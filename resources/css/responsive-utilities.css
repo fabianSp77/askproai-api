@@ -1,0 +1,238 @@
+/* Mobile-First Responsive Utilities */
+
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+    /* Ensure minimum tap target size for mobile */
+    button,
+    a,
+    input[type="checkbox"],
+    input[type="radio"],
+    select {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improve text input usability on mobile */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        min-height: 44px;
+    }
+    
+    /* Better spacing for mobile forms */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive tables */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Stack table cells on mobile */
+    .table-mobile-stack td {
+        display: block;
+        width: 100%;
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+    
+    .table-mobile-stack td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        text-align: left;
+        font-weight: bold;
+    }
+}
+
+/* Improved mobile navigation */
+@media (max-width: 768px) {
+    /* Mobile menu styles */
+    .mobile-menu {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        background: white;
+        z-index: 9999;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+    
+    .mobile-menu.active {
+        left: 0;
+    }
+    
+    .mobile-menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        display: none;
+    }
+    
+    .mobile-menu-overlay.active {
+        display: block;
+    }
+    
+    /* Sticky mobile header */
+    .mobile-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Mobile-optimized cards */
+    .card-mobile {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+    /* Two-column layout for tablets */
+    .tablet-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    /* Adjust sidebar width for tablets */
+    .sidebar-tablet {
+        width: 250px;
+    }
+}
+
+/* Desktop enhancements */
+@media (min-width: 1025px) {
+    /* Hover effects only on desktop */
+    .desktop-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Multi-column layouts for desktop */
+    .desktop-columns-3 {
+        column-count: 3;
+        column-gap: 2rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    /* Hide non-essential elements */
+    .no-print,
+    nav,
+    .sidebar,
+    .mobile-menu,
+    button,
+    .pagination {
+        display: none !important;
+    }
+    
+    /* Ensure content fits on page */
+    .print-break-inside-avoid {
+        break-inside: avoid;
+    }
+    
+    /* Reset colors for printing */
+    * {
+        color: black !important;
+        background: white !important;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    * {
+        border-width: 2px !important;
+    }
+    
+    button,
+    a {
+        text-decoration: underline !important;
+    }
+}
+
+/* Dark mode responsive adjustments */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 640px) {
+        .mobile-menu {
+            background: #1f2937;
+        }
+        
+        .mobile-header {
+            background: #1f2937;
+        }
+    }
+}
+
+/* Utility classes for responsive behavior */
+.touch-friendly {
+    padding: 0.75rem;
+    margin: 0.25rem;
+}
+
+.mobile-only {
+    display: block;
+}
+
+.desktop-only {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .mobile-only {
+        display: none;
+    }
+    
+    .desktop-only {
+        display: block;
+    }
+}
+
+/* Responsive text utilities */
+.text-responsive {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.heading-responsive {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+/* Responsive spacing utilities */
+.spacing-responsive {
+    padding: clamp(1rem, 3vw, 2rem);
+    margin: clamp(0.5rem, 2vw, 1rem);
+}

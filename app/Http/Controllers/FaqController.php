@@ -1,5 +1,8 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Models\FAQ;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -7,7 +10,7 @@ class FaqController extends Controller
 {
     public function index()
     {
-        $faqs = DB::table('faqs')->orderBy('category')->get();
+        $faqs = FAQ::where('active', true)->orderBy('category')->get();
         $categories = DB::table('faqs')->select('category')->distinct()->get();
         return view('faqs.index', compact('faqs', 'categories'));
     }
@@ -25,13 +28,11 @@ class FaqController extends Controller
             'category' => 'required'
         ]);
 
-        DB::table('faqs')->insert([
+        FAQ::create([
             'question' => $request->question,
             'answer' => $request->answer,
             'category' => $request->category,
-            'active' => true,
-            'created_at' => now(),
-            'updated_at' => now()
+            'active' => true
         ]);
 
         return redirect()->route('faqs.index')

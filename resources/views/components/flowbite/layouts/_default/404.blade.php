@@ -1,0 +1,13 @@
+{{-- Flowbite Component: 404 --}}
+@props(['title' => '', 'description' => ''])
+<div {{ $attributes->merge(['class' => '']) }}>
+{{ define "body_override" }}
+  <body class="d-flex flex-column min-vh-100"></body>
+{{ end }}
+{{ define "main" }}
+  <main class="my-auto p-5" id="content">
+    {{ .Content }}
+  </main>
+{{ end }}
+
+</div>

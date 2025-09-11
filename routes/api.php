@@ -22,3 +22,4 @@ Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
 
 // Retell Webhook (POST)
 Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);
+Route::get('/health', [\App\Http\Controllers\HealthCheckController::class, '__invoke']);

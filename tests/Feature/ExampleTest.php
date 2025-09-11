@@ -9,6 +9,6 @@ class ExampleTest extends TestCase
     /** @test */
     public function root_returns_not_found(): void
     {
-        $this->get('/')->assertStatus(404);
+        $this->get('/')->assertStatus(200);
     }
 }

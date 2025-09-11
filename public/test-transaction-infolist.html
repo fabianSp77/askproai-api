@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transaction View Test</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #16a34a; background: #dcfce7; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #dc2626; background: #fef2f2; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #2563eb; background: #eff6ff; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #e5e7eb; border-radius: 6px; }
+        code { background: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        #results { margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 6px; min-height: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Transaction Infolist Debug Test</h1>
+        
+        <div class="info">
+            <strong>Purpose:</strong> This page will test the Transaction view to verify that Infolist components are rendering properly.
+        </div>
+        
+        <div class="section">
+            <h3>Test Configuration</h3>
+            <p><strong>Transaction ID:</strong> 1</p>
+            <p><strong>Transaction Type:</strong> topup</p>
+            <p><strong>Amount:</strong> 5000 cents</p>
+            <p><strong>Description:</strong> Test-Aufladung</p>
+        </div>
+        
+        <div class="section">
+            <h3>Tests to Run</h3>
+            <button onclick="testDirectAccess()">1. Test Direct Admin Access</button>
+            <button onclick="testViewPage()">2. Test Transaction View Page</button>
+            <button onclick="testComponentRendering()">3. Analyze Component Rendering</button>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+        </div>
+        
+        <div id="results">
+            <p><em>Click a test button to start...</em></p>
+        </div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            results.innerHTML += '<div class="' + className + '">[' + timestamp + '] ' + message + '</div>';
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        function testDirectAccess() {
+            clearResults();
+            log('🔍 Testing direct admin access...', 'info');
+            
+            // Test if we can access the admin panel
+            fetch('/admin')
+                .then(response => {
+                    if (response.ok || response.status === 302) {
+                        log('✅ Admin panel accessible (status: ' + response.status + ')', 'success');
+                        return testTransactionRoute();
+                    } else {
+                        log('❌ Admin panel not accessible (status: ' + response.status + ')', 'error');
+                        throw new Error('Admin not accessible');
+                    }
+                })
+                .catch(error => {
+                    log('❌ Error accessing admin: ' + error.message, 'error');
+                });
+        }
+        
+        function testTransactionRoute() {
+            log('🔍 Testing transaction route...', 'info');
+            
+            fetch('/admin/transactions/1')
+                .then(response => {
+                    log('📊 Transaction page response status: ' + response.status, 'info');
+                    
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Status ' + response.status);
+                    }
+                })
+                .then(html => {
+                    log('✅ Transaction page loaded successfully', 'success');
+                    analyzeHTML(html);
+                })
+                .catch(error => {
+                    log('❌ Error loading transaction page: ' + error.message, 'error');
+                });
+        }
+        
+        function testViewPage() {
+            clearResults();
+            log('�� Testing transaction view page directly...', 'info');
+            
+            // Create a new window to test the page
+            const testWindow = window.open('/admin/transactions/1', '_blank', 'width=1200,height=800');
+            
+            if (testWindow) {
+                log('✅ Opened transaction page in new window', 'success');
+                log('👀 Check the new window for content. It should show transaction details in sections.', 'info');
+                
+                // Try to access the window content after it loads
+                setTimeout(() => {
+                    try {
+                        const windowDoc = testWindow.document;
+                        if (windowDoc) {
+                            analyzeWindowContent(windowDoc);
+                        }
+                    } catch (e) {
+                        log('⚠️  Cannot analyze window content (CORS/security restriction)', 'info');
+                        log('🔍 Manually check the opened window for:', 'info');
+                        log('   - Section headings: "Transaktionsdetails", "Verknüpfungen", "Systemdaten"', 'info');
+                        log('   - Transaction data: ID, Type, Amount, Description', 'info');
+                        log('   - Proper formatting and styling', 'info');
+                    }
+                }, 2000);
+            } else {
+                log('❌ Failed to open transaction page (popup blocked?)', 'error');
+            }
+        }
+        
+        function testComponentRendering() {
+            clearResults();
+            log('🔍 Testing component rendering via fetch...', 'info');
+            
+            fetch('/admin/transactions/1', {
+                headers: {
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                analyzeHTML(html);
+            })
+            .catch(error => {
+                log('❌ Error fetching page: ' + error.message, 'error');
+            });
+        }
+        
+        function analyzeHTML(html) {
+            log('🔍 Analyzing HTML content...', 'info');
+            
+            // Create a temporary DOM to analyze
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Check for Filament components
+            const checks = {
+                'fi-page': 'Filament Page Component',
+                'fi-in-component': 'Infolist Component',
+                'fi-in-entry': 'Infolist Entry',
+                'fi-section': 'Filament Section',
+                'fi-in-text': 'Infolist Text Component'
+            };
+            
+            let foundComponents = 0;
+            
+            for (const [className, description] of Object.entries(checks)) {
+                const elements = doc.querySelectorAll('[class*="' + className + '"]');
+                if (elements.length > 0) {
+                    log('✅ ' + description + ': ' + elements.length + ' found', 'success');
+                    foundComponents++;
+                } else {
+                    log('❌ ' + description + ': Not found', 'error');
+                }
+            }
+            
+            // Check for specific transaction data
+            const bodyText = doc.body.textContent;
+            const dataChecks = {
+                'Transaktionsdetails': 'Section heading',
+                '1': 'Transaction ID',
+                'Test-Aufladung': 'Description',
+                'Systemdaten': 'System data section'
+            };
+            
+            let foundData = 0;
+            
+            for (const [needle, description] of Object.entries(dataChecks)) {
+                if (bodyText.includes(needle)) {
+                    log('✅ ' + description + ': Found', 'success');
+                    foundData++;
+                } else {
+                    log('❌ ' + description + ': Missing', 'error');
+                }
+            }
+            
+            // Check for Livewire
+            const livewireComponents = doc.querySelectorAll('[wire\\:id]');
+            log('📊 Livewire components: ' + livewireComponents.length, 'info');
+            
+            // Final assessment
+            if (foundComponents >= 2 && foundData >= 2) {
+                log('🎉 SUCCESS: Infolist components appear to be rendering correctly!', 'success');
+            } else if (foundComponents > 0) {
+                log('⚠️  PARTIAL: Some components found but missing content', 'error');
+            } else {
+                log('❌ FAILURE: No infolist components found - components not rendering', 'error');
+            }
+        }
+        
+        function analyzeWindowContent(doc) {
+            log('🔍 Analyzing opened window content...', 'info');
+            
+            const sections = doc.querySelectorAll('section, .fi-section');
+            log('📊 Found ' + sections.length + ' sections', 'info');
+            
+            const textContent = doc.body.textContent;
+            if (textContent.includes('Transaktionsdetails')) {
+                log('✅ Found "Transaktionsdetails" section', 'success');
+            }
+            
+            if (textContent.includes('1')) {
+                log('✅ Found transaction ID in content', 'success');
+            }
+        }
+        
+        function runAllTests() {
+            clearResults();
+            log('🚀 Running comprehensive test suite...', 'info');
+            
+            setTimeout(testDirectAccess, 500);
+            setTimeout(testComponentRendering, 2000);
+            setTimeout(() => {
+                log('📋 Test Summary Complete', 'info');
+                log('🎯 If all tests pass, the Infolist rendering issue is FIXED', 'success');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

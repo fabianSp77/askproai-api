@@ -98,6 +98,40 @@ class CalcomController extends Controller
     }
 
     /**
+     * Check availability endpoint (from CalComController)
+     */
+    public function checkAvailability(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'dateFrom' => 'required',
+                'dateTo' => 'required',
+                'eventTypeId' => 'required',
+                'userId' => 'required'
+            ]);
+
+            $response = $this->calcomService->checkAvailability($validated);
+
+            return response()->json([
+                'success' => true,
+                'data' => $response
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[CalcomController] Failed to check availability', [
+                'message' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to check availability',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Health check endpoint
      */
     public function health(): JsonResponse

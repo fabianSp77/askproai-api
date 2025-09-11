@@ -1,0 +1,357 @@
+{{-- Flowbite Component: feed --}}
+@props(['title' => 'Tailwind CSS User Feed Page - Flowbite', 'description' => 'Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.'])
+<div {{ $attributes->merge(['class' => '']) }}>
+<div class="feed-container relative items-start overflow-y-hidden md:flex">
+  <aside id="sidebar-contacts" class="hidden h-full min-w-80 overflow-y-scroll border-e border-gray-200 bg-white px-4 py-6 dark:border-gray-700 dark:bg-gray-800 md:sticky md:mb-0 md:block md:pb-0">
+    <div class="mb-4 flex items-center justify-between border-b border-gray-200 pb-4 text-sm dark:border-gray-700">
+      <h3 class="font-medium text-gray-900 dark:text-white">Members<span class="ms-1 font-normal text-gray-500 dark:text-gray-400">3,456</span></h3>
+      <h4 class="text-gray-500 dark:text-gray-400">Activities</h4>
+    </div>
+    <ul class="mb-4 space-y-4">
+      <li class="flex items-center">
+        <input
+          id="user-1"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/jese-leos.png" alt="jese avatar" />
+        <label for="user-1" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Jese Leos </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">435</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-2"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/bonnie-green.png" alt="bonnie avatar" />
+        <label for="user-2" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Bonnie Green </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">46</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-3"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/joseph-mcfall.png" alt="Joseph avatar" />
+        <label for="user-3" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Joseph Mcfall </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">102</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-103"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+          checked
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/neil-sims.png" alt="Neil avatar" />
+        <label for="user-103" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Neil Sims </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">475</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-4"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/lana-byrd.png" alt="Lana avatar" />
+        <label for="user-4" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Lana Byrd </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">234</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-52"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/thomas-lean.png" alt="Thomas avatar" />
+        <label for="user-52" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Thomas Lean </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">1,028</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-8"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+          checked
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/roberta-casas.png" alt="Roberta avatar" />
+        <label for="user-8" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Roberta Casas </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">945</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-67"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/robert-brown.png" alt="Robert avatar" />
+        <label for="user-67" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Robert Brown </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">89</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-7"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/michael-gough.png" alt="Micheal avatar" />
+        <label for="user-7" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Micheal Gough </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">654</span>
+      </li>
+      <li class="flex items-center">
+        <input
+          id="user-9"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <img class="me-2 h-5 w-5 rounded-full" src="/images/users/karen-nelson.png" alt="Karen avatar" />
+        <label for="user-9" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Karen Nelson </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">44</span>
+      </li>
+    </ul>
+    <button type="button" class="text-sm font-medium text-primary-700 hover:underline dark:text-primary-500">Show more...</button>
+    <div class="mb-4 mt-4 flex items-center justify-between border-b border-t py-4 text-sm font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400 border-gray-200">
+      <h3 class="font-medium text-gray-900 dark:text-white">Groups<span class="ms-1 font-normal text-gray-500 dark:text-gray-400">48</span></h3>
+      <h4 class="text-gray-500 dark:text-gray-400">Activities</h4>
+    </div>
+    <ul class="mb-4 space-y-4">
+      <li class="flex items-center">
+        <input
+          id="group-1"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <div class="me-2 flex -space-x-3">
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/jese-leos.png" alt="Jese avatar" />
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/bonnie-green.png" alt="Bonnie avatar" />
+        </div>
+        <label for="group-1" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Flowbite Dev </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">2,756</span>
+      </li>
+
+      <li class="flex items-center">
+        <input
+          id="group-2"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <div class="me-2 flex -space-x-3">
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/lana-byrd.png" alt="Lana avatar" />
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/joseph-mcfall.png" alt="Joseph avatar" />
+        </div>
+        <label for="group-2" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Design Team </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">1,033</span>
+      </li>
+
+      <li class="flex items-center">
+        <input
+          id="group-3"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <div class="me-2 flex -space-x-3">
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="Robert avatar" />
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/roberta-casas.png" alt="Roberta avatar" />
+        </div>
+        <label for="group-3" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> React Devs </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">961</span>
+      </li>
+
+      <li class="flex items-center">
+        <input
+          id="group-4"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <div class="me-2 flex -space-x-3">
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/michael-gough.png" alt="Michael avatar" />
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="Robert avatar" />
+        </div>
+        <label for="group-4" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Finance Team </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">961</span>
+      </li>
+
+      <li class="flex items-center">
+        <input
+          id="group-5"
+          type="checkbox"
+          value=""
+          class="me-3 h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+        />
+        <div class="me-2 flex -space-x-3">
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/neil-sims.png" alt="Neil avatar" />
+          <img class="h-5 w-5 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/roberta-casas.png" alt="Roberta avatar" />
+        </div>
+        <label for="group-5" class="flex items-center font-medium text-gray-900 dark:text-gray-100"> Funny Weekend </label>
+        <span class="ms-auto text-sm text-gray-500 dark:text-gray-400">961</span>
+      </li>
+    </ul>
+    <button type="button" class="mb-4 text-sm font-medium text-primary-700 hover:underline dark:text-primary-500">Show more...</button>
+  </aside>
+  <div class="mb-5 h-full w-full overflow-hidden overflow-y-auto p-4">
+    @php
+      // Sample feed data for demonstration
+      $feedItems = [
+        [
+          'avatar' => 'jese-leos.png',
+          'name' => 'Jese Leos',
+          'posted_on' => '2 hours ago',
+          'content' => 'Great news everyone! We just launched our new product line. Check it out and let me know what you think!',
+          'comments' => 12,
+          'likes' => 45,
+          'images' => ['product-1.jpg', 'product-2.jpg']
+        ],
+        [
+          'avatar' => 'bonnie-green.png',
+          'name' => 'Bonnie Green',
+          'posted_on' => '5 hours ago',
+          'content' => 'Working on some exciting new features for our upcoming release. Stay tuned for updates!',
+          'comments' => 8,
+          'likes' => 32
+        ],
+        [
+          'avatar' => 'neil-sims.png',
+          'name' => 'Neil Sims',
+          'posted_on' => '1 day ago',
+          'content' => 'Just finished a productive meeting with the team. We have some amazing things planned for Q4!',
+          'comments' => 3,
+          'likes' => 18
+        ]
+      ];
+    @endphp
+    
+    @foreach($feedItems as $item)
+      <div class="mb-4 space-y-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 lg:space-y-6 2xl:p-6">
+        <div class="flex items-center space-x-3">
+          <div class="shrink-0">
+            <img class="h-10 w-10 rounded-lg" src="/images/users/{{ $item['avatar'] }}" alt="{{ $item['name'] }}" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <a href="#" class="truncate font-semibold text-gray-900 hover:underline dark:text-white">{{ $item['name'] }}</a>
+            <p class="truncate text-sm text-gray-500 dark:text-gray-400">{{ $item['posted_on'] }}</p>
+          </div>
+          <button
+            id="notification-1-dropdown-button"
+            type="button"
+            data-dropdown-toggle="notification-1-dropdown"
+            class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+            </svg>
+          </button>
+          <div id="notification-1-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+            <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="notification-1-dropdown-button">
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7.833 2c-.507 0-.98.216-1.318.576A1.92 1.92 0 0 0 6 3.89V21a1 1 0 0 0 1.625.78L12 18.28l4.375 3.5A1 1 0 0 0 18 21V3.889c0-.481-.178-.954-.515-1.313A1.808 1.808 0 0 0 16.167 2H7.833Z" />
+                  </svg>
+                  Save post
+                </button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="m4 15.6 3.055-3.056A4.913 4.913 0 0 1 7 12.012a5.006 5.006 0 0 1 5-5c.178.009.356.027.532.054l1.744-1.744A8.973 8.973 0 0 0 12 5.012c-5.388 0-10 5.336-10 7A6.49 6.49 0 0 0 4 15.6Z" />
+                    <path
+                      d="m14.7 10.726 4.995-5.007A.998.998 0 0 0 18.99 4a1 1 0 0 0-.71.305l-4.995 5.007a2.98 2.98 0 0 0-.588-.21l-.035-.01a2.981 2.981 0 0 0-3.584 3.583c0 .012.008.022.01.033.05.204.12.402.211.59l-4.995 4.983a1 1 0 1 0 1.414 1.414l4.995-4.983c.189.091.386.162.59.211.011 0 .021.007.033.01a2.982 2.982 0 0 0 3.584-3.584c0-.012-.008-.023-.011-.035a3.05 3.05 0 0 0-.21-.588Z"
+                    />
+                    <path d="m19.821 8.605-2.857 2.857a4.952 4.952 0 0 1-5.514 5.514l-1.785 1.785c.767.166 1.55.25 2.335.251 6.453 0 10-5.258 10-7 0-1.166-1.637-2.874-2.179-3.407Z" />
+                  </svg>
+
+                  Hide post
+                </button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M13.09 3.294c1.924.95 3.422 1.69 5.472.692a1 1 0 0 1 1.438.9v9.54a1 1 0 0 1-.562.9c-2.981 1.45-5.382.24-7.25-.701a38.739 38.739 0 0 0-.622-.31c-1.033-.497-1.887-.812-2.756-.77-.76.036-1.672.357-2.81 1.396V21a1 1 0 1 1-2 0V4.971a1 1 0 0 1 .297-.71c1.522-1.506 2.967-2.185 4.417-2.255 1.407-.068 2.653.453 3.72.967.225.108.443.216.655.32Z"
+                    />
+                  </svg>
+
+                  Report post
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <p class="text-base font-normal text-gray-500 dark:text-gray-400">{{ $item['content'] ?? 'Check out this amazing update!' }}</p>
+          @if(isset($item['images']) && is_array($item['images']))
+            <div class="flex">
+              @foreach($item['images'] as $image)
+                <img class="mr-4 h-32 w-32 rounded-lg sm:h-40 sm:w-40" src="/images/feed/{{ $image }}" alt="task screenshot" />
+              @endforeach
+            </div>
+          @endif
+        </div>
+        <div class="flex space-x-6 border-b border-t border-gray-200 py-3 dark:border-gray-700">
+          <a href="#" class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white">
+            <svg class="me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clip-rule="evenodd" />
+            </svg>
+            @if(($item['comments'] ?? 0) > 0)
+              {{ $item['comments'] }} Comments
+            @else
+              No comments
+            @endif
+          </a>
+          <a href="#" class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white">
+            <svg class="me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="m12.75 20.66 6.184-7.098c2.677-2.884 2.559-6.506.754-8.705-.898-1.095-2.206-1.816-3.72-1.855-1.293-.034-2.652.43-3.963 1.442-1.315-1.012-2.678-1.476-3.973-1.442-1.515.04-2.825.76-3.724 1.855-1.806 2.201-1.915 5.823.772 8.706l6.183 7.097c.19.216.46.34.743.34a.985.985 0 0 0 .743-.34Z"
+              />
+            </svg>
+            @if(($item['likes'] ?? 0) > 0)
+              {{ $item['likes'] }} Likes
+            @else
+              No likes
+            @endif
+          </a>
+        </div>
+        <div>
+          <form action="#">
+            <label for="write-message" class="sr-only">Write message</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5">
+                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M3 5.983C3 4.888 3.895 4 5 4h14c1.105 0 2 .888 2 1.983v8.923a1.992 1.992 0 0 1-2 1.983h-6.6l-2.867 2.7c-.955.899-2.533.228-2.533-1.08v-1.62H5c-1.105 0-2-.888-2-1.983V5.983Zm5.706 3.809a1 1 0 1 0-1.412 1.417 1 1 0 1 0 1.412-1.417Zm2.585.002a1 1 0 1 1 .003 1.414 1 1 0 0 1-.003-1.414Zm5.415-.002a1 1 0 1 0-1.412 1.417 1 1 0 1 0 1.412-1.417Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                id="write-message"
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Write your response"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    @endforeach
+  </div>
+</div>
+</div>

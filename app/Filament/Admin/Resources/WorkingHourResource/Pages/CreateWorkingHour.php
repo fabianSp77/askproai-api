@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateWorkingHour extends CreateRecord
 {
     protected static string $resource = WorkingHourResource::class;
+    
 }

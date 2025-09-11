@@ -9,11 +9,20 @@ use Filament\Resources\Pages\EditRecord;
 class EditCall extends EditRecord
 {
     protected static string $resource = CallResource::class;
+    
+    // protected static string $view = 'filament.admin.resources.call-resource.pages.edit-call';
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),
+        ];
+    }
+    
+    protected function getViewData(): array
+    {
+        return [
+            'record' => $this->record,
         ];
     }
 }

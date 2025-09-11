@@ -1,0 +1,25 @@
+/* Custom fix for Dashboard heading cutoff issue */
+@media (min-width: 1024px) {
+    /* Ensure proper spacing for page headers */
+    .fi-header-heading {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Fix the main content area positioning */
+    .fi-page-header {
+        padding-left: 2rem !important;
+    }
+    
+    /* Ensure the page content doesn't overlap */
+    .fi-page {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Fix for the specific dashboard title */
+    h1.fi-header-heading {
+        display: block;
+        width: 100%;
+    }
+}

@@ -9,7 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditWorkingHour extends EditRecord
 {
     protected static string $resource = WorkingHourResource::class;
-
+    
     protected function getHeaderActions(): array
     {
         return [

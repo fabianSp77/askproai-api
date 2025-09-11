@@ -1,0 +1,630 @@
+{
+    "generated_at": "2025-09-01 19:40:00",
+    "total_components": 104,
+    "components": {
+        "content.homepages.car-service": {
+            "file": "content\/homepages\/car-service.blade.php",
+            "source": "car-service.html",
+            "type": "content",
+            "size": 106289
+        },
+        "content.homepages.saas": {
+            "file": "content\/homepages\/saas.blade.php",
+            "source": "saas.html",
+            "type": "content",
+            "size": 126800
+        },
+        "content.homepages.logistics": {
+            "file": "content\/homepages\/logistics.blade.php",
+            "source": "logistics.html",
+            "type": "content",
+            "size": 128687
+        },
+        "content.homepages.crypto": {
+            "file": "content\/homepages\/crypto.blade.php",
+            "source": "crypto.html",
+            "type": "content",
+            "size": 189321
+        },
+        "content.homepages.project-management": {
+            "file": "content\/homepages\/project-management.blade.php",
+            "source": "project-management.html",
+            "type": "content",
+            "size": 210637
+        },
+        "content.homepages.music": {
+            "file": "content\/homepages\/music.blade.php",
+            "source": "music.html",
+            "type": "content",
+            "size": 17669
+        },
+        "content.homepages.e-commerce": {
+            "file": "content\/homepages\/e-commerce.blade.php",
+            "source": "e-commerce.html",
+            "type": "content",
+            "size": 166517
+        },
+        "content.homepages.marketing": {
+            "file": "content\/homepages\/marketing.blade.php",
+            "source": "marketing.html",
+            "type": "content",
+            "size": 100442
+        },
+        "content.homepages.customer-service": {
+            "file": "content\/homepages\/customer-service.blade.php",
+            "source": "customer-service.html",
+            "type": "content",
+            "size": 160167
+        },
+        "content.homepages.bank": {
+            "file": "content\/homepages\/bank.blade.php",
+            "source": "bank.html",
+            "type": "content",
+            "size": 157761
+        },
+        "content.e-commerce.transactions": {
+            "file": "content\/e-commerce\/transactions.blade.php",
+            "source": "transactions.html",
+            "type": "content",
+            "size": 106698
+        },
+        "content.e-commerce.invoices": {
+            "file": "content\/e-commerce\/invoices.blade.php",
+            "source": "invoices.html",
+            "type": "content",
+            "size": 149691
+        },
+        "content.e-commerce.invoice": {
+            "file": "content\/e-commerce\/invoice.blade.php",
+            "source": "invoice.html",
+            "type": "content",
+            "size": 24295
+        },
+        "content.e-commerce.billing": {
+            "file": "content\/e-commerce\/billing.blade.php",
+            "source": "billing.html",
+            "type": "content",
+            "size": 68856
+        },
+        "content.e-commerce.transaction": {
+            "file": "content\/e-commerce\/transaction.blade.php",
+            "source": "transaction.html",
+            "type": "content",
+            "size": 22643
+        },
+        "content.e-commerce.products": {
+            "file": "content\/e-commerce\/products.blade.php",
+            "source": "products.html",
+            "type": "content",
+            "size": 200366
+        },
+        "content.e-commerce.create-invoice": {
+            "file": "content\/e-commerce\/create-invoice.blade.php",
+            "source": "create-invoice.html",
+            "type": "content",
+            "size": 48796
+        },
+        "content.users.profile": {
+            "file": "content\/users\/profile.blade.php",
+            "source": "profile.html",
+            "type": "content",
+            "size": 100185
+        },
+        "content.users.feed": {
+            "file": "content\/users\/feed.blade.php",
+            "source": "feed.html",
+            "type": "content",
+            "size": 21381
+        },
+        "content.users.settings": {
+            "file": "content\/users\/settings.blade.php",
+            "source": "settings.html",
+            "type": "content",
+            "size": 73049
+        },
+        "content.users.list": {
+            "file": "content\/users\/list.blade.php",
+            "source": "list.html",
+            "type": "content",
+            "size": 243981
+        },
+        "content.support.ticket": {
+            "file": "content\/support\/ticket.blade.php",
+            "source": "ticket.html",
+            "type": "content",
+            "size": 48673
+        },
+        "content.support.tickets": {
+            "file": "content\/support\/tickets.blade.php",
+            "source": "tickets.html",
+            "type": "content",
+            "size": 166949
+        },
+        "content.kanban": {
+            "file": "content\/kanban.blade.php",
+            "source": "kanban.html",
+            "type": "content",
+            "size": 72
+        },
+        "content.pages.api": {
+            "file": "content\/pages\/api.blade.php",
+            "source": "api.html",
+            "type": "content",
+            "size": 147183
+        },
+        "content.pages.text-editor": {
+            "file": "content\/pages\/text-editor.blade.php",
+            "source": "text-editor.html",
+            "type": "content",
+            "size": 88729
+        },
+        "content.pages.notifications": {
+            "file": "content\/pages\/notifications.blade.php",
+            "source": "notifications.html",
+            "type": "content",
+            "size": 66709
+        },
+        "content.pages.500": {
+            "file": "content\/pages\/500.blade.php",
+            "source": "500.html",
+            "type": "content",
+            "size": 70
+        },
+        "content.pages.kanban": {
+            "file": "content\/pages\/kanban.blade.php",
+            "source": "kanban.html",
+            "type": "content",
+            "size": 136208
+        },
+        "content.pages.datatables": {
+            "file": "content\/pages\/datatables.blade.php",
+            "source": "datatables.html",
+            "type": "content",
+            "size": 36448
+        },
+        "content.pages.pricing": {
+            "file": "content\/pages\/pricing.blade.php",
+            "source": "pricing.html",
+            "type": "content",
+            "size": 43628
+        },
+        "content.pages.integrations": {
+            "file": "content\/pages\/integrations.blade.php",
+            "source": "integrations.html",
+            "type": "content",
+            "size": 132239
+        },
+        "content.pages.events": {
+            "file": "content\/pages\/events.blade.php",
+            "source": "events.html",
+            "type": "content",
+            "size": 202904
+        },
+        "content.pages.chat-room": {
+            "file": "content\/pages\/chat-room.blade.php",
+            "source": "chat-room.html",
+            "type": "content",
+            "size": 200213
+        },
+        "content.pages.maintenance": {
+            "file": "content\/pages\/maintenance.blade.php",
+            "source": "maintenance.html",
+            "type": "content",
+            "size": 78
+        },
+        "content.pages.ai-chat": {
+            "file": "content\/pages\/ai-chat.blade.php",
+            "source": "ai-chat.html",
+            "type": "content",
+            "size": 126057
+        },
+        "content.pages.calendar": {
+            "file": "content\/pages\/calendar.blade.php",
+            "source": "calendar.html",
+            "type": "content",
+            "size": 53735
+        },
+        "content.pages.404": {
+            "file": "content\/pages\/404.blade.php",
+            "source": "404.html",
+            "type": "content",
+            "size": 70
+        },
+        "content.authentication.sign-up": {
+            "file": "content\/authentication\/sign-up.blade.php",
+            "source": "sign-up.html",
+            "type": "content",
+            "size": 10761
+        },
+        "content.authentication.forgot-password": {
+            "file": "content\/authentication\/forgot-password.blade.php",
+            "source": "forgot-password.html",
+            "type": "content",
+            "size": 3922
+        },
+        "content.authentication.profile-lock": {
+            "file": "content\/authentication\/profile-lock.blade.php",
+            "source": "profile-lock.html",
+            "type": "content",
+            "size": 4600
+        },
+        "content.authentication.two-factor": {
+            "file": "content\/authentication\/two-factor.blade.php",
+            "source": "two-factor.html",
+            "type": "content",
+            "size": 6438
+        },
+        "content.authentication.reset-password": {
+            "file": "content\/authentication\/reset-password.blade.php",
+            "source": "reset-password.html",
+            "type": "content",
+            "size": 5030
+        },
+        "content.authentication.sign-in": {
+            "file": "content\/authentication\/sign-in.blade.php",
+            "source": "sign-in.html",
+            "type": "content",
+            "size": 9233
+        },
+        "content._index": {
+            "file": "content\/_index.blade.php",
+            "source": "_index.html",
+            "type": "content",
+            "size": 184337
+        },
+        "content.project-management.project-management-table": {
+            "file": "content\/project-management\/project-management-table.blade.php",
+            "source": "project-management-table.html",
+            "type": "content",
+            "size": 92147
+        },
+        "content.project-management.my-projects": {
+            "file": "content\/project-management\/my-projects.blade.php",
+            "source": "my-projects.html",
+            "type": "content",
+            "size": 53380
+        },
+        "content.project-management.project-summary": {
+            "file": "content\/project-management\/project-summary.blade.php",
+            "source": "project-summary.html",
+            "type": "content",
+            "size": 109418
+        },
+        "content.project-management.all-projects": {
+            "file": "content\/project-management\/all-projects.blade.php",
+            "source": "all-projects.html",
+            "type": "content",
+            "size": 199504
+        },
+        "content.project-management.to-do": {
+            "file": "content\/project-management\/to-do.blade.php",
+            "source": "to-do.html",
+            "type": "content",
+            "size": 153887
+        },
+        "content.project-management.to-do-upcoming": {
+            "file": "content\/project-management\/to-do-upcoming.blade.php",
+            "source": "to-do-upcoming.html",
+            "type": "content",
+            "size": 152823
+        },
+        "content.project-management.all-files": {
+            "file": "content\/project-management\/all-files.blade.php",
+            "source": "all-files.html",
+            "type": "content",
+            "size": 127836
+        },
+        "content.audio.call-ended": {
+            "file": "content\/audio\/call-ended.blade.php",
+            "source": "call-ended.html",
+            "type": "content",
+            "size": 7668
+        },
+        "content.audio.incoming-call": {
+            "file": "content\/audio\/incoming-call.blade.php",
+            "source": "incoming-call.html",
+            "type": "content",
+            "size": 5820
+        },
+        "content.audio.in-call": {
+            "file": "content\/audio\/in-call.blade.php",
+            "source": "in-call.html",
+            "type": "content",
+            "size": 10771
+        },
+        "content.audio.outgoing-call": {
+            "file": "content\/audio\/outgoing-call.blade.php",
+            "source": "outgoing-call.html",
+            "type": "content",
+            "size": 9879
+        },
+        "content.video.rate-conversation": {
+            "file": "content\/video\/rate-conversation.blade.php",
+            "source": "rate-conversation.html",
+            "type": "content",
+            "size": 10509
+        },
+        "content.video.create-meeting": {
+            "file": "content\/video\/create-meeting.blade.php",
+            "source": "create-meeting.html",
+            "type": "content",
+            "size": 8130
+        },
+        "content.video.meeting-room": {
+            "file": "content\/video\/meeting-room.blade.php",
+            "source": "meeting-room.html",
+            "type": "content",
+            "size": 72782
+        },
+        "content.video.join-call": {
+            "file": "content\/video\/join-call.blade.php",
+            "source": "join-call.html",
+            "type": "content",
+            "size": 22539
+        },
+        "content.status.server-status": {
+            "file": "content\/status\/server-status.blade.php",
+            "source": "server-status.html",
+            "type": "content",
+            "size": 32509
+        },
+        "content.status.500": {
+            "file": "content\/status\/500.blade.php",
+            "source": "500.html",
+            "type": "content",
+            "size": 1493
+        },
+        "content.status.uptime": {
+            "file": "content\/status\/uptime.blade.php",
+            "source": "uptime.html",
+            "type": "content",
+            "size": 4921
+        },
+        "content.status.status-history": {
+            "file": "content\/status\/status-history.blade.php",
+            "source": "status-history.html",
+            "type": "content",
+            "size": 17304
+        },
+        "content.status.maintenance": {
+            "file": "content\/status\/maintenance.blade.php",
+            "source": "maintenance.html",
+            "type": "content",
+            "size": 2080
+        },
+        "content.status.404": {
+            "file": "content\/status\/404.blade.php",
+            "source": "404.html",
+            "type": "content",
+            "size": 2142
+        },
+        "content.mailing.reply": {
+            "file": "content\/mailing\/reply.blade.php",
+            "source": "reply.html",
+            "type": "content",
+            "size": 54971
+        },
+        "content.mailing.read": {
+            "file": "content\/mailing\/read.blade.php",
+            "source": "read.html",
+            "type": "content",
+            "size": 29520
+        },
+        "content.mailing.inbox": {
+            "file": "content\/mailing\/inbox.blade.php",
+            "source": "inbox.html",
+            "type": "content",
+            "size": 78094
+        },
+        "layouts._default.redirect": {
+            "file": "layouts\/_default\/redirect.blade.php",
+            "source": "redirect.html",
+            "type": "layouts",
+            "size": 58
+        },
+        "layouts._default.dashboard-no-sidebar": {
+            "file": "layouts\/_default\/dashboard-no-sidebar.blade.php",
+            "source": "dashboard-no-sidebar.html",
+            "type": "layouts",
+            "size": 440
+        },
+        "layouts._default.baseof": {
+            "file": "layouts\/_default\/baseof.blade.php",
+            "source": "baseof.html",
+            "type": "layouts",
+            "size": 394
+        },
+        "layouts._default.monthly-tasks-layout": {
+            "file": "layouts\/_default\/monthly-tasks-layout.blade.php",
+            "source": "monthly-tasks-layout.html",
+            "type": "layouts",
+            "size": 476
+        },
+        "layouts._default.main": {
+            "file": "layouts\/_default\/main.blade.php",
+            "source": "main.html",
+            "type": "layouts",
+            "size": 236
+        },
+        "layouts._default.dashboard-no-overflow": {
+            "file": "layouts\/_default\/dashboard-no-overflow.blade.php",
+            "source": "dashboard-no-overflow.html",
+            "type": "layouts",
+            "size": 411
+        },
+        "layouts._default.examples": {
+            "file": "layouts\/_default\/examples.blade.php",
+            "source": "examples.html",
+            "type": "layouts",
+            "size": 1397
+        },
+        "layouts._default.dashboard-triple-navbar": {
+            "file": "layouts\/_default\/dashboard-triple-navbar.blade.php",
+            "source": "dashboard-triple-navbar.html",
+            "type": "layouts",
+            "size": 439
+        },
+        "layouts._default.dashboard-2-sidebars": {
+            "file": "layouts\/_default\/dashboard-2-sidebars.blade.php",
+            "source": "dashboard-2-sidebars.html",
+            "type": "layouts",
+            "size": 474
+        },
+        "layouts._default.404": {
+            "file": "layouts\/_default\/404.blade.php",
+            "source": "404.html",
+            "type": "layouts",
+            "size": 194
+        },
+        "layouts._default.dashboard": {
+            "file": "layouts\/_default\/dashboard.blade.php",
+            "source": "dashboard.html",
+            "type": "layouts",
+            "size": 429
+        },
+        "layouts._default.single": {
+            "file": "layouts\/_default\/single.blade.php",
+            "source": "single.html",
+            "type": "layouts",
+            "size": 708
+        },
+        "layouts._default.dashboard-2-sidebars-music": {
+            "file": "layouts\/_default\/dashboard-2-sidebars-music.blade.php",
+            "source": "dashboard-2-sidebars-music.html",
+            "type": "layouts",
+            "size": 477
+        },
+        "layouts.partials.monthly-tasks-sidebar": {
+            "file": "layouts\/partials\/monthly-tasks-sidebar.blade.php",
+            "source": "monthly-tasks-sidebar.html",
+            "type": "layouts",
+            "size": 25471
+        },
+        "layouts.partials.navbar-dashboard": {
+            "file": "layouts\/partials\/navbar-dashboard.blade.php",
+            "source": "navbar-dashboard.html",
+            "type": "layouts",
+            "size": 46390
+        },
+        "layouts.partials.redirect": {
+            "file": "layouts\/partials\/redirect.blade.php",
+            "source": "redirect.html",
+            "type": "layouts",
+            "size": 339
+        },
+        "layouts.partials.scripts": {
+            "file": "layouts\/partials\/scripts.blade.php",
+            "source": "scripts.html",
+            "type": "layouts",
+            "size": 57
+        },
+        "layouts.partials.footer-dashboard-no-sidebar": {
+            "file": "layouts\/partials\/footer-dashboard-no-sidebar.blade.php",
+            "source": "footer-dashboard-no-sidebar.html",
+            "type": "layouts",
+            "size": 14605
+        },
+        "layouts.partials.navbar-triple": {
+            "file": "layouts\/partials\/navbar-triple.blade.php",
+            "source": "navbar-triple.html",
+            "type": "layouts",
+            "size": 62157
+        },
+        "layouts.partials.navbar-main": {
+            "file": "layouts\/partials\/navbar-main.blade.php",
+            "source": "navbar-main.html",
+            "type": "layouts",
+            "size": 4863
+        },
+        "layouts.partials.footer-dashboard": {
+            "file": "layouts\/partials\/footer-dashboard.blade.php",
+            "source": "footer-dashboard.html",
+            "type": "layouts",
+            "size": 15859
+        },
+        "layouts.partials.favicons": {
+            "file": "layouts\/partials\/favicons.blade.php",
+            "source": "favicons.html",
+            "type": "layouts",
+            "size": 512
+        },
+        "layouts.partials.skippy": {
+            "file": "layouts\/partials\/skippy.blade.php",
+            "source": "skippy.html",
+            "type": "layouts",
+            "size": 334
+        },
+        "layouts.partials.header": {
+            "file": "layouts\/partials\/header.blade.php",
+            "source": "header.html",
+            "type": "layouts",
+            "size": 1009
+        },
+        "layouts.partials.footer-main": {
+            "file": "layouts\/partials\/footer-main.blade.php",
+            "source": "footer-main.html",
+            "type": "layouts",
+            "size": 16128
+        },
+        "layouts.partials.analytics": {
+            "file": "layouts\/partials\/analytics.blade.php",
+            "source": "analytics.html",
+            "type": "layouts",
+            "size": 0
+        },
+        "layouts.partials.stylesheet": {
+            "file": "layouts\/partials\/stylesheet.blade.php",
+            "source": "stylesheet.html",
+            "type": "layouts",
+            "size": 442
+        },
+        "layouts.partials.navbar-dashboard-drawer": {
+            "file": "layouts\/partials\/navbar-dashboard-drawer.blade.php",
+            "source": "navbar-dashboard-drawer.html",
+            "type": "layouts",
+            "size": 45450
+        },
+        "layouts.partials.sidebar": {
+            "file": "layouts\/partials\/sidebar.blade.php",
+            "source": "sidebar.html",
+            "type": "layouts",
+            "size": 56001
+        },
+        "layouts.partials.music-playlist-sidebar": {
+            "file": "layouts\/partials\/music-playlist-sidebar.blade.php",
+            "source": "music-playlist-sidebar.html",
+            "type": "layouts",
+            "size": 29383
+        },
+        "layouts.partials.social": {
+            "file": "layouts\/partials\/social.blade.php",
+            "source": "social.html",
+            "type": "layouts",
+            "size": 1166
+        },
+        "layouts.partials.daily-tasks-sidebar": {
+            "file": "layouts\/partials\/daily-tasks-sidebar.blade.php",
+            "source": "daily-tasks-sidebar.html",
+            "type": "layouts",
+            "size": 10837
+        },
+        "layouts.partials.sidebar-drawer": {
+            "file": "layouts\/partials\/sidebar-drawer.blade.php",
+            "source": "sidebar-drawer.html",
+            "type": "layouts",
+            "size": 54626
+        },
+        "layouts.alias": {
+            "file": "layouts\/alias.blade.php",
+            "source": "alias.html",
+            "type": "layouts",
+            "size": 36
+        },
+        "layouts.shortcodes.card": {
+            "file": "layouts\/shortcodes\/card.blade.php",
+            "source": "card.html",
+            "type": "layouts",
+            "size": 141
+        }
+    }
+}

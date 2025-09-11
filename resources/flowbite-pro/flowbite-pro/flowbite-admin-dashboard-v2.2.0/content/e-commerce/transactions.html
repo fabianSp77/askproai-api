@@ -1,0 +1,1562 @@
+---
+title: Tailwind CSS Transactions Page - Flowbite
+description: Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.
+layout: dashboard
+group: e-commerce
+page: transactions
+footer: true
+---
+
+<div class="grid grid-cols-12 gap-4 bg-white dark:bg-gray-900">
+  <div class="col-span-full mx-4 mt-4 ">
+    <nav class="mb-4 flex" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <li class="inline-flex items-center">
+          <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white">
+            <svg class="me-2.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M11.3 3.3a1 1 0 0 1 1.4 0l6 6 2 2a1 1 0 0 1-1.4 1.4l-.3-.3V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3c0 .6-.4 1-1 1H7a2 2 0 0 1-2-2v-6.6l-.3.3a1 1 0 0 1-1.4-1.4l2-2 6-6Z" clip-rule="evenodd" />
+            </svg>
+            Home
+          </a>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+            </svg>
+            <a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">E-commerce</a>
+          </div>
+        </li>
+        <li aria-current="page">
+          <div class="flex items-center">
+            <svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+            </svg>
+            <span class="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ms-2">Transactions</span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Transactions</h1>
+  </div>
+  <div class="relative col-span-full">
+    <div class="mx-4 border-b dark:border-gray-700 border-gray-200">
+      <div class="flex flex-col-reverse items-center justify-between pb-4 md:flex-row md:space-x-4">
+        <div class="flex w-full flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 lg:w-2/3">
+          <form class="sm:mr-4">
+            <label for="default-search" class="sr-only text-sm font-medium text-gray-900 dark:text-white">Search</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg aria-hidden="true" class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="search"
+                id="default-search"
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 sm:min-w-72"
+                placeholder="Search by Order ID or Customer"
+                required=""
+              />
+            </div>
+          </form>
+          <div class="grid grid-cols-2 gap-4 sm:flex sm:items-center sm:space-x-4 sm:gap-0">
+            <button
+              id="filterDropdownButton"
+              data-dropdown-toggle="filterDropdown"
+              data-dropdown-ignore-click-outside-class="datepicker"
+              class="flex w-full shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+              type="button"
+            >
+              Last 7 days
+              <svg class="-me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+              </svg>
+            </button>
+            <!-- Dropdown menu -->
+            <div id="filterDropdown" class="z-10 hidden w-[340px] rounded-lg bg-white p-2 shadow-sm dark:bg-gray-700">
+              <ul class="space-y-1 text-sm" aria-labelledby="filterDropdownButton">
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">Today<span class="ms-1 text-gray-400">Aug 21, 2025 - Aug 21, 2025</span></button>
+                </li>
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">Yesterday<span class="ms-1 text-gray-400">Aug 20, 2025 - Aug 21, 2025</span></button>
+                </li>
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">Last 7 days<span class="ms-1 text-gray-400">Aug 14, 2025 - Aug 21, 2025</span></button>
+                </li>
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">Month to Date<span class="ms-1 text-gray-400">Sep 21, 2025 - Aug 21, 2025</span></button>
+                </li>
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">Year to Date<span class="ms-1 text-gray-400">Jan 1, 2025 - Aug 21, 2025</span></button>
+                </li>
+                <li class="flex rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <button type="button" class="text-primary-700 dark:text-primary-500">All time<span class="ms-1 text-gray-400">Jan 1, 2020 - Aug 21, 2025</span></button>
+                </li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              class="flex w-full shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+            >
+              <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  fill-rule="evenodd"
+                  d="M9 2.2V7H4.2l.4-.5 3.9-4 .5-.3Zm2-.2v5a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v7c0 1.1.9 2 2 2 0 1.1.9 2 2 2h12a2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V4a2 2 0 0 0-2-2h-7Zm1 8.8A2.3 2.3 0 0 0 9.6 13a2.3 2.3 0 0 0 2.1 2.5h.7a.3.3 0 0 1 .2.4l-.4.1h-1a1 1 0 1 0 0 2h1c.5 0 1 0 1.4-.3a2 2 0 0 0 1-1.1 2.3 2.3 0 0 0-2.2-3l-.5-.1a.3.3 0 0 1-.3-.4.3.3 0 0 1 .4-.3h1a1 1 0 1 0 0-2h-1Zm8 1.5a1 1 0 1 0-2-.6l-.5 1.7-.5-1.7a1 1 0 0 0-2 .6l1.5 4.8a1 1 0 0 0 1.9 0l1.6-4.8Zm-13.8.9.4-.2h1a1 1 0 1 0 0-2h-1A2.6 2.6 0 0 0 4 13.6v1.8A2.6 2.6 0 0 0 6.6 18h1a1 1 0 1 0 0-2h-1a.6.6 0 0 1-.6-.6v-1.8c0-.1 0-.3.2-.4Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="mb-3 flex w-full shrink-0 flex-col items-stretch justify-end md:mb-0 md:w-auto md:flex-row md:items-center md:space-x-3">
+          <button
+            id="createReportButton"
+            data-modal-target="createReportDefaultModal"
+            data-modal-toggle="createReportDefaultModal"
+            type="button"
+            class="flex items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M9 2.2V7H4.2l.4-.5 3.9-4 .5-.3Zm2-.2v5a2 2 0 0 1-2 2H4v11c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7ZM8 16c0-.6.4-1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1-5a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H9Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Generate report
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="mx-4 flex flex-wrap py-4">
+      <div class="mr-4 hidden items-center text-sm font-medium text-gray-900 dark:text-white md:flex">Show only:</div>
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center">
+          <input
+            checked
+            id="inline-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">All</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-2-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-2-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Completed</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-3-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-3-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Pending</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-4-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-4-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Refunded</label>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto relative">
+      <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="p-4">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-all"
+                  type="checkbox"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-all" class="sr-only">checkbox</label>
+              </div>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Order ID</th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Customer
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Email</th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Total
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Due Date
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Status
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Delivery Type
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="px-4 py-3 font-semibold">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846325</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Flowbite LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">flowbite@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$466</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">09 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-1-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-1-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-1-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-1-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846326</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Jese Leos</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$2000</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">07 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="me-2 rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">Failed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-2-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-2-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-2-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-2-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846327</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Bonnie Green</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@company.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$245</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">12 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Scheduled (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-3-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-3-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-3-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-3-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846328</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Themesberg LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">company@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$90</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">18 Apr 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">Refunded</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Scheduled (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-4-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-4-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-4-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-4-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846329</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Micheal Gough</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$3040</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">21 Apr 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Pending</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Shipment (Packaging)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-5-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-5-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-5-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-5-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846330</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Lana Byrd</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$2999</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">24 Apr 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-6-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-6-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-6-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-6-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846331</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Netflix LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">company@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$1870</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">05 May 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Shipment (Packaging)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-7-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-7-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-7-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-7-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846332</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Leslie Livingston</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$5067</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">08 May 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">Refunded</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Shipment (Packaging)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-8-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-8-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-8-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-8-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846333</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Bergside LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">company@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$60</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">02 May 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Pending</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-9-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-9-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-9-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-9-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846334</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Robert Brown</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$499</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">20 Jun 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-10-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-10-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-10-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-10-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846335</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Joseph McFall</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$76</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">22 Jun 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-11-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-11-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-11-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-11-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846336</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Neil Sims</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$284</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">31 Jul 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Shipment (Packaging)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-12-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-12-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-12-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-12-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846337</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Roberta Casas</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$7675</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">01 Jul 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="me-2 rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">Failed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Shipment (Packaging)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-13-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-13-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-13-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-13-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846338</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Pixel LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">company@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$657</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">05 Jul 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-14-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-14-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-14-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-14-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a href="../transaction" class="hover:underline">#1846339</a></th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Neil Sims</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium">name@example.com</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">$999</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">10 Jul 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="mr-2 rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Instant (Digital)</td>
+            <td class="px-4 py-3">
+              <button
+                id="transaction-15-dropdown-button"
+                type="button"
+                data-dropdown-toggle="transaction-15-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="transaction-15-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="transaction-15-dropdown-button">
+                  <li>
+                    <a href="../transaction" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Details
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="deleteInvoiceButton"
+                      data-modal-target="deleteTransactionModal"
+                      data-modal-toggle="deleteTransactionModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="w-full">
+      <!-- Table Footer -->
+      <div class="relative overflow-hidden">
+        <nav class="flex flex-col items-start justify-between space-y-3 p-4 md:flex-row md:items-center md:space-y-0" aria-label="Table navigation">
+          <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-15</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
+          <ul class="inline-flex items-stretch -space-x-px">
+            <li>
+              <a
+                href="#"
+                class="ml-0 flex h-full items-center justify-center rounded-l-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <span class="sr-only">Previous</span>
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 19-7-7 7-7" />
+                </svg>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                1
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                2
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                aria-current="page"
+                class="z-10 flex items-center justify-center border border-primary-300 bg-primary-50 px-3 py-2 text-sm leading-tight text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+              >
+                3
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                ...
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                100
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex h-full items-center justify-center rounded-r-lg border border-gray-300 bg-white px-3 py-1.5 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <span class="sr-only">Next</span>
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete transaction modal -->
+<div id="deleteTransactionModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="absolute end-2.5 top-2.5 me-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="deleteTransactionModal"
+      >
+        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+        </svg>
+        <span class="sr-only">Close modal</span>
+      </button>
+      <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">Are you sure?</h3>
+      <p class="mb-4 font-light text-gray-500 dark:text-gray-400">You are about to delete this transaction, this cannot be undone:</p>
+      <ul role="list" class="mb-4 space-y-2 text-left font-medium text-gray-900 dark:text-white sm:mb-5">
+        <li class="flex items-center space-x-2">
+          <svg aria-hidden="true" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span>Order #1846325</span>
+        </li>
+      </ul>
+      <div class="flex items-center space-x-4">
+        <button
+          data-modal-toggle="deleteTransactionModal"
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900">
+          <svg aria-hidden="true" class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill-rule="evenodd"
+              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generate report modal -->
+<div id="createReportDefaultModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <!-- Modal header -->
+      <div class="mb-4 flex items-center justify-between rounded-t sm:mb-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Reports</h3>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="createReportDefaultModal"
+        >
+          <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <form action="#">
+        <div class="mb-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="report" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Select report
+              <button data-popover-target="popover-report-description" type="button" class="ms-2 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="report"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Balance</option>
+              <option value="income">Income statement</option>
+              <option value="cashflow">Cash Flow statement</option>
+              <option value="incomebalance">Trial balance</option>
+            </select>
+            <div
+              id="popover-report-description"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-700"
+            >
+              Transaction reports are documents that provide a detailed record of individual financial transaction.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div>
+            <label for="ledger-type" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Ledger event
+              <button data-popover-target="popover-ledger-description" type="button" class="ms-2 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="ledger-type"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>All</option>
+              <option value="sales">Sales</option>
+              <option value="purchases">Purchases</option>
+            </select>
+            <div
+              id="popover-ledger-description"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-700"
+            >
+              Ledger event codes relate performance ledger data so that you can report on the data.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div date-rangepicker class="items-center sm:col-span-2 sm:flex sm:space-x-4">
+            <div class="mb-4 w-full sm:mb-0">
+              <label for="startDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">From</label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                  <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      fill-rule="evenodd"
+                      d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <input
+                  id="startDate"
+                  name="start"
+                  type="text"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  placeholder="Select date"
+                />
+              </div>
+            </div>
+            <div class="w-full">
+              <label for="dueDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">To</label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                  <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      fill-rule="evenodd"
+                      d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <input
+                  id="dueDate"
+                  name="end"
+                  type="text"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  placeholder="Select date"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-4 flex items-center sm:mb-5">
+          <input
+            id="report-checkbox"
+            type="checkbox"
+            value=""
+            class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="report-checkbox" class="ms-2 text-sm font-medium text-gray-500 dark:text-gray-400">Include ledger narratives?</label>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button
+            type="button"
+            class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+          >
+            View report
+          </button>
+          <button
+            type="submit"
+            class="inline-flex w-full items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M9 7V2.2a2 2 0 0 0-.5.4l-4 3.9a2 2 0 0 0-.3.5H9Zm2 0V2h7a2 2 0 0 1 2 2v9.3l-2-2a1 1 0 0 0-1.4 1.4l.3.3h-6.6a1 1 0 1 0 0 2h6.6l-.3.3a1 1 0 0 0 1.4 1.4l2-2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Export
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

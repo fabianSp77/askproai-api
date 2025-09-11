@@ -23,13 +23,14 @@ class CalcomWebhookController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
-        /* ───── TEMP-DEBUG – Header & Body in calcom-Channel loggen ───── */
-        Log::channel('calcom')->info('[Debug] headers', $request->headers->all());
-        Log::channel('calcom')->info('[Debug] body',    ['raw' => $request->getContent()]);
-        /* ──────────────────────────────────────────────────────────────── */
-
-        // TODO: Event-Typen auswerten (booking.created …)
-        Log::channel('calcom')->info('[Cal.com] Webhook-Event', $request->all());
+        // Log webhook event without sensitive data
+        $eventData = $request->only(['triggerEvent', 'createdAt']);
+        if ($request->has('payload')) {
+            $eventData['payload_type'] = $request->input('payload.type', 'unknown');
+            $eventData['booking_id'] = $request->input('payload.bookingId');
+        }
+        
+        Log::channel('calcom')->info('[Cal.com] Webhook received', $eventData);
 
         return response()->json(['received' => true]);
     }

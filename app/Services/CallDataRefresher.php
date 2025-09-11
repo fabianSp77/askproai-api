@@ -23,8 +23,11 @@ class CallDataRefresher
 
         $res = Http::withToken($token)->get($url);
 
-        Log::info('Retell-status', ['code' => $res->status()]);
-        Log::info('Retell-RAW',    ['body' => $res->body()]);
+        Log::info('Retell API call', [
+            'call_id' => $call->call_id,
+            'status' => $res->status(),
+            'success' => $res->successful()
+        ]);
 
         if ($res->failed()) {
             Log::warning('Retell API error', [

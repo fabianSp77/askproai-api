@@ -9,4 +9,6 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateAppointment extends CreateRecord
 {
     protected static string $resource = AppointmentResource::class;
+    
+    // protected static string $view = 'filament.admin.resources.appointment-resource.pages.create-appointment';
 }

@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Services\CalcomHybridService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class CalComController extends Controller
 {
+    protected CalcomHybridService $calcomService;
+    
+    public function __construct(CalcomHybridService $calcomService)
+    {
+        $this->calcomService = $calcomService;
+    }
+    
     public function bookAppointment(Request $request): JsonResponse
     {
         try {
@@ -21,80 +29,41 @@ class CalComController extends Controller
                 'timeZone' => 'required|string',
             ]);
             
-            // Set duration based on event type (from screenshots)
-            $duration = ($validatedData['eventTypeId'] == 2031153) ? 60 : 45; // Damen: 60min, Herren: 45min
-            
-            // Parse start date and add appropriate duration
-            $startTime = new \DateTime($validatedData['start']);
-            $endTime = clone $startTime;
-            $endTime->modify("+{$duration} minutes");
-            $endTimeFormatted = $endTime->format('Y-m-d\TH:i:s.u\Z');
-            
-            // Cal.com API details
-            $apiKey = config('services.calcom.api_key');
-            $userId = '1346408';
-            
-            // Build the correct format for Cal.com API - matching their exact expected format
-            $payload = [
+            // Prepare booking data for hybrid service
+            $bookingData = [
                 'eventTypeId' => (int)$validatedData['eventTypeId'],
                 'start' => $validatedData['start'],
-                'end' => $endTimeFormatted,
-                'timeZone' => $validatedData['timeZone'],
-                'language' => 'de',
-                'metadata' => (object)[],
-                'responses' => [
+                'attendee' => [
                     'name' => $validatedData['name'],
                     'email' => $validatedData['email'],
-                    'guests' => [],
-                    'location' => ['optionValue' => '', 'value' => 'Vor Ort'],
-                    'notes' => ''
+                    'timeZone' => $validatedData['timeZone'],
+                    'language' => 'de'
                 ],
-                'hasHashedBookingLink' => false,
-                'hashedLink' => null,
-                'smsReminderNumber' => null
+                'metadata' => [],
+                'location' => ['type' => 'address', 'address' => 'Vor Ort']
             ];
             
             // Log what we're sending
-            Log::info('Cal.com Request Payload', ['payload' => $payload]);
-            
-            // Make the actual API call using v2
-            $ch = curl_init("https://api.cal.com/v2/bookings");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'cal-api-version: 2025-01-07',
-                'Authorization: Bearer ' . $apiKey
+            Log::info('[CalComController] Creating booking via hybrid service', [
+                'event_type_id' => $bookingData['eventTypeId'],
+                'attendee' => $bookingData['attendee']['email']
             ]);
             
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
+            // Use the hybrid service to create booking (will use V2)
+            $bookingResult = $this->calcomService->createBooking($bookingData);
             
-            // Log the raw response
-            Log::info('Cal.com Raw Response', [
-                'response' => $response,
-                'httpCode' => $httpCode,
-                'curlError' => $curlError
+            // Log the result
+            Log::info('[CalComController] Booking created successfully', [
+                'booking_uid' => $bookingResult['uid'] ?? 'unknown',
+                'booking_id' => $bookingResult['id'] ?? 'unknown'
             ]);
             
-            $responseData = json_decode($response, true);
-            
-            if ($httpCode >= 400 || $curlError) {
-                $errorDetails = $responseData ?? ['curlError' => $curlError];
-                return response()->json([
-                    'error' => 'Terminbuchung fehlgeschlagen',
-                    'details' => $errorDetails
-                ], $httpCode ?: 500);
-            }
-            
-            // Success response
+            // Return successful response
             return response()->json([
                 'success' => true,
-                'data' => $responseData
-            ], 200);
+                'message' => 'Terminbuchung erfolgreich',
+                'data' => $bookingResult
+            ], 201);
         } catch (\Exception $e) {
             Log::error('Cal.com Exception', [
                 'message' => $e->getMessage(),

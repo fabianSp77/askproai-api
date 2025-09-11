@@ -1,0 +1,159 @@
+<x-filament-panels::page>
+    <div class="space-y-6">
+        {{-- Call Header with Flowbite Card --}}
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        Call Details: {{ $record->call_id }}
+                    </h2>
+                    <span class="px-3 py-1 text-sm rounded-full {{ $record->call_successful ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
+                        {{ $record->call_successful ? 'Successful' : 'Failed' }}
+                    </span>
+                </div>
+                
+                {{-- Flowbite Stats Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Duration</div>
+                        <div class="text-xl font-semibold text-gray-900 dark:text-white">
+                            {{ gmdate('H:i:s', $record->duration_sec ?? 0) }}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Customer</div>
+                        <div class="text-xl font-semibold text-gray-900 dark:text-white">
+                            {{ $record->customer?->name ?? 'Unknown' }}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Start Time</div>
+                        <div class="text-xl font-semibold text-gray-900 dark:text-white">
+                            {{ $record->start_timestamp?->format('H:i:s') ?? 'N/A' }}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Date</div>
+                        <div class="text-xl font-semibold text-gray-900 dark:text-white">
+                            {{ $record->start_timestamp?->format('Y-m-d') ?? 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Transcript Section with Flowbite Timeline --}}
+        @if($record->transcript)
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Call Transcript</h3>
+                <div class="relative">
+                    <div class="absolute left-4 top-0 h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="space-y-4">
+                        @php
+                            $transcriptLines = explode("\n", $record->transcript);
+                        @endphp
+                        @foreach($transcriptLines as $index => $line)
+                            @if(trim($line))
+                            <div class="relative flex items-start">
+                                <div class="absolute left-4 w-2 h-2 bg-blue-600 rounded-full -translate-x-1/2"></div>
+                                <div class="ml-12 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex-1">
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $line }}</p>
+                                </div>
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Analysis Section with Flowbite Alert --}}
+        @if($record->analysis)
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">AI Analysis</h3>
+                
+                @php
+                    $analysis = is_string($record->analysis) ? json_decode($record->analysis, true) : $record->analysis;
+                @endphp
+                
+                @if($analysis)
+                <div class="space-y-3">
+                    @foreach($analysis as $key => $value)
+                    <div class="flex items-start space-x-3">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900">
+                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $key)) }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ is_array($value) ? json_encode($value) : $value }}
+                            </p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Related Appointments with Flowbite Table --}}
+        @if($record->appointment)
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Related Appointment</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Service</th>
+                                <th scope="col" class="px-6 py-3">Staff</th>
+                                <th scope="col" class="px-6 py-3">Date & Time</th>
+                                <th scope="col" class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                    {{ $record->appointment->service?->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ $record->appointment->staff?->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ $record->appointment->starts_at?->format('Y-m-d H:i') ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full 
+                                        {{ $record->appointment->status === 'scheduled' ? 'bg-blue-100 text-blue-800' : '' }}
+                                        {{ $record->appointment->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                                        {{ $record->appointment->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
+                                        {{ ucfirst($record->appointment->status ?? 'unknown') }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+    
+    {{-- Initialize Flowbite components --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.initFlowbite === 'function') {
+                window.initFlowbite();
+            }
+        });
+    </script>
+</x-filament-panels::page>

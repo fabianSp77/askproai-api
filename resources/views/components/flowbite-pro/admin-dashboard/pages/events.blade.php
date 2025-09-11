@@ -1,0 +1,2973 @@
+@php
+$attributes = $attributes ?? new \Illuminate\View\ComponentAttributeBag();
+@endphp
+
+---
+title: Tailwind CSS Events - Flowbite
+description: Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.
+layout: dashboard
+footer: true
+group: pages
+page: events
+---
+
+<div class="{{ $attributes->get('class', '') }} grid grid-cols-12 gap-4 bg-white dark:bg-gray-900">
+  <div class="{{ $attributes->get('class', '') }} relative col-span-full">
+    <div class="{{ $attributes->get('class', '') }} px-4 pt-4">
+      <div class="{{ $attributes->get('class', '') }} flex flex-col space-y-4 border-b border-gray-200 pb-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between sm:space-x-4 sm:space-y-0">
+        <div>
+          <nav class="{{ $attributes->get('class', '') }} mb-4 flex" aria-label="Breadcrumb">
+            <ol class="{{ $attributes->get('class', '') }} inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+              <li class="{{ $attributes->get('class', '') }} inline-flex items-center">
+                <a href="/" class="{{ $attributes->get('class', '') }} inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white">
+                  <svg class="{{ $attributes->get('class', '') }} me-2.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      fill-rule="evenodd"
+                      d="M11.3 3.3a1 1 0 0 1 1.4 0l6 6 2 2a1 1 0 0 1-1.4 1.4l-.3-.3V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3c0 .6-.4 1-1 1H7a2 2 0 0 1-2-2v-6.6l-.3.3a1 1 0 0 1-1.4-1.4l2-2 6-6Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Home
+                </a>
+              </li>
+              <li>
+                <div class="{{ $attributes->get('class', '') }} flex items-center">
+                  <svg class="{{ $attributes->get('class', '') }} mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+                  </svg>
+                  <a href="#" class="{{ $attributes->get('class', '') }} ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">Events</a>
+                </div>
+              </li>
+              <li aria-current="page">
+                <div class="{{ $attributes->get('class', '') }} flex items-center">
+                  <svg class="{{ $attributes->get('class', '') }} mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+                  </svg>
+                  <span class="{{ $attributes->get('class', '') }} ms-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ms-2">All events</span>
+                </div>
+              </li>
+            </ol>
+          </nav>
+          <div class="{{ $attributes->get('class', '') }} flex flex-1 items-center space-x-2">
+            <h5>
+              <span class="{{ $attributes->get('class', '') }} font-semibold dark:text-white">All events</span>
+              <span class="{{ $attributes->get('class', '') }} ml-1 text-gray-500 dark:text-gray-400">1567 Results</span>
+            </h5>
+            <button data-tooltip-target="results-tooltip" type="button" class="{{ $attributes->get('class', '') }} text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" class="{{ $attributes->get('class', '') }} h-4 w-4" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">More info</span>
+            </button>
+            <div id="results-tooltip" role="tooltip" class="{{ $attributes->get('class', '') }} tooltip invisible absolute z-10 inline-block rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-700">
+              Showing 1-15 of 1567 results
+              <div class="{{ $attributes->get('class', '') }} tooltip-arrow" data-popper-arrow=""></div>
+            </div>
+          </div>
+        </div>
+        <div class="{{ $attributes->get('class', '') }} flex items-center space-x-4">
+          <button
+            id="createEventButton"
+            class="{{ $attributes->get('class', '') }} inline-flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:w-auto"
+            type="button"
+            data-drawer-target="createEventDrawer"
+            data-drawer-show="createEventDrawer"
+            data-drawer-placement="right"
+            aria-controls="createEventDrawer"
+          >
+            <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Create event
+          </button>
+          <button
+            type="button"
+            class="{{ $attributes->get('class', '') }} flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+          >
+            <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M9 7V2.2a2 2 0 0 0-.5.4l-4 3.9a2 2 0 0 0-.3.5H9Zm2 0V2h7a2 2 0 0 1 2 2v9.3l-2-2a1 1 0 0 0-1.4 1.4l.3.3h-6.6a1 1 0 1 0 0 2h6.6l-.3.3a1 1 0 0 0 1.4 1.4l2-2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+      <div class="{{ $attributes->get('class', '') }} flex flex-col items-stretch justify-between space-y-3 py-4 sm:flex-row sm:items-center sm:space-y-0">
+        <div class="{{ $attributes->get('class', '') }} block items-center space-y-2 sm:flex sm:space-y-0">
+          <div class="{{ $attributes->get('class', '') }} shrink-0 font-semibold dark:text-white">Sort:</div>
+          <div class="{{ $attributes->get('class', '') }} flex items-center">
+            <select
+              id="compare"
+              class="{{ $attributes->get('class', '') }} mr-4 block w-full min-w-40 rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 sm:mx-4 lg:hidden"
+            >
+              <option selected>Current year</option>
+              <option value="past_month">Past month</option>
+              <option value="last_30_days">Last 30 days</option>
+              <option value="last_7_days">Last 7 days</option>
+            </select>
+            <div class="{{ $attributes->get('class', '') }} mx-4 hidden w-full flex-col rounded-md shadow-xs md:w-auto md:flex-row lg:inline-flex" role="group">
+              <button
+                type="button"
+                class="{{ $attributes->get('class', '') }} rounded-t-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:text-primary-700 focus:ring-2 focus:ring-primary-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:text-white dark:focus:ring-primary-500 md:rounded-l-lg md:rounded-tr-none"
+              >
+                Current year
+              </button>
+              <button
+                type="button"
+                class="{{ $attributes->get('class', '') }} border-x border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:text-primary-700 focus:ring-2 focus:ring-primary-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:text-white dark:focus:ring-primary-500 md:border-x-0 md:border-b md:border-t"
+              >
+                Past month
+              </button>
+              <button
+                type="button"
+                class="{{ $attributes->get('class', '') }} border-x border-t border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:text-primary-700 focus:ring-2 focus:ring-primary-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:text-white dark:focus:ring-primary-500 md:border-x-0 md:border-b md:border-l"
+              >
+                Last 30 days
+              </button>
+              <button
+                type="button"
+                class="{{ $attributes->get('class', '') }} rounded-b-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:text-primary-700 focus:ring-2 focus:ring-primary-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:text-white dark:focus:ring-primary-500 md:rounded-r-lg md:rounded-bl-none"
+              >
+                Last 7 days
+              </button>
+            </div>
+            <a href="#" class="{{ $attributes->get('class', '') }} flex shrink-0 items-center text-sm font-medium text-primary-700 hover:underline dark:text-primary-500">
+              <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4.2a1 1 0 1 0-2 0V11H7.8a1 1 0 1 0 0 2H11v3.2a1 1 0 1 0 2 0V13h3.2a1 1 0 1 0 0-2H13V7.8Z" clip-rule="evenodd" />
+              </svg>
+              More options
+            </a>
+          </div>
+        </div>
+        <button
+          id="actionsDropdownButton"
+          data-dropdown-toggle="actionsDropdown"
+          class="{{ $attributes->get('class', '') }} flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+          type="button"
+        >
+          Actions
+          <svg class="{{ $attributes->get('class', '') }} -me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+          </svg>
+        </button>
+        <div id="actionsDropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 rounded-lg bg-white shadow-sm dark:bg-gray-700">
+          <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="actionsDropdownButton">
+            <li>
+              <a
+                id="updateEventButton"
+                data-drawer-target="drawer-update-event"
+                data-drawer-show="drawer-update-event"
+                data-drawer-placement="right"
+                aria-controls="drawer-update-event"
+                href="#updateEventButton"
+                class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z" clip-rule="evenodd" />
+                </svg>
+                Edit
+              </a>
+            </li>
+            <li>
+              <a
+                id="archiveButton"
+                data-modal-target="archiveModal"
+                data-modal-toggle="archiveModal"
+                href="#archiveModal"
+                class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Archive
+              </a>
+            </li>
+            <li>
+              <a
+                type="button"
+                id="deleteEventButton"
+                data-modal-target="deleteEventModal"
+                data-modal-toggle="deleteEventModal"
+                href="#deleteProductsModal"
+                class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+              >
+                <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Delete
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} overflow-x-auto relative">
+      <table class="{{ $attributes->get('class', '') }} w-full text-left text-sm text-gray-500 dark:text-gray-400">
+        <thead class="{{ $attributes->get('class', '') }} bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="{{ $attributes->get('class', '') }} p-4">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-all"
+                  type="checkbox"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-all" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Event</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Speakers</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Remaining Seats</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Google meet</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Date</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold whitespace-nowrap">Duration</th>
+            <th scope="col" class="{{ $attributes->get('class', '') }} px-4 py-3 font-semibold">
+              <span class="{{ $attributes->get('class', '') }} sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">MTech Expo</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+5</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">875/1023</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 75%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/vek...
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                02 Dec 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">3 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-1-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-1-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-1-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-1-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-2"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-2" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Mobilefest</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-5.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-6.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+5</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">2000/2000</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/mob...
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                17 Jan 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">1 day</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-2-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-2-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-2-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-2-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">IFEX</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-9.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-8.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">240/500</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-yellow-300" style="width: 50%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="{{ $attributes->get('class', '') }} me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                05 Feb 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">5 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-3-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-3-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-3-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-3-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Bio-IT World Conference</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">756/800</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 95%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/bio
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                28 Feb 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">8 hours</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-4-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-4-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-4-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-4-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Value-Based Care Summit</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-3.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-8.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">175/997</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-red-500" style="width: 20%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/meet
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                14 Mar 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">3 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-5-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-5-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-5-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-5-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Antibody Engineering & Tech</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-9.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-4.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+20</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">45/200</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-yellow-300" style="width: 45%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="{{ $attributes->get('class', '') }} me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                18 Apr 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">1 day</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-6-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-6-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-6-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-6-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Electrocom Expo</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-5.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-4.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">75/1023</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-red-500" style="width: 15%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/electro
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                29 Jun 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">1 week</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-7-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-7-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-7-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-7-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">The 4th Digital Transformation</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-4.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+35</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">4076/10546</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-yellow-300" style="width: 40%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/tdt4
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                01 Aug 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">2 weeks</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-8-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-8-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-8-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-8-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">ANME Trade Show</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">875/1023</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 75%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/anme
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                04 Aug 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">1 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-9-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-9-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-9-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-9-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">USA Art Festival</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-9.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-8.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">245/998</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-yellow-300" style="width: 25%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/meet12
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                14 Sep 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">3 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-10-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-10-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-10-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-10-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">AMTech Expo</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+5</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">875/1023</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 75%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/vek...
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                02 Dec 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">3 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-11-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-11-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-11-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-11-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-2"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-2" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Mobilefest</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-5.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-6.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="{{ $attributes->get('class', '') }} flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+5</a
+                >
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">2000/2000</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/mob...
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                17 Jan 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">1 day</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-12-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-12-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-12-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-12-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">IFEX</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-9.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-8.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">240/500</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-yellow-300" style="width: 50%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="{{ $attributes->get('class', '') }} me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                05 Feb 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">5 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-13-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-13-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-13-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-13-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Bio-IT World Conference</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">756/800</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-green-500" style="width: 95%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/bio
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                28 Feb 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">8 hours</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-14-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-14-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-14-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-14-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="{{ $attributes->get('class', '') }} border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="{{ $attributes->get('class', '') }} w-4 px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="{{ $attributes->get('class', '') }} sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><button type="button" class="{{ $attributes->get('class', '') }} hover:underline" data-drawer-show="readEventDrawerAdvanced">Value-Based Care Summit</button></th>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <div class="{{ $attributes->get('class', '') }} flex w-28 -space-x-4">
+                <img src="/images/users/avatar-3.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-8.png" alt="Avatar" class="{{ $attributes->get('class', '') }} h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium">
+              <div class="{{ $attributes->get('class', '') }} mb-1 flex justify-end">
+                <span class="{{ $attributes->get('class', '') }} text-xs font-medium text-gray-500 dark:text-gray-400">175/997</span>
+              </div>
+              <div class="{{ $attributes->get('class', '') }} h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="{{ $attributes->get('class', '') }} h-1.5 rounded-full bg-red-500" style="width: 20%"></div>
+              </div>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="{{ $attributes->get('class', '') }} inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M11.4 5H5a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-6.4a3 3 0 0 1-1.7-1.6l-3 3A3 3 0 1 1 10 9.8l3-3A3 3 0 0 1 11.4 5Z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M13.2 4c0-.6.5-1 1-1H20c.6 0 1 .4 1 1v5.8a1 1 0 1 1-2 0V6.4l-6.2 6.2a1 1 0 0 1-1.4-1.4L17.6 5h-3.4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                </svg>
+                https://meet.google.com/meet
+              </a>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2">
+              <span class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                <svg class="{{ $attributes->get('class', '') }} me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                14 Mar 2025
+              </span>
+            </td>
+            <td class="{{ $attributes->get('class', '') }} whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">3 days</td>
+            <td class="{{ $attributes->get('class', '') }} px-4 py-2">
+              <button
+                id="event-15-dropdown-button"
+                type="button"
+                data-dropdown-toggle="event-15-dropdown"
+                class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="event-15-dropdown" class="{{ $attributes->get('class', '') }} z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="{{ $attributes->get('class', '') }} p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="event-15-dropdown-button">
+                  <li>
+                    <a
+                      id="updateEventButton"
+                      data-drawer-target="drawer-update-event"
+                      data-drawer-show="drawer-update-event"
+                      data-drawer-placement="right"
+                      aria-controls="drawer-update-event"
+                      href="#updateEventButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      id="readEventAdvancedButton"
+                      data-drawer-target="readEventDrawerAdvanced"
+                      data-drawer-show="readEventDrawerAdvanced"
+                      data-drawer-placement="right"
+                      aria-controls="readEventDrawerAdvanced"
+                      href="#readEventAdvancedButton"
+                      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="{{ $attributes->get('class', '') }} p-2">
+                  <button
+                    type="button"
+                    id="deleteEventButton"
+                    data-modal-target="deleteEventModal"
+                    data-modal-toggle="deleteEventModal"
+                    class="{{ $attributes->get('class', '') }} inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="{{ $attributes->get('class', '') }} me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="{{ $attributes->get('class', '') }} flex flex-col items-start justify-between space-y-3 p-4 md:flex-row md:items-center md:space-y-0" aria-label="Table navigation">
+      <span class="{{ $attributes->get('class', '') }} text-sm font-normal text-gray-500 dark:text-gray-400">
+        Showing
+        <span class="{{ $attributes->get('class', '') }} font-semibold text-gray-900 dark:text-white">1-10</span>
+        of
+        <span class="{{ $attributes->get('class', '') }} font-semibold text-gray-900 dark:text-white">1000</span>
+      </span>
+      <ul class="{{ $attributes->get('class', '') }} inline-flex items-stretch -space-x-px">
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} ml-0 flex h-full items-center justify-center rounded-l-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            <span class="{{ $attributes->get('class', '') }} sr-only">Previous</span>
+            <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            1
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            2
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            aria-current="page"
+            class="{{ $attributes->get('class', '') }} z-10 flex items-center justify-center border border-primary-300 bg-primary-50 px-3 py-2 text-sm leading-tight text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+          >
+            3
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            ...
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            100
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="{{ $attributes->get('class', '') }} flex h-full items-center justify-center rounded-r-lg border border-gray-300 bg-white px-3 py-1.5 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            <span class="{{ $attributes->get('class', '') }} sr-only">Next</span>
+            <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Create event drawer -->
+<div
+  id="createEventDrawer"
+  class="{{ $attributes->get('class', '') }} fixed right-0 top-0 z-40 h-screen w-full max-w-sm translate-x-full overflow-y-auto bg-white p-4 transition-transform dark:bg-gray-800"
+  tabindex="-1"
+  aria-labelledby="createEventDrawer-label"
+  aria-hidden="true"
+>
+  <div class="{{ $attributes->get('class', '') }} mb-1.5 flex items-center justify-between">
+    <h4 id="create-event-drawer-label" class="{{ $attributes->get('class', '') }} inline-flex items-center text-sm font-semibold uppercase text-gray-500 dark:text-gray-400">New Event</h4>
+    <button
+      type="button"
+      data-drawer-dismiss="createEventDrawer"
+      aria-controls="createEventDrawer"
+      class="{{ $attributes->get('class', '') }}  inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+    >
+      <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+      </svg>
+      <span class="{{ $attributes->get('class', '') }} sr-only">Close menu</span>
+    </button>
+  </div>
+  <form action="#">
+    <div class="{{ $attributes->get('class', '') }} space-y-4">
+      <div>
+        <label for="title" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Title</label>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+          placeholder="Add title here"
+          required=""
+        />
+      </div>
+      <div>
+        <label for="description" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Description</label>
+        <textarea
+          id="description"
+          rows="4"
+          class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+          placeholder="Enter event description here"
+        ></textarea>
+      </div>
+      <div date-rangepicker>
+        <label for="start-date" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Start date</label>
+        <div class="{{ $attributes->get('class', '') }} relative mb-4">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <input
+            id="start-date"
+            name="start"
+            type="text"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="Start date"
+          />
+        </div>
+        <label for="end-date" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">End date</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <input
+            id="end-date"
+            name="end"
+            type="text"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="End date"
+          />
+        </div>
+      </div>
+      <div>
+        <label for="location" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Location</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M12 2a8 8 0 0 1 6.6 12.6l-.1.1-.6.7-5.1 6.2a1 1 0 0 1-1.6 0L6 15.3l-.3-.4-.2-.2v-.2A8 8 0 0 1 11.8 2Zm3 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            id="location"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="Enter location"
+          />
+        </div>
+      </div>
+      <div>
+        <label for="add-guests" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Add guests</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <input
+            type="search"
+            id="add-guests"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 pl-4 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="Add guest email"
+            required=""
+          />
+          <button
+            type="button"
+            class="{{ $attributes->get('class', '') }} absolute bottom-2.5 right-2.5 inline-flex items-center rounded-md bg-primary-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="{{ $attributes->get('class', '') }} -ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Add
+          </button>
+        </div>
+        <div class="{{ $attributes->get('class', '') }} mb-5 mt-2 flex space-x-1">
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/helene-engels.png" alt="helene avatar" />
+            <a href="#" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </a>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/bonnie-green.png" alt="bonnie avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="robert avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/jese-leos.png" alt="jese avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <button type="button" class="{{ $attributes->get('class', '') }} flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-700 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-600">+7</button>
+        </div>
+      </div>
+      <div>
+        <div class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Tag Color</div>
+        <div class="{{ $attributes->get('class', '') }} flex items-center space-x-2">
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-purple-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-indigo-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-primary-600"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-pink-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-teal-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-green-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-yellow-300"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-orange-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-red-500"></button>
+        </div>
+      </div>
+      <div>
+        <label class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white" for="guest-permission-checkbox">Guest Permissions</label>
+        <div class="{{ $attributes->get('class', '') }} space-y-3">
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              id="guest-permission-1-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-1-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Modify event</label>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              id="guest-permission-2-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-2-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Invite others</label>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              checked=""
+              id="guest-permission-3-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-3-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">See guest list</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} mt-8 flex w-full justify-center space-x-3">
+      <button
+        type="submit"
+        class="{{ $attributes->get('class', '') }} w-full justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+      >
+        Add event
+      </button>
+      <button
+        type="button"
+        data-drawer-dismiss="createEventDrawer"
+        aria-controls="createEventDrawer"
+        class="{{ $attributes->get('class', '') }} inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+      >
+        <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+        </svg>
+        Close
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Edit/Update event drawer -->
+<div
+  id="drawer-update-event"
+  class="{{ $attributes->get('class', '') }} fixed right-0 top-0 z-40 h-screen w-full max-w-sm translate-x-full overflow-y-auto bg-white p-4 transition-transform dark:bg-gray-800"
+  tabindex="-1"
+  aria-labelledby="drawer-update-event-label"
+  aria-hidden="true"
+>
+  <div class="{{ $attributes->get('class', '') }} mb-1.5 flex items-center justify-between">
+    <h4 id="update-event-drawer-label" class="{{ $attributes->get('class', '') }} inline-flex items-center text-sm font-semibold uppercase text-gray-500 dark:text-gray-400">Update Event</h4>
+    <button
+      type="button"
+      data-drawer-dismiss="drawer-update-event"
+      aria-controls="drawer-update-event"
+      class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+    >
+      <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+      </svg>
+      <span class="{{ $attributes->get('class', '') }} sr-only">Close menu</span>
+    </button>
+  </div>
+  <form action="#">
+    <div class="{{ $attributes->get('class', '') }} space-y-4">
+      <div>
+        <label for="title" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Title</label>
+        <input
+          type="text"
+          name="title"
+          id="title-update"
+          class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+          value="The 4th Digital Transformation"
+          placeholder="Add title here"
+          required=""
+        />
+      </div>
+      <div>
+        <label for="description" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Description</label>
+        <textarea
+          id="description"
+          rows="6"
+          class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+          placeholder="Enter event description here..."
+        >
+The 4th Digital Transformation and Industry 4.0 Free Online Conference Organized by Flowbite and Themesberg, Live on Saturday 26th Nov at 02:00 pm GMT | 04:00 pm EET on Zoom Webinars
+        </textarea>
+      </div>
+      <div date-rangepicker>
+        <label for="start-date-update" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Start date</label>
+        <div class="{{ $attributes->get('class', '') }} relative mb-4">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <input
+            id="start-date-update"
+            name="start"
+            type="text"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            value="26/08/2025"
+            placeholder="Start date"
+          />
+        </div>
+        <label for="end-date-update" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">End date</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <input
+            id="end-date-update"
+            name="end"
+            type="text"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            value="31/08/2025"
+            placeholder="End date"
+          />
+        </div>
+      </div>
+      <div>
+        <label for="location-update" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Location</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <div class="{{ $attributes->get('class', '') }} pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M12 2a8 8 0 0 1 6.6 12.6l-.1.1-.6.7-5.1 6.2a1 1 0 0 1-1.6 0L6 15.3l-.3-.4-.2-.2v-.2A8 8 0 0 1 11.8 2Zm3 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            id="location-update"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            value="San Francico, California"
+            placeholder="Enter location"
+          />
+        </div>
+      </div>
+      <div>
+        <label for="add-guests-update" class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Add guests</label>
+        <div class="{{ $attributes->get('class', '') }} relative">
+          <input
+            type="search"
+            id="add-guests-update"
+            class="{{ $attributes->get('class', '') }} block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 pl-4 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="Add guest email"
+            required=""
+          />
+          <button
+            type="button"
+            class="{{ $attributes->get('class', '') }} absolute bottom-2.5 right-2.5 inline-flex items-center rounded-md bg-primary-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="{{ $attributes->get('class', '') }} -ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Add
+          </button>
+        </div>
+        <div class="{{ $attributes->get('class', '') }} mb-5 mt-2 flex space-x-1">
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/helene-engels.png" alt="helene avatar" />
+            <a href="#" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </a>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/bonnie-green.png" alt="bonnie avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="robert avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} relative">
+            <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/jese-leos.png" alt="jese avatar" />
+            <button type="button" class="{{ $attributes->get('class', '') }} absolute left-5 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-gray-400 hover:bg-gray-500 dark:border-gray-800">
+              <svg aria-hidden="true" class="{{ $attributes->get('class', '') }} h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span class="{{ $attributes->get('class', '') }} sr-only">Remove user</span>
+            </button>
+          </div>
+          <button type="button" class="{{ $attributes->get('class', '') }} flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-700 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-600">+7</button>
+        </div>
+      </div>
+      <div>
+        <div class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white">Tag Color</div>
+        <div class="{{ $attributes->get('class', '') }} flex items-center space-x-2">
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-purple-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-indigo-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-primary-600"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-pink-500"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-teal-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-green-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-yellow-300"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-orange-400"></button>
+          <button type="button" class="{{ $attributes->get('class', '') }} h-6 w-6 rounded-xs bg-red-500"></button>
+        </div>
+      </div>
+      <div>
+        <label class="{{ $attributes->get('class', '') }} mb-2 block text-sm font-medium text-gray-900 dark:text-white" for="guest-permission-checkbox">Guest Permissions</label>
+        <div class="{{ $attributes->get('class', '') }} space-y-3">
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              id="guest-permission-6-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-6-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Modify event</label>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              id="guest-permission-7-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-7-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Invite others</label>
+          </div>
+          <div class="{{ $attributes->get('class', '') }} mr-4 flex items-center">
+            <input
+              checked=""
+              id="guest-permission-8-checkbox"
+              type="checkbox"
+              value=""
+              name="guest-permission-checkbox"
+              class="{{ $attributes->get('class', '') }} h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="guest-permission-8-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">See guest list</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} mt-8 flex w-full justify-center space-x-3">
+      <button
+        type="submit"
+        class="{{ $attributes->get('class', '') }} w-full justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+      >
+        Update event
+      </button>
+      <button
+        type="button"
+        class="{{ $attributes->get('class', '') }} inline-flex w-full items-center justify-center rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+      >
+        <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            fill-rule="evenodd"
+            d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Delete
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- View event drawer -->
+<div id="readEventDrawerAdvanced" class="{{ $attributes->get('class', '') }} fixed right-0 top-0 z-40 h-screen w-full max-w-sm translate-x-full overflow-y-auto bg-white p-4 transition-transform dark:bg-gray-800" tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
+  <div class="{{ $attributes->get('class', '') }} mb-1.5 flex items-center justify-between">
+    <h4 id="drawer-label" class="{{ $attributes->get('class', '') }} text-lg font-semibold leading-none text-gray-900 dark:text-white">The 4th Digital Transformation</h4>
+    <button
+      type="button"
+      data-drawer-dismiss="readEventDrawerAdvanced"
+      aria-controls="readEventDrawerAdvanced"
+      class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+    >
+      <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+      </svg>
+      <span class="{{ $attributes->get('class', '') }} sr-only">Close menu</span>
+    </button>
+  </div>
+
+  <div id="default-carousel" class="{{ $attributes->get('class', '') }} relative my-4 w-full md:my-5" data-carousel="slide">
+    <!-- Carousel wrapper -->
+    <div class="{{ $attributes->get('class', '') }} relative h-56 overflow-hidden rounded-lg">
+      <!-- Item 1 -->
+      <div class="{{ $attributes->get('class', '') }} hidden rounded-lg duration-700 ease-in-out" data-carousel-item>
+        <img src="/images/ngo/image-1.jpg" class="{{ $attributes->get('class', '') }} absolute left-1/2 top-1/2 block w-full -translate-x-1/2 -translate-y-1/2 rounded-lg" alt="" />
+      </div>
+      <!-- Item 2 -->
+      <div class="{{ $attributes->get('class', '') }} hidden rounded-lg duration-700 ease-in-out" data-carousel-item>
+        <img src="/images/ngo/image-2.jpg" class="{{ $attributes->get('class', '') }} absolute left-1/2 top-1/2 block w-full -translate-x-1/2 -translate-y-1/2 rounded-lg" alt="" />
+      </div>
+      <!-- Item 3 -->
+      <div class="{{ $attributes->get('class', '') }} hidden rounded-lg duration-700 ease-in-out" data-carousel-item>
+        <img src="/images/ngo/image-3.jpg" class="{{ $attributes->get('class', '') }} absolute left-1/2 top-1/2 block w-full -translate-x-1/2 -translate-y-1/2 rounded-lg" alt="" />
+      </div>
+      <!-- Item 4 -->
+      <div class="{{ $attributes->get('class', '') }} hidden rounded-lg duration-700 ease-in-out" data-carousel-item>
+        <img src="/images/ngo/image-4.jpg" class="{{ $attributes->get('class', '') }} absolute left-1/2 top-1/2 block w-full -translate-x-1/2 -translate-y-1/2 rounded-lg" alt="" />
+      </div>
+      <!-- Item 5 -->
+      <div class="{{ $attributes->get('class', '') }} hidden rounded-lg duration-700 ease-in-out" data-carousel-item>
+        <img src="/images/ngo/image-5.jpg" class="{{ $attributes->get('class', '') }} absolute left-1/2 top-1/2 block w-full -translate-x-1/2 -translate-y-1/2 rounded-lg" alt="" />
+      </div>
+    </div>
+    <!-- Slider indicators -->
+    <div class="{{ $attributes->get('class', '') }} absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 space-x-3 rtl:space-x-reverse">
+      <button type="button" class="{{ $attributes->get('class', '') }} h-3 w-3 rounded-full" aria-current="true" aria-label="Slide 1" data-carousel-slide-to="0"></button>
+      <button type="button" class="{{ $attributes->get('class', '') }} h-3 w-3 rounded-full" aria-current="false" aria-label="Slide 2" data-carousel-slide-to="1"></button>
+      <button type="button" class="{{ $attributes->get('class', '') }} h-3 w-3 rounded-full" aria-current="false" aria-label="Slide 3" data-carousel-slide-to="2"></button>
+      <button type="button" class="{{ $attributes->get('class', '') }} h-3 w-3 rounded-full" aria-current="false" aria-label="Slide 4" data-carousel-slide-to="3"></button>
+      <button type="button" class="{{ $attributes->get('class', '') }} h-3 w-3 rounded-full" aria-current="false" aria-label="Slide 5" data-carousel-slide-to="4"></button>
+    </div>
+    <!-- Slider controls -->
+    <button type="button" class="{{ $attributes->get('class', '') }} group absolute start-0 top-0 z-30 flex h-full cursor-pointer items-center justify-center px-4 focus:outline-none" data-carousel-prev>
+      <span
+        class="{{ $attributes->get('class', '') }} inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/30 group-hover:bg-white/50 group-focus:outline-none group-focus:ring-4 group-focus:ring-white dark:bg-gray-800/30 dark:group-hover:bg-gray-800/60 dark:group-focus:ring-gray-800/70"
+      >
+        <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-white dark:text-gray-800 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4" />
+        </svg>
+        <span class="{{ $attributes->get('class', '') }} sr-only">Previous</span>
+      </span>
+    </button>
+    <button type="button" class="{{ $attributes->get('class', '') }} group absolute end-0 top-0 z-30 flex h-full cursor-pointer items-center justify-center px-4 focus:outline-none" data-carousel-next>
+      <span
+        class="{{ $attributes->get('class', '') }} inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/30 group-hover:bg-white/50 group-focus:outline-none group-focus:ring-4 group-focus:ring-white dark:bg-gray-800/30 dark:group-hover:bg-gray-800/60 dark:group-focus:ring-gray-800/70"
+      >
+        <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-white dark:text-gray-800 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+        </svg>
+        <span class="{{ $attributes->get('class', '') }} sr-only">Next</span>
+      </span>
+    </button>
+  </div>
+
+  <dl class="{{ $attributes->get('class', '') }} mt-4 sm:mt-5">
+    <dt class="{{ $attributes->get('class', '') }} mb-2 font-semibold leading-none text-gray-900 dark:text-white">Details</dt>
+    <dd class="{{ $attributes->get('class', '') }} mb-4 text-gray-500 dark:text-gray-400 sm:mb-5">
+      The 4th Digital Transformation and Industry 4.0 Free Online Conference Organized by Flowbite and Themesberg, Live on Saturday 26th Nov at 02:00 pm GMT | 04:00 pm EET on Zoom Webinars
+    </dd>
+  </dl>
+  <dl class="{{ $attributes->get('class', '') }} flex items-center">
+    <dt class="{{ $attributes->get('class', '') }} sr-only">Date</dt>
+    <dd class="{{ $attributes->get('class', '') }} mb-4 mr-4 flex items-center space-x-1.5 text-gray-900 dark:text-white sm:mb-5">
+      <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path
+          fill-rule="evenodd"
+          d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <span class="{{ $attributes->get('class', '') }} font-medium">26th August 2025</span>
+    </dd>
+    <dt class="{{ $attributes->get('class', '') }} sr-only">Location</dt>
+    <dd class="{{ $attributes->get('class', '') }} mb-4 flex items-center space-x-1.5 text-gray-900 dark:text-white sm:mb-5">
+      <svg class="{{ $attributes->get('class', '') }} h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path fill-rule="evenodd" d="M12 2a8 8 0 0 1 6.6 12.6l-.1.1-.6.7-5.1 6.2a1 1 0 0 1-1.6 0L6 15.3l-.3-.4-.2-.2v-.2A8 8 0 0 1 11.8 2Zm3 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+      </svg>
+      <span class="{{ $attributes->get('class', '') }} font-medium">California, USA</span>
+    </dd>
+  </dl>
+  <dl class="{{ $attributes->get('class', '') }} mb-4 md:mb-5">
+    <dt class="{{ $attributes->get('class', '') }} mb-1 flex justify-between">
+      <span class="{{ $attributes->get('class', '') }} text-base font-semibold text-gray-900 dark:text-white">Remaining seats</span>
+      <span class="{{ $attributes->get('class', '') }} text-sm font-medium text-gray-500 dark:text-gray-400">875/1023</span>
+    </dt>
+    <dd class="{{ $attributes->get('class', '') }} h-2 w-full rounded-xs bg-gray-200 dark:bg-gray-700">
+      <div class="{{ $attributes->get('class', '') }} h-2 rounded-xs bg-green-500" style="width: 45%"></div>
+    </dd>
+  </dl>
+  <dl class="{{ $attributes->get('class', '') }} mb-4 grid grid-cols-2 gap-4">
+    <div class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-gray-100 p-3 dark:border-gray-600 dark:bg-gray-700">
+      <dt class="{{ $attributes->get('class', '') }} mb-2 font-semibold leading-none text-gray-900 dark:text-white">Participants</dt>
+      <dd class="{{ $attributes->get('class', '') }} flex -space-x-3">
+        <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-gray-100 dark:border-gray-700" src="/images/users/helene-engels.png" alt="helene avatar" />
+        <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-gray-100 dark:border-gray-700" src="/images/users/bonnie-green.png" alt="bonnie avatar" />
+        <img class="{{ $attributes->get('class', '') }} h-8 w-8 rounded-full border-2 border-gray-100 dark:border-gray-700" src="/images/users/jese-leos.png" alt="jese avatar" />
+        <button type="button" class="{{ $attributes->get('class', '') }} flex h-8 w-8 items-center justify-center rounded-full border-2 !border-gray-100 bg-gray-700 text-xs font-medium text-white hover:bg-gray-500 dark:!border-gray-700 dark:bg-gray-600">+7</button>
+      </dd>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-gray-100 p-3 dark:border-gray-600 dark:bg-gray-700">
+      <dt class="{{ $attributes->get('class', '') }} mb-2 font-semibold leading-none text-gray-900 dark:text-white">Online</dt>
+      <dd class="{{ $attributes->get('class', '') }} text-gray-500 dark:text-gray-400">Google Meet</dd>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-gray-100 p-3 dark:border-gray-600 dark:bg-gray-700">
+      <dt class="{{ $attributes->get('class', '') }} mb-2 font-semibold leading-none text-gray-900 dark:text-white">Duration</dt>
+      <dd class="{{ $attributes->get('class', '') }} text-gray-500 dark:text-gray-400">All day</dd>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-gray-100 p-3 dark:border-gray-600 dark:bg-gray-700">
+      <dt class="{{ $attributes->get('class', '') }} mb-2 font-semibold leading-none text-gray-900 dark:text-white">Notification</dt>
+      <dd class="{{ $attributes->get('class', '') }} text-gray-500 dark:text-gray-400">4 Days SMS</dd>
+    </div>
+  </dl>
+  <div class="{{ $attributes->get('class', '') }} mt-8 flex w-full justify-center space-x-3">
+    <button
+      type="button"
+      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+    >
+      <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+        <path fill-rule="evenodd" d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z" clip-rule="evenodd" />
+      </svg>
+      Edit
+    </button>
+    <button
+      type="button"
+      class="{{ $attributes->get('class', '') }} inline-flex w-full items-center justify-center rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+    >
+      <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path
+          fill-rule="evenodd"
+          d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Delete
+    </button>
+  </div>
+</div>
+
+<!-- Delete event modal -->
+<div id="deleteEventModal" tabindex="-1" aria-hidden="true" class="{{ $attributes->get('class', '') }} fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="{{ $attributes->get('class', '') }} relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <form action="#" class="{{ $attributes->get('class', '') }} relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="{{ $attributes->get('class', '') }} absolute right-2.5 top-2.5 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="deleteEventModal"
+      >
+        <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+        </svg>
+        <span class="{{ $attributes->get('class', '') }} sr-only">Close modal</span>
+      </button>
+      <h3 class="{{ $attributes->get('class', '') }} mb-2 text-lg font-semibold text-gray-900 dark:text-white">Remove this event?</h3>
+      <p class="{{ $attributes->get('class', '') }} mb-4 font-light text-gray-500 dark:text-gray-400">If you delete this event, all notifications, reservations and payments for this event may be deleted.</p>
+      <div class="{{ $attributes->get('class', '') }} mb-4 rounded-lg bg-gray-100 p-4 text-left text-sm text-gray-500 dark:bg-gray-700 dark:text-gray-400 sm:mb-5" role="alert">
+        <div class="{{ $attributes->get('class', '') }} flex">
+          <input
+            id="confirm-checkbox"
+            type="checkbox"
+            value=""
+            class="{{ $attributes->get('class', '') }} mt-1 h-4 w-4 rounded-sm border-gray-300 bg-gray-50 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:ring-offset-gray-700 dark:focus:ring-primary-600"
+            required
+          />
+          <label for="confirm-checkbox" class="{{ $attributes->get('class', '') }} ml-2 text-sm">Also delete <span class="{{ $attributes->get('class', '') }} font-medium text-gray-900 dark:text-white">all posts, photos and videos</span> on Flowbite that this event may have published on your behalf.</label>
+        </div>
+      </div>
+      <div class="{{ $attributes->get('class', '') }} flex items-center space-x-4">
+        <button
+          data-modal-toggle="deleteEventModal"
+          type="button"
+          class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="{{ $attributes->get('class', '') }} inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900">
+          <svg class="{{ $attributes->get('class', '') }} -ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Yes, delete
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Archive event modal -->
+<div id="archiveModal" tabindex="-1" aria-hidden="true" class="{{ $attributes->get('class', '') }} fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="{{ $attributes->get('class', '') }} relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="{{ $attributes->get('class', '') }} relative rounded-lg bg-white p-4 text-center shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="{{ $attributes->get('class', '') }} absolute right-2.5 top-2.5 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="archiveModal"
+      >
+        <svg class="{{ $attributes->get('class', '') }} h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+        </svg>
+        <span class="{{ $attributes->get('class', '') }} sr-only">Close modal</span>
+      </button>
+      <svg class="{{ $attributes->get('class', '') }} mx-auto mb-3.5 h-11 w-11 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+      </svg>
+      <p class="{{ $attributes->get('class', '') }} mb-4 text-gray-500 dark:text-gray-300">Are you sure you want to archive this event?</p>
+      <div class="{{ $attributes->get('class', '') }} flex items-center justify-center space-x-4">
+        <button
+          data-modal-toggle="deleteModal"
+          type="button"
+          class="{{ $attributes->get('class', '') }} rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          No, cancel
+        </button>
+        <button
+          type="submit"
+          class="{{ $attributes->get('class', '') }} rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          Yes, I do
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

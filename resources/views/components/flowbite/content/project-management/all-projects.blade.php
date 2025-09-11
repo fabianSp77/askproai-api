@@ -1,0 +1,2868 @@
+{{-- Flowbite Component: all-projects --}}
+@props(['title' => 'Tailwind CSS All Projects - Flowbite', 'description' => 'Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.'])
+<div {{ $attributes->merge(['class' => '']) }}>
+<div class="grid grid-cols-12 gap-4 bg-white dark:bg-gray-900">
+  <div class="col-span-full mx-4 mt-4 items-center justify-between sm:flex">
+    <div class="mb-4 sm:mb-0">
+      <nav class="mb-4 flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+          <li class="inline-flex items-center">
+            <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white">
+              <svg class="me-2.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M11.3 3.3a1 1 0 0 1 1.4 0l6 6 2 2a1 1 0 0 1-1.4 1.4l-.3-.3V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3c0 .6-.4 1-1 1H7a2 2 0 0 1-2-2v-6.6l-.3.3a1 1 0 0 1-1.4-1.4l2-2 6-6Z" clip-rule="evenodd" />
+              </svg>
+              Home
+            </a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+              </svg>
+              <a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">Project management</a>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+              </svg>
+              <span class="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ms-2">All projects</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white">All projects</h1>
+    </div>
+    <button
+      type="button"
+      id="newProjectButton"
+      data-modal-target="newProjectModal"
+      data-modal-toggle="newProjectModal"
+      class="flex w-full items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:w-auto"
+    >
+      <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+      </svg>
+      Add new project
+    </button>
+  </div>
+  <div class="relative col-span-full">
+    <div class="px-4">
+      <div class="grid w-full grid-cols-2 gap-4 pb-4 md:grid-cols-3 lg:grid-cols-6">
+        <div class="relative">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            name="email"
+            id="topbar-search"
+            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            placeholder="Search for projects"
+          />
+        </div>
+        <select
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+        >
+          <option selected="">Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+        >
+          <option selected="">Number of users</option>
+          <option value="1">1</option>
+          <option value="5">1-5</option>
+          <option value="10">5-10</option>
+          <option value="20">10-20</option>
+        </select>
+        <select
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+        >
+          <option selected="">Progress</option>
+          <option value="done">Done</option>
+          <option value="almost-done">Almost done</option>
+          <option value="half-done">Half done</option>
+          <option value="just-started">Just started</option>
+        </select>
+        <select
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 md:col-span-1"
+        >
+          <option selected="">Preview link</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+        <select
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500 md:col-span-1"
+        >
+          <option selected="">Due date</option>
+          <option value="day">This day</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+        </select>
+      </div>
+      <div class="block w-full items-center justify-between border-t py-3 dark:border-gray-800 sm:flex border-gray-200">
+        <div class="flex flex-wrap gap-4">
+          <div class="flex items-center text-sm font-medium text-gray-900 dark:text-white">Show:</div>
+          <div class="flex items-center">
+            <input
+              id="all-users"
+              type="radio"
+              value=""
+              name="show-only"
+              checked=""
+              class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="all-users" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">All</label>
+          </div>
+          <div class="flex items-center">
+            <input
+              id="sort-role"
+              type="radio"
+              value=""
+              name="show-only"
+              class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="sort-role" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Completed</label>
+          </div>
+          <div class="flex items-center">
+            <input
+              id="sort-type"
+              type="radio"
+              value=""
+              name="show-only"
+              class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="sort-type" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">In progress</label>
+          </div>
+          <div class="flex items-center">
+            <input
+              id="sort-status"
+              type="radio"
+              value=""
+              name="show-only"
+              class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+            />
+            <label for="sort-status" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">In review</label>
+          </div>
+        </div>
+        <div class="mt-4 sm:mt-0">
+          <button
+            id="actionsDropdownButton"
+            data-dropdown-toggle="actionsDropdown"
+            class=" flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+            type="button"
+          >
+            Actions
+            <svg class="-me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+            </svg>
+          </button>
+          <div id="actionsDropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+            <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="actionsDropdownButton">
+              <li>
+                <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">Suspend all</a>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  id="deleteAllProjectsModalButton"
+                  data-modal-target="deleteAllProjectsModal"
+                  data-modal-toggle="deleteAllProjectsModal"
+                  class="inline-flex w-full items-center rounded-md px-3 py-2 text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                >
+                  Delete all
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto relative">
+      <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="p-4">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-all"
+                  type="checkbox"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-all" class="sr-only">checkbox</label>
+              </div>
+            </th>
+            <th scope="col" class="px-4 py-3 font-semibold">Name</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Status</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Users</th>
+            <th scope="col" class="min-w-56 px-4 py-3 font-semibold">Progress</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Preview</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Time Tracking</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Due Date</th>
+            <th scope="col" class="px-4 py-3 font-semibold">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Upload feed and Reels in Instagram</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+5</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">75%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-primary-600" style="width: 75%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-500">6:47</span>
+                /8:00
+                <button class="ml-3 rounded-md bg-orange-500 p-1 text-white hover:bg-orange-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8 5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8Zm7 0a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Nov 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Crossplatform analysis</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-6.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-2.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="me-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                7:00
+                <button class="ml-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">03 Nov 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-2-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-2-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-2-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-2-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Product features analysis</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-8.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">50%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-primary-600" style="width: 50%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-500">3:25</span>
+                /8:00
+                <button class="ml-3 rounded-md bg-orange-500 p-1 text-white hover:bg-orange-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8 5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8Zm7 0a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">Yesterday</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-3-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-3-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-3-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-3-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Create user story</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-2.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-5.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                8:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Nov 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-4-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-4-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-4-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-4-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Users profile update</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-5.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">20%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-primary-600" style="width: 20%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-500">4:21</span>
+                /8:00
+                <button class="ml-3 rounded-md bg-orange-500 p-1 text-white hover:bg-orange-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8 5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8Zm7 0a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">Yesterday</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-5-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-5-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-5-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-5-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">User flow update</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-6.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                7:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Oct 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-6-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-6-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-6-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-6-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Update design system</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">In review</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-yellow-300" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                7:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">02 Now 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-7-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-7-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-7-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-7-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Create a new logo</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-2.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                5:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">30 Oct 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-1-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-1-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-1-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-1-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Screen structure</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">In review</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-8.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-yellow-300" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                2:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Nov 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-8-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-8-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-8-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-8-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Implement GPT 3.0 in Flowbite</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-5.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">25%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-primary-600" style="width: 25%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-500">3:11</span>
+                /8:00
+                <button class="ml-3 rounded-md bg-orange-500 p-1 text-white hover:bg-orange-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8 5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8Zm7 0a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">Today</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-10-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-10-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-10-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-10-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">User flow update</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-6.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-7.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                7:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Oct 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-11-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-11-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-11-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-11-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Update design system</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">In review</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-yellow-300" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                7:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">02 Now 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-12-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-12-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-12-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-12-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Create a new logo</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">Completed</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-2.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-3.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">100%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-green-500" style="width: 100%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                5:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">30 Oct 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-13-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-13-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-13-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-13-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Refactor Flowbite React Library</a>
+            </th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-8.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">80%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-yellow-300" style="width: 80%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <a href="#" class="inline-flex items-center font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <svg class="mr-1 h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+                </svg>
+                Website
+              </a>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                2:00
+                <button class="ms-3 rounded-md bg-green-500 p-1 text-white hover:bg-green-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">23 Nov 2025</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-14-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-14-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-14-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-14-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 border-gray-200">
+            <td class="w-4 px-4 py-2">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"><a href="../project-summary" class="font-medium text-gray-900 hover:underline dark:text-white">Implement GPT 3</a></th>
+            <td class="whitespace-nowrap px-4 py-2">
+              <span class="rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">In progress</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <div class="flex w-28 -space-x-4">
+                <img src="/images/users/avatar-10.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-1.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <img src="/images/users/avatar-5.png" alt="" class="h-10 w-10 shrink-0 rounded-full border-2 border-white dark:border-gray-800" />
+                <a
+                  href="#"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >+2</a
+                >
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <div class="mb-1 flex justify-end">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">25%</span>
+              </div>
+              <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div class="h-1.5 rounded-full bg-primary-600" style="width: 25%"></div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">None</span>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-900 dark:text-white">
+              <div class="inline-flex items-center rounded-lg border bg-white py-1 pe-1 ps-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700 border-gray-200">
+                <svg class="me-1.5 h-4 w-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v4c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V8Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-500">3:11</span>
+                /8:00
+                <button class="ml-3 rounded-md bg-orange-500 p-1 text-white hover:bg-orange-700">
+                  <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M8 5a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8Zm7 0a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-xs font-medium text-gray-900 dark:text-white">Today</td>
+            <td class="px-4 py-2">
+              <button
+                id="project-15-dropdown-button"
+                type="button"
+                data-dropdown-toggle="project-15-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="project-15-dropdown" class="z-10 hidden w-40 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="project-15-dropdown-button">
+                  <li>
+                    <button
+                      type="button"
+                      id="editProjectButton"
+                      data-modal-target="editProjectModal"
+                      data-modal-toggle="editProjectModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M11.3 6.2H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h11c1.1 0 2-1 2-2.1V11l-4 4.2c-.3.3-.7.6-1.2.7l-2.7.6c-1.7.3-3.3-1.3-3-3.1l.6-2.9c.1-.5.4-1 .7-1.3l3-3.1Z" clip-rule="evenodd" />
+                        <path
+                          fill-rule="evenodd"
+                          d="M19.8 4.3a2.1 2.1 0 0 0-1-1.1 2 2 0 0 0-2.2.4l-.6.6 2.9 3 .5-.6a2.1 2.1 0 0 0 .6-1.5c0-.2 0-.5-.2-.8Zm-2.4 4.4-2.8-3-4.8 5-.1.3-.7 3c0 .3.3.7.6.6l2.7-.6.3-.1 4.7-5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <a href="../project-summary" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5 7.8C6.7 6.3 9.2 5 12 5s5.3 1.3 7 2.8a12.7 12.7 0 0 1 2.7 3.2c.2.2.3.6.3 1s-.1.8-.3 1a2 2 0 0 1-.6 1 12.7 12.7 0 0 1-9.1 5c-2.8 0-5.3-1.3-7-2.8A12.7 12.7 0 0 1 2.3 13c-.2-.2-.3-.6-.3-1s.1-.8.3-1c.1-.4.3-.7.6-1 .5-.7 1.2-1.5 2.1-2.2Zm7 7.2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      View
+                    </a>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteProjectButton"
+                    data-modal-target="deleteProjectModal"
+                    data-modal-toggle="deleteProjectModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="w-full">
+      <!-- Table Footer -->
+      <div class="relative overflow-hidden">
+        <nav class="flex flex-col items-start justify-between space-y-3 p-4 md:flex-row md:items-center md:space-y-0" aria-label="Table navigation">
+          <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-15</span> of <span class="font-semibold text-gray-900 dark:text-white">146</span></span>
+          <ul class="inline-flex items-stretch -space-x-px">
+            <li>
+              <a
+                href="#"
+                class="ml-0 flex h-full items-center justify-center rounded-l-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <span class="sr-only">Previous</span>
+                <svg class="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                1
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                2
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                aria-current="page"
+                class="z-10 flex items-center justify-center border border-primary-300 bg-primary-50 px-3 py-2 text-sm leading-tight text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+              >
+                3
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                ...
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                10
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="flex h-full items-center justify-center rounded-r-lg border border-gray-300 bg-white px-3 py-1.5 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <span class="sr-only">Next</span>
+                <svg class="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div id="newProjectModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-5xl p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <!-- Modal header -->
+      <div class="mb-4 flex items-center justify-between dark:border-gray-600 sm:mb-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add new project</h3>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="newProjectModal"
+        >
+          <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <form action="#">
+        <div class="mb-4 grid gap-5 sm:mb-5 lg:grid-cols-2">
+          <div class="space-y-4">
+            <div>
+              <label for="title" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Title</label>
+              <input
+                type="text"
+                name="title"
+                id="title"
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Add title here"
+                required=""
+              />
+            </div>
+            <div>
+              <label for="description" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Description</label>
+              <div class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-600 md:mb-4">
+                <div class="flex items-center justify-between border-b p-1 dark:border-gray-600 border-gray-300">
+                  <div class="flex flex-wrap items-center divide-gray-200 dark:divide-gray-600 sm:divide-x">
+                    <div class="flex items-center space-x-1 sm:pr-2">
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8" />
+                        </svg>
+                        <span class="sr-only">Attach file</span>
+                      </button>
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M12 2a8 8 0 0 1 6.6 12.6l-.1.1-.6.7-5.1 6.2a1 1 0 0 1-1.6 0L6 15.3l-.3-.4-.2-.2v-.2A8 8 0 0 1 11.8 2Zm3 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="sr-only">Embed map</span>
+                      </button>
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M13 10c0-.6.4-1 1-1a1 1 0 1 1 0 2 1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                          <path
+                            fill-rule="evenodd"
+                            d="M2 6c0-1.1.9-2 2-2h16a2 2 0 0 1 2 2v12c0 .6-.2 1-.6 1.4a1 1 0 0 1-.9.6H4a2 2 0 0 1-2-2V6Zm6.9 12 3.8-5.4-4-4.3a1 1 0 0 0-1.5.1L4 13V6h16v10l-3.3-3.7a1 1 0 0 0-1.5.1l-4 5.6H8.9Z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                        <span class="sr-only">Upload image</span>
+                      </button>
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path
+                            fill-rule="evenodd"
+                            d="M9 2.2V7H4.2l.4-.5 3.9-4 .5-.3Zm2-.2v5a2 2 0 0 1-2 2H4v11c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7Zm-.3 9.3c.4.4.4 1 0 1.4L9.4 14l1.3 1.3a1 1 0 0 1-1.4 1.4l-2-2a1 1 0 0 1 0-1.4l2-2a1 1 0 0 1 1.4 0Zm2.6 1.4a1 1 0 0 1 1.4-1.4l2 2c.4.4.4 1 0 1.4l-2 2a1 1 0 0 1-1.4-1.4l1.3-1.3-1.3-1.3Z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                        <span class="sr-only">Format code</span>
+                      </button>
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path
+                            fill-rule="evenodd"
+                            d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM8 9c0-.6.4-1 1-1a1 1 0 0 1 0 2 1 1 0 0 1-1-1Zm6 0c0-.6.4-1 1-1a1 1 0 1 1 0 2 1 1 0 0 1-1-1Zm-5.5 7.2c-1-.8-1.7-2-1.9-3.2h10.8a5.5 5.5 0 0 1-9 3.2Z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                        <span class="sr-only">Add emoji</span>
+                      </button>
+                    </div>
+                    <div class="hidden flex-wrap items-center space-x-1 sm:flex sm:pl-2">
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path
+                            fill-rule="evenodd"
+                            d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                        <span class="sr-only">Timeline</span>
+                      </button>
+                      <button type="button" class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M13 11.1V4a1 1 0 1 0-2 0v7.1L8.8 8.4a1 1 0 1 0-1.6 1.2l4 5a1 1 0 0 0 1.6 0l4-5a1 1 0 1 0-1.6-1.2L13 11Z" clip-rule="evenodd" />
+                          <path fill-rule="evenodd" d="M9.7 15.9 7.4 13H5a2 2 0 0 0-2 2v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.4l-2.3 2.9a3 3 0 0 1-4.6 0Zm7.3.1a1 1 0 1 0 0 2 1 1 0 1 0 0-2Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="sr-only">Download</span>
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    data-tooltip-target="tooltip-fullscreen"
+                    class="cursor-pointer rounded-sm p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white sm:ml-auto"
+                  >
+                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H4m0 0v4m0-4 5 5m7-5h4m0 0v4m0-4-5 5M8 20H4m0 0v-4m0 4 5-5m7 5h4m0 0v-4m0 4-5-5" />
+                    </svg>
+                    <span class="sr-only">Full screen</span>
+                  </button>
+                  <div
+                    id="tooltip-fullscreen"
+                    role="tooltip"
+                    class="tooltip invisible absolute z-10 inline-block rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-700"
+                    data-popper-reference-hidden=""
+                    data-popper-escaped=""
+                    data-popper-placement="bottom"
+                    style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate3d(0px, 335px, 0px);"
+                  >
+                    Show full screen
+                    <div class="tooltip-arrow" data-popper-arrow=""></div>
+                  </div>
+                </div>
+                <div class="rounded-b-lg bg-gray-50 px-4 py-2 dark:bg-gray-700">
+                  <textarea
+                    id="description"
+                    rows="12"
+                    class="block w-full border-0 bg-gray-50 px-0 text-sm text-gray-800 focus:ring-0 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                    placeholder="Write a description here"
+                    required=""
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Right Content -->
+          <div>
+            <div class="mb-4">
+              <div class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Assignee & Communication</div>
+              <div class="flex items-center space-x-4">
+                <div class="flex -space-x-4 sm:mb-0">
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/helene-engels.png" alt="Helene Engels" />
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="Robert Brown" />
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/bonnie-green.png" alt="Bonnie Green" />
+                  <a class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-700 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800" href="#">+9</a>
+                </div>
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+                >
+                  <svg class="-ml-1 mr-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+                  </svg>
+                  Add member
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="mb-4 inline-flex items-center rounded-lg bg-[#4285F4] px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-[#4285F4]/90 focus:outline-none focus:ring-4 focus:ring-[#4285F4]/50 dark:focus:ring-[#4285F4]/55"
+            >
+              <svg class="-ml-1 mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <path
+                  fill="currentColor"
+                  d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                />
+              </svg>
+              Add Google Meet video conference
+            </button>
+            <div class="mb-4">
+              <label class="mb-2 block text-sm font-medium text-gray-900 dark:text-white" for="priority">Priority</label>
+              <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                  <input
+                    id="priority-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-checkbox" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">High</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="priority-2-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-2-checkbox" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Medium</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    checked=""
+                    id="priority-3-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-3-checkbox" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Low</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    id="priority-4-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-4-checkbox" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Lowest</label>
+                </div>
+              </div>
+            </div>
+            <div date-rangepicker class="mb-4 flex items-center space-x-4">
+              <div class="w-full">
+                <label for="startDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">Start date</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="startDate"
+                    name="start"
+                    type="text"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="Start date"
+                  />
+                </div>
+              </div>
+              <div class="w-full">
+                <label for="dueDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">Due date</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="dueDate"
+                    name="end"
+                    type="text"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mb-4 flex items-center space-x-4">
+              <div class="w-full">
+                <label for="project-category" class="mb-2 inline-flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Category
+                  <button type="button" data-tooltip-target="tooltip-project-category" data-tooltip-style="dark" class="ms-1 text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white">
+                    <svg aria-hidden="true" class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">User permission details</span>
+                  </button>
+                  <div id="tooltip-project-category" role="tooltip" class="tooltip invisible absolute z-10 inline-block w-72 max-w-sm rounded-lg bg-gray-900 px-3 py-2 text-sm font-normal text-white opacity-0 shadow-xs dark:bg-gray-700">
+                    Select the category to which this task belongs, with its help you can more efficiently categorize the team's tasks.
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </label>
+                <select
+                  id="project-category"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Design</option>
+                  <option value="seo">SEO</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="programming">Programming</option>
+                  <option value="sales">Sales</option>
+                </select>
+              </div>
+              <div class="w-full">
+                <label for="project-type" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Project type
+                  <button data-tooltip-target="tooltip-project-type" data-tooltip-style="dark" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">Show information</span>
+                  </button>
+                  <div id="tooltip-project-type" role="tooltip" class="tooltip invisible absolute z-10 inline-block w-72 max-w-sm rounded-lg bg-gray-900 px-3 py-2 text-sm font-normal text-white opacity-0 shadow-xs dark:bg-gray-700">
+                    Select the type of task, with its help you can more efficiently categorize the team's tasks.
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </label>
+                <select
+                  id="project-type"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Sprint</option>
+                  <option value="decision">Decision</option>
+                  <option value="finance">Finance</option>
+                  <option value="problems">Problem-solving</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Deadline notification</div>
+              <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                <div class="w-full">
+                  <label for="reminder-type" class="sr-only">Reminder type</label>
+                  <select
+                    id="reminder-type"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  >
+                    <option selected="">Notification</option>
+                    <option value="AL">Alarm</option>
+                    <option value="EM">Email</option>
+                    <option value="SM">SMS</option>
+                  </select>
+                </div>
+                <div class="w-full">
+                  <label for="reminder-counter" class="sr-only">Counter</label>
+                  <input
+                    type="number"
+                    name="reminder-counter"
+                    id="reminder-counter-days"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="1"
+                    required=""
+                  />
+                </div>
+                <div class="w-full">
+                  <label for="reminder-length-type" class="sr-only">Length</label>
+                  <select
+                    id="reminder-length-type"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  >
+                    <option selected="">Days</option>
+                    <option value="WE">Weeks</option>
+                    <option value="MO">Months</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-primary-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Add new project
+            <span class="sr-only">Add event</span>
+          </button>
+          <button
+            data-modal-toggle="newProjectModal"
+            type="button"
+            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-5xl p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <!-- Modal header -->
+      <div class="mb-4 flex items-center justify-between dark:border-gray-600 sm:mb-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit task</h3>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="editProjectModal"
+        >
+          <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <form action="#">
+        <div class="mb-4 grid gap-5 sm:mb-5 lg:grid-cols-2">
+          <div class="space-y-4">
+            <div>
+              <label for="title" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Title</label>
+              <input
+                type="text"
+                name="title"
+                id="title"
+                value="Redesign Flowbite homepage "
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Add title here"
+                required=""
+              />
+            </div>
+            <div>
+              <label for="description" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Description</label>
+              <textarea
+                id="description"
+                rows="15"
+                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-left text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Write your thoughts here..."
+              >
+Redesigning a homepage can be a powerful way to improve user experience, engagement, and overall brand perception.
+  
+Here are some tips for a successful homepage redesign: User-Centric Approach:
+  
+Prioritize the needs and expectations of your target audience. Conduct user research, analyze user behavior, and consider feedback to understand what elements are most valuable to them.
+  
+Clear and Concise Messaging: Craft a compelling and succinct headline that conveys your brand's value proposition. Use clear and engaging language to communicate the primary benefits of your product or service.</textarea
+              >
+            </div>
+          </div>
+          <!-- Right Content -->
+          <div>
+            <div class="mb-4">
+              <div class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Assignee & Communication</div>
+              <div class="flex items-center space-x-4">
+                <div class="flex -space-x-4">
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/helene-engels.png" alt="Helene Engels" />
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/robert-brown.png" alt="Robert Brown" />
+                  <img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="/images/users/bonnie-green.png" alt="Bonnie Green" />
+                  <a class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-700 text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800" href="#">+9</a>
+                </div>
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+                >
+                  <svg class="-ml-1 mr-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+                  </svg>
+                  Add member
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="mb-4 inline-flex items-center rounded-lg bg-[#4285F4] px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-[#4285F4]/90 focus:outline-none focus:ring-4 focus:ring-[#4285F4]/50 dark:focus:ring-[#4285F4]/55"
+            >
+              <svg class="-ml-1 mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <path
+                  fill="currentColor"
+                  d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                />
+              </svg>
+              Add Google Meet video conference
+            </button>
+            <div class="mb-4">
+              <label class="mb-2 block text-sm font-medium text-gray-900 dark:text-white" for="priority">Priority</label>
+              <div class="flex space-x-4">
+                <div class="mr-4 flex items-center">
+                  <input
+                    id="priority-checkbox-edit"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-checkbox-edit" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">High</label>
+                </div>
+                <div class="mr-4 flex items-center">
+                  <input
+                    id="priority-2-checkbox-edit"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-2-checkbox-edit" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Medium</label>
+                </div>
+                <div class="mr-4 flex items-center">
+                  <input
+                    checked=""
+                    id="priority-3-checkbox-edit"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-3-checkbox-edit" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Low</label>
+                </div>
+                <div class="mr-4 flex items-center">
+                  <input
+                    id="priority-4-checkbox-edit"
+                    type="checkbox"
+                    value=""
+                    class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                  />
+                  <label for="priority-4-checkbox-edit" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Lowest</label>
+                </div>
+              </div>
+            </div>
+            <div date-rangepicker class="mb-4 flex items-center space-x-4">
+              <div class="w-full">
+                <label for="startDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">Start date</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="startDate"
+                    name="start"
+                    type="text"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="Start date"
+                  />
+                </div>
+              </div>
+              <div class="w-full">
+                <label for="dueDate" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">Due date</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="dueDate"
+                    name="end"
+                    type="text"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mb-4 flex items-center space-x-4">
+              <div class="w-full">
+                <label for="project-category-2" class="mb-2 inline-flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Category
+                  <button type="button" data-tooltip-target="tooltip-project-category-2" data-tooltip-style="dark" class="ms-1 text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white">
+                    <svg aria-hidden="true" class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">User permission details</span>
+                  </button>
+                  <div id="tooltip-project-category-2" role="tooltip" class="tooltip invisible absolute z-10 inline-block w-72 max-w-sm rounded-lg bg-gray-900 px-3 py-2 text-sm font-normal text-white opacity-0 shadow-xs dark:bg-gray-700">
+                    Select the category to which this task belongs, with its help you can more efficiently categorize the team's tasks.
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </label>
+                <select
+                  id="project-category-2"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Design</option>
+                  <option value="seo">SEO</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="programming">Programming</option>
+                  <option value="sales">Sales</option>
+                </select>
+              </div>
+              <div class="w-full">
+                <label for="project-type-2" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Project type
+                  <button data-tooltip-target="tooltip-project-type-2" data-tooltip-style="dark" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">Show information</span>
+                  </button>
+                  <div id="tooltip-project-type-2" role="tooltip" class="tooltip invisible absolute z-10 inline-block w-72 max-w-sm rounded-lg bg-gray-900 px-3 py-2 text-sm font-normal text-white opacity-0 shadow-xs dark:bg-gray-700">
+                    Select the type of task, with its help you can more efficiently categorize the team's tasks.
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </label>
+                <select
+                  id="project-type-2"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Sprint</option>
+                  <option value="decision">Decision</option>
+                  <option value="finance">Finance</option>
+                  <option value="problems">Problem-solving</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Deadline notification</div>
+              <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                <div class="w-full">
+                  <label for="reminder-type" class="sr-only">Reminder type</label>
+                  <select
+                    id="reminder-type"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  >
+                    <option selected="">Notification</option>
+                    <option value="AL">Alarm</option>
+                    <option value="EM">Email</option>
+                    <option value="SM">SMS</option>
+                  </select>
+                </div>
+                <div class="w-full">
+                  <label for="reminder-counter" class="sr-only">Counter</label>
+                  <input
+                    type="number"
+                    name="reminder-counter"
+                    id="reminder-counter-days"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="1"
+                    required=""
+                  />
+                </div>
+                <div class="w-full">
+                  <label for="reminder-length-type" class="sr-only">Length</label>
+                  <select
+                    id="reminder-length-type"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  >
+                    <option selected="">Days</option>
+                    <option value="WE">Weeks</option>
+                    <option value="MO">Months</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-primary-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            Update project
+            <span class="sr-only">Add event</span>
+          </button>
+          <button
+            data-modal-toggle="editTaskModal"
+            type="button"
+            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete project modal -->
+<div id="deleteProjectModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-lg p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white shadow-sm dark:bg-gray-800">
+      <div class="flex items-center justify-between px-4 py-4 sm:px-5">
+        <h3 class="text-lg font-semibold leading-none text-gray-900 dark:text-white">Are you sure?</h3>
+        <button
+          type="button"
+          class="absolute right-2.5 top-2.5 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="deleteProjectModal"
+        >
+          <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6m0 12L6 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <p class="border-b border-t border-orange-200 bg-orange-100 px-4 py-4 font-light text-orange-700 dark:border-gray-600 dark:bg-gray-700 dark:text-orange-300 sm:px-5">Unexpected bad things can happen if you don’t read this!</p>
+      <div class="px-4 py-4 sm:px-5 sm:py-5">
+        <p class="font-light text-gray-500 dark:text-gray-400">
+          This action <span class="font-semibold text-gray-900 dark:text-white">CANNOT</span> be undone. This will permanently delete the <span class="font-semibold text-gray-900 dark:text-white">bergside/flowbite</span> project, images,
+          repos and comments, and remove all collaborator assosiations.
+        </p>
+        <form action="#">
+          <div class="mb-4 mt-2">
+            <label for="repository-name-input" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Please type in the name of the project to confirm.</label>
+            <input
+              type="text"
+              id="repository-name-input"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+              required
+              placeholder="Ex. bergside/flowbite"
+            />
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+            I understand, delete this project
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete all projects modal -->
+<div id="deleteAllProjectsModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="absolute right-2.5 top-2.5 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="deleteAllProjectsModal"
+      >
+        <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path
+            fill-rule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        <span class="sr-only">Close modal</span>
+      </button>
+      <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">Are you sure?</h3>
+      <p class="mb-4 font-light text-gray-500 dark:text-gray-400">You are about to delete the following 3 projects, this cannot be undone:</p>
+      <ul role="list" class="mb-4 space-y-2 text-left text-gray-500 dark:text-gray-400 sm:mb-5">
+        <li class="flex items-center space-x-1">
+          <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd" />
+          </svg>
+          <span>Crossplatform analysis</span>
+        </li>
+        <li class="flex items-center space-x-1">
+          <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd" />
+          </svg>
+          <span>Product features analysis</span>
+        </li>
+        <li class="flex items-center space-x-1">
+          <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd" />
+          </svg>
+          <span>Flowbite 3.0</span>
+        </li>
+      </ul>
+      <div class="flex items-center space-x-4">
+        <button
+          data-modal-toggle="deleteAllProjectsModal"
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          No, cancel
+        </button>
+        <button
+          type="submit"
+          class="inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+        >
+          <svg aria-hidden="true" class="-ml-0.5 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill-rule="evenodd"
+              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          Yes, delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

@@ -1,0 +1,11 @@
+@php
+$attributes = $attributes ?? new \Illuminate\View\ComponentAttributeBag();
+@endphp
+
+@{{  define "main"  }}
+  @{{  if .Params.navigation  }}@{{  partial "navbar-main" .  }}@{{  end  }}
+  <main class="{{ $attributes->get('class', '') }} bg-gray-50 dark:bg-gray-900">
+    @{{  .Content  }}
+  </main>
+  @{{  if .Params.footer  }}@{{  partial "footer-main" .  }}@{{  end  }}
+@{{  end  }}

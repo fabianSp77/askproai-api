@@ -1,0 +1,4 @@
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-01 19:01:21.167"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-01 19:01:21.183"}
+{"arguments":{"url":"https://api.askproai.de/flowbite-test"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2025-09-01 21:07:53.617","tool":"puppeteer_navigate"}
+{"0":"n","1":"p","2":"x","level":"info","message":"Launching browser with config:","service":"mcp-puppeteer","timestamp":"2025-09-01 21:07:53.620"}

@@ -29,11 +29,11 @@ class SecureApiKeyAuth
         }
 
         // Rate limiting per IP for brute force protection
-        $rateLimitKey = 'api_auth:' . $request->ip();
-        if (RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+        $ipRateLimitKey = 'api_auth:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($ipRateLimitKey, 10)) {
             Log::warning('API key brute force attempt', [
                 'ip' => $request->ip(),
-                'attempts' => RateLimiter::attempts($rateLimitKey)
+                'attempts' => RateLimiter::attempts($ipRateLimitKey)
             ]);
 
             return response()->json([
@@ -46,7 +46,7 @@ class SecureApiKeyAuth
         $tenant = Tenant::findByApiKey($apiKey);
 
         if (!$tenant) {
-            RateLimiter::hit($rateLimitKey, 300); // 5 minute penalty
+            RateLimiter::hit($ipRateLimitKey, 300); // 5 minute penalty
 
             Log::warning('Invalid API key used', [
                 'key_prefix' => substr($apiKey, 0, 8) . '...',
@@ -61,7 +61,26 @@ class SecureApiKeyAuth
         }
 
         // Success - clear rate limit and set tenant context
-        RateLimiter::clear($rateLimitKey);
+        RateLimiter::clear($ipRateLimitKey);
+        
+        // Per-API-key rate limiting
+        $apiKeyRateLimit = config('security.api_key_rate_limit', 100);
+        $apiRateLimitKey = 'api_key:' . substr($apiKey, 0, 8);
+        
+        if (RateLimiter::tooManyAttempts($apiRateLimitKey, $apiKeyRateLimit)) {
+            Log::warning('API key rate limit exceeded', [
+                'tenant_id' => $tenant->id,
+                'key_prefix' => substr($apiKey, 0, 8) . '...',
+                'limit' => $apiKeyRateLimit
+            ]);
+
+            return response()->json([
+                'error' => 'API rate limit exceeded',
+                'message' => 'Your API key has exceeded the rate limit'
+            ], 429);
+        }
+        
+        RateLimiter::hit($apiRateLimitKey, 3600); // 1 hour window
         
         // Set authenticated tenant in request
         $request->attributes->set('authenticated_tenant', $tenant);
@@ -83,24 +102,22 @@ class SecureApiKeyAuth
             return substr($authHeader, 7);
         }
 
-        // Fallback to X-API-Key header (deprecated)
-        $apiKeyHeader = $request->header('X-API-Key');
-        if ($apiKeyHeader) {
-            Log::info('Deprecated X-API-Key header used', [
+        // Log deprecated header attempts
+        if ($request->header('X-API-Key')) {
+            Log::warning('Deprecated X-API-Key header rejected', [
                 'ip' => $request->ip(),
-                'message' => 'Please migrate to Authorization: Bearer header'
+                'user_agent' => $request->userAgent(),
+                'message' => 'Use Authorization: Bearer header instead'
             ]);
-            return $apiKeyHeader;
         }
 
-        // Query parameter (highly discouraged)
-        $queryApiKey = $request->query('api_key');
-        if ($queryApiKey) {
-            Log::warning('API key in query string (insecure)', [
+        // Log insecure query parameter attempts
+        if ($request->query('api_key')) {
+            Log::warning('API key in query string rejected (security risk)', [
                 'ip' => $request->ip(),
-                'message' => 'API keys in URLs are logged and cached. Use headers instead.'
+                'user_agent' => $request->userAgent(),
+                'message' => 'API keys in URLs are insecure and logged'
             ]);
-            return $queryApiKey;
         }
 
         return null;

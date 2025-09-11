@@ -5,53 +5,33 @@
 @endphp
 
 <x-filament-panels::layout.base :livewire="$livewire">
+    {{-- The sidebar is after the page content in the markup to fix issues with page content overlapping dropdown content from the sidebar. --}}
     <div
-        class="fi-layout min-h-screen w-full"
-        style="display: grid !important; grid-template-columns: 16rem 1fr !important;"
+        class="fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip"
     >
-        {{-- SIDEBAR FIRST (LEFT COLUMN) --}}
-        @if (filament()->hasNavigation())
-            <div
-                x-cloak
-                x-data="{}"
-                x-on:click="$store.sidebar.close()"
-                x-show="$store.sidebar.isOpen"
-                x-transition.opacity.300ms
-                class="fi-sidebar-close-overlay fixed inset-0 z-30 bg-gray-950/50 transition duration-500 dark:bg-gray-950/75 lg:hidden"
-            ></div>
-
-            <x-filament-panels::sidebar
-                :navigation="$navigation"
-                class="fi-main-sidebar"
-                style="grid-column: 1 !important;"
-            />
-        @endif
-
-        {{-- MAIN CONTENT (RIGHT COLUMN) --}}
         <div
             @if (filament()->isSidebarCollapsibleOnDesktop())
                 x-data="{}"
                 x-bind:class="{
                     'fi-main-ctn-sidebar-open': $store.sidebar.isOpen,
                 }"
-                x-bind:style="'display: flex; opacity:1; grid-column: 2;'"
+                x-bind:style="'display: flex; opacity:1;'" {{-- Mimics `x-cloak`, as using `x-cloak` causes visual issues with chart widgets --}}
             @elseif (filament()->isSidebarFullyCollapsibleOnDesktop())
                 x-data="{}"
                 x-bind:class="{
                     'fi-main-ctn-sidebar-open': $store.sidebar.isOpen,
                 }"
-                x-bind:style="'display: flex; opacity:1; grid-column: 2;'"
+                x-bind:style="'display: flex; opacity:1;'" {{-- Mimics `x-cloak`, as using `x-cloak` causes visual issues with chart widgets --}}
             @elseif (! (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop() || filament()->hasTopNavigation() || (! filament()->hasNavigation())))
                 x-data="{}"
-                x-bind:style="'display: flex; opacity:1; grid-column: 2;'"
+                x-bind:style="'display: flex; opacity:1;'" {{-- Mimics `x-cloak`, as using `x-cloak` causes visual issues with chart widgets --}}
             @endif
             @class([
-                'fi-main-ctn w-full flex-1 flex-col',
+                'fi-main-ctn w-screen flex-1 flex-col',
                 'h-full opacity-0 transition-all' => filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop(),
                 'opacity-0' => ! (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop() || filament()->hasTopNavigation() || (! filament()->hasNavigation())),
                 'flex' => filament()->hasTopNavigation() || (! filament()->hasNavigation()),
             ])
-            style="grid-column: 2 !important;"
         >
             @if (filament()->hasTopbar())
                 {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_BEFORE, scopes: $livewire->getRenderHookScopes()) }}
@@ -101,31 +81,22 @@
         </div>
 
         @if (filament()->hasNavigation())
+            <div
+                x-cloak
+                x-data="{}"
+                x-on:click="$store.sidebar.close()"
+                x-show="$store.sidebar.isOpen"
+                x-transition.opacity.300ms
+                class="fi-sidebar-close-overlay fixed inset-0 z-30 bg-gray-950/50 transition duration-500 dark:bg-gray-950/75 lg:hidden"
+            ></div>
+
+            <x-filament-panels::sidebar
+                :navigation="$navigation"
+                class="fi-main-sidebar"
+            />
+
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
-                    // Fix grid layout
-                    const layout = document.querySelector('.fi-layout');
-                    if (layout) {
-                        layout.style.display = 'grid';
-                        layout.style.gridTemplateColumns = '16rem 1fr';
-                    }
-
-                    // Fix sidebar positioning
-                    const sidebar = document.querySelector('.fi-main-sidebar');
-                    if (sidebar) {
-                        sidebar.style.gridColumn = '1';
-                        sidebar.style.position = 'sticky';
-                        sidebar.style.top = '0';
-                        sidebar.style.height = '100vh';
-                        sidebar.style.overflowY = 'auto';
-                    }
-
-                    // Fix main content positioning
-                    const mainCtn = document.querySelector('.fi-main-ctn');
-                    if (mainCtn) {
-                        mainCtn.style.gridColumn = '2';
-                    }
-
                     setTimeout(() => {
                         let activeSidebarItem = document.querySelector(
                             '.fi-main-sidebar .fi-sidebar-item.fi-active',

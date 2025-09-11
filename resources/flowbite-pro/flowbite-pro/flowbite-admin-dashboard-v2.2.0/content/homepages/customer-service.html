@@ -1,0 +1,2410 @@
+---
+title: Tailwind CSS Customer Service Dashboard - Flowbite
+description: Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.
+layout: dashboard
+footer: true
+group: dashboards
+page: customer-service
+---
+
+<div class="px-4">
+  <!-- Widget -->
+  <div class="my-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+    <div class="items-start justify-between border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex md:pb-6">
+      <div class="mb-4 sm:mb-0">
+        <h2 class="mb-2 text-xl font-bold leading-none text-gray-900 dark:text-white">Website performance</h2>
+        <p class="text-gray-500 dark:text-gray-400">Last month website stats.</p>
+      </div>
+      <button
+        id="performanceActionsDropdownButton"
+        data-dropdown-toggle="performanceActionsDropdown"
+        data-dropdown-ignore-click-outside-class="datepicker"
+        class="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+        type="button"
+      >
+        <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            fill-rule="evenodd"
+            d="M5 5c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1h1c.6 0 1-.4 1-1a1 1 0 1 1 2 0c0 .6.4 1 1 1a2 2 0 0 1 2 2v1c0 .6-.4 1-1 1H4a1 1 0 0 1-1-1V7c0-1.1.9-2 2-2ZM3 19v-7c0-.6.4-1 1-1h16c.6 0 1 .4 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6-6c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1ZM7 17a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Zm6 0c0-.6-.4-1-1-1a1 1 0 1 0 0 2c.6 0 1-.4 1-1Zm2 0a1 1 0 1 1 2 0c0 .6-.4 1-1 1a1 1 0 0 1-1-1Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Dec 31 - Jan 31
+        <svg class="-me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+        </svg>
+      </button>
+      <!-- Dropdown menu -->
+      <div class="z-50 my-4 hidden list-none w-80 divide-y divide-gray-100 rounded-lg bg-white text-sm font-medium shadow-sm dark:divide-gray-600 dark:bg-gray-700" id="performanceActionsDropdown">
+        <ul class="p-2 text-gray-500 dark:text-gray-400" role="none" aria-labelledby="referrersActionsDropdown">
+          <li>
+            <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Yesterday</button>
+          </li>
+          <li>
+            <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Today</button>
+          </li>
+          <li>
+            <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 7 days</button>
+          </li>
+          <li>
+            <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 30 days</button>
+          </li>
+          <li>
+            <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 90 days</button>
+          </li>
+        </ul>
+        <div class="p-5">
+          <span class="text-gray-900 dark:text-white mb-2 block">Custom period:</span>
+          <div id="date-range-picker" date-rangepicker class="flex w-full items-center gap-3">
+            <div class="relative w-full">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6.01-6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-10 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <input
+                id="datepicker-range-start"
+                name="start"
+                type="text"
+                class=" w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Start date"
+              />
+            </div>
+            <div class="relative w-full">
+              <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6.01-6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-10 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <input
+                id="datepicker-range-end"
+                name="end"
+                type="text"
+                class=" w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="End date"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="items-center justify-between border-b border-gray-200 py-4 dark:border-gray-700 md:py-6 xl:flex">
+      <div class="grid w-full gap-4 sm:grid-cols-2 lg:gap-8 xl:grid-cols-4 xl:gap-10">
+        <div>
+          <svg class="mb-2 h-8 w-8 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 5a2 2 0 0 0-2 2v2.5a1 1 0 0 0 1 1 1.5 1.5 0 1 1 0 3 1 1 0 0 0-1 1V17a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-1-1 1.5 1.5 0 1 1 0-3 1 1 0 0 0 1-1V7a2 2 0 0 0-2-2H4Z" />
+          </svg>
+          <h3 class="mb-2 text-gray-500 dark:text-gray-400">Received tickets</h3>
+          <span class="flex items-center text-2xl font-bold text-gray-900 dark:text-white"
+            >15,475
+            <span class="ms-2 inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+              <svg class="-ms-1 me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4" />
+              </svg>
+              6,4%
+            </span>
+          </span>
+          <p class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:text-base">
+            <svg class="me-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4.5V19a1 1 0 0 0 1 1h15M7 14l4-4 4 4 5-5m0 0h-3.207M20 9v3.207" />
+            </svg>
+
+            vs 14,987 last week
+          </p>
+        </div>
+        <div>
+          <svg class="mb-2 h-8 w-8 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M15.03 9.684h3.965c.322 0 .64.08.925.232.286.153.532.374.717.645a2.109 2.109 0 0 1 .242 1.883l-2.36 7.201c-.288.814-.48 1.355-1.884 1.355-2.072 0-4.276-.677-6.157-1.256-.472-.145-.924-.284-1.348-.404h-.115V9.478a25.485 25.485 0 0 0 4.238-5.514 1.8 1.8 0 0 1 .901-.83 1.74 1.74 0 0 1 1.21-.048c.396.13.736.397.96.757.225.36.32.788.269 1.211l-1.562 4.63ZM4.177 10H7v8a2 2 0 1 1-4 0v-6.823C3 10.527 3.527 10 4.176 10Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <h3 class="mb-2 text-gray-500 dark:text-gray-400">Solved tickets</h3>
+          <span class="flex items-center text-2xl font-bold text-gray-900 dark:text-white"
+            >15,001
+            <span class="ms-2 inline-flex items-center rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">
+              <svg class="-ms-1 me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14-4-4m4 4 4-4" />
+              </svg>
+              1%
+            </span>
+          </span>
+          <p class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:text-base">
+            <svg class="me-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4.5V19a1 1 0 0 0 1 1h15M7 14l4-4 4 4 5-5m0 0h-3.207M20 9v3.207" />
+            </svg>
+
+            vs 15,221 last month
+          </p>
+        </div>
+        <div>
+          <svg class="mb-2 h-8 w-8 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <h3 class="mb-2 text-gray-500 dark:text-gray-400">Rejected tickets</h3>
+          <span class="flex items-center text-2xl font-bold text-gray-900 dark:text-white"
+            >56
+            <span class="ms-2 inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+              <svg class="-ms-1 me-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4" />
+              </svg>
+              9,1%
+            </span>
+          </span>
+          <p class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:text-base">
+            <svg class="me-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4.5V19a1 1 0 0 0 1 1h15M7 14l4-4 4 4 5-5m0 0h-3.207M20 9v3.207" />
+            </svg>
+
+            vs 49 last week
+          </p>
+        </div>
+        <div>
+          <svg class="mb-2 h-8 w-8 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm5.495.93A.5.5 0 0 0 6.5 13c0 1.19.644 2.438 1.618 3.375C9.099 17.319 10.469 18 12 18c1.531 0 2.9-.681 3.882-1.625.974-.937 1.618-2.184 1.618-3.375a.5.5 0 0 0-.995-.07.764.764 0 0 1-.156.096c-.214.106-.554.208-1.006.295-.896.173-2.111.262-3.343.262-1.232 0-2.447-.09-3.343-.262-.452-.087-.792-.19-1.005-.295a.762.762 0 0 1-.157-.096ZM8.99 8a1 1 0 0 0 0 2H9a1 1 0 1 0 0-2h-.01Zm6 0a1 1 0 1 0 0 2H15a1 1 0 1 0 0-2h-.01Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <h3 class="mb-2 text-gray-500 dark:text-gray-400">Average CSAT</h3>
+          <span class="flex items-baseline text-2xl font-bold text-gray-900 dark:text-white"
+            >4.7
+            <span class="ms-2 text-base text-gray-500 dark:text-gray-400"> of 5 </span>
+          </span>
+          <a href="#" class="mt-2 flex items-center font-medium text-primary-700 hover:underline dark:text-primary-500">
+            See all responses
+            <svg class="ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="hidden 2xl:flex" id="service-level-chart"></div>
+    </div>
+    <div class="mt-4 md:mt-6" id="tickets-overview-chart"></div>
+    <div class="border-t border-gray-200 pt-4 dark:border-gray-700 md:pt-6">
+      <button
+        type="button"
+        class="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto"
+      >
+        View full report
+        <svg class="-me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="mb-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+    <div class="flex items-center space-x-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-400">
+        <svg class="h-6 w-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">15 min</h2>
+        <p class="text-gray-500 dark:text-gray-400">Average response time</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-400">
+        <svg class="h-6 w-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">12%</h2>
+        <p class="text-gray-500 dark:text-gray-400">Ticket reopening rate</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-400">
+        <svg class="h-6 w-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            fill-rule="evenodd"
+            d="M12 2a7 7 0 0 0-7 7 3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1V9a5 5 0 1 1 10 0v7.083A2.919 2.919 0 0 1 14.083 19H14a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h1a2 2 0 0 0 1.732-1h.351a4.917 4.917 0 0 0 4.83-4H19a3 3 0 0 0 3-3v-2a3 3 0 0 0-3-3 7 7 0 0 0-7-7Zm1.45 3.275a4 4 0 0 0-4.352.976 1 1 0 0 0 1.452 1.376 2.001 2.001 0 0 1 2.836-.067 1 1 0 1 0 1.386-1.442 4 4 0 0 0-1.321-.843Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">20</h2>
+        <p class="text-gray-500 dark:text-gray-400">Active agents today</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-400">
+        <svg class="h-6 w-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            fill-rule="evenodd"
+            d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.408-5.5a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM10 10a1 1 0 1 0 0 2h1v3h-1a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-1v-4a1 1 0 0 0-1-1h-2Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">0.6%</h2>
+        <p class="text-gray-500 dark:text-gray-400">Escalated tickets</p>
+      </div>
+    </div>
+  </div>
+  <div class="mb-4 grid gap-4 xl:grid-cols-2">
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <div class="mb-4 flex justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
+        <div class="items-center sm:flex">
+          <div class="mb-4 me-3 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 sm:mb-0">
+            <svg class="h-6 w-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M12 2a7 7 0 0 0-7 7 3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1V9a5 5 0 1 1 10 0v7.083A2.919 2.919 0 0 1 14.083 19H14a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h1a2 2 0 0 0 1.732-1h.351a4.917 4.917 0 0 0 4.83-4H19a3 3 0 0 0 3-3v-2a3 3 0 0 0-3-3 7 7 0 0 0-7-7Zm1.45 3.275a4 4 0 0 0-4.352.976 1 1 0 0 0 1.452 1.376 2.001 2.001 0 0 1 2.836-.067 1 1 0 1 0 1.386-1.442 4 4 0 0 0-1.321-.843Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <div>
+            <h5 class="pb-1 text-2xl font-bold leading-none text-gray-900 dark:text-white">Reasons for tickets</h5>
+            <p class="shrink-0 text-gray-500 dark:text-gray-400">Top reasons for tickets this week</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2">
+        <dl class="mb-4 flex items-center sm:mb-0">
+          <dt class="me-1 text-gray-500 dark:text-gray-400">Tickets received:</dt>
+          <dd class="font-semibold text-gray-900 dark:text-white">3,232</dd>
+        </dl>
+        <dl class="flex items-center sm:justify-end">
+          <dt class="me-1 text-gray-500 dark:text-gray-400">Response rate:</dt>
+          <dd class="font-semibold text-gray-900 dark:text-white">93%</dd>
+        </dl>
+      </div>
+
+      <!-- Radial Chart -->
+      <ul class="space-y-6 py-6 font-medium text-gray-900 dark:text-white">
+        <li>
+          <div class="items-center justify-between gap-8 sm:flex 2xl:gap-16">
+            <h3 class="mb-2 w-56 shrink-0 sm:mb-0">Product/Service problems</h3>
+            <div class="flex w-full items-center gap-8 2xl:gap-16">
+              <div class="h-5 w-full rounded-md bg-gray-200 dark:bg-gray-700">
+                <div class="h-5 rounded-md bg-primary-700 dark:bg-primary-600" style="width: 41%"></div>
+              </div>
+              <span>41%</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="items-center justify-between gap-8 sm:flex 2xl:gap-16">
+            <h3 class="mb-2 w-56 shrink-0 sm:mb-0">Technical issues</h3>
+            <div class="flex w-full items-center gap-8 2xl:gap-16">
+              <div class="h-5 w-full rounded-md bg-gray-200 dark:bg-gray-700">
+                <div class="h-5 rounded-md bg-teal-400" style="width: 22%"></div>
+              </div>
+              <span>22%</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="items-center justify-between gap-8 sm:flex 2xl:gap-16">
+            <h3 class="mb-2 w-56 shrink-0 sm:mb-0">Payment issues</h3>
+            <div class="flex w-full items-center gap-8 2xl:gap-16">
+              <div class="h-5 w-full rounded-md bg-gray-200 dark:bg-gray-700">
+                <div class="h-5 rounded-md bg-orange-300" style="width: 15%"></div>
+              </div>
+              <span>15%</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="items-center justify-between gap-8 sm:flex 2xl:gap-16">
+            <h3 class="mb-2 w-56 shrink-0 sm:mb-0">Product issues</h3>
+            <div class="flex w-full items-center gap-8 2xl:gap-16">
+              <div class="h-5 w-full rounded-md bg-gray-200 dark:bg-gray-700">
+                <div class="h-5 rounded-md bg-pink-500" style="width: 12%"></div>
+              </div>
+              <span>12%</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="items-center justify-between gap-8 sm:flex 2xl:gap-16">
+            <h3 class="mb-2 w-56 shrink-0 sm:mb-0">New account</h3>
+            <div class="flex w-full items-center gap-8 2xl:gap-16">
+              <div class="h-5 w-full rounded-md bg-gray-200 dark:bg-gray-700">
+                <div class="h-5 rounded-md bg-purple-500" style="width: 10%"></div>
+              </div>
+              <span>10%</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <div class="flex items-center justify-center space-x-4 border-t border-gray-200 pt-4 dark:border-gray-700 md:pt-6">
+        <a
+          href="#"
+          class="inline-flex items-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M5.024 3.783A1 1 0 0 1 6 3h12a1 1 0 0 1 .976.783L20.802 12h-4.244a1.99 1.99 0 0 0-1.824 1.205 2.978 2.978 0 0 1-5.468 0A1.991 1.991 0 0 0 7.442 12H3.198l1.826-8.217ZM3 14v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4.43a4.978 4.978 0 0 1-9.14 0H3Zm5-7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm0 2a1 1 0 0 0 0 2h8a1 1 0 1 0 0-2H8Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Go to inbox</a
+        >
+        <a
+          href="#"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+          >Download report</a
+        >
+      </div>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+      <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white md:mb-6">Best agents this week</h2>
+      <ul>
+        <li class="border-b border-gray-200 pb-2.5 dark:border-gray-700">
+          <div class="flex items-center space-x-4">
+            <img src="/images/users/avatar-10.png" alt="User avatar" class="h-8 w-8 rounded-full" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-gray-900 dark:text-white">Jese Leos</p>
+              <p class="truncate text-sm font-normal text-gray-500 dark:text-gray-400">email@example.com</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <p class="hidden text-gray-500 dark:text-gray-400 sm:flex">120 tickets answered</p>
+              <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-sm font-medium text-green-500 dark:bg-green-900 dark:text-green-300">4.9/5</span>
+            </div>
+          </div>
+        </li>
+        <li class="border-b border-gray-200 py-2.5 dark:border-gray-700">
+          <div class="flex items-center space-x-4">
+            <img src="/images/users/avatar-8.png" alt="User avatar" class="h-8 w-8 rounded-full" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-gray-900 dark:text-white">Roberta Casas</p>
+              <p class="truncate text-sm font-normal text-gray-500 dark:text-gray-400">email@example.com</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <p class="hidden text-gray-500 dark:text-gray-400 sm:flex">100 tickets answered</p>
+              <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-sm font-medium text-green-500 dark:bg-green-900 dark:text-green-300">4.9/5</span>
+            </div>
+          </div>
+        </li>
+        <li class="border-b border-gray-200 py-2.5 dark:border-gray-700">
+          <div class="flex items-center space-x-4">
+            <img src="/images/users/avatar-1.png" alt="User avatar" class="h-8 w-8 rounded-full" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-gray-900 dark:text-white">Bonnie Green</p>
+              <p class="truncate text-sm font-normal text-gray-500 dark:text-gray-400">email@example.com</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <p class="hidden text-gray-500 dark:text-gray-400 sm:flex">92 tickets answered</p>
+              <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-sm font-medium text-green-500 dark:bg-green-900 dark:text-green-300">4.8/5</span>
+            </div>
+          </div>
+        </li>
+        <li class="border-b border-gray-200 py-2.5 dark:border-gray-700">
+          <div class="flex items-center space-x-4">
+            <img src="/images/users/avatar-3.png" alt="User avatar" class="h-8 w-8 rounded-full" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-gray-900 dark:text-white">Micheal Gough</p>
+              <p class="truncate text-sm font-normal text-gray-500 dark:text-gray-400">email@example.com</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <p class="hidden text-gray-500 dark:text-gray-400 sm:flex">71 tickets answered</p>
+              <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-sm font-medium text-green-500 dark:bg-green-900 dark:text-green-300">4.7/5</span>
+            </div>
+          </div>
+        </li>
+        <li class="py-2.5">
+          <div class="flex items-center space-x-4">
+            <img src="/images/users/avatar-5.png" alt="User avatar" class="h-8 w-8 rounded-full" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-gray-900 dark:text-white">Robert Brown</p>
+              <p class="truncate text-sm font-normal text-gray-500 dark:text-gray-400">email@example.com</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <p class="hidden text-gray-500 dark:text-gray-400 sm:flex">49 tickets answered</p>
+              <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-sm font-medium text-green-500 dark:bg-green-900 dark:text-green-300">4.5/5</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <div class="grid grid-cols-1 items-center justify-between border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between pt-5">
+          <!-- Button -->
+          <button 
+          id="bestAgentsDropdownButton"
+          data-dropdown-toggle="bestAgentsDropdown"
+          data-dropdown-ignore-click-outside-class="datepicker"
+          class="inline-flex items-center rounded-lg p-2 text-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" 
+          type="button">
+            Last 7 days
+            <svg class="ms-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+            </svg>
+          </button>
+          <!-- Dropdown menu -->
+          <div class="z-50 my-4 hidden list-none w-80 divide-y divide-gray-100 rounded-lg bg-white text-sm font-medium shadow-sm dark:divide-gray-600 dark:bg-gray-700" id="bestAgentsDropdown">
+            <ul class="p-2 text-gray-500 dark:text-gray-400" role="none" aria-labelledby="bestAgentsDropdownButton">
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Yesterday</button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Today</button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 7 days</button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 30 days</button>
+              </li>
+              <li>
+                <button type="button" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Last 90 days</button>
+              </li>
+            </ul>
+            <div class="p-5">
+              <span class="text-gray-900 dark:text-white mb-2 block">Custom period:</span>
+              <div id="date-range-picker-3" date-rangepicker class="flex w-full items-center gap-3">
+                <div class="relative w-full">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6.01-6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-10 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="datepicker-range-start-3"
+                    name="start"
+                    type="text"
+                    class=" w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="Start date"
+                  />
+                </div>
+                <div class="relative w-full">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm6.01-6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-10 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm6 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="datepicker-range-end-3"
+                    name="end"
+                    type="text"
+                    class=" w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-9 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <a href="#" class="inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold uppercase text-primary-700 hover:bg-gray-100 dark:border-gray-700 dark:text-primary-500 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+            Agents report
+            <svg class="ms-1 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Table Widget -->
+  <div class="mb-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 md:p-6">
+    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white md:mb-6">Latest tickets</h2>
+    <div class="border-b dark:border-gray-700 border-gray-200">
+      <div class="flex flex-col-reverse items-center justify-between pb-4 md:flex-row md:space-x-4">
+        <div class="flex w-full flex-col space-y-3 md:flex-row md:items-center md:space-y-0 lg:w-2/3">
+          <form class="w-full flex-1 md:mr-4 md:max-w-sm">
+            <label for="default-search" class="sr-only text-sm font-medium text-gray-900 dark:text-white">Search</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg aria-hidden="true" class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="search"
+                id="default-search"
+                class="block w-full min-w-64 rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                placeholder="Search invoice"
+                required=""
+              />
+              <button
+                type="submit"
+                class="absolute bottom-0 right-0 top-0 rounded-r-lg bg-primary-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+          <div class="flex items-center space-x-4">
+            <button
+              id="filterDropdownButton"
+              data-dropdown-toggle="filterDropdown"
+              data-dropdown-ignore-click-outside-class="datepicker"
+              class="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 md:w-auto"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="-ms-0.5 me-1.5 h-4 w-4" viewbox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+              </svg>
+              Filters
+              <svg class="-me-0.5 ms-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+              </svg>
+            </button>
+            <!-- Dropdown menu -->
+            <form action="#" method="get" id="filterDropdown" class="z-10 hidden w-72 space-y-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-700" aria-labelledby="dropdownDefault">
+              <h5 id="drawer-label" class="inline-flex items-center font-medium text-gray-500 dark:text-gray-400">Filter</h5>
+              <div>
+                <label for="tags" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Tags</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    id="tags"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder=""
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="ticket-status" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Ticket status
+                  <button data-popover-target="popover-ticket-status-description" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">Show information</span>
+                  </button>
+                </label>
+                <select
+                  id="ticket-status"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Any</option>
+                  <option value="personal">Pending</option>
+                  <option value="business">Solved</option>
+                  <option value="education">Deleted</option>
+                </select>
+                <div
+                  id="popover-ticket-status-description"
+                  role="tooltip"
+                  class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+                >
+                  Ticket status refers to the current state of a support ticket in various contexts.
+                  <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
+              </div>
+              <div>
+                <label for="requester" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Requester</label>
+                <div class="relative">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5">
+                    <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    id="requester"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 ps-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                    placeholder="e.g. Bonnie Green"
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="ticket-type" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Type
+                  <button data-popover-target="popover-type-description" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">Show information</span>
+                  </button>
+                </label>
+                <select
+                  id="ticket-type"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Any</option>
+                  <option value="personal">Question</option>
+                  <option value="business">Refund</option>
+                  <option value="business">Service request</option>
+                  <option value="business">Task</option>
+                </select>
+                <div
+                  id="popover-type-description"
+                  role="tooltip"
+                  class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+                >
+                  Each ticket type represents a specific kind of issue or task that requires attention.
+                  <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
+              </div>
+              <div>
+                <label for="priority-type" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                  Priority
+                  <button data-popover-target="popover-priority-description" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span class="sr-only">Show information</span>
+                  </button>
+                </label>
+                <select
+                  id="priority-type"
+                  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                >
+                  <option selected>Any</option>
+                  <option value="personal">High</option>
+                  <option value="business">Medium</option>
+                  <option value="business">Low</option>
+                </select>
+                <div
+                  id="popover-priority-description"
+                  role="tooltip"
+                  class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+                >
+                  Ticket priority is a classification that helps determine the importance of a request.
+                  <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
+              </div>
+              <div class="mt-6 flex space-x-4">
+                <button
+                  type="submit"
+                  class="w-full rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  Apply
+                </button>
+                <button
+                  type="reset"
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+            <button
+              type="button"
+              class="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 md:w-auto"
+            >
+              <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  fill-rule="evenodd"
+                  d="M9 2.2V7H4.2l.4-.5 3.9-4 .5-.3Zm2-.2v5a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v7c0 1.1.9 2 2 2 0 1.1.9 2 2 2h12a2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V4a2 2 0 0 0-2-2h-7Zm1 8.8A2.3 2.3 0 0 0 9.6 13a2.3 2.3 0 0 0 2.1 2.5h.7a.3.3 0 0 1 .2.4l-.4.1h-1a1 1 0 1 0 0 2h1c.5 0 1 0 1.4-.3a2 2 0 0 0 1-1.1 2.3 2.3 0 0 0-2.2-3l-.5-.1a.3.3 0 0 1-.3-.4.3.3 0 0 1 .4-.3h1a1 1 0 1 0 0-2h-1Zm8 1.5a1 1 0 1 0-2-.6l-.5 1.7-.5-1.7a1 1 0 0 0-2 .6l1.5 4.8a1 1 0 0 0 1.9 0l1.6-4.8Zm-13.8.9.4-.2h1a1 1 0 1 0 0-2h-1A2.6 2.6 0 0 0 4 13.6v1.8A2.6 2.6 0 0 0 6.6 18h1a1 1 0 1 0 0-2h-1a.6.6 0 0 1-.6-.6v-1.8c0-.1 0-.3.2-.4Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="mb-3 flex w-full shrink-0 flex-col items-stretch justify-end md:mb-0 md:w-auto md:flex-row md:items-center md:space-x-3">
+          <button
+            id="createTicketButton"
+            data-modal-target="createTicketModal"
+            data-modal-toggle="createTicketModal"
+            type="button"
+            class="flex items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Create ticket
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap py-4">
+      <div class="mr-4 hidden items-center text-sm font-medium text-gray-900 dark:text-white md:flex">Show only:</div>
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center">
+          <input
+            id="inline-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">All</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-2-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-2-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Solved</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-3-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-3-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Pending</label>
+        </div>
+        <div class="flex items-center">
+          <input
+            id="inline-4-radio"
+            type="radio"
+            value=""
+            name="inline-radio-group"
+            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          />
+          <label for="inline-4-radio" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Archived</label>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto relative">
+      <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="p-4">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-all"
+                  type="checkbox"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-all" class="sr-only">checkbox</label>
+              </div>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">ID</th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Requested by
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Subject</th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Priority
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Agent
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Create Date
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">
+              Status
+              <svg class="ml-1 inline-block h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z"
+                />
+              </svg>
+            </th>
+            <th scope="col" class="px-4 py-3 font-semibold">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846325</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Mark Duan</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Help with my purchase</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Medium</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Jese Leos
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">02 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.5 3a1 1 0 0 0 0 2H7v2.3c0 .7.2 1.3.6 1.8L9 11.9l.1.1v.1L7.5 15a3 3 0 0 0-.6 1.8V19H5.5a1 1 0 1 0 0 2h13a1 1 0 1 0 0-2H17v-2.3a3 3 0 0 0-.6-1.8l-1.6-2.8v-.2l1.6-2.8a3 3 0 0 0 .6-1.8V5h1.5a1 1 0 1 0 0-2h-13Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Pending
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-1-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-1-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-1-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-1-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846325</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Donnie Gree</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Support for Flowbite</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">High</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-9.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Neil Simss
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">03 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.5 3a1 1 0 0 0 0 2H7v2.3c0 .7.2 1.3.6 1.8L9 11.9l.1.1v.1L7.5 15a3 3 0 0 0-.6 1.8V19H5.5a1 1 0 1 0 0 2h13a1 1 0 1 0 0-2H17v-2.3a3 3 0 0 0-.6-1.8l-1.6-2.8v-.2l1.6-2.8a3 3 0 0 0 .6-1.8V5h1.5a1 1 0 1 0 0-2h-13Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Pending
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-2-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-2-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-2-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-2-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846325</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">User123</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Verify my email and my account</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">High</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Roberta Casas
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">03 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.5 3a1 1 0 0 0 0 2H7v2.3c0 .7.2 1.3.6 1.8L9 11.9l.1.1v.1L7.5 15a3 3 0 0 0-.6 1.8V19H5.5a1 1 0 1 0 0 2h13a1 1 0 1 0 0-2H17v-2.3a3 3 0 0 0-.6-1.8l-1.6-2.8v-.2l1.6-2.8a3 3 0 0 0 .6-1.8V5h1.5a1 1 0 1 0 0-2h-13Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Pending
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-3-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-3-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-3-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-3-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846328</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Leslie Livingston</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">New components</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">Low</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Roberta Casas
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">07 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-4-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-4-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-4-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-4-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846329</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">User123</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Figma variants missing</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="me-2 rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">High</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Jese Leos
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">07 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.5 3a1 1 0 0 0 0 2H7v2.3c0 .7.2 1.3.6 1.8L9 11.9l.1.1v.1L7.5 15a3 3 0 0 0-.6 1.8V19H5.5a1 1 0 1 0 0 2h13a1 1 0 1 0 0-2H17v-2.3a3 3 0 0 0-.6-1.8l-1.6-2.8v-.2l1.6-2.8a3 3 0 0 0 .6-1.8V5h1.5a1 1 0 1 0 0-2h-13Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Pending
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-5-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-5-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-5-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-5-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846330</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Bergside LLC</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">How to change colors</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Medium</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Roberta Casas
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">08 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-6-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-6-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-6-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-6-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846331</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Faye Drake</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Invoice issues</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Medium</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Jese Leos
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">08 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-7-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-7-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-7-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-7-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846332</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Karen Nelson</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Hello there!</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">High</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-10.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Jese Leos
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">10 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-8-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-8-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-8-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-8-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846333</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Lana Byrd</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Pricing questions</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">High</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-7.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Bonnie Green
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">11 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-9-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-9-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-9-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-9-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 border-gray-200">
+            <td class="w-4 px-4 py-3">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-table-search-1"
+                  type="checkbox"
+                  onclick="event.stopPropagation()"
+                  class="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                />
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="hover:underline" href="/support/ticket">#1846334</a></th>
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">User12345</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">Flowbite license</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <span class="rounded-sm bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">Low</span>
+            </td>
+            <th scope="row" class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <div class="mr-3 flex items-center">
+                <img src="/images/users/avatar-2.png" alt="Avatar" class="mr-3 h-8 w-auto rounded-full" />
+                Roberta Casas
+              </div>
+            </th>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">12 Mar 2025</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              <span class="inline-flex items-center rounded-sm bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="me-1 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 0 0-1 1H6a2 2 0 0 0-2 2v15c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2c0-.6-.4-1-1-1H9Zm1 2h4v2h1a1 1 0 1 1 0 2H9a1 1 0 0 1 0-2h1V4Zm5.7 8.7a1 1 0 0 0-1.4-1.4L11 14.6l-1.3-1.3a1 1 0 0 0-1.4 1.4l2 2c.4.4 1 .4 1.4 0l4-4Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Solved
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                id="ticket-10-dropdown-button"
+                type="button"
+                data-dropdown-toggle="ticket-10-dropdown"
+                class="inline-flex items-center rounded-lg p-1 text-center text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              >
+                <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="4" d="M6 12h0m6 0h0m6 0h0" />
+                </svg>
+              </button>
+              <div id="ticket-10-dropdown" class="z-10 hidden w-44 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700">
+                <ul class="p-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-labelledby="ticket-10-dropdown-button">
+                  <li>
+                    <a href="#" class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white">
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4.7 4.5 9.3-9" />
+                      </svg>
+                      Mark as solved
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="assigneeTicketModalButton"
+                      data-modal-target="assigneeTicketModal"
+                      data-modal-toggle="assigneeTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.3-2a6 6 0 0 0 0-6A4 4 0 0 1 20 8a4 4 0 0 1-6.7 3Zm2.2 9a4 4 0 0 0 .5-2v-1a6 6 0 0 0-1.5-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.5Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      id="archiveTicketModalButton"
+                      data-modal-target="archiveTicketModal"
+                      data-modal-toggle="archiveTicketModal"
+                      class="inline-flex w-full items-center rounded-md px-3 py-2 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                    >
+                      <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1c0 .6-.4 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                        <path d="M2 6c0-1.1.9-2 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z" />
+                      </svg>
+                      Archive
+                    </button>
+                  </li>
+                </ul>
+                <div class="p-2">
+                  <button
+                    type="button"
+                    id="deleteInvoiceButton"
+                    data-modal-target="deleteTicketModal"
+                    data-modal-toggle="deleteTicketModal"
+                    class="inline-flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-600"
+                  >
+                    <svg class="me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.6 2.6A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4c0-.5.2-1 .6-1.4ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Delete ticket
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Table Footer -->
+    <div class="relative overflow-hidden">
+      <nav class="flex flex-col items-start justify-between space-y-3 pt-4 md:flex-row md:items-center md:space-y-0 md:pt-6" aria-label="Table navigation">
+        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-15</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
+        <ul class="inline-flex items-stretch -space-x-px">
+          <li>
+            <a
+              href="#"
+              class="ml-0 flex h-full items-center justify-center rounded-l-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 19-7-7 7-7" />
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              1
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              2
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              aria-current="page"
+              class="z-10 flex items-center justify-center border border-primary-300 bg-primary-50 px-3 py-2 text-sm leading-tight text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+            >
+              3
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              ...
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              100
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex h-full items-center justify-center rounded-r-lg border border-gray-300 bg-white px-3 py-1.5 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Ticket modal -->
+<div id="deleteTicketModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-sm p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="absolute end-2.5 top-2.5 me-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="deleteTicketModal"
+      >
+        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+        </svg>
+
+        <span class="sr-only">Close modal</span>
+      </button>
+      <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">Are you sure?</h3>
+      <p class="mb-4 text-gray-500 dark:text-gray-400">You are about to delete this ticket, this cannot be undone.</p>
+      <div class="flex items-center space-x-4">
+        <button
+          data-modal-toggle="deleteTicketModal"
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:z-10 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-600"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+        >
+          <svg aria-hidden="true" class="-ml-0.5 me-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill-rule="evenodd"
+              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create ticket modal -->
+<div id="createTicketModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-2xl p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <!-- Modal header -->
+      <div class="mb-4 flex items-center justify-between rounded-t sm:mb-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add new ticket</h3>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="createTicketModal"
+        >
+          <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <form action="#">
+        <div class="mb-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="requester" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Requester
+              <button data-popover-target="popover-requester-description" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="requester"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Jese Leos</option>
+              <option value="bergside">Bergside LLC</option>
+              <option value="user">User1029</option>
+              <option value="leslie">Leslie Livingston</option>
+              <option value="micheal">Micheal Gough</option>
+              <option value="karen">Karen Nelson</option>
+            </select>
+            <div
+              id="popover-requester-description"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+            >
+              The requester is typically the person experiencing an issue or the individual seeking assistance, or information from a support team.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div>
+            <label for="agent" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Agent
+              <button data-popover-target="popover-agent" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="agent"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Bonnie Green</option>
+              <option value="thomas">Thomas Lean</option>
+              <option value="roberta">Roberta Casas</option>
+            </select>
+            <div
+              id="popover-agent"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+            >
+              An agent is a member of a support team who is responsible for managing and resolving service requests through the ticketing system.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div>
+            <label for="follower" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">Follower</label>
+            <select
+              id="follower"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Bonnie Green</option>
+              <option value="thomas">Thomas Lean</option>
+              <option value="roberta">Roberta Casas</option>
+            </select>
+          </div>
+          <div>
+            <label for="tags" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Tags</label>
+            <input
+              type="text"
+              id="tags"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+              placeholder=""
+              required
+            />
+          </div>
+          <div>
+            <label for="ticket-type-modal" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Type
+              <button data-popover-target="popover-ticket-type" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="ticket-type-modal"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Question</option>
+              <option value="refund">Refund</option>
+              <option value="roberta">Service request</option>
+              <option value="roberta">Task</option>
+            </select>
+            <div
+              id="popover-ticket-type"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+            >
+              Ticket types help organize and prioritize different types of requests within the ticketing system.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div>
+            <label for="ticket-priority" class="mb-2 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+              Priority
+              <button data-popover-target="popover-priority-modal" type="button" class="ms-1 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.008-3.018a1.502 1.502 0 0 1 2.522 1.159v.024a1.44 1.44 0 0 1-1.493 1.418 1 1 0 0 0-1.037.999V14a1 1 0 1 0 2 0v-.539a3.44 3.44 0 0 0 2.529-3.256 3.502 3.502 0 0 0-7-.255 1 1 0 0 0 2 .076c.014-.398.187-.774.48-1.044Zm.982 7.026a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2h-.01Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="sr-only">Show information</span>
+              </button>
+            </label>
+            <select
+              id="ticket-priority"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+            >
+              <option selected>Any</option>
+              <option value="personal">High</option>
+              <option value="business">Medium</option>
+              <option value="business">Low</option>
+            </select>
+            <div
+              id="popover-priority-modal"
+              role="tooltip"
+              class="tooltip invisible absolute z-10 inline-block w-72 rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-xs transition-opacity duration-300 dark:bg-gray-600"
+            >
+              Ticket priority is a classification that helps determine the urgency and importance of a service request.
+              <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+          </div>
+          <div class="col-span-2">
+            <label for="subject" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Your message</label>
+            <textarea
+              id="subject"
+              rows="4"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+              placeholder="Write your thoughts here..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4 sm:mt-5">
+          <button
+            type="button"
+            class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-primary-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5" />
+            </svg>
+            Add ticket
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Archive ticket modal -->
+<div id="archiveTicketModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <button
+        type="button"
+        class="absolute right-2.5 top-2.5 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        data-modal-toggle="archiveTicketModal"
+      >
+        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+        </svg>
+        <span class="sr-only">Close modal</span>
+      </button>
+      <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">Archive ticket</h3>
+      <p class="mb-4 font-light text-gray-500 dark:text-gray-400">You are about to archive the following ticket:</p>
+      <ul role="list" class="mb-4 space-y-2 text-left text-gray-500 dark:text-gray-400 sm:mb-5">
+        <li class="flex items-center space-x-1">
+          <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd" />
+          </svg>
+          <span>#1846354 - Mark Duan</span>
+        </li>
+      </ul>
+      <div class="flex items-center space-x-4">
+        <button
+          data-modal-toggle="archiveTicketModal"
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          No, cancel
+        </button>
+        <button
+          type="button"
+          class="flex items-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          <svg class="-ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5" />
+          </svg>
+          Archive this ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assignee modal -->
+<div id="assigneeTicketModal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0">
+  <div class="relative max-h-full w-full max-w-sm p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-5">
+      <form class="mx-auto mb-4 max-w-sm">
+        <label for="assignee" class="mb-2 flex items-center justify-between text-sm font-medium text-gray-900 dark:text-white">
+          Agent
+          <a href="#" class="text-primary-700 hover:underline dark:text-primary-500">take it</a>
+        </label>
+        <select
+          id="assignee"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+        >
+          <option selected>Bonnie Green</option>
+          <option value="jese">Jese Leos</option>
+          <option value="roberta">Roberta Casas</option>
+          <option value="neil">Neil Sims</option>
+        </select>
+      </form>
+
+      <div class="flex items-center space-x-4">
+        <button
+          data-modal-toggle="assigneeTicketModal"
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="inline-flex items-center rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

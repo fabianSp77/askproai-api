@@ -6,9 +6,59 @@
     "auditLog": "/var/www/api-gateway/logs/.dd03e116fe6051cf56589cd03dd712b5f42981ce-audit.json",
     "files": [
         {
-            "date": 1755153084567,
-            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-08-14.log",
-            "hash": "0f63fa8627cbcac889307ac5eb462869530214104aa62f06dbaaa536fde84ffc"
+            "date": 1756746080986,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-01.log",
+            "hash": "9857ad8f9b8e9ef27fba7647aea3380adbf0670a09c64714797bfc8bbedeb866"
+        },
+        {
+            "date": 1756831014760,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-02.log",
+            "hash": "a3913c7acec340e96277db6b9dcd55714d028734aed025705c3debc36388caba"
+        },
+        {
+            "date": 1756902586873,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-03.log",
+            "hash": "9c574579b319c2630c8e3881a239ca485cdde5821bcb860d196b5da09454d042"
+        },
+        {
+            "date": 1756968977058,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-04.log",
+            "hash": "70d343dd7756ed02c4cccf30d9e058265a270452644dd0b4c98bdfae83ce85c8"
+        },
+        {
+            "date": 1757054095582,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-05.log",
+            "hash": "a5b04f3c66c22c208c122ceeb3bc9d2e7060385d2bdbd64edcd13ae84776bd13"
+        },
+        {
+            "date": 1757135060860,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-06.log",
+            "hash": "2d854bd9809eaeec46986ab824a6eba59c35da92b772c98f14ecba1f48f02904"
+        },
+        {
+            "date": 1757265702995,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-07.log",
+            "hash": "f5c7d43f9e93ce861823fcb4d05e9e136d7ca6510ed09d4c0f7a4e238c9677e8"
+        },
+        {
+            "date": 1757340875343,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-08.log",
+            "hash": "ab07586140583ce4ef561058d4d50b0993ad94c7fbd3d3d0f71d963e5dcceb81"
+        },
+        {
+            "date": 1757397742905,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-09.log",
+            "hash": "96bc8079ae8e565226727e4232710b2af89d7932d57518f37af9bdd0da84d772"
+        },
+        {
+            "date": 1757483590815,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-10.log",
+            "hash": "b6b5f4cdcabae5fe2cc57e268b0261b2c1da212d243bf59d47cc189d90e544d8"
+        },
+        {
+            "date": 1757588407366,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-11.log",
+            "hash": "a3ece95ae2aac5ed06a366b8a02c5554c0b9951cab6128e69570c87e3eb46444"
         }
     ],
     "hashType": "sha256"

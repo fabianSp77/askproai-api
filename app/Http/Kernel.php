@@ -14,6 +14,7 @@ class Kernel extends HttpKernel
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\AutoFixViewCache::class, // Auto-fix view cache issues
             \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
@@ -32,6 +33,9 @@ class Kernel extends HttpKernel
         
         // 🔒 Admin panel security - internal network only
         'restrict.internal' => \App\Http\Middleware\RestrictToInternalNetwork::class,
+        
+        // 💰 Billing and usage tracking
+        'billing.track' => \App\Http\Middleware\BillingUsageTracker::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth'              => \App\Http\Middleware\Authenticate::class,

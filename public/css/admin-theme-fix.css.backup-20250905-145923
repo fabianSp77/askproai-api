@@ -1,0 +1,338 @@
+/* AskProAI Admin Theme Fix - Sky Blue Modern Design */
+
+:root {
+    --color-primary-50: 240 249 255;
+    --color-primary-100: 224 242 254;
+    --color-primary-200: 186 230 253;
+    --color-primary-300: 125 211 252;
+    --color-primary-400: 56 189 248;
+    --color-primary-500: 14 165 233;
+    --color-primary-600: 2 132 199;
+    --color-primary-700: 3 105 161;
+    --color-primary-800: 7 89 133;
+    --color-primary-900: 12 74 110;
+    --color-primary-950: 8 47 73;
+}
+
+/* Modern Sidebar Styling */
+.fi-sidebar {
+    background: linear-gradient(to bottom, rgb(255 255 255), rgb(249 250 251)) !important;
+    border-right: 1px solid rgb(229 231 235) !important;
+}
+
+.fi-sidebar-header {
+    background: linear-gradient(to right, rgb(14 165 233), rgb(2 132 199)) !important;
+    color: white !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-sidebar-nav {
+    background-color: transparent !important;
+    padding: 0.5rem !important;
+}
+
+.fi-sidebar-item a {
+    border-radius: 0.5rem !important;
+    margin-left: 0.5rem !important;
+    margin-right: 0.5rem !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.625rem 0.75rem !important;
+}
+
+.fi-sidebar-item-active a,
+.fi-sidebar-item-active {
+    background-color: rgb(240 249 255) !important;
+    color: rgb(3 105 161) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active) a {
+    background-color: rgb(243 244 246) !important;
+    color: rgb(55 65 81) !important;
+}
+
+/* Modern Cards with Flowbite styling */
+.fi-wi-widget {
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgb(243 244 246) !important;
+    overflow: hidden !important;
+}
+
+.fi-section {
+    border-radius: 1rem !important;
+    background-color: white !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgb(243 244 246) !important;
+}
+
+/* Clean Tables */
+.fi-ta-table {
+    border-top: 1px solid rgb(243 244 246) !important;
+}
+
+.fi-ta-row:hover {
+    background-color: rgb(240 249 255) !important;
+    transition: background-color 0.15s !important;
+}
+
+/* Modern Form Inputs */
+.fi-input,
+.fi-fo-field-wrp input,
+.fi-fo-field-wrp select,
+.fi-fo-field-wrp textarea {
+    border-radius: 0.5rem !important;
+    border-color: rgb(229 231 235) !important;
+}
+
+.fi-input:focus,
+.fi-fo-field-wrp input:focus,
+.fi-fo-field-wrp select:focus,
+.fi-fo-field-wrp textarea:focus {
+    border-color: rgb(56 189 248) !important;
+    ring-color: rgb(56 189 248) !important;
+}
+
+/* Better Buttons with Flowbite style */
+.fi-btn {
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.fi-btn:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-btn-primary,
+.fi-ac-btn-action[style*="--c-400:var(--primary-400)"] {
+    background: linear-gradient(to right, rgb(14 165 233), rgb(2 132 199)) !important;
+    color: white !important;
+}
+
+.fi-btn-primary:hover,
+.fi-ac-btn-action[style*="--c-400:var(--primary-400)"]:hover {
+    background: linear-gradient(to right, rgb(2 132 199), rgb(3 105 161)) !important;
+}
+
+/* Dashboard Stats Cards */
+.fi-stats-card,
+.fi-wi-stats-overview-stat {
+    background-color: white !important;
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    border: 1px solid rgb(243 244 246) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    transition: box-shadow 0.3s !important;
+}
+
+.fi-stats-card:hover,
+.fi-wi-stats-overview-stat:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Page Headers */
+.fi-header {
+    background: white !important;
+    border-bottom: 1px solid rgb(243 244 246) !important;
+    padding: 1.5rem !important;
+}
+
+.fi-header-heading {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: rgb(17 24 39) !important;
+}
+
+/* Info List Styling */
+.fi-in-component {
+    background: white !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
+}
+
+.fi-in-item {
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid rgb(243 244 246) !important;
+}
+
+.fi-in-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Badges */
+.fi-badge {
+    border-radius: 9999px !important;
+    padding: 0.125rem 0.625rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+}
+
+/* Grid Layout Fix */
+.fi-layout {
+    display: grid !important;
+    grid-template-columns: 16rem 1fr !important;
+    min-height: 100vh !important;
+}
+
+.fi-sidebar {
+    grid-column: 1 !important;
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+}
+
+.fi-main-ctn {
+    grid-column: 2 !important;
+    opacity: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    background-color: rgb(249 250 251) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 1024px) {
+    .fi-layout {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .fi-sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 16rem !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s !important;
+        z-index: 50 !important;
+    }
+    
+    .fi-sidebar.fi-sidebar-open {
+        transform: translateX(0) !important;
+    }
+    
+    .fi-main-ctn {
+        grid-column: 1 !important;
+    }
+}
+
+/* Breadcrumbs */
+.fi-breadcrumbs {
+    background: white !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Notifications */
+.fi-notification {
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Loading States */
+.fi-loading-indicator {
+    color: rgb(14 165 233) !important;
+}
+
+/* Modals */
+.fi-modal-window {
+    border-radius: 1rem !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Tabs */
+.fi-tabs-item-active {
+    border-bottom: 2px solid rgb(14 165 233) !important;
+    color: rgb(14 165 233) !important;
+}
+
+/* Pagination */
+.fi-pagination {
+    background: white !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+}
+
+/* Search Input */
+.fi-global-search-field {
+    border-radius: 9999px !important;
+    background: rgb(243 244 246) !important;
+}
+
+.fi-global-search-field:focus {
+    background: white !important;
+    border: 1px solid rgb(14 165 233) !important;
+}
+
+/* Actions Menu */
+.fi-dropdown-panel {
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgb(243 244 246) !important;
+}
+
+/* User Menu */
+.fi-user-menu {
+    background: white !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgb(243 244 246) !important;
+}
+
+/* Fix text colors for better contrast */
+.fi-sidebar-item-label {
+    font-weight: 500 !important;
+}
+
+.text-gray-950 {
+    color: rgb(3 7 18) !important;
+}
+
+.text-gray-600 {
+    color: rgb(75 85 99) !important;
+}
+
+/* Make the whole admin panel feel more modern */
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Smooth all transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-duration: 150ms !important;
+}
+
+/* Remove harsh borders and add subtle shadows */
+.border {
+    border-color: rgb(243 244 246) !important;
+}
+
+/* Sky-blue accents throughout */
+a:hover {
+    color: rgb(14 165 233) !important;
+}
+
+.ring-primary-500 {
+    --tw-ring-color: rgb(14 165 233) !important;
+}
+
+/* Fix any remaining buttons */
+button[type="submit"],
+.fi-btn[style*="background"],
+.filament-button {
+    background: rgb(14 165 233) !important;
+    color: white !important;
+}
+
+button[type="submit"]:hover,
+.fi-btn[style*="background"]:hover,
+.filament-button:hover {
+    background: rgb(2 132 199) !important;
+}

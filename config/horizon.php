@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'use' => 'default',
+    'use' => 'queue',
 
     /*
     |--------------------------------------------------------------------------
@@ -84,7 +84,10 @@ return [
     */
 
     'waits' => [
-        'redis:default' => 60,
+        'redis:default' => 30,
+        'redis:high' => 15,
+        'redis:webhooks' => 10,
+        'redis:notifications' => 60,
     ],
 
     /*
@@ -166,7 +169,7 @@ return [
     |
     */
 
-    'memory_limit' => 64,
+    'memory_limit' => 256,
 
     /*
     |--------------------------------------------------------------------------
@@ -180,33 +183,104 @@ return [
     */
 
     'defaults' => [
-        'supervisor-1' => [
+        'webhooks' => [
+            'connection' => 'redis',
+            'queue' => ['webhooks'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 5,
+            'maxTime' => 0,
+            'maxJobs' => 100,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 30,
+            'nice' => 0,
+        ],
+        'high' => [
+            'connection' => 'redis',
+            'queue' => ['high'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 3,
+            'maxTime' => 0,
+            'maxJobs' => 50,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 120,
+            'nice' => 0,
+        ],
+        'default' => [
             'connection' => 'redis',
             'queue' => ['default'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 1,
+            'maxProcesses' => 2,
             'maxTime' => 0,
-            'maxJobs' => 0,
-            'memory' => 128,
-            'tries' => 1,
-            'timeout' => 60,
+            'maxJobs' => 50,
+            'memory' => 256,
+            'tries' => 2,
+            'timeout' => 90,
             'nice' => 0,
+        ],
+        'notifications' => [
+            'connection' => 'redis',
+            'queue' => ['notifications', 'emails'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 50,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 5,
         ],
     ],
 
     'environments' => [
         'production' => [
-            'supervisor-1' => [
-                'maxProcesses' => 10,
+            'webhooks' => [
+                'maxProcesses' => 8,
+                'minProcesses' => 2,
+                'balanceMaxShift' => 2,
+                'balanceCooldown' => 3,
+            ],
+            'high' => [
+                'maxProcesses' => 5,
+                'minProcesses' => 1,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+            ],
+            'default' => [
+                'maxProcesses' => 4,
+                'minProcesses' => 1,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+            'notifications' => [
+                'maxProcesses' => 3,
+                'minProcesses' => 1,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
             ],
         ],
 
         'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
+            'webhooks' => [
+                'maxProcesses' => 2,
+                'minProcesses' => 1,
+            ],
+            'high' => [
+                'maxProcesses' => 2,
+                'minProcesses' => 1,
+            ],
+            'default' => [
+                'maxProcesses' => 2,
+                'minProcesses' => 1,
+            ],
+            'notifications' => [
+                'maxProcesses' => 1,
+                'minProcesses' => 1,
             ],
         ],
     ],

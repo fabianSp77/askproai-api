@@ -1,0 +1,122 @@
+<x-filament-panels::page>
+    @php
+        $sections = [
+            [
+                'title' => 'Call Details',
+                'description' => 'Basic information about the call',
+                'fields' => [
+                    [
+                        'type' => 'select',
+                        'name' => 'customer_id',
+                        'label' => 'Customer',
+                        'placeholder' => 'Select a customer',
+                        'required' => true,
+                        'options' => \App\Models\Customer::pluck('name', 'id')->map(fn($name, $id) => ['value' => $id, 'label' => $name])->values()->toArray(),
+                    ],
+                    [
+                        'type' => 'select',
+                        'name' => 'agent_id',
+                        'label' => 'Agent',
+                        'placeholder' => 'Select an agent',
+                        'options' => \App\Models\Staff::pluck('name', 'id')->map(fn($name, $id) => ['value' => $id, 'label' => $name])->values()->toArray(),
+                    ],
+                    [
+                        'type' => 'tel',
+                        'name' => 'from_number',
+                        'label' => 'From Number',
+                        'placeholder' => '+49 123 456 789',
+                        'required' => true,
+                    ],
+                    [
+                        'type' => 'tel',
+                        'name' => 'to_number',
+                        'label' => 'To Number',
+                        'placeholder' => '+49 123 456 789',
+                        'required' => true,
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Call Information',
+                'description' => 'Call type, status and duration',
+                'fields' => [
+                    [
+                        'type' => 'select',
+                        'name' => 'call_type',
+                        'label' => 'Call Type',
+                        'required' => true,
+                        'options' => [
+                            ['value' => 'inbound', 'label' => 'Inbound'],
+                            ['value' => 'outbound', 'label' => 'Outbound'],
+                        ],
+                    ],
+                    [
+                        'type' => 'select',
+                        'name' => 'status',
+                        'label' => 'Status',
+                        'required' => true,
+                        'value' => 'initiated',
+                        'options' => [
+                            ['value' => 'initiated', 'label' => 'Initiated'],
+                            ['value' => 'in_progress', 'label' => 'In Progress'],
+                            ['value' => 'completed', 'label' => 'Completed'],
+                            ['value' => 'failed', 'label' => 'Failed'],
+                            ['value' => 'abandoned', 'label' => 'Abandoned'],
+                        ],
+                    ],
+                    [
+                        'type' => 'number',
+                        'name' => 'duration',
+                        'label' => 'Duration (seconds)',
+                        'placeholder' => '0',
+                        'min' => '0',
+                    ],
+                    [
+                        'type' => 'datetime-local',
+                        'name' => 'started_at',
+                        'label' => 'Started At',
+                        'value' => now()->format('Y-m-d\TH:i'),
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Call Content',
+                'description' => 'Notes and transcript information',
+                'fields' => [
+                    [
+                        'type' => 'textarea',
+                        'name' => 'notes',
+                        'label' => 'Notes',
+                        'placeholder' => 'Add any notes about this call...',
+                        'rows' => 4,
+                    ],
+                    [
+                        'type' => 'textarea',
+                        'name' => 'transcript',
+                        'label' => 'Call Transcript',
+                        'placeholder' => 'Enter call transcript if available...',
+                        'rows' => 6,
+                    ],
+                    [
+                        'type' => 'textarea',
+                        'name' => 'summary',
+                        'label' => 'Call Summary',
+                        'placeholder' => 'Brief summary of the call...',
+                        'rows' => 3,
+                    ],
+                ],
+            ],
+        ];
+    @endphp
+    
+    <x-admin.flowbite-form
+        title="Create Call"
+        description="Record a new call entry"
+        action="{{ url('/admin/calls') }}"
+        method="POST"
+        :sections="$sections"
+        submitLabel="Create Call"
+        cancelUrl="/admin/calls"
+        layout="single"
+    />
+</x-filament-panels::page>

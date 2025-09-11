@@ -9,11 +9,20 @@ use Filament\Resources\Pages\EditRecord;
 class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
+    
+    // protected static string $view = 'filament.admin.resources.customer-resource.pages.edit-customer';
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),
+        ];
+    }
+    
+    protected function getViewData(): array
+    {
+        return [
+            'record' => $this->record,
         ];
     }
 }

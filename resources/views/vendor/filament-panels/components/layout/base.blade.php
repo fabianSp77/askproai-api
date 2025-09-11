@@ -39,51 +39,6 @@
             [x-cloak='1'] {
                 display: none !important;
             }
-            
-            /* EMERGENCY FIX FOR ISSUE #578 - Navigation Overlap */
-            .fi-layout {
-                display: grid !important;
-                grid-template-columns: 16rem 1fr !important;
-                min-height: 100vh !important;
-            }
-            
-            .fi-sidebar {
-                grid-column: 1 !important;
-                position: sticky !important;
-                top: 0 !important;
-                height: 100vh !important;
-                overflow-y: auto !important;
-                background: white !important;
-                border-right: 1px solid rgb(229 231 235) !important;
-                z-index: 40 !important;
-            }
-            
-            .fi-main-ctn {
-                grid-column: 2 !important;
-                opacity: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                min-height: 100vh !important;
-                overflow-x: hidden !important;
-            }
-            
-            .fi-sidebar-nav {
-                padding: 0.5rem !important;
-            }
-            
-            .fi-sidebar-item {
-                margin-bottom: 0.125rem !important;
-            }
-            
-            .fi-sidebar-item a {
-                display: flex !important;
-                align-items: center !important;
-                padding: 0.625rem 0.75rem !important;
-                border-radius: 0.5rem !important;
-                pointer-events: auto !important;
-                position: relative !important;
-                z-index: 10 !important;
-            }
 
             @media (max-width: 1023px) {
                 [x-cloak='-lg'] {
@@ -186,42 +141,5 @@
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire->getRenderHookScopes()) }}
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire->getRenderHookScopes()) }}
-        <script>
-            // Emergency JavaScript fix for navigation - Issue #578
-            document.addEventListener('DOMContentLoaded', function() {
-                const layout = document.querySelector('.fi-layout');
-                if (layout) {
-                    layout.style.display = 'grid';
-                    layout.style.gridTemplateColumns = '16rem 1fr';
-                }
-                
-                const sidebar = document.querySelector('.fi-sidebar');
-                if (sidebar) {
-                    sidebar.style.gridColumn = '1';
-                    sidebar.style.position = 'sticky';
-                    sidebar.style.top = '0';
-                    sidebar.style.height = '100vh';
-                    sidebar.style.zIndex = '40';
-                }
-                
-                const mainCtn = document.querySelector('.fi-main-ctn');
-                if (mainCtn) {
-                    mainCtn.style.gridColumn = '2';
-                    mainCtn.style.opacity = '1';
-                    mainCtn.style.display = 'flex';
-                    mainCtn.style.flexDirection = 'column';
-                }
-                
-                // Ensure all navigation links are clickable
-                const navLinks = document.querySelectorAll('.fi-sidebar-item a');
-                navLinks.forEach(link => {
-                    link.style.pointerEvents = 'auto';
-                    link.style.position = 'relative';
-                    link.style.zIndex = '10';
-                });
-                
-                console.log('✅ Navigation fix applied via JavaScript - Issue #578');
-            });
-        </script>
     </body>
 </html>

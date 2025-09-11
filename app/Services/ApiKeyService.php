@@ -13,7 +13,7 @@ class ApiKeyService
     /**
      * Generate a new API key for tenant
      */
-    public function generateApiKey(Tenant $tenant): array
+    public function generateApiKey(Tenant $tenant): string
     {
         $plainKey = 'ask_' . Str::random(32);
         $hashedKey = Hash::make($plainKey);
@@ -21,39 +21,35 @@ class ApiKeyService
         // Update tenant with new hashed key
         $tenant->update([
             'api_key_hash' => $hashedKey,
-            'api_key_generated_at' => now(),
+            'api_key_created_at' => now(),
         ]);
 
         Log::info('New API key generated', [
             'tenant_id' => $tenant->id,
             'tenant_name' => $tenant->name,
+            'key_prefix' => substr($plainKey, 0, 8),
         ]);
 
-        return [
-            'api_key' => $plainKey,
-            'key_id' => substr($plainKey, 0, 8) . '...' . substr($plainKey, -4),
-            'generated_at' => now()->toISOString(),
-            'tenant_id' => $tenant->id,
-        ];
+        return $plainKey;
     }
 
     /**
      * Rotate API key for tenant
      */
-    public function rotateApiKey(Tenant $tenant, string $reason = 'Manual rotation'): array
+    public function rotateApiKey(Tenant $tenant, string $reason = 'Manual rotation'): string
     {
-        $oldKeyId = $tenant->api_key_hash ? substr($tenant->api_key_hash, 0, 12) . '...' : 'none';
+        $oldKeyPrefix = $tenant->api_key ? substr($tenant->api_key, 0, 8) : 'none';
         
-        $newKeyData = $this->generateApiKey($tenant);
+        $newKey = $this->generateApiKey($tenant);
 
         Log::warning('API key rotated', [
             'tenant_id' => $tenant->id,
-            'old_key_id' => $oldKeyId,
-            'new_key_id' => $newKeyData['key_id'],
+            'old_key_prefix' => $oldKeyPrefix,
+            'new_key_prefix' => substr($newKey, 0, 8),
             'reason' => $reason,
         ]);
 
-        return $newKeyData;
+        return $newKey;
     }
 
     /**

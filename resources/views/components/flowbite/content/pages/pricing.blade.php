@@ -1,0 +1,652 @@
+{{-- Flowbite Component: pricing --}}
+@props(['title' => 'Tailwind CSS Pricing Page - Flowbite', 'description' => 'Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.'])
+<div {{ $attributes->merge(['class' => '']) }}>
+<section class="bg-white dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 pt-8 sm:pt-16 lg:px-6">
+    <div class="mx-auto mb-8 max-w-screen-md text-center lg:mb-12">
+      <h2 class="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">Why Flowbite?</h2>
+      <p class="mb-5 font-light text-gray-500 dark:text-gray-400 sm:text-xl">Here at Flowbite we focus on markets where technology, innovation, and capital can unlock long-term value and drive economic growth.</p>
+      <div class="flex items-center justify-center">
+        <span class="text-base font-medium text-gray-900 dark:text-white"> Monthly </span>
+        <!-- Switch Container -->
+        <label class="inline-flex items-center cursor-pointer mx-4">
+          <input id="toggle-example" type="checkbox" value="" class="sr-only peer">
+          <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600 dark:peer-checked:bg-primary-600"></div>
+        </label>
+        <span class="text-base font-medium text-gray-500 dark:text-gray-400"> Yearly </span>
+      </div>
+    </div>
+    <div class="grid gap-8 xl:grid-cols-3 xl:gap-10">
+      <!-- Pricing Card -->
+      <div class="mx-auto flex max-w-xl flex-col rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800 xl:max-w-lg xl:p-8">
+        <h3 class="mb-4 text-2xl font-medium text-gray-900 dark:text-white">Starter</h3>
+        <span class="text-5xl font-extrabold text-gray-900 dark:text-white">$29</span>
+        <p class="mb-1 mt-4 text-gray-500 dark:text-gray-400">$19 USD per month, paid annually</p>
+        <a href="#" class="inline-flex items-center justify-center font-medium text-primary-600 hover:text-primary-800 dark:text-primary-500 dark:hover:text-primary-700">
+          Go to annual plan
+          <svg class="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a
+          href="#"
+          class="my-8 rounded-lg bg-gray-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 dark:bg-gray-600 dark:text-white  dark:hover:bg-gray-500 dark:focus:ring-gray-600"
+          >Get started</a
+        >
+        <!-- List -->
+        <ul role="list" class="space-y-4 text-left text-gray-900 dark:text-gray-400">
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
+              <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>All tools you need to create apps</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>No setup, monthly, or hidden fees</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>Comprehensive security</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+            </svg>
+            <span class="line-through">Get hundreds of feature updates</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="line-through"> Payouts to your bank account</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="line-through">Financial reconciliation and reporting</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="line-through">24×7 phone, chat, and email support</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"
+              ></path>
+            </svg>
+            <span class="line-through">Robust developer platform</span>
+          </li>
+        </ul>
+      </div>
+      <!-- Pricing Card -->
+      <div class="mx-auto flex max-w-xl flex-col rounded-lg border border-primary-600 bg-white p-6 text-center shadow-sm dark:bg-gray-800 xl:max-w-lg xl:p-8">
+        <div class="mb-2">
+          <span class="rounded-sm bg-primary-100 px-3 py-1 text-sm text-primary-800 dark:bg-primary-200 dark:text-primary-800">Most popular</span>
+        </div>
+        <h3 class="mb-4 text-2xl font-medium text-gray-900 dark:text-white">Premium</h3>
+        <span class="text-5xl font-extrabold text-gray-900 dark:text-white">$199</span>
+        <p class="mb-1 mt-4 text-gray-500 dark:text-gray-400">$159 USD per month, paid annually</p>
+        <a href="#" class="inline-flex items-center justify-center font-medium text-primary-600 hover:text-primary-800 dark:text-primary-500 dark:hover:text-primary-700">
+          Go to annual plan
+          <svg class="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a
+          href="#"
+          class="my-8 rounded-lg bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+          >Get started</a
+        >
+        <!-- List -->
+        <ul role="list" class="space-y-4 text-left text-gray-900 dark:text-gray-400">
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
+              <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>All tools you need to create apps</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>No setup, monthly, or hidden fees</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>Comprehensive security</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+            </svg>
+            <span>Get hundreds of feature updates</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span> Payouts to your bank account</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="line-through">Financial reconciliation and reporting</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="line-through">24×7 phone, chat, and email support</span>
+          </li>
+          <li class="flex items-center space-x-3 text-gray-500">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"
+              ></path>
+            </svg>
+            <span class="line-through">Robust developer platform</span>
+          </li>
+        </ul>
+      </div>
+      <!-- Pricing Card -->
+      <div class="mx-auto flex max-w-xl flex-col rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800 xl:max-w-lg xl:p-8">
+        <h3 class="mb-4 text-2xl font-medium text-gray-900 dark:text-white">Enterprise</h3>
+        <span class="text-5xl font-extrabold text-gray-900 dark:text-white">$599</span>
+        <p class="mb-1 mt-4 text-gray-500 dark:text-gray-400">$499 USD per month, paid annually</p>
+        <a href="#" class="inline-flex items-center justify-center font-medium text-primary-600 hover:text-primary-800 dark:text-primary-500 dark:hover:text-primary-700">
+          Go to annual plan
+          <svg class="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a
+          href="#"
+          class="my-8 rounded-lg bg-gray-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 dark:bg-gray-600 dark:text-white  dark:hover:bg-gray-500 dark:focus:ring-gray-600"
+          >Get started</a
+        >
+        <!-- List -->
+        <ul role="list" class="space-y-4 text-left text-gray-900 dark:text-gray-400">
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
+              <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>All tools you need to create apps</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>No setup, monthly, or hidden fees</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>Comprehensive security</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+            </svg>
+            <span>Get hundreds of feature updates</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span> Payouts to your bank account</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>Financial reconciliation and reporting</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span>24×7 phone, chat, and email support</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <!-- Icon -->
+            <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"
+              ></path>
+            </svg>
+            <span>Robust developer platform</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-white dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 py-8 sm:py-16 lg:px-6 lg:py-24">
+    <div class="mx-auto max-w-screen-lg text-center">
+      <h2 class="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">Frequently asked questions</h2>
+      <p class="mb-8 text-gray-500 dark:text-gray-400 lg:text-lg">Ask us anything about our brand and products, and get factual responses.</p>
+    </div>
+
+    <div class="grid border-t border-gray-200 pt-8 text-left dark:border-gray-700 sm:grid-cols-2 sm:gap-8 lg:gap-16">
+      <div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">What do you mean by "Figma assets"?</h3>
+          <p class="text-gray-500 dark:text-gray-400">
+            You will have access to download the full Figma project including all of the pages, the components, responsive pages, and also the icons, illustrations, and images included in the screens.
+          </p>
+        </div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">What does "lifetime access" exactly mean?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">Once you have purchased either the design, code, or both packages, you will have access to all of the future updates based on the roadmap, free of charge.</p>
+        </div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">How does support work?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">We're aware of the importance of well qualified support, that is why we decided that support will only be provided by the authors that actually worked on this project.</p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            Feel free to <a href="#" class="font-medium text-primary-600 underline hover:no-underline dark:text-primary-500" target="_blank" rel="noreferrer">contact us</a> and we'll help you out as soon as we can.
+          </p>
+        </div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">I want to build more than one project with Flowbite. Is that allowed?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            You can use Flowbite for an unlimited amount of projects, whether it's a personal website, a SaaS app, or a website for a client. As long as you don't build a product that will directly compete with Flowbite either as a UI kit,
+            theme, or template, it's fine.
+          </p>
+          <p class="text-gray-500 dark:text-gray-400">Find out more information by <a href="#" class="font-medium text-primary-600 underline hover:no-underline dark:text-primary-500">reading the license</a>.</p>
+        </div>
+      </div>
+      <div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">What does "free updates" include?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            The free updates that will be provided is based on the <a href="#" class="font-medium text-primary-600 underline hover:no-underline dark:text-primary-500">roadmap</a> that we have laid out for this project. It is also possible
+            that we will provide extra updates outside of the roadmap as well.
+          </p>
+        </div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">What does the free version include?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            The <a href="#" class="font-medium text-primary-600 underline hover:no-underline dark:text-primary-500">free version</a> of Flowbite includes a minimal style guidelines, component variants, and a dashboard page with the mobile
+            version alongside it.
+          </p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">You can use this version for any purposes, because it is open-source under the MIT license.</p>
+        </div>
+        <div class="mb-10">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">What is the difference between Flowbite and Tailwind UI?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            Although both Flowbite and Tailwind UI are built for integration with Tailwind CSS, the main difference is in the design, the pages, the extra components and UI elements that Flowbite includes.
+          </p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">Additionally, Flowbite is a project that is still in development, and later it will include both the application, marketing, and e-commerce UI interfaces.</p>
+        </div>
+        <div class="mb-10  xl:mb-0">
+          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">Can I use Flowbite in open-source projects?</h3>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            Generally, it is accepted to use Flowbite in open-source projects, as long as it is not a UI library, a theme, a template, a page-builder that would be considered as an alternative to Flowbite itself.
+          </p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">With that being said, feel free to use this design kit for your open-source projects.</p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400  xl:mb-0">Find out more information by <a href="#" class="font-medium text-primary-600 underline hover:no-underline dark:text-primary-500">reading the license</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="border-b border-t border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+  <div class="mx-auto max-w-screen-xl px-4 py-8 sm:py-16 lg:px-6 lg:py-24">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="text-3xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-4xl">Donors, Partners & Sponsors</h2>
+      <p class="mt-4 text-base font-normal text-gray-500 dark:text-gray-400 sm:text-xl">Here at flowbite we focus on markets where technology, innovation, and capital can unlock long-term value.</p>
+      <div class="mt-4">
+        <a href="#" title="" class="inline-flex items-center text-base font-medium text-primary-600 hover:underline dark:text-primary-500">
+          Become a sponsor
+          <svg class="ms-1.5 h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 text-center sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:grid-cols-4">
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/stripe.svg" alt="Stripe logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/spotify.svg" alt="Spotify logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/tesla.svg" alt="Tesla logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/twitch.svg" alt="Twitch logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/intel.svg" alt="Intel logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/shell.svg" alt="Shell logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/netflix.svg" alt="Netflix logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/nestle.svg" alt="Nestle logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/fedex.svg" alt="Fedex logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain dark:invert" src="/images/customers/disney.svg" alt="Disney logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/bmw.svg" alt="BMW logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <img class="mx-auto h-12 w-auto object-contain" src="/images/customers/coca-cola.svg" alt="Coca Cola logo" />
+          <p class="mt-2.5 text-base font-normal leading-tight text-gray-500 dark:text-gray-400">Partner since 2015</p>
+        </div>
+        <div class="mt-5">
+          <a
+            href="#"
+            title=""
+            class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
+            role="button"
+          >
+            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.8a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8V7.2A1.2 1.2 0 0 1 5.2 6h4.6m4.4-2H20v5.8m-7.9 2L20 4.2" />
+            </svg>
+            Visit website
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>

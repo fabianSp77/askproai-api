@@ -11,11 +11,23 @@ class WorkingHourPolicy
     use HandlesAuthorization;
 
     /**
+     * Perform pre-authorization checks.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_working::hour');
+        return $user->can('view_any_working_hour');
     }
 
     /**
@@ -23,7 +35,7 @@ class WorkingHourPolicy
      */
     public function view(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('view_working::hour');
+        return $user->can('view_working_hour');
     }
 
     /**
@@ -31,7 +43,7 @@ class WorkingHourPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_working::hour');
+        return $user->can('create_working_hour');
     }
 
     /**
@@ -39,7 +51,7 @@ class WorkingHourPolicy
      */
     public function update(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('update_working::hour');
+        return $user->can('update_working_hour');
     }
 
     /**
@@ -47,7 +59,7 @@ class WorkingHourPolicy
      */
     public function delete(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('delete_working::hour');
+        return $user->can('delete_working_hour');
     }
 
     /**
@@ -55,7 +67,7 @@ class WorkingHourPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_working::hour');
+        return $user->can('delete_any_working_hour');
     }
 
     /**
@@ -63,7 +75,7 @@ class WorkingHourPolicy
      */
     public function forceDelete(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('force_delete_working::hour');
+        return $user->can('force_delete_working_hour');
     }
 
     /**
@@ -71,7 +83,7 @@ class WorkingHourPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_working::hour');
+        return $user->can('force_delete_any_working_hour');
     }
 
     /**
@@ -79,7 +91,7 @@ class WorkingHourPolicy
      */
     public function restore(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('restore_working::hour');
+        return $user->can('restore_working_hour');
     }
 
     /**
@@ -87,7 +99,7 @@ class WorkingHourPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_working::hour');
+        return $user->can('restore_any_working_hour');
     }
 
     /**
@@ -95,7 +107,7 @@ class WorkingHourPolicy
      */
     public function replicate(User $user, WorkingHour $workingHour): bool
     {
-        return $user->can('replicate_working::hour');
+        return $user->can('replicate_working_hour');
     }
 
     /**
@@ -103,6 +115,6 @@ class WorkingHourPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_working::hour');
+        return $user->can('reorder_working_hour');
     }
 }

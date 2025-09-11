@@ -8,19 +8,32 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Integration extends Model
 {
     protected $fillable = [
-        'customer_id',
-        'system',
+        'tenant_id',
+        'company_id',
+        'name',
+        'type',
+        'status',
+        'config',
         'credentials',
-        'active',
+        'is_active',
+        'last_sync_at',
     ];
 
     protected $casts = [
+        'config' => 'array',
         'credentials' => 'array',
-        'active'      => 'boolean',
+        'is_active' => 'boolean',
+        'last_sync_at' => 'datetime',
     ];
 
-    public function customer(): BelongsTo
+    // Relationships based on actual database schema
+    public function company(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Company::class);
+    }
+    
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

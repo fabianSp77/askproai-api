@@ -70,7 +70,13 @@ $response = curl_exec($ch);
 - [x] Add cal-api-version header
 - [x] Update .env.example files
 - [x] Update configuration documentation
-- [ ] Test v2 API calls with staging environment
+- [x] Implement dual V1/V2 support in CalcomService
+- [x] Add checkAvailability method for V2
+- [x] Create comprehensive test suite
+- [x] Add proper error handling for auth failures
+- [ ] Obtain valid API key from Cal.com dashboard
+- [ ] Test v2 API calls with valid API key
+- [ ] Deploy to staging environment
 - [ ] Update any additional API integrations
 
 ## Security Improvements

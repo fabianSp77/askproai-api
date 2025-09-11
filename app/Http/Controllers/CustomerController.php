@@ -1,46 +1,77 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Models\Kunde;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 class CustomerController extends Controller
 {
+    /**
+     * Login method for API authentication
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        // Check user
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json(['message' => 'Ungültige Zugangsdaten.'], 401);
+        }
+
+        // Generate token
+        $token = $user->createToken('API Token')->accessToken;
+
+        return response()->json(['token' => $token], 200);
+    }
+
+    /**
+     * Display all customers
+     */
     public function index()
     {
-        $customers = DB::table('customers')->get();
-        return view('customers.index', compact('customers'));
+        return response()->json(Kunde::all());
     }
-    
-    public function create()
-    {
-        return view('customers.create');
-    }
-    
+
+    /**
+     * Store a new customer
+     */
     public function store(Request $request)
     {
-        $id = DB::table('customers')->insertGetId([
-            'name' => $request->name,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        
-        return redirect()->route('customers.show', $id)
-            ->with('success', 'Kunde erfolgreich erstellt');
+        $kunde = Kunde::create($request->all());
+        return response()->json($kunde, 201);
     }
-    
-    public function show($id)
+
+    /**
+     * Display a specific customer
+     */
+    public function show(Kunde $kunde)
     {
-        $customer = DB::table('customers')->find($id);
-        
-        // Verwende phone_number statt customer_id für die Verknüpfung
-        $customerPhone = DB::table('customers')->where('id', $id)->value('phone_number');
-        
-        $calls = DB::table('calls')
-            ->where('phone_number', $customerPhone)
-            ->orderBy('call_time', 'desc')
-            ->get();
-            
-        return view('customers.show', compact('customer', 'calls'));
+        return response()->json($kunde);
+    }
+
+    /**
+     * Update a specific customer
+     */
+    public function update(Request $request, Kunde $kunde)
+    {
+        $kunde->update($request->all());
+        return response()->json($kunde, 200);
+    }
+
+    /**
+     * Delete a specific customer
+     */
+    public function destroy(Kunde $kunde)
+    {
+        $kunde->delete();
+        return response()->json(null, 204);
     }
 }

@@ -4,13 +4,23 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DirectCalcomController extends Controller
 {
-    const BASE_URL = 'https://api.cal.com/v2';
-    const API_KEY = null; // Use config('services.calcom.api_key') instead
     const TIMEZONE = 'Europe/Berlin';
     const LANGUAGE = 'de';
+    
+    private string $baseUrl;
+    private string $apiKey;
+    private bool $useV2;
+
+    public function __construct()
+    {
+        $this->baseUrl = rtrim(config('services.calcom.base_url', 'https://api.cal.com/v2'), '/');
+        $this->apiKey = config('services.calcom.api_key', '');
+        $this->useV2 = str_contains($this->baseUrl, '/v2');
+    }
 
     private function callWithRetry($url, $method = 'GET', $payload = [])
     {
@@ -19,25 +29,47 @@ class DirectCalcomController extends Controller
 
         while ($attempts-- > 0) {
             try {
-                if ($method === 'GET') {
-                    $response = Http::get($url);
+                // Build HTTP client with proper authentication
+                if ($this->useV2) {
+                    // V2 API: Bearer authentication with headers
+                    $http = Http::acceptJson()
+                        ->withHeaders([
+                            'Authorization' => 'Bearer ' . $this->apiKey,
+                            'cal-api-version' => '2024-08-13',
+                            'Content-Type' => 'application/json'
+                        ]);
                 } else {
-                    $response = Http::post($url, $payload);
+                    // V1 API: Query parameter authentication (fallback)
+                    $http = Http::acceptJson();
+                    // Add API key to URL for V1
+                    $separator = str_contains($url, '?') ? '&' : '?';
+                    $url = $url . $separator . 'apiKey=' . $this->apiKey;
+                }
+
+                if ($method === 'GET') {
+                    $response = $http->get($url);
+                } else {
+                    $response = $http->post($url, $payload);
                 }
 
                 if ($response->successful()) {
                     return ['success' => true, 'data' => $response->json()];
                 }
 
-                \Log::warning("API-Aufruf fehlgeschlagen", [
+                Log::warning("[DirectCalcomController] API-Aufruf fehlgeschlagen", [
                     'httpCode' => $response->status(),
-                    'response' => $response->body()
+                    'response' => $response->body(),
+                    'url' => preg_replace('/apiKey=[^&]+/', 'apiKey=***', $url)
                 ]);
             } catch (\Throwable $e) {
-                \Log::error("API-Aufruf Exception", ['exception' => $e->getMessage()]);
+                Log::error("[DirectCalcomController] API-Aufruf Exception", [
+                    'exception' => $e->getMessage()
+                ]);
             }
 
-            sleep(1);
+            if ($attempts > 0) {
+                sleep(1);
+            }
         }
 
         return ['success' => false, 'data' => $response ? $response->json() : null];
@@ -54,11 +86,15 @@ class DirectCalcomController extends Controller
 
         $userId = $request->userId ?? 1346408; // Verwende Default-User-ID wenn nicht angegeben
 
-        $url = self::BASE_URL . "/availability?apiKey=" . self::API_KEY;
-        $url .= "&eventTypeId=" . $request->eventTypeId;
-        $url .= "&userId=" . $userId;
-        $url .= "&dateFrom=" . urlencode($request->dateFrom);
-        $url .= "&dateTo=" . urlencode($request->dateTo);
+        // Build URL without API key (will be added in headers for V2)
+        $queryParams = http_build_query([
+            'eventTypeId' => $request->eventTypeId,
+            'userId' => $userId,
+            'dateFrom' => $request->dateFrom,
+            'dateTo' => $request->dateTo
+        ]);
+        
+        $url = $this->baseUrl . "/availability?" . $queryParams;
 
         $result = $this->callWithRetry($url);
 
@@ -79,17 +115,23 @@ class DirectCalcomController extends Controller
             'name' => 'required|string',
             'email' => 'required|email',
         ]);
-        $eventTypeDetails = $this->callWithRetry(self::BASE_URL."/event-types/{$request->eventTypeId}?apiKey=".self::API_KEY);
+        
+        // Get event type details
+        $eventTypeUrl = $this->baseUrl . "/event-types/{$request->eventTypeId}";
+        $eventTypeDetails = $this->callWithRetry($eventTypeUrl);
+        
         if (!$eventTypeDetails['success'] || !isset($eventTypeDetails['data']['event_type']['length'])) {
             return response()->json([
                 'error' => 'Event-Typ-Daten konnten nicht geladen werden',
                 'details' => $eventTypeDetails['data'] ?? 'Keine Daten verfügbar'
             ], 500);
         }
+        
         $duration = $eventTypeDetails['data']['event_type']['length'];
         $startTime = new \DateTime($request->start);
         $endTime = clone $startTime;
         $endTime->modify("+{$duration} minutes");
+        
         $payload = [
             'eventTypeId' => $request->eventTypeId,
             'start' => $startTime->format('c'),
@@ -110,13 +152,18 @@ class DirectCalcomController extends Controller
                 'name' => $request->name
             ]
         ];
-        $bookingResult = $this->callWithRetry(self::BASE_URL."/bookings?apiKey=".self::API_KEY, 'POST', $payload);
+        
+        // Create booking
+        $bookingUrl = $this->baseUrl . "/bookings";
+        $bookingResult = $this->callWithRetry($bookingUrl, 'POST', $payload);
+        
         if (!$bookingResult['success']) {
             return response()->json([
                 'error' => 'Buchung fehlgeschlagen',
                 'details' => $bookingResult['data'] ?? 'Keine Daten verfügbar'
             ], 500);
         }
+        
         return response()->json(['status' => 'success', 'booking' => $bookingResult['data']]);
     }
 }

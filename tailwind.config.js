@@ -8,11 +8,44 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
-        './resources/**/*.js',
+        './resources/js/**/*.js',
         './vendor/filament/**/*.blade.php',
         './node_modules/flowbite/**/*.js',
     ],
-
+    safelist: [
+        // Dynamically generated classes that PurgeCSS might miss
+        'bg-green-100',
+        'bg-yellow-100',
+        'bg-red-100',
+        'text-green-800',
+        'text-yellow-800',
+        'text-red-800',
+        'border-green-400',
+        'border-yellow-400',
+        'border-red-400',
+        // Dark mode variants
+        'dark:bg-green-900',
+        'dark:bg-yellow-900',
+        'dark:bg-red-900',
+        'dark:text-green-400',
+        'dark:text-yellow-400',
+        'dark:text-red-400',
+        // Grid classes
+        'grid-cols-1',
+        'grid-cols-2',
+        'grid-cols-3',
+        'grid-cols-4',
+        'md:grid-cols-2',
+        'md:grid-cols-3',
+        'md:grid-cols-4',
+        'lg:grid-cols-3',
+        'lg:grid-cols-4',
+        // Status colors
+        'bg-blue-500',
+        'bg-green-500',
+        'bg-red-500',
+        'bg-yellow-500',
+    ],
     theme: {
         extend: {
             fontFamily: {
@@ -38,6 +71,5 @@ export default {
             },
         },
     },
-
     plugins: [forms, flowbite],
 };

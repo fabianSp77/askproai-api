@@ -54,6 +54,8 @@ return [
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
+        App\Providers\FlowbiteServiceProvider::class,
+        App\Providers\ViewServiceProvider::class,
 
         /* Filament Panel */
         App\Providers\Filament\AdminPanelProvider::class,

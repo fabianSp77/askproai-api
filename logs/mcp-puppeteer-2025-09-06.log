@@ -1,0 +1,24 @@
+{"level":"info","message":"Puppeteer MCP Server closing","service":"mcp-puppeteer","timestamp":"2025-09-06 07:04:20.803"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 07:04:30.050"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 07:04:30.055"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 07:10:18.319"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 07:10:18.324"}
+{"arguments":{"url":"https://api.askproai.de/admin"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2025-09-06 07:12:34.638","tool":"puppeteer_navigate"}
+{"0":"n","1":"p","2":"x","level":"info","message":"Launching browser with config:","service":"mcp-puppeteer","timestamp":"2025-09-06 07:12:34.640"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 07:23:25.165"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 07:23:25.170"}
+{"arguments":{},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2025-09-06 07:24:21.826","tool":"puppeteer_connect_active_tab"}
+{"0":"n","1":"p","2":"x","level":"info","message":"Launching browser with config:","service":"mcp-puppeteer","timestamp":"2025-09-06 07:24:21.828"}
+{"level":"info","message":"Puppeteer MCP Server closing","service":"mcp-puppeteer","timestamp":"2025-09-06 11:59:06.650"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 11:59:59.824"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 11:59:59.830"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 12:00:21.661"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 12:00:21.666"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 16:26:54.293"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 16:26:54.298"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 16:29:31.996"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 16:29:32.001"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 22:02:55.362"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 22:02:55.366"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-09-06 23:41:47.965"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-09-06 23:41:47.970"}

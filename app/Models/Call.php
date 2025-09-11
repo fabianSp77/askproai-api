@@ -12,6 +12,12 @@ class Call extends Model
     use HasFactory;
 
     /**
+     * The relationships that should always be loaded.
+     * Prevents N+1 query issues by eager loading common relationships.
+     */
+    protected $with = ['customer', 'tenant', 'agent'];
+
+    /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
@@ -28,7 +34,9 @@ class Call extends Model
         'call_successful',
         'disconnect_reason',
         'transcript',
-        'analysis'
+        'analysis',
+        'branch_id',
+        'appointment_id'
     ];
 
     /**
@@ -65,6 +73,22 @@ class Call extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    /**
+     * Get the branch associated with the call.
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Get the primary appointment associated with this call.
+     */
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     /**
