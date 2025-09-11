@@ -1,0 +1,33 @@
+@php
+$attributes = $attributes ?? new \Illuminate\View\ComponentAttributeBag();
+@endphp
+
+---
+title: Tailwind CSS 500 Server Error Page - Flowbite
+description: Get started with a premium admin dashboard interface built with Tailwind CSS and Flowbite featuring over 50 example pages of charts, calendars, kanban boards, dashboards, CRUD pages, mailing systems, and more.
+layout: main
+group: status
+page: 500
+---
+
+<section class="{{ $attributes->get('class', '') }} mx-auto flex h-screen flex-col items-center justify-center bg-white dark:bg-gray-900">
+  <div class="{{ $attributes->get('class', '') }} max-w-screen-xl grid-cols-2 content-center gap-8 px-4 py-8 md:grid lg:px-6 lg:py-16">
+    <div class="{{ $attributes->get('class', '') }} self-center">
+      <h1 class="{{ $attributes->get('class', '') }} mb-4 text-2xl font-bold text-primary-700 dark:text-primary-500">500 Internal Error</h1>
+      <p class="{{ $attributes->get('class', '') }} mb-4 text-2xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl lg:mb-10">Whoops! Something went wrong.</p>
+      <p class="{{ $attributes->get('class', '') }} mb-4 text-gray-500 dark:text-gray-400">Here are some helpful links:</p>
+      <ul class="{{ $attributes->get('class', '') }} flex items-center space-x-4 text-gray-500 dark:text-gray-400">
+        <li>
+          <a href="#" class="{{ $attributes->get('class', '') }} underline hover:text-gray-900 dark:hover:text-white">Support</a>
+        </li>
+        <li>
+          <a href="#" class="{{ $attributes->get('class', '') }} underline hover:text-gray-900 dark:hover:text-white">Search</a>
+        </li>
+      </ul>
+    </div>
+    <div class="{{ $attributes->get('class', '') }} hidden md:flex">
+      <img class="{{ $attributes->get('class', '') }} mx-auto mb-4 dark:hidden" src="../../images/500.svg" alt="illustration" />
+      <img class="{{ $attributes->get('class', '') }} mx-auto mb-4 hidden dark:flex" src="../../images/500-dark.svg" alt="illustration" />
+    </div>
+  </div>
+</section>

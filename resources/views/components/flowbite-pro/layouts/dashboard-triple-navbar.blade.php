@@ -1,0 +1,16 @@
+@php
+$attributes = $attributes ?? new \Illuminate\View\ComponentAttributeBag();
+@endphp
+
+@{{  define "main"  }}
+  @{{  partial "navbar-triple" .  }}
+  <div class="{{ $attributes->get('class', '') }} flex overflow-hidden bg-gray-50 dark:bg-gray-900">
+    @{{  partial "sidebar-drawer" .  }}
+    <div id="main-content" class="{{ $attributes->get('class', '') }} relative h-full w-full overflow-y-auto bg-gray-50 p-4 antialiased dark:bg-gray-900">
+      <main>
+        @{{  .Content  }}
+      </main>
+      @{{  if .Params.footer  }}@{{  partial "footer-dashboard-no-sidebar" .  }}@{{  end  }}
+    </div>
+  </div>
+@{{  end  }}
