@@ -1,0 +1,1422 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\InvoiceResource\Pages;
+use App\Models\Invoice;
+use App\Models\Tenant;
+use App\Models\Customer;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Support\Enums\FontWeight;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\Grid as InfoGrid;
+use Filament\Infolists\Components\Split;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\RepeatableEntry;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Notifications\Notification;
+use Carbon\Carbon;
+
+class InvoiceResource extends Resource
+{
+    protected static ?string $model = Invoice::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationGroup = 'Abrechnung';
+    protected static ?string $navigationLabel = 'Rechnungen';
+    protected static ?string $label = 'Rechnung';
+    protected static ?string $pluralLabel = 'Rechnungen';
+    protected static ?int $navigationSort = 3;
+
+    protected static ?string $recordTitleAttribute = 'invoice_number';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return Cache::remember('invoice-badge-count', 300, function () {
+            return static::getModel()::unpaid()->count() ?: null;
+        });
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return Cache::remember('invoice-badge-color', 300, function () {
+            $count = static::getModel()::unpaid()->count();
+            return $count > 10 ? 'danger' : ($count > 0 ? 'warning' : 'success');
+        });
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['invoice_number', 'billing_name', 'billing_email', 'payment_reference'];
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Tabs::make('Invoice Details')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('Grunddaten')
+                            ->icon('heroicon-o-information-circle')
+                            ->schema([
+                                Forms\Components\Grid::make(3)
+                                    ->schema([
+                                        Forms\Components\Section::make('Rechnungsinformationen')
+                                            ->description('Grundlegende Rechnungsdaten')
+                                            ->icon('heroicon-o-document')
+                                            ->schema([
+                                                Forms\Components\TextInput::make('invoice_number')
+                                                    ->label('Rechnungsnummer')
+                                                    ->disabled()
+                                                    ->dehydrated()
+                                                    ->helperText('Wird automatisch generiert'),
+
+                                                Forms\Components\Select::make('tenant_id')
+                                                    ->label('Mandant')
+                                                    ->relationship('tenant', 'name')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->live()
+                                                    ->afterStateUpdated(fn (Set $set) => $set('customer_id', null)),
+
+                                                Forms\Components\Select::make('customer_id')
+                                                    ->label('Kunde')
+                                                    ->options(function (Get $get) {
+                                                        if (!$get('tenant_id')) {
+                                                            return [];
+                                                        }
+                                                        return Customer::where('tenant_id', $get('tenant_id'))
+                                                            ->pluck('name', 'id');
+                                                    })
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Set $set, ?string $state) {
+                                                        if ($state) {
+                                                            $customer = Customer::find($state);
+                                                            if ($customer) {
+                                                                $set('billing_name', $customer->name);
+                                                                $set('billing_email', $customer->email);
+                                                                $set('billing_phone', $customer->phone);
+                                                                $set('billing_address', $customer->address);
+                                                                $set('billing_tax_id', $customer->tax_id);
+                                                            }
+                                                        }
+                                                    }),
+
+                                                Forms\Components\Select::make('status')
+                                                    ->label('Status')
+                                                    ->options(Invoice::getStatusOptions())
+                                                    ->required()
+                                                    ->default(Invoice::STATUS_DRAFT)
+                                                    ->native(false)
+                                                    ->live(),
+                                            ])->columnSpan(2),
+
+                                        Forms\Components\Section::make('Wichtige Daten')
+                                            ->description('Fälligkeiten und Zeitplan')
+                                            ->icon('heroicon-o-calendar')
+                                            ->schema([
+                                                Forms\Components\DatePicker::make('issue_date')
+                                                    ->label('Rechnungsdatum')
+                                                    ->required()
+                                                    ->default(now())
+                                                    ->native(false)
+                                                    ->displayFormat('d.m.Y')
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Set $set, ?string $state) {
+                                                        if ($state) {
+                                                            $set('due_date', Carbon::parse($state)->addDays(30));
+                                                        }
+                                                    }),
+
+                                                Forms\Components\DatePicker::make('due_date')
+                                                    ->label('Fälligkeitsdatum')
+                                                    ->required()
+                                                    ->native(false)
+                                                    ->displayFormat('d.m.Y')
+                                                    ->after('issue_date')
+                                                    ->helperText('Standard: 30 Tage'),
+
+                                                Forms\Components\DatePicker::make('paid_date')
+                                                    ->label('Zahlungsdatum')
+                                                    ->native(false)
+                                                    ->displayFormat('d.m.Y')
+                                                    ->visible(fn (Get $get) => in_array($get('status'), [
+                                                        Invoice::STATUS_PAID,
+                                                        Invoice::STATUS_PARTIAL
+                                                    ])),
+
+                                                Forms\Components\Toggle::make('is_recurring')
+                                                    ->label('Wiederkehrend')
+                                                    ->live(),
+
+                                                Forms\Components\Select::make('recurring_period')
+                                                    ->label('Wiederholungszeitraum')
+                                                    ->options([
+                                                        'monthly' => 'Monatlich',
+                                                        'quarterly' => 'Vierteljährlich',
+                                                        'yearly' => 'Jährlich',
+                                                    ])
+                                                    ->visible(fn (Get $get) => $get('is_recurring')),
+                                            ])->columnSpan(1),
+                                    ]),
+
+                                Forms\Components\Section::make('Rechnungsempfänger')
+                                    ->description('Kontakt- und Rechnungsdaten')
+                                    ->icon('heroicon-o-user')
+                                    ->schema([
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('billing_name')
+                                                    ->label('Firmenname')
+                                                    ->required()
+                                                    ->maxLength(255),
+
+                                                Forms\Components\TextInput::make('billing_email')
+                                                    ->label('E-Mail')
+                                                    ->email()
+                                                    ->required()
+                                                    ->maxLength(255),
+
+                                                Forms\Components\TextInput::make('billing_phone')
+                                                    ->label('Telefon')
+                                                    ->tel()
+                                                    ->maxLength(255),
+
+                                                Forms\Components\Textarea::make('billing_address')
+                                                    ->label('Adresse')
+                                                    ->rows(3)
+                                                    ->columnSpan(2),
+
+                                                Forms\Components\TextInput::make('billing_tax_id')
+                                                    ->label('USt-IdNr.')
+                                                    ->placeholder('DE123456789')
+                                                    ->maxLength(255),
+                                            ]),
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Positionen')
+                            ->icon('heroicon-o-shopping-cart')
+                            ->schema([
+                                Forms\Components\Section::make('Rechnungspositionen')
+                                    ->description('Artikel und Dienstleistungen')
+                                    ->icon('heroicon-o-list-bullet')
+                                    ->schema([
+                                        Forms\Components\Repeater::make('line_items')
+                                            ->label('Positionen')
+                                            ->schema([
+                                                Forms\Components\Grid::make(12)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('description')
+                                                            ->label('Beschreibung')
+                                                            ->required()
+                                                            ->columnSpan(4),
+
+                                                        Forms\Components\Select::make('type')
+                                                            ->label('Typ')
+                                                            ->options([
+                                                                'service' => 'Dienstleistung',
+                                                                'product' => 'Produkt',
+                                                                'subscription' => 'Abonnement',
+                                                                'usage' => 'Verbrauch',
+                                                                'credit' => 'Guthaben',
+                                                            ])
+                                                            ->default('service')
+                                                            ->columnSpan(2),
+
+                                                        Forms\Components\TextInput::make('quantity')
+                                                            ->label('Menge')
+                                                            ->numeric()
+                                                            ->default(1)
+                                                            ->minValue(0.01)
+                                                            ->step(0.01)
+                                                            ->live()
+                                                            ->columnSpan(2),
+
+                                                        Forms\Components\TextInput::make('price')
+                                                            ->label('Einzelpreis')
+                                                            ->numeric()
+                                                            ->prefix('€')
+                                                            ->required()
+                                                            ->minValue(0)
+                                                            ->step(0.01)
+                                                            ->live()
+                                                            ->columnSpan(2),
+
+                                                        Forms\Components\TextInput::make('total')
+                                                            ->label('Gesamt')
+                                                            ->prefix('€')
+                                                            ->disabled()
+                                                            ->dehydrated(false)
+                                                            ->afterStateHydrated(function (TextInput $component, Get $get, $state) {
+                                                                $quantity = $get('quantity') ?? 1;
+                                                                $price = $get('price') ?? 0;
+                                                                $component->state($quantity * $price);
+                                                            })
+                                                            ->columnSpan(2),
+
+                                                        Forms\Components\DatePicker::make('period_start')
+                                                            ->label('Periode von')
+                                                            ->native(false)
+                                                            ->displayFormat('d.m.Y')
+                                                            ->columnSpan(3)
+                                                            ->visible(fn (Get $get) => in_array($get('type'), ['subscription', 'usage'])),
+
+                                                        Forms\Components\DatePicker::make('period_end')
+                                                            ->label('Periode bis')
+                                                            ->native(false)
+                                                            ->displayFormat('d.m.Y')
+                                                            ->columnSpan(3)
+                                                            ->visible(fn (Get $get) => in_array($get('type'), ['subscription', 'usage'])),
+
+                                                        Forms\Components\Textarea::make('notes')
+                                                            ->label('Zusatzinfo')
+                                                            ->rows(1)
+                                                            ->columnSpan(6),
+                                                    ]),
+                                            ])
+                                            ->defaultItems(1)
+                                            ->collapsible()
+                                            ->cloneable()
+                                            ->reorderableWithButtons()
+                                            ->live()
+                                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                                // Calculate subtotal
+                                                $items = $get('line_items') ?? [];
+                                                $subtotal = 0;
+                                                foreach ($items as $item) {
+                                                    $subtotal += ($item['quantity'] ?? 1) * ($item['price'] ?? 0);
+                                                }
+                                                $set('subtotal', $subtotal);
+
+                                                // Calculate tax
+                                                $taxRate = $get('tax_rate') ?? Invoice::TAX_RATE_STANDARD;
+                                                $discount = $get('discount_amount') ?? 0;
+                                                $taxableAmount = $subtotal - $discount;
+                                                $taxAmount = ($taxableAmount * $taxRate) / 100;
+                                                $set('tax_amount', round($taxAmount, 2));
+
+                                                // Calculate total
+                                                $total = $taxableAmount + $taxAmount;
+                                                $set('total_amount', round($total, 2));
+
+                                                // Calculate balance due
+                                                $paidAmount = $get('paid_amount') ?? 0;
+                                                $set('balance_due', round($total - $paidAmount, 2));
+                                            })
+                                            ->columnSpanFull(),
+                                    ]),
+
+                                Forms\Components\Section::make('Beträge')
+                                    ->description('Kalkulation und Summen')
+                                    ->icon('heroicon-o-calculator')
+                                    ->schema([
+                                        Forms\Components\Grid::make(4)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('subtotal')
+                                                    ->label('Zwischensumme')
+                                                    ->prefix('€')
+                                                    ->disabled()
+                                                    ->dehydrated(),
+
+                                                Forms\Components\TextInput::make('discount_amount')
+                                                    ->label('Rabatt')
+                                                    ->prefix('€')
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->minValue(0)
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
+                                                        // Recalculate tax and total
+                                                        $subtotal = $get('subtotal') ?? 0;
+                                                        $taxRate = $get('tax_rate') ?? Invoice::TAX_RATE_STANDARD;
+                                                        $taxableAmount = $subtotal - ($state ?? 0);
+                                                        $taxAmount = ($taxableAmount * $taxRate) / 100;
+                                                        $set('tax_amount', round($taxAmount, 2));
+                                                        $total = $taxableAmount + $taxAmount;
+                                                        $set('total_amount', round($total, 2));
+                                                        $paidAmount = $get('paid_amount') ?? 0;
+                                                        $set('balance_due', round($total - $paidAmount, 2));
+                                                    }),
+
+                                                Forms\Components\Select::make('tax_rate')
+                                                    ->label('MwSt-Satz')
+                                                    ->options([
+                                                        '0' => '0% (Steuerfrei)',
+                                                        '7' => '7% (Ermäßigt)',
+                                                        '19' => '19% (Standard)',
+                                                    ])
+                                                    ->default('19')
+                                                    ->suffix('%')
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
+                                                        // Recalculate tax and total
+                                                        $subtotal = $get('subtotal') ?? 0;
+                                                        $discount = $get('discount_amount') ?? 0;
+                                                        $taxableAmount = $subtotal - $discount;
+                                                        $taxAmount = ($taxableAmount * ($state ?? 19)) / 100;
+                                                        $set('tax_amount', round($taxAmount, 2));
+                                                        $total = $taxableAmount + $taxAmount;
+                                                        $set('total_amount', round($total, 2));
+                                                        $paidAmount = $get('paid_amount') ?? 0;
+                                                        $set('balance_due', round($total - $paidAmount, 2));
+                                                    }),
+
+                                                Forms\Components\TextInput::make('tax_amount')
+                                                    ->label('MwSt-Betrag')
+                                                    ->prefix('€')
+                                                    ->disabled()
+                                                    ->dehydrated(),
+
+                                                Forms\Components\TextInput::make('total_amount')
+                                                    ->label('Gesamtbetrag')
+                                                    ->prefix('€')
+                                                    ->disabled()
+                                                    ->dehydrated(),
+
+                                                Forms\Components\TextInput::make('paid_amount')
+                                                    ->label('Bezahlt')
+                                                    ->prefix('€')
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->minValue(0)
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
+                                                        $total = $get('total_amount') ?? 0;
+                                                        $set('balance_due', round($total - ($state ?? 0), 2));
+
+                                                        // Update status
+                                                        if ($state >= $total && $total > 0) {
+                                                            $set('status', Invoice::STATUS_PAID);
+                                                        } elseif ($state > 0) {
+                                                            $set('status', Invoice::STATUS_PARTIAL);
+                                                        }
+                                                    }),
+
+                                                Forms\Components\TextInput::make('balance_due')
+                                                    ->label('Offener Betrag')
+                                                    ->prefix('€')
+                                                    ->disabled()
+                                                    ->dehydrated(),
+
+                                                Forms\Components\Select::make('currency')
+                                                    ->label('Währung')
+                                                    ->options([
+                                                        'EUR' => 'EUR - Euro',
+                                                        'USD' => 'USD - US Dollar',
+                                                        'GBP' => 'GBP - British Pound',
+                                                        'CHF' => 'CHF - Swiss Franc',
+                                                    ])
+                                                    ->default('EUR')
+                                                    ->native(false),
+                                            ]),
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Zahlung')
+                            ->icon('heroicon-o-credit-card')
+                            ->schema([
+                                Forms\Components\Section::make('Zahlungsinformationen')
+                                    ->description('Zahlungsmethode und Details')
+                                    ->icon('heroicon-o-banknotes')
+                                    ->schema([
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Forms\Components\Select::make('payment_method')
+                                                    ->label('Zahlungsmethode')
+                                                    ->options([
+                                                        'stripe' => 'Stripe (Kreditkarte)',
+                                                        'paypal' => 'PayPal',
+                                                        'bank_transfer' => 'Banküberweisung',
+                                                        'direct_debit' => 'SEPA-Lastschrift',
+                                                        'cash' => 'Barzahlung',
+                                                        'balance' => 'Guthaben',
+                                                        'credit_note' => 'Gutschrift',
+                                                        'other' => 'Sonstige',
+                                                    ])
+                                                    ->native(false),
+
+                                                Forms\Components\TextInput::make('payment_reference')
+                                                    ->label('Zahlungsreferenz')
+                                                    ->placeholder('z.B. Transaktions-ID')
+                                                    ->maxLength(255),
+
+                                                Forms\Components\KeyValue::make('payment_details')
+                                                    ->label('Zahlungsdetails')
+                                                    ->keyLabel('Feld')
+                                                    ->valueLabel('Wert')
+                                                    ->columnSpan(3),
+                                            ]),
+                                    ]),
+
+                                Forms\Components\Section::make('Kommunikation')
+                                    ->description('E-Mail-Versand und Erinnerungen')
+                                    ->icon('heroicon-o-envelope')
+                                    ->collapsed()
+                                    ->schema([
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Forms\Components\DateTimePicker::make('sent_at')
+                                                    ->label('Versendet am')
+                                                    ->native(false)
+                                                    ->displayFormat('d.m.Y H:i')
+                                                    ->disabled(),
+
+                                                Forms\Components\DateTimePicker::make('reminder_sent_at')
+                                                    ->label('Erinnerung versendet')
+                                                    ->native(false)
+                                                    ->displayFormat('d.m.Y H:i')
+                                                    ->disabled(),
+
+                                                Forms\Components\TextInput::make('reminder_count')
+                                                    ->label('Anzahl Erinnerungen')
+                                                    ->numeric()
+                                                    ->disabled()
+                                                    ->default(0),
+                                            ]),
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Zusatzinfo')
+                            ->icon('heroicon-o-document-text')
+                            ->schema([
+                                Forms\Components\Section::make('Notizen und Bedingungen')
+                                    ->description('Zusätzliche Informationen')
+                                    ->icon('heroicon-o-clipboard-document-list')
+                                    ->schema([
+                                        Forms\Components\Textarea::make('notes')
+                                            ->label('Interne Notizen')
+                                            ->placeholder('Nur für interne Zwecke...')
+                                            ->rows(3)
+                                            ->helperText('Diese Notizen erscheinen nicht auf der Rechnung'),
+
+                                        Forms\Components\Textarea::make('terms_conditions')
+                                            ->label('Zahlungsbedingungen')
+                                            ->placeholder('z.B. Zahlbar innerhalb von 30 Tagen...')
+                                            ->rows(3)
+                                            ->default('Zahlbar innerhalb von 30 Tagen nach Rechnungsdatum. Bei Zahlungsverzug berechnen wir Verzugszinsen in Höhe von 9% über dem Basiszinssatz.'),
+
+                                        Forms\Components\KeyValue::make('metadata')
+                                            ->label('Metadaten')
+                                            ->keyLabel('Schlüssel')
+                                            ->valueLabel('Wert'),
+                                    ]),
+
+                                Forms\Components\Section::make('PDF-Verwaltung')
+                                    ->description('Generierung und Speicherung')
+                                    ->icon('heroicon-o-document-arrow-down')
+                                    ->collapsed()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('pdf_path')
+                                            ->label('PDF-Pfad')
+                                            ->disabled()
+                                            ->helperText('Wird beim Versenden automatisch generiert'),
+
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('generate_pdf')
+                                                ->label('PDF generieren')
+                                                ->icon('heroicon-o-document-arrow-down')
+                                                ->action(function ($record, Set $set) {
+                                                    if ($record) {
+                                                        $pdfPath = self::generateInvoicePdf($record);
+                                                        $set('pdf_path', $pdfPath);
+                                                        Notification::make()
+                                                            ->success()
+                                                            ->title('PDF generiert')
+                                                            ->body('Die Rechnung wurde als PDF erstellt.')
+                                                            ->send();
+                                                    }
+                                                })
+                                                ->visible(fn ($record) => $record !== null),
+
+                                            Forms\Components\Actions\Action::make('download_pdf')
+                                                ->label('PDF herunterladen')
+                                                ->icon('heroicon-o-arrow-down-tray')
+                                                ->action(function ($record) {
+                                                    if ($record && $record->pdf_path) {
+                                                        return response()->download(storage_path('app/' . $record->pdf_path));
+                                                    }
+                                                })
+                                                ->visible(fn ($record) => $record && $record->pdf_path),
+                                        ]),
+                                    ]),
+                            ]),
+                    ])
+                    ->columnSpanFull()
+                    ->persistTabInQueryString(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('invoice_number')
+                    ->label('Rechnungsnr.')
+                    ->searchable()
+                    ->sortable()
+                    
+                    ->weight(FontWeight::Bold),
+
+                Tables\Columns\TextColumn::make('tenant.name')
+                    ->label('Mandant')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('billing_name')
+                    ->label('Kunde')
+                    ->searchable()
+                    ->sortable()
+                    ->description(fn ($record) => $record->billing_email)
+                    ->wrap(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'gray' => Invoice::STATUS_DRAFT,
+                        'warning' => Invoice::STATUS_PENDING,
+                        'info' => Invoice::STATUS_SENT,
+                        'success' => Invoice::STATUS_PAID,
+                        'primary' => Invoice::STATUS_PARTIAL,
+                        'danger' => Invoice::STATUS_OVERDUE,
+                        'gray' => Invoice::STATUS_CANCELLED,
+                        'warning' => Invoice::STATUS_REFUNDED,
+                    ])
+                    ->formatStateUsing(fn (string $state): string => Invoice::getStatusOptions()[$state] ?? $state),
+
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->label('Gesamtbetrag')
+                    ->money('EUR', locale: 'de_DE')
+                    ->sortable()
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()
+                        ->money('EUR', locale: 'de_DE')
+                        ->label('Summe')),
+
+                Tables\Columns\TextColumn::make('balance_due')
+                    ->label('Offener Betrag')
+                    ->money('EUR', locale: 'de_DE')
+                    ->sortable()
+                    ->color(fn ($state) => $state > 0 ? 'danger' : 'success')
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()
+                        ->money('EUR', locale: 'de_DE')
+                        ->label('Offen')),
+
+                Tables\Columns\TextColumn::make('issue_date')
+                    ->label('Datum')
+                    ->date('d.m.Y')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('due_date')
+                    ->label('Fälligkeit')
+                    ->date('d.m.Y')
+                    ->sortable()
+                    ->color(fn ($record) => $record->isOverdue() ? 'danger' : null)
+                    ->description(fn ($record) =>
+                        $record->days_until_due !== null
+                            ? ($record->days_until_due < 0
+                                ? abs($record->days_until_due) . ' Tage überfällig'
+                                : $record->days_until_due . ' Tage')
+                            : null
+                    ),
+
+                Tables\Columns\IconColumn::make('is_recurring')
+                    ->label('Wiederkehrend')
+                    ->boolean()
+                    ->toggleable(),
+
+                Tables\Columns\IconColumn::make('pdf_path')
+                    ->label('PDF')
+                    ->icon(fn ($state) => $state ? 'heroicon-o-document-check' : 'heroicon-o-document-minus')
+                    ->color(fn ($state) => $state ? 'success' : 'gray')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Erstellt')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->multiple()
+                    ->options(Invoice::getStatusOptions()),
+
+                Tables\Filters\SelectFilter::make('tenant_id')
+                    ->label('Mandant')
+                    ->relationship('tenant', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                Tables\Filters\TernaryFilter::make('is_recurring')
+                    ->label('Wiederkehrend')
+                    ->placeholder('Alle')
+                    ->trueLabel('Nur wiederkehrende')
+                    ->falseLabel('Nur einmalige'),
+
+                Tables\Filters\Filter::make('overdue')
+                    ->label('Überfällig')
+                    ->query(fn (Builder $query): Builder => $query->overdue()),
+
+                Tables\Filters\Filter::make('date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('Von')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                        Forms\Components\DatePicker::make('to')
+                            ->label('Bis')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'], fn ($q, $date) => $q->whereDate('issue_date', '>=', $date))
+                            ->when($data['to'], fn ($q, $date) => $q->whereDate('issue_date', '<=', $date));
+                    }),
+
+                Tables\Filters\Filter::make('amount_range')
+                    ->form([
+                        Forms\Components\TextInput::make('min')
+                            ->label('Min. Betrag')
+                            ->numeric()
+                            ->prefix('€'),
+                        Forms\Components\TextInput::make('max')
+                            ->label('Max. Betrag')
+                            ->numeric()
+                            ->prefix('€'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['min'], fn ($q, $amount) => $q->where('total_amount', '>=', $amount))
+                            ->when($data['max'], fn ($q, $amount) => $q->where('total_amount', '<=', $amount));
+                    }),
+            ])
+            ->actions([
+                Tables\Actions\Action::make('send')
+                    ->label('Versenden')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->modalHeading('Rechnung versenden')
+                    ->modalDescription(fn ($record) => "Möchten Sie die Rechnung {$record->invoice_number} an {$record->billing_email} versenden?")
+                    ->action(fn ($record) => self::sendInvoice($record))
+                    ->visible(fn ($record) => in_array($record->status, [
+                        Invoice::STATUS_PENDING,
+                        Invoice::STATUS_DRAFT
+                    ])),
+
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('mark_paid')
+                        ->label('Als bezahlt markieren')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->form([
+                            Forms\Components\TextInput::make('paid_amount')
+                                ->label('Bezahlter Betrag')
+                                ->numeric()
+                                ->prefix('€')
+                                ->default(fn ($record) => $record->total_amount)
+                                ->required(),
+                            Forms\Components\TextInput::make('payment_reference')
+                                ->label('Zahlungsreferenz')
+                                ->placeholder('z.B. Überweisungs-ID'),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $record->markAsPaid($data['paid_amount'], [
+                                'payment_reference' => $data['payment_reference'],
+                                'marked_paid_at' => now()->toIso8601String(),
+                            ]);
+                        })
+                        ->visible(fn ($record) => $record->isPayable()),
+
+                    Tables\Actions\Action::make('send_reminder')
+                        ->label('Erinnerung senden')
+                        ->icon('heroicon-o-bell')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(fn ($record) => self::sendReminder($record))
+                        ->visible(fn ($record) => in_array($record->status, [
+                            Invoice::STATUS_SENT,
+                            Invoice::STATUS_OVERDUE
+                        ])),
+
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplizieren')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->action(function ($record) {
+                            $newInvoice = $record->replicate([
+                                'invoice_number',
+                                'status',
+                                'paid_date',
+                                'paid_amount',
+                                'sent_at',
+                                'reminder_sent_at',
+                                'reminder_count',
+                                'pdf_path',
+                            ]);
+                            $newInvoice->status = Invoice::STATUS_DRAFT;
+                            $newInvoice->save();
+                        }),
+
+                    Tables\Actions\Action::make('download_pdf')
+                        ->label('PDF herunterladen')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('gray')
+                        ->action(function ($record) {
+                            if (!$record->pdf_path) {
+                                $record->pdf_path = self::generateInvoicePdf($record);
+                                $record->save();
+                            }
+                            return response()->download(storage_path('app/' . $record->pdf_path));
+                        }),
+
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn ($record) => $record->isEditable()),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn ($record) => $record->status === Invoice::STATUS_DRAFT),
+                ]),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('mark_sent')
+                    ->label('Als versendet markieren')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->action(fn ($records) => $records->each->markAsSent())
+                    ->deselectRecordsAfterCompletion()
+                    ->requiresConfirmation(),
+
+                Tables\Actions\BulkAction::make('export_pdf')
+                    ->label('PDFs exportieren')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function ($records) {
+                        // Create a zip file with all PDFs
+                        $zip = new \ZipArchive();
+                        $zipName = 'invoices-' . now()->format('Y-m-d-His') . '.zip';
+                        $zipPath = storage_path('app/temp/' . $zipName);
+
+                        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+                            foreach ($records as $record) {
+                                if (!$record->pdf_path) {
+                                    $record->pdf_path = self::generateInvoicePdf($record);
+                                    $record->save();
+                                }
+                                if ($record->pdf_path && file_exists(storage_path('app/' . $record->pdf_path))) {
+                                    $zip->addFile(
+                                        storage_path('app/' . $record->pdf_path),
+                                        $record->invoice_number . '.pdf'
+                                    );
+                                }
+                            }
+                            $zip->close();
+                            return response()->download($zipPath)->deleteFileAfterSend();
+                        }
+                    }),
+
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function ($records) {
+                            // Only allow deletion of draft invoices
+                            $nonDraftCount = $records->where('status', '!=', Invoice::STATUS_DRAFT)->count();
+                            if ($nonDraftCount > 0) {
+                                throw new \Exception('Nur Entwurfs-Rechnungen können gelöscht werden.');
+                            }
+                        }),
+                ]),
+            ])
+            ->defaultSort('issue_date', 'desc')
+            ->poll('60s');
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                // Rechnungsübersicht
+                InfoSection::make('Rechnungsübersicht')
+                    ->description('Hauptinformationen zur Rechnung')
+                    ->icon('heroicon-o-document-text')
+                    ->schema([
+                        InfoGrid::make(4)->schema([
+                            TextEntry::make('invoice_number')
+                                ->label('Rechnungsnummer')
+                                ->icon('heroicon-m-hashtag')
+                                ->weight('bold')
+                                ->size('lg')
+                                ,
+
+                            TextEntry::make('status')
+                                ->label('Status')
+                                ->badge()
+                                ->formatStateUsing(fn ($state) => Invoice::getStatusOptions()[$state] ?? $state)
+                                ->color(fn ($state) => match($state) {
+                                    Invoice::STATUS_DRAFT => 'gray',
+                                    Invoice::STATUS_PENDING => 'warning',
+                                    Invoice::STATUS_SENT => 'info',
+                                    Invoice::STATUS_PAID => 'success',
+                                    Invoice::STATUS_PARTIAL => 'primary',
+                                    Invoice::STATUS_OVERDUE => 'danger',
+                                    Invoice::STATUS_CANCELLED => 'gray',
+                                    Invoice::STATUS_REFUNDED => 'warning',
+                                    default => 'gray'
+                                }),
+
+                            TextEntry::make('total_amount')
+                                ->label('Gesamtbetrag')
+                                ->money('EUR')
+                                ->weight('bold')
+                                ->size('lg')
+                                ->color('success'),
+
+                            TextEntry::make('balance_due')
+                                ->label('Offener Betrag')
+                                ->money('EUR')
+                                ->weight('bold')
+                                ->color(fn ($state) => $state > 0 ? 'danger' : 'success')
+                                ->icon(fn ($state) => $state > 0 ? 'heroicon-m-exclamation-circle' : 'heroicon-m-check-circle'),
+                        ]),
+
+                        InfoGrid::make(3)->schema([
+                            TextEntry::make('issue_date')
+                                ->label('Rechnungsdatum')
+                                ->date('d.m.Y')
+                                ->icon('heroicon-m-calendar'),
+
+                            TextEntry::make('due_date')
+                                ->label('Fälligkeitsdatum')
+                                ->date('d.m.Y')
+                                ->icon('heroicon-m-clock')
+                                ->color(fn ($record) => $record->isOverdue() ? 'danger' : 'gray')
+                                ->hint(fn ($record) =>
+                                    $record->days_until_due !== null
+                                        ? ($record->days_until_due < 0
+                                            ? '⚠️ ' . abs($record->days_until_due) . ' Tage überfällig'
+                                            : '✓ ' . $record->days_until_due . ' Tage verbleibend')
+                                        : null
+                                ),
+
+                            TextEntry::make('paid_date')
+                                ->label('Zahlungsdatum')
+                                ->date('d.m.Y')
+                                ->placeholder('Noch nicht bezahlt')
+                                ->icon('heroicon-m-banknotes')
+                                ->visible(fn ($record) => $record->paid_date),
+                        ]),
+                    ]),
+
+                // Kunde & Mandant
+                InfoSection::make('Kunde & Mandant')
+                    ->description('Rechnungsempfänger und Mandanteninformationen')
+                    ->icon('heroicon-o-user-group')
+                    ->collapsible()
+                    ->schema([
+                        InfoGrid::make(2)->schema([
+                            Fieldset::make('Mandant')
+                                ->schema([
+                                    TextEntry::make('tenant.name')
+                                        ->label('Mandantenname')
+                                        ->icon('heroicon-m-building-office')
+                                        ->badge()
+                                        ->color('primary'),
+
+                                    TextEntry::make('tenant.email')
+                                        ->label('Mandanten-Email')
+                                        ->icon('heroicon-m-envelope')
+                                        ,
+                                ]),
+
+                            Fieldset::make('Kunde')
+                                ->schema([
+                                    TextEntry::make('customer.name')
+                                        ->label('Kundenname')
+                                        ->icon('heroicon-m-user')
+                                        ->badge()
+                                        ->color('info')
+                                        ->url(fn ($record) => $record->customer_id
+                                            ? route('filament.admin.resources.customers.view', $record->customer_id)
+                                            : null),
+
+                                    TextEntry::make('customer.email')
+                                        ->label('Kunden-Email')
+                                        ->icon('heroicon-m-envelope')
+                                        ,
+                                ]),
+                        ]),
+
+                        InfoGrid::make(3)->schema([
+                            TextEntry::make('billing_name')
+                                ->label('Rechnungsname')
+                                ->icon('heroicon-m-building-office-2')
+                                ,
+
+                            TextEntry::make('billing_email')
+                                ->label('Rechnungs-Email')
+                                ->icon('heroicon-m-envelope')
+                                ,
+
+                            TextEntry::make('billing_phone')
+                                ->label('Telefonnummer')
+                                ->icon('heroicon-m-phone')
+                                ->placeholder('Keine Telefonnummer')
+                                ,
+                        ]),
+
+                        TextEntry::make('billing_address')
+                            ->label('Rechnungsadresse')
+                            ->icon('heroicon-m-map-pin')
+                            ->placeholder('Keine Adresse angegeben')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('billing_tax_id')
+                            ->label('USt-IdNr.')
+                            ->icon('heroicon-m-identification')
+                            ->placeholder('Keine USt-IdNr.')
+                            
+                            ->badge()
+                            ->color('gray'),
+                    ]),
+
+                // Rechnungspositionen
+                InfoSection::make('Rechnungspositionen')
+                    ->description('Aufstellung der einzelnen Leistungen')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->collapsible()
+                    ->schema([
+                        RepeatableEntry::make('line_items')
+                            ->label(false)
+                            ->schema([
+                                InfoGrid::make(12)->schema([
+                                    TextEntry::make('description')
+                                        ->label('Beschreibung')
+                                        ->columnSpan(4)
+                                        ->weight('semibold'),
+
+                                    TextEntry::make('type')
+                                        ->label('Typ')
+                                        ->columnSpan(2)
+                                        ->badge()
+                                        ->formatStateUsing(fn ($state) => match($state) {
+                                            'service' => '🛠️ Dienstleistung',
+                                            'product' => '📦 Produkt',
+                                            'subscription' => '🔄 Abonnement',
+                                            'usage' => '📊 Verbrauch',
+                                            'credit' => '💳 Guthaben',
+                                            default => $state
+                                        })
+                                        ->color(fn ($state) => match($state) {
+                                            'service' => 'info',
+                                            'product' => 'success',
+                                            'subscription' => 'primary',
+                                            'usage' => 'warning',
+                                            'credit' => 'danger',
+                                            default => 'gray'
+                                        }),
+
+                                    TextEntry::make('quantity')
+                                        ->label('Menge')
+                                        ->columnSpan(2)
+                                        ->numeric(2)
+                                        ->suffix(' Stk'),
+
+                                    TextEntry::make('price')
+                                        ->label('Einzelpreis')
+                                        ->columnSpan(2)
+                                        ->money('EUR'),
+
+                                    TextEntry::make('total')
+                                        ->label('Gesamt')
+                                        ->columnSpan(2)
+                                        ->getStateUsing(fn ($record) =>
+                                            ($record['quantity'] ?? 1) * ($record['price'] ?? 0)
+                                        )
+                                        ->money('EUR')
+                                        ->weight('bold')
+                                        ->color('success'),
+
+                                    TextEntry::make('period')
+                                        ->label('Abrechnungszeitraum')
+                                        ->columnSpan(6)
+                                        ->getStateUsing(fn ($record) =>
+                                            isset($record['period_start']) && isset($record['period_end'])
+                                                ? Carbon::parse($record['period_start'])->format('d.m.Y') . ' - ' .
+                                                  Carbon::parse($record['period_end'])->format('d.m.Y')
+                                                : null
+                                        )
+                                        ->placeholder('Keine Periode')
+                                        ->visible(fn ($record) =>
+                                            in_array($record['type'] ?? '', ['subscription', 'usage'])
+                                        ),
+
+                                    TextEntry::make('notes')
+                                        ->label('Zusatzinfo')
+                                        ->columnSpan(6)
+                                        ->placeholder('Keine zusätzlichen Informationen'),
+                                ]),
+                            ])
+                            ->contained(false),
+                    ]),
+
+                // Beträge & Steuern
+                InfoSection::make('Beträge & Steuern')
+                    ->description('Finanzielle Aufschlüsselung')
+                    ->icon('heroicon-o-calculator')
+                    ->collapsible()
+                    ->schema([
+                        InfoGrid::make(2)->schema([
+                            Fieldset::make('Berechnung')
+                                ->schema([
+                                    TextEntry::make('subtotal')
+                                        ->label('Zwischensumme')
+                                        ->money('EUR')
+                                        ->icon('heroicon-m-plus'),
+
+                                    TextEntry::make('discount_amount')
+                                        ->label('Rabatt')
+                                        ->money('EUR')
+                                        ->icon('heroicon-m-minus')
+                                        ->color('warning')
+                                        ->visible(fn ($record) => $record->discount_amount > 0),
+
+                                    TextEntry::make('tax_rate')
+                                        ->label('MwSt-Satz')
+                                        ->suffix('%')
+                                        ->icon('heroicon-m-receipt-percent')
+                                        ->badge()
+                                        ->color('info'),
+
+                                    TextEntry::make('tax_amount')
+                                        ->label('MwSt-Betrag')
+                                        ->money('EUR')
+                                        ->icon('heroicon-m-calculator'),
+
+                                    TextEntry::make('total_amount')
+                                        ->label('Gesamtbetrag')
+                                        ->money('EUR')
+                                        ->weight('bold')
+                                        ->size('lg')
+                                        ->color('success')
+                                        ->icon('heroicon-m-banknotes'),
+                                ]),
+
+                            Fieldset::make('Zahlungsstatus')
+                                ->schema([
+                                    TextEntry::make('paid_amount')
+                                        ->label('Bezahlt')
+                                        ->money('EUR')
+                                        ->icon('heroicon-m-check')
+                                        ->color('success'),
+
+                                    TextEntry::make('balance_due')
+                                        ->label('Offener Betrag')
+                                        ->money('EUR')
+                                        ->icon('heroicon-m-exclamation-triangle')
+                                        ->color(fn ($state) => $state > 0 ? 'danger' : 'success'),
+
+                                    TextEntry::make('payment_percentage')
+                                        ->label('Zahlungsfortschritt')
+                                        ->getStateUsing(fn ($record) =>
+                                            $record->total_amount > 0
+                                                ? number_format(($record->paid_amount / $record->total_amount) * 100, 1) . '%'
+                                                : '0%'
+                                        )
+                                        ->badge()
+                                        ->color(fn ($record) =>
+                                            $record->paid_amount >= $record->total_amount ? 'success' :
+                                            ($record->paid_amount > 0 ? 'warning' : 'danger')
+                                        ),
+
+                                    TextEntry::make('currency')
+                                        ->label('Währung')
+                                        ->badge()
+                                        ->color('gray'),
+                                ]),
+                        ]),
+                    ]),
+
+                // Zahlungsinformationen
+                InfoSection::make('Zahlungsinformationen')
+                    ->description('Details zur Zahlung')
+                    ->icon('heroicon-o-credit-card')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        InfoGrid::make(3)->schema([
+                            TextEntry::make('payment_method')
+                                ->label('Zahlungsmethode')
+                                ->formatStateUsing(fn ($state) => match($state) {
+                                    'stripe' => '💳 Stripe (Kreditkarte)',
+                                    'paypal' => '🅿️ PayPal',
+                                    'bank_transfer' => '🏦 Banküberweisung',
+                                    'direct_debit' => '🔄 SEPA-Lastschrift',
+                                    'cash' => '💵 Barzahlung',
+                                    'balance' => '💰 Guthaben',
+                                    'credit_note' => '📄 Gutschrift',
+                                    'other' => '❓ Sonstige',
+                                    default => 'Nicht angegeben'
+                                })
+                                ->placeholder('Keine Zahlungsmethode')
+                                ->badge()
+                                ->color(fn ($state) => match($state) {
+                                    'stripe', 'paypal' => 'success',
+                                    'bank_transfer', 'direct_debit' => 'primary',
+                                    'cash' => 'info',
+                                    'balance', 'credit_note' => 'warning',
+                                    default => 'gray'
+                                }),
+
+                            TextEntry::make('payment_reference')
+                                ->label('Zahlungsreferenz')
+                                ->placeholder('Keine Referenz')
+                                
+                                ->badge()
+                                ->color('gray'),
+
+                            TextEntry::make('is_recurring')
+                                ->label('Zahlungstyp')
+                                ->formatStateUsing(fn ($state) =>
+                                    $state ? '🔄 Wiederkehrend' : '1️⃣ Einmalig'
+                                )
+                                ->badge()
+                                ->color(fn ($state) => $state ? 'primary' : 'gray'),
+                        ]),
+
+                        TextEntry::make('recurring_period')
+                            ->label('Wiederholungszeitraum')
+                            ->formatStateUsing(fn ($state) => match($state) {
+                                'monthly' => '📅 Monatlich',
+                                'quarterly' => '📊 Vierteljährlich',
+                                'yearly' => '🗓️ Jährlich',
+                                default => $state
+                            })
+                            ->placeholder('Nicht wiederkehrend')
+                            ->badge()
+                            ->color('info')
+                            ->visible(fn ($record) => $record->is_recurring),
+
+                        TextEntry::make('payment_details')
+                            ->label('Zahlungsdetails')
+                            ->getStateUsing(fn ($record) =>
+                                $record->payment_details
+                                    ? collect($record->payment_details)
+                                        ->map(fn ($value, $key) => "**{$key}:** {$value}")
+                                        ->join("\n")
+                                    : null
+                            )
+                            ->placeholder('Keine zusätzlichen Details')
+                            ->markdown()
+                            ->columnSpanFull(),
+                    ]),
+
+                // Kommunikation & Versand
+                InfoSection::make('Kommunikation & Versand')
+                    ->description('E-Mail-Versand und Erinnerungen')
+                    ->icon('heroicon-o-envelope')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        InfoGrid::make(3)->schema([
+                            TextEntry::make('sent_at')
+                                ->label('Versendet am')
+                                ->dateTime('d.m.Y H:i:s')
+                                ->placeholder('Noch nicht versendet')
+                                ->icon('heroicon-m-paper-airplane')
+                                ->badge()
+                                ->color(fn ($state) => $state ? 'success' : 'gray'),
+
+                            TextEntry::make('reminder_sent_at')
+                                ->label('Letzte Erinnerung')
+                                ->dateTime('d.m.Y H:i:s')
+                                ->placeholder('Keine Erinnerung versendet')
+                                ->icon('heroicon-m-bell')
+                                ->badge()
+                                ->color(fn ($state) => $state ? 'warning' : 'gray'),
+
+                            TextEntry::make('reminder_count')
+                                ->label('Anzahl Erinnerungen')
+                                ->suffix(' Erinnerungen')
+                                ->placeholder('0 Erinnerungen')
+                                ->icon('heroicon-m-bell-alert')
+                                ->badge()
+                                ->color(fn ($state) =>
+                                    $state > 2 ? 'danger' :
+                                    ($state > 0 ? 'warning' : 'gray')
+                                ),
+                        ]),
+
+                        InfoGrid::make(2)->schema([
+                            TextEntry::make('pdf_status')
+                                ->label('PDF-Status')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->pdf_path ? '✅ PDF generiert' : '❌ PDF nicht generiert'
+                                )
+                                ->badge()
+                                ->color(fn ($record) => $record->pdf_path ? 'success' : 'warning'),
+
+                            TextEntry::make('pdf_path')
+                                ->label('PDF-Pfad')
+                                ->placeholder('Kein PDF vorhanden')
+                                
+                                ->visible(fn ($record) => $record->pdf_path),
+                        ]),
+                    ]),
+
+                // Notizen & Bedingungen
+                InfoSection::make('Notizen & Bedingungen')
+                    ->description('Zusätzliche Informationen und Vertragsbedingungen')
+                    ->icon('heroicon-o-document-text')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        TextEntry::make('notes')
+                            ->label('Interne Notizen')
+                            ->placeholder('Keine internen Notizen')
+                            ->columnSpanFull()
+                            ->markdown(),
+
+                        TextEntry::make('terms_conditions')
+                            ->label('Zahlungsbedingungen')
+                            ->placeholder('Standard-Zahlungsbedingungen')
+                            ->columnSpanFull()
+                            ->markdown(),
+                    ]),
+
+                // System-Informationen
+                InfoSection::make('System-Informationen')
+                    ->description('Technische Details und Metadaten')
+                    ->icon('heroicon-o-information-circle')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        InfoGrid::make(3)->schema([
+                            TextEntry::make('id')
+                                ->label('Rechnungs-ID')
+                                
+                                ->badge()
+                                ->color('gray'),
+
+                            TextEntry::make('created_at')
+                                ->label('Erstellt am')
+                                ->dateTime('d.m.Y H:i:s')
+                                ->icon('heroicon-m-calendar-days'),
+
+                            TextEntry::make('updated_at')
+                                ->label('Zuletzt geändert')
+                                ->dateTime('d.m.Y H:i:s')
+                                ->icon('heroicon-m-pencil'),
+                        ]),
+
+                        TextEntry::make('metadata')
+                            ->label('Metadaten')
+                            ->getStateUsing(fn ($record) =>
+                                $record->metadata
+                                    ? json_encode($record->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                                    : null
+                            )
+                            ->placeholder('Keine Metadaten')
+                            ->columnSpanFull()
+                            ,
+                    ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            // Could add payment relation manager
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListInvoices::route('/'),
+            'create' => Pages\CreateInvoice::route('/create'),
+            'view' => Pages\ViewInvoice::route('/{record}'),
+            'edit' => Pages\EditInvoice::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['tenant', 'customer']);
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            // Could add invoice statistics widgets
+        ];
+    }
+
+    /**
+     * Generate PDF for invoice
+     */
+    protected static function generateInvoicePdf(Invoice $invoice): string
+    {
+        // Create invoice PDF using Laravel DomPDF
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+
+        $filename = 'invoices/' . $invoice->invoice_number . '.pdf';
+        $path = storage_path('app/' . $filename);
+
+        // Ensure directory exists
+        if (!file_exists(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        $pdf->save($path);
+
+        return $filename;
+    }
+
+    /**
+     * Send invoice via email
+     */
+    protected static function sendInvoice(Invoice $invoice): void
+    {
+        // Generate PDF if not exists
+        if (!$invoice->pdf_path) {
+            $invoice->pdf_path = self::generateInvoicePdf($invoice);
+        }
+
+        // TODO: Send email with PDF attachment
+        // Mail::to($invoice->billing_email)->send(new InvoiceEmail($invoice));
+
+        $invoice->markAsSent();
+    }
+
+    /**
+     * Send reminder email
+     */
+    protected static function sendReminder(Invoice $invoice): void
+    {
+        // TODO: Send reminder email
+        // Mail::to($invoice->billing_email)->send(new InvoiceReminderEmail($invoice));
+
+        $invoice->sendReminder();
+    }
+}

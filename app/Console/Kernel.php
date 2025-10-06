@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Console;
+
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+
+class Kernel extends ConsoleKernel
+{
+    protected $commands = [
+        \App\Console\Commands\SendStripeMeterEvent::class,
+        \App\Console\Commands\SendStripeUsage::class, // ← Legacy-Command kann bleiben
+        \App\Console\Commands\SyncRetellCalls::class,
+        \App\Console\Commands\DetectCallConversions::class,
+        \App\Console\Commands\ConfigureRetellWebhook::class,
+    ];
+
+    protected function schedule(Schedule $schedule): void
+    {
+        // Cal.com Event Type sync - runs every 30 minutes as backup for webhooks
+        $schedule->command('calcom:sync-services')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/calcom-sync.log'));
+
+        // Retell calls sync - runs every 15 minutes to get new calls
+        $schedule->command('retell:sync-calls --limit=100 --days=1')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/retell-sync.log'));
+
+        // Full Retell sync - runs once daily at night to ensure nothing is missed
+        $schedule->command('retell:sync-calls --limit=1000 --days=7')
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/retell-sync-full.log'));
+
+        // Detect call conversions - runs every hour
+        $schedule->command('calls:detect-conversions --hours=2 --auto-link')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/conversion-detection.log'));
+
+        // Clean up stuck calls - runs every 10 minutes
+        $schedule->command('calls:cleanup-stuck')
+            ->everyTenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/calls-cleanup.log'));
+
+        // Daily validation: Check for NULL company_id in customers (data integrity)
+        $schedule->command('customer:validate-company-id --fail-on-issues')
+            ->dailyAt('04:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/customer-validation.log'))
+            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
+
+        // Materialized Stats: Refresh customer modification stats hourly (for O(1) policy quota checks)
+        $schedule->call(function () {
+            $service = app(\App\Services\Policies\MaterializedStatService::class);
+            $service->refreshAllStats();
+        })
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->name('materialized-stats-refresh')
+            ->appendOutputTo(storage_path('logs/materialized-stats.log'));
+
+        // Materialized Stats: Clean up old stats daily at 3am (stats older than 90 days)
+        $schedule->call(function () {
+            $service = app(\App\Services\Policies\MaterializedStatService::class);
+            $service->cleanupOldStats();
+        })
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->name('materialized-stats-cleanup')
+            ->appendOutputTo(storage_path('logs/materialized-stats.log'));
+    }
+
+    protected function commands(): void
+    {
+        $this->load(__DIR__.'/Commands');
+        require base_path('routes/console.php');
+    }
+}

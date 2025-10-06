@@ -1,0 +1,6383 @@
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:05:02 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1329[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1331[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:15:31 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1296[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1333[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1333[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1333[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1334[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1334[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1334[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1334[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 22:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1335[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1335[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1335[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1335[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1335[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Di 23. Sep 23:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1336[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [1;33m⚠ 3[0m
+
+======================================
+Status: [0;32m✓ HEALTHY[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 11[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 11[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 11[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 11[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 12[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 12[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 12[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 12[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 12[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 00:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 14[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 14[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 14[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 14[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 14[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 15[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 16[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 01:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 17[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 17[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 18[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 18[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 18[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 18[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 20[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 02:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 21[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 21[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 21[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 22[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 22[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 22[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 03:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 23[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 24[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 24[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 24[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 25[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 25[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 26[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 26[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 26[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 26[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 04:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 26[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 27[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 27[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 27[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 27[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 28[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 05:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 29[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 29[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 35[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 45[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 45[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 45[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 46[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 46[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 46[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 46[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:46:26 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 46[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 06:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 52[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 53[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 53[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 53[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 53[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 55[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 60[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 07:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 60[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 60[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 61[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 62[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 62[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 62[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 64[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 76[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 80[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 82[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 84[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 86[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 08:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 102[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 103[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 113[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 113[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 121[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;31m✗ Error (500)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 134[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (2)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;31m✗ Error (500)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 1
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 235[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (2)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;31m✗ Stopped[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;31m✗ Error (500)[0m
+
+Database:
+  Connection: [0;31m✗ Failed[0m
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 394[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (4)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 419[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 419[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 419[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 420[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 09:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 421[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 421[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 421[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:10:02 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 423[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 423[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 423[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 423[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 423[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 426[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 430[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 433[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 443[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 10:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 446[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 457[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 457[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 457[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 467[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 472[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 476[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 477[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 486[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 489[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 489[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 490[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 11:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 491[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 4
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 493[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 496[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 504[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 552[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 558[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 579[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 589[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 615[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 664[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 689[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 714[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 12:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 732[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 741[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 770[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 781[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 791[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 801[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 815[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 891[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 907[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 2
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 913[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 930[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 958[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 13:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 988[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1050[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1117[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1168[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1169[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1170[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1172[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1174[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1176[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1178[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1179[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1181[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 14:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1183[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1185[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1186[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1188[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1200[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1205[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1212[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1241[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1251[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1272[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1277[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1282[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 15:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1292[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1300[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:05:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1316[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:10:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 4
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1364[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:15:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1374[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:20:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1381[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:25:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1424[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:30:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1465[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:35:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1513[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:40:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1571[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:45:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1624[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:50:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1663[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 16:55:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1718[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m
+[0;34mQUICK HEALTH CHECK[0m
+======================================
+Time: Mi 24. Sep 17:00:01 CEST 2025
+
+Services:
+  nginx          : [0;32m✓ Running[0m
+  php8.3-fpm     : [0;32m✓ Running[0m
+  mariadb        : [0;32m✓ Running[0m
+  redis          : [0;32m✓ Running[0m
+
+Web Response:
+  Dashboard: [0;32m✓ OK (302)[0m
+
+Database:
+  Connection: [0;32m✓ Connected[0m
+  Active connections: 3
+
+Disk Space:
+  Usage: [0;32m✓ 16% (410G free)[0m
+
+Memory:
+[1;33m⚠ Unable to get memory info[0m
+
+Recent Errors (last 5 min):
+  Laravel errors: [0;31m✗ 1782[0m
+
+======================================
+Status: [0;31m✗ ISSUES FOUND (1)[0m

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Cache Clear Instructions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .steps { background: #f0f8ff; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .step { margin: 15px 0; padding-left: 30px; position: relative; }
+        .step:before { content: "✓"; position: absolute; left: 5px; color: #4CAF50; font-weight: bold; }
+        .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #d4edda; border: 1px solid #28a745; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 500 Error Fix - Browser Cache leeren!</h1>
+
+        <div class="warning">
+            <strong>⚠️ Wichtig:</strong> Die Server-Seite wurde gefixt, aber dein Browser hat noch die alte fehlerhafte JavaScript-Version im Cache!
+        </div>
+
+        <h2>So leerst du den Cache richtig:</h2>
+
+        <div class="steps">
+            <h3>Option 1: Hard Refresh (Schnellste Methode)</h3>
+            <div class="step">Windows/Linux: Drücke <code>Strg + F5</code> oder <code>Strg + Shift + R</code></div>
+            <div class="step">Mac: Drücke <code>Cmd + Shift + R</code></div>
+        </div>
+
+        <div class="steps">
+            <h3>Option 2: Developer Tools Method</h3>
+            <div class="step">Öffne Developer Tools (F12)</div>
+            <div class="step">Rechtsklick auf Reload-Button</div>
+            <div class="step">Wähle "Empty Cache and Hard Reload"</div>
+        </div>
+
+        <div class="steps">
+            <h3>Option 3: Komplett Cache leeren</h3>
+            <div class="step">Chrome: Einstellungen → Datenschutz → Browserdaten löschen</div>
+            <div class="step">Firefox: Einstellungen → Datenschutz → Cookies und Website-Daten → Daten entfernen</div>
+            <div class="step">Safari: Entwickler → Cache-Speicher leeren</div>
+        </div>
+
+        <h2>Test nach Cache-Leerung:</h2>
+        <button onclick="testLivewire()">Test Livewire jetzt</button>
+        <div id="result"></div>
+
+        <div class="success" style="display:none;" id="success">
+            ✅ <strong>Erfolgreich!</strong> Wenn kein 500 Error Pop-up mehr kommt, ist das Problem behoben!
+        </div>
+    </div>
+
+    <script>
+        async function testLivewire() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Testing...</p>';
+
+            try {
+                // Check if document.write still exists in loaded scripts
+                const scripts = Array.from(document.scripts);
+                let hasDocumentWrite = false;
+
+                for (let script of scripts) {
+                    if (script.src && script.src.includes('livewire')) {
+                        const response = await fetch(script.src);
+                        const text = await response.text();
+                        if (text.includes('document.write(')) {
+                            hasDocumentWrite = true;
+                            result.innerHTML = '<p style="color:red">❌ Alte Version noch im Cache! Bitte Cache leeren und Seite neu laden.</p>';
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasDocumentWrite) {
+                    result.innerHTML = '<p style="color:green">✅ Neue Version geladen! Gehe jetzt zu <a href="/admin">Admin Panel</a> und logge dich ein.</p>';
+                    document.getElementById('success').style.display = 'block';
+                }
+
+            } catch (error) {
+                result.innerHTML = '<p style="color:orange">Test konnte nicht ausgeführt werden. Bitte manuell testen.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

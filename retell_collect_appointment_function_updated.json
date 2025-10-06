@@ -1,0 +1,73 @@
+{
+  "name": "collect_appointment_data",
+  "type": "custom",
+  "url": "https://api.askproai.de/api/retell/collect-appointment",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "parameter_type": "json",
+  "query_params": {},
+  "description": "Sammelt alle Termindaten vom Anrufer, prüft Verfügbarkeit und bucht bei Bestätigung. NIEMALS nach der Telefonnummer fragen!",
+  "execution_message_description": "Ich prüfe den Terminwunsch",
+  "timeout_ms": 120000,
+  "speak_during_execution": true,
+  "speak_after_execution": false,
+  "response_variables": {
+    "success": "$.success",
+    "status": "$.status",
+    "message": "$.message",
+    "bestaetigung_status": "$.bestaetigung_status",
+    "appointment_id": "$.appointment_id",
+    "termin_referenz": "$.reference_id",
+    "naechste_schritte": "$.next_steps"
+  },
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "call_id": {
+        "type": "string",
+        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+      },
+      "datum": {
+        "type": "string",
+        "description": "Datum des Termins (z.B. 'heute', 'morgen', '01.10.2025')"
+      },
+      "uhrzeit": {
+        "type": "string",
+        "description": "Gewünschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '13:00', '15:30')"
+      },
+      "name": {
+        "type": "string",
+        "description": "Vollständiger Name des Kunden"
+      },
+      "dienstleistung": {
+        "type": "string",
+        "description": "Gewünschte Dienstleistung oder Behandlung"
+      },
+      "email": {
+        "type": "string",
+        "description": "E-Mail-Adresse für Terminbestätigung (optional, nur wenn Kunde es wünscht)"
+      },
+      "bestaetigung": {
+        "type": "boolean",
+        "description": "WICHTIG: Setze auf true beim ZWEITEN Aufruf, um die Buchung zu bestätigen. Beim ersten Aufruf weglassen oder false."
+      },
+      "kundenpraeferenzen": {
+        "type": "string",
+        "description": "Zusätzliche Wünsche oder Anmerkungen (optional)"
+      },
+      "mitarbeiter_wunsch": {
+        "type": "string",
+        "description": "Bevorzugter Mitarbeiter (optional, nur wenn Kunde es erwähnt)"
+      }
+    },
+    "required": [
+      "call_id",
+      "datum",
+      "uhrzeit",
+      "name",
+      "dienstleistung"
+    ]
+  }
+}

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent Update Guide - Anonymous Caller Fix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .step-content {
+            margin-left: 47px;
+            color: #555;
+        }
+
+        .step-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .step-content li {
+            margin-bottom: 8px;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .warning strong {
+            color: #856404;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .checklist {
+            list-style: none;
+            margin-left: 0 !important;
+        }
+
+        .checklist li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .checklist input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-box {
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .comparison-box.before {
+            background: #ffe6e6;
+            border: 2px solid #ff4444;
+        }
+
+        .comparison-box.after {
+            background: #e6ffe6;
+            border: 2px solid #44ff44;
+        }
+
+        .comparison-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .visual-guide {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .test-section {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .test-section h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Retell Agent Update Guide</h1>
+            <p>Anonymous Caller Fix - Terminverschiebung für Anrufer mit unterdrückter Nummer</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Datum: 04. Oktober 2025</p>
+        </div>
+
+        <div class="content">
+            <!-- Einführung -->
+            <div class="alert alert-info">
+                <strong>📋 Übersicht:</strong> Diese Anleitung hilft dir, deinen Retell Agent so zu konfigurieren,
+                dass Kunden mit unterdrückter Telefonnummer ihre Termine verschieben können.
+                Du musst <strong>2 Updates</strong> durchführen.
+            </div>
+
+            <div class="alert">
+                <strong>⏱️ Zeitaufwand:</strong> Ca. 5-10 Minuten<br>
+                <strong>🎯 Ziel:</strong> Termin-Verschiebung funktioniert auch für anonyme Anrufer
+            </div>
+
+            <!-- UPDATE 1: Function Definition -->
+            <div class="section">
+                <h2 class="section-title">📍 UPDATE 1: Custom Function Parameter hinzufügen</h2>
+
+                <div class="warning">
+                    <strong>⚠️ WICHTIG:</strong> Dieser Schritt ist KRITISCH! Ohne den <code>customer_name</code> Parameter
+                    kann das System Termine von anonymen Anrufern nicht finden.
+                </div>
+
+                <!-- Schritt 1 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Retell Dashboard öffnen
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Gehe zu: <strong>https://app.retellai.com</strong></li>
+                            <li>Login mit deinen Credentials</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Schritt 2 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Zum Agent navigieren
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Klicke links im Menü auf: <span class="highlight">Agents</span></li>
+                            <li>Suche deinen Agent (z.B. "Ask-Pro-AI Agent")</li>
+                            <li>Klicke auf den Agent um ihn zu öffnen</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Schritt 3 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Custom Function finden
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Suche im Agent Editor nach: <span class="highlight">Custom Functions</span> oder <span class="highlight">Functions</span></li>
+                            <li>Finde in der Liste: <span class="highlight">reschedule_appointment</span></li>
+                            <li>Klicke darauf um sie zu öffnen</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Schritt 4 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        JSON Parameters öffnen
+                    </div>
+                    <div class="step-content">
+                        <p>Du siehst jetzt verschiedene Felder. Scrolle zu:</p>
+                        <ul>
+                            <li><span class="highlight">Parameters (Optional)</span></li>
+                            <li>Klicke auf den Tab: <span class="highlight">JSON</span> (NICHT "Form"!)</li>
+                        </ul>
+
+                        <div class="visual-guide">┌─────────────────────────────────────────┐
+│ Custom Function                         │
+├─────────────────────────────────────────┤
+│ Name: reschedule_appointment            │
+├─────────────────────────────────────────┤
+│ Parameters (Optional)                   │
+│ ┌───────┬──────┐                       │
+│ │ JSON  │ Form │  ← Klicke auf JSON!   │
+│ └───────┴──────┘                       │
+│ ┌─────────────────────────────────┐    │
+│ │  Hier ist dein JSON Code...     │    │
+│ └─────────────────────────────────┘    │
+└─────────────────────────────────────────┘</div>
+                    </div>
+                </div>
+
+                <!-- Schritt 5 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        JSON Code KOMPLETT ERSETZEN
+                    </div>
+                    <div class="step-content">
+                        <div class="warning">
+                            <strong>⚠️ WICHTIG:</strong>
+                            <ol style="margin-left: 20px; margin-top: 10px;">
+                                <li>Markiere den KOMPLETTEN aktuellen JSON Code im Editor</li>
+                                <li>Drücke DELETE oder BACKSPACE um alles zu löschen</li>
+                                <li>Klicke auf "KOPIEREN" beim Code unten</li>
+                                <li>Füge den neuen Code ein (STRG+V oder CMD+V)</li>
+                            </ol>
+                        </div>
+
+                        <p style="margin-bottom: 10px;"><strong>Neuer JSON Code (komplett kopieren):</strong></p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this, 'json-code-1')">📋 KOPIEREN</button>
+                            <code id="json-code-1">{
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Name des Kunden dessen Termin verschoben werden soll (z.B. 'Hans Schuster'). Wichtig bei anonymen Anrufern!"
+    },
+    "new_date": {
+      "type": "string",
+      "description": "Neues Datum für den Termin"
+    },
+    "new_time": {
+      "type": "string",
+      "description": "Neue Uhrzeit für den Termin"
+    },
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "old_date": {
+      "type": "string",
+      "description": "Aktuelles Datum des Termins"
+    }
+  },
+  "required": [
+    "call_id",
+    "old_date",
+    "new_date",
+    "new_time"
+  ]
+}</code>
+                        </div>
+
+                        <div class="success" style="margin-top: 20px;">
+                            <strong>✅ Was ist neu?</strong><br>
+                            Der Parameter <code>customer_name</code> wurde ganz oben in <code>properties</code> hinzugefügt!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schritt 6 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">6</span>
+                        Speichern & Deployen
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Scrolle nach unten</li>
+                            <li>Klicke auf: <span class="highlight">Save</span> oder <span class="highlight">Update</span></li>
+                            <li>Falls vorhanden: Klicke auch auf <span class="highlight">Deploy</span> oder <span class="highlight">Publish</span></li>
+                            <li>Warte ca. 30 Sekunden bis Änderungen aktiv sind</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Vorher/Nachher Vergleich -->
+                <div class="comparison">
+                    <div class="comparison-box before">
+                        <h4>❌ VORHER (ohne customer_name)</h4>
+                        <div class="code-block" style="font-size: 12px; padding: 10px;">
+<code>{
+  "properties": {
+    "new_date": {...},
+    "new_time": {...},
+    ...
+  }
+}</code>
+                        </div>
+                    </div>
+                    <div class="comparison-box after">
+                        <h4>✅ NACHHER (mit customer_name)</h4>
+                        <div class="code-block" style="font-size: 12px; padding: 10px;">
+<code>{
+  "properties": {
+    "customer_name": {...}, ← NEU!
+    "new_date": {...},
+    "new_time": {...},
+    ...
+  }
+}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPDATE 2: Agent Prompt -->
+            <div class="section">
+                <h2 class="section-title">📝 UPDATE 2: Agent Prompt erweitern</h2>
+
+                <div class="info">
+                    <strong>ℹ️ Warum?</strong> Der Agent muss wissen, dass er bei Terminverschiebungen IMMER
+                    nach dem vollständigen Namen fragen soll, damit der <code>customer_name</code> Parameter übergeben wird.
+                </div>
+
+                <!-- Schritt 1 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Agent Prompt öffnen
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Im selben Agent Editor</li>
+                            <li>Suche nach: <span class="highlight">Prompt</span> oder <span class="highlight">System Prompt</span></li>
+                            <li>Du siehst ein großes Textfeld mit dem aktuellen Prompt</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Schritt 2 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Richtige Stelle im Prompt finden
+                    </div>
+                    <div class="step-content">
+                        <p>Suche im Prompt nach dieser Zeile (STRG+F oder CMD+F):</p>
+                        <div class="code-block">
+<code>═══════════════════════════════════════════════════════════════
+VERFÜGBARE FUNKTIONEN
+═══════════════════════════════════════════════════════════════</code>
+                        </div>
+                        <p style="margin-top: 15px;">Scrolle dann NACH UNTEN bis du siehst:</p>
+                        <div class="code-block">
+<code>═══════════════════════════════════════════════════════════════
+KONTEXT
+═══════════════════════════════════════════════════════════════</code>
+                        </div>
+                        <div class="warning" style="margin-top: 15px;">
+                            <strong>⚠️ WICHTIG:</strong> Der neue Abschnitt muss ZWISCHEN diesen beiden Abschnitten eingefügt werden!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schritt 3 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Neuen Abschnitt einfügen
+                    </div>
+                    <div class="step-content">
+                        <p>Setze den Cursor DIREKT VOR die Zeile "KONTEXT" und drücke ENTER um eine Leerzeile zu schaffen.</p>
+                        <p style="margin-top: 10px;"><strong>Füge dann diesen kompletten Text ein:</strong></p>
+
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this, 'prompt-code-1')">📋 KOPIEREN</button>
+                            <code id="prompt-code-1">
+═══════════════════════════════════════════════════════════════
+TERMINVERSCHIEBUNG WORKFLOW
+═══════════════════════════════════════════════════════════════
+
+WANN WIRD EIN TERMIN VERSCHOBEN?
+─────────────────────────────────────────
+
+Der Kunde möchte einen BESTEHENDEN Termin auf ein neues Datum/Uhrzeit verlegen.
+
+Beispiele:
+• "Ich möchte meinen Termin verschieben"
+• "Können wir den Termin am Donnerstag verlegen?"
+• "Ich kann am 5. Oktober doch nicht, geht auch später?"
+• "Mein Termin am Montag um 14 Uhr muss auf 16 Uhr"
+
+
+WORKFLOW FÜR TERMINVERSCHIEBUNG IN 3 SCHRITTEN:
+─────────────────────────────────────────────────
+
+SCHRITT 1: Erfrage ALLE notwendigen Informationen
+
+   ⚠️ KRITISCH WICHTIG: IMMER den vollständigen Namen erfragen!
+
+   Benötigte Daten:
+   • Name des Kunden (VORNAME + NACHNAME!)
+     → "Könnten Sie mir bitte Ihren vollständigen Namen nennen?"
+     → Beispiel: "Hans Schuster" (nicht nur "Hans"!)
+
+   • Aktuelles Datum des Termins
+     → "An welchem Tag ist Ihr aktueller Termin?"
+     → Beispiel: "am 7. Oktober" oder "am Donnerstag"
+
+   • Neues Datum
+     → "Auf welches Datum möchten Sie verschieben?"
+     → Beispiel: "am 9. Oktober" oder "nächsten Montag"
+
+   • Neue Uhrzeit
+     → "Und um welche Uhrzeit?"
+     → Beispiel: "16 Uhr" oder "sechzehn Uhr dreißig"
+
+
+SCHRITT 2: Rufe reschedule_appointment auf
+
+   ⚠️ WICHTIG: Alle Parameter korrekt übergeben!
+
+   Parameter:
+   • customer_name: "Hans Schuster" (VOLLSTÄNDIGER NAME!)
+   • old_date: "2025-10-07" (aktuelles Datum des Termins)
+   • new_date: "2025-10-09" (neues Datum)
+   • new_time: "16:00" (neue Uhrzeit im Format HH:MM)
+   • call_id: {{call_id}} (IMMER übergeben!)
+
+   ⚠️ KRITISCH: customer_name ist ESSENTIELL!
+      → Bei anonymen Anrufern ist dies der EINZIGE Weg den Termin zu finden
+      → Immer Vorname + Nachname erfragen
+      → Beispiel: "Hans Schuster", nicht nur "Hans"
+
+
+SCHRITT 3: Reagiere auf die Antwort
+
+   ✅ FALL A: Termin wurde verschoben (success: true, status: "rescheduled")
+   ─────────────────────────────────────────────────────────────────────────
+   Bestätige dem Kunden:
+   "Perfekt! Ihr Termin wurde erfolgreich verschoben auf [neues Datum] um [neue Uhrzeit].
+   Sie erhalten in Kürze eine Bestätigungsemail."
+
+   📅 FALL B: Neuer Termin nicht verfügbar (success: false, status: "not_available")
+   ─────────────────────────────────────────────────────────────────────────────────
+   1. Lese die Alternative aus der Response vor
+   2. Frage: "Passt Ihnen einer dieser Termine?"
+   3. Bei Auswahl: Rufe reschedule_appointment NOCHMAL auf mit neuem Datum/Zeit
+   4. System bucht automatisch die gewählte Alternative
+
+   ❌ FALL C: Termin nicht gefunden (success: false, status: "not_found")
+   ────────────────────────────────────────────────────────────────────────
+   Reagiere freundlich:
+   "Ich konnte leider keinen Termin am [Datum] finden.
+   Könnten Sie mir bitte noch einmal das genaue Datum Ihres Termins nennen?
+   Und zur Sicherheit: Wie lautet Ihr vollständiger Name?"
+
+   ⚠️ FALL D: Technischer Fehler (success: false)
+   ────────────────────────────────────────────────────────────────────
+   "Es tut mir leid, ich habe gerade ein technisches Problem.
+   Können Sie es bitte in einem Moment erneut versuchen?"
+
+
+WICHTIGE REGELN FÜR TERMINVERSCHIEBUNG
+─────────────────────────────────────────
+
+⚠️ IMMER den vollständigen Namen erfragen (Vorname + Nachname)
+⚠️ IMMER call_id mit {{call_id}} übergeben
+⚠️ Bei "Termin nicht gefunden" nachfragen statt aufgeben
+⚠️ Datum-Format: YYYY-MM-DD, Zeit-Format: HH:MM
+
+</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schritt 4 -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Speichern & Deployen
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>Scrolle nach unten im Prompt Editor</li>
+                            <li>Klicke auf: <span class="highlight">Save</span> oder <span class="highlight">Update</span></li>
+                            <li>Falls vorhanden: Klicke auch auf <span class="highlight">Deploy</span></li>
+                            <li>Warte ca. 30 Sekunden</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Section -->
+            <div class="test-section">
+                <h3>🧪 TESTEN: Beide Updates abgeschlossen?</h3>
+
+                <p><strong>Mache jetzt einen Testanruf mit unterdrückter Nummer:</strong></p>
+
+                <ol style="margin-left: 20px; margin-top: 15px;">
+                    <li style="margin-bottom: 10px;">
+                        <strong>Rufnummernunterdrückung aktivieren:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Bei jedem Anruf: Wähle <code>*67</code> vor der Nummer</li>
+                            <li>Oder in Telefon-Einstellungen: "Rufnummer unterdrücken" aktivieren</li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <strong>Rufe an:</strong> +493083793369
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <strong>Sage genau:</strong><br>
+                        "Mein Name ist Hans Schuster. Ich möchte meinen Termin am 5. Oktober verschieben auf 16 Uhr."
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <strong>Erwartetes Ergebnis:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>✅ Agent findet den Termin</li>
+                            <li>✅ Termin wird erfolgreich verschoben</li>
+                            <li>✅ Agent bestätigt: "Ihr Termin wurde erfolgreich verschoben..."</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="success" style="margin-top: 20px;">
+                    <strong>✅ Wenn es funktioniert:</strong> Herzlichen Glückwunsch! Das System ist jetzt bereit
+                    für Terminverschiebungen von Anrufern mit unterdrückter Telefonnummer!
+                </div>
+
+                <div class="warning" style="margin-top: 15px;">
+                    <strong>❌ Wenn es NICHT funktioniert:</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Prüfe: Wurde <code>customer_name</code> wirklich im JSON hinzugefügt?</li>
+                        <li>Prüfe: Wurde der Prompt-Abschnitt korrekt eingefügt?</li>
+                        <li>Warte weitere 2 Minuten und versuche es erneut</li>
+                        <li>Schaue in die Retell Call Logs ob <code>customer_name</code> übergeben wurde</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Final Checklist -->
+            <div class="section">
+                <h2 class="section-title">✅ Finale Checkliste</h2>
+
+                <div class="step">
+                    <div class="step-content">
+                        <ul class="checklist">
+                            <li><input type="checkbox" id="check1"> <label for="check1">UPDATE 1: Custom Function <code>reschedule_appointment</code> geöffnet</label></li>
+                            <li><input type="checkbox" id="check2"> <label for="check2">JSON Tab ausgewählt (nicht Form)</label></li>
+                            <li><input type="checkbox" id="check3"> <label for="check3">Kompletten JSON Code ersetzt (mit <code>customer_name</code>)</label></li>
+                            <li><input type="checkbox" id="check4"> <label for="check4">Function gespeichert & deployed</label></li>
+                            <li><input type="checkbox" id="check5"> <label for="check5">UPDATE 2: Agent Prompt geöffnet</label></li>
+                            <li><input type="checkbox" id="check6"> <label for="check6">"TERMINVERSCHIEBUNG WORKFLOW" Abschnitt eingefügt</label></li>
+                            <li><input type="checkbox" id="check7"> <label for="check7">Prompt gespeichert & deployed</label></li>
+                            <li><input type="checkbox" id="check8"> <label for="check8">30 Sekunden gewartet</label></li>
+                            <li><input type="checkbox" id="check9"> <label for="check9">Testanruf mit unterdrückter Nummer durchgeführt</label></li>
+                            <li><input type="checkbox" id="check10"> <label for="check10">Terminverschiebung funktioniert! 🎉</label></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="alert alert-success" style="text-align: center; margin-top: 40px;">
+                <strong>🎉 Fertig!</strong><br>
+                Dein Retell Agent kann jetzt Termine verschieben - auch für Anrufer mit unterdrückter Telefonnummer!
+            </div>
+
+            <div style="text-align: center; color: #999; font-size: 0.9em; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                Erstellt: 04. Oktober 2025 | Ask-Pro-AI Backend System
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(button, elementId) {
+            const codeElement = document.getElementById(elementId);
+            const text = codeElement.textContent;
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(text).then(function() {
+                // Change button appearance
+                button.textContent = '✅ KOPIERT!';
+                button.classList.add('copied');
+
+                // Reset after 2 seconds
+                setTimeout(function() {
+                    button.textContent = '📋 KOPIEREN';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                alert('Fehler beim Kopieren. Bitte manuell kopieren.');
+                console.error('Copy failed:', err);
+            });
+        }
+
+        // Save checkbox state to localStorage
+        document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function(checkbox) {
+            // Load saved state
+            const savedState = localStorage.getItem(checkbox.id);
+            if (savedState === 'true') {
+                checkbox.checked = true;
+            }
+
+            // Save on change
+            checkbox.addEventListener('change', function() {
+                localStorage.setItem(this.id, this.checked);
+            });
+        });
+    </script>
+</body>
+</html>

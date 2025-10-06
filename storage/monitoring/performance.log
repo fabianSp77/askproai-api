@@ -1,0 +1,684 @@
+====== Performance Check: Di 23. Sep 22:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.311878s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 22:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.077332s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 22:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.073901s
+DB Connections: 3
+
+====== Performance Check: Di 23. Sep 22:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.058395s
+DB Connections: 3
+
+====== Performance Check: Di 23. Sep 22:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068564s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 23:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.065165s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 23:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.071526s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 23:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.080119s
+DB Connections: 3
+
+====== Performance Check: Di 23. Sep 23:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.097849s
+DB Connections: 3
+
+====== Performance Check: Di 23. Sep 23:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068259s
+DB Connections: 2
+
+====== Performance Check: Di 23. Sep 23:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074679s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 00:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.113933s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 00:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.061656s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 00:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.063159s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 00:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.066473s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 00:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.069699s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 00:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068589s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 01:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.064643s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 01:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.075270s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 01:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.073839s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 01:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.075926s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 01:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067210s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 01:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.060156s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 02:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.069633s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 02:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.066523s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 02:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.073123s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 02:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.070446s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 02:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.060195s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 02:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.073943s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 03:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.092405s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 03:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.055285s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 03:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.064144s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 03:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.051180s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 03:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.070338s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 03:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068525s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 04:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.054004s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 04:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068904s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 04:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.064013s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 04:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067878s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 04:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.077531s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 04:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.092080s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 05:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.065694s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 05:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.081977s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 05:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.070945s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 05:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.060862s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 05:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.059787s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 05:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.075789s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 06:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.156563s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 06:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.090389s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 06:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074535s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 06:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074742s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 06:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.069089s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 06:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.062713s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 07:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.079805s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 07:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.062528s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 07:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.084213s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 07:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.086944s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 07:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074736s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 07:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.059670s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 08:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.075348s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 08:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.071342s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 08:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.060875s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 08:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076855s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 08:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.072706s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 08:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.065045s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 09:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074369s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 09:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.077865s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 09:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.480302s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 09:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.106258s
+DB Connections: 
+
+====== Performance Check: Mi 24. Sep 09:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068707s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 09:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.077792s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 10:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074356s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 10:10:02 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067676s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 10:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.062526s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 10:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.059396s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 10:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.087440s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 10:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.085365s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 11:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.079740s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 11:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.058201s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 11:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076040s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 11:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.059239s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 11:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.096750s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 11:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.073038s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 12:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.078826s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 12:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.072943s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 12:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067305s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 12:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.100596s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 12:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.081370s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 12:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076627s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 13:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.112068s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 13:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.058375s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 13:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.087784s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 13:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067434s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 13:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.064990s
+DB Connections: 2
+
+====== Performance Check: Mi 24. Sep 13:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.067806s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.088158s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.092130s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.084024s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076481s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.070390s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 14:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.071417s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 15:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076570s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 15:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.074020s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 15:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.076503s
+DB Connections: 4
+
+====== Performance Check: Mi 24. Sep 15:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.060516s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 15:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.057529s
+DB Connections: 4
+
+====== Performance Check: Mi 24. Sep 15:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.068811s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.066109s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:10:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.100248s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:20:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.059844s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:30:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.082595s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:40:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.770602s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 16:50:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.116524s
+DB Connections: 3
+
+====== Performance Check: Mi 24. Sep 17:00:01 CEST 2025 ======
+CPU Usage: %
+Memory Usage: %
+Dashboard Response: 0.052052s
+DB Connections: 3
+

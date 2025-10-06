@@ -1,0 +1,81 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CalcomWebhookController;
+use App\Http\Controllers\RetellWebhookController;   // ← HIERHER!
+use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\API\CalcomHealthController;
+use App\Http\Controllers\Api\V2\AvailabilityController;
+use App\Http\Controllers\Api\V2\BookingController;
+use App\Http\Controllers\Api\V2\CalcomSyncController;
+use App\Http\Controllers\Api\V2\CommunicationController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+// ---- Cal.com Webhook -------------------------------------------
+
+// 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
+Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
+
+// 2) Produktiver Webhook (POST) ➜ mit Signaturprüfung
+Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
+     ->middleware(['calcom.signature', 'throttle:60,1']); // 60 requests per minute
+
+// Retell Webhook (POST)
+Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);
+
+// API Health Check
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'healthy',
+        'api_version' => '1.0',
+        'timestamp' => now()
+    ]);
+});
+
+// Monitoring Dashboard Routes (protected)
+Route::prefix('monitoring')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/dashboard', [MonitoringController::class, 'dashboard']);
+    Route::get('/health', [MonitoringController::class, 'health']);
+    Route::get('/metrics', [MonitoringController::class, 'metrics']);
+});
+
+// Cal.com Health Check (public for monitoring services)
+Route::get('/health/calcom', [CalcomHealthController::class, 'index'])
+    ->name('health.calcom');
+
+// ---- V2 API Routes (Cal.com V2 Integration) -------------------------------------------
+// Test route without middleware to see if it loads
+Route::get('/v2/test', function() {
+    return response()->json(['message' => 'V2 API is working']);
+});
+
+Route::prefix('v2')->group(function () {
+    // Availability endpoints
+    Route::post('/availability/simple', [AvailabilityController::class, 'simple']);
+    Route::post('/availability/composite', [AvailabilityController::class, 'composite']);
+
+    // Booking endpoints
+    Route::post('/bookings', [BookingController::class, 'create']);
+    Route::patch('/bookings/{id}/reschedule', [BookingController::class, 'reschedule']);
+    Route::delete('/bookings/{id}', [BookingController::class, 'cancel']);
+
+    // Communication endpoints
+    Route::post('/communications/confirmation', [CommunicationController::class, 'sendConfirmation']);
+    Route::post('/communications/reminder', [CommunicationController::class, 'sendReminder']);
+    Route::post('/communications/cancellation', [CommunicationController::class, 'sendCancellation']);
+    Route::post('/communications/ics', [CommunicationController::class, 'generateIcs']);
+
+    // Cal.com sync endpoints
+    Route::post('/calcom/push-event-types', [CalcomSyncController::class, 'pushEventTypes']);
+    Route::get('/calcom/drift-status', [CalcomSyncController::class, 'driftStatus']);
+    Route::post('/calcom/detect-drift', [CalcomSyncController::class, 'detectDrift']);
+    Route::post('/calcom/resolve-drift', [CalcomSyncController::class, 'resolveDrift']);
+    Route::post('/calcom/auto-resolve', [CalcomSyncController::class, 'autoResolve']);
+});
+

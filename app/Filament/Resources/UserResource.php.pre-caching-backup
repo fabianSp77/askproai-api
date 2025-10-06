@@ -1,0 +1,782 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\User;
+use App\Models\Role;
+use App\Models\Company;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\Tabs;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class UserResource extends Resource
+{
+    protected static ?string $model = User::class;
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationLabel = 'Benutzer';
+    protected static ?string $modelLabel = 'Benutzer';
+    protected static ?string $pluralModelLabel = 'Benutzer';
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $active = static::getModel()::where('is_active', true)->count();
+        $total = static::getModel()::count();
+
+        return "{$active} / {$total}";
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $inactive = static::getModel()::where('is_active', false)->count();
+
+        if ($inactive > 5) return 'danger';
+        if ($inactive > 0) return 'warning';
+
+        return 'success';
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Tabs::make('User Details')
+                    ->tabs([
+                        Tabs\Tab::make('👤 Grunddaten')
+                            ->schema([
+                                Forms\Components\Section::make('Persönliche Informationen')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Name')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->placeholder('Max Mustermann'),
+
+                                        Forms\Components\TextInput::make('email')
+                                            ->label('E-Mail')
+                                            ->email()
+                                            ->required()
+                                            ->unique(ignoreRecord: true)
+                                            ->maxLength(255)
+                                            ->placeholder('max@example.com'),
+
+                                        Forms\Components\TextInput::make('phone')
+                                            ->label('Telefon')
+                                            ->tel()
+                                            ->maxLength(20)
+                                            ->placeholder('+49 123 456789'),
+
+                                        Forms\Components\Select::make('company_id')
+                                            ->label('Unternehmen')
+                                            ->options(Company::pluck('name', 'id'))
+                                            ->searchable()
+                                            ->placeholder('Unternehmen wählen'),
+
+                                        Forms\Components\DatePicker::make('birth_date')
+                                            ->label('Geburtsdatum')
+                                            ->maxDate(now()->subYears(18))
+                                            ->displayFormat('d.m.Y'),
+
+                                        Forms\Components\Select::make('language')
+                                            ->label('Sprache')
+                                            ->options([
+                                                'de' => '🇩🇪 Deutsch',
+                                                'en' => '🇬🇧 English',
+                                                'fr' => '🇫🇷 Français',
+                                                'es' => '🇪🇸 Español',
+                                            ])
+                                            ->default('de'),
+
+                                        Forms\Components\Select::make('timezone')
+                                            ->label('Zeitzone')
+                                            ->options([
+                                                'Europe/Berlin' => 'Berlin (UTC+1)',
+                                                'Europe/London' => 'London (UTC+0)',
+                                                'Europe/Paris' => 'Paris (UTC+1)',
+                                                'America/New_York' => 'New York (UTC-5)',
+                                            ])
+                                            ->default('Europe/Berlin'),
+
+                                        Forms\Components\FileUpload::make('avatar')
+                                            ->label('Profilbild')
+                                            ->image()
+                                            ->avatar()
+                                            ->directory('avatars')
+                                            ->maxSize(1024),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Adresse')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('street')
+                                            ->label('Straße')
+                                            ->maxLength(255),
+
+                                        Forms\Components\TextInput::make('house_number')
+                                            ->label('Hausnummer')
+                                            ->maxLength(10),
+
+                                        Forms\Components\TextInput::make('postal_code')
+                                            ->label('PLZ')
+                                            ->maxLength(10),
+
+                                        Forms\Components\TextInput::make('city')
+                                            ->label('Stadt')
+                                            ->maxLength(100),
+
+                                        Forms\Components\TextInput::make('state')
+                                            ->label('Bundesland')
+                                            ->maxLength(100),
+
+                                        Forms\Components\Select::make('country')
+                                            ->label('Land')
+                                            ->options([
+                                                'DE' => '🇩🇪 Deutschland',
+                                                'AT' => '🇦🇹 Österreich',
+                                                'CH' => '🇨🇭 Schweiz',
+                                                'LI' => '🇱🇮 Liechtenstein',
+                                            ])
+                                            ->default('DE'),
+                                    ])
+                                    ->columns(3),
+                            ]),
+
+                        Tabs\Tab::make('🔐 Sicherheit')
+                            ->schema([
+                                Forms\Components\Section::make('Authentifizierung')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('password')
+                                            ->label('Passwort')
+                                            ->password()
+                                            ->revealable()
+                                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                                            ->dehydrated(fn ($state) => filled($state))
+                                            ->required(fn (string $context): bool => $context === 'create')
+                                            ->maxLength(255)
+                                            ->helperText('Min. 8 Zeichen, inkl. Groß-/Kleinbuchstaben und Zahlen'),
+
+                                        Forms\Components\TextInput::make('password_confirmation')
+                                            ->label('Passwort bestätigen')
+                                            ->password()
+                                            ->revealable()
+                                            ->required(fn (string $context): bool => $context === 'create')
+                                            ->same('password')
+                                            ->dehydrated(false),
+
+                                        Forms\Components\Toggle::make('two_factor_enabled')
+                                            ->label('Zwei-Faktor-Authentifizierung')
+                                            ->helperText('Erhöht die Sicherheit des Kontos'),
+
+                                        Forms\Components\Toggle::make('must_change_password')
+                                            ->label('Passwort-Änderung erforderlich')
+                                            ->helperText('Benutzer muss bei nächster Anmeldung Passwort ändern'),
+
+                                        Forms\Components\DateTimePicker::make('password_changed_at')
+                                            ->label('Passwort geändert am')
+                                            ->disabled()
+                                            ->displayFormat('d.m.Y H:i'),
+
+                                        Forms\Components\TextInput::make('failed_login_attempts')
+                                            ->label('Fehlgeschlagene Anmeldeversuche')
+                                            ->numeric()
+                                            ->disabled()
+                                            ->default(0),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('API Zugang')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('api_token')
+                                            ->label('API Token')
+                                            ->disabled()
+                                            ->suffixAction(
+                                                Forms\Components\Actions\Action::make('regenerate')
+                                                    ->label('Neu generieren')
+                                                    ->icon('heroicon-o-arrow-path')
+                                                    ->requiresConfirmation()
+                                                    ->action(function ($set) {
+                                                        $set('api_token', Str::random(60));
+                                                    })
+                                            ),
+
+                                        Forms\Components\DateTimePicker::make('api_token_expires_at')
+                                            ->label('Token läuft ab am')
+                                            ->minDate(now())
+                                            ->displayFormat('d.m.Y H:i'),
+
+                                        Forms\Components\Textarea::make('allowed_ips')
+                                            ->label('Erlaubte IP-Adressen')
+                                            ->rows(3)
+                                            ->helperText('Eine IP pro Zeile. Leer = alle IPs erlaubt'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('🛡️ Berechtigungen')
+                            ->schema([
+                                Forms\Components\Section::make('Rollen & Berechtigungen')
+                                    ->schema([
+                                        Forms\Components\Select::make('roles')
+                                            ->label('Rollen')
+                                            ->multiple()
+                                            ->relationship('roles', 'name')
+                                            ->preload()
+                                            ->searchable()
+                                            ->helperText('Wählen Sie eine oder mehrere Rollen'),
+
+                                        Forms\Components\CheckboxList::make('permissions')
+                                            ->label('Direkte Berechtigungen')
+                                            ->relationship('permissions', 'name')
+                                            ->columns(3)
+                                            ->searchable()
+                                            ->bulkToggleable()
+                                            ->helperText('Zusätzliche Berechtigungen unabhängig von Rollen'),
+                                    ]),
+
+                                Forms\Components\Section::make('Zugriffsbeschränkungen')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('is_admin')
+                                            ->label('Administrator')
+                                            ->helperText('Voller Systemzugriff'),
+
+                                        Forms\Components\Toggle::make('is_super_admin')
+                                            ->label('Super Administrator')
+                                            ->helperText('Höchste Berechtigungsstufe')
+                                            ->visible(fn () => auth()->user()->is_super_admin ?? false),
+
+                                        Forms\Components\Toggle::make('can_access_admin_panel')
+                                            ->label('Admin-Panel Zugriff')
+                                            ->default(true),
+
+                                        Forms\Components\Toggle::make('can_access_api')
+                                            ->label('API Zugriff')
+                                            ->default(false),
+
+                                        Forms\Components\DateTimePicker::make('access_valid_from')
+                                            ->label('Zugriff gültig ab')
+                                            ->displayFormat('d.m.Y H:i'),
+
+                                        Forms\Components\DateTimePicker::make('access_valid_until')
+                                            ->label('Zugriff gültig bis')
+                                            ->displayFormat('d.m.Y H:i')
+                                            ->after('access_valid_from'),
+                                    ])
+                                    ->columns(3),
+                            ]),
+
+                        Tabs\Tab::make('⚙️ Einstellungen')
+                            ->schema([
+                                Forms\Components\Section::make('Benachrichtigungen')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('email_notifications')
+                                            ->label('E-Mail Benachrichtigungen')
+                                            ->default(true),
+
+                                        Forms\Components\Toggle::make('sms_notifications')
+                                            ->label('SMS Benachrichtigungen')
+                                            ->default(false),
+
+                                        Forms\Components\Toggle::make('push_notifications')
+                                            ->label('Push Benachrichtigungen')
+                                            ->default(true),
+
+                                        Forms\Components\CheckboxList::make('notification_types')
+                                            ->label('Benachrichtigungstypen')
+                                            ->options([
+                                                'appointments' => '📅 Termine',
+                                                'messages' => '💬 Nachrichten',
+                                                'system' => '⚙️ System',
+                                                'marketing' => '📣 Marketing',
+                                                'security' => '🔐 Sicherheit',
+                                            ])
+                                            ->columns(2),
+                                    ])
+                                    ->columns(3),
+
+                                Forms\Components\Section::make('Präferenzen')
+                                    ->schema([
+                                        Forms\Components\Select::make('theme')
+                                            ->label('Theme')
+                                            ->options([
+                                                'light' => '☀️ Hell',
+                                                'dark' => '🌙 Dunkel',
+                                                'auto' => '🔄 Automatisch',
+                                            ])
+                                            ->default('auto'),
+
+                                        Forms\Components\Select::make('date_format')
+                                            ->label('Datumsformat')
+                                            ->options([
+                                                'd.m.Y' => '31.12.2024',
+                                                'd/m/Y' => '31/12/2024',
+                                                'Y-m-d' => '2024-12-31',
+                                                'm/d/Y' => '12/31/2024',
+                                            ])
+                                            ->default('d.m.Y'),
+
+                                        Forms\Components\Select::make('time_format')
+                                            ->label('Zeitformat')
+                                            ->options([
+                                                'H:i' => '24 Stunden (14:30)',
+                                                'h:i A' => '12 Stunden (02:30 PM)',
+                                            ])
+                                            ->default('H:i'),
+
+                                        Forms\Components\Select::make('first_day_of_week')
+                                            ->label('Erster Wochentag')
+                                            ->options([
+                                                '1' => 'Montag',
+                                                '0' => 'Sonntag',
+                                            ])
+                                            ->default('1'),
+
+                                        Forms\Components\KeyValue::make('preferences')
+                                            ->label('Weitere Einstellungen')
+                                            ->addActionLabel('Einstellung hinzufügen')
+                                            ->keyLabel('Schlüssel')
+                                            ->valueLabel('Wert')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('📊 Status')
+                            ->schema([
+                                Forms\Components\Section::make('Kontostatus')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->label('Aktiv')
+                                            ->default(true)
+                                            ->helperText('Deaktivierte Benutzer können sich nicht anmelden'),
+
+                                        Forms\Components\Toggle::make('email_verified')
+                                            ->label('E-Mail verifiziert')
+                                            ->disabled()
+                                            ->dehydrated(false),
+
+                                        Forms\Components\Select::make('status')
+                                            ->label('Status')
+                                            ->options([
+                                                'active' => '🟢 Aktiv',
+                                                'inactive' => '⚫ Inaktiv',
+                                                'suspended' => '🔴 Gesperrt',
+                                                'pending' => '🟡 Ausstehend',
+                                            ])
+                                            ->default('pending'),
+
+                                        Forms\Components\Textarea::make('status_reason')
+                                            ->label('Statusgrund')
+                                            ->rows(2)
+                                            ->placeholder('Grund für Statusänderung'),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Aktivität')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('last_login_at')
+                                            ->label('Letzte Anmeldung')
+                                            ->content(fn ($record) => $record && $record->last_login_at
+                                                ? $record->last_login_at->format('d.m.Y H:i') . ' (' . $record->last_login_at->diffForHumans() . ')'
+                                                : 'Noch nie angemeldet'),
+
+                                        Forms\Components\Placeholder::make('last_activity_at')
+                                            ->label('Letzte Aktivität')
+                                            ->content(fn ($record) => $record && $record->last_activity_at
+                                                ? $record->last_activity_at->format('d.m.Y H:i') . ' (' . $record->last_activity_at->diffForHumans() . ')'
+                                                : 'Keine Aktivität'),
+
+                                        Forms\Components\Placeholder::make('login_count')
+                                            ->label('Anmeldungen')
+                                            ->content(fn ($record) => $record ? number_format($record->login_count ?? 0) : '0'),
+
+                                        Forms\Components\Placeholder::make('last_ip')
+                                            ->label('Letzte IP-Adresse')
+                                            ->content(fn ($record) => $record->last_ip ?? 'Unbekannt'),
+
+                                        Forms\Components\Placeholder::make('last_user_agent')
+                                            ->label('Letzter Browser')
+                                            ->content(fn ($record) => $record ? Str::limit($record->last_user_agent ?? 'Unbekannt', 50) : 'Unbekannt')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Metadaten')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('created_at')
+                                            ->label('Erstellt am')
+                                            ->content(fn ($record) => $record ? $record->created_at->format('d.m.Y H:i') : '-'),
+
+                                        Forms\Components\Placeholder::make('updated_at')
+                                            ->label('Aktualisiert am')
+                                            ->content(fn ($record) => $record ? $record->updated_at->format('d.m.Y H:i') : '-'),
+
+                                        Forms\Components\Placeholder::make('created_by')
+                                            ->label('Erstellt von')
+                                            ->content(fn ($record) => $record && $record->creator ? $record->creator->name : 'System'),
+
+                                        Forms\Components\Placeholder::make('updated_by')
+                                            ->label('Aktualisiert von')
+                                            ->content(fn ($record) => $record && $record->updater ? $record->updater->name : 'System'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->modifyQueryUsing(fn (Builder $query) =>
+                $query->with(['company:id,name', 'roles'])
+            )
+            ->columns([
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('')
+                    ->circular()
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name))
+                    ->size(40),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) => $record->email),
+
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Unternehmen')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Kein Unternehmen')
+                    ->color('primary'),
+
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Rollen')
+                    ->badge()
+                    ->separator(', ')
+                    ->color(fn ($state) => match($state) {
+                        'Admin' => 'danger',
+                        'Manager' => 'warning',
+                        'User' => 'success',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'success' => 'active',
+                        'danger' => 'suspended',
+                        'warning' => 'pending',
+                        'gray' => 'inactive',
+                    ])
+                    ->icons([
+                        'heroicon-o-check-circle' => 'active',
+                        'heroicon-o-x-circle' => 'suspended',
+                        'heroicon-o-clock' => 'pending',
+                        'heroicon-o-minus-circle' => 'inactive',
+                    ]),
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Aktiv')
+                    ->boolean()
+                    ->sortable(),
+
+                Tables\Columns\IconColumn::make('email_verified')
+                    ->label('Verifiziert')
+                    ->boolean()
+                    ->tooltip(fn ($record) => $record->email_verified_at
+                        ? 'Verifiziert am ' . $record->email_verified_at->format('d.m.Y')
+                        : 'Nicht verifiziert'),
+
+                Tables\Columns\IconColumn::make('two_factor_enabled')
+                    ->label('2FA')
+                    ->boolean()
+                    ->tooltip('Zwei-Faktor-Authentifizierung'),
+
+                Tables\Columns\TextColumn::make('last_login_at')
+                    ->label('Letzte Anmeldung')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->description(fn ($record) => $record->last_login_at
+                        ? $record->last_login_at->diffForHumans()
+                        : null)
+                    ->placeholder('Nie'),
+
+                Tables\Columns\TextColumn::make('login_count')
+                    ->label('Anmeldungen')
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Registriert')
+                    ->date('d.m.Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('company')
+                    ->label('Unternehmen')
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                SelectFilter::make('roles')
+                    ->label('Rolle')
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->preload(),
+
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'active' => 'Aktiv',
+                        'inactive' => 'Inaktiv',
+                        'suspended' => 'Gesperrt',
+                        'pending' => 'Ausstehend',
+                    ]),
+
+                TernaryFilter::make('is_active')
+                    ->label('Aktiv'),
+
+                TernaryFilter::make('email_verified')
+                    ->label('E-Mail verifiziert')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('email_verified_at'),
+                        false: fn (Builder $query) => $query->whereNull('email_verified_at'),
+                    ),
+
+                TernaryFilter::make('two_factor_enabled')
+                    ->label('2FA aktiviert'),
+
+                Tables\Filters\Filter::make('last_login')
+                    ->form([
+                        Forms\Components\Select::make('period')
+                            ->label('Zeitraum')
+                            ->options([
+                                'today' => 'Heute',
+                                'week' => 'Diese Woche',
+                                'month' => 'Diesen Monat',
+                                'inactive_month' => 'Länger als 1 Monat inaktiv',
+                                'inactive_3months' => 'Länger als 3 Monate inaktiv',
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when($data['period'] ?? null, function ($query, $period) {
+                            return match($period) {
+                                'today' => $query->whereDate('last_login_at', today()),
+                                'week' => $query->where('last_login_at', '>=', now()->startOfWeek()),
+                                'month' => $query->where('last_login_at', '>=', now()->startOfMonth()),
+                                'inactive_month' => $query->where('last_login_at', '<', now()->subMonth()),
+                                'inactive_3months' => $query->where('last_login_at', '<', now()->subMonths(3)),
+                                default => $query,
+                            };
+                        });
+                    }),
+            ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
+            ->persistFiltersInSession()
+            ->actions([
+                Action::make('impersonate')
+                    ->label('Imitieren')
+                    ->icon('heroicon-o-user-circle')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(fn () => auth()->user()->is_admin ?? false)
+                    ->action(function (User $record) {
+                        auth()->login($record);
+
+                        Notification::make()
+                            ->title('Benutzer imitiert')
+                            ->body("Sie sind jetzt als {$record->name} angemeldet")
+                            ->warning()
+                            ->send();
+
+                        return redirect('/admin');
+                    }),
+
+                Action::make('reset_password')
+                    ->label('Passwort zurücksetzen')
+                    ->icon('heroicon-o-key')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->form([
+                        Forms\Components\TextInput::make('new_password')
+                            ->label('Neues Passwort')
+                            ->password()
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $record->update([
+                            'password' => Hash::make($data['new_password']),
+                            'must_change_password' => true,
+                        ]);
+
+                        Notification::make()
+                            ->title('Passwort zurückgesetzt')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('toggle_status')
+                    ->label(fn ($record) => $record->is_active ? 'Deaktivieren' : 'Aktivieren')
+                    ->icon(fn ($record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->update(['is_active' => !$record->is_active]);
+
+                        Notification::make()
+                            ->title($record->is_active ? 'Benutzer aktiviert' : 'Benutzer deaktiviert')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\ViewAction::make()
+                    ->iconButton(),
+
+                Tables\Actions\EditAction::make()
+                    ->iconButton(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('activate')
+                        ->label('Aktivieren')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update(['is_active' => true, 'status' => 'active']);
+                            }
+                            Notification::make()
+                                ->title('Benutzer aktiviert')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('deactivate')
+                        ->label('Deaktivieren')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update(['is_active' => false, 'status' => 'inactive']);
+                            }
+                            Notification::make()
+                                ->title('Benutzer deaktiviert')
+                                ->warning()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('assign_role')
+                        ->label('Rolle zuweisen')
+                        ->icon('heroicon-o-shield-check')
+                        ->form([
+                            Forms\Components\Select::make('roles')
+                                ->label('Rollen')
+                                ->multiple()
+                                ->relationship('roles', 'name')
+                                ->required(),
+                        ])
+                        ->action(function ($records, array $data) {
+                            foreach ($records as $record) {
+                                $record->syncRoles($data['roles']);
+                            }
+                            Notification::make()
+                                ->title('Rollen zugewiesen')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('export')
+                        ->label('Exportieren')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->action(function ($records) {
+                            // Export logic here
+                            Notification::make()
+                                ->title('Export gestartet')
+                                ->info()
+                                ->send();
+                        }),
+
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            ->headerActions([
+                Action::make('import')
+                    ->label('Benutzer importieren')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\FileUpload::make('file')
+                            ->label('CSV-Datei')
+                            ->acceptedFileTypes(['text/csv', 'application/csv'])
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        // Import logic here
+                        Notification::make()
+                            ->title('Import gestartet')
+                            ->info()
+                            ->send();
+                    }),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'view' => Pages\ViewUser::route('/{record}'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            // UserStatsWidget::class,
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Only super_admin can bypass company scope
+        if (auth()->user()?->hasRole('super_admin')) {
+            return $query->withoutGlobalScopes();
+        }
+
+        return $query;
+    }
+}

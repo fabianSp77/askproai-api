@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Function Update - customer_name Parameter hinzufügen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-card {
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .completed {
+            background: #dcfce7;
+            border-color: #22c55e;
+        }
+        .copy-btn {
+            transition: all 0.2s ease;
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        .json-container {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        .json-key { color: #7dd3fc; }
+        .json-string { color: #86efac; }
+        .json-comment { color: #94a3b8; font-style: italic; }
+        kbd {
+            background: #e5e7eb;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg p-6 mb-6 shadow-lg">
+        <div class="flex items-start justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">🚨 KRITISCH: Retell Function Update</h1>
+                <p class="text-red-100 mb-2">customer_name Parameter für cancel_appointment & reschedule_appointment</p>
+                <div class="flex items-center gap-4 text-sm">
+                    <span class="bg-red-800 px-3 py-1 rounded">⏱️ Zeitaufwand: ~10 Minuten</span>
+                    <span class="bg-orange-800 px-3 py-1 rounded">⭐ Schwierigkeit: Einfach</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problem Box -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-6 rounded-lg shadow">
+        <h3 class="font-bold text-yellow-900 mb-2 text-lg">⚠️ WARUM IST DAS WICHTIG?</h3>
+        <p class="text-yellow-800 mb-3">
+            <strong>Problem:</strong> Anonyme Anrufer (unterdrückte Nummer) können aktuell ihre Termine <strong>NICHT stornieren oder verschieben</strong>,
+            weil Retell AI den Kundennamen nicht als Parameter sendet.
+        </p>
+        <p class="text-yellow-800 mb-3">
+            <strong>Lösung:</strong> Füge <code class="bg-yellow-200 px-2 py-1 rounded">customer_name</code> Parameter zu beiden Functions hinzu.
+        </p>
+        <p class="text-yellow-800">
+            <strong>Ergebnis:</strong> ✅ Anonyme Anrufer können Termine zuverlässig stornieren/verschieben
+        </p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-lg p-4 mb-6 shadow">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold text-gray-700">Fortschritt</span>
+            <span id="progress-text" class="text-sm font-semibold text-blue-600">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+            <div id="progress-bar" class="progress-bar bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="space-y-4">
+
+        <!-- Schritt 1 -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-blue-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step1" class="step-checkbox mt-1 mr-3 h-5 w-5 text-blue-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Schritt 1: Retell Dashboard öffnen</h3>
+                    <p class="text-gray-600 mb-3">Öffne das Retell Dashboard und melde dich an:</p>
+                    <a href="https://app.retellai.com" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
+                        📊 Retell Dashboard öffnen →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 2 -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-green-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step2" class="step-checkbox mt-1 mr-3 h-5 w-5 text-green-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Schritt 2: Zum Agent navigieren</h3>
+                    <p class="text-gray-600 mb-2">Navigation:</p>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Linkes Menü: <strong>"Agents"</strong> oder <strong>"LLM Agents"</strong> klicken</li>
+                        <li>Agent suchen: <strong>"Online: Assistent für Fabian Spitzer Rechtliches"</strong></li>
+                        <li>Agent öffnen durch Klick auf den Namen</li>
+                    </ol>
+                    <div class="bg-blue-50 p-3 rounded text-sm text-blue-800">
+                        💡 <strong>Tipp:</strong> Falls mehrere Versionen existieren, nimm die neueste (höchste Versionsnummer)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 3 -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-purple-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step3" class="step-checkbox mt-1 mr-3 h-5 w-5 text-purple-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Schritt 3: Functions Tab öffnen</h3>
+                    <p class="text-gray-600 mb-2">Im Agent Editor:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Suche die Tabs: <code>General</code>, <code>Prompt</code>, <code>Voice</code>, <strong><code>Functions</code></strong></li>
+                        <li>Klicke auf: <strong>"Functions"</strong> oder <strong>"Custom Functions"</strong></li>
+                    </ul>
+                    <p class="text-sm text-gray-600">Mögliche alternative Tab-Namen: <code>Tools</code>, <code>Capabilities</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 4 - cancel_appointment -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-orange-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step4" class="step-checkbox mt-1 mr-3 h-5 w-5 text-orange-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Schritt 4: cancel_appointment aktualisieren</h3>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">4.1 Function finden und öffnen</h4>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
+                        <li>Scrolle in der Function-Liste zu <strong>cancel_appointment</strong></li>
+                        <li>Klicke auf <strong>"Edit"</strong> oder <strong>"⚙️"</strong> oder <strong>"✏️"</strong></li>
+                    </ul>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">4.2 Parameters JSON ersetzen</h4>
+                    <p class="text-gray-600 mb-2">Im <strong>Parameters</strong> Feld (großes Textfeld mit JSON):</p>
+
+                    <ol class="list-decimal list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Markiere ALLES: <kbd>Ctrl+A</kbd> (Windows) oder <kbd>Cmd+A</kbd> (Mac)</li>
+                        <li>Löschen: <kbd>Backspace</kbd></li>
+                        <li>Klicke auf den grünen Button unten um das neue JSON zu kopieren</li>
+                        <li>Einfügen: <kbd>Ctrl+V</kbd> (Windows) oder <kbd>Cmd+V</kbd> (Mac)</li>
+                    </ol>
+
+                    <button onclick="copyCancelAppointment()" class="copy-btn mb-3 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg w-full">
+                        ✓ CANCEL_APPOINTMENT JSON KOPIEREN
+                    </button>
+
+                    <details class="mb-3">
+                        <summary class="cursor-pointer text-blue-600 hover:text-blue-800 font-semibold">📋 JSON Vorschau anzeigen</summary>
+                        <div class="json-container mt-2">
+                            <pre id="cancel-json-preview"></pre>
+                        </div>
+                    </details>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">4.3 Speichern</h4>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Klicke auf <strong>"Save"</strong> oder <strong>"Update"</strong> (unten rechts)</li>
+                        <li>Warte auf Bestätigung: "Function updated successfully"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 5 - reschedule_appointment -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-pink-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step5" class="step-checkbox mt-1 mr-3 h-5 w-5 text-pink-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Schritt 5: reschedule_appointment aktualisieren</h3>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">5.1 Function finden und öffnen</h4>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
+                        <li>Zurück zur Function-Liste (falls noch im Editor: <strong>"← Back"</strong>)</li>
+                        <li>Scrolle zu <strong>reschedule_appointment</strong></li>
+                        <li>Klicke auf <strong>"Edit"</strong> oder <strong>"⚙️"</strong> oder <strong>"✏️"</strong></li>
+                    </ul>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">5.2 Parameters JSON ersetzen</h4>
+                    <p class="text-gray-600 mb-2">Im <strong>Parameters</strong> Feld:</p>
+
+                    <ol class="list-decimal list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Markiere ALLES: <kbd>Ctrl+A</kbd> (Windows) oder <kbd>Cmd+A</kbd> (Mac)</li>
+                        <li>Löschen: <kbd>Backspace</kbd></li>
+                        <li>Klicke auf den grünen Button unten</li>
+                        <li>Einfügen: <kbd>Ctrl+V</kbd> (Windows) oder <kbd>Cmd+V</kbd> (Mac)</li>
+                    </ol>
+
+                    <button onclick="copyRescheduleAppointment()" class="copy-btn mb-3 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg w-full">
+                        ✓ RESCHEDULE_APPOINTMENT JSON KOPIEREN
+                    </button>
+
+                    <details class="mb-3">
+                        <summary class="cursor-pointer text-blue-600 hover:text-blue-800 font-semibold">📋 JSON Vorschau anzeigen</summary>
+                        <div class="json-container mt-2">
+                            <pre id="reschedule-json-preview"></pre>
+                        </div>
+                    </details>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">5.3 Speichern</h4>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Klicke auf <strong>"Save"</strong> oder <strong>"Update"</strong> (unten rechts)</li>
+                        <li>Warte auf Bestätigung: "Function updated successfully"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 6 - Deploy -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-indigo-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step6" class="step-checkbox mt-1 mr-3 h-5 w-5 text-indigo-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Schritt 6: Agent deployen (optional)</h3>
+                    <p class="text-gray-600 mb-3">Manche Retell Setups brauchen einen Deploy-Schritt:</p>
+
+                    <ul class="list-disc list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Suche Button oben rechts: <strong>"Deploy"</strong> oder <strong>"Publish"</strong></li>
+                        <li><strong>Falls vorhanden:</strong> Klicken → "Deploy this version?" → <strong>"Yes"</strong></li>
+                        <li><strong>Falls NICHT vorhanden:</strong> ✅ Änderungen sind automatisch live</li>
+                    </ul>
+
+                    <div class="bg-green-50 p-3 rounded text-sm text-green-800">
+                        ✅ Deployment dauert ~5-30 Sekunden. Warte auf "Agent deployed successfully"
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 7 - Verifizierung -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-teal-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step7" class="step-checkbox mt-1 mr-3 h-5 w-5 text-teal-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Schritt 7: Verifizierung</h3>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">Visual Check durchführen:</h4>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2 mb-3">
+                        <li>Gehe zurück zur <strong>Functions</strong> Liste</li>
+                        <li>Öffne <strong>cancel_appointment</strong> nochmal (Edit/View)</li>
+                        <li>Prüfe: Steht <code class="bg-gray-200 px-2 py-1 rounded">customer_name</code> als <strong>erster</strong> Parameter?</li>
+                        <li>Wiederhole für <strong>reschedule_appointment</strong></li>
+                    </ol>
+
+                    <div class="bg-blue-50 p-4 rounded">
+                        <p class="font-semibold text-blue-900 mb-2">✅ Erfolgs-Kriterium:</p>
+                        <p class="text-blue-800 text-sm">In beiden Functions muss <code>customer_name</code> als ERSTER Parameter in der properties-Liste stehen,
+                        mit der description: "Name des Kunden... WICHTIG: Bei anonymen Anrufern..."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 8 - Live Test -->
+        <div class="step-card bg-white rounded-lg p-5 shadow border-l-4 border-red-500">
+            <div class="flex items-start">
+                <input type="checkbox" id="step8" class="step-checkbox mt-1 mr-3 h-5 w-5 text-red-600" onchange="updateProgress()">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Schritt 8: Live-Test durchführen</h3>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">Test-Anruf:</h4>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-1 mb-3">
+                        <li>Prüfe Testtermin: <a href="https://api.askproai.de/admin/appointments/638" target="_blank" class="text-blue-600 hover:underline">Termin #638 öffnen</a></li>
+                        <li>Anruf mit <strong>unterdrückter Nummer</strong> (*31# voranstellen)</li>
+                        <li>Nummer: <code class="bg-gray-200 px-2 py-1 rounded">+49 30 83793369</code></li>
+                        <li>Sage: <em>"Guten Tag, mein Name ist Hans Schuster. Ich möchte meinen Termin am sechsten Oktober stornieren."</em></li>
+                    </ol>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">Log-Überprüfung:</h4>
+                    <div class="bg-gray-900 text-gray-100 p-3 rounded font-mono text-sm mb-3">
+                        <div class="text-green-400"># SSH auf Server:</div>
+                        <div>tail -f /var/www/api-gateway/storage/logs/laravel.log | grep "customer_name"</div>
+                    </div>
+
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                        <p class="font-semibold text-green-900 mb-2">✅ SUCCESS Indicator:</p>
+                        <code class="text-green-800 text-sm block">
+                            {"customer_name":"Hans Schuster"}  ← NICHT MEHR NULL! ✅
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Checkliste -->
+    <div class="mt-8 bg-white rounded-lg p-6 shadow">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">📋 Vollständige Checkliste</h3>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="font-semibold text-gray-700 mb-2">cancel_appointment:</h4>
+                <ul class="space-y-1 text-sm text-gray-700">
+                    <li id="check1" class="flex items-center">
+                        <span class="mr-2">⬜</span> Function geöffnet
+                    </li>
+                    <li id="check2" class="flex items-center">
+                        <span class="mr-2">⬜</span> JSON komplett ersetzt
+                    </li>
+                    <li id="check3" class="flex items-center">
+                        <span class="mr-2">⬜</span> customer_name ist erster Parameter
+                    </li>
+                    <li id="check4" class="flex items-center">
+                        <span class="mr-2">⬜</span> Gespeichert & verifiziert
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-semibold text-gray-700 mb-2">reschedule_appointment:</h4>
+                <ul class="space-y-1 text-sm text-gray-700">
+                    <li id="check5" class="flex items-center">
+                        <span class="mr-2">⬜</span> Function geöffnet
+                    </li>
+                    <li id="check6" class="flex items-center">
+                        <span class="mr-2">⬜</span> JSON komplett ersetzt
+                    </li>
+                    <li id="check7" class="flex items-center">
+                        <span class="mr-2">⬜</span> customer_name ist erster Parameter
+                    </li>
+                    <li id="check8" class="flex items-center">
+                        <span class="mr-2">⬜</span> Gespeichert & verifiziert
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="mt-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-6 shadow">
+        <h3 class="text-xl font-bold text-red-900 mb-3">🆘 Troubleshooting</h3>
+
+        <div class="space-y-3">
+            <details>
+                <summary class="cursor-pointer font-semibold text-red-800 hover:text-red-600">❌ "JSON Syntax Error beim Speichern"</summary>
+                <div class="mt-2 text-red-700 text-sm pl-4">
+                    <p class="mb-2"><strong>Lösung:</strong></p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Prüfe: Alle { haben ein } und alle [ haben ein ]</li>
+                        <li>Kopiere das JSON nochmal komplett neu</li>
+                        <li>Stelle sicher, dass du ALLES ersetzt hast (Ctrl+A vor Einfügen)</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details>
+                <summary class="cursor-pointer font-semibold text-red-800 hover:text-red-600">❌ "customer_name wird immer noch als null gesendet"</summary>
+                <div class="mt-2 text-red-700 text-sm pl-4">
+                    <p class="mb-2"><strong>Lösung:</strong></p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Deployment Check: Hast du Agent deployed?</li>
+                        <li>Warte 1-2 Minuten (Retell cached manchmal)</li>
+                        <li>Verifizierung: Function nochmal öffnen - ist customer_name wirklich da?</li>
+                        <li>Agent deaktivieren → 10 Sekunden warten → aktivieren</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details>
+                <summary class="cursor-pointer font-semibold text-red-800 hover:text-red-600">❓ "Ich finde den Functions Tab nicht"</summary>
+                <div class="mt-2 text-red-700 text-sm pl-4">
+                    <p class="mb-2"><strong>Lösung:</strong></p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Mögliche Namen: Functions, Custom Functions, Tools, Capabilities</li>
+                        <li>Scrolle horizontal (manche UIs haben viele Tabs)</li>
+                        <li>Rechts oben: Settings → Functions</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-gray-500 text-sm">
+        <p class="mb-1">Dokumentation: <code>/var/www/api-gateway/claudedocs/RETELL_FUNCTION_CUSTOMER_NAME_UPDATE_2025-10-05.md</code></p>
+        <p>Letzte Aktualisierung: 2025-10-05 18:20 CEST | Version 1.0</p>
+    </div>
+
+</div>
+
+<script>
+// JSON for cancel_appointment
+const CANCEL_APPOINTMENT_JSON = {
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Name des Kunden dessen Termin storniert werden soll (z.B. 'Hans Schuster'). WICHTIG: Bei anonymen Anrufern ist dies der einzige Weg den Termin zu finden!"
+    },
+    "appointment_date": {
+      "type": "string",
+      "description": "Datum des zu stornierenden Termins (z.B. '2025-10-06' oder '6. Oktober')"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Grund für die Stornierung (optional)"
+    },
+    "call_id": {
+      "type": "string",
+      "description": "Die Retell Call ID"
+    }
+  },
+  "required": ["appointment_date", "call_id"]
+};
+
+// JSON for reschedule_appointment
+const RESCHEDULE_APPOINTMENT_JSON = {
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Name des Kunden dessen Termin verschoben werden soll (z.B. 'Hans Schuster'). WICHTIG: Bei anonymen Anrufern ist dies der einzige Weg den Termin zu finden!"
+    },
+    "old_date": {
+      "type": "string",
+      "description": "Aktuelles Datum des Termins (z.B. '7. Oktober' oder 'siebter Oktober')"
+    },
+    "new_date": {
+      "type": "string",
+      "description": "Neues Datum für den Termin"
+    },
+    "new_time": {
+      "type": "string",
+      "description": "Neue Uhrzeit für den Termin (z.B. '16:30')"
+    },
+    "call_id": {
+      "type": "string",
+      "description": "Die Retell Call ID"
+    }
+  },
+  "required": ["old_date", "new_date", "new_time", "call_id"]
+};
+
+// Display JSON previews
+document.getElementById('cancel-json-preview').textContent = JSON.stringify(CANCEL_APPOINTMENT_JSON, null, 2);
+document.getElementById('reschedule-json-preview').textContent = JSON.stringify(RESCHEDULE_APPOINTMENT_JSON, null, 2);
+
+// Copy functions
+function copyCancelAppointment() {
+    const jsonString = JSON.stringify(CANCEL_APPOINTMENT_JSON, null, 2);
+    copyToClipboard(jsonString, event.target, 'cancel_appointment');
+}
+
+function copyRescheduleAppointment() {
+    const jsonString = JSON.stringify(RESCHEDULE_APPOINTMENT_JSON, null, 2);
+    copyToClipboard(jsonString, event.target, 'reschedule_appointment');
+}
+
+function copyToClipboard(text, button, funcName) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ KOPIERT! Jetzt in Retell einfügen (Ctrl+V)';
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-emerald-600');
+
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('bg-emerald-600');
+            button.classList.add('bg-green-600', 'hover:bg-green-700');
+        }, 4000);
+    }).catch(err => {
+        alert('Kopieren fehlgeschlagen. Bitte markiere den JSON-Text manuell und kopiere ihn mit Strg+C');
+        console.error('Clipboard error:', err);
+    });
+}
+
+// Progress tracking with localStorage
+function updateProgress() {
+    const checkboxes = document.querySelectorAll('.step-checkbox');
+    const cards = document.querySelectorAll('.step-card');
+    let completed = 0;
+
+    checkboxes.forEach((checkbox, index) => {
+        if (checkbox.checked) {
+            completed++;
+            cards[index].classList.add('completed');
+            updateChecklistItem(index + 1, true);
+        } else {
+            cards[index].classList.remove('completed');
+            updateChecklistItem(index + 1, false);
+        }
+
+        // Save state
+        localStorage.setItem('step_function_' + (index + 1), checkbox.checked);
+    });
+
+    const progress = (completed / checkboxes.length) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+    document.getElementById('progress-text').textContent = Math.round(progress) + '%';
+}
+
+function updateChecklistItem(step, completed) {
+    const checkId = 'check' + step;
+    const element = document.getElementById(checkId);
+    if (element) {
+        const span = element.querySelector('span');
+        if (span) {
+            span.textContent = completed ? '✅' : '⬜';
+        }
+    }
+}
+
+// Load saved progress on page load
+window.addEventListener('DOMContentLoaded', () => {
+    const checkboxes = document.querySelectorAll('.step-checkbox');
+    checkboxes.forEach((checkbox, index) => {
+        const saved = localStorage.getItem('step_function_' + (index + 1));
+        if (saved === 'true') {
+            checkbox.checked = true;
+        }
+    });
+    updateProgress();
+});
+</script>
+
+</body>
+</html>

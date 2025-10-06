@@ -1,0 +1,183 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Indexes for customers table
+        if (Schema::hasTable('customers')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $this->addIndexIfNotExists('customers', 'status', $table);
+                $this->addIndexIfNotExists('customers', 'journey_status', $table);
+                $this->addIndexIfNotExists('customers', 'created_at', $table);
+                $this->addIndexIfNotExists('customers', 'phone', $table);
+                $this->addIndexIfNotExists('customers', 'email', $table);
+                $this->addIndexIfNotExists('customers', 'company_id', $table);
+            });
+        }
+
+        // Indexes for appointments table
+        if (Schema::hasTable('appointments')) {
+            Schema::table('appointments', function (Blueprint $table) {
+                $this->addIndexIfNotExists('appointments', 'status', $table);
+                $this->addIndexIfNotExists('appointments', 'starts_at', $table);
+                $this->addIndexIfNotExists('appointments', 'customer_id', $table);
+                $this->addIndexIfNotExists('appointments', 'staff_id', $table);
+                $this->addIndexIfNotExists('appointments', 'service_id', $table);
+                $this->addIndexIfNotExists('appointments', 'branch_id', $table);
+                // Composite index for date range queries
+                $this->addCompositeIndexIfNotExists('appointments', ['starts_at', 'ends_at'], $table);
+            });
+        }
+
+        // Indexes for staff table
+        if (Schema::hasTable('staff')) {
+            Schema::table('staff', function (Blueprint $table) {
+                $this->addIndexIfNotExists('staff', 'branch_id', $table);
+                $this->addIndexIfNotExists('staff', 'active', $table);
+                $this->addIndexIfNotExists('staff', 'is_bookable', $table);
+                // Composite index for availability queries
+                $this->addCompositeIndexIfNotExists('staff', ['branch_id', 'active', 'is_bookable'], $table);
+            });
+        }
+
+        // Indexes for calls table
+        if (Schema::hasTable('calls')) {
+            Schema::table('calls', function (Blueprint $table) {
+                $this->addIndexIfNotExists('calls', 'status', $table);
+                $this->addIndexIfNotExists('calls', 'created_at', $table);
+                $this->addIndexIfNotExists('calls', 'customer_id', $table);
+                $this->addIndexIfNotExists('calls', 'phone_number_id', $table);
+            });
+        }
+
+        // Indexes for transactions table
+        if (Schema::hasTable('transactions')) {
+            Schema::table('transactions', function (Blueprint $table) {
+                $this->addIndexIfNotExists('transactions', 'tenant_id', $table);
+                $this->addIndexIfNotExists('transactions', 'type', $table);
+                $this->addIndexIfNotExists('transactions', 'created_at', $table);
+                // Composite index for tenant transaction queries
+                $this->addCompositeIndexIfNotExists('transactions', ['tenant_id', 'type', 'created_at'], $table);
+            });
+        }
+
+        // Indexes for balance_topups table
+        if (Schema::hasTable('balance_topups')) {
+            Schema::table('balance_topups', function (Blueprint $table) {
+                $this->addIndexIfNotExists('balance_topups', 'tenant_id', $table);
+                $this->addIndexIfNotExists('balance_topups', 'status', $table);
+                $this->addIndexIfNotExists('balance_topups', 'payment_method', $table);
+                $this->addIndexIfNotExists('balance_topups', 'stripe_payment_intent_id', $table);
+            });
+        }
+
+        // Indexes for invoices table
+        if (Schema::hasTable('invoices')) {
+            Schema::table('invoices', function (Blueprint $table) {
+                $this->addIndexIfNotExists('invoices', 'tenant_id', $table);
+                $this->addIndexIfNotExists('invoices', 'status', $table);
+                $this->addIndexIfNotExists('invoices', 'due_date', $table);
+                $this->addIndexIfNotExists('invoices', 'created_at', $table);
+            });
+        }
+
+        // Indexes for companies table
+        if (Schema::hasTable('companies')) {
+            Schema::table('companies', function (Blueprint $table) {
+                $this->addIndexIfNotExists('companies', 'company_type', $table);
+                $this->addIndexIfNotExists('companies', 'billing_status', $table);
+                $this->addIndexIfNotExists('companies', 'subscription_status', $table);
+            });
+        }
+
+        // Indexes for branches table
+        if (Schema::hasTable('branches')) {
+            Schema::table('branches', function (Blueprint $table) {
+                $this->addIndexIfNotExists('branches', 'company_id', $table);
+                $this->addIndexIfNotExists('branches', 'is_active', $table);
+                $this->addIndexIfNotExists('branches', 'calendar_mode', $table);
+            });
+        }
+
+        // Indexes for services table
+        if (Schema::hasTable('services')) {
+            Schema::table('services', function (Blueprint $table) {
+                $this->addIndexIfNotExists('services', 'company_id', $table);
+                $this->addIndexIfNotExists('services', 'category', $table);
+                $this->addIndexIfNotExists('services', 'is_active', $table);
+            });
+        }
+
+        // Indexes for notification_queues table
+        if (Schema::hasTable('notification_queues')) {
+            Schema::table('notification_queues', function (Blueprint $table) {
+                $this->addIndexIfNotExists('notification_queues', 'status', $table);
+                $this->addIndexIfNotExists('notification_queues', 'channel', $table);
+                $this->addIndexIfNotExists('notification_queues', 'scheduled_at', $table);
+                $this->addIndexIfNotExists('notification_queues', 'customer_id', $table);
+                // Composite index for queue processing
+                $this->addCompositeIndexIfNotExists('notification_queues', ['status', 'scheduled_at'], $table);
+            });
+        }
+
+        // Indexes for activity_logs table
+        if (Schema::hasTable('activity_logs')) {
+            Schema::table('activity_logs', function (Blueprint $table) {
+                $this->addIndexIfNotExists('activity_logs', 'severity', $table);
+                $this->addIndexIfNotExists('activity_logs', 'created_at', $table);
+                $this->addIndexIfNotExists('activity_logs', 'user_id', $table);
+                // Composite index for filtering
+                $this->addCompositeIndexIfNotExists('activity_logs', ['severity', 'created_at'], $table);
+            });
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Note: We're not dropping indexes in down() to be safe
+        // as they might have been added by other migrations
+    }
+
+    /**
+     * Add index if it doesn't exist
+     */
+    private function addIndexIfNotExists(string $table, string $column, Blueprint $blueprint): void
+    {
+        $indexName = $table . '_' . $column . '_index';
+        if (!$this->indexExists($table, $indexName)) {
+            $blueprint->index($column, $indexName);
+        }
+    }
+
+    /**
+     * Add composite index if it doesn't exist
+     */
+    private function addCompositeIndexIfNotExists(string $table, array $columns, Blueprint $blueprint): void
+    {
+        $indexName = $table . '_' . implode('_', $columns) . '_index';
+        if (!$this->indexExists($table, $indexName)) {
+            $blueprint->index($columns, $indexName);
+        }
+    }
+
+    /**
+     * Check if index exists
+     */
+    private function indexExists(string $table, string $index): bool
+    {
+        $indexes = DB::select("SHOW INDEX FROM $table WHERE Key_name = ?", [$index]);
+        return count($indexes) > 0;
+    }
+};

@@ -1,0 +1,66 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\MonitoringController;
+
+Route::get('/', function () {
+    return redirect('/admin');
+});
+
+// Redirect old business routes to admin
+Route::redirect('/business', '/admin', 301);
+Route::redirect('/business/login', '/admin/login', 301);
+Route::redirect('/business/{any}', '/admin/{any}', 301)->where('any', '.*');
+
+// Monitoring Routes
+Route::prefix('monitor')->group(function () {
+    Route::get('/health', [MonitoringController::class, 'health'])->name('monitor.health');
+    Route::get('/dashboard', [MonitoringController::class, 'dashboard'])->name('monitor.dashboard');
+});
+
+// API Routes
+Route::prefix('api')->group(function () {
+    // Health check endpoints
+    Route::get('/health', [MonitoringController::class, 'health'])->name('api.health');
+    Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('api.health.detailed');
+
+    // V1 API Routes
+    Route::prefix('v1')->group(function () {
+        // Placeholder routes for API v1
+        Route::get('/customers', function () {
+            return response()->json(['message' => 'Customers API v1 - Coming Soon'], 501);
+        });
+        Route::get('/calls', function () {
+            return response()->json(['message' => 'Calls API v1 - Coming Soon'], 501);
+        });
+        Route::get('/appointments', function () {
+            return response()->json(['message' => 'Appointments API v1 - Coming Soon'], 501);
+        });
+    });
+});
+
+// Webhook routes
+Route::prefix('webhooks')->group(function () {
+    Route::post('/calcom', [\App\Http\Controllers\CalcomWebhookController::class, 'handle'])
+        ->name('webhooks.calcom')
+        ->middleware(['calcom.signature', 'throttle:60,1']) // 60 requests per minute
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+    Route::post('/retell', [\App\Http\Controllers\RetellWebhookController::class, '__invoke'])
+        ->name('webhooks.retell')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+    // Stripe webhook for payment processing
+    Route::post('/stripe', [\App\Http\Controllers\StripePaymentController::class, 'handleWebhook'])
+        ->name('webhooks.stripe')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+});
+
+// API Routes for Stripe Payment Intent creation
+Route::prefix('api/v1/payments')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('/create-payment-intent', [\App\Http\Controllers\StripePaymentController::class, 'createPaymentIntent'])
+        ->name('api.payments.create-intent');
+});
+
+require __DIR__.'/auth.php';

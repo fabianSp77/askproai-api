@@ -1,0 +1,18 @@
+[0;34m╔══════════════════════════════════════╗[0m
+[0;34m║   PERFORMANCE MONITORING & ANALYSIS   ║[0m
+[0;34m╚══════════════════════════════════════╝[0m
+Started at: So 28. Sep 02:00:01 CEST 2025
+
+[0;34m1. SYSTEM RESOURCES[0m
+--------------------------------------
+  CPU Usage: (standard_in) 1: syntax error
+(standard_in) 1: syntax error
+[0;32m✓ OK[0m (%)
+  Memory Usage: (standard_in) 1: syntax error
+(standard_in) 1: syntax error
+(standard_in) 1: syntax error
+[0;32m✓ OK[0m (%)
+    Total: MB | Used: MB | Free: 0MB
+  Swap Usage: [1;33m⚠ Active[0m (4095MB of 4095MB)
+  Load Average: /var/www/api-gateway/tests/performance-check.sh: Zeile 90: Syntaxfehler beim unerwarteten Symbol »)«
+/var/www/api-gateway/tests/performance-check.sh: Zeile 90: `check_status "$load_per_core" "$LOAD_THRESHOLD" "Load/Core" "")'

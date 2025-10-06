@@ -1,0 +1,173 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Customers table performance indexes
+        Schema::table('customers', function (Blueprint $table) {
+            if (!$this->indexExists('customers', 'idx_customers_status_company')) {
+                $table->index(['status', 'company_id'], 'idx_customers_status_company');
+            }
+            if (!$this->indexExists('customers', 'idx_customers_journey_status')) {
+                $table->index(['journey_status', 'company_id'], 'idx_customers_journey_status');
+            }
+            if (!$this->indexExists('customers', 'idx_customers_created_at')) {
+                $table->index('created_at', 'idx_customers_created_at');
+            }
+        });
+
+        // Appointments table performance indexes
+        Schema::table('appointments', function (Blueprint $table) {
+            if (!$this->indexExists('appointments', 'idx_appointments_date_range')) {
+                $table->index(['starts_at', 'ends_at'], 'idx_appointments_date_range');
+            }
+            if (!$this->indexExists('appointments', 'idx_appointments_staff_date')) {
+                $table->index(['staff_id', 'starts_at', 'status'], 'idx_appointments_staff_date');
+            }
+            if (!$this->indexExists('appointments', 'idx_appointments_customer_status')) {
+                $table->index(['customer_id', 'status'], 'idx_appointments_customer_status');
+            }
+        });
+
+        // Calls table performance indexes
+        Schema::table('calls', function (Blueprint $table) {
+            if (!$this->indexExists('calls', 'idx_calls_date_direction')) {
+                $table->index(['created_at', 'direction'], 'idx_calls_date_direction');
+            }
+            if (!$this->indexExists('calls', 'idx_calls_customer_date')) {
+                $table->index(['customer_id', 'created_at'], 'idx_calls_customer_date');
+            }
+            if (!$this->indexExists('calls', 'idx_calls_phone_status')) {
+                $table->index(['phone_number_id', 'status'], 'idx_calls_phone_status');
+            }
+        });
+
+        // Transactions table performance indexes - skipped if table doesn't exist
+        if (Schema::hasTable('transactions')) {
+            $columns = Schema::getColumnListing('transactions');
+            Schema::table('transactions', function (Blueprint $table) use ($columns) {
+                if (in_array('created_at', $columns) && in_array('type', $columns)) {
+                    if (!$this->indexExists('transactions', 'idx_transactions_date_type')) {
+                        $table->index(['created_at', 'type'], 'idx_transactions_date_type');
+                    }
+                }
+            });
+        }
+
+        // Staff table performance indexes
+        Schema::table('staff', function (Blueprint $table) {
+            if (!$this->indexExists('staff', 'idx_staff_branch_active')) {
+                $table->index(['branch_id', 'is_active'], 'idx_staff_branch_active');
+            }
+            if (!$this->indexExists('staff', 'idx_staff_company_bookable')) {
+                $table->index(['company_id', 'is_bookable'], 'idx_staff_company_bookable');
+            }
+        });
+
+        // Services table performance indexes
+        Schema::table('services', function (Blueprint $table) {
+            if (!$this->indexExists('services', 'idx_services_active_online')) {
+                $table->index(['is_active', 'is_online_booking_enabled'], 'idx_services_active_online');
+            }
+            if (!$this->indexExists('services', 'idx_services_category_price')) {
+                $table->index(['category', 'price'], 'idx_services_category_price');
+            }
+        });
+
+        // Companies table performance indexes
+        Schema::table('companies', function (Blueprint $table) {
+            if (!$this->indexExists('companies', 'idx_companies_active_type')) {
+                $table->index(['is_active', 'company_type'], 'idx_companies_active_type');
+            }
+            if (!$this->indexExists('companies', 'idx_companies_billing_status')) {
+                $table->index(['billing_status', 'subscription_status'], 'idx_companies_billing_status');
+            }
+        });
+
+        // Add full-text search indexes for better search performance
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE customers ADD FULLTEXT idx_customers_fulltext (name, email, phone)');
+            DB::statement('ALTER TABLE staff ADD FULLTEXT idx_staff_fulltext (first_name, last_name, email)');
+            DB::statement('ALTER TABLE services ADD FULLTEXT idx_services_fulltext (name, description)');
+            DB::statement('ALTER TABLE companies ADD FULLTEXT idx_companies_fulltext (name, contact_person)');
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Drop customers indexes
+        Schema::table('customers', function (Blueprint $table) {
+            $table->dropIndex('idx_customers_status_company');
+            $table->dropIndex('idx_customers_journey_status');
+            $table->dropIndex('idx_customers_created_at');
+        });
+
+        // Drop appointments indexes
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->dropIndex('idx_appointments_date_range');
+            $table->dropIndex('idx_appointments_staff_date');
+            $table->dropIndex('idx_appointments_customer_status');
+        });
+
+        // Drop calls indexes
+        Schema::table('calls', function (Blueprint $table) {
+            $table->dropIndex('idx_calls_date_direction');
+            $table->dropIndex('idx_calls_customer_date');
+            $table->dropIndex('idx_calls_phone_status');
+        });
+
+        // Drop transactions indexes
+        Schema::table('transactions', function (Blueprint $table) {
+            $table->dropIndex('idx_transactions_date_type');
+            $table->dropIndex('idx_transactions_customer_status');
+            $table->dropIndex('idx_transactions_company_date');
+        });
+
+        // Drop staff indexes
+        Schema::table('staff', function (Blueprint $table) {
+            $table->dropIndex('idx_staff_branch_active');
+            $table->dropIndex('idx_staff_company_bookable');
+        });
+
+        // Drop services indexes
+        Schema::table('services', function (Blueprint $table) {
+            $table->dropIndex('idx_services_active_online');
+            $table->dropIndex('idx_services_category_price');
+        });
+
+        // Drop companies indexes
+        Schema::table('companies', function (Blueprint $table) {
+            $table->dropIndex('idx_companies_active_type');
+            $table->dropIndex('idx_companies_billing_status');
+        });
+
+        // Drop full-text indexes
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE customers DROP INDEX idx_customers_fulltext');
+            DB::statement('ALTER TABLE staff DROP INDEX idx_staff_fulltext');
+            DB::statement('ALTER TABLE services DROP INDEX idx_services_fulltext');
+            DB::statement('ALTER TABLE companies DROP INDEX idx_companies_fulltext');
+        }
+    }
+
+    /**
+     * Check if an index exists
+     */
+    private function indexExists(string $table, string $index): bool
+    {
+        $indexes = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
+        return count($indexes) > 0;
+    }
+};

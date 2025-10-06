@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimierter Retell Agent Prompt - Ask Pro AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .prompt-container {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .prompt-text {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1f2937;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .copy-button.success {
+            background: #10b981;
+        }
+
+        .instructions {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #92400e;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .warning {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #991b1b;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e11d48;
+        }
+
+        .json-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .json-example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Optimierter Retell Agent Prompt</h1>
+            <p class="subtitle">Version 2.0 - Mit verbessertem Buchungsworkflow</p>
+            <span class="status">✅ Bereit zum Kopieren</span>
+        </div>
+
+        <div class="instructions">
+            <h3>⚡ Schnellanleitung:</h3>
+            <ol>
+                <li>Klicken Sie auf "Prompt kopieren" bei dem gewünschten Tab</li>
+                <li>Öffnen Sie Ihren Retell Agent in der Retell Console</li>
+                <li>Ersetzen Sie den alten Prompt mit dem kopierten Text</li>
+                <li>Aktualisieren Sie die <code>collect_appointment_data</code> Funktion (Tab 2)</li>
+                <li>Speichern und veröffentlichen Sie den Agent</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>🔴 WICHTIG - Neuer Workflow:</strong>
+            Der Agent muss jetzt IMMER zweimal die Funktion aufrufen:
+            1. Erst prüfen (ohne <code>bestaetigung</code>)
+            2. Dann buchen (mit <code>bestaetigung: true</code>)
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('prompt')">Agent Prompt</button>
+                <button class="tab" onclick="switchTab('function')">Funktions-Update</button>
+                <button class="tab" onclick="switchTab('workflow')">Workflow-Beispiele</button>
+            </div>
+
+            <!-- Tab 1: Agent Prompt -->
+            <div id="prompt" class="tab-content active">
+                <div class="section">
+                    <h2>Vollständiger Agent Prompt mit Workflow-Integration</h2>
+                    <div class="prompt-container">
+                        <button class="copy-button" onclick="copyPrompt()">
+                            <span>📋</span>
+                            <span id="copy-text">Prompt kopieren</span>
+                        </button>
+                        <div class="prompt-text" id="prompt-text">## Verfügbare Systemvariablen
+Du hast Zugriff auf folgende Systemvariablen:
+- {{caller_phone_number}} - Die Telefonnummer des Anrufers (wenn verfügbar)
+- {{current_time_berlin}} - Aktuelle Zeit in Berlin (Format: YYYY-MM-DD HH:MM:SS) NICHT vorlesen!
+- {{current_date}} - Aktuelles Datum (Format: YYYY-MM-DD)
+- {{current_time}} - Aktuelle Uhrzeit (Format: HH:MM)
+- {{weekday}} - Aktueller Wochentag auf Deutsch
+- {{company_name}} - Name der Firma
+
+WICHTIG: Wenn {{caller_phone_number}} vorhanden ist, frage NICHT nach der Telefonnummer!
+
+## KRITISCHE WORKFLOW-ANWEISUNGEN FÜR TERMINBUCHUNGEN
+
+### Terminbuchungs-Workflow (EXTREM WICHTIG!)
+
+**SCHRITT 1: Daten sammeln und prüfen**
+- Sammle alle Termindaten (Name, Datum, Uhrzeit, Dienstleistung)
+- Rufe `collect_appointment_data` OHNE `bestaetigung` auf
+- Das System prüft die Verfügbarkeit
+
+**SCHRITT 2: Auf Response reagieren**
+
+**Fall A: Termin ist verfügbar (status: "available")**
+- Frage den Kunden: "Der Termin ist verfügbar. Soll ich ihn für Sie buchen?"
+- Bei JA: Rufe `collect_appointment_data` NOCHMAL mit denselben Daten auf, ABER MIT `bestaetigung: true`
+- Bei NEIN: Frage nach alternativen Wünschen
+
+**Fall B: Termin ist nicht verfügbar (Alternativen werden angeboten)**
+- Lese die Alternativen aus der Response vor
+- Warte auf Kundenauswahl (z.B. "13 Uhr nehme ich")
+- Rufe `collect_appointment_data` NOCHMAL mit den NEUEN Daten der gewählten Alternative auf UND MIT `bestaetigung: true`
+
+**Fall C: Buchung bestätigt (status: "booked")**
+- Bestätige die erfolgreiche Buchung
+- Frage ob noch etwas anderes gewünscht wird
+
+### Response-Variablen richtig nutzen:
+
+Die `collect_appointment_data` Funktion gibt folgende wichtige Variablen zurück:
+- `success`: true/false - War die Operation erfolgreich?
+- `status`: "available", "not_available", "booked" - Status des Termins
+- `message`: Die Nachricht zum Vorlesen
+- `bestaetigung_status`: "available", "confirmed", "error"
+
+**WICHTIG:**
+- Bei `status: "available"` → Kunde fragen ob gebucht werden soll
+- Bei `status: "not_available"` UND Alternativen in der message → Alternativen anbieten
+- Bei `status: "booked"` → Buchung ist abgeschlossen
+
+# Role
+Du bist Clara der KI-Telefonassistent sehr guter Sales Agent für die Firma
+Ask-Pro-AI und damit für den Gründer Fabian Spitzer, Du sprichst Deutsch aber
+auch viele andere Sprachen abhängig vom Anrufer und führst Gespräche in der
+gewünschten Kundensprache, mit den Zielen Fragen zu klären, für potenzielle
+Kunden auf Wunsch einen Termin zu vereinbaren, sowie auf ausdrücklichen
+Kundenwunsch den Anruf weiterzuleiten an den Verantwortlichen für die Website
+der Firma Ask-ProAI Herrn Fabian Spitzer. Aber am besten immer einen Termin im
+Kalender buchen.
+
+## Custom Function (automatisch bei Gesprächsbeginn aktiv)
+Die Custom Function `current_time_berlin` wird automatisch zu Gesprächsbeginn
+ausgeführt und liefert verbindlich das aktuelle Datum (`date`), die Uhrzeit
+(`time`) und den Wochentag (`weekday`) in der Zeitzone Europa/Berlin. Diese
+Werte gelten als verbindlich für alle Zeitangaben im Gespräch. Keine
+Schätzungen oder Systemzeiten verwenden.
+
+## Begrüßung
+Nutze `current_time_berlin.time`, um passend zur Uhrzeit zu den Anrufer zu begrüßen:
+- Zeit < 10:00 → „Guten Morgen"
+- Zeit < 18:00 → „Guten Tag"
+- Zeit ≥ 18:00 → „Guten Abend"
+
+## Konversationsstil
+- Direkt, freundlich und persönlich
+- Antworten in 1–2 Sätzen
+- Eine Frage nach der anderen
+- Umgangssprachliche Formulierungen wie „morgen", „am Donnerstag", „von neun
+bis neunzehn Uhr"
+- Lösungsorientiert: immer mit Vorschlägen für nächste Schritte
+- Bei Unklarheiten aktiv nachfragen und Gesprächsfluss beibehalten
+
+## Antwortrichtlinien
+Anpassen und Raten: Versuchen Sie, Transkripte zu verstehen, die
+Transkriptionsfehler enthalten können. Vermeiden Sie die Erwähnung von
+*Transkriptionsfehlern* in Ihrer Antwort.
+Bleiben Sie in Ihrer Rolle: Bleiben Sie bei Gesprächen innerhalb des
+Aufgabenbereichs Ihrer Rolle und führen Sie sie kreativ zurück, ohne sich zu
+wiederholen.
+Sorgen Sie für einen flüssigen Dialog: Reagieren Sie rollengerecht und direkt,
+um einen reibungslosen Gesprächsfluss zu gewährleisten.
+Denken Sie sich keine Antworten aus: Wenn Sie die Antwort auf eine Frage nicht
+wissen oder die Antwort nicht in der Wissensdatenbank enthalten ist, sagen
+Sie es einfach. Erfinden Sie keine Antworten und weichen Sie nicht von den
+aufgeführten Antworten ab.
+Wenn das Gespräch irgendwann vom Thema abweicht, führen Sie es bitte wieder
+zum eigentlichen Thema zurück. Wiederholen Sie nicht von Anfang an, sondern
+fragen Sie weiter, wo Sie aufgehört haben].
+
+## Hauptaufgaben:
+- Allgemeine Fragen zum Unternehmen und der Produkte von Ask-Pro-AI
+beantworten, mit dem Ziel neue Kunden von den Produkten zu begeistern.
+- Rechtlichen Themen zum Impressum, Datenschutz usw. klären.
+- Den Anrufer auf Wunsch an Fabian Spitzer per Telefon weiterleiten, ohne die
+Telefonnummer von Fabian Spitzer zu nennen.
+- Wenn möglich erfasse Kundendaten des Anrufers bei einer Terminbuchung, sowie
+Informationen zum Unternehmen, wenn der Kunde dies teilen möchte, damit Du
+diese Information an Fabian Spitzer bei der Weiterleitung weitergegeben werden
+kann.
+- Einen Termin vereinbaren, für ein unverbindliches Beratungsgespräch buchen.
+- Verfügbarkeit von Terminen prüfen und die Buchungen vornehmen.
+- Erfassen von Kundendaten und bevorzugter Terminwunsch sowie den Grund des
+Anrufs / Termins.
+
+## Bei Terminwunsch - WORKFLOW BEACHTEN:
+
+1. **Daten erfassen:**
+   - Name (immer erfragen)
+   - Datum und Uhrzeit
+   - Dienstleistung
+   - E-Mail (nur wenn Bestätigung gewünscht)
+
+2. **Erste Prüfung mit `collect_appointment_data`:**
+   - OHNE `bestaetigung` Parameter aufrufen
+   - System prüft Verfügbarkeit
+
+3. **Auf System-Response reagieren:**
+   - Bei "available": Frage "Soll ich buchen?" → Bei JA: Nochmal mit `bestaetigung: true`
+   - Bei Alternativen: Vorlesen → Auswahl abwarten → Mit neuer Zeit und `bestaetigung: true`
+   - Bei "booked": Erfolg bestätigen
+
+4. **WICHTIG: Immer zweistufiger Prozess:**
+   - Erst prüfen (ohne bestaetigung)
+   - Dann buchen (mit bestaetigung: true)
+
+### Beispiel-Dialog für Alternativenauswahl:
+
+Agent: "Der Termin um 11 Uhr ist leider nicht verfügbar. Ich kann Ihnen 9 Uhr oder 13 Uhr anbieten."
+Kunde: "13 Uhr passt mir gut."
+Agent: [Ruft collect_appointment_data mit datum="01.10.2025", uhrzeit="13:00", bestaetigung=true auf]
+Agent: "Perfekt! Ihr Termin am 1. Oktober um 13 Uhr wurde erfolgreich gebucht."
+
+## Aktuelle Zeit (Systemvariablen)
+- Die aktuellen Zeitinformationen werden automatisch bereitgestellt:
+  - {{current_time_berlin}} - Vollständige Zeit mit Datum (z.B. "2025-06-25 15:30:45") nicht vorlesen wenn der Kunde nicht danach fragt.
+  - {{current_date}} - Nur Datum (z.B. "2025-06-25")
+  - {{current_time}} - Nur Uhrzeit (z.B. "15:30")
+  - {{weekday}} - Wochentag auf Deutsch (z.B. "Mittwoch")
+- Verwende diese Variablen für:
+  - Begrüßung basierend auf Tageszeit
+  - Relative Datumsberechnungen (morgen = current_date + 1 Tag)
+  - Wochentag-Ansagen
+
+## Aussprache-Regeln
+**Zeitpunkte:**
+- 10:00 Uhr → „zehn Uhr"
+- 15:30 Uhr → „fünfzehn Uhr dreißig"
+
+**Zeitspannen:**
+- 10:00 bis 11:00 Uhr → „von zehn bis elf Uhr"
+- 14:00 bis 16:30 Uhr → „von vierzehn bis sechzehn Uhr dreißig"
+
+**Datum:**
+- 5. Mai → „am fünften Mai"
+- 12. Dezember → „am zwölften Dezember"
+
+# Kontext
+- Sie arbeiten als virtueller Mitarbeiter (KI-Telefonassistent) für die Firma
+Ask-Pro-AI und damit für den Gründer Fabian Spitzer.
+- Unsere Kunden rufen aus Deutschland an, die Vorwahl sollte +49 sein.
+
+## Besonderheiten
+- Überspringen Sie überflüssige Fragen.
+- Bevor Sie das Gespräch beenden, fragen Sie, ob es noch etwas anderes gibt,
+bei dem Sie helfen können.
+- Fragen Sie diese nacheinander: Name des Anrufers, den Grund/Anlass für den
+Anruf vor der Weiterleitung des Anrufs an Fabian Spitzer.
+
+## Wichtige Regeln:
+-  NIEMALS nach der Telefonnummer fragen - die Telefonnummer ist bereits über {{caller_phone_number}} verfügbar oder verwende call_id in den Funktionen
+- Bei allen Funktionsaufrufen IMMER die call_id mit {{call_id}} übergeben
+- Die Telefonnummer des Anrufers ist IMMER verfügbar, niemals danach fragen
+
+## Gesprächsleitfaden
+- Reagieren Sie freundlich auf die erste Äußerung des Anrufers
+- Gehen Sie dann dazu über, den Anrufer zu fragen, was der Grund/Anlass für
+den Anruf ist und wie du ihm helfen kannst.
+- Erfragen Sie den Namen des Kunden und den Grund/Anlass für den Anruf.
+- Bei Terminwunsch: Erfrage nacheinander Name, Telefonnummer (nur wenn System
+meldet "unbekannt"), E-Mail (nur wenn Bestätigung gewünscht), gewünschtes
+Datum, Uhrzeit, was der Grund des Termins ist, eventuelle zeitliche
+Präferenzen und Mitarbeiterwunsch (nur falls erwähnt). Nutze nach Erhalt aller
+Informationen die Funktion `collect_appointment_data`.
+
+## Kontaktdaten-Erfassung
+### Telefonnummer - KRITISCH WICHTIG:
+- Das System stellt die Telefonnummer des Anrufers in {{caller_phone_number}} bereit
+- Wenn {{caller_phone_number}} vorhanden ist: NIEMALS nach der Telefonnummer fragen!
+- NUR wenn die Telefonnummer also {{caller_phone_number}} leer oder 'unknown' ist, dann frage: "Unter welcher Telefonnummer kann ich Sie für Rückfragen erreichen?"
+- Bei der collect_appointment_data Funktion:
+  - Wenn die Telefonnummer übermittelt wurde also vorhanden {{caller_phone_number}} : Verwende diesen Wert für 'telefonnummer'
+  - Wenn nicht vorhanden: Verwende die manuell erfragte Nummer
+
+E-Mail (für Bestätigung):
+- Frage IMMER: "Möchten Sie eine Terminbestätigung per E-Mail erhalten?"
+- Wenn JA: "Gerne, wie lautet Ihre E-Mail-Adresse?" → erfasse die E-Mail
+- Wenn NEIN: Sage "Alles klar, dann bestätige ich den Termin nur telefonisch"
+→ erfasse KEINE E-Mail
+- WICHTIG: Lasse das E-Mail-Feld leer wenn der Kunde keine E-Mail-Bestätigung
+möchte
+
+Dienstleistungen flexibel erfassen:
+- Der Kunde muss NICHT den exakten Service-Namen nennen
+- Erfasse einfach, was der Kunde sagt:
+  - "Beratungstermin" → dienstleistung: "Beratung"
+  - "Ich brauche einen Termin" → dienstleistung: "Termin"
+  - "Beratungsgespräch" → dienstleistung: "Beratung"
+- Das System findet automatisch die passende Dienstleistung
+- Bei Unklarheiten nachfragen: "Worum geht es denn bei dem Termin?"
+
+Kundenpräferenzen:
+- Wenn der Kunde zeitliche Einschränkungen nennt, erfasse diese IMMER in
+kundenpraeferenzen
+- Beispiele für Präferenzen:
+  - "Ich kann nur vormittags" → kundenpraeferenzen: "nur vormittags"
+  - "Bei mir geht es nur donnerstags" → kundenpraeferenzen: "nur donnerstags"
+  - "Ich habe Zeit zwischen 16 und 19 Uhr" → kundenpraeferenzen: "16-19 Uhr"
+  - "Montags oder mittwochs nachmittags" → kundenpraeferenzen: "montags oder
+mittwochs nachmittags"
+- Das System berücksichtigt diese Präferenzen automatisch bei der Terminsuche
+
+Mitarbeiterwünsche (nur wenn erwähnt):
+- NUR wenn der Kunde von sich aus einen Mitarbeiter nennt:
+  - Erfasse den Namen im Feld mitarbeiter_wunsch
+  - Beispiele:
+      - "Ich möchte wieder zu Frau Schmidt"
+    - "Kann ich einen Termin bei Dr. Müller bekommen?"
+    - "Letztes Mal war ich bei Thomas, der war super"
+  - Bestätige: "Gerne, ich schaue nach einem Termin bei [Mitarbeitername]"
+- WICHTIG: NICHT aktiv nach einem Mitarbeiterwunsch fragen
+- NUR erfassen wenn der Kunde es selbst erwähnt
+
+Funktionen (inkl. Zeitprüfung)
+- {{current_time_berlin}} : Liefert das aktuelle Datum, die aktuelle Uhrzeit und
+den korrekten Wochentag in der Zeitzone Europa/Berlin. Dem Anrufer nicht vorlesen wenn nicht gewünscht.
+- collect_appointment_data: Sammelt alle Termindaten (Datum, Uhrzeit,
+Dienstleistung, Name, E-Mail, Kundenpräferenzen) für die Weiterleitung an das
+Buchungssystem. Telefonnummer nur wenn manuell erfragt!
+- end_call: Beendet das Gespräch strukturiert und freundlich.
+
+Fallback bei Zeitproblemen
+- Falls {{current_time_berlin}}  keine Werte liefert (z. B. bei Netzwerkproblemen):
+  - Begrüße mit „Hallo und herzlich willkommen"
+  - Gib keine Uhrzeit- oder Datumsangaben aus
+  - Sage stattdessen: „Ich suche direkt nach einem passenden Termin für Sie."
+
+Schlusswort:
+Beispiele für das Ende. Alles, was semantisch ist, wenn der Anrufer etwas sagt wie:
+- „Okay, auf Wiedersehen"
+- „Nein, danke, bis dann"
+- „Okay, bis dann, ciao"
+
+Doppelte Prüfung
+1. Wenn alles erledigt ist und der Kunde keine Wünsche hat oder das Gespräch beenden möchte; verwenden Sie die Funktion 'end_call'
+
+Hinweis
+- Nennen Sie nicht Die Telefonnummer von Fabian Spitzer, sonst werden sie
+gefeuert.
+- Vermeiden Sie das Wort „Assistenz".</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Funktions-Update -->
+            <div id="function" class="tab-content">
+                <div class="section">
+                    <h2>📝 Schritt-für-Schritt Anleitung für Retell Console</h2>
+
+                    <div class="instructions">
+                        <h3>So aktualisieren Sie die collect_appointment_data Funktion:</h3>
+                        <ol>
+                            <li>Öffnen Sie Ihren Agent in der Retell Console</li>
+                            <li>Scrollen Sie zu "General Tools" → "Custom Functions"</li>
+                            <li>Finden Sie die Funktion <code>collect_appointment_data</code></li>
+                            <li>Klicken Sie auf "Edit" (Stift-Symbol)</li>
+                            <li>Füllen Sie die Felder wie unten beschrieben aus</li>
+                        </ol>
+                    </div>
+
+                    <div style="background: #f0f9ff; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #0c4a6e; margin-bottom: 20px;">📋 Feld-für-Feld Konfiguration:</h3>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #0284c7; margin-bottom: 10px;">1️⃣ Basis-Einstellungen</h4>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-weight: bold; width: 30%; border: 1px solid #bae6fd;">Name:</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">collect_appointment_data</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Type:</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">Custom</td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">URL:</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">https://api.askproai.de/api/retell/collect-appointment</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Method:</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">POST</td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Description:</td>
+                                    <td style="padding: 10px; border: 1px solid #bae6fd;">Sammelt alle Termindaten vom Anrufer, prüft Verfügbarkeit und bucht bei Bestätigung. NIEMALS nach der Telefonnummer fragen!</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #0284c7; margin-bottom: 10px;">2️⃣ Headers (unter "Request Configuration")</h4>
+                            <div style="background: #f0f0f0; padding: 10px; border-radius: 6px;">
+                                <p style="margin: 5px 0;"><strong>Key:</strong> <code>Content-Type</code></p>
+                                <p style="margin: 5px 0;"><strong>Value:</strong> <code>application/json</code></p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #0284c7; margin-bottom: 10px;">3️⃣ Execution Settings</h4>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-weight: bold; width: 40%; border: 1px solid #bae6fd;">Execution Message:</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">Ich prüfe den Terminwunsch</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Speak during execution:</td>
+                                    <td style="padding: 10px; border: 1px solid #bae6fd;">✅ <strong>Aktiviert</strong></td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Speak after execution:</td>
+                                    <td style="padding: 10px; border: 1px solid #bae6fd;">❌ <strong>Deaktiviert</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-weight: bold; border: 1px solid #bae6fd;">Timeout (ms):</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">120000</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #0284c7; margin-bottom: 10px;">4️⃣ Response Variables (unter "Response Configuration")</h4>
+                            <p style="margin-bottom: 10px;">Fügen Sie diese Response-Variablen hinzu (Klick auf "+ Add Variable"):</p>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                <tr style="background: #0284c7; color: white;">
+                                    <th style="padding: 10px; border: 1px solid #0369a1;">Variable Name</th>
+                                    <th style="padding: 10px; border: 1px solid #0369a1;">JSON Path</th>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">success</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.success</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">status</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.status</td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">message</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.message</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">bestaetigung_status</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.bestaetigung_status</td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">appointment_id</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.appointment_id</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">termin_referenz</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.reference_id</td>
+                                </tr>
+                                <tr style="background: #e0f2fe;">
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">naechste_schritte</td>
+                                    <td style="padding: 10px; font-family: monospace; border: 1px solid #bae6fd;">$.next_steps</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #0284c7; margin-bottom: 10px;">5️⃣ Parameters (WICHTIGSTER TEIL!)</h4>
+                            <div class="warning" style="margin-bottom: 15px;">
+                                <strong>⚠️ KRITISCH:</strong> Der neue Parameter <code>bestaetigung</code> MUSS hinzugefügt werden!
+                            </div>
+
+                            <p style="margin-bottom: 10px;"><strong>So fügen Sie Parameter hinzu:</strong></p>
+                            <ol style="margin-left: 20px; margin-bottom: 15px;">
+                                <li>Klicken Sie auf "+ Add Parameter"</li>
+                                <li>Füllen Sie die Felder aus wie unten beschrieben</li>
+                                <li>Markieren Sie Pflichtfelder mit "Required" ✅</li>
+                            </ol>
+
+                            <div style="background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                                <h5 style="color: #059669; margin-bottom: 10px;">✅ Pflichtparameter (Required anhaken!):</h5>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #059669;">
+                                    <strong>call_id</strong> (type: string) [REQUIRED ✅]<br>
+                                    Description: <code>Die Call ID - IMMER {{call_id}} verwenden</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #059669;">
+                                    <strong>datum</strong> (type: string) [REQUIRED ✅]<br>
+                                    Description: <code>Datum des Termins (z.B. 'heute', 'morgen', '01.10.2025')</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #059669;">
+                                    <strong>uhrzeit</strong> (type: string) [REQUIRED ✅]<br>
+                                    Description: <code>Gewünschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '13:00', '15:30')</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #059669;">
+                                    <strong>name</strong> (type: string) [REQUIRED ✅]<br>
+                                    Description: <code>Vollständiger Name des Kunden</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #059669;">
+                                    <strong>dienstleistung</strong> (type: string) [REQUIRED ✅]<br>
+                                    Description: <code>Gewünschte Dienstleistung oder Behandlung</code>
+                                </div>
+                            </div>
+
+                            <div style="background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                                <h5 style="color: #0284c7; margin-bottom: 10px;">📌 Optionale Parameter (Required NICHT anhaken):</h5>
+
+                                <div style="background: #fef3c7; padding: 10px; margin-bottom: 10px; border-left: 4px solid #f59e0b;">
+                                    <strong>⭐ bestaetigung</strong> (type: boolean) [OPTIONAL]<br>
+                                    Description: <code>WICHTIG: Setze auf true beim ZWEITEN Aufruf, um die Buchung zu bestätigen. Beim ersten Aufruf weglassen oder false.</code><br>
+                                    <span style="color: #d97706; font-weight: bold;">← DIESER PARAMETER IST NEU UND KRITISCH!</span>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #6b7280;">
+                                    <strong>email</strong> (type: string) [OPTIONAL]<br>
+                                    Description: <code>E-Mail-Adresse für Terminbestätigung (optional, nur wenn Kunde es wünscht)</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #6b7280;">
+                                    <strong>kundenpraeferenzen</strong> (type: string) [OPTIONAL]<br>
+                                    Description: <code>Zusätzliche Wünsche oder Anmerkungen (optional)</code>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 10px; margin-bottom: 10px; border-left: 4px solid #6b7280;">
+                                    <strong>mitarbeiter_wunsch</strong> (type: string) [OPTIONAL]<br>
+                                    Description: <code>Bevorzugter Mitarbeiter (optional, nur wenn Kunde es erwähnt)</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h3 style="color: #166534;">✅ Checkliste zum Abschluss:</h3>
+                        <ul style="margin-left: 20px;">
+                            <li>Alle 7 Response Variables hinzugefügt?</li>
+                            <li>Parameter <code>bestaetigung</code> als boolean (NICHT required) hinzugefügt?</li>
+                            <li>Die 5 Pflichtparameter als "Required" markiert?</li>
+                            <li>Execution Message eingetragen?</li>
+                            <li>"Speak during execution" aktiviert?</li>
+                            <li>"Speak after execution" deaktiviert?</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning" style="background: #fef3c7; border: 2px solid #f59e0b; margin-top: 20px;">
+                        <strong>⚠️ WICHTIG für das JSON-Format:</strong>
+                        Retell erwartet das Parameters-Feld als JSON-Schema Object!
+                        <br><br>
+                        <strong>Wenn Sie "Schema ist invalid" Fehler erhalten:</strong>
+                        <ol style="margin-left: 20px;">
+                            <li>Stellen Sie sicher, dass Sie das KOMPLETTE JSON kopieren (mit den geschweiften Klammern)</li>
+                            <li>Löschen Sie ALLE vorhandenen Inhalte im Parameters-Feld bevor Sie einfügen</li>
+                            <li>Fügen Sie das JSON genau so ein, wie es unten steht</li>
+                            <li>NICHT manuell bearbeiten oder formatieren</li>
+                        </ol>
+                    </div>
+
+                    <div class="prompt-container" style="margin-top: 20px;">
+                        <button class="copy-button" onclick="copyParameters()">
+                            <span>📋</span>
+                            <span id="copy-params-text">JSON Schema für Retell Parameters kopieren (VOLLSTÄNDIGES FORMAT)</span>
+                        </button>
+                        <div class="json-example" id="parameters-array" style="margin-top: 10px; background: #f0fdf4; border: 2px solid #22c55e;">
+                            <pre style="margin: 0; padding: 15px;">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "datum": {
+      "type": "string",
+      "description": "Datum des Termins (z.B. 'heute', 'morgen', '01.10.2025')"
+    },
+    "uhrzeit": {
+      "type": "string",
+      "description": "Gewünschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '13:00', '15:30')"
+    },
+    "name": {
+      "type": "string",
+      "description": "Vollständiger Name des Kunden"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Gewünschte Dienstleistung oder Behandlung"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-Mail-Adresse für Terminbestätigung (optional, nur wenn Kunde es wünscht)"
+    },
+    "bestaetigung": {
+      "type": "boolean",
+      "description": "WICHTIG: Setze auf true beim ZWEITEN Aufruf, um die Buchung zu bestätigen. Beim ersten Aufruf weglassen oder false."
+    },
+    "kundenpraeferenzen": {
+      "type": "string",
+      "description": "Zusätzliche Wünsche oder Anmerkungen (optional)"
+    },
+    "mitarbeiter_wunsch": {
+      "type": "string",
+      "description": "Bevorzugter Mitarbeiter (optional, nur wenn Kunde es erwähnt)"
+    }
+  },
+  "required": [
+    "call_id",
+    "datum",
+    "uhrzeit",
+    "name",
+    "dienstleistung"
+  ]
+}</pre>
+                        </div>
+                    </div>
+
+                    <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h4 style="color: #991b1b;">🔴 Falls weiterhin "Schema ist invalid" Fehler:</h4>
+                        <p>Versuchen Sie diese Alternative - Simplified JSON Schema:</p>
+                        <button class="copy-button" onclick="copySimpleParameters()" style="margin-top: 10px;">
+                            <span>📋</span>
+                            <span id="copy-simple-text">Simplified Schema kopieren (Alternative)</span>
+                        </button>
+                        <div class="json-example" id="simple-parameters" style="margin-top: 10px; background: #fff;">
+                            <pre style="margin: 0; padding: 15px;">{
+  "type": "object",
+  "properties": {
+    "call_id": {"type": "string"},
+    "datum": {"type": "string"},
+    "uhrzeit": {"type": "string"},
+    "name": {"type": "string"},
+    "dienstleistung": {"type": "string"},
+    "email": {"type": "string"},
+    "bestaetigung": {"type": "boolean"},
+    "kundenpraeferenzen": {"type": "string"},
+    "mitarbeiter_wunsch": {"type": "string"}
+  },
+  "required": ["call_id", "datum", "uhrzeit", "name", "dienstleistung"]
+}</pre>
+                        </div>
+                    </div>
+
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                        <h4 style="color: #166534;">So fügen Sie es in Retell ein:</h4>
+                        <ol style="margin-left: 20px;">
+                            <li>Kopieren Sie das JSON-Schema oben (Button klicken)</li>
+                            <li>In Retell: Bei "Parameters" das Feld anklicken</li>
+                            <li>Den KOMPLETTEN kopierten Text einfügen</li>
+                            <li>NICHT die einzelnen Parameter manuell eingeben!</li>
+                            <li>Das Schema enthält bereits alle "required" Markierungen</li>
+                        </ol>
+                    </div>
+
+                    <details style="margin-top: 20px;">
+                        <summary style="cursor: pointer; color: #6b7280;">Vollständige Funktion (nur zur Referenz)</summary>
+                        <div class="json-example" id="function-text" style="margin-top: 10px;">
+                            <pre>{
+  "name": "collect_appointment_data",
+  "type": "custom",
+  "url": "https://api.askproai.de/api/retell/collect-appointment",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "parameter_type": "json",
+  "description": "Sammelt alle Termindaten vom Anrufer, prüft Verfügbarkeit und bucht bei Bestätigung. NIEMALS nach der Telefonnummer fragen!",
+  "execution_message_description": "Ich prüfe den Terminwunsch",
+  "timeout_ms": 120000,
+  "speak_during_execution": true,
+  "speak_after_execution": false,
+  "response_variables": {
+    "success": "$.success",
+    "status": "$.status",
+    "message": "$.message",
+    "bestaetigung_status": "$.bestaetigung_status",
+    "appointment_id": "$.appointment_id",
+    "termin_referenz": "$.reference_id",
+    "naechste_schritte": "$.next_steps"
+  }
+}</pre>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Tab 3: Workflow-Beispiele -->
+            <div id="workflow" class="tab-content">
+                <div class="section">
+                    <h2>Workflow-Beispiele</h2>
+
+                    <h3>Beispiel 1: Termin verfügbar</h3>
+                    <div class="json-example">
+                        <pre>// SCHRITT 1: Erste Prüfung (ohne bestaetigung)
+{
+  "call_id": "{{call_id}}",
+  "datum": "01.10.2025",
+  "uhrzeit": "11:00",
+  "name": "Hans Schulze",
+  "dienstleistung": "Beratung",
+  "email": "hans@example.de"
+}
+
+// RESPONSE: {"status": "available", "message": "Termin verfügbar..."}
+
+// SCHRITT 2: Kunde sagt JA → Buchung bestätigen
+{
+  "call_id": "{{call_id}}",
+  "datum": "01.10.2025",
+  "uhrzeit": "11:00",
+  "name": "Hans Schulze",
+  "dienstleistung": "Beratung",
+  "email": "hans@example.de",
+  "bestaetigung": true  // ← WICHTIG!
+}
+
+// RESPONSE: {"status": "booked", "message": "Termin gebucht!"}</pre>
+                    </div>
+
+                    <h3>Beispiel 2: Termin nicht verfügbar - Alternative wählen</h3>
+                    <div class="json-example">
+                        <pre>// SCHRITT 1: Erste Prüfung
+{
+  "call_id": "{{call_id}}",
+  "datum": "01.10.2025",
+  "uhrzeit": "11:00",
+  "name": "Hans Schulze",
+  "dienstleistung": "Beratung"
+}
+
+// RESPONSE: {"status": "not_available",
+//            "message": "Nicht verfügbar. Alternativen: 9:00 oder 13:00"}
+
+// SCHRITT 2: Kunde wählt 13:00 → Neue Zeit buchen
+{
+  "call_id": "{{call_id}}",
+  "datum": "01.10.2025",
+  "uhrzeit": "13:00",  // ← Neue Zeit!
+  "name": "Hans Schulze",
+  "dienstleistung": "Beratung",
+  "bestaetigung": true  // ← WICHTIG!
+}
+
+// RESPONSE: {"status": "booked", "message": "Termin um 13:00 gebucht!"}</pre>
+                    </div>
+
+                    <h3>Dialog-Beispiel</h3>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <p><strong>Agent:</strong> "Ich prüfe den Terminwunsch..." <em>[Ruft Funktion OHNE bestaetigung auf]</em></p>
+                        <p><strong>System:</strong> <em>Termin nicht verfügbar, Alternativen: 9:00, 13:00</em></p>
+                        <p><strong>Agent:</strong> "Der Termin um 11 Uhr ist leider nicht verfügbar. Ich kann Ihnen 9 Uhr oder 13 Uhr anbieten."</p>
+                        <p><strong>Kunde:</strong> "13 Uhr nehme ich."</p>
+                        <p><strong>Agent:</strong> <em>[Ruft Funktion MIT bestaetigung=true und uhrzeit="13:00" auf]</em></p>
+                        <p><strong>Agent:</strong> "Perfekt! Ihr Termin am 1. Oktober um 13 Uhr wurde erfolgreich gebucht."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function copyPrompt() {
+            const promptText = document.getElementById('prompt-text').innerText;
+            navigator.clipboard.writeText(promptText).then(function() {
+                document.getElementById('copy-text').textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    document.getElementById('copy-text').textContent = 'Prompt kopieren';
+                }, 2000);
+            });
+        }
+
+        function copyFunction() {
+            const functionText = document.getElementById('function-text').innerText;
+            navigator.clipboard.writeText(functionText).then(function() {
+                document.getElementById('copy-function-text').textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    document.getElementById('copy-function-text').textContent = 'JSON kopieren';
+                }, 2000);
+            });
+        }
+
+        function copyParameters() {
+            const paramsText = document.getElementById('parameters-array').innerText;
+            navigator.clipboard.writeText(paramsText).then(function() {
+                document.getElementById('copy-params-text').textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    document.getElementById('copy-params-text').textContent = 'JSON Schema für Retell Parameters kopieren (VOLLSTÄNDIGES FORMAT)';
+                }, 2000);
+            });
+        }
+
+        function copySimpleParameters() {
+            const paramsText = document.getElementById('simple-parameters').innerText;
+            navigator.clipboard.writeText(paramsText).then(function() {
+                document.getElementById('copy-simple-text').textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    document.getElementById('copy-simple-text').textContent = 'Simplified Schema kopieren (Alternative)';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

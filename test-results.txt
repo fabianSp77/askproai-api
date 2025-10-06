@@ -1,0 +1,27 @@
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.01s  
+
+   FAIL  Tests\Feature\AuthenticationTest
+  ✓ login page is accessible                                             1.10s  
+  ⨯ user can login with correct credentials                              0.71s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\AuthenticationTest > user can login with correct cr…   
+  The user is not authenticated
+Failed asserting that false is true.
+
+  at tests/Feature/AuthenticationTest.php:37
+     33▕             'email' => 'test@example.com',
+     34▕             'password' => 'password123',
+     35▕         ]);
+     36▕ 
+  ➜  37▕         $this->assertAuthenticated();
+     38▕         $response->assertRedirect('/admin');
+     39▕     }
+     40▕ 
+     41▕     /**
+
+
+  Tests:    1 failed, 2 passed, [2m8 pending[22m (3 assertions)
+  Duration: 1.94s
+

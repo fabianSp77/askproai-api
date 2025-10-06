@@ -1,0 +1,264 @@
+@props([
+    'livewire' => null,
+])
+
+<!DOCTYPE html>
+<html
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    dir="{{ __('filament-panels::layout.direction') ?? 'ltr' }}"
+    @class([
+        'fi min-h-screen',
+        'dark' => filament()->hasDarkModeForced(),
+    ])
+>
+    <head>
+        {{-- Emergency CSS only loads with feature flag --}}
+        @if(config('app.emergency_ui_fix') === true || request()->get('forceFix') === '1')
+            <link rel="stylesheet" href="{{ asset('css/nuclear-reset.css') }}?v={{ time() }}">
+        @endif
+        
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_START, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+
+        <meta charset="utf-8" />
+        <meta name="csrf-token" content="{{ csrf_token() }}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        @if ($favicon = filament()->getFavicon())
+            <link rel="icon" href="{{ $favicon }}" />
+        @endif
+
+        <title>
+            {{ filled($title = strip_tags(($livewire ?? null)?->getTitle() ?? '')) ? "{$title} - " : null }}
+            {{ strip_tags(filament()->getBrandName()) }}
+        </title>
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_BEFORE, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+
+        <style>
+            [x-cloak=''],
+            [x-cloak='x-cloak'],
+            [x-cloak='1'] {
+                display: none !important;
+            }
+
+            @media (max-width: 1023px) {
+                [x-cloak='-lg'] {
+                    display: none !important;
+                }
+            }
+
+            <link rel="stylesheet" href="{{ asset('emergency-ui-fix.css') }}?v={{ time() }}">
+        @endif
+        {{ filament()->getFontHtml() }}
+
+        <style>
+            :root {
+                --font-family: '{!! filament()->getFontFamily() !!}';
+                --sidebar-width: {{ filament()->getSidebarWidth() }};
+                --collapsed-sidebar-width: {{ filament()->getCollapsedSidebarWidth() }};
+                --default-theme-mode: {{ filament()->getDefaultThemeMode()->value }};
+            }
+        </style>
+
+        {{-- Vite theme CSS is now loaded via ->viteTheme() in AdminPanelProvider --}}
+        {{-- Emergency CSS removed - was breaking the UI! --}}
+        
+        {{-- Force Navigation to Left Side --}}
+        <link rel="stylesheet" href="{{ asset('css/force-navigation-left.css') }}?v={{ time() }}">
+
+        @stack('styles')
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+
+        @if (! filament()->hasDarkMode())
+            <script>
+                localStorage.setItem('theme', 'light')
+            </script>
+        @elseif (filament()->hasDarkModeForced())
+            <script>
+                localStorage.setItem('theme', 'dark')
+            </script>
+        @else
+            <script>
+                const theme = localStorage.getItem('theme') ?? @js(filament()->getDefaultThemeMode()->value)
+                
+                if (
+                    theme === 'dark' ||
+                    (theme === 'system' &&
+                        window.matchMedia('(prefers-color-scheme: dark)')
+                            .matches)
+                ) {
+                    document.documentElement.classList.add('dark')
+                }
+            </script>
+        @endif
+
+        @livewireStyles
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- Emergency menu only with feature flag --}}
+        @if(config('app.emergency_ui_fix') === true || request()->get('forceFix') === '1')
+        <script>
+        // Emergency menu via Alt+H
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && e.key === 'h') {
+                alert('Emergency menu is enabled. Navigate to: /admin');
+            }
+        });
+        </script>
+        @endif
+        
+        {{-- JavaScript fixes are handled by the admin bundle --}}
+    </head>
+
+    <body
+        {{ $attributes
+                ->merge(($livewire ?? null)?->getExtraBodyAttributes() ?? [], escape: false)
+                ->class([
+                    'fi-body',
+                    'fi-panel-' . filament()->getId(),
+                    'min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white',
+                ]) }}
+    >
+    <!-- ASKPROAI-NUCLEAR-OVERRIDE from Issue #555 -->
+    <style id="ASKPROAI-NUCLEAR-OVERRIDE">
+      body.fi-layout { display: grid !important; grid-template-columns: 16rem minmax(0, 1fr) !important; }
+      .fi-layout > .fi-sidebar { grid-column: 1 / 2 !important; position: sticky !important; top: 0; z-index: 30; }
+      .fi-layout > .fi-main { grid-column: 2 / -1 !important; min-width: 0 !important; overflow-x: hidden !important; }
+      .fi-sidebar a { pointer-events: auto !important; cursor: pointer !important; }
+      @media (max-width: 1024px) {
+        body.fi-layout { grid-template-columns: 1fr !important; }
+        .fi-layout > .fi-main { grid-column: 1 !important; }
+        .fi-sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+        body.sidebar-open .fi-sidebar { transform: translateX(0); }
+      }
+    </style>
+    <!-- ULTRA NUCLEAR FIX START - GitHub #553 -->
+    <style id="ULTRA-NUCLEAR-GRID-FIX">
+        body.fi-layout, .fi-layout {
+            display: grid !important;
+            grid-template-columns: 16rem minmax(0, 1fr) !important;
+            min-height: 100vh !important;
+        }
+        .fi-layout > .fi-main, .fi-main {
+            grid-column: 2 / -1 !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+        }
+        .fi-sidebar {
+            grid-column: 1 / 2 !important;
+            width: 16rem !important;
+            position: sticky !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 30 !important;
+            pointer-events: auto !important;
+        }
+        .fi-sidebar a, .fi-sidebar button {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        .fi-login-panel button[type="submit"] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            background-color: rgb(251, 146, 60) !important;
+            color: white !important;
+        }
+        @media (max-width: 1023px) {
+            body.fi-layout, .fi-layout {
+                display: block !important;
+                grid-template-columns: none !important;
+            }
+            .fi-sidebar {
+                position: fixed !important;
+                transform: translateX(-100%);
+            }
+            .fi-sidebar-open .fi-sidebar {
+                transform: translateX(0) !important;
+            }
+            .fi-main {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+    <!-- ULTRA NUCLEAR FIX END -->
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+
+        {{ $slot }}
+
+        @livewire(Filament\Livewire\Notifications::class)
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_BEFORE, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+
+        @livewireScripts
+        
+        {{-- Load Alpine components BEFORE Alpine.js initialization --}}
+        @if(filament()->getId() === 'admin')
+            {{-- Alpine components removed - causing conflicts --}}
+        @endif
+        
+        @filamentScripts(withCore: true)
+
+        {{-- CRITICAL: Load admin bundle for admin panel --}}
+        @if(filament()->getId() === 'admin')
+            @vite(['resources/js/bundles/admin.js'])
+            {{-- Removed conflicting scripts - using minimal fix instead --}}
+            
+            {{-- Login fixes only with feature flag --}}
+            @if((config('app.emergency_ui_fix') === true || request()->get('forceFix') === '1') && request()->routeIs('filament.*.auth.login'))
+                <script src="{{ asset('js/login-form-fix-v2.js') }}?v={{ time() }}"></script>
+            @endif
+        @endif
+
+        {{-- No JavaScript fixes - they were breaking the UI! --}}
+
+        @if (filament()->hasBroadcasting() && config('filament.broadcasting.echo'))
+            <script data-navigate-once>
+                window.Echo = new window.EchoFactory(@js(config('filament.broadcasting.echo')))
+                window.dispatchEvent(new CustomEvent('EchoLoaded'))
+            </script>
+        @endif
+
+        @stack('scripts')
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- Removed emergency framework fix - replaced with minimal fix --}}
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- ASKPROAI-HARDNAV: Temporary fix to force navigation on sidebar links --}}
+        <!-- ASKPROAI-HARDNAV Enhanced from Issue #555 -->
+        <script id="ASKPROAI-HARDNAV">
+        (function(){
+            // Original event delegation approach
+            try {
+                var root = document;
+                var side = root.querySelector(".fi-sidebar");
+                if (side) {
+                    side.addEventListener("click", function(e) {
+                        var a = e.target.closest("a[href]");
+                        if (!a) return;
+                        var href = a.getAttribute("href");
+                        if (!href || href.charAt(0) === "#") return;
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        window.location.assign(href);
+                    }, {capture: true});
+                }
+            } catch(_) {}
+            
+            // Enhanced direct link approach from colleague
+            document.querySelectorAll(".fi-sidebar a[href]").forEach(a=>{
+                a.addEventListener("click", e=>{
+                    e.stopImmediatePropagation();
+                    window.location.href = a.href;
+                }, {capture:true});
+            });
+        })();
+        </script>
+    </body>
+</html>

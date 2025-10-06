@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class VerifyLivewireCsrf
+{
+    /**
+     * Handle an incoming request.
+     * Simplified version - let Laravel handle sessions automatically
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        // Only handle Livewire update requests
+        if ($request->is('livewire/update')) {
+            $response = $next($request);
+
+            // If we get a 419 (page expired), convert to a proper JSON response
+            if ($response->status() === 419) {
+                return response()->json([
+                    'effects' => [
+                        'redirect' => url('/admin/login')
+                    ]
+                ], 200);
+            }
+
+            return $response;
+        }
+
+        return $next($request);
+    }
+}

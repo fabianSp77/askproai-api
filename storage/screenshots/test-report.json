@@ -1,0 +1,32 @@
+{
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "screenshots": [
+    {
+      "name": "login-page",
+      "description": "Admin login page before authentication",
+      "filename": "2025-10-03T11-02-44-974Z_login-page.png",
+      "timestamp": "2025-10-03T11:02:45.123Z",
+      "url": "https://api.askproai.de/admin/login"
+    },
+    {
+      "name": "login-filled",
+      "description": "Login form filled",
+      "filename": "2025-10-03T11-02-45-438Z_login-filled.png",
+      "timestamp": "2025-10-03T11:02:45.556Z",
+      "url": "https://api.askproai.de/admin/login"
+    },
+    {
+      "name": "login-error",
+      "description": "Login failed: Navigation timeout of 10000 ms exceeded",
+      "filename": "2025-10-03T11-02-55-563Z_login-error.png",
+      "timestamp": "2025-10-03T11:02:55.699Z",
+      "url": "https://api.askproai.de/admin/login"
+    }
+  ],
+  "consoleErrors": [],
+  "networkErrors": [],
+  "performanceMetrics": {},
+  "elementChecks": {}
+}

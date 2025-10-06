@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "call_id": {"type": "string"},
+    "datum": {"type": "string"},
+    "uhrzeit": {"type": "string"},
+    "name": {"type": "string"},
+    "dienstleistung": {"type": "string"},
+    "email": {"type": "string"},
+    "bestaetigung": {"type": "boolean"},
+    "kundenpraeferenzen": {"type": "string"},
+    "mitarbeiter_wunsch": {"type": "string"}
+  },
+  "required": ["call_id", "datum", "uhrzeit", "name", "dienstleistung"]
+}

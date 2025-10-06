@@ -1,0 +1,44 @@
+/* Emergency CSS fix for login button visibility */
+.inline-flex[type="submit"] {
+    background-color: rgb(31 41 55) !important; /* bg-gray-800 */
+    color: white !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.375rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    transition: background-color 0.15s ease-in-out !important;
+}
+
+.inline-flex[type="submit"]:hover {
+    background-color: rgb(55 65 81) !important; /* bg-gray-700 */
+}
+
+/* Ensure primary button is visible */
+button[type="submit"],
+.bg-gray-800 {
+    background-color: rgb(31 41 55) !important;
+    color: white !important;
+}
+
+/* Additional safety styles for button visibility */
+x-primary-button button,
+[x-data] button[type="submit"] {
+    min-height: 2.5rem !important;
+    min-width: 5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    button[type="submit"] {
+        background-color: rgb(59 130 246) !important; /* bg-blue-500 for dark mode */
+        color: white !important;
+    }
+
+    button[type="submit"]:hover {
+        background-color: rgb(37 99 235) !important; /* bg-blue-600 for dark mode */
+    }
+}

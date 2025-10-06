@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test with Debug</title>
+    <meta name="csrf-token" content="">
+</head>
+<body>
+    <h1>Login Test Debug Page</h1>
+
+    <div id="status">Ready to test...</div>
+    <button onclick="testLogin()">Test Login Flow</button>
+
+    <h2>Console Output:</h2>
+    <pre id="console" style="background: #f0f0f0; padding: 10px; height: 400px; overflow: auto;"></pre>
+
+    <script>
+        function log(message) {
+            const console = document.getElementById('console');
+            console.innerHTML += message + '\n';
+            console.scrollTop = console.scrollHeight;
+        }
+
+        async function testLogin() {
+            log('=== Starting Login Test ===');
+
+            try {
+                // Step 1: Get CSRF token
+                log('1. Fetching CSRF token...');
+                const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+
+                const loginResponse = await fetch('/admin/login');
+                const loginHtml = await loginResponse.text();
+
+                const csrfMatch = loginHtml.match(/name="csrf-token" content="([^"]+)"/);
+                const csrfToken = csrfMatch ? csrfMatch[1] : null;
+                log('   CSRF Token: ' + (csrfToken ? 'Found' : 'NOT FOUND'));
+
+                // Step 2: Get Livewire component ID
+                const wireMatch = loginHtml.match(/wire:id="([^"]+)"/);
+                const wireId = wireMatch ? wireMatch[1] : null;
+                log('   Livewire ID: ' + (wireId || 'NOT FOUND'));
+
+                // Step 3: Attempt login
+                log('\n2. Attempting login...');
+                const loginData = {
+                    fingerprint: {
+                        id: wireId,
+                        name: 'filament.pages.auth.login',
+                        locale: 'en',
+                        path: 'admin/login',
+                        method: 'POST'
+                    },
+                    serverMemo: {
+                        children: [],
+                        errors: [],
+                        htmlHash: 'abc123',
+                        data: {
+                            data: {
+                                email: 'admin@askproai.de',
+                                password: 'password',
+                                remember: false
+                            }
+                        },
+                        dataMeta: [],
+                        checksum: 'xyz789'
+                    },
+                    updates: [{
+                        type: 'callMethod',
+                        payload: {
+                            method: 'authenticate',
+                            params: []
+                        }
+                    }]
+                };
+
+                const loginResult = await fetch('/livewire/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Livewire': 'true',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html, application/xhtml+xml'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                log('   Login response: ' + loginResult.status);
+
+                if (loginResult.status === 500) {
+                    log('   ❌ 500 ERROR DETECTED!');
+                    const errorText = await loginResult.text();
+                    log('   Error: ' + errorText.substring(0, 500));
+
+                    // Check for specific error
+                    if (errorText.includes('hasRole')) {
+                        log('\n   🔍 FOUND: hasRole() method error!');
+                        log('   This is the error causing the popup!');
+                    }
+                } else if (loginResult.status === 200) {
+                    log('   ✅ Login successful');
+
+                    // Step 4: Test dashboard update
+                    log('\n3. Testing dashboard Livewire update...');
+                    const dashboardUpdate = {
+                        fingerprint: {
+                            id: 'dashboard123',
+                            name: 'filament.pages.dashboard',
+                            locale: 'en',
+                            path: 'admin',
+                            method: 'GET'
+                        },
+                        serverMemo: {
+                            children: [],
+                            errors: [],
+                            htmlHash: 'abc123',
+                            data: [],
+                            dataMeta: [],
+                            checksum: 'xyz789'
+                        },
+                        updates: []
+                    };
+
+                    const dashResult = await fetch('/livewire/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Livewire': 'true',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html, application/xhtml+xml'
+                        },
+                        body: JSON.stringify(dashboardUpdate)
+                    });
+
+                    log('   Dashboard update response: ' + dashResult.status);
+
+                    if (dashResult.status === 500) {
+                        log('   ❌ 500 ERROR on dashboard update!');
+                        const errorText = await dashResult.text();
+                        log('   This is the popup error you see!');
+                        log('   Error: ' + errorText.substring(0, 500));
+                    }
+                }
+
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+
+            log('\n=== Test Complete ===');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\PermissionResource\Pages;
+use App\Filament\Resources\PermissionResource\RelationManagers;
+use Spatie\Permission\Models\Permission;
+use App\Models\Role;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Grid;
+use Filament\Tables\Columns\TextInputColumn;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Collection;
+
+class PermissionResource extends Resource
+{
+    protected static ?string $model = Permission::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
+
+    protected static ?string $navigationLabel = 'Berechtigungen';
+
+    protected static ?string $modelLabel = 'Berechtigung';
+
+    protected static ?string $pluralModelLabel = 'Berechtigungen';
+
+    protected static ?string $navigationGroup = 'System';
+
+    protected static ?int $navigationSort = 3;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Section::make('Berechtigungsdetails')
+                    ->schema([
+                        Grid::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Berechtigungsname')
+                                    ->placeholder('z.B. users.create, posts.edit')
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->helperText('Format: modul.aktion (z.B. users.create)')
+                                    ->maxLength(125),
+
+                                Forms\Components\Select::make('guard_name')
+                                    ->label('Guard')
+                                    ->options([
+                                        'web' => 'Web',
+                                        'api' => 'API',
+                                    ])
+                                    ->default('web')
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('module')
+                                    ->label('Modul')
+                                    ->placeholder('z.B. users, posts, settings')
+                                    ->helperText('Gruppiert verwandte Berechtigungen')
+                                    ->maxLength(50),
+
+                                Forms\Components\TextInput::make('action')
+                                    ->label('Aktion')
+                                    ->placeholder('z.B. create, read, update, delete')
+                                    ->helperText('Die Aktion, die diese Berechtigung erlaubt')
+                                    ->maxLength(50),
+                            ])
+                            ->columns(2),
+
+                        Forms\Components\Textarea::make('description')
+                            ->label('Beschreibung')
+                            ->placeholder('Beschreiben Sie, was diese Berechtigung erlaubt')
+                            ->rows(2)
+                            ->columnSpanFull(),
+                    ]),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Berechtigung')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    
+                    ->copyMessage('Berechtigung kopiert')
+                    ->icon('heroicon-m-key'),
+
+                TextInputColumn::make('description')
+                    ->label('Beschreibung')
+                    ->searchable()
+                    ->rules(['max:500'])
+                    ->placeholder('Beschreibung eingeben...')
+                    ->tooltip('Klicken zum Bearbeiten')
+                    ->afterStateUpdated(function ($record) {
+                        Notification::make()
+                            ->title('Beschreibung aktualisiert')
+                            ->success()
+                            ->duration(2000)
+                            ->send();
+                    }),
+
+                SelectColumn::make('module')
+                    ->label('Modul')
+                    ->searchable()
+                    ->sortable()
+                    ->options([
+                        'customer' => '👤 Kunden',
+                        'user' => '👥 Benutzer',
+                        'invoice' => '📄 Rechnungen',
+                        'appointment' => '📅 Termine',
+                        'system' => '⚙️ System',
+                        'api' => '🔌 API',
+                        'company' => '🏢 Unternehmen',
+                        'branch' => '🏪 Filialen',
+                        'staff' => '👷 Mitarbeiter',
+                        'service' => '🛠️ Services',
+                        'role' => '🔐 Rollen',
+                        'setting' => '⚙️ Einstellungen',
+                        'call' => '📞 Anrufe',
+                        'activity' => '📊 Aktivitäten',
+                        'payment' => '💳 Zahlungen',
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->afterStateUpdated(function () {
+                        Notification::make()
+                            ->title('Modul aktualisiert')
+                            ->success()
+                            ->duration(2000)
+                            ->send();
+                    }),
+
+                SelectColumn::make('action')
+                    ->label('Aktion')
+                    ->searchable()
+                    ->options([
+                        'view' => '👁️ Anzeigen',
+                        'create' => '➕ Erstellen',
+                        'update' => '✏️ Bearbeiten',
+                        'delete' => '🗑️ Löschen',
+                        'export' => '📤 Exportieren',
+                        'import' => '📥 Importieren',
+                        'manage' => '🎛️ Verwalten',
+                        'execute' => '▶️ Ausführen',
+                        'read' => '📖 Lesen',
+                        'write' => '✍️ Schreiben',
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->afterStateUpdated(function () {
+                        Notification::make()
+                            ->title('Aktion aktualisiert')
+                            ->success()
+                            ->duration(2000)
+                            ->send();
+                    }),
+
+                Tables\Columns\BadgeColumn::make('guard_name')
+                    ->label('Guard')
+                    ->color(fn ($state) => $state === 'web' ? 'primary' : 'secondary'),
+
+                // Dynamic role toggle columns
+                ...self::getRoleToggleColumns(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Erstellt')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Aktualisiert')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->since()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->defaultSort('module', 'asc')
+            ->groups([
+                'module',
+                'action',
+                'guard_name',
+            ])
+            ->filters([
+                SelectFilter::make('module')
+                    ->options(fn () => Permission::query()
+                        ->whereNotNull('module')
+                        ->distinct()
+                        ->pluck('module', 'module')
+                        ->mapWithKeys(fn ($module) => [$module => ucfirst($module)])
+                        ->toArray()
+                    )
+                    ->label('Modul')
+                    ->placeholder('Alle Module'),
+
+                SelectFilter::make('action')
+                    ->options(fn () => Permission::query()
+                        ->whereNotNull('action')
+                        ->distinct()
+                        ->pluck('action', 'action')
+                        ->mapWithKeys(fn ($action) => [$action => ucfirst($action)])
+                        ->toArray()
+                    )
+                    ->label('Aktion')
+                    ->placeholder('Alle Aktionen'),
+
+                SelectFilter::make('guard_name')
+                    ->options([
+                        'web' => 'Web',
+                        'api' => 'API',
+                    ])
+                    ->label('Guard')
+                    ->placeholder('Alle Guards'),
+
+                Tables\Filters\TernaryFilter::make('has_roles')
+                    ->label('Mit Rollen')
+                    ->queries(
+                        true: fn (Builder $query) => $query->has('roles'),
+                        false: fn (Builder $query) => $query->doesntHave('roles'),
+                    )
+                    ->placeholder('Alle')
+                    ->trueLabel('Mit Rollen')
+                    ->falseLabel('Ohne Rollen'),
+            ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('view_details')
+                        ->label('Details')
+                        ->icon('heroicon-m-eye')
+                        ->color('gray')
+                        ->modalHeading(fn (Permission $record) => "Berechtigung: {$record->name}")
+                        ->modalContent(function (Permission $record) {
+                            $roles = $record->roles->pluck('name')->join(', ') ?: 'Keine';
+                            $users = \App\Models\User::permission($record->name)->count();
+
+                            return view('filament.resources.permission-details', [
+                                'permission' => $record,
+                                'roles' => $roles,
+                                'userCount' => $users,
+                            ]);
+                        })
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Schließen'),
+
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Löschen')
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Berechtigung gelöscht')
+                                ->body('Die Berechtigung wurde erfolgreich entfernt.')
+                        ),
+                ])
+                ->tooltip('Aktionen')
+                ->icon('heroicon-m-ellipsis-horizontal')
+                ->size('sm')
+                ->color('gray'),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulk_assign_module')
+                        ->label('Modul zuweisen')
+                        ->icon('heroicon-m-folder')
+                        ->color('primary')
+                        ->form([
+                            Forms\Components\Select::make('module')
+                                ->label('Modul auswählen')
+                                ->options([
+                                    'customer' => 'Kunden',
+                                    'user' => 'Benutzer',
+                                    'invoice' => 'Rechnungen',
+                                    'appointment' => 'Termine',
+                                    'system' => 'System',
+                                ])
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $records->each(function ($record) use ($data) {
+                                $record->update(['module' => $data['module']]);
+                            });
+
+                            Notification::make()
+                                ->title('Modul zugewiesen')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('bulk_toggle_role')
+                        ->label('Rollen umschalten')
+                        ->icon('heroicon-m-user-group')
+                        ->color('success')
+                        ->form([
+                            Forms\Components\Select::make('role')
+                                ->label('Rolle auswählen')
+                                ->options(Role::all()->pluck('name', 'id'))
+                                ->required(),
+                            Forms\Components\Radio::make('action')
+                                ->label('Aktion')
+                                ->options([
+                                    'assign' => 'Zuweisen',
+                                    'remove' => 'Entfernen',
+                                ])
+                                ->default('assign')
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $role = Role::find($data['role']);
+
+                            if ($data['action'] === 'assign') {
+                                $role->givePermissionTo($records);
+                                $message = 'Berechtigungen zugewiesen';
+                            } else {
+                                foreach ($records as $permission) {
+                                    $role->revokePermissionTo($permission);
+                                }
+                                $message = 'Berechtigungen entfernt';
+                            }
+
+                            Notification::make()
+                                ->title($message)
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Berechtigungen gelöscht')
+                                ->body('Die ausgewählten Berechtigungen wurden entfernt.')
+                        ),
+                ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('quick_create')
+                    ->label('Schnell erstellen')
+                    ->icon('heroicon-m-plus')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Name')
+                            ->required()
+                            ->placeholder('z.B. module.action'),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Beschreibung')
+                            ->rows(2),
+                    ])
+                    ->action(function (array $data) {
+                        $parts = explode('.', $data['name']);
+                        Permission::create([
+                            'name' => $data['name'],
+                            'description' => $data['description'] ?? null,
+                            'module' => $parts[0] ?? null,
+                            'action' => $parts[1] ?? null,
+                            'guard_name' => 'web',
+                        ]);
+
+                        Notification::make()
+                            ->title('Berechtigung erstellt')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('import_permissions')
+                    ->label('Berechtigungen importieren')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->color('warning')
+                    ->action(function () {
+                        self::createStandardPermissions();
+                    }),
+            ])
+            ->poll('30s')
+            ->striped()
+            ->paginated([25, 50, 100])
+            ->extremePaginationLinks()
+            ->deferLoading()
+            ->persistFiltersInSession()
+            ->persistSortInSession()
+            ->emptyStateHeading('Keine Berechtigungen gefunden')
+            ->emptyStateDescription('Erstellen Sie Ihre erste Berechtigung oder importieren Sie Standardberechtigungen.')
+            ->emptyStateIcon('heroicon-o-lock-closed');
+    }
+
+    protected static function getRoleToggleColumns(): array
+    {
+        $columns = [];
+        $roles = Role::orderBy('priority')->limit(5)->get();
+
+        foreach ($roles as $role) {
+            $columns[] = ToggleColumn::make("role_{$role->id}")
+                ->label($role->name)
+                ->getStateUsing(function (Permission $record) use ($role) {
+                    return $record->roles->contains('id', $role->id);
+                })
+                ->updateStateUsing(function (Permission $record, bool $state) use ($role) {
+                    if ($state) {
+                        $role->givePermissionTo($record);
+                    } else {
+                        $role->revokePermissionTo($record);
+                    }
+
+                    Notification::make()
+                        ->title($state ? 'Rolle zugewiesen' : 'Rolle entfernt')
+                        ->success()
+                        ->duration(2000)
+                        ->send();
+                })
+                ->tooltip(fn () => "Rolle '{$role->name}' umschalten")
+                ->toggleable()
+                ->sortable(false);
+        }
+
+        return $columns;
+    }
+
+    protected static function createStandardPermissions(): void
+    {
+        $modules = [
+            'customer' => ['view', 'create', 'update', 'delete', 'export'],
+            'user' => ['view', 'create', 'update', 'delete', 'manage'],
+            'invoice' => ['view', 'create', 'update', 'delete', 'export', 'send'],
+            'appointment' => ['view', 'create', 'update', 'delete', 'manage'],
+            'company' => ['view', 'create', 'update', 'delete'],
+            'branch' => ['view', 'create', 'update', 'delete'],
+            'staff' => ['view', 'create', 'update', 'delete'],
+            'service' => ['view', 'create', 'update', 'delete'],
+            'role' => ['view', 'create', 'update', 'delete', 'manage'],
+            'setting' => ['view', 'update', 'manage'],
+            'system' => ['view', 'manage', 'backup', 'restore'],
+            'api' => ['view', 'manage', 'generate_token'],
+            'activity' => ['view', 'export'],
+            'payment' => ['view', 'create', 'update', 'delete', 'refund'],
+            'call' => ['view', 'create', 'update', 'delete'],
+        ];
+
+        $created = 0;
+
+        foreach ($modules as $module => $actions) {
+            foreach ($actions as $action) {
+                $name = "{$module}.{$action}";
+
+                if (!Permission::where('name', $name)->exists()) {
+                    Permission::create([
+                        'name' => $name,
+                        'guard_name' => 'web',
+                        'module' => $module,
+                        'action' => $action,
+                        'description' => ucfirst($action) . ' ' . $module . ' Berechtigung',
+                    ]);
+                    $created++;
+                }
+            }
+        }
+
+        Notification::make()
+            ->title('Berechtigungen erstellt')
+            ->body("{$created} Standardberechtigungen wurden erstellt.")
+            ->success()
+            ->send();
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ManagePermissions::route('/'),
+            'matrix' => Pages\PermissionMatrix::route('/matrix'),
+        ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'primary';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with('roles');
+    }
+}

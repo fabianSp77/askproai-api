@@ -1,0 +1,531 @@
+================================================================================
+PHASE 2: BOOKING ENGINE TEST REPORT
+================================================================================
+Generated: Do 25. Sep 17:49:32 CEST 2025
+Environment: 
+   ERROR  Command "env:current" is not defined. Did you mean one of these?  
+
+  ⇂ env  
+  ⇂ env:decrypt  
+  ⇂ env:encrypt  
+
+production
+PHP Version: PHP 8.3.23 (cli) (built: Jul  3 2025 16:20:45) (NTS)
+Laravel Version: Laravel Framework 11.46.0
+================================================================================
+
+[2025-09-25 17:49:34] INFO: === ENVIRONMENT CHECK ===
+[2025-09-25 17:49:34] SUCCESS: PHP 8.x detected
+[2025-09-25 17:49:34] SUCCESS: Redis is running
+[2025-09-25 17:49:35] SUCCESS: Database connection successful
+[2025-09-25 17:49:35] INFO: Clearing caches...
+[2025-09-25 17:49:38] INFO: === [1/5] UNIT TESTS ===
+[2025-09-25 17:49:38] WARNING: No Booking unit tests found
+[2025-09-25 17:49:38] INFO: === [2/5] FEATURE TESTS ===
+[2025-09-25 17:49:38] INFO: Running Feature Tests - Public Booking...
+
+   FAIL  Tests\Feature\PublicBookingTest
+  ⨯ guest can view available services
+  ⨯ service selection shows correct staff
+  ⨯ availability grid shows correct slots
+  ⨯ double booking prevention
+  ⨯ complete booking flow
+  ⨯ validation errors
+  ⨯ rate limiting
+  ⨯ composite booking flow
+  ⨯ timezone conversion
+  ⨯ booking with resource allocation
+  ⨯ availability calculation performance
+  ⨯ concurrent booking attempts
+  ⨯ slot optimization suggestions
+  ⨯ availability heatmap generation
+  ⨯ customer data persistence
+  ⨯ booking cancellation window
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > guest can view…   QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > service selecti…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > availability gr…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > double booking…   QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > complete bookin…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > validation erro…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > rate limiting     QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > composite booki…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > timezone conver…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > booking with re…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > availability ca…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > concurrent book…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > slot optimizati…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > availability he…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > customer data p…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\PublicBookingTest > booking cancell…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Feature/PublicBookingTest.php:34
+
+
+  Tests:    16 failed (0 assertions)
+  Duration: 1.97s
+
+[2025-09-25 17:49:42] ERROR: Feature Tests - Public Booking failed after 3.432772680s
+[2025-09-25 17:49:42] INFO: === [3/5] PERFORMANCE TESTS ===
+[2025-09-25 17:49:42] INFO: Running Performance Tests - Booking Load...
+
+   FAIL  Tests\Performance\BookingLoadTest
+  ⨯ 100 concurrent booking requests
+  ⨯ availability calculation under50ms
+  ⨯ slot locking mechanism
+  ⨯ cache warmup strategy
+  ⨯ database query performance
+  ⨯ memory usage
+  ⨯ monthly availability grid performance
+  ⨯ concurrent availability checks
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > 100 concurren…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > availability…   QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > slot locking…   QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > cache warmup…   QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > database quer…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > memory usage    QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > monthly avail…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Performance\BookingLoadTest > concurrent av…  QueryException   
+  SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = 'askproai_test' and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+      [2m+34 vendor frames [22m
+  35  tests/Performance/BookingLoadTest.php:29
+
+
+  Tests:    8 failed (0 assertions)
+  Duration: 1.31s
+
+[2025-09-25 17:49:44] ERROR: Performance Tests - Booking Load failed after 2.655965200s
+[2025-09-25 17:49:44] INFO: === [4/5] INTEGRATION TESTS ===
+[2025-09-25 17:49:44] INFO: Testing API endpoints...
+[2025-09-25 17:49:44] WARNING: Availability API endpoint may have issues
+[2025-09-25 17:49:44] INFO: === [5/5] DATABASE TESTS ===
+[2025-09-25 17:49:44] INFO: Checking database indexes...
+Appointment indexes: 110
+Customer indexes: 63
+Call indexes: 34
+[2025-09-25 17:49:45] INFO: === PERFORMANCE METRICS ===
+[2025-09-25 17:49:46] SUCCESS: Performance metrics collected
+[2025-09-25 17:49:46] INFO: === SECURITY CHECKS ===
+[2025-09-25 17:49:46] INFO: Checking for SQL injection vulnerabilities...
+[2025-09-25 17:49:46] SUCCESS: No SQL injection vulnerabilities detected
+[2025-09-25 17:49:46] INFO: Testing rate limiting...
+[2025-09-25 17:49:49] WARNING: Rate limiting may not be properly configured
+[2025-09-25 17:49:49] INFO: === TEST SUMMARY ===
+
+================================================================================
+TEST SUMMARY
+================================================================================
+Total Test Suites Run: 2
+Successful: 0
+Failed: 2
+Success Rate: 0%
+
+Performance Metrics:
+- Admin Page Load: 89ms
+- API Response: 120ms
+- Peak Memory: 2MB
+
+Report Location: /var/www/api-gateway/tests/reports/phase2_test_report_20250925_174932.txt
+Performance Log: /var/www/api-gateway/tests/reports/performance_20250925_174932.json
+================================================================================
+[2025-09-25 17:49:49] WARNING: ⚠️ Some tests failed or performance targets not met

@@ -1,0 +1,156 @@
+<?php
+
+namespace App\Filament\Resources\CustomerResource\RelationManagers;
+
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables;
+use Filament\Tables\Table;
+
+class TransactionsRelationManager extends RelationManager
+{
+    protected static string $relationship = 'transactions';
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Select::make('type')
+                    ->options([
+                        'topup' => 'Top-up',
+                        'charge' => 'Charge',
+                        'refund' => 'Refund',
+                        'payment' => 'Payment',
+                        'adjustment' => 'Adjustment',
+                    ])
+                    ->required(),
+                Forms\Components\TextInput::make('amount')
+                    ->required()
+                    ->numeric()
+                    ->prefix('€'),
+                Forms\Components\TextInput::make('reference')
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('description')
+                    ->maxLength(500)
+                    ->rows(3),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'processing' => 'Processing',
+                        'completed' => 'Completed',
+                        'failed' => 'Failed',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->default('pending')
+                    ->required(),
+                Forms\Components\Select::make('payment_method')
+                    ->options([
+                        'credit_card' => 'Credit Card',
+                        'debit_card' => 'Debit Card',
+                        'bank_transfer' => 'Bank Transfer',
+                        'paypal' => 'PayPal',
+                        'stripe' => 'Stripe',
+                        'manual' => 'Manual',
+                    ]),
+                Forms\Components\DateTimePicker::make('processed_at')
+                    ->native(false),
+            ]);
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->recordTitleAttribute('reference')
+            ->columns([
+                Tables\Columns\TextColumn::make('reference')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable(),
+                Tables\Columns\BadgeColumn::make('type')
+                    ->colors([
+                        'success' => 'topup',
+                        'danger' => 'charge',
+                        'warning' => 'refund',
+                        'info' => 'payment',
+                        'gray' => 'adjustment',
+                    ]),
+                Tables\Columns\TextColumn::make('amount')
+                    ->money('EUR')
+                    ->sortable()
+                    ->alignEnd()
+                    ->weight('bold')
+                    ->color(fn ($state, $record) => match($record->type) {
+                        'topup', 'payment' => 'success',
+                        'charge' => 'danger',
+                        'refund' => 'warning',
+                        default => null,
+                    }),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'success' => 'completed',
+                        'warning' => ['pending', 'processing'],
+                        'danger' => ['failed', 'cancelled'],
+                    ]),
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->limit(30)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 30) {
+                            return null;
+                        }
+                        return $state;
+                    }),
+                Tables\Columns\TextColumn::make('processed_at')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('type')
+                    ->options([
+                        'topup' => 'Top-up',
+                        'charge' => 'Charge',
+                        'refund' => 'Refund',
+                        'payment' => 'Payment',
+                        'adjustment' => 'Adjustment',
+                    ]),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'processing' => 'Processing',
+                        'completed' => 'Completed',
+                        'failed' => 'Failed',
+                        'cancelled' => 'Cancelled',
+                    ]),
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->options([
+                        'credit_card' => 'Credit Card',
+                        'debit_card' => 'Debit Card',
+                        'bank_transfer' => 'Bank Transfer',
+                        'paypal' => 'PayPal',
+                        'stripe' => 'Stripe',
+                        'manual' => 'Manual',
+                    ]),
+            ])
+            ->headerActions([
+                Tables\Actions\CreateAction::make(),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('created_at', 'desc');
+    }
+}

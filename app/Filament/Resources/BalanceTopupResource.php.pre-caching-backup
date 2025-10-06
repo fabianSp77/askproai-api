@@ -1,0 +1,1016 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\BalanceTopupResource\Pages;
+use App\Models\BalanceTopup;
+use App\Models\Tenant;
+use App\Models\User;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\Tabs;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\Split;
+use Filament\Infolists\Components\KeyValueEntry;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
+use Carbon\Carbon;
+
+class BalanceTopupResource extends Resource
+{
+    protected static ?string $model = BalanceTopup::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-currency-euro';
+
+    protected static ?string $navigationGroup = 'Abrechnung';
+
+    protected static ?string $navigationLabel = 'Guthaben-Aufladungen';
+
+    protected static ?string $modelLabel = 'Guthaben-Aufladung';
+
+    protected static ?string $pluralModelLabel = 'Guthaben-Aufladungen';
+
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $recordTitleAttribute = 'reference_number';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return Cache::remember('balance-topup-badge-count', 300, function () {
+            return static::getModel()::where('status', 'pending')->count() ?: null;
+        });
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Ausstehende Aufladungen';
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Tabs::make('Aufladungs-Details')
+                    ->tabs([
+                        Tabs\Tab::make('💰 Grunddaten')
+                            ->schema([
+                                Forms\Components\Section::make('Aufladungsinformationen')
+                                    ->description('Grundlegende Informationen zur Guthaben-Aufladung')
+                                    ->icon('heroicon-o-banknotes')
+                                    ->schema([
+                                        Forms\Components\Select::make('tenant_id')
+                                            ->label('Mandant')
+                                            ->relationship('tenant', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->required()
+                                            ->createOptionForm([
+                                                Forms\Components\TextInput::make('name')
+                                                    ->label('Mandantenname')
+                                                    ->required(),
+                                            ])
+                                            ->helperText('Wählen Sie den Mandanten für diese Aufladung'),
+
+                                        Forms\Components\TextInput::make('amount')
+                                            ->label('Betrag')
+                                            ->required()
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->maxValue(100000)
+                                            ->prefix('€')
+                                            ->suffix('EUR')
+                                            ->step(0.01)
+                                            ->helperText('Aufladungsbetrag in Euro')
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                if ($state) {
+                                                    $vat = $state * 0.19;
+                                                    $set('vat_amount', round($vat, 2));
+                                                    $set('total_amount', round($state + $vat, 2));
+                                                }
+                                            }),
+
+                                        Forms\Components\TextInput::make('vat_amount')
+                                            ->label('MwSt. (19%)')
+                                            ->disabled()
+                                            ->numeric()
+                                            ->prefix('€')
+                                            ->suffix('EUR')
+                                            ->dehydrated(),
+
+                                        Forms\Components\TextInput::make('total_amount')
+                                            ->label('Gesamtbetrag')
+                                            ->disabled()
+                                            ->numeric()
+                                            ->prefix('€')
+                                            ->suffix('EUR')
+                                            ->dehydrated(),
+
+                                        Forms\Components\Select::make('currency')
+                                            ->label('Währung')
+                                            ->options([
+                                                'EUR' => '🇪🇺 EUR - Euro',
+                                                'USD' => '🇺🇸 USD - US Dollar',
+                                                'GBP' => '🇬🇧 GBP - Britisches Pfund',
+                                                'CHF' => '🇨🇭 CHF - Schweizer Franken',
+                                            ])
+                                            ->default('EUR')
+                                            ->required()
+                                            ->native(false),
+
+                                        Forms\Components\DateTimePicker::make('transaction_date')
+                                            ->label('Transaktionsdatum')
+                                            ->default(now())
+                                            ->required()
+                                            ->maxDate(now())
+                                            ->displayFormat('d.m.Y H:i')
+                                            ->helperText('Zeitpunkt der Transaktion'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('💳 Zahlungsmethode')
+                            ->schema([
+                                Forms\Components\Section::make('Zahlungsinformationen')
+                                    ->description('Details zur verwendeten Zahlungsmethode')
+                                    ->icon('heroicon-o-credit-card')
+                                    ->schema([
+                                        Forms\Components\Select::make('payment_method')
+                                            ->label('Zahlungsmethode')
+                                            ->options([
+                                                'credit_card' => '💳 Kreditkarte',
+                                                'debit_card' => '💳 Debitkarte',
+                                                'bank_transfer' => '🏦 Banküberweisung',
+                                                'sepa_direct_debit' => '🏦 SEPA-Lastschrift',
+                                                'paypal' => '🅿️ PayPal',
+                                                'stripe' => '💳 Stripe',
+                                                'klarna' => '🛍️ Klarna',
+                                                'apple_pay' => '🍎 Apple Pay',
+                                                'google_pay' => '🔍 Google Pay',
+                                                'crypto' => '₿ Kryptowährung',
+                                            ])
+                                            ->required()
+                                            ->reactive()
+                                            ->helperText('Wählen Sie die Zahlungsmethode'),
+
+                                        Forms\Components\TextInput::make('reference_number')
+                                            ->label('Referenznummer')
+                                            ->maxLength(255)
+                                            ->unique(ignoreRecord: true)
+                                            ->placeholder('z.B. TXN-2024-001234')
+                                            ->helperText('Eindeutige Transaktions-Referenz'),
+
+                                        Forms\Components\TextInput::make('payment_gateway_id')
+                                            ->label('Gateway Transaktions-ID')
+                                            ->maxLength(255)
+                                            ->placeholder('z.B. pi_1234567890')
+                                            ->helperText('ID vom Zahlungsanbieter'),
+
+                                        Forms\Components\Select::make('payment_gateway')
+                                            ->label('Zahlungs-Gateway')
+                                            ->options([
+                                                'stripe' => 'Stripe',
+                                                'paypal' => 'PayPal',
+                                                'mollie' => 'Mollie',
+                                                'adyen' => 'Adyen',
+                                                'square' => 'Square',
+                                                'internal' => 'Intern',
+                                            ])
+                                            ->visible(fn (callable $get) => in_array($get('payment_method'),
+                                                ['credit_card', 'debit_card', 'paypal', 'stripe'])),
+
+                                        Forms\Components\KeyValue::make('payment_metadata')
+                                            ->label('Zahlungs-Metadaten')
+                                            ->keyLabel('Schlüssel')
+                                            ->valueLabel('Wert')
+                                            ->addButtonLabel('Metadaten hinzufügen')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('📊 Status & Bearbeitung')
+                            ->schema([
+                                Forms\Components\Section::make('Status-Verwaltung')
+                                    ->description('Bearbeitungsstatus und Genehmigungen')
+                                    ->icon('heroicon-o-clipboard-document-check')
+                                    ->schema([
+                                        Forms\Components\Select::make('status')
+                                            ->label('Status')
+                                            ->options([
+                                                'pending' => '⏳ Ausstehend',
+                                                'processing' => '🔄 In Bearbeitung',
+                                                'completed' => '✅ Abgeschlossen',
+                                                'failed' => '❌ Fehlgeschlagen',
+                                                'cancelled' => '🚫 Storniert',
+                                                'refunded' => '↩️ Erstattet',
+                                                'partial_refund' => '↩️ Teilweise erstattet',
+                                            ])
+                                            ->default('pending')
+                                            ->required()
+                                            ->reactive()
+                                            ->helperText('Aktueller Bearbeitungsstatus'),
+
+                                        Forms\Components\TextInput::make('failure_reason')
+                                            ->label('Fehlergrund')
+                                            ->visible(fn (callable $get) => $get('status') === 'failed')
+                                            ->maxLength(500)
+                                            ->helperText('Grund für das Fehlschlagen der Transaktion'),
+
+                                        Forms\Components\Select::make('processed_by')
+                                            ->label('Bearbeitet von')
+                                            ->relationship('processor', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->placeholder('Automatisch')
+                                            ->helperText('Mitarbeiter, der die Aufladung bearbeitet hat'),
+
+                                        Forms\Components\DateTimePicker::make('processed_at')
+                                            ->label('Bearbeitet am')
+                                            ->displayFormat('d.m.Y H:i')
+                                            ->helperText('Zeitpunkt der Bearbeitung'),
+
+                                        Forms\Components\Toggle::make('requires_approval')
+                                            ->label('Genehmigung erforderlich')
+                                            ->helperText('Große Beträge benötigen Genehmigung')
+                                            ->reactive(),
+
+                                        Forms\Components\Select::make('approved_by')
+                                            ->label('Genehmigt von')
+                                            ->relationship('approver', 'name')
+                                            ->visible(fn (callable $get) => $get('requires_approval'))
+                                            ->searchable()
+                                            ->preload(),
+
+                                        Forms\Components\DateTimePicker::make('approved_at')
+                                            ->label('Genehmigt am')
+                                            ->visible(fn (callable $get) => $get('requires_approval'))
+                                            ->displayFormat('d.m.Y H:i'),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Buchhaltung')
+                                    ->description('Buchhaltungs- und Rechnungsinformationen')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('invoice_number')
+                                            ->label('Rechnungsnummer')
+                                            ->placeholder('z.B. INV-2024-001234')
+                                            ->helperText('Zugehörige Rechnungsnummer'),
+
+                                        Forms\Components\DatePicker::make('invoice_date')
+                                            ->label('Rechnungsdatum')
+                                            ->displayFormat('d.m.Y'),
+
+                                        Forms\Components\Select::make('accounting_period')
+                                            ->label('Abrechnungsperiode')
+                                            ->options([
+                                                '2024-Q1' => 'Q1 2024',
+                                                '2024-Q2' => 'Q2 2024',
+                                                '2024-Q3' => 'Q3 2024',
+                                                '2024-Q4' => 'Q4 2024',
+                                                '2025-Q1' => 'Q1 2025',
+                                            ]),
+
+                                        Forms\Components\Toggle::make('invoice_sent')
+                                            ->label('Rechnung versendet')
+                                            ->helperText('Wurde die Rechnung an den Kunden gesendet?'),
+                                    ])
+                                    ->columns(2)
+                                    ->collapsed(),
+                            ]),
+
+                        Tabs\Tab::make('📝 Notizen & Anhänge')
+                            ->schema([
+                                Forms\Components\Section::make('Zusätzliche Informationen')
+                                    ->schema([
+                                        Forms\Components\Textarea::make('notes')
+                                            ->label('Interne Notizen')
+                                            ->rows(4)
+                                            ->maxLength(2000)
+                                            ->placeholder('Interne Anmerkungen zu dieser Aufladung...')
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\Textarea::make('customer_notes')
+                                            ->label('Kundennotizen')
+                                            ->rows(3)
+                                            ->maxLength(1000)
+                                            ->placeholder('Notizen vom Kunden...')
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\FileUpload::make('attachments')
+                                            ->label('Anhänge')
+                                            ->multiple()
+                                            ->directory('balance-topups')
+                                            ->acceptedFileTypes(['application/pdf', 'image/*'])
+                                            ->maxSize(5120)
+                                            ->downloadable()
+                                            ->previewable()
+                                            ->helperText('PDF oder Bilder, max. 5MB pro Datei')
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\TagsInput::make('tags')
+                                            ->label('Tags')
+                                            ->placeholder('Neue Tags hinzufügen...')
+                                            ->separator(',')
+                                            ->helperText('Tags für bessere Organisation'),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('⚙️ Erweitert')
+                            ->schema([
+                                Forms\Components\Section::make('System-Informationen')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('created_at')
+                                            ->label('Erstellt am')
+                                            ->content(fn (?BalanceTopup $record) =>
+                                                $record?->created_at?->format('d.m.Y H:i:s') ?? '-'),
+
+                                        Forms\Components\Placeholder::make('updated_at')
+                                            ->label('Zuletzt aktualisiert')
+                                            ->content(fn (?BalanceTopup $record) =>
+                                                $record?->updated_at?->format('d.m.Y H:i:s') ?? '-'),
+
+                                        Forms\Components\Placeholder::make('id')
+                                            ->label('System-ID')
+                                            ->content(fn (?BalanceTopup $record) => $record?->id ?? '-'),
+
+                                        Forms\Components\TextInput::make('external_id')
+                                            ->label('Externe ID')
+                                            ->placeholder('z.B. externe System-Referenz')
+                                            ->maxLength(255),
+
+                                        Forms\Components\Select::make('source')
+                                            ->label('Quelle')
+                                            ->options([
+                                                'manual' => '👤 Manuell',
+                                                'api' => '🔌 API',
+                                                'webhook' => '🔗 Webhook',
+                                                'import' => '📥 Import',
+                                                'automatic' => '🤖 Automatisch',
+                                            ])
+                                            ->default('manual'),
+
+                                        Forms\Components\TextInput::make('ip_address')
+                                            ->label('IP-Adresse')
+                                            ->placeholder('z.B. 192.168.1.1')
+                                            ->helperText('IP-Adresse der Transaktion'),
+                                    ])
+                                    ->columns(2),
+                            ])
+                            ->visible(fn () => auth()->user()->hasRole('admin')),
+                    ])
+                    ->columnSpanFull()
+                    ->persistTabInQueryString(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('reference_number')
+                    ->label('Referenz')
+                    ->searchable()
+                    ->sortable()
+                    
+                    ->tooltip('Klicken zum Kopieren')
+                    ->weight('bold')
+                    ->icon('heroicon-m-hashtag'),
+
+                Tables\Columns\TextColumn::make('tenant.name')
+                    ->label('Mandant')
+                    ->sortable()
+                    ->searchable()
+                    ->icon('heroicon-m-building-office')
+                    ->description(fn (BalanceTopup $record) =>
+                        $record->tenant?->email ?? '-'),
+
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Betrag')
+                    ->money('EUR')
+                    ->sortable()
+                    ->summarize([
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->money('EUR')
+                            ->label('Gesamt'),
+                        Tables\Columns\Summarizers\Average::make()
+                            ->money('EUR')
+                            ->label('Durchschnitt'),
+                    ])
+                    ->icon('heroicon-m-currency-euro')
+                    ->color(fn (BalanceTopup $record) => match(true) {
+                        $record->amount >= 1000 => 'success',
+                        $record->amount >= 100 => 'primary',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Zahlungsmethode')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state) => match($state) {
+                        'credit_card' => '💳 Kreditkarte',
+                        'debit_card' => '💳 Debitkarte',
+                        'bank_transfer' => '🏦 Banküberweisung',
+                        'sepa_direct_debit' => '🏦 SEPA-Lastschrift',
+                        'paypal' => '🅿️ PayPal',
+                        'stripe' => '💳 Stripe',
+                        'klarna' => '🛍️ Klarna',
+                        'apple_pay' => '🍎 Apple Pay',
+                        'google_pay' => '🔍 Google Pay',
+                        'crypto' => '₿ Krypto',
+                        default => $state,
+                    })
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state) => match($state) {
+                        'pending' => '⏳ Ausstehend',
+                        'processing' => '🔄 In Bearbeitung',
+                        'completed' => '✅ Abgeschlossen',
+                        'failed' => '❌ Fehlgeschlagen',
+                        'cancelled' => '🚫 Storniert',
+                        'refunded' => '↩️ Erstattet',
+                        'partial_refund' => '↩️ Teilweise erstattet',
+                        default => $state,
+                    })
+                    ->colors([
+                        'success' => 'completed',
+                        'warning' => ['pending', 'processing'],
+                        'danger' => ['failed', 'cancelled'],
+                        'info' => ['refunded', 'partial_refund'],
+                    ])
+                    ->icon(fn (string $state) => match($state) {
+                        'completed' => 'heroicon-m-check-circle',
+                        'pending' => 'heroicon-m-clock',
+                        'processing' => 'heroicon-m-arrow-path',
+                        'failed' => 'heroicon-m-x-circle',
+                        'cancelled' => 'heroicon-m-no-symbol',
+                        default => 'heroicon-m-question-mark-circle',
+                    }),
+
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->label('Transaktionsdatum')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->icon('heroicon-m-calendar')
+                    ->description(fn (BalanceTopup $record) =>
+                        $record->transaction_date?->diffForHumans() ?? '-'),
+
+                Tables\Columns\TextColumn::make('invoice_number')
+                    ->label('Rechnungsnr.')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-m-document-text'),
+
+                Tables\Columns\IconColumn::make('requires_approval')
+                    ->label('Genehmigung')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-shield-check')
+                    ->falseIcon('heroicon-o-check')
+                    ->trueColor('warning')
+                    ->falseColor('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('tags')
+                    ->label('Tags')
+                    ->badge()
+                    ->separator(',')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Erstellt')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->since()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->multiple()
+                    ->options([
+                        'pending' => '⏳ Ausstehend',
+                        'processing' => '🔄 In Bearbeitung',
+                        'completed' => '✅ Abgeschlossen',
+                        'failed' => '❌ Fehlgeschlagen',
+                        'cancelled' => '🚫 Storniert',
+                        'refunded' => '↩️ Erstattet',
+                    ])
+                    ->default(['pending', 'processing']),
+
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->label('Zahlungsmethode')
+                    ->multiple()
+                    ->options([
+                        'credit_card' => '💳 Kreditkarte',
+                        'bank_transfer' => '🏦 Banküberweisung',
+                        'paypal' => '🅿️ PayPal',
+                        'stripe' => '💳 Stripe',
+                    ]),
+
+                Tables\Filters\SelectFilter::make('tenant_id')
+                    ->label('Mandant')
+                    ->relationship('tenant', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                Tables\Filters\Filter::make('amount')
+                    ->form([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('amount_from')
+                                    ->label('Betrag von')
+                                    ->numeric()
+                                    ->prefix('€'),
+                                Forms\Components\TextInput::make('amount_to')
+                                    ->label('Betrag bis')
+                                    ->numeric()
+                                    ->prefix('€'),
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['amount_from'],
+                                fn (Builder $query, $amount): Builder =>
+                                    $query->where('amount', '>=', $amount))
+                            ->when($data['amount_to'],
+                                fn (Builder $query, $amount): Builder =>
+                                    $query->where('amount', '<=', $amount));
+                    }),
+
+                Tables\Filters\Filter::make('transaction_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from')
+                            ->label('Von Datum'),
+                        Forms\Components\DatePicker::make('date_to')
+                            ->label('Bis Datum'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['date_from'],
+                                fn (Builder $query, $date): Builder =>
+                                    $query->whereDate('transaction_date', '>=', $date))
+                            ->when($data['date_to'],
+                                fn (Builder $query, $date): Builder =>
+                                    $query->whereDate('transaction_date', '<=', $date));
+                    }),
+
+                Tables\Filters\Filter::make('requires_approval')
+                    ->label('Genehmigung erforderlich')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('requires_approval', true))
+                    ->toggle(),
+            ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContentCollapsible)
+            ->persistFiltersInSession()
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->iconButton(),
+
+                Tables\Actions\EditAction::make()
+                    ->iconButton(),
+
+                Tables\Actions\Action::make('process')
+                    ->label('Verarbeiten')
+                    ->icon('heroicon-m-play')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (BalanceTopup $record) =>
+                        $record->status === 'pending')
+                    ->action(function (BalanceTopup $record) {
+                        $record->update([
+                            'status' => 'processing',
+                            'processed_by' => auth()->id(),
+                            'processed_at' => now(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Aufladung in Bearbeitung')
+                            ->body("Die Aufladung #{$record->reference_number} wird verarbeitet.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('complete')
+                    ->label('Abschließen')
+                    ->icon('heroicon-m-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (BalanceTopup $record) =>
+                        in_array($record->status, ['pending', 'processing']))
+                    ->action(function (BalanceTopup $record) {
+                        DB::transaction(function () use ($record) {
+                            $record->update([
+                                'status' => 'completed',
+                                'processed_by' => auth()->id(),
+                                'processed_at' => now(),
+                            ]);
+
+                            // Update tenant balance
+                            $record->tenant->increment('balance', $record->amount);
+                        });
+
+                        Notification::make()
+                            ->title('Aufladung abgeschlossen')
+                            ->body("Die Aufladung von {$record->amount} € wurde erfolgreich verbucht.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('cancel')
+                    ->label('Stornieren')
+                    ->icon('heroicon-m-x-mark')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Aufladung stornieren')
+                    ->modalDescription('Sind Sie sicher, dass Sie diese Aufladung stornieren möchten?')
+                    ->visible(fn (BalanceTopup $record) =>
+                        in_array($record->status, ['pending', 'processing']))
+                    ->action(function (BalanceTopup $record) {
+                        $record->update([
+                            'status' => 'cancelled',
+                            'processed_by' => auth()->id(),
+                            'processed_at' => now(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Aufladung storniert')
+                            ->body("Die Aufladung #{$record->reference_number} wurde storniert.")
+                            ->warning()
+                            ->send();
+                    }),
+
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->visible(fn () => auth()->user()->hasRole('admin')),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('process_bulk')
+                        ->label('Verarbeiten')
+                        ->icon('heroicon-m-play')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records) {
+                            $processed = 0;
+                            foreach ($records as $record) {
+                                if ($record->status === 'pending') {
+                                    $record->update([
+                                        'status' => 'processing',
+                                        'processed_by' => auth()->id(),
+                                        'processed_at' => now(),
+                                    ]);
+                                    $processed++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Bulk-Verarbeitung')
+                                ->body("{$processed} Aufladungen werden verarbeitet.")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('export')
+                        ->label('Exportieren')
+                        ->icon('heroicon-m-arrow-down-tray')
+                        ->color('primary')
+                        ->action(function (Collection $records) {
+                            $csv = "Referenz,Mandant,Betrag,Zahlungsmethode,Status,Datum\n";
+
+                            foreach ($records as $record) {
+                                $csv .= sprintf(
+                                    "%s,%s,%.2f,%s,%s,%s\n",
+                                    $record->reference_number,
+                                    $record->tenant?->name ?? '-',
+                                    $record->amount,
+                                    $record->payment_method,
+                                    $record->status,
+                                    $record->transaction_date?->format('d.m.Y H:i') ?? '-'
+                                );
+                            }
+
+                            return response()->streamDownload(function () use ($csv) {
+                                echo $csv;
+                            }, 'aufladungen-' . now()->format('Y-m-d-His') . '.csv');
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->hasRole('admin')),
+                ]),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->poll('60s')
+            ->striped()
+            ->paginated([10, 25, 50, 100])
+            ->groups([
+                'status',
+                'payment_method',
+                'tenant.name',
+                Tables\Grouping\Group::make('transaction_date')
+                    ->date()
+                    ->label('Transaktionsdatum'),
+            ])
+            ->defaultGroup('status')
+            ->groupingSettingsHidden()
+            ->emptyStateHeading('Keine Aufladungen vorhanden')
+            ->emptyStateDescription('Erstellen Sie die erste Guthaben-Aufladung')
+            ->emptyStateIcon('heroicon-o-currency-euro')
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('Aufladung erstellen')
+                    ->icon('heroicon-m-plus'),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('💰 Aufladungs-Übersicht')
+                    ->description('Detaillierte Informationen zur Guthaben-Aufladung')
+                    ->icon('heroicon-o-banknotes')
+                    ->schema([
+                        Split::make([
+                            Section::make([
+                                TextEntry::make('reference_number')
+                                    ->label('Referenznummer')
+                                    
+                                    ->weight('bold')
+                                    ->icon('heroicon-m-hashtag'),
+
+                                TextEntry::make('tenant.name')
+                                    ->label('Mandant')
+                                    ->icon('heroicon-m-building-office')
+                                    ->url(fn (BalanceTopup $record) =>
+                                        $record->tenant
+                                            ? route('filament.admin.resources.tenants.view', $record->tenant)
+                                            : null),
+
+                                TextEntry::make('amount')
+                                    ->label('Betrag')
+                                    ->money('EUR')
+                                    ->size('lg')
+                                    ->weight('bold')
+                                    ->icon('heroicon-m-currency-euro')
+                                    ->color(fn (BalanceTopup $record) => match(true) {
+                                        $record->amount >= 1000 => 'success',
+                                        $record->amount >= 100 => 'primary',
+                                        default => 'gray',
+                                    }),
+
+                                TextEntry::make('vat_amount')
+                                    ->label('MwSt. (19%)')
+                                    ->money('EUR')
+                                    ->icon('heroicon-m-receipt-percent'),
+
+                                TextEntry::make('total_amount')
+                                    ->label('Gesamtbetrag')
+                                    ->money('EUR')
+                                    ->weight('bold')
+                                    ->icon('heroicon-m-calculator'),
+                            ])->grow(false),
+
+                            Section::make([
+                                TextEntry::make('status')
+                                    ->label('Status')
+                                    ->badge()
+                                    ->formatStateUsing(fn (string $state) => match($state) {
+                                        'pending' => '⏳ Ausstehend',
+                                        'processing' => '🔄 In Bearbeitung',
+                                        'completed' => '✅ Abgeschlossen',
+                                        'failed' => '❌ Fehlgeschlagen',
+                                        'cancelled' => '🚫 Storniert',
+                                        'refunded' => '↩️ Erstattet',
+                                        default => $state,
+                                    })
+                                    ->color(fn (string $state) => match($state) {
+                                        'completed' => 'success',
+                                        'pending', 'processing' => 'warning',
+                                        'failed', 'cancelled' => 'danger',
+                                        'refunded' => 'info',
+                                        default => 'gray',
+                                    }),
+
+                                TextEntry::make('payment_method')
+                                    ->label('Zahlungsmethode')
+                                    ->badge()
+                                    ->formatStateUsing(fn (string $state) => match($state) {
+                                        'credit_card' => '💳 Kreditkarte',
+                                        'bank_transfer' => '🏦 Banküberweisung',
+                                        'paypal' => '🅿️ PayPal',
+                                        'stripe' => '💳 Stripe',
+                                        default => $state,
+                                    }),
+
+                                TextEntry::make('transaction_date')
+                                    ->label('Transaktionsdatum')
+                                    ->dateTime('d.m.Y H:i:s')
+                                    ->icon('heroicon-m-calendar'),
+
+                                TextEntry::make('processed_at')
+                                    ->label('Bearbeitet am')
+                                    ->dateTime('d.m.Y H:i:s')
+                                    ->placeholder('Noch nicht bearbeitet')
+                                    ->icon('heroicon-m-clock'),
+
+                                TextEntry::make('processor.name')
+                                    ->label('Bearbeitet von')
+                                    ->placeholder('Automatisch')
+                                    ->icon('heroicon-m-user'),
+                            ]),
+                        ])->from('md'),
+                    ]),
+
+                Section::make('💳 Zahlungsdetails')
+                    ->description('Informationen zur Zahlungsmethode und Gateway')
+                    ->icon('heroicon-o-credit-card')
+                    ->schema([
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('payment_gateway')
+                                    ->label('Zahlungs-Gateway')
+                                    ->placeholder('Nicht angegeben'),
+
+                                TextEntry::make('payment_gateway_id')
+                                    ->label('Gateway Transaktions-ID')
+                                    
+                                    ->placeholder('Keine ID'),
+
+                                TextEntry::make('failure_reason')
+                                    ->label('Fehlergrund')
+                                    ->placeholder('Kein Fehler')
+                                    ->visible(fn (BalanceTopup $record) =>
+                                        $record->status === 'failed'),
+                            ]),
+
+                        KeyValueEntry::make('payment_metadata')
+                            ->label('Zahlungs-Metadaten')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsed(),
+
+                Section::make('📊 Buchhaltung')
+                    ->description('Rechnungs- und Buchhaltungsinformationen')
+                    ->icon('heroicon-o-document-text')
+                    ->schema([
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('invoice_number')
+                                    ->label('Rechnungsnummer')
+                                    
+                                    ->placeholder('Noch nicht erstellt'),
+
+                                TextEntry::make('invoice_date')
+                                    ->label('Rechnungsdatum')
+                                    ->date('d.m.Y')
+                                    ->placeholder('Noch nicht erstellt'),
+
+                                TextEntry::make('accounting_period')
+                                    ->label('Abrechnungsperiode')
+                                    ->placeholder('Nicht zugeordnet'),
+
+                                TextEntry::make('invoice_sent')
+                                    ->label('Rechnung versendet')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state) => $state ? '✅ Ja' : '❌ Nein')
+                                    ->color(fn ($state) => $state ? 'success' : 'gray'),
+                            ]),
+                    ])
+                    ->collapsed(),
+
+                Section::make('📝 Notizen')
+                    ->description('Interne und Kunden-Notizen')
+                    ->schema([
+                        TextEntry::make('notes')
+                            ->label('Interne Notizen')
+                            ->placeholder('Keine internen Notizen')
+                            ->columnSpanFull()
+                            ->prose(),
+
+                        TextEntry::make('customer_notes')
+                            ->label('Kundennotizen')
+                            ->placeholder('Keine Kundennotizen')
+                            ->columnSpanFull()
+                            ->prose(),
+
+                        TextEntry::make('tags')
+                            ->label('Tags')
+                            ->badge()
+                            ->separator(','),
+                    ])
+                    ->collapsed(),
+
+                Section::make('⚙️ System-Informationen')
+                    ->description('Technische Details und Metadaten')
+                    ->schema([
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('id')
+                                    ->label('System-ID')
+                                    ,
+
+                                TextEntry::make('external_id')
+                                    ->label('Externe ID')
+                                    ->placeholder('Keine'),
+
+                                TextEntry::make('source')
+                                    ->label('Quelle')
+                                    ->badge()
+                                    ->formatStateUsing(fn (string $state) => match($state) {
+                                        'manual' => '👤 Manuell',
+                                        'api' => '🔌 API',
+                                        'webhook' => '🔗 Webhook',
+                                        'import' => '📥 Import',
+                                        'automatic' => '🤖 Automatisch',
+                                        default => $state,
+                                    }),
+
+                                TextEntry::make('ip_address')
+                                    ->label('IP-Adresse')
+                                    
+                                    ->placeholder('Nicht erfasst'),
+
+                                TextEntry::make('created_at')
+                                    ->label('Erstellt am')
+                                    ->dateTime('d.m.Y H:i:s'),
+
+                                TextEntry::make('updated_at')
+                                    ->label('Aktualisiert am')
+                                    ->dateTime('d.m.Y H:i:s'),
+                            ]),
+                    ])
+                    ->collapsed()
+                    ->visible(fn () => auth()->user()->hasRole('admin')),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListBalanceTopups::route('/'),
+            'create' => Pages\CreateBalanceTopup::route('/create'),
+            'view' => Pages\ViewBalanceTopup::route('/{record}'),
+            'edit' => Pages\EditBalanceTopup::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['tenant', 'processor', 'approver']);
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return $record->reference_number ?? "Aufladung #{$record->id}";
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['reference_number', 'tenant.name', 'invoice_number', 'payment_gateway_id'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Mandant' => $record->tenant?->name,
+            'Betrag' => number_format($record->amount, 2, ',', '.') . ' €',
+            'Status' => $record->status,
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            // Add widgets for dashboard if needed
+        ];
+    }
+}

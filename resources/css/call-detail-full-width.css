@@ -1,0 +1,24 @@
+/* Full-Width Fix for Call Detail Page - Filament Tab Padding Override */
+
+/* Filament uses max-w-7xl (1280px) at the page level, but Tabs add px-6 (24px each side = 48px total) */
+/* This reduces effective width to 1232px. We remove Tab padding to restore full 1280px. */
+
+/* IMPORTANT: Scope all rules to .fi-main (resource pages) to avoid breaking .fi-simple-main (login page) */
+
+/* Remove Tab content padding while maintaining max-width container */
+.fi-main .fi-tabs-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* ViewEntry components need full width within their container */
+.fi-main .fi-in-view {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Maintain overall page max-width constraint */
+.fi-main .fi-section-content-ctn {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}

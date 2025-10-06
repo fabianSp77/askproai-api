@@ -1,0 +1,56 @@
+[
+  {
+    "name": "call_id",
+    "type": "string",
+    "description": "Die Call ID - IMMER {{call_id}} verwenden",
+    "required": true
+  },
+  {
+    "name": "datum",
+    "type": "string",
+    "description": "Datum des Termins (z.B. 'heute', 'morgen', '01.10.2025')",
+    "required": true
+  },
+  {
+    "name": "uhrzeit",
+    "type": "string",
+    "description": "Gewünschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '13:00', '15:30')",
+    "required": true
+  },
+  {
+    "name": "name",
+    "type": "string",
+    "description": "Vollständiger Name des Kunden",
+    "required": true
+  },
+  {
+    "name": "dienstleistung",
+    "type": "string",
+    "description": "Gewünschte Dienstleistung oder Behandlung",
+    "required": true
+  },
+  {
+    "name": "email",
+    "type": "string",
+    "description": "E-Mail-Adresse für Terminbestätigung (optional, nur wenn Kunde es wünscht)",
+    "required": false
+  },
+  {
+    "name": "bestaetigung",
+    "type": "boolean",
+    "description": "WICHTIG: Setze auf true beim ZWEITEN Aufruf, um die Buchung zu bestätigen. Beim ersten Aufruf weglassen oder false.",
+    "required": false
+  },
+  {
+    "name": "kundenpraeferenzen",
+    "type": "string",
+    "description": "Zusätzliche Wünsche oder Anmerkungen (optional)",
+    "required": false
+  },
+  {
+    "name": "mitarbeiter_wunsch",
+    "type": "string",
+    "description": "Bevorzugter Mitarbeiter (optional, nur wenn Kunde es erwähnt)",
+    "required": false
+  }
+]

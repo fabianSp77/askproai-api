@@ -1,0 +1,6 @@
+{
+  "timestamp": "2025-10-03T20:12:02.183Z",
+  "adminUrl": "https://api.askproai.de/admin",
+  "tests": {},
+  "error": "Navigation timeout of 30000 ms exceeded"
+}

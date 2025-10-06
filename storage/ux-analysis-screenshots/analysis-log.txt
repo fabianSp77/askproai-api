@@ -1,0 +1,47 @@
+🚀 Starting Comprehensive UX Analysis...
+   Admin URL: https://api.askproai.de/admin
+   Login: admin@askproai.de
+   Chromium: /usr/bin/chromium
+✅ Screenshot directory: /var/www/api-gateway/storage/ux-analysis-screenshots
+
+🔐 Logging in as admin@askproai.de...
+   📸 Screenshot: login-page-initial-001.png
+   📸 Screenshot: login-page-filled-002.png
+   📸 Screenshot: login-success-003.png
+   Current URL after login: https://api.askproai.de/admin
+✅ Login successful
+
+
+═══════════════════════════════════════════════════════
+⚙️  TESTING: PolicyConfiguration Resource
+═══════════════════════════════════════════════════════
+
+
+📋 Test 1: List View
+   📸 Screenshot: policy-config-list-004.png
+   📊 Intuition Score: 5/10
+   📝 Page Title: Richtlinienkonfigurationen - AskPro AI Gateway
+   🏷️  Form Fields: 32
+   💡 Help Elements: 0
+
+❌ UX Analysis failed: SyntaxError: Failed to execute 'querySelector' on 'Document': 'a[href*="create"], button:has-text("Create")' is not a valid selector.
+DOMException: SyntaxError: Failed to execute 'querySelector' on 'Document': 'a[href*="create"], button:has-text("Create")' is not a valid selector.
+    at evaluateHandle (evaluateHandle at CSSQueryHandler.queryOne (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:138:73), <anonymous>:1:15)
+    at #evaluate (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/cdp/ExecutionContext.js:391:56)
+    at async ExecutionContext.evaluateHandle (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/cdp/ExecutionContext.js:329:16)
+    at async IsolatedWorld.evaluateHandle (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/cdp/IsolatedWorld.js:89:16)
+    at async CdpJSHandle.evaluateHandle (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/api/JSHandle.js:157:20)
+    at async CdpElementHandle.evaluateHandle (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/api/ElementHandle.js:354:20)
+    at async CSSQueryHandler.queryOne (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:138:59)
+    at async CdpElementHandle.$ (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/api/ElementHandle.js:409:21)
+    at async CdpElementHandle.<anonymous> (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/api/ElementHandle.js:133:24)
+    at async CdpFrame.$ (/var/www/api-gateway/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:400:20)
+
+
+═══════════════════════════════════════════════════════
+✅ UX ANALYSIS COMPLETE
+═══════════════════════════════════════════════════════
+
+📸 Total Screenshots: 4
+📝 Total UX Issues: 0
+📂 Output Directory: /var/www/api-gateway/storage/ux-analysis-screenshots

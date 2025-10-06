@@ -1,0 +1,233 @@
+<x-filament-panels::page.simple>
+    @if (filament()->hasRegistration())
+        <x-slot name="subheading">
+            {{ __('filament-panels::pages/auth/login.actions.register.before') }}
+
+            {{ $this->registerAction }}
+        </x-slot>
+    @endif
+
+    {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, scopes: $this->getRenderHookScopes()) }}
+
+    {{-- Mobile Enhanced Login Form with Fallback --}}
+    <div x-data="{
+        livewireReady: false,
+        fallbackMode: false,
+        formSubmitted: false,
+        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+        init() {
+            // Immediate fallback for mobile devices
+            if (this.isMobile) {
+                console.log('📱 Mobile device detected, enabling fallback immediately');
+                this.enableFallback();
+                return;
+            }
+
+            // Check for Livewire availability on desktop
+            const checkLivewire = () => {
+                if (typeof window.Livewire !== 'undefined' && window.Livewire.components) {
+                    this.livewireReady = true;
+                    console.log('✅ Livewire ready for login');
+                } else {
+                    setTimeout(checkLivewire, 200);
+                }
+            };
+            checkLivewire();
+
+            // Fallback mechanism after 3 seconds for desktop
+            setTimeout(() => {
+                if (!this.livewireReady && !this.formSubmitted) {
+                    this.enableFallback();
+                }
+            }, 3000);
+        },
+        enableFallback() {
+            this.fallbackMode = true;
+            console.warn('⚠️ Activating mobile fallback mode');
+            const form = document.getElementById('form');
+            if (form) {
+                form.action = '/mobile-login.php';
+                form.method = 'POST';
+                // Remove Livewire attributes
+                form.removeAttribute('wire:submit');
+
+                // CRITICAL FIX: Remove all wire:model bindings to prevent input clearing
+                // This prevents Livewire from syncing and clearing the fields
+                form.querySelectorAll('[wire\\:model]').forEach(input => {
+                    const wireModel = input.getAttribute('wire:model');
+                    input.removeAttribute('wire:model');
+                    input.removeAttribute('wire:model.lazy');
+                    input.removeAttribute('wire:model.defer');
+                    input.removeAttribute('wire:model.debounce');
+
+                    // Ensure proper name attribute for form submission
+                    if (!input.name && wireModel) {
+                        // Convert wire:model path to form name (data.email -> email)
+                        const fieldName = wireModel.replace('data.', '');
+                        input.name = fieldName;
+                        console.log('📝 Set name="' + fieldName + '" for disconnected field');
+                    }
+                });
+
+                // Also remove any wire:loading attributes that might interfere
+                form.querySelectorAll('[wire\\:loading]').forEach(el => {
+                    el.removeAttribute('wire:loading');
+                    el.removeAttribute('wire:loading.delay');
+                });
+
+                // Add CSRF token
+                if (!form.querySelector('input[name=_token]')) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfInput);
+                }
+
+                console.log('✅ Livewire fully disconnected - inputs will persist');
+            }
+        },
+        submitForm(event) {
+            this.formSubmitted = true;
+            if (this.fallbackMode || this.isMobile) {
+                console.log('📱 Submitting form in mobile fallback mode');
+                // Prevent any Livewire handling
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const form = document.getElementById('form');
+                if (form) {
+                    // Ensure form uses mobile endpoint
+                    form.action = '/mobile-login.php';
+                    form.method = 'POST';
+                    form.removeAttribute('wire:submit');
+
+                    // Double-check that wire:model is removed before submission
+                    form.querySelectorAll('[wire\\:model]').forEach(input => {
+                        input.removeAttribute('wire:model');
+                    });
+
+                    // Log the form data being submitted for debugging
+                    const formData = new FormData(form);
+                    console.log('📤 Submitting with:', {
+                        email: formData.get('email'),
+                        password: formData.get('password') ? '[hidden]' : '[empty]',
+                        remember: formData.get('remember')
+                    });
+
+                    form.submit();
+                }
+                return false;
+            }
+        }
+    }">
+        {{-- Fallback Mode Indicator --}}
+        <div x-show="fallbackMode" x-transition class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-amber-700">
+                        Mobile compatibility mode activated. Login will work normally.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <x-filament-panels::form
+            id="form"
+            x-bind:wire:submit="!fallbackMode && !isMobile ? 'authenticate' : null"
+            x-on:submit.prevent="submitForm($event)"
+        >
+            {{ $this->form }}
+
+            <x-filament-panels::form.actions
+                :actions="$this->getCachedFormActions()"
+                :full-width="$this->hasFullWidthFormActions()"
+            />
+        </x-filament-panels::form>
+    </div>
+
+    {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, scopes: $this->getRenderHookScopes()) }}
+
+    {{-- Mobile-specific JavaScript enhancements --}}
+    <script>
+        // CRITICAL FIX: Force form visibility failsafe
+        document.addEventListener('DOMContentLoaded', function() {
+            // Failsafe to remove x-cloak if Alpine.js fails
+            setTimeout(function() {
+                const cloakedElements = document.querySelectorAll('[x-cloak]');
+                if (cloakedElements.length > 0) {
+                    console.warn('⚠️ Forcing visibility - removing x-cloak from', cloakedElements.length, 'elements');
+                    cloakedElements.forEach(function(el) {
+                        el.removeAttribute('x-cloak');
+                        el.style.removeProperty('display');
+                    });
+                }
+
+                // Ensure form fields are visible
+                const formFields = document.querySelectorAll('.fi-fo-field-wrp, .fi-input, input[type="email"], input[type="password"]');
+                formFields.forEach(function(field) {
+                    if (field.style.display === 'none' || getComputedStyle(field).display === 'none') {
+                        field.style.display = 'block';
+                    }
+                });
+
+                // Ensure the main form is visible
+                const form = document.getElementById('form');
+                if (form) {
+                    form.style.display = 'block';
+                    if (form.parentElement) {
+                        form.parentElement.style.display = 'block';
+                    }
+                }
+
+                console.log('✅ Form visibility failsafe applied');
+            }, 500); // Wait 500ms for Alpine to try first
+        });
+
+        // Enhanced mobile login support
+        (function() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                console.log('📱 Mobile device detected - enhancing login experience');
+
+                // Prevent iOS zoom on input focus
+                document.querySelectorAll('input[type="email"], input[type="password"]').forEach(input => {
+                    input.style.fontSize = '16px';
+                });
+
+                // Add touch-friendly styling
+                const style = document.createElement('style');
+                style.textContent = `
+                    @media (max-width: 768px) {
+                        .fi-btn { min-height: 48px !important; }
+                        .fi-input { min-height: 48px !important; font-size: 16px !important; }
+                        .fi-simple-main { margin: 0.5rem !important; }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // Monitor network conditions
+                if ('connection' in navigator) {
+                    const connection = navigator.connection;
+                    if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                        console.warn('⚠️ Slow network detected - reducing timeouts');
+                        // Activate fallback mode faster on slow networks
+                        setTimeout(() => {
+                            if (!window.Livewire) {
+                                console.log('📱 Slow network: activating fallback early');
+                                document.dispatchEvent(new CustomEvent('activate-fallback'));
+                            }
+                        }, 4000);
+                    }
+                }
+            }
+        })();
+    </script>
+</x-filament-panels::page.simple>

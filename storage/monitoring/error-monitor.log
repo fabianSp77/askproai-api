@@ -1,0 +1,380 @@
+====== Error Monitor: Di 23. Sep 22:15:31 CEST 2025 ======
+Errors (15 min): 1331
+Warnings (15 min): 57
+Last error: [2025-09-23 22:09:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Di 23. Sep 22:30:01 CEST 2025 ======
+Errors (15 min): 1333
+Warnings (15 min): 57
+Last error: [2025-09-23 22:17:22] production.ERROR: syntax error, unexpected token "catch", expecting ")" {"exception":"[object] (ParseError(code: 0): syntax error, unexpected token \"catch\", expecting \")\" at 
+
+====== Error Monitor: Di 23. Sep 22:45:01 CEST 2025 ======
+Errors (15 min): 1334
+Warnings (15 min): 57
+Last error: [2025-09-23 22:33:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Di 23. Sep 23:00:01 CEST 2025 ======
+Errors (15 min): 1335
+Warnings (15 min): 57
+Last error: [2025-09-23 22:54:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Di 23. Sep 23:15:01 CEST 2025 ======
+Errors (15 min): 1335
+Warnings (15 min): 57
+Last error: [2025-09-23 22:54:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Di 23. Sep 23:30:01 CEST 2025 ======
+Errors (15 min): 1336
+Warnings (15 min): 58
+Last error: [2025-09-23 23:15:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Di 23. Sep 23:45:01 CEST 2025 ======
+Errors (15 min): 1336
+Warnings (15 min): 58
+Last error: [2025-09-23 23:15:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 00:00:01 CEST 2025 ======
+Errors (15 min): 1336
+Warnings (15 min): 58
+Last error: [2025-09-23 23:15:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 00:15:01 CEST 2025 ======
+Errors (15 min): 11
+Warnings (15 min): 0
+Last error: [2025-09-24 00:05:14] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 00:30:01 CEST 2025 ======
+Errors (15 min): 12
+Warnings (15 min): 0
+Last error: [2025-09-24 00:27:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 00:45:01 CEST 2025 ======
+Errors (15 min): 12
+Warnings (15 min): 0
+Last error: [2025-09-24 00:27:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 01:00:01 CEST 2025 ======
+Errors (15 min): 14
+Warnings (15 min): 0
+Last error: [2025-09-24 00:51:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 01:15:01 CEST 2025 ======
+Errors (15 min): 14
+Warnings (15 min): 0
+Last error: [2025-09-24 00:51:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 01:30:01 CEST 2025 ======
+Errors (15 min): 15
+Warnings (15 min): 0
+Last error: [2025-09-24 01:15:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 01:45:01 CEST 2025 ======
+Errors (15 min): 15
+Warnings (15 min): 0
+Last error: [2025-09-24 01:15:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 02:00:01 CEST 2025 ======
+Errors (15 min): 17
+Warnings (15 min): 0
+Last error: [2025-09-24 01:51:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = SzzqUalToEGFKjA2b6lGQoGq2oGPSwu0WWGrcAAX limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 02:15:01 CEST 2025 ======
+Errors (15 min): 18
+Warnings (15 min): 0
+Last error: [2025-09-24 02:03:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 02:30:01 CEST 2025 ======
+Errors (15 min): 20
+Warnings (15 min): 0
+Last error: [2025-09-24 02:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = kJHKxXwDjjCyIkF4m54JJJSTebEkAQk6zsYensgy limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 02:45:01 CEST 2025 ======
+Errors (15 min): 20
+Warnings (15 min): 0
+Last error: [2025-09-24 02:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = kJHKxXwDjjCyIkF4m54JJJSTebEkAQk6zsYensgy limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 03:00:01 CEST 2025 ======
+Errors (15 min): 21
+Warnings (15 min): 0
+Last error: [2025-09-24 02:51:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 03:15:01 CEST 2025 ======
+Errors (15 min): 22
+Warnings (15 min): 0
+Last error: [2025-09-24 03:09:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 03:30:01 CEST 2025 ======
+Errors (15 min): 23
+Warnings (15 min): 0
+Last error: [2025-09-24 03:21:13] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = pyyFxw0wB244FwvnNV0p9NxO6Pa6WXNBDGeSwrF9 limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 03:45:01 CEST 2025 ======
+Errors (15 min): 23
+Warnings (15 min): 0
+Last error: [2025-09-24 03:21:13] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = pyyFxw0wB244FwvnNV0p9NxO6Pa6WXNBDGeSwrF9 limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 04:00:01 CEST 2025 ======
+Errors (15 min): 23
+Warnings (15 min): 0
+Last error: [2025-09-24 03:21:13] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = pyyFxw0wB244FwvnNV0p9NxO6Pa6WXNBDGeSwrF9 limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 04:15:01 CEST 2025 ======
+Errors (15 min): 24
+Warnings (15 min): 0
+Last error: [2025-09-24 04:09:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 04:30:01 CEST 2025 ======
+Errors (15 min): 25
+Warnings (15 min): 0
+Last error: [2025-09-24 04:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 04:45:01 CEST 2025 ======
+Errors (15 min): 26
+Warnings (15 min): 0
+Last error: [2025-09-24 04:33:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = aIrYbUBULjFDqoMu0DmvJo9d3rm0p9xme9FVgu59 limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 05:00:01 CEST 2025 ======
+Errors (15 min): 27
+Warnings (15 min): 0
+Last error: [2025-09-24 04:57:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 05:15:01 CEST 2025 ======
+Errors (15 min): 27
+Warnings (15 min): 0
+Last error: [2025-09-24 04:57:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 05:30:01 CEST 2025 ======
+Errors (15 min): 28
+Warnings (15 min): 0
+Last error: [2025-09-24 05:18:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 05:45:01 CEST 2025 ======
+Errors (15 min): 28
+Warnings (15 min): 0
+Last error: [2025-09-24 05:18:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 06:00:01 CEST 2025 ======
+Errors (15 min): 29
+Warnings (15 min): 0
+Last error: [2025-09-24 05:51:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 06:15:01 CEST 2025 ======
+Errors (15 min): 45
+Warnings (15 min): 0
+Last error: [2025-09-24 06:09:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 06:30:01 CEST 2025 ======
+Errors (15 min): 46
+Warnings (15 min): 0
+Last error: [2025-09-24 06:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 06:46:07 CEST 2025 ======
+Errors (15 min): 46
+Warnings (15 min): 0
+Last error: [2025-09-24 06:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 07:00:01 CEST 2025 ======
+Errors (15 min): 52
+Warnings (15 min): 6
+Last error: [2025-09-24 06:47:58] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 07:15:01 CEST 2025 ======
+Errors (15 min): 52
+Warnings (15 min): 7
+Last error: [2025-09-24 06:47:58] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 07:30:01 CEST 2025 ======
+Errors (15 min): 53
+Warnings (15 min): 7
+Last error: [2025-09-24 07:24:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 07:45:01 CEST 2025 ======
+Errors (15 min): 55
+Warnings (15 min): 7
+Last error: [2025-09-24 07:44:57] production.ERROR: An option named "quiet" already exists. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\LogicException(code: 0): An option named \"quiet\" alrea
+
+====== Error Monitor: Mi 24. Sep 08:00:01 CEST 2025 ======
+Errors (15 min): 60
+Warnings (15 min): 7
+Last error: [2025-09-24 07:46:17] production.ERROR: Health check failed for Web Server {"details":"Health endpoint returned 404"} 
+
+====== Error Monitor: Mi 24. Sep 08:15:01 CEST 2025 ======
+Errors (15 min): 62
+Warnings (15 min): 7
+Last error: [2025-09-24 08:08:16] production.ERROR: Health check failed for Web Server {"details":"Health endpoint returned 404"} 
+
+====== Error Monitor: Mi 24. Sep 08:30:01 CEST 2025 ======
+Errors (15 min): 76
+Warnings (15 min): 7
+Last error: [2025-09-24 08:30:01] production.ERROR: Health check failed for Web Server {"details":"Health endpoint returned 404"} 
+
+====== Error Monitor: Mi 24. Sep 08:45:01 CEST 2025 ======
+Errors (15 min): 84
+Warnings (15 min): 7
+Last error: [2025-09-24 08:44:41] production.ERROR: Method Filament\Tables\Actions\Action::dropdown does not exist. {"userId":6,"exception":"[object] (BadMethodCallException(code: 0): Method Filament\\Tables\\Act
+
+====== Error Monitor: Mi 24. Sep 09:00:01 CEST 2025 ======
+Errors (15 min): 103
+Warnings (15 min): 7
+Last error: [2025-09-24 08:57:32] production.ERROR: Method Filament\Infolists\Components\TextEntry::description does not exist. {"userId":6,"exception":"[object] (BadMethodCallException(code: 0): Method Filament\
+
+====== Error Monitor: Mi 24. Sep 09:15:01 CEST 2025 ======
+Errors (15 min): 121
+Warnings (15 min): 8
+Last error: [2025-09-24 09:10:32] production.ERROR: SQLSTATE[HY000] [1045] Access denied for user 'askproai_user'@'localhost' (using password: YES) (Connection: mysql, SQL: select * from `sessions` where `id` = U
+
+====== Error Monitor: Mi 24. Sep 09:30:01 CEST 2025 ======
+Errors (15 min): 392
+Warnings (15 min): 8
+Last error: [2025-09-24 09:29:58] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 09:45:01 CEST 2025 ======
+Errors (15 min): 419
+Warnings (15 min): 8
+Last error: [2025-09-24 09:30:39] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 10:00:01 CEST 2025 ======
+Errors (15 min): 421
+Warnings (15 min): 8
+Last error: [2025-09-24 09:50:12] production.ERROR: Class "Filament\Tables\Actions\ActionSize" not found {"userId":6,"exception":"[object] (Error(code: 0): Class \"Filament\\Tables\\Actions\\ActionSize\" not foun
+
+====== Error Monitor: Mi 24. Sep 10:15:01 CEST 2025 ======
+Errors (15 min): 423
+Warnings (15 min): 8
+Last error: [2025-09-24 10:09:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 10:30:01 CEST 2025 ======
+Errors (15 min): 423
+Warnings (15 min): 8
+Last error: [2025-09-24 10:09:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 10:45:01 CEST 2025 ======
+Errors (15 min): 433
+Warnings (15 min): 8
+Last error: [2025-09-24 10:42:23] production.ERROR: include(/var/www/api-gateway/vendor/composer/../../app/Models/Permission.php): Failed to open stream: No such file or directory (View: /var/www/api-gateway/reso
+
+====== Error Monitor: Mi 24. Sep 11:00:01 CEST 2025 ======
+Errors (15 min): 457
+Warnings (15 min): 8
+Last error: [2025-09-24 10:57:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 11:15:01 CEST 2025 ======
+Errors (15 min): 467
+Warnings (15 min): 8
+Last error: [2025-09-24 11:13:12] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 11:30:01 CEST 2025 ======
+Errors (15 min): 477
+Warnings (15 min): 8
+Last error: [2025-09-24 11:27:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 11:45:01 CEST 2025 ======
+Errors (15 min): 489
+Warnings (15 min): 8
+Last error: [2025-09-24 11:36:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused (Connection: mysql, SQL: select * from `sessions` where `id` = r8tEATJUFbGEogYM6FijncKLL7XSRMsn3eYSLt0y limit 1) {"exc
+
+====== Error Monitor: Mi 24. Sep 12:00:01 CEST 2025 ======
+Errors (15 min): 493
+Warnings (15 min): 8
+Last error: [2025-09-24 11:58:54] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 12:15:01 CEST 2025 ======
+Errors (15 min): 552
+Warnings (15 min): 11
+Last error: [2025-09-24 12:14:56] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 12:30:01 CEST 2025 ======
+Errors (15 min): 589
+Warnings (15 min): 14
+Last error: [2025-09-24 12:30:00] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 12:45:01 CEST 2025 ======
+Errors (15 min): 689
+Warnings (15 min): 16
+Last error: [2025-09-24 12:44:51] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 13:00:01 CEST 2025 ======
+Errors (15 min): 741
+Warnings (15 min): 19
+Last error: [2025-09-24 12:59:37] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 13:15:01 CEST 2025 ======
+Errors (15 min): 791
+Warnings (15 min): 22
+Last error: [2025-09-24 13:13:46] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 13:30:01 CEST 2025 ======
+Errors (15 min): 890
+Warnings (15 min): 25
+Last error: [2025-09-24 13:30:00] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 13:45:01 CEST 2025 ======
+Errors (15 min): 930
+Warnings (15 min): 28
+Last error: [2025-09-24 13:44:59] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 14:00:01 CEST 2025 ======
+Errors (15 min): 1050
+Warnings (15 min): 30
+Last error: [2025-09-24 13:59:57] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 14:15:01 CEST 2025 ======
+Errors (15 min): 1169
+Warnings (15 min): 33
+Last error: [2025-09-24 14:09:11] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 14:30:01 CEST 2025 ======
+Errors (15 min): 1174
+Warnings (15 min): 36
+Last error: [2025-09-24 14:27:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 14:45:01 CEST 2025 ======
+Errors (15 min): 1179
+Warnings (15 min): 39
+Last error: [2025-09-24 14:36:12] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 15:00:01 CEST 2025 ======
+Errors (15 min): 1185
+Warnings (15 min): 42
+Last error: [2025-09-24 14:57:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 15:15:01 CEST 2025 ======
+Errors (15 min): 1200
+Warnings (15 min): 44
+Last error: [2025-09-24 15:12:16] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 15:30:01 CEST 2025 ======
+Errors (15 min): 1241
+Warnings (15 min): 47
+Last error: [2025-09-24 15:29:47] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 15:45:01 CEST 2025 ======
+Errors (15 min): 1277
+Warnings (15 min): 49
+Last error: [2025-09-24 15:42:11] production.ERROR: SQLSTATE[HY000] [2002] Connection refused {"exception":"[object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Connection refused at /var/www/api-gateway/ve
+
+====== Error Monitor: Mi 24. Sep 16:00:01 CEST 2025 ======
+Errors (15 min): 1300
+Warnings (15 min): 50
+Last error: [2025-09-24 15:57:54] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 16:15:01 CEST 2025 ======
+Errors (15 min): 1374
+Warnings (15 min): 51
+Last error: [2025-09-24 16:12:19] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 16:30:01 CEST 2025 ======
+Errors (15 min): 1465
+Warnings (15 min): 54
+Last error: [2025-09-24 16:29:08] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 16:45:01 CEST 2025 ======
+Errors (15 min): 1624
+Warnings (15 min): 54
+Last error: [2025-09-24 16:45:01] production.ERROR: There are no commands defined in the "horizon" namespace. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\NamespaceNotFoundException(code: 0): T
+
+====== Error Monitor: Mi 24. Sep 17:00:01 CEST 2025 ======
+Errors (15 min): 1782
+Warnings (15 min): 57
+Last error: [2025-09-24 17:00:00] production.ERROR: filemtime(): stat failed for /var/www/api-gateway/storage/framework/views/15bca2dc40180f19a3d370a1cf2739e6.php {"userId":6,"exception":"[object] (ErrorException
+

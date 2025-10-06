@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Test</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .success { border-color: #4CAF50; background: #f1f8f4; }
+        .error { border-color: #f44336; background: #ffebee; }
+        button {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <h1>AskPro AI Gateway - Browser Test</h1>
+
+    <button onclick="testAdminLogin()">Test /admin/login</button>
+    <button onclick="testAPI()">Test API</button>
+    <button onclick="testHealth()">Test Health Check</button>
+    <button onclick="clearResults()">Clear Results</button>
+
+    <div id="results"></div>
+
+    <script>
+        function addResult(test, success, details) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'test-result ' + (success ? 'success' : 'error');
+            div.innerHTML = `
+                <strong>${test}</strong><br>
+                ${details}<br>
+                <small>Time: ${new Date().toISOString()}</small>
+            `;
+            results.insertBefore(div, results.firstChild);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testAdminLogin() {
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Cache-Control': 'no-cache'
+                    },
+                    cache: 'no-cache'
+                });
+
+                const text = await response.text();
+
+                if (response.ok) {
+                    addResult('Admin Login', true,
+                        `Status: ${response.status}<br>
+                        Page Title: ${text.match(/<title>(.*?)<\/title>/)?.[1] || 'N/A'}<br>
+                        Content Length: ${text.length} bytes<br>
+                        Has Login Form: ${text.includes('login') || text.includes('Login')}`);
+                } else {
+                    addResult('Admin Login', false,
+                        `Status: ${response.status}<br>
+                        Status Text: ${response.statusText}<br>
+                        Error in response`);
+                }
+            } catch (error) {
+                addResult('Admin Login', false, `Error: ${error.message}`);
+            }
+        }
+
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('API Health', true,
+                        `Status: ${response.status}<br>
+                        Response: ${JSON.stringify(data)}`);
+                } else {
+                    addResult('API Health', false,
+                        `Status: ${response.status}<br>
+                        Status Text: ${response.statusText}`);
+                }
+            } catch (error) {
+                addResult('API Health', false, `Error: ${error.message}`);
+            }
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch('/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const text = await response.text();
+
+                addResult('Health Endpoint', response.ok,
+                    `Status: ${response.status}<br>
+                    Response: ${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`);
+            } catch (error) {
+                addResult('Health Endpoint', false, `Error: ${error.message}`);
+            }
+        }
+
+        // Test on load
+        window.onload = function() {
+            addResult('Page Load', true, `Test page loaded successfully<br>
+                Current URL: ${window.location.href}<br>
+                Protocol: ${window.location.protocol}<br>
+                Host: ${window.location.host}`);
+        };
+    </script>
+</body>
+</html>

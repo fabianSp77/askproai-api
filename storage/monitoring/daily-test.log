@@ -1,0 +1,86 @@
+[0;34m🚀 VOLLSTÄNDIGE PLATTFORM-ÜBERPRÜFUNG[0m
+======================================
+Start: Fr 3. Okt 03:00:01 CEST 2025
+
+[0;34m1. SYSTEM STATUS CHECK[0m
+--------------------------------------
+     Active: active (running) since Wed 2025-10-01 13:18:12 CEST; 1 day 13h ago
+     Active: active (running) since Thu 2025-10-02 22:43:20 CEST; 4h 16min ago
+     Active: active (running) since Mon 2025-09-29 20:46:57 CEST; 3 days ago
+
+[0;34m2. DATABASE STATUS[0m
+--------------------------------------
+Variable_name	Value
+Threads_connected	3
+total_customers
+60
+total_calls
+125
+total_appointments
+117
+
+[0;34m3. RUNNING TEST SUITES[0m
+--------------------------------------
+[1;33m▶ Running: Resource Tests[0m
+[1;33m⚠ Resource Tests script not found, creating...[0m
+
+[1;33m▶ Running: Widget Tests[0m
+[1;33m⚠ Widget Tests script not found, creating...[0m
+
+[1;33m▶ Running: Database Integrity[0m
+[1;33m⚠ Database Integrity script not found, creating...[0m
+
+[1;33m▶ Running: Performance Check[0m
+[1;33m⚠ Performance Check script not found, creating...[0m
+
+[0;34m4. LARAVEL HEALTH CHECKS[0m
+--------------------------------------
+
+  Environment ................................................................  
+  Application Name ......................................... AskPro AI Gateway  
+  Laravel Version .................................................... 11.46.0  
+  PHP Version ......................................................... 8.3.23  
+  Composer Version ..................................................... 2.5.5  
+  Environment ..................................................... production  
+  Debug Mode ............................................................. OFF  
+  URL ........................................................ api.askproai.de  
+  Maintenance Mode ....................................................... OFF  
+  Timezone ..................................................... Europe/Berlin  
+  Locale .................................................................. de  
+
+✅ Caches cleared (NOT cached again)
+
+[0;34m5. COMMON ISSUE CHECKS[0m
+--------------------------------------
+500 Errors (last hour): 36
+Missing relationships: 0
+0
+DB connection errors: 0
+0
+
+[0;34m6. PERFORMANCE METRICS[0m
+--------------------------------------
+Dashboard Response Time:
+HTTP Code: 302, Time: 0.066585s
+
+real	0m0,078s
+user	0m0,003s
+sys	0m0,009s
+Customer List Response Time:
+HTTP Code: 404, Time: 0.054450s
+
+real	0m0,067s
+user	0m0,006s
+sys	0m0,007s
+Memory Usage:
+
+======================================
+[0;34mTEST SUMMARY[0m
+--------------------------------------
+Total Tests Run: 4
+Passed: [0;32m0[0m
+Failed: [0;31m0[0m
+Success Rate: 0%
+Duration: 2 seconds
+Completed: Fr 3. Okt 03:00:03 CEST 2025
+======================================

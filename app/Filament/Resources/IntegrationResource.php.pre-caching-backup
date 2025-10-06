@@ -1,0 +1,763 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\IntegrationResource\Pages;
+use App\Models\Integration;
+use App\Models\Company;
+use App\Models\Branch;
+use App\Models\Staff;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\Tabs;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
+
+class IntegrationResource extends Resource
+{
+    protected static ?string $model = Integration::class;
+    protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
+    protected static ?string $navigationLabel = 'Integrationen';
+    protected static ?string $modelLabel = 'Integration';
+    protected static ?string $pluralModelLabel = 'Integrationen';
+    protected static ?int $navigationSort = 10;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $active = static::getModel()::where('is_active', true)->count();
+        $total = static::getModel()::count();
+
+        return "{$active} / {$total}";
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $hasErrors = static::getModel()::where('status', 'error')->exists();
+
+        if ($hasErrors) return 'danger';
+
+        $allHealthy = static::getModel()::where('is_active', true)
+            ->where('health_status', '!=', 'healthy')
+            ->doesntExist();
+
+        return $allHealthy ? 'success' : 'warning';
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Tabs::make('Integrationsdetails')
+                    ->tabs([
+                        Tabs\Tab::make('📋 Basis')
+                            ->schema([
+                                Forms\Components\Section::make('Integrationsdetails')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Name')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->placeholder('z.B. Cal.com Hauptkonto')
+                                            ->helperText('Ein eindeutiger Name für diese Integration'),
+
+                                        Forms\Components\Select::make('provider')
+                                            ->label('Anbieter')
+                                            ->options(collect(Integration::PROVIDERS)->pluck('name', 'name')->toArray())
+                                            ->required()
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                                // Set default config based on provider
+                                                $set('environment', $state === 'webhook' ? 'production' : 'production');
+                                            })
+                                            ->helperText('Wählen Sie den Integrationsanbieter'),
+
+                                        Forms\Components\Select::make('environment')
+                                            ->label('Umgebung')
+                                            ->options([
+                                                'production' => '🟢 Production',
+                                                'sandbox' => '🟡 Sandbox',
+                                                'test' => '🔵 Test',
+                                            ])
+                                            ->default('production')
+                                            ->required(),
+
+                                        Forms\Components\Textarea::make('description')
+                                            ->label('Beschreibung')
+                                            ->rows(3)
+                                            ->maxLength(500)
+                                            ->columnSpanFull()
+                                            ->placeholder('Beschreiben Sie den Zweck dieser Integration'),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Zuordnung')
+                                    ->schema([
+                                        Forms\Components\Select::make('company_id')
+                                            ->label('Unternehmen')
+                                            ->options(Company::pluck('name', 'id'))
+                                            ->searchable()
+                                            ->reactive()
+                                            ->afterStateUpdated(fn (Forms\Set $set) => $set('integrable_id', null))
+                                            ->helperText('Globale Zuordnung zu einem Unternehmen'),
+
+                                        Forms\Components\MorphToSelect::make('integrable')
+                                            ->label('Spezifische Zuordnung')
+                                            ->types([
+                                                Forms\Components\MorphToSelect\Type::make(Company::class)
+                                                    ->titleAttribute('name')
+                                                    ->label('Unternehmen'),
+                                                Forms\Components\MorphToSelect\Type::make(Branch::class)
+                                                    ->titleAttribute('name')
+                                                    ->label('Filiale'),
+                                                Forms\Components\MorphToSelect\Type::make(Staff::class)
+                                                    ->titleAttribute('name')
+                                                    ->label('Mitarbeiter'),
+                                            ])
+                                            ->searchable(),
+                                            // Note: helperText is not available for MorphToSelect
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('🔑 Authentifizierung')
+                            ->schema([
+                                Forms\Components\Section::make('API-Anmeldedaten')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('api_key')
+                                            ->label('API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->maxLength(255)
+                                            ->helperText('Der API-Schlüssel wird verschlüsselt gespeichert')
+                                            ->visible(fn (Forms\Get $get) => in_array($get('provider'), ['calcom', 'retell', 'api'])),
+
+                                        Forms\Components\TextInput::make('api_secret')
+                                            ->label('API Secret')
+                                            ->password()
+                                            ->revealable()
+                                            ->maxLength(255)
+                                            ->helperText('Das API-Secret wird verschlüsselt gespeichert')
+                                            ->visible(fn (Forms\Get $get) => in_array($get('provider'), ['oauth2', 'api'])),
+
+                                        Forms\Components\TextInput::make('webhook_url')
+                                            ->label('Webhook URL')
+                                            ->url()
+                                            ->maxLength(500)
+                                            ->placeholder('https://example.com/webhook')
+                                            ->helperText('Endpoint für eingehende Webhooks')
+                                            ->visible(fn (Forms\Get $get) => $get('provider') === 'webhook'),
+
+                                        Forms\Components\TextInput::make('webhook_secret')
+                                            ->label('Webhook Secret')
+                                            ->password()
+                                            ->revealable()
+                                            ->maxLength(255)
+                                            ->helperText('Secret zur Webhook-Validierung')
+                                            ->visible(fn (Forms\Get $get) => $get('provider') === 'webhook'),
+
+                                        Forms\Components\KeyValue::make('credentials')
+                                            ->label('Zusätzliche Credentials')
+                                            ->addActionLabel('Credential hinzufügen')
+                                            ->keyLabel('Schlüssel')
+                                            ->valueLabel('Wert')
+                                            ->reorderable()
+                                            ->columnSpanFull()
+                                            ->helperText('Weitere provider-spezifische Anmeldedaten'),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('OAuth 2.0')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('access_token')
+                                            ->label('Zugriffstoken')
+                                            ->password()
+                                            ->revealable()
+                                            ->maxLength(1000)
+                                            ->disabled()
+                                            ->helperText('Automatisch generiert nach OAuth-Authentifizierung'),
+
+                                        Forms\Components\TextInput::make('refresh_token')
+                                            ->label('Aktualisierungstoken')
+                                            ->password()
+                                            ->revealable()
+                                            ->maxLength(1000)
+                                            ->disabled()
+                                            ->helperText('Zur automatischen Token-Erneuerung'),
+                                    ])
+                                    ->columns(2)
+                                    ->visible(fn (Forms\Get $get) => $get('provider') === 'oauth2'),
+                            ]),
+
+                        Tabs\Tab::make('⚙️ Konfiguration')
+                            ->schema([
+                                Forms\Components\Section::make('Sync-Einstellungen')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('auto_sync')
+                                            ->label('Automatische Synchronisation')
+                                            ->helperText('Aktiviert regelmäßige automatische Synchronisation')
+                                            ->reactive(),
+
+                                        Forms\Components\TextInput::make('sync_interval_minutes')
+                                            ->label('Sync-Intervall (Minuten)')
+                                            ->numeric()
+                                            ->minValue(5)
+                                            ->maxValue(10080)
+                                            ->default(60)
+                                            ->suffix('Minuten')
+                                            ->helperText('Wie oft soll synchronisiert werden? (5 Min - 1 Woche)')
+                                            ->visible(fn (Forms\Get $get) => $get('auto_sync')),
+
+                                        Forms\Components\KeyValue::make('sync_settings')
+                                            ->label('Sync-Optionen')
+                                            ->addActionLabel('Option hinzufügen')
+                                            ->keyLabel('Option')
+                                            ->valueLabel('Wert')
+                                            ->columnSpanFull()
+                                            ->default([
+                                                'direction' => 'bidirectional',
+                                                'conflict_resolution' => 'remote_wins',
+                                                'batch_size' => '100',
+                                            ])
+                                            ->helperText('Provider-spezifische Sync-Einstellungen'),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Feld-Zuordnung')
+                                    ->schema([
+                                        Forms\Components\KeyValue::make('field_mappings')
+                                            ->label('Feld-Zuordnungen')
+                                            ->addActionLabel('Mapping hinzufügen')
+                                            ->keyLabel('Lokales Feld')
+                                            ->valueLabel('Remote Feld')
+                                            ->reorderable()
+                                            ->columnSpanFull()
+                                            ->helperText('Zuordnung zwischen lokalen und Remote-Feldern'),
+
+                                        Forms\Components\KeyValue::make('config')
+                                            ->label('Erweiterte Konfiguration')
+                                            ->addActionLabel('Konfiguration hinzufügen')
+                                            ->keyLabel('Parameter')
+                                            ->valueLabel('Wert')
+                                            ->columnSpanFull()
+                                            ->helperText('Provider-spezifische Konfigurationsparameter'),
+                                    ]),
+
+                                Forms\Components\Section::make('Limits & Kontingente')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('api_calls_limit')
+                                            ->label('API Call Limit')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->suffix('Calls')
+                                            ->placeholder('Unbegrenzt')
+                                            ->helperText('Maximale Anzahl API-Aufrufe (leer = unbegrenzt)'),
+
+                                        Forms\Components\Toggle::make('requires_auth')
+                                            ->label('Authentifizierung erforderlich')
+                                            ->default(true)
+                                            ->helperText('Erfordert diese Integration Authentifizierung?'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+
+                        Tabs\Tab::make('📊 Status')
+                            ->schema([
+                                Forms\Components\Section::make('Aktueller Status')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->label('Aktiv')
+                                            ->default(true)
+                                            ->helperText('Integration aktivieren/deaktivieren'),
+
+                                        Forms\Components\Toggle::make('is_visible')
+                                            ->label('Sichtbar')
+                                            ->default(true)
+                                            ->helperText('In Listen anzeigen'),
+
+                                        Forms\Components\Placeholder::make('current_status')
+                                            ->label('Status')
+                                            ->content(fn ($record) => $record ? $record->formatted_status : 'Neu'),
+
+                                        Forms\Components\Placeholder::make('health_display')
+                                            ->label('Gesundheit')
+                                            ->content(fn ($record) => $record ? "{$record->health_icon} {$record->health_status} ({$record->health_score}%)" : 'N/A'),
+
+                                        Forms\Components\Placeholder::make('last_sync_display')
+                                            ->label('Letzte Synchronisation')
+                                            ->content(fn ($record) => $record ? $record->formatted_last_sync : 'Nie'),
+
+                                        Forms\Components\Placeholder::make('api_usage')
+                                            ->label('API-Nutzung')
+                                            ->content(fn ($record) => $record && $record->api_calls_limit
+                                                ? "{$record->api_calls_count} / {$record->api_calls_limit} ({$record->api_usage_percentage}%)"
+                                                : ($record ? "{$record->api_calls_count} Calls" : '0 Calls')),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Fehler & Logs')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('error_count_display')
+                                            ->label('Fehleranzahl')
+                                            ->content(fn ($record) => $record ? $record->error_count : '0'),
+
+                                        Forms\Components\Placeholder::make('success_count_display')
+                                            ->label('Erfolge')
+                                            ->content(fn ($record) => $record ? $record->success_count : '0'),
+
+                                        Forms\Components\Textarea::make('last_error')
+                                            ->label('Letzter Fehler')
+                                            ->rows(4)
+                                            ->disabled()
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(2),
+
+                                Forms\Components\Section::make('Metadaten')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('external_id')
+                                            ->label('Externe ID')
+                                            ->disabled()
+                                            ->helperText('ID im externen System'),
+
+                                        Forms\Components\Placeholder::make('created_info')
+                                            ->label('Erstellt')
+                                            ->content(fn ($record) => $record
+                                                ? ($record->created_at->format('d.m.Y H:i') . ' von ' . ($record->createdBy->name ?? 'System'))
+                                                : 'Neu'),
+
+                                        Forms\Components\Placeholder::make('updated_info')
+                                            ->label('Aktualisiert')
+                                            ->content(fn ($record) => $record && $record->updated_at
+                                                ? ($record->updated_at->format('d.m.Y H:i') . ' von ' . ($record->updatedBy->name ?? 'System'))
+                                                : 'N/A'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->modifyQueryUsing(fn (Builder $query) =>
+                $query->with(['company:id,name', 'integrable', 'createdBy:id,name'])
+            )
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) => $record->description)
+                    ->wrap(),
+
+                Tables\Columns\BadgeColumn::make('provider')
+                    ->label('Provider')
+                    ->formatStateUsing(fn ($state, $record) => $record->provider_name)
+                    ->icon(fn ($record) => $record->provider_icon)
+                    ->color(fn ($record) => $record->provider_color),
+
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Zuordnung')
+                    ->description(fn ($record) => $record->integrable ?
+                        class_basename($record->integrable) . ': ' . $record->integrable->name : null)
+                    ->searchable()
+                    ->sortable()
+                    ->color('primary'),
+
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(fn ($state) => ucfirst($state))
+                    ->color(fn ($record) => $record->status_color),
+
+                Tables\Columns\TextColumn::make('health_status')
+                    ->label('Gesundheit')
+                    ->formatStateUsing(fn ($state, $record) => "{$record->health_icon} {$record->health_score}%")
+                    ->color(fn ($record) => $record->health_color)
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('last_sync_at')
+                    ->label('Letzte Sync')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->description(fn ($record) => $record->last_sync_at ? $record->last_sync_at->diffForHumans() : null)
+                    ->placeholder('Nie'),
+
+                Tables\Columns\IconColumn::make('auto_sync')
+                    ->label('Auto')
+                    ->boolean()
+                    ->tooltip(fn ($state) => $state ? 'Automatische Sync aktiv' : 'Manuelle Sync')
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('environment')
+                    ->label('Umgebung')
+                    ->badge()
+                    ->color(fn ($state) => match($state) {
+                        'production' => 'success',
+                        'sandbox' => 'warning',
+                        'test' => 'info',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Aktiv')
+                    ->boolean()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('api_calls_count')
+                    ->label('API Calls')
+                    ->formatStateUsing(fn ($state, $record) =>
+                        $record->api_calls_limit ?
+                        "{$state}/{$record->api_calls_limit}" :
+                        $state
+                    )
+                    ->color(fn ($record) =>
+                        $record->api_usage_percentage > 90 ? 'danger' :
+                        ($record->api_usage_percentage > 70 ? 'warning' : 'gray')
+                    )
+                    ->alignCenter(),
+            ])
+            ->defaultSort('name')
+            ->filters([
+                SelectFilter::make('provider')
+                    ->label('Provider')
+                    ->multiple()
+                    ->options(collect(Integration::PROVIDERS)->pluck('name', 'name')->toArray()),
+
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        Integration::STATUS_ACTIVE => 'Aktiv',
+                        Integration::STATUS_INACTIVE => 'Inaktiv',
+                        Integration::STATUS_ERROR => 'Fehler',
+                        Integration::STATUS_SYNCING => 'Synchronisiert',
+                        Integration::STATUS_PENDING => 'Ausstehend',
+                        Integration::STATUS_SUSPENDED => 'Gesperrt',
+                    ]),
+
+                SelectFilter::make('health_status')
+                    ->label('Gesundheit')
+                    ->options([
+                        Integration::HEALTH_HEALTHY => '✅ Gesund',
+                        Integration::HEALTH_DEGRADED => '⚠️ Beeinträchtigt',
+                        Integration::HEALTH_UNHEALTHY => '❌ Ungesund',
+                        Integration::HEALTH_UNKNOWN => '❓ Unbekannt',
+                    ]),
+
+                SelectFilter::make('environment')
+                    ->label('Umgebung')
+                    ->options([
+                        'production' => 'Production',
+                        'sandbox' => 'Sandbox',
+                        'test' => 'Test',
+                    ]),
+
+                TernaryFilter::make('is_active')
+                    ->label('Aktiv'),
+
+                TernaryFilter::make('auto_sync')
+                    ->label('Auto-Sync'),
+
+                SelectFilter::make('company')
+                    ->label('Unternehmen')
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
+            ->persistFiltersInSession()
+            ->actions([
+                Action::make('test_connection')
+                    ->label('Test')
+                    ->icon('heroicon-o-signal')
+                    ->color('info')
+                    ->action(function (Integration $record) {
+                        try {
+                            // Provider-specific test logic
+                            $success = match($record->provider) {
+                                'calcom' => static::testCalcomConnection($record),
+                                'retell' => static::testRetellConnection($record),
+                                'webhook' => static::testWebhookConnection($record),
+                                default => false,
+                            };
+
+                            if ($success) {
+                                $record->update([
+                                    'status' => Integration::STATUS_ACTIVE,
+                                    'last_success_at' => now(),
+                                ]);
+                                $record->updateHealthStatus();
+
+                                Notification::make()
+                                    ->title('Verbindung erfolgreich')
+                                    ->success()
+                                    ->send();
+                            } else {
+                                throw new \Exception('Verbindungstest fehlgeschlagen');
+                            }
+                        } catch (\Exception $e) {
+                            $record->markSyncError($e->getMessage());
+
+                            Notification::make()
+                                ->title('Verbindungsfehler')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Action::make('sync_now')
+                    ->label('Sync')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->canSync())
+                    ->action(function (Integration $record) {
+                        $record->update(['status' => Integration::STATUS_SYNCING]);
+
+                        // Dispatch sync job
+                        // dispatch(new SyncIntegrationJob($record));
+
+                        Notification::make()
+                            ->title('Synchronisation gestartet')
+                            ->info()
+                            ->send();
+                    }),
+
+                Tables\Actions\ViewAction::make()
+                    ->iconButton(),
+
+                Tables\Actions\EditAction::make()
+                    ->iconButton(),
+
+                Action::make('duplicate')
+                    ->label('Duplizieren')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->action(function (Integration $record) {
+                        $new = $record->replicate([
+                            'api_key', 'api_secret', 'access_token', 'refresh_token',
+                            'last_sync_at', 'last_success_at', 'last_error_at',
+                            'error_count', 'success_count', 'api_calls_count',
+                        ]);
+                        $new->name = $record->name . ' (Kopie)';
+                        $new->status = Integration::STATUS_PENDING;
+                        $new->is_active = false;
+                        $new->save();
+
+                        Notification::make()
+                            ->title('Integration dupliziert')
+                            ->success()
+                            ->send();
+
+                        return redirect(static::getUrl('edit', ['record' => $new]));
+                    }),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulk_activate')
+                        ->label('Aktivieren')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update(['is_active' => true]);
+                            }
+                            Notification::make()
+                                ->title('Integrationen aktiviert')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('bulk_deactivate')
+                        ->label('Deaktivieren')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'is_active' => false,
+                                    'status' => Integration::STATUS_INACTIVE,
+                                ]);
+                            }
+                            Notification::make()
+                                ->title('Integrationen deaktiviert')
+                                ->warning()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('bulk_test')
+                        ->label('Verbindungen testen')
+                        ->icon('heroicon-o-signal')
+                        ->color('info')
+                        ->action(function ($records) {
+                            $success = 0;
+                            $failed = 0;
+
+                            foreach ($records as $record) {
+                                try {
+                                    $testSuccess = match($record->provider) {
+                                        'calcom' => static::testCalcomConnection($record),
+                                        'retell' => static::testRetellConnection($record),
+                                        'webhook' => static::testWebhookConnection($record),
+                                        default => false,
+                                    };
+
+                                    if ($testSuccess) {
+                                        $record->update(['status' => Integration::STATUS_ACTIVE]);
+                                        $success++;
+                                    } else {
+                                        $failed++;
+                                    }
+                                } catch (\Exception $e) {
+                                    $failed++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Tests abgeschlossen')
+                                ->body("Erfolgreich: {$success}, Fehlgeschlagen: {$failed}")
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\BulkAction::make('reset_api_calls')
+                        ->label('API Calls zurücksetzen')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->resetApiCalls();
+                            }
+                            Notification::make()
+                                ->title('API Calls zurückgesetzt')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            ->headerActions([
+                Action::make('import_integrations')
+                    ->label('Integrationen importieren')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->action(function () {
+                        // Import logic here
+                        Notification::make()
+                            ->title('Import-Funktion kommt bald')
+                            ->info()
+                            ->send();
+                    }),
+
+                Action::make('documentation')
+                    ->label('Dokumentation')
+                    ->icon('heroicon-o-question-mark-circle')
+                    ->url('https://docs.example.com/integrations')
+                    ->openUrlInNewTab(),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListIntegrations::route('/'),
+            'create' => Pages\CreateIntegration::route('/create'),
+            'edit' => Pages\EditIntegration::route('/{record}/edit'),
+            'view' => Pages\ViewIntegration::route('/{record}'),
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            // IntegrationStatsWidget::class,
+        ];
+    }
+
+    /**
+     * Test Cal.com connection
+     */
+    protected static function testCalcomConnection(Integration $integration): bool
+    {
+        if (!$integration->api_key) {
+            throw new \Exception('API Key fehlt');
+        }
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $integration->api_key,
+        ])->get('https://api.cal.com/v1/event-types');
+
+        if ($response->successful()) {
+            $integration->incrementApiCalls();
+            return true;
+        }
+
+        throw new \Exception('Cal.com API Fehler: ' . $response->status());
+    }
+
+    /**
+     * Test Retell connection
+     */
+    protected static function testRetellConnection(Integration $integration): bool
+    {
+        if (!$integration->api_key) {
+            throw new \Exception('API Key fehlt');
+        }
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $integration->api_key,
+        ])->get('https://api.retellai.com/agents');
+
+        if ($response->successful()) {
+            $integration->incrementApiCalls();
+            return true;
+        }
+
+        throw new \Exception('Retell API Fehler: ' . $response->status());
+    }
+
+    /**
+     * Test Webhook connection
+     */
+    protected static function testWebhookConnection(Integration $integration): bool
+    {
+        if (!$integration->webhook_url) {
+            throw new \Exception('Webhook URL fehlt');
+        }
+
+        $response = Http::timeout(5)->post($integration->webhook_url, [
+            'test' => true,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
+        if ($response->successful()) {
+            return true;
+        }
+
+        throw new \Exception('Webhook Fehler: ' . $response->status());
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "timestamp": "2025-09-25T17:49:45+02:00",
+    "metrics": {
+        "admin_page_load_ms": 89,
+        "api_health_check_ms": 120,
+        "peak_memory_mb": 2
+    }
+}

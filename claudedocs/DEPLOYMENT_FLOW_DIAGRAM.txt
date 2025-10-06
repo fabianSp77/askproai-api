@@ -1,0 +1,448 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   PHASE 2 MIGRATION DEPLOYMENT FLOW                          ║
+║                     Multi-Tenant Database Schema                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          PRE-DEPLOYMENT PHASE                                │
+│                           (Estimated: 45 min)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  1. Review Documentation                                    │
+    │     • MIGRATION_TESTING_DEPLOYMENT_PLAN.md                  │
+    │     • MIGRATION_DEPLOYMENT_CHECKLIST.md                     │
+    │     • PHASE_2_DEPLOYMENT_READY_SUMMARY.md                   │
+    │     Time: 15 minutes                                        │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  2. Run Automated Test Suite                                │
+    │     Command: sudo ./scripts/test_migrations.sh              │
+    │                                                             │
+    │     Tests Performed:                                        │
+    │     ✓ Test database creation                                │
+    │     ✓ Schema cloning                                        │
+    │     ✓ Migration execution (6 tables)                        │
+    │     ✓ Foreign key validation (CASCADE)                      │
+    │     ✓ Index verification                                    │
+    │     ✓ Cascade delete testing                                │
+    │     ✓ Rollback testing                                      │
+    │     ✓ Re-migration testing                                  │
+    │     ✓ Data integrity check                                  │
+    │                                                             │
+    │     Expected: ALL TESTS PASS ✓                              │
+    │     Time: 5-10 minutes                                      │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+              ┌───────────────────────────────┐
+              │   Tests Failed?               │
+              │   ┌─────┐        ┌─────┐      │
+              │   │ YES │        │ NO  │      │
+              │   └──┬──┘        └──┬──┘      │
+              └──────┼──────────────┼─────────┘
+                     ↓              ↓
+            ┌────────────────┐      │
+            │ STOP DEPLOYMENT│      │
+            │                │      │
+            │ • Review logs  │      │
+            │ • Fix issues   │      │
+            │ • Re-test      │      │
+            └────────────────┘      ↓
+                                   PROCEED TO DEPLOYMENT
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         PRODUCTION DEPLOYMENT                                │
+│                          (Estimated: 3 min)                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Start Deployment Script                                    │
+    │  Command: sudo ./scripts/deploy_migrations.sh               │
+    │                                                             │
+    │  Options:                                                   │
+    │  • Full safety (recommended): default                       │
+    │  • Zero downtime: --no-maintenance                          │
+    │  • Skip backup (NOT RECOMMENDED): --skip-backup             │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Pre-Deployment Checks                                      │
+    │  • Database connectivity                                    │
+    │  • Critical tables exist                                    │
+    │  • Backup directory writable                                │
+    │  • Laravel application present                              │
+    │                                                             │
+    │  Time: <5 seconds                                           │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Phase 1: Database Backup                                   │
+    │  • Full database dump (askproai_db)                         │
+    │  • Compress with gzip                                       │
+    │  • Secure permissions (600)                                 │
+    │  • Location: /var/backups/mysql/askproai_db_pre_*.sql.gz   │
+    │                                                             │
+    │  Time: ~2 minutes                                           │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Phase 2: Maintenance Mode (Optional)                       │
+    │  • php artisan down                                         │
+    │  • HTTP 503 returned to users                               │
+    │  • Retry-After: 60 seconds                                  │
+    │                                                             │
+    │  Time: <5 seconds                                           │
+    │  Downtime: Starts here (if enabled)                         │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Phase 3: Cache Clearing                                    │
+    │  • php artisan config:clear                                 │
+    │  • php artisan cache:clear                                  │
+    │                                                             │
+    │  Time: ~5 seconds                                           │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ╔═════════════════════════════════════════════════════════════╗
+    ║  Phase 4: MIGRATION EXECUTION (Critical)                    ║
+    ║  php artisan migrate --force --step -v                      ║
+    ║                                                             ║
+    ║  Creates:                                                   ║
+    ║  1. notification_configurations                             ║
+    ║  2. policy_configurations                                   ║
+    ║  3. callback_requests                                       ║
+    ║  4. appointment_modifications                               ║
+    ║  5. callback_escalations                                    ║
+    ║  6. appointment_modification_stats                          ║
+    ║                                                             ║
+    ║  Time: <1 SECOND                                            ║
+    ╚═════════════════════════════════════════════════════════════╝
+                              ↓
+              ┌───────────────────────────────┐
+              │   Migration Failed?           │
+              │   ┌─────┐        ┌─────┐      │
+              │   │ YES │        │ NO  │      │
+              │   └──┬──┘        └──┬──┘      │
+              └──────┼──────────────┼─────────┘
+                     ↓              ↓
+            ┌────────────────┐      │
+            │ AUTO ROLLBACK  │      │
+            │                │      │
+            │ • Log error    │      │
+            │ • Exit code 1  │      │
+            │ • DB unchanged │      │
+            └────────────────┘      ↓
+                                   CONTINUE
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Phase 5: Post-Deployment Verification                      │
+    │  • Verify 6 tables created                                  │
+    │  • Check foreign keys (6 company_id → companies)            │
+    │  • Verify indexes created                                   │
+    │  • Check for orphaned records (expect 0)                    │
+    │  • Validate CASCADE delete rules                            │
+    │                                                             │
+    │  Time: ~10 seconds                                          │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+              ┌───────────────────────────────┐
+              │   Verification Failed?        │
+              │   ┌─────┐        ┌─────┐      │
+              │   │ YES │        │ NO  │      │
+              │   └──┬──┘        └──┬──┘      │
+              └──────┼──────────────┼─────────┘
+                     ↓              ↓
+            ┌────────────────┐      │
+            │ ERROR EXIT     │      │
+            │                │      │
+            │ • Log details  │      │
+            │ • Manual check │      │
+            └────────────────┘      ↓
+                                   SUCCESS
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Phase 6: Application Restore                               │
+    │  • php artisan config:clear                                 │
+    │  • php artisan cache:clear                                  │
+    │  • php artisan route:clear                                  │
+    │  • php artisan view:clear                                   │
+    │  • php artisan up (disable maintenance)                     │
+    │  • Verify HTTP 200                                          │
+    │                                                             │
+    │  Time: ~5 seconds                                           │
+    │  Downtime: Ends here (if enabled)                           │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  ✓ DEPLOYMENT SUCCESSFUL                                    │
+    │                                                             │
+    │  Summary:                                                   │
+    │  • 6 tables created                                         │
+    │  • Foreign keys validated                                   │
+    │  • Indexes created                                          │
+    │  • Data integrity confirmed                                 │
+    │  • Backup available for rollback                            │
+    │                                                             │
+    │  Total Time: ~3 minutes                                     │
+    │  Actual Downtime: ~30 seconds (if maintenance mode used)    │
+    └─────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        POST-DEPLOYMENT MONITORING                            │
+│                           (Required: 30 min)                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Immediate Monitoring (First 5 minutes)                     │
+    │                                                             │
+    │  Terminal 1: Application Logs                               │
+    │  tail -f /var/www/api-gateway/storage/logs/laravel.log     │
+    │  Watch for: Foreign key errors, database errors             │
+    │                                                             │
+    │  Terminal 2: Database Logs                                  │
+    │  tail -f /var/log/mysql/error.log                           │
+    │  Watch for: Constraint violations, deadlocks                │
+    │                                                             │
+    │  Terminal 3: System Resources                               │
+    │  htop                                                       │
+    │  Watch for: Memory spikes, CPU issues                       │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Functional Testing                                         │
+    │  • Test existing features (bookings, etc.)                  │
+    │  • Verify API endpoints respond                             │
+    │  • Check application performance                            │
+    │                                                             │
+    │  Time: 5-10 minutes                                         │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+              ┌───────────────────────────────┐
+              │   Issues Detected?            │
+              │   ┌─────┐        ┌─────┐      │
+              │   │ YES │        │ NO  │      │
+              │   └──┬──┘        └──┬──┘      │
+              └──────┼──────────────┼─────────┘
+                     ↓              ↓
+         ┌───────────────────────┐  │
+         │ ASSESS SEVERITY       │  │
+         └───────┬───────────────┘  │
+                 ↓                  ↓
+    ┌────────────┴────────────┐    │
+    │                         │    │
+    ↓                         ↓    ↓
+┌─────────┐          ┌──────────┐  │
+│ MINOR   │          │ MAJOR    │  │
+│         │          │          │  │
+│Continue │          │ Rollback │  │
+│Monitor  │          │          │  │
+└─────────┘          └──────────┘  │
+                           ↓       ↓
+                     ┌──────────────────────┐
+                     │ ROLLBACK PROCEDURE   │
+                     │                      │
+                     │ Option A: Migration  │
+                     │ php artisan          │
+                     │ migrate:rollback     │
+                     │ --step=6 --force     │
+                     │                      │
+                     │ Option B: DB Restore │
+                     │ gunzip < backup.sql  │
+                     │ | mysql              │
+                     └──────────────────────┘
+                              ↓
+                     ┌──────────────────────┐
+                     │ POST-ROLLBACK        │
+                     │ • Verify app works   │
+                     │ • Document issues    │
+                     │ • Schedule re-deploy │
+                     └──────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  30-Minute Checkpoint (If No Issues)                        │
+    │  • No errors in application logs ✓                          │
+    │  • No database constraint violations ✓                      │
+    │  • Application performance normal ✓                         │
+    │  • No user-reported issues ✓                                │
+    │                                                             │
+    │  Status: DEPLOYMENT SUCCESSFUL ✓                            │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │  Post-Deployment Notification                               │
+    │  • Send success notification to team                        │
+    │  • Document deployment completion                           │
+    │  • Update status to "monitoring complete"                   │
+    │  • Archive deployment logs                                  │
+    └─────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          DATABASE SCHEMA OVERVIEW                            │
+│                        (6 New Tables Created)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  companies (existing)                                            │
+    │  ├─ id (PK)                                                      │
+    │  ├─ name                                                         │
+    │  └─ ...                                                          │
+    └──────┬───────────────────────────────────────────────────────────┘
+           │
+           │ CASCADE ON DELETE (Multi-tenant isolation)
+           │
+           ├─────────────────────────────────────────────────────┐
+           │                                                     │
+           ↓                                                     ↓
+    ┌────────────────────────────────┐    ┌──────────────────────────────────┐
+    │ notification_configurations    │    │ policy_configurations            │
+    │ ├─ id (PK)                     │    │ ├─ id (PK)                       │
+    │ ├─ company_id (FK → companies) │    │ ├─ company_id (FK → companies)   │
+    │ ├─ configurable_type           │    │ ├─ configurable_type             │
+    │ ├─ configurable_id             │    │ ├─ configurable_id               │
+    │ ├─ event_type                  │    │ ├─ policy_type                   │
+    │ ├─ channel                     │    │ ├─ config (JSON)                 │
+    │ ├─ metadata (JSON)             │    │ ├─ is_override                   │
+    │ └─ ...                         │    │ ├─ deleted_at (soft delete)      │
+    │                                │    │ └─ ...                           │
+    │ Polymorphic:                   │    │                                  │
+    │ • Company → Branch → Service   │    │ Polymorphic:                     │
+    │ • Hierarchical notifications   │    │ • Company → Branch → Service     │
+    └────────────────────────────────┘    │ • Policy inheritance             │
+                                          └──────────────────────────────────┘
+           │
+           ├─────────────────────────────────────────────────────┐
+           │                                                     │
+           ↓                                                     ↓
+    ┌────────────────────────────────┐    ┌──────────────────────────────────┐
+    │ callback_requests              │    │ appointment_modifications        │
+    │ ├─ id (PK)                     │    │ ├─ id (PK)                       │
+    │ ├─ company_id (FK → companies) │    │ ├─ company_id (FK → companies)   │
+    │ ├─ customer_id (FK)            │    │ ├─ appointment_id (FK)           │
+    │ ├─ branch_id (FK, UUID)        │    │ ├─ customer_id (FK)              │
+    │ ├─ service_id (FK)             │    │ ├─ modification_type             │
+    │ ├─ staff_id (FK, UUID)         │    │ ├─ within_policy                 │
+    │ ├─ assigned_to (FK, UUID)      │    │ ├─ fee_charged                   │
+    │ ├─ status                      │    │ ├─ deleted_at (soft delete)      │
+    │ ├─ priority                    │    │ └─ ...                           │
+    │ ├─ expires_at (SLA)            │    │                                  │
+    │ └─ ...                         │    │ Audit Trail:                     │
+    │                                │    │ • 30-day rolling window          │
+    │ Callback Management:           │    │ • Policy compliance tracking     │
+    │ • SLA tracking                 │────┤                                  │
+    │ • Escalation support           │    │                                  │
+    └────────────────────────────────┘    └──────────────────────────────────┘
+           │                                          │
+           │                                          │
+           ↓                                          ↓
+    ┌────────────────────────────────┐    ┌──────────────────────────────────┐
+    │ callback_escalations           │    │ appointment_modification_stats   │
+    │ ├─ id (PK)                     │    │ ├─ id (PK)                       │
+    │ ├─ company_id (FK → companies) │    │ ├─ company_id (FK → companies)   │
+    │ ├─ callback_request_id (FK)    │    │ ├─ customer_id (FK)              │
+    │ ├─ escalation_reason           │    │ ├─ stat_type                     │
+    │ ├─ escalated_from (FK, UUID)   │    │ ├─ period_start                  │
+    │ ├─ escalated_to (FK, UUID)     │    │ ├─ period_end                    │
+    │ ├─ escalated_at                │    │ ├─ count                         │
+    │ ├─ resolved_at                 │    │ └─ ...                           │
+    │ └─ ...                         │    │                                  │
+    │                                │    │ Materialized View:               │
+    │ Escalation Tracking:           │    │ • O(1) quota checks              │
+    │ • SLA breach handling          │    │ • Pre-calculated stats           │
+    │ • Manual escalations           │    │ • Hourly job updates             │
+    └────────────────────────────────┘    └──────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          FOREIGN KEY RELATIONSHIPS                           │
+│                     (17 Total Foreign Keys Created)                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    companies.id
+        ↓ CASCADE DELETE
+        ├─ notification_configurations.company_id
+        ├─ policy_configurations.company_id
+        ├─ callback_requests.company_id
+        ├─ appointment_modifications.company_id
+        ├─ callback_escalations.company_id
+        └─ appointment_modification_stats.company_id
+
+    customers.id
+        ↓ CASCADE DELETE
+        ├─ callback_requests.customer_id (NULLABLE)
+        └─ appointment_modifications.customer_id
+
+    appointments.id
+        ↓ CASCADE DELETE
+        └─ appointment_modifications.appointment_id
+
+    branches.id (UUID)
+        ↓ CASCADE DELETE
+        └─ callback_requests.branch_id
+
+    services.id
+        ↓ NULL ON DELETE
+        └─ callback_requests.service_id (NULLABLE)
+
+    staff.id (UUID)
+        ↓ NULL ON DELETE
+        ├─ callback_requests.staff_id (NULLABLE)
+        ├─ callback_requests.assigned_to (NULLABLE)
+        ├─ callback_escalations.escalated_from (NULLABLE)
+        └─ callback_escalations.escalated_to (NULLABLE)
+
+    policy_configurations.id
+        ↓ SET NULL ON DELETE
+        └─ policy_configurations.overrides_id (self-reference, NULLABLE)
+
+    callback_requests.id
+        ↓ CASCADE DELETE
+        └─ callback_escalations.callback_request_id
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          CRITICAL SUCCESS FACTORS                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ✓ All 6 tables created successfully
+    ✓ 17 foreign key constraints active (CASCADE protection)
+    ✓ 32+ indexes optimized for performance
+    ✓ 3 unique constraints enforcing data integrity
+    ✓ Multi-tenant isolation guaranteed (company_id NOT NULL)
+    ✓ Backup created before deployment
+    ✓ Rollback tested and verified
+    ✓ Zero orphaned records
+    ✓ Migration time <1 second
+    ✓ Total deployment time <3 minutes
+    ✓ 30-minute monitoring period completed
+    ✓ No errors in application logs
+    ✓ No database constraint violations
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                               LEGEND                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    PK   = Primary Key
+    FK   = Foreign Key
+    UUID = Universally Unique Identifier (char(36))
+    JSON = JSON data type
+
+    CASCADE DELETE  = Child records deleted when parent deleted
+    NULL ON DELETE  = Foreign key set to NULL when parent deleted
+    SET NULL        = Foreign key set to NULL on parent delete
+
+    NULLABLE        = Column allows NULL values
+    NOT NULL        = Column requires value
+
+    ✓ = Success/Complete
+    ✗ = Failure/Error
+    ⚠ = Warning/Caution
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                        END OF DEPLOYMENT FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════

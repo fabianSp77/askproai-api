@@ -1,0 +1,609 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\ServiceResource\Pages;
+use App\Models\Service;
+use App\Models\Company;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Get;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Filament\Notifications\Notification;
+
+class ServiceResourceFixed extends Resource
+{
+    protected static ?string $model = Service::class;
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+    protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationLabel = 'Services';
+    protected static ?string $pluralLabel = 'Services';
+    protected static ?string $modelLabel = 'Service';
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('is_active', true)->count(); // FIXED: is_active instead of active
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $count = static::getModel()::where('is_active', true)->count(); // FIXED: is_active instead of active
+        return $count > 50 ? 'success' : ($count > 20 ? 'warning' : 'info');
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                // Optimized to 4 logical tabs for service management
+                Tabs::make('Service Details')
+                    ->tabs([
+                        // Tab 1: Essential Service Information
+                        Tabs\Tab::make('Grunddaten')
+                            ->icon('heroicon-m-briefcase')
+                            ->schema([
+                                Section::make('Service Informationen')
+                                    ->description('Grundlegende Einstellungen des Service')
+                                    ->schema([
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('name')
+                                                ->label('Service Name')
+                                                ->required()
+                                                ->maxLength(255)
+                                                ->placeholder('z.B. Beratungsgespräch'),
+
+                                            Forms\Components\Select::make('category')
+                                                ->label('Kategorie')
+                                                ->options([
+                                                    'consulting' => '💼 Beratung',
+                                                    'support' => '🛠️ Support',
+                                                    'development' => '💻 Entwicklung',
+                                                    'maintenance' => '🔧 Wartung',
+                                                    'training' => '📚 Schulung',
+                                                    'premium' => '⭐ Premium',
+                                                ])
+                                                ->native(false)
+                                                ->searchable(),
+                                        ]),
+
+                                        Forms\Components\Select::make('company_id')
+                                            ->label('Unternehmen')
+                                            ->relationship('company', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->required(),
+
+                                        Forms\Components\Textarea::make('description')
+                                            ->label('Beschreibung')
+                                            ->rows(3)
+                                            ->maxLength(500)
+                                            ->placeholder('Detaillierte Beschreibung des Services...'),
+
+                                        Grid::make(3)->schema([
+                                            Forms\Components\Toggle::make('is_active') // FIXED: is_active instead of active
+                                                ->label('Aktiv')
+                                                ->default(true)
+                                                ->inline(),
+
+                                            Forms\Components\Toggle::make('is_online') // FIXED: is_online instead of is_online_bookable
+                                                ->label('Online buchbar')
+                                                ->default(true)
+                                                ->inline(),
+
+                                            Forms\Components\TextInput::make('sort_order')
+                                                ->label('Sortierung')
+                                                ->numeric()
+                                                ->default(0),
+                                        ]),
+                                    ]),
+                            ]),
+
+                        // Tab 2: Pricing, Duration & Booking Rules
+                        Tabs\Tab::make('Preise & Zeiten')
+                            ->icon('heroicon-m-currency-euro')
+                            ->badge(fn ($record) => $record?->price ? '€' . number_format($record->price, 2) : null)
+                            ->schema([
+                                Section::make('Preise & Zeiten')
+                                    ->description('Preisgestaltung und Zeitplanung')
+                                    ->schema([
+                                        Grid::make(3)->schema([
+                                            Forms\Components\TextInput::make('price')
+                                                ->label('Preis')
+                                                ->prefix('€')
+                                                ->numeric()
+                                                ->step(0.01)
+                                                ->default(0.00),
+
+                                            Forms\Components\TextInput::make('duration_minutes') // FIXED: duration_minutes instead of default_duration_minutes
+                                                ->label('Dauer')
+                                                ->suffix('min')
+                                                ->numeric()
+                                                ->required()
+                                                ->default(30),
+
+                                            Forms\Components\TextInput::make('buffer_time_minutes')
+                                                ->label('Pufferzeit')
+                                                ->suffix('min')
+                                                ->numeric()
+                                                ->default(0),
+                                        ]),
+
+                                        Grid::make(2)->schema([
+                                            Forms\Components\Toggle::make('deposit_required') // ADDED: Missing field from model
+                                                ->label('Anzahlung erforderlich')
+                                                ->reactive()
+                                                ->inline(),
+
+                                            Forms\Components\TextInput::make('deposit_amount') // ADDED: Missing field from model
+                                                ->label('Anzahlungsbetrag')
+                                                ->prefix('€')
+                                                ->numeric()
+                                                ->step(0.01)
+                                                ->visible(fn (Get $get) => $get('deposit_required'))
+                                                ->required(fn (Get $get) => $get('deposit_required')),
+                                        ]),
+
+                                        Grid::make(3)->schema([
+                                            Forms\Components\TextInput::make('max_attendees') // ADDED: Missing field from model
+                                                ->label('Max. Teilnehmer')
+                                                ->numeric()
+                                                ->default(1)
+                                                ->minValue(1),
+
+                                            Forms\Components\Toggle::make('requires_confirmation') // ADDED: Missing field from model
+                                                ->label('Bestätigung erforderlich')
+                                                ->default(false)
+                                                ->inline(),
+
+                                            Forms\Components\Toggle::make('allow_cancellation') // ADDED: Missing field from model
+                                                ->label('Stornierung erlaubt')
+                                                ->default(true)
+                                                ->reactive()
+                                                ->inline(),
+                                        ]),
+
+                                        Forms\Components\TextInput::make('cancellation_hours_notice') // ADDED: Missing field from model
+                                            ->label('Stornierungsfrist (Stunden)')
+                                            ->numeric()
+                                            ->default(24)
+                                            ->suffix('Stunden')
+                                            ->visible(fn (Get $get) => $get('allow_cancellation'))
+                                            ->required(fn (Get $get) => $get('allow_cancellation')),
+                                    ]),
+                            ]),
+
+                        // Tab 3: Cal.com Integration
+                        Tabs\Tab::make('Cal.com Integration')
+                            ->icon('heroicon-m-link')
+                            ->schema([
+                                Section::make('Cal.com Verknüpfung')
+                                    ->description('Integration mit Cal.com für Online-Buchungen')
+                                    ->schema([
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('calcom_event_type_id')
+                                                ->label('Cal.com Event Type ID')
+                                                ->maxLength(255)
+                                                ->placeholder('z.B. 123456')
+                                                ->helperText('Die Event Type ID aus Cal.com'),
+
+                                            Forms\Components\TextInput::make('external_id') // ADDED: Missing field from model
+                                                ->label('Externe ID')
+                                                ->maxLength(255)
+                                                ->placeholder('Optionale externe Referenz'),
+                                        ]),
+
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('syncWithCalcom')
+                                                ->label('Mit Cal.com synchronisieren')
+                                                ->icon('heroicon-m-arrow-path')
+                                                ->color('primary')
+                                                ->action(function ($record) {
+                                                    // TODO: Implement Cal.com sync
+                                                    Notification::make()
+                                                        ->title('Cal.com Synchronisation')
+                                                        ->body('Service wird mit Cal.com synchronisiert...')
+                                                        ->success()
+                                                        ->send();
+                                                })
+                                                ->disabled(fn ($record) => !$record || !$record->calcom_event_type_id),
+                                        ])->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        // Tab 4: Visual & Metadata
+                        Tabs\Tab::make('Darstellung')
+                            ->icon('heroicon-m-paint-brush')
+                            ->schema([
+                                Section::make('Visuelle Einstellungen')
+                                    ->description('Farben, Icons und Bilder für bessere Darstellung')
+                                    ->schema([
+                                        Grid::make(3)->schema([
+                                            Forms\Components\TextInput::make('color_code') // ADDED: Missing field from model
+                                                ->label('Farbcode')
+                                                ->placeholder('#3B82F6')
+                                                ->maxLength(7),
+
+                                            Forms\Components\TextInput::make('icon') // ADDED: Missing field from model
+                                                ->label('Icon')
+                                                ->placeholder('heroicon-o-briefcase')
+                                                ->maxLength(255),
+
+                                            Forms\Components\TextInput::make('image_url') // ADDED: Missing field from model
+                                                ->label('Bild URL')
+                                                ->url()
+                                                ->maxLength(255),
+                                        ]),
+
+                                        Forms\Components\KeyValue::make('metadata') // ADDED: Missing field from model
+                                            ->label('Zusätzliche Metadaten')
+                                            ->addActionLabel('Metadaten hinzufügen')
+                                            ->keyLabel('Schlüssel')
+                                            ->valueLabel('Wert')
+                                            ->reorderable(),
+                                    ]),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            // Performance: Optimized eager loading
+            ->modifyQueryUsing(fn (Builder $query) =>
+                $query->with(['company:id,name'])
+                    ->withCount([
+                        'appointments as total_appointments',
+                        'appointments as confirmed_appointments' => fn ($q) => $q->where('status', 'confirmed')
+                    ])
+            )
+            // Optimized to 9 essential columns with correct field names
+            ->columns([
+                // 1. Service name with description
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Service')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) =>
+                        ($record->category ? ucfirst($record->category) . ' • ' : '') .
+                        $record->duration_minutes . ' min' // FIXED: duration_minutes
+                    )
+                    ->icon(fn ($record) => $record->icon ?: match($record->category) {
+                        'consulting' => 'heroicon-m-chat-bubble-left-right',
+                        'support' => 'heroicon-m-wrench-screwdriver',
+                        'development' => 'heroicon-m-code-bracket',
+                        'maintenance' => 'heroicon-m-cog',
+                        'training' => 'heroicon-m-academic-cap',
+                        'premium' => 'heroicon-m-star',
+                        default => 'heroicon-m-briefcase',
+                    }),
+
+                // 2. Category
+                Tables\Columns\BadgeColumn::make('category')
+                    ->label('Kategorie')
+                    ->colors([
+                        'info' => 'consulting',
+                        'warning' => 'support',
+                        'success' => 'development',
+                        'gray' => 'maintenance',
+                        'indigo' => 'training',
+                        'yellow' => 'premium',
+                    ])
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'consulting' => '💼 Beratung',
+                        'support' => '🛠️ Support',
+                        'development' => '💻 Entwicklung',
+                        'maintenance' => '🔧 Wartung',
+                        'training' => '📚 Schulung',
+                        'premium' => '⭐ Premium',
+                        default => $state ?: '📋 Sonstige',
+                    }),
+
+                // 3. Price
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Preis')
+                    ->money('EUR')
+                    ->sortable()
+                    ->alignEnd()
+                    ->weight('bold')
+                    ->color(fn ($state) =>
+                        $state == 0 ? 'success' :
+                        ($state > 100 ? 'warning' : 'gray')
+                    )
+                    ->description(fn ($record) =>
+                        $record->price > 0 && $record->duration_minutes > 0 ?
+                        '€' . number_format($record->price / ($record->duration_minutes / 60), 2) . '/h' :
+                        'Kostenlos'
+                    ),
+
+                // 4. Duration & Buffer
+                Tables\Columns\TextColumn::make('time_details')
+                    ->label('Zeiten')
+                    ->getStateUsing(fn ($record) =>
+                        $record->duration_minutes . ' min' . // FIXED: duration_minutes
+                        ($record->buffer_time_minutes > 0 ? ' +' . $record->buffer_time_minutes . 'min' : '')
+                    )
+                    ->badge()
+                    ->color('info'),
+
+                // 5. Booking Rules
+                Tables\Columns\TextColumn::make('booking_rules')
+                    ->label('Buchungsregeln')
+                    ->getStateUsing(fn ($record) => collect([
+                        $record->max_attendees > 1 ? $record->max_attendees . ' Personen' : null,
+                        $record->requires_confirmation ? '✓ Bestätigung' : null,
+                        $record->deposit_required ? '€' . number_format($record->deposit_amount, 0) . ' Anzahlung' : null,
+                    ])->filter()->implode(' • ') ?: 'Standard')
+                    ->badge()
+                    ->color('gray'),
+
+                // 6. Online Status
+                Tables\Columns\TextColumn::make('online_status')
+                    ->label('Online')
+                    ->getStateUsing(fn ($record) =>
+                        $record->is_online ? // FIXED: is_online instead of is_online_bookable
+                        ($record->calcom_event_type_id ? '🌐 Cal.com' : '✅ Online') :
+                        '❌ Offline'
+                    )
+                    ->badge()
+                    ->color(fn ($record) =>
+                        $record->is_online ? // FIXED: is_online
+                        ($record->calcom_event_type_id ? 'success' : 'warning') :
+                        'danger'
+                    ),
+
+                // 7. Bookings Count
+                Tables\Columns\TextColumn::make('confirmed_appointments_count')
+                    ->label('Buchungen')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state . ' aktiv')
+                    ->color(fn ($state) => $state > 10 ? 'success' : ($state > 0 ? 'warning' : 'gray'))
+                    ->sortable(),
+
+                // 8. Company
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Unternehmen')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
+
+                // 9. Status
+                Tables\Columns\ToggleColumn::make('is_active') // FIXED: is_active instead of active
+                    ->label('Aktiv')
+                    ->onColor('success')
+                    ->offColor('danger'),
+            ])
+            // Smart filters with correct field names
+            ->filters([
+                SelectFilter::make('category')
+                    ->label('Kategorie')
+                    ->multiple()
+                    ->options([
+                        'consulting' => '💼 Beratung',
+                        'support' => '🛠️ Support',
+                        'development' => '💻 Entwicklung',
+                        'maintenance' => '🔧 Wartung',
+                        'training' => '📚 Schulung',
+                        'premium' => '⭐ Premium',
+                    ]),
+
+                Filter::make('active')
+                    ->label('Aktive Services')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('is_active', true) // FIXED: is_active
+                    )
+                    ->default(),
+
+                Filter::make('online')
+                    ->label('Online buchbar')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('is_online', true) // FIXED: is_online
+                    ),
+
+                Filter::make('calcom')
+                    ->label('Cal.com verknüpft')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->whereNotNull('calcom_event_type_id')
+                    ),
+
+                Filter::make('deposit')
+                    ->label('Mit Anzahlung')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('deposit_required', true)
+                    ),
+
+                Filter::make('free')
+                    ->label('Kostenlos')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('price', 0)
+                    ),
+
+                Filter::make('premium')
+                    ->label('Premium (>€100)')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('price', '>', 100)
+                    ),
+
+                SelectFilter::make('company_id')
+                    ->label('Unternehmen')
+                    ->relationship('company', 'name')
+                    ->searchable()
+                    ->preload(),
+            ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
+            // Quick actions with correct field names
+            ->actions([
+                Tables\Actions\ActionGroup::make([
+                    // View (to be implemented)
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ansehen'),
+
+                    // Edit
+                    Tables\Actions\EditAction::make()
+                        ->label('Bearbeiten'),
+
+                    // Duplicate
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplizieren')
+                        ->icon('heroicon-m-document-duplicate')
+                        ->color('info')
+                        ->action(function ($record) {
+                            $newService = $record->replicate();
+                            $newService->name = $record->name . ' (Kopie)';
+                            $newService->is_active = false;
+                            $newService->calcom_event_type_id = null;
+                            $newService->external_id = null;
+                            $newService->save();
+
+                            Notification::make()
+                                ->title('Service dupliziert')
+                                ->body('Der Service wurde erfolgreich kopiert.')
+                                ->success()
+                                ->send();
+                        }),
+
+                    // Sync Cal.com
+                    Tables\Actions\Action::make('syncCalcom')
+                        ->label('Cal.com Sync')
+                        ->icon('heroicon-m-arrow-path')
+                        ->color('primary')
+                        ->action(function ($record) {
+                            // TODO: Implement Cal.com sync
+                            Notification::make()
+                                ->title('Cal.com Synchronisation')
+                                ->body('Service wird mit Cal.com synchronisiert...')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn ($record) => $record->calcom_event_type_id),
+
+                    // Toggle Status
+                    Tables\Actions\Action::make('toggleStatus')
+                        ->label(fn ($record) => $record->is_active ? 'Deaktivieren' : 'Aktivieren') // FIXED: is_active
+                        ->icon('heroicon-m-power')
+                        ->color(fn ($record) => $record->is_active ? 'danger' : 'success') // FIXED: is_active
+                        ->action(function ($record) {
+                            $record->update(['is_active' => !$record->is_active]); // FIXED: is_active
+
+                            Notification::make()
+                                ->title('Status geändert')
+                                ->body('Der Service wurde ' .
+                                    ($record->is_active ? 'aktiviert' : 'deaktiviert') . '.')
+                                ->success()
+                                ->send();
+                        }),
+                ]),
+            ])
+            // Bulk actions
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulkActivate')
+                        ->label('Aktivieren')
+                        ->icon('heroicon-m-check')
+                        ->color('success')
+                        ->action(fn ($records) => $records->each->update(['is_active' => true])) // FIXED: is_active
+                        ->requiresConfirmation(),
+
+                    Tables\Actions\BulkAction::make('bulkDeactivate')
+                        ->label('Deaktivieren')
+                        ->icon('heroicon-m-x-mark')
+                        ->color('danger')
+                        ->action(fn ($records) => $records->each->update(['is_active' => false])) // FIXED: is_active
+                        ->requiresConfirmation(),
+
+                    Tables\Actions\BulkAction::make('bulkUpdatePrices')
+                        ->label('Preise anpassen')
+                        ->icon('heroicon-m-currency-euro')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\Select::make('adjustment_type')
+                                ->label('Anpassungstyp')
+                                ->options([
+                                    'percentage_increase' => 'Prozentuale Erhöhung',
+                                    'percentage_decrease' => 'Prozentuale Senkung',
+                                    'fixed_increase' => 'Fester Betrag erhöhen',
+                                    'fixed_decrease' => 'Fester Betrag senken',
+                                ])
+                                ->required(),
+                            Forms\Components\TextInput::make('adjustment_value')
+                                ->label('Wert')
+                                ->numeric()
+                                ->required()
+                                ->suffix(fn (Get $get) =>
+                                    str_contains($get('adjustment_type'), 'percentage') ? '%' : '€'
+                                ),
+                        ])
+                        ->action(function ($records, array $data) {
+                            foreach ($records as $record) {
+                                $newPrice = match($data['adjustment_type']) {
+                                    'percentage_increase' => $record->price * (1 + $data['adjustment_value'] / 100),
+                                    'percentage_decrease' => $record->price * (1 - $data['adjustment_value'] / 100),
+                                    'fixed_increase' => $record->price + $data['adjustment_value'],
+                                    'fixed_decrease' => $record->price - $data['adjustment_value'],
+                                };
+                                $record->update(['price' => max(0, $newPrice)]);
+                            }
+
+                            Notification::make()
+                                ->title('Preise angepasst')
+                                ->body(count($records) . ' Service-Preise wurden aktualisiert.')
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation(),
+
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            // Performance optimizations
+            ->defaultPaginationPageOption(25)
+            ->poll('300s') // 5 minutes instead of 60s
+            ->deferLoading()
+            ->persistFiltersInSession()
+            ->persistSortInSession()
+            ->striped();
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListServices::route('/'),
+            'create' => Pages\CreateService::route('/create'),
+            'edit' => Pages\EditService::route('/{record}/edit'),
+            // 'view' => Pages\ViewService::route('/{record}'), // TODO: Create ViewService page
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['company:id,name']);
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'description', 'category'];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            // TODO: Add AppointmentsRelationManager
+        ];
+    }
+}
