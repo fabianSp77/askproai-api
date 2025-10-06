@@ -2,6 +2,8 @@
 
 namespace App\Services\CustomerIdentification;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * PhoneticMatcher - Cologne Phonetic Algorithm for German Names
  *
