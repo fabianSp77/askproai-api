@@ -245,12 +245,14 @@ class RetellApiClient
                 'duration_sec' => isset($callData['duration_ms']) ? round($callData['duration_ms'] / 1000) : null,
 
                 // 🟡 HIGH: Complete cost tracking
-                'cost_cents' => isset($callData['call_cost']['combined_cost']) ? round($callData['call_cost']['combined_cost'] * 100) : null,
-                'cost' => $callData['call_cost']['combined_cost'] ?? null,
+                // CRITICAL: combined_cost is in CENTS (not dollars!)
+                'cost_cents' => isset($callData['call_cost']['combined_cost']) ? round($callData['call_cost']['combined_cost']) : null,
+                'cost' => isset($callData['call_cost']['combined_cost']) ? ($callData['call_cost']['combined_cost'] / 100) : null,
                 'cost_breakdown' => isset($callData['call_cost']) ? json_encode($callData['call_cost']) : null,
 
-                // 🔥 FIX: Retell cost calculation from product_costs
-                'retell_cost_usd' => $callData['call_cost']['retell_cost'] ?? $callData['call_cost']['combined_cost'] ?? null,
+                // 🔥 FIX: Don't fallback to combined_cost - let webhook handler process actual costs
+                // combined_cost includes ALL costs (Retell + Twilio + Add-ons), not just Retell
+                'retell_cost_usd' => $callData['call_cost']['retell_cost'] ?? null,
                 'twilio_cost_usd' => $callData['call_cost']['twilio_cost'] ?? null,
 
                 // 🟡 HIGH: Timing metrics (agent/customer/silence talk time)

@@ -17,6 +17,14 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
+        // Exchange rates update - runs daily at 2am to get fresh USD/EUR/GBP rates from ECB
+        $schedule->command('exchange-rates:update')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/exchange-rates.log'))
+            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
+
         // Cal.com Event Type sync - runs every 30 minutes as backup for webhooks
         $schedule->command('calcom:sync-services')
             ->everyThirtyMinutes()

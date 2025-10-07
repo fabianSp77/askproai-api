@@ -1,0 +1,53 @@
+{
+  "name": "query_appointment",
+  "type": "custom",
+  "url": "https://api.askproai.de/api/retell/function-call",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "parameter_type": "json",
+  "description": "Findet einen bestehenden Termin für den Anrufer. Nutze diese Funktion wenn der Kunde fragt 'Wann ist mein Termin?', 'Um wie viel Uhr habe ich gebucht?' oder Informationen über einen gebuchten Termin haben möchte. WICHTIG: Diese Funktion funktioniert NUR wenn die Telefonnummer des Anrufers übertragen wurde (nicht bei unterdrückter Nummer).",
+  "execution_message_description": "Ich suche Ihren Termin",
+  "timeout_ms": 30000,
+  "speak_during_execution": true,
+  "speak_after_execution": false,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "function_name": {
+        "type": "string",
+        "enum": ["query_appointment"],
+        "description": "Immer 'query_appointment' verwenden"
+      },
+      "call_id": {
+        "type": "string",
+        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+      },
+      "appointment_date": {
+        "type": "string",
+        "description": "Datum des gesuchten Termins im Format 'YYYY-MM-DD' oder relative Angabe wie 'heute', 'morgen', '10.10.2025'. Optional - wenn nicht angegeben werden alle zukünftigen Termine angezeigt."
+      },
+      "service_name": {
+        "type": "string",
+        "description": "Name der gebuchten Dienstleistung zur Filterung (optional)"
+      }
+    },
+    "required": [
+      "function_name",
+      "call_id"
+    ]
+  },
+  "response_variables": {
+    "success": "$.success",
+    "error": "$.error",
+    "message": "$.message",
+    "requires_phone_number": "$.requires_phone_number",
+    "appointment_count": "$.appointment_count",
+    "appointment_id": "$.appointment.id",
+    "appointment_date": "$.appointment.date",
+    "appointment_time": "$.appointment.time",
+    "service_name": "$.appointment.service",
+    "staff_name": "$.appointment.staff"
+  }
+}

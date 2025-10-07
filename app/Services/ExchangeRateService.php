@@ -118,8 +118,10 @@ class ExchangeRateService
     {
         $rate = CurrencyExchangeRate::getCurrentRate('USD', 'EUR');
         if ($rate === null) {
-            Log::warning('No USD to EUR rate available, using default 0.92');
-            $rate = 0.92; // Fallback rate
+            $rate = config('currency.fallback_rates.USD.EUR', 0.856);
+            Log::warning('No USD to EUR rate available, using fallback rate', [
+                'fallback_rate' => $rate
+            ]);
         }
         return $usdAmount * $rate;
     }
@@ -131,8 +133,10 @@ class ExchangeRateService
     {
         $rate = CurrencyExchangeRate::getCurrentRate('USD', 'EUR');
         if ($rate === null) {
-            Log::warning('No USD to EUR rate available, using default 0.92');
-            $rate = 0.92;
+            $rate = config('currency.fallback_rates.USD.EUR', 0.856);
+            Log::warning('No USD to EUR rate available, using fallback rate', [
+                'fallback_rate' => $rate
+            ]);
         }
         return (int)round($usdCents * $rate);
     }
@@ -243,6 +247,54 @@ class ExchangeRateService
     }
 
     /**
+     * Get historical exchange rate for a specific date
+     *
+     * @param string $from Source currency (e.g. 'USD')
+     * @param string $to Target currency (e.g. 'EUR')
+     * @param Carbon $date Date for historical rate
+     * @return float|null Historical rate or null if not available
+     */
+    public function getHistoricalRate(string $from, string $to, Carbon $date): ?float
+    {
+        // Try to get rate from database for that specific date
+        $historicalRate = CurrencyExchangeRate::where('from_currency', $from)
+            ->where('to_currency', $to)
+            ->where('valid_from', '<=', $date)
+            ->where(function($query) use ($date) {
+                $query->whereNull('valid_to')
+                    ->orWhere('valid_to', '>=', $date);
+            })
+            ->where('is_active', true)
+            ->orderBy('valid_from', 'desc')
+            ->first();
+
+        if ($historicalRate) {
+            return $historicalRate->rate;
+        }
+
+        // Fallback: Try to fetch from external API for historical date
+        // Note: Most free APIs don't support historical rates
+        // For production, consider paid API like Fixer.io or ExchangeRate-API
+
+        return null;
+    }
+
+    /**
+     * Get current exchange rate (alias for compatibility)
+     *
+     * @param string $to Target currency
+     * @return float
+     */
+    public function getRate(string $to): float
+    {
+        $rate = CurrencyExchangeRate::getCurrentRate('USD', $to);
+        if ($rate === null) {
+            $rate = config("currency.fallback_rates.USD.{$to}", 0.856);
+        }
+        return $rate;
+    }
+
+    /**
      * Calculate external costs for a call
      */
     public function calculateCallExternalCosts(array $costs): array
@@ -262,20 +314,20 @@ class ExchangeRateService
 
         // Get exchange rate
         $rate = CurrencyExchangeRate::getCurrentRate('USD', 'EUR');
-        if ($rate) {
-            $result['exchange_rate'] = $rate;
-
-            // Convert to EUR cents
-            $result['retell_eur_cents'] = (int)round($result['retell_usd'] * $rate * 100);
-            $result['twilio_eur_cents'] = (int)round($result['twilio_usd'] * $rate * 100);
-            $result['total_eur_cents'] = $result['retell_eur_cents'] + $result['twilio_eur_cents'];
-        } else {
-            // Use fallback rate
-            $result['exchange_rate'] = 0.92;
-            $result['retell_eur_cents'] = (int)round($result['retell_usd'] * 0.92 * 100);
-            $result['twilio_eur_cents'] = (int)round($result['twilio_usd'] * 0.92 * 100);
-            $result['total_eur_cents'] = $result['retell_eur_cents'] + $result['twilio_eur_cents'];
+        if (!$rate) {
+            // Use fallback rate from config
+            $rate = config('currency.fallback_rates.USD.EUR', 0.856);
+            Log::warning('Using fallback exchange rate for cost calculation', [
+                'fallback_rate' => $rate
+            ]);
         }
+
+        $result['exchange_rate'] = $rate;
+
+        // Convert to EUR cents
+        $result['retell_eur_cents'] = (int)round($result['retell_usd'] * $rate * 100);
+        $result['twilio_eur_cents'] = (int)round($result['twilio_usd'] * $rate * 100);
+        $result['total_eur_cents'] = $result['retell_eur_cents'] + $result['twilio_eur_cents'];
 
         return $result;
     }

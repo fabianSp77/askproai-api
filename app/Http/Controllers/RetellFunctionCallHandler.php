@@ -105,27 +105,30 @@ class RetellFunctionCallHandler extends Controller
             'headers' => LogSanitizer::sanitizeHeaders($request->headers->all()),
             'raw_body' => LogSanitizer::sanitize($request->getContent()),
             'parsed_data' => LogSanitizer::sanitize($data),
-            'function_name' => $data['function_name'] ?? 'NONE',
-            'parameters' => LogSanitizer::sanitize($data['parameters'] ?? $data['args'] ?? []),
+            'function_name' => $data['name'] ?? $data['function_name'] ?? 'NONE',  // Bug #4 Fix: Retell sends 'name' not 'function_name'
+            'parameters' => LogSanitizer::sanitize($data['args'] ?? $data['parameters'] ?? []),
             'call_id' => $data['call_id'] ?? null,
             'agent_id' => $data['agent_id'] ?? null,
             'session_id' => $data['session_id'] ?? null
         ]);
 
         Log::info('🔧 Function call received from Retell', [
-            'function' => $data['function_name'] ?? 'unknown',
-            'parameters' => $data['parameters'] ?? [],
+            'function' => $data['name'] ?? $data['function_name'] ?? 'unknown',  // Bug #4 Fix
+            'parameters' => $data['args'] ?? $data['parameters'] ?? [],  // Bug #4 Fix
             'call_id' => $data['call_id'] ?? null
         ]);
 
-        $functionName = $data['function_name'] ?? '';
-        $parameters = $data['parameters'] ?? [];
-        $callId = $data['call_id'] ?? null;
+        // Bug #4 Fix (Call 777): Retell sends 'name' and 'args', not 'function_name' and 'parameters'
+        $functionName = $data['name'] ?? $data['function_name'] ?? '';
+        $parameters = $data['args'] ?? $data['parameters'] ?? [];
+        // Bug #6 Fix (Call 778): call_id is inside parameters/args, not at top level - CHECK PARAMETERS FIRST!
+        $callId = $parameters['call_id'] ?? $data['call_id'] ?? null;
 
         // Route to appropriate function handler
         return match($functionName) {
             'check_availability' => $this->checkAvailability($parameters, $callId),
             'book_appointment' => $this->bookAppointment($parameters, $callId),
+            'query_appointment' => $this->queryAppointment($parameters, $callId),
             'get_alternatives' => $this->getAlternatives($parameters, $callId),
             'list_services' => $this->listServices($parameters, $callId),
             'cancel_appointment' => $this->handleCancellationAttempt($parameters, $callId),
@@ -439,25 +442,32 @@ class RetellFunctionCallHandler extends Controller
                             'call_id' => $callId,
                             'calcom_booking_id' => $calcomBookingId
                         ]);
+
+                        // Return partial success - Cal.com booking succeeded but no call context
+                        return $this->responseFormatter->success([
+                            'booked' => true,
+                            'message' => "Ihr Termin am {$appointmentTime->format('d.m.')} um {$appointmentTime->format('H:i')} Uhr ist gebucht.",
+                            'booking_id' => $calcomBookingId,
+                            'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'confirmation' => "Sie erhalten eine Bestätigung per E-Mail."
+                        ]);
                     }
                 } catch (\Exception $e) {
-                    Log::error('❌ Failed to create local appointment after Cal.com success', [
+                    Log::error('❌ CRITICAL: Failed to create local appointment after Cal.com success', [
                         'calcom_booking_id' => $calcomBookingId,
                         'call_id' => $callId,
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
-                    // Continue - Cal.com booking succeeded, appointment will be synced via webhook
-                }
 
-                // Fallback response if appointment creation failed (webhook will sync)
-                return $this->responseFormatter->success([
-                    'booked' => true,
-                    'message' => "Perfekt! Ihr Termin am {$appointmentTime->format('d.m.')} um {$appointmentTime->format('H:i')} Uhr ist gebucht.",
-                    'booking_id' => $calcomBookingId,
-                    'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
-                    'confirmation' => "Sie erhalten eine Bestätigung per SMS."
-                ]);
+                    // 🚨 FIX: Return error instead of success to prevent silent failures
+                    // Cal.com booking succeeded but local record creation failed
+                    // This requires manual intervention or webhook sync
+                    return $this->responseFormatter->error(
+                        'Die Terminbuchung wurde im Kalender erstellt, aber es gab ein Problem beim Speichern. ' .
+                        'Bitte kontaktieren Sie uns direkt zur Bestätigung. Booking-ID: ' . $calcomBookingId
+                    );
+                }
             }
 
             return $this->responseFormatter->error('Buchung konnte nicht durchgeführt werden');
@@ -645,6 +655,26 @@ class RetellFunctionCallHandler extends Controller
             $name = $validatedData['name'];
             $dienstleistung = $validatedData['dienstleistung'];
             $email = $validatedData['email'];
+
+            // 🔧 BUG FIX (Call 776): Auto-fill customer name if "Unbekannt" or empty
+            // If agent didn't provide name but customer exists, use database name
+            $callId = $args['call_id'] ?? null;
+            if (($name === 'Unbekannt' || empty($name)) && $callId) {
+                $call = $this->callLifecycle->findCallByRetellId($callId);
+                if ($call && $call->customer_id) {
+                    $customer = \App\Models\Customer::find($call->customer_id);
+                    if ($customer && !empty($customer->name)) {
+                        $originalName = $name;
+                        $name = $customer->name;
+                        Log::info('✅ Auto-filled customer name from database', [
+                            'original_name' => $originalName,
+                            'auto_filled_name' => $name,
+                            'customer_id' => $customer->id,
+                            'call_id' => $call->id
+                        ]);
+                    }
+                }
+            }
 
             // Fallback: Replace Retell placeholders if not resolved
             if ($datum === '{{current_date}}' || $datum === 'current_date') {
@@ -917,6 +947,78 @@ class RetellFunctionCallHandler extends Controller
                 ], 200);
             }
 
+            // 🔍 PRE-BOOKING DUPLICATE CHECK
+            // Check if customer already has appointment at requested date/time
+            if ($call && $call->from_number) {
+                $customer = \App\Models\Customer::where('phone', $call->from_number)
+                    ->where('company_id', $companyId)
+                    ->first();
+
+                if ($customer) {
+                    // Check for existing appointments at exact date/time
+                    $existingAppointment = \App\Models\Appointment::where('customer_id', $customer->id)
+                        ->whereDate('starts_at', $appointmentDate->format('Y-m-d'))
+                        ->whereTime('starts_at', $appointmentDate->format('H:i:s'))
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->with(['service', 'staff'])
+                        ->first();
+
+                    if ($existingAppointment) {
+                        Log::warning('⚠️ DUPLICATE BOOKING DETECTED - Customer already has appointment at this time', [
+                            'call_id' => $call->id,
+                            'customer_id' => $customer->id,
+                            'customer_name' => $customer->name,
+                            'existing_appointment_id' => $existingAppointment->id,
+                            'requested_date' => $appointmentDate->format('Y-m-d'),
+                            'requested_time' => $appointmentDate->format('H:i'),
+                            'existing_starts_at' => $existingAppointment->starts_at->format('Y-m-d H:i')
+                        ]);
+
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'duplicate_detected',
+                            'message' => sprintf(
+                                'Sie haben bereits einen Termin am %s um %s Uhr%s. Möchten Sie diesen Termin behalten, verschieben, oder einen zusätzlichen Termin buchen?',
+                                $existingAppointment->starts_at->format('d.m.Y'),
+                                $existingAppointment->starts_at->format('H:i'),
+                                $existingAppointment->service ? ' für ' . $existingAppointment->service->name : ''
+                            ),
+                            'existing_appointment' => [
+                                'id' => $existingAppointment->id,
+                                'date' => $existingAppointment->starts_at->format('d.m.Y'),
+                                'time' => $existingAppointment->starts_at->format('H:i'),
+                                'datetime' => $existingAppointment->starts_at->toIso8601String(),
+                                'service' => $existingAppointment->service?->name,
+                                'staff' => $existingAppointment->staff?->name,
+                                'status' => $existingAppointment->status
+                            ],
+                            'options' => [
+                                'keep_existing' => 'Bestehenden Termin behalten',
+                                'book_additional' => 'Zusätzlichen Termin buchen',
+                                'reschedule' => 'Termin verschieben'
+                            ],
+                            'bestaetigung_status' => 'duplicate_confirmation_needed'
+                        ], 200);
+                    }
+
+                    // Also check for appointments on same day (different time) - for context
+                    $sameDayAppointments = \App\Models\Appointment::where('customer_id', $customer->id)
+                        ->whereDate('starts_at', $appointmentDate->format('Y-m-d'))
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->count();
+
+                    if ($sameDayAppointments > 0) {
+                        Log::info('ℹ️ Customer has other appointments on same day', [
+                            'customer_id' => $customer->id,
+                            'requested_date' => $appointmentDate->format('Y-m-d'),
+                            'requested_time' => $appointmentDate->format('H:i'),
+                            'same_day_count' => $sameDayAppointments
+                        ]);
+                        // Continue with booking - just informational log
+                    }
+                }
+            }
+
             // REAL Cal.com availability check
             try {
                 // Use the actual date without year mapping
@@ -1118,7 +1220,8 @@ class RetellFunctionCallHandler extends Controller
                                                     'duration_minutes' => $service->duration ?? 60
                                                 ],
                                                 calcomBookingId: $booking['uid'] ?? null,
-                                                call: $call
+                                                call: $call,
+                                                calcomBookingData: $booking  // Pass Cal.com booking data for staff assignment
                                             );
 
                                             Log::info('✅ Appointment record created from Cal.com booking', [
@@ -2307,6 +2410,72 @@ class RetellFunctionCallHandler extends Controller
                 'error' => 'finder_error',
                 'message' => 'Entschuldigung, Verfügbarkeitssuche fehlgeschlagen.',
             ];
+        }
+    }
+
+    /**
+     * Query existing appointments for caller
+     *
+     * Security: Requires phone number verification
+     * Anonymous callers are rejected for security reasons
+     *
+     * @param array $params Query parameters (date, service, etc.)
+     * @param string|null $callId Retell call ID
+     * @return array Response with appointment info or error
+     */
+    private function queryAppointment(array $params, ?string $callId)
+    {
+        try {
+            Log::info('🔍 Query appointment function called', [
+                'call_id' => $callId,
+                'parameters' => $params
+            ]);
+
+            // Get call context
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+
+            if (!$call) {
+                Log::error('❌ Call not found for query', [
+                    'retell_call_id' => $callId
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'call_not_found',
+                    'message' => 'Anruf konnte nicht gefunden werden.'
+                ];
+            }
+
+            // Use query service for secure appointment lookup
+            $queryService = app(\App\Services\Retell\AppointmentQueryService::class);
+
+            $criteria = [
+                'appointment_date' => $params['appointment_date'] ?? $params['datum'] ?? null,
+                'service_name' => $params['service_name'] ?? $params['dienstleistung'] ?? null
+            ];
+
+            $result = $queryService->findAppointments($call, $criteria);
+
+            Log::info('✅ Query appointment completed', [
+                'call_id' => $callId,
+                'success' => $result['success'],
+                'appointment_count' => $result['appointment_count'] ?? 0
+            ]);
+
+            return response()->json($result, 200);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Query appointment failed', [
+                'call_id' => $callId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'query_error',
+                'message' => 'Entschuldigung, ich konnte Ihren Termin nicht finden. Bitte versuchen Sie es erneut.'
+            ], 200);
         }
     }
 }

@@ -201,7 +201,8 @@ class AppointmentCreationService implements AppointmentCreationInterface
                     $service,
                     $bookingDetails,
                     $alternativeResult['booking_id'],
-                    $call
+                    $call,
+                    $alternativeResult['booking_data'] ?? null  // Phase 2: Pass Cal.com response for staff assignment
                 );
             }
 
@@ -346,6 +347,23 @@ class AppointmentCreationService implements AppointmentCreationInterface
                     'reason' => 'Database duplicate check prevented creating duplicate appointment'
                 ]);
 
+                // 🔧 FIX: Link current call to existing appointment to prevent orphaned calls
+                if ($call && !$call->appointment_id) {
+                    $call->update([
+                        'appointment_id' => $existingAppointment->id,
+                        'appointment_link_status' => 'linked',
+                        'appointment_linked_at' => now(),
+                        'customer_link_status' => 'linked',
+                        'customer_linked_at' => now(),
+                    ]);
+
+                    Log::info('✅ Duplicate booking attempt: Linked new call to existing appointment', [
+                        'call_id' => $call->id,
+                        'appointment_id' => $existingAppointment->id,
+                        'original_call_id' => $existingAppointment->call_id
+                    ]);
+                }
+
                 // Return existing appointment instead of creating duplicate
                 return $existingAppointment;
             }
@@ -367,6 +385,7 @@ class AppointmentCreationService implements AppointmentCreationInterface
         }
 
         $appointment = Appointment::create([
+            'company_id' => $customer->company_id,  // FIX: Auto-set company_id from customer
             'customer_id' => $customer->id,
             'service_id' => $service->id,
             'branch_id' => $branchId,
@@ -729,6 +748,7 @@ class AppointmentCreationService implements AppointmentCreationInterface
 
             return [
                 'booking_id' => $bookingResult['booking_id'],
+                'booking_data' => $bookingResult['booking_data'],  // Pass Cal.com booking data for staff assignment
                 'alternative_time' => $alternativeTime,
                 'alternative_type' => $alternative['type']
             ];

@@ -67,7 +67,7 @@ class BookingApiService
         }
 
         $appointment = $this->compositeService->bookComposite([
-            'company_id' => $service->company_id,
+            'company_id' => $customer->company_id,  // Use customer's company_id for multi-tenant isolation
             'branch_id' => $data['branch_id'],
             'service_id' => $service->id,
             'customer_id' => $customer->id,
@@ -137,7 +137,7 @@ class BookingApiService
 
             // Create appointment record
             $appointment = Appointment::create([
-                'company_id' => $service->company_id,
+                'company_id' => $customer->company_id,  // Use customer's company_id for multi-tenant isolation
                 'branch_id' => $data['branch_id'],
                 'service_id' => $service->id,
                 'customer_id' => $customer->id,

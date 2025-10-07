@@ -98,6 +98,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Staff Matching Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Confidence thresholds for automatic Cal.com host to staff matching.
+    | auto_threshold: Minimum confidence required for automatic mapping (0-100)
+    | email_confidence: Confidence score for exact email matches
+    | name_confidence: Confidence score for name-based matches
+    */
+
+    'staff_matching' => [
+        'auto_threshold' => env('BOOKING_STAFF_AUTO_THRESHOLD', 75),
+        'email_confidence' => env('BOOKING_STAFF_EMAIL_CONFIDENCE', 95),
+        'name_confidence' => env('BOOKING_STAFF_NAME_CONFIDENCE', 75),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Notification Settings
     |--------------------------------------------------------------------------
     */

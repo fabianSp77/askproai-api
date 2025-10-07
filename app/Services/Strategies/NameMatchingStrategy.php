@@ -38,7 +38,7 @@ class NameMatchingStrategy implements HostMatchingStrategy
 
         return new MatchResult(
             staff: $staff,
-            confidence: 75, // Lower confidence than email
+            confidence: config('booking.staff_matching.name_confidence', 75),
             reason: "Full name match: {$calcomName}",
             metadata: [
                 'match_field' => 'name',

@@ -94,6 +94,22 @@ class ListCalls extends ListRecords
             echo "Datum;Uhrzeit;Kunde;Von Nummer;Nach Nummer;Richtung;Dauer;Status;Stimmung;Termin;Ergebnis;Kosten (€);Notizen\n";
 
             foreach ($calls as $call) {
+                // Get role-based cost (same logic as table column)
+                $user = auth()->user();
+                $primaryCost = 0;
+
+                if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
+                    $primaryCost = $call->base_cost ?? 0;
+                } elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+                    $primaryCost = $call->reseller_cost ?? $call->base_cost ?? 0;
+                } else {
+                    $primaryCost = $call->customer_cost ?? 0;
+                    // Fallback for legacy calls without customer_cost
+                    if ($primaryCost == 0 && is_numeric($call->cost)) {
+                        $primaryCost = round($call->cost * 100);
+                    }
+                }
+
                 $row = [
                     $call->created_at->format('d.m.Y'),
                     $call->created_at->format('H:i:s'),
@@ -106,7 +122,7 @@ class ListCalls extends ListRecords
                     $this->translateSentiment($call->sentiment),
                     $call->appointment_made ? 'Ja' : 'Nein',
                     $this->translateOutcome($call->session_outcome),
-                    number_format(($call->cost ?? 0) / 100, 2, ',', '.'),
+                    number_format($primaryCost / 100, 2, ',', '.'),
                     str_replace(["\n", "\r", ";"], [" ", " ", ","], $call->notes ?? '')
                 ];
 

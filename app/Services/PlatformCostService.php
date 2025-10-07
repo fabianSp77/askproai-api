@@ -171,21 +171,25 @@ class PlatformCostService
     public function calculateCallTotalCosts(Call $call): void
     {
         try {
-            $exchangeRate = CurrencyExchangeRate::getCurrentRate('USD', 'EUR') ?? 0.92;
+            $exchangeRate = CurrencyExchangeRate::getCurrentRate('USD', 'EUR') ?? config('currency.fallback_rates.USD.EUR', 0.856);
 
-            // Calculate total external costs
+            // Calculate total external costs (Retell + Twilio)
             $totalExternalCostEurCents =
                 ($call->retell_cost_eur_cents ?? 0) +
                 ($call->twilio_cost_eur_cents ?? 0);
 
             // Update call with totals
+            // IMPORTANT: base_cost should equal total_external_cost_eur_cents (our cost basis)
             $call->update([
                 'exchange_rate_used' => $exchangeRate,
-                'total_external_cost_eur_cents' => $totalExternalCostEurCents
+                'total_external_cost_eur_cents' => $totalExternalCostEurCents,
+                'base_cost' => $totalExternalCostEurCents  // Base cost = Total external costs
             ]);
 
             Log::info('Calculated total call costs', [
                 'call_id' => $call->id,
+                'retell_eur_cents' => $call->retell_cost_eur_cents ?? 0,
+                'twilio_eur_cents' => $call->twilio_cost_eur_cents ?? 0,
                 'total_eur_cents' => $totalExternalCostEurCents
             ]);
         } catch (\Exception $e) {

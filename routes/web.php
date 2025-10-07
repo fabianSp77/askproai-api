@@ -33,6 +33,10 @@ Route::prefix('guides')->group(function () {
     Route::get('/retell-agent-update', function () {
         return view('guides.retell-agent-update');
     })->name('guides.retell-agent-update');
+
+    Route::get('/retell-agent-query-function', function () {
+        return view('guides.retell-agent-query-function');
+    })->name('guides.retell-agent-query-function');
 });
 
 // Protected Documentation Routes (requires authentication)

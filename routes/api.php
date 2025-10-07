@@ -240,6 +240,11 @@ Route::prefix('retell')->group(function () {
     Route::post('/reschedule-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'rescheduleAppointment'])
         ->name('api.retell.reschedule-appointment')
         ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:30,1']);
+
+    // Fallback route for query_appointment function (legacy Retell agent config)
+    Route::post('/function-call', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'handleFunctionCall'])
+        ->name('api.retell.function-call.legacy')
+        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
 });
 
 // ---- User Preferences Routes -------------------------------------------

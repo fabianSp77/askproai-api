@@ -31,7 +31,7 @@ class EmailMatchingStrategy implements HostMatchingStrategy
 
         return new MatchResult(
             staff: $staff,
-            confidence: 95,
+            confidence: config('booking.staff_matching.email_confidence', 95),
             reason: "Exact email match: {$email}",
             metadata: [
                 'match_field' => 'email',

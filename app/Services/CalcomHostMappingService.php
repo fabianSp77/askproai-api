@@ -70,16 +70,19 @@ class CalcomHostMappingService
         }
 
         // 2. Attempt auto-discovery via matching strategies
+        $autoThreshold = config('booking.staff_matching.auto_threshold', 75);
+
         foreach ($this->strategies as $strategy) {
             $matchResult = $strategy->match($hostData, $context);
 
-            if ($matchResult && $matchResult->confidence >= 80) {
+            if ($matchResult && $matchResult->confidence >= $autoThreshold) {
                 Log::info('CalcomHostMappingService: Auto-matched via strategy', [
                     'host_id' => $hostId,
                     'strategy' => get_class($strategy),
                     'staff_id' => $matchResult->staff->id,
                     'confidence' => $matchResult->confidence,
-                    'reason' => $matchResult->reason
+                    'reason' => $matchResult->reason,
+                    'threshold' => $autoThreshold
                 ]);
 
                 $mapping = $this->createMapping(
@@ -123,6 +126,7 @@ class CalcomHostMappingService
     ): CalcomHostMapping {
         $mapping = CalcomHostMapping::create([
             'staff_id' => $staff->id,
+            'company_id' => $staff->company_id,  // Multi-tenant isolation
             'calcom_host_id' => $hostData['id'],
             'calcom_name' => $hostData['name'] ?? '',
             'calcom_email' => $hostData['email'] ?? '',

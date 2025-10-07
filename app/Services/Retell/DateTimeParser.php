@@ -126,6 +126,24 @@ class DateTimeParser
         if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $dateString, $matches)) {
             try {
                 $carbon = Carbon::createFromFormat('d.m.Y', $dateString);
+
+                // 🔍 SMART YEAR INFERENCE (Bug Fix: Call 778)
+                // Apply year adjustment for German format dates too!
+                if ($carbon->isPast() && $carbon->diffInDays(now(), true) > 7) {
+                    $nextYear = $carbon->copy()->addYear();
+
+                    // Only adjust if future date is reasonable (within next 365 days)
+                    if ($nextYear->isFuture() && $nextYear->diffInDays(now()) < 365) {
+                        Log::info('📅 Adjusted date year to future occurrence (German format)', [
+                            'original' => $carbon->format('Y-m-d'),
+                            'adjusted' => $nextYear->format('Y-m-d'),
+                            'input' => $dateString,
+                            'reason' => 'past_date_detected'
+                        ]);
+                        $carbon = $nextYear;
+                    }
+                }
+
                 return $carbon->format('Y-m-d');
             } catch (\Exception $e) {
                 Log::warning('Failed to parse German date format', [
@@ -138,6 +156,25 @@ class DateTimeParser
         // Try parsing ISO format (YYYY-MM-DD) or let Carbon figure it out
         try {
             $carbon = Carbon::parse($dateString);
+
+            // 🔍 SMART YEAR INFERENCE (Bug Fix: Call 776, Fixed in Call 778)
+            // If parsed date is significantly in the past (>7 days), assume user meant next occurrence
+            // Bug Fix: Use absolute value (true) not signed value (false) for past date comparison
+            if ($carbon->isPast() && $carbon->diffInDays(now(), true) > 7) {
+                $nextYear = $carbon->copy()->addYear();
+
+                // Only adjust if future date is reasonable (within next 365 days)
+                if ($nextYear->isFuture() && $nextYear->diffInDays(now()) < 365) {
+                    Log::info('📅 Adjusted date year to future occurrence', [
+                        'original' => $carbon->format('Y-m-d'),
+                        'adjusted' => $nextYear->format('Y-m-d'),
+                        'input' => $dateString,
+                        'reason' => 'past_date_detected'
+                    ]);
+                    $carbon = $nextYear;
+                }
+            }
+
             return $carbon->format('Y-m-d');
         } catch (\Exception $e) {
             Log::error('Failed to parse date string', [
