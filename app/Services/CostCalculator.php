@@ -54,6 +54,20 @@ class CostCalculator
             // Ensure downstream calculations use the freshly computed base cost
             $call->base_cost = $costs['base_cost'];
 
+            // ✅ FIX: Cost consistency validation (QUALITY AUDIT recommendation)
+            if ($call->total_external_cost_eur_cents &&
+                abs($call->total_external_cost_eur_cents - $costs['base_cost']) > 1) {
+                Log::warning('Cost calculation mismatch detected', [
+                    'call_id' => $call->id,
+                    'total_external_cost_eur_cents' => $call->total_external_cost_eur_cents,
+                    'calculated_base_cost' => $costs['base_cost'],
+                    'difference_cents' => abs($call->total_external_cost_eur_cents - $costs['base_cost']),
+                    'retell_cost' => $call->retell_cost_eur_cents,
+                    'twilio_cost' => $call->twilio_cost_eur_cents,
+                    'note' => 'Base cost should equal total_external_cost (within 1 cent rounding)'
+                ]);
+            }
+
             // 3. Check if company has a reseller/mandant
             if ($company->parent_company_id) {
                 // This is a reseller customer

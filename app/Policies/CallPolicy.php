@@ -46,9 +46,17 @@ class CallPolicy
             return true;
         }
 
-        // Users can view calls from their company
+        // Users can view calls from their company (direct match)
         if ($user->company_id && $user->company_id === $call->company_id) {
             return true;
+        }
+
+        // ✅ FIX VULN-002: Resellers can view their customers' calls (parent_company_id match)
+        if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            // Check if call belongs to a customer company where parent_company_id = reseller company_id
+            if ($call->company && $call->company->parent_company_id === $user->company_id) {
+                return true;
+            }
         }
 
         // Staff can view calls they participated in
@@ -86,6 +94,13 @@ class CallPolicy
         // Managers can update calls in their company
         if ($user->hasRole('manager') && $user->company_id === $call->company_id) {
             return true;
+        }
+
+        // ✅ FIX: Resellers can update their customers' calls
+        if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            if ($call->company && $call->company->parent_company_id === $user->company_id) {
+                return true;
+            }
         }
 
         // Staff can update their own calls (e.g., add notes)
@@ -139,6 +154,13 @@ class CallPolicy
         // Managers can play recordings from their company
         if ($user->hasRole('manager') && $user->company_id === $call->company_id) {
             return true;
+        }
+
+        // ✅ FIX: Resellers can play recordings from their customers' calls
+        if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            if ($call->company && $call->company->parent_company_id === $user->company_id) {
+                return true;
+            }
         }
 
         // Staff can play recordings of calls they participated in

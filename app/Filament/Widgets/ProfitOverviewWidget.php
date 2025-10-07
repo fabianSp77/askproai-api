@@ -41,8 +41,10 @@ class ProfitOverviewWidget extends StatsOverviewWidget
                 });
             }
 
-            // Today's profit
-            $todayCalls = (clone $query)->whereDate('created_at', today())->get();
+            // Today's profit - ✅ FIX PERF-001: Eager load appointments to prevent N+1
+            $todayCalls = (clone $query)->whereDate('created_at', today())
+                ->with('appointments:id,call_id,price')
+                ->get();
             $todayProfit = 0;
             $todayPlatformProfit = 0;
             $todayResellerProfit = 0;
@@ -59,8 +61,10 @@ class ProfitOverviewWidget extends StatsOverviewWidget
                 }
             }
 
-            // Yesterday comparison
-            $yesterdayCalls = (clone $query)->whereDate('created_at', today()->subDay())->get();
+            // Yesterday comparison - ✅ FIX PERF-001: Eager load appointments
+            $yesterdayCalls = (clone $query)->whereDate('created_at', today()->subDay())
+                ->with('appointments:id,call_id,price')
+                ->get();
             $yesterdayProfit = 0;
 
             foreach ($yesterdayCalls as $call) {
@@ -70,10 +74,11 @@ class ProfitOverviewWidget extends StatsOverviewWidget
                 }
             }
 
-            // Month stats
+            // Month stats - ✅ FIX PERF-001: Eager load appointments
             $monthProfit = 0;
             $monthCalls = (clone $query)->whereMonth('created_at', now()->month)
                                        ->whereYear('created_at', now()->year)
+                                       ->with('appointments:id,call_id,price')
                                        ->get();
 
             foreach ($monthCalls as $call) {
@@ -136,7 +141,10 @@ class ProfitOverviewWidget extends StatsOverviewWidget
         $chart = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $calls = (clone $baseQuery)->whereDate('created_at', $date)->get();
+            // ✅ FIX PERF-001: Eager load appointments for chart data
+            $calls = (clone $baseQuery)->whereDate('created_at', $date)
+                ->with('appointments:id,call_id,price')
+                ->get();
 
             $dayProfit = 0;
             foreach ($calls as $call) {

@@ -95,8 +95,10 @@ class ProfitDashboard extends Page
         }
         // Super admin sees all
 
-        // Today's stats
-        $todayCalls = (clone $query)->whereDate('created_at', today())->get();
+        // Today's stats - ✅ FIX PERF-001: Eager load appointments to prevent N+1
+        $todayCalls = (clone $query)->whereDate('created_at', today())
+            ->with('appointments:id,call_id,price')
+            ->get();
         $todayProfit = 0;
         $todayPlatformProfit = 0;
         $todayResellerProfit = 0;
@@ -113,9 +115,10 @@ class ProfitDashboard extends Page
             }
         }
 
-        // This month's stats
+        // This month's stats - ✅ FIX PERF-001: Eager load appointments
         $monthCalls = (clone $query)->whereMonth('created_at', now()->month)
                                    ->whereYear('created_at', now()->year)
+                                   ->with('appointments:id,call_id,price')
                                    ->get();
         $monthProfit = 0;
         foreach ($monthCalls as $call) {
@@ -159,7 +162,7 @@ class ProfitDashboard extends Page
             $date = now()->subDays($i);
             $chartData['labels'][] = $date->format('d.m');
 
-            // Get calls for this day
+            // Get calls for this day - ✅ FIX PERF-001: Eager load appointments
             $query = Call::whereDate('created_at', $date);
 
             if ($isReseller && !$isSuperAdmin) {
@@ -168,7 +171,7 @@ class ProfitDashboard extends Page
                 });
             }
 
-            $calls = $query->get();
+            $calls = $query->with('appointments:id,call_id,price')->get();
             $dayProfit = 0;
             $dayPlatformProfit = 0;
             $dayResellerProfit = 0;

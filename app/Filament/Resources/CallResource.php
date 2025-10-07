@@ -1950,18 +1950,33 @@ class CallResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'customer:id,name,phone,email,company_id',
-                'company:id,name',
-                'appointment:id,customer_id,starts_at,status',
+                'company:id,name,parent_company_id',  // ✅ FIX: Added parent_company_id
+                'appointment:id,customer_id,starts_at,status,price',  // ✅ FIX: Added price for N+1 prevention
                 'phoneNumber:id,number,label',
             ])
             // 🔥 FIX: Hide temporary calls from default view (created during call_inbound, upgraded on call_started)
-            ->where(function ($query) {
-                $query->where('retell_call_id', 'LIKE', 'call_%')
-                      ->orWhereNull('retell_call_id');
+            ->where(function ($q) {
+                $q->where('retell_call_id', 'LIKE', 'call_%')
+                  ->orWhereNull('retell_call_id');
             });
+
+        // ✅ FIX: Custom company filtering for resellers to see their customers' calls
+        // VULN-001: Resellers need to see calls from their customer companies (parent_company_id match)
+        $user = auth()->user();
+        if ($user && $user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            $query->where(function($q) use ($user) {
+                // See calls from own company OR from customer companies
+                $q->where('calls.company_id', $user->company_id)
+                  ->orWhereHas('company', function($subQ) use ($user) {
+                      $subQ->where('parent_company_id', $user->company_id);
+                  });
+            });
+        }
+
+        return $query;
     }
 
     public static function getPages(): array

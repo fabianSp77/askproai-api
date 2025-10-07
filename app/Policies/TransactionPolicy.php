@@ -40,7 +40,7 @@ class TransactionPolicy
             return true;
         }
 
-        // Billing managers and accountants can view company transactions
+        // Direct company match
         if ($user->hasAnyRole(['billing_manager', 'accountant']) &&
             $user->company_id === $transaction->company_id) {
             return true;
@@ -49,6 +49,13 @@ class TransactionPolicy
         // Managers can view their company's transactions
         if ($user->hasRole('manager') && $user->company_id === $transaction->company_id) {
             return true;
+        }
+
+        // ✅ FIX: Resellers can view their customers' transactions
+        if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            if ($transaction->company && $transaction->company->parent_company_id === $user->company_id) {
+                return true;
+            }
         }
 
         return false;

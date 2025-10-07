@@ -376,11 +376,17 @@ class Call extends Model
     /**
      * Get appointment revenue (only paid appointments)
      *
+     * ✅ FIX PERF-001: Uses eager loaded appointments when available to prevent N+1
      * @return int Revenue in cents (EUR)
      */
     public function getAppointmentRevenue(): int
     {
-        // Only count appointments with actual price > 0
+        // ✅ Use relationship data if loaded (prevents N+1 queries)
+        if ($this->relationLoaded('appointments')) {
+            return (int)($this->appointments->where('price', '>', 0)->sum('price') * 100);
+        }
+
+        // Fallback to query if not eager loaded
         return $this->appointments()
             ->where('price', '>', 0)
             ->sum('price') * 100; // Convert EUR to cents
@@ -389,11 +395,12 @@ class Call extends Model
     /**
      * Get call profit (revenue - costs)
      *
+     * ✅ FIX PERF-001: Optimized with eager loaded appointments
      * @return int Profit in cents
      */
     public function getCallProfit(): int
     {
-        $revenue = $this->getAppointmentRevenue();
+        $revenue = $this->getAppointmentRevenue(); // Now optimized with relationLoaded() check
         $cost = $this->base_cost ?? 0;
 
         return $revenue - $cost;

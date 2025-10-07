@@ -29,9 +29,17 @@ class InvoicePolicy
             return true;
         }
 
+        // Direct company match
         if ($user->hasAnyRole(['billing_manager', 'accountant', 'manager']) &&
             $user->company_id === $invoice->company_id) {
             return true;
+        }
+
+        // ✅ FIX: Resellers can view their customers' invoices
+        if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+            if ($invoice->company && $invoice->company->parent_company_id === $user->company_id) {
+                return true;
+            }
         }
 
         return false;
