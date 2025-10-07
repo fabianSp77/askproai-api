@@ -1,0 +1,54 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"],
+      "env": {},
+      "description": "Documentation and API reference"
+    },
+    "sequential": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {},
+      "description": "Complex reasoning and analysis"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "puppeteer-mcp-server"],
+      "env": {},
+      "description": "Browser automation (ARM64 compatible)"
+    },
+    "serena": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server-serena"],
+      "env": {},
+      "description": "Session memory and context"
+    },
+    "mysql-database": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/database-server",
+        "--mysql",
+        "--host", "127.0.0.1",
+        "--database", "askproai_db",
+        "--port", "3306",
+        "--user", "askproai_user",
+        "--password", "askproai_secure_pass_2024"
+      ],
+      "env": {},
+      "description": "MySQL database access (227 tables)"
+    },
+    "redis-cache": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@gongrzhe/server-redis-mcp",
+        "--host", "127.0.0.1",
+        "--port", "6379"
+      ],
+      "env": {},
+      "description": "Redis cache operations"
+    }
+  }
+}
