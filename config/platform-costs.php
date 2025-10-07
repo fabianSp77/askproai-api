@@ -30,6 +30,13 @@ return [
             // Phone number monthly cost
             'phone_number_monthly_usd' => env('TWILIO_PHONE_NUMBER_COST_USD', 1.0),
         ],
+        'estimation' => [
+            // Enable/disable estimation when webhook doesn't provide actual Twilio cost
+            // IMPORTANT: Retell's combined_cost does NOT include Twilio telephony costs
+            'enabled' => env('TWILIO_ESTIMATION_ENABLED', true),
+            // Minimum call duration to estimate costs (avoid 0-duration calls)
+            'min_duration_sec' => env('TWILIO_MIN_DURATION_SEC', 1),
+        ],
     ],
 
     'calcom' => [

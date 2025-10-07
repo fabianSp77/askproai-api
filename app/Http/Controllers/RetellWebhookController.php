@@ -578,32 +578,79 @@ class RetellWebhookController extends Controller
                     // Track external platform costs
                     $platformCostService = new PlatformCostService();
 
-                    // Track Retell costs (if provided in webhook)
-                    if (isset($callData['price_usd']) || isset($callData['cost_usd'])) {
+                    // 🔥 FIX: Use actual cost from webhook call_cost.combined_cost
+                    // combined_cost includes ALL costs: Retell API + Twilio + Voice Engine + LLM + Add-ons
+                    // CRITICAL: combined_cost is in CENTS, not DOLLARS! Must divide by 100!
+                    if (isset($callData['call_cost']['combined_cost'])) {
+                        $combinedCostCents = $callData['call_cost']['combined_cost'];
+                        $retellCostUsd = $combinedCostCents / 100; // Convert CENTS to DOLLARS
+                        if ($retellCostUsd > 0) {
+                            Log::info('Using actual Retell cost from webhook', [
+                                'call_id' => $call->id,
+                                'combined_cost_cents' => $combinedCostCents,
+                                'combined_cost_usd' => $retellCostUsd,
+                                'source' => 'webhook.call_cost.combined_cost'
+                            ]);
+                            $platformCostService->trackRetellCost($call, $retellCostUsd);
+                        }
+                    } elseif (isset($callData['price_usd']) || isset($callData['cost_usd'])) {
+                        // Backward compatibility for older webhook format
                         $retellCostUsd = $callData['price_usd'] ?? $callData['cost_usd'] ?? 0;
                         if ($retellCostUsd > 0) {
                             $platformCostService->trackRetellCost($call, $retellCostUsd);
                         }
                     } else {
-                        // Estimate Retell cost based on duration (0.07 USD per minute)
+                        // Fallback: Estimate Retell cost only if no actual data available
                         if ($call->duration_sec > 0) {
-                            $estimatedRetellCostUsd = ($call->duration_sec / 60) * 0.07;
+                            $estimatedRetellCostUsd = ($call->duration_sec / 60) * 0.10; // Updated to 0.10 USD/min (more accurate estimate)
+                            Log::warning('Using estimated Retell cost (no webhook data)', [
+                                'call_id' => $call->id,
+                                'estimated_cost_usd' => $estimatedRetellCostUsd,
+                                'duration_sec' => $call->duration_sec
+                            ]);
                             $platformCostService->trackRetellCost($call, $estimatedRetellCostUsd);
                         }
                     }
 
-                    // Track Twilio costs (if provided or estimated)
-                    if (isset($callData['twilio_cost_usd'])) {
+                    // Track Twilio costs with intelligent estimation
+                    // IMPORTANT: Retell's combined_cost does NOT include Twilio telephony costs!
+                    // We need to track Twilio separately (actual from webhook OR estimated from duration)
+                    if (isset($callData['call_cost']['twilio_cost']) && $callData['call_cost']['twilio_cost'] > 0) {
+                        // PATH 1: Use actual Twilio cost from webhook
+                        $twilioCostUsd = $callData['call_cost']['twilio_cost'];
+
+                        Log::info('Using actual Twilio cost from webhook', [
+                            'call_id' => $call->id,
+                            'twilio_cost_usd' => $twilioCostUsd,
+                            'source' => 'webhook.call_cost.twilio_cost'
+                        ]);
+
+                        $platformCostService->trackTwilioCost($call, $twilioCostUsd);
+                    } elseif (isset($callData['twilio_cost_usd']) && $callData['twilio_cost_usd'] > 0) {
+                        // PATH 1b: Alternative webhook field
                         $twilioCostUsd = $callData['twilio_cost_usd'];
-                        if ($twilioCostUsd > 0) {
-                            $platformCostService->trackTwilioCost($call, $twilioCostUsd);
-                        }
-                    } else {
-                        // Estimate Twilio cost based on duration (0.0085 USD per minute for US)
-                        if ($call->duration_sec > 0) {
-                            $estimatedTwilioCostUsd = ($call->duration_sec / 60) * 0.0085;
+
+                        Log::info('Using actual Twilio cost from webhook (alt field)', [
+                            'call_id' => $call->id,
+                            'twilio_cost_usd' => $twilioCostUsd,
+                            'source' => 'webhook.twilio_cost_usd'
+                        ]);
+
+                        $platformCostService->trackTwilioCost($call, $twilioCostUsd);
+                    } elseif ($this->shouldEstimateTwilioCost($call)) {
+                        // PATH 2: Estimate Twilio cost based on duration
+                        $estimatedTwilioCostUsd = $this->estimateTwilioCost($call);
+
+                        if ($estimatedTwilioCostUsd > 0) {
                             $platformCostService->trackTwilioCost($call, $estimatedTwilioCostUsd);
                         }
+                    } else {
+                        // PATH 3: Cannot estimate (log for debugging)
+                        Log::debug('Skipping Twilio cost estimation', [
+                            'call_id' => $call->id,
+                            'duration_sec' => $call->duration_sec,
+                            'reason' => 'insufficient_duration_or_disabled'
+                        ]);
                     }
 
                     // Update call with total external costs
@@ -1220,5 +1267,76 @@ class RetellWebhookController extends Controller
             'duration' => $call->duration_sec,
             'has_transcript' => !empty($call->transcript)
         ]);
+    }
+
+    /**
+     * Determine if Twilio cost estimation should be performed
+     *
+     * @param Call $call
+     * @return bool
+     */
+    private function shouldEstimateTwilioCost(\App\Models\Call $call): bool
+    {
+        // Check if estimation is enabled in configuration
+        if (!config('platform-costs.twilio.estimation.enabled', true)) {
+            return false;
+        }
+
+        // Check if call has sufficient duration
+        $minDuration = config('platform-costs.twilio.estimation.min_duration_sec', 1);
+
+        return $call->duration_sec >= $minDuration;
+    }
+
+    /**
+     * Estimate Twilio cost based on call duration and configured pricing
+     *
+     * @param Call $call
+     * @return float Estimated cost in USD
+     */
+    private function estimateTwilioCost(\App\Models\Call $call): float
+    {
+        try {
+            // Get pricing configuration
+            $costPerMinuteUsd = config('platform-costs.twilio.pricing.inbound_per_minute_usd', 0.0085);
+
+            // Calculate duration in minutes (use actual seconds for precision)
+            $durationMinutes = $call->duration_sec / 60;
+
+            // Calculate estimated cost
+            $estimatedCostUsd = $durationMinutes * $costPerMinuteUsd;
+
+            Log::info('Estimated Twilio cost', [
+                'call_id' => $call->id,
+                'duration_sec' => $call->duration_sec,
+                'duration_minutes' => round($durationMinutes, 2),
+                'cost_per_minute_usd' => $costPerMinuteUsd,
+                'estimated_cost_usd' => round($estimatedCostUsd, 4),
+                'source' => 'estimated'
+            ]);
+
+            // Sanity check: Alert if cost seems unreasonable
+            if ($estimatedCostUsd < 0 || $estimatedCostUsd > 10) { // $10 = ~1000 minutes
+                Log::warning('Twilio cost estimate out of expected range', [
+                    'call_id' => $call->id,
+                    'duration_sec' => $call->duration_sec,
+                    'estimated_cost_usd' => $estimatedCostUsd,
+                    'warning' => 'cost_threshold_exceeded'
+                ]);
+            }
+
+            // Never return negative cost
+            return max(0, $estimatedCostUsd);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to estimate Twilio cost', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Fail safe: return 0 instead of breaking the webhook
+            return 0;
+        }
     }
 }
