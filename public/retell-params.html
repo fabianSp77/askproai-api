@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Retell Parameters - Copy This</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .json-box { background: #2d2d2d; padding: 20px; border: 2px solid #00ff00; margin: 20px 0; }
+        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; user-select: all; }
+        button { background: #00ff00; color: #000; padding: 10px 20px; font-size: 16px; border: none; cursor: pointer; margin: 10px 0; }
+        button:hover { background: #00cc00; }
+        .warning { background: #ff0000; color: #fff; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎯 RETELL PARAMETERS - COPY BUTTON METHOD</h1>
+
+    <div class="warning">
+        ⚠️ WICHTIG: Klicke auf den Button unten - NICHT manuell markieren und kopieren!
+    </div>
+
+    <h2>✅ EMPFOHLEN: Maximale Version (alles drin)</h2>
+    <div class="json-box">
+        <pre id="json1">{"type":"object","properties":{"call_id":{"type":"string","description":"Call ID des aktuellen Anrufs"},"appointment_date":{"type":"string","description":"Datum des gesuchten Termins im Format YYYY-MM-DD oder relative Angabe wie heute, morgen, 10.10.2025. Optional - wenn nicht angegeben werden alle zukuenftigen Termine angezeigt."},"service_name":{"type":"string","description":"Name der gebuchten Dienstleistung zur Filterung (optional)"}},"required":["call_id"]}</pre>
+    </div>
+    <button onclick="copyText('json1')">📋 COPY MAXIMALE VERSION</button>
+
+    <h2>Alternative: Minimal (Notfall)</h2>
+    <div class="json-box">
+        <pre id="json2">{"type":"object","properties":{"call_id":{"type":"string","description":"Call ID"}},"required":["call_id"]}</pre>
+    </div>
+    <button onclick="copyText('json2')">📋 COPY MINIMAL VERSION</button>
+
+    <div id="status" style="margin: 20px 0; font-size: 18px; color: #00ff00;"></div>
+
+    <script>
+    function copyText(elementId) {
+        const element = document.getElementById(elementId);
+        const text = element.textContent;
+
+        // Create a temporary textarea to copy from
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        document.getElementById('status').textContent = '✅ Copied to clipboard! Paste it into Retell now.';
+
+        // Log the copied text for debugging
+        console.log('Copied text length:', text.length);
+        console.log('Copied text:', text);
+
+        // Check for control characters
+        for (let i = 0; i < text.length; i++) {
+            const code = text.charCodeAt(i);
+            if (code < 32 && code !== 10 && code !== 13 && code !== 9) {
+                console.warn(`Control char at position ${i}: code ${code}`);
+            }
+        }
+    }
+    </script>
+</body>
+</html>

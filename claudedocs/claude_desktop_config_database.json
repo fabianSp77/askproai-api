@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "mysql-database": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/database-server",
+        "--mysql",
+        "--host", "127.0.0.1",
+        "--database", "askproai_db",
+        "--port", "3306",
+        "--user", "askproai_user",
+        "--password", "askproai_secure_pass_2024"
+      ]
+    },
+    "redis-cache": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@gongrzhe/server-redis-mcp",
+        "--host", "127.0.0.1",
+        "--port", "6379"
+      ]
+    }
+  }
+}

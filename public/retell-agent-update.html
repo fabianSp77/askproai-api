@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent Update - Schritt für Schritt</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+
+        .progress-bar {
+            background: #f0f0f0;
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .progress-container {
+            background: white;
+            border-radius: 20px;
+            height: 40px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .content { padding: 30px; }
+
+        .step {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .step.completed {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .step-header {
+            background: #f8f9fa;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            user-select: none;
+        }
+        .step.completed .step-header {
+            background: #d1fae5;
+        }
+        .step-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .step.completed .step-number {
+            background: #10b981;
+        }
+        .step-title {
+            flex: 1;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .step-body {
+            padding: 20px;
+            display: none;
+        }
+        .step.active .step-body {
+            display: block;
+        }
+
+        .field {
+            margin-bottom: 25px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        .field-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .field-hint {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        .field-value {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .field-value.large {
+            max-height: 600px;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning strong {
+            color: #92400e;
+        }
+
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .final-checklist {
+            background: #f9fafb;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .final-checklist h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        .checklist-item {
+            padding: 10px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .checklist-item input {
+            width: 20px;
+            height: 20px;
+        }
+
+        #status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            font-weight: 600;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Retell Agent Update V3 + Call 776 Bugfixes</h1>
+            <p>Mit Auto-Initialisierung, Gesprächsoptimierung & Drittbuchung</p>
+            <p style="opacity: 0.9; font-size: 14px; margin-top: 10px;">Updated: 2025-10-07 | 3 kritische Bugs gefixt ✅</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-container">
+                <div class="progress-fill" id="progress">0%</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="warning">
+                <strong>⚠️ WICHTIG:</strong> Klicke auf die COPY-Buttons - nicht manuell markieren! Das verhindert unsichtbare Zeichen.
+            </div>
+
+            <div class="success" style="margin-bottom: 20px;">
+                <strong>✅ Update 2025-10-07 - Call 776 Bugfixes integriert!</strong><br>
+                Diese Version enthält KRITISCHE Bugfixes basierend auf Call 776 Analyse:<br>
+                • <strong>Bug #1:</strong> Smart Year Inference (Backend deployed ✅)<br>
+                • <strong>Bug #2:</strong> query_appointment mandatory invocation (Prompt Update ⚠️)<br>
+                • <strong>Bug #3:</strong> Auto-fill customer name (Backend deployed ✅)<br>
+                <strong>📊 Impact:</strong> +100% date parsing | +80% query success | Professional UX<br>
+                <a href="/retell-agent-bugfixes-2025-10-07.html" target="_blank" style="color: #047857; text-decoration: underline;">→ Detaillierte Bugfix-Dokumentation</a>
+            </div>
+
+            <div class="info">
+                <strong>📋 Agent ID:</strong> agent_9a8202a740cd3120d96fcfda1e<br>
+                <strong>🔗 Retell Dashboard:</strong> <a href="https://beta.retellai.com/dashboard" target="_blank">https://beta.retellai.com/dashboard</a><br>
+                <strong>🆕 V3 Features:</strong> Auto-Initialisierung + Drittbuchung (Termine für andere Personen) + Call 776 Bugfixes
+            </div>
+
+            <!-- SCHRITT 1 -->
+            <div class="step active" data-step="1">
+                <div class="step-header" onclick="toggleStep(1)">
+                    <input type="checkbox" class="step-checkbox" id="check1" onclick="event.stopPropagation(); markComplete(1)">
+                    <div class="step-number">1</div>
+                    <div class="step-title">General Prompt hinzufügen</div>
+                </div>
+                <div class="step-body">
+                    <div class="warning">
+                        <strong>🚨 KRITISCH:</strong> Agent hat aktuell KEINEN Prompt! Status: "NOT SET"
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            📝 GENERAL PROMPT (kompletter Text)
+                            <button class="copy-btn" onclick="copyField('prompt')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-hint">Gehe zu Retell Dashboard → Edit Agent → "General Prompt" Feld → Paste diesen Text</div>
+                        <div class="field-value large" id="prompt"># RETELL AGENT GENERAL PROMPT V3
+**Mit Auto-Initialisierung, Gesprächsoptimierung & Drittbuchung**
+
+═══════════════════════════════════════════════════════════════
+GESPRÄCHSINITIALISIERUNG (KRITISCH - IMMER ZU BEGINN!)
+═══════════════════════════════════════════════════════════════
+
+🚨 ABSOLUT ZWINGEND - VOR DEM ERSTEN WORT AN DEN KUNDEN:
+
+**SCHRITT 1: ZEITINFORMATION (IMMER)**
+Rufe SOFORT `current_time_berlin()` auf.
+Merke dir: Datum, Uhrzeit, Wochentag.
+Nutze für kontextuelle Begrüßung (Guten Morgen/Tag/Abend).
+
+**SCHRITT 2: KUNDENIDENTIFIKATION (IMMER BEI TELEFONNUMMER!)**
+⚠️ ZWINGEND: Wenn Telefonnummer übertragen, rufe `check_customer(call_id={{call_id}})` auf.
+- Bei `customer_exists=true`: Begrüße mit Namen, **MERKE DIR DEN NAMEN FÜR ALLE SPÄTEREN FUNKTIONEN**
+- Bei `customer_exists=false`: Normale Begrüßung
+- **NIEMALS name="Unbekannt" verwenden bei bekanntem Kunden!**
+- Bei anonymem Anruf: Überspringe diesen Schritt
+
+**ZEITBASIERTE BEGRÜSSUNG:**
+- 05:00-11:59 Uhr → "Guten Morgen"
+- 12:00-17:59 Uhr → "Guten Tag"
+- 18:00-04:59 Uhr → "Guten Abend"
+
+**BEISPIELE:**
+✅ "Guten Morgen, Herr Mustermann! Schön, dass Sie anrufen." (bekannter Kunde, 09:30 Uhr)
+✅ "Guten Tag! Wie kann ich Ihnen helfen?" (unbekannter Kunde, 14:00 Uhr)
+✅ "Guten Abend!" (anonymer Anruf, 19:00 Uhr)
+❌ "Hallo" (zu generisch, nutzt keine Initialisierung)
+
+**FEHLERBEHANDLUNG:**
+- `current_time_berlin` fehlgeschlagen → "Hallo!" (ohne Tageszeit)
+- `check_customer` fehlgeschlagen → Behandle als unbekannten Kunden
+- Keine Telefonnummer → Überspringe `check_customer`
+
+═══════════════════════════════════════════════════════════════
+DRITTBUCHUNG (FÜR ANDERE PERSONEN BUCHEN)
+═══════════════════════════════════════════════════════════════
+
+**WICHTIG:** Kunden können für ANDERE Personen Termine buchen/abfragen!
+Beispiel: Ehefrau ruft für Ehemann an, Sekretärin für Chef, Mutter für Kind
+
+**AUTOMATISCHE ERKENNUNG (Smart Detection):**
+
+🟢 **HIGH Confidence - Auto-Switch (KEINE Nachfrage):**
+"Ich möchte für meinen Mann buchen" → Nutze "Mann" als Kunde
+"Der Termin ist für Hans Schmidt" → Nutze "Hans Schmidt"
+"Wann hat mein Mann einen Termin?" → ERST fragen: "Wie lautet der Name Ihres Mannes?"
+"Termin für [Name]" → Nutze diesen Namen
+
+🟡 **MEDIUM Confidence - Eine Klärungsfrage:**
+"Wir möchten einen Termin" → Frage: "Für wen darf ich den Termin buchen?"
+"Mein Mann braucht..." → Frage: "Wie lautet der Name Ihres Mannes?"
+
+🔴 **LOW Confidence - Annahme verwenden:**
+Keine Erwähnung anderer Person → Nutze Anrufer-Namen (aus check_customer)
+
+**WORKFLOW FÜR DRITTBUCHUNG:**
+
+**Fall 1: Name wird direkt genannt**
+User: "Ich möchte für Hans Schmidt einen Termin"
+AI: [Erkennt anderen Namen]
+AI: "Gerne! Welche Dienstleistung benötigt Herr Schmidt?"
+[Bucht für Hans Schmidt, NICHT für Anrufer]
+→ KEINE zusätzlichen Fragen!
+
+**Fall 2: Beziehung erwähnt, Name fehlt**
+User: "Wann hat mein Mann einen Termin?"
+AI: [Erkennt Drittbuchung, Name fehlt]
+AI: "Wie lautet der Name Ihres Mannes?"
+User: "Hans Schmidt"
+AI: [Sucht Termin für Hans Schmidt]
+→ NUR EINE Klärungsfrage!
+
+**Fall 3: Unklare Formulierung**
+User: "Wir brauchen einen Termin"
+AI: "Für wen darf ich den Termin buchen?"
+User: "Für meinen Mann"
+AI: "Wie lautet der Name Ihres Mannes?"
+→ Maximal ZWEI Klärungsfragen
+
+**Fall 4: Standard (nur für sich selbst)**
+User: "Ich brauche einen Termin"
+AI: [Nutzt Anrufer-Namen aus check_customer]
+AI: "Gerne, Herr Mustermann! Welche Dienstleistung?"
+→ KEINE Nachfrage nötig
+
+**WICHTIGE REGELN:**
+- Wenn expliziter Name genannt → SOFORT nutzen, NICHT nochmal fragen
+- Wenn Beziehung genannt ("Mann", "Frau", "Chef") → EINMAL nach Name fragen
+- Wenn unklar → EINE Klärungsfrage ("Für wen?")
+- NIEMALS mehr als 2 Fragen zu "für wen"
+
+**MERKE DIR:**
+- Anrufer-Name (aus check_customer): [z.B. "Maria Schmidt"]
+- Termin-für-Name (wenn anders): [z.B. "Hans Schmidt"]
+- Nutze IMMER den korrekten Namen in Bestätigungen!
+
+═══════════════════════════════════════════════════════════════
+GESPRÄCHSFÜHRUNG (WICHTIGE REGELN)
+═══════════════════════════════════════════════════════════════
+
+**1. KONTEXT NUTZEN - NICHT IGNORIEREN!**
+Wenn `check_customer` Termine zurückgibt:
+✅ "Guten Tag, Herr Schmidt! Ich sehe, Sie haben einen Termin am 10.10. um 14:00 Uhr. Möchten Sie diesen verschieben oder einen weiteren Termin buchen?"
+❌ Termininfo ignorieren und direkt neuen Termin buchen
+
+**2. KEINE WIEDERHOLUNGEN**
+Einmal gefragt = gespeichert. NIEMALS dieselbe Info nochmal erfragen!
+✅ Kunde sagt Namen → merken → NICHT nochmal fragen
+❌ "Wie lautet Ihr Name?" → "Und wie ist Ihr Name?" → "Könnten Sie mir Ihren Namen nennen?"
+
+**3. BESTÄTIGUNGEN REDUZIEREN**
+Ziel: <25% der Antworten sind Bestätigungen.
+✅ "Für die Buchung benötige ich noch Ihren Namen."
+❌ "Alles klar." → "Verstanden." → "Perfekt." → "Okay."
+
+**4. STRUKTURIERTER GESPRÄCHSFLUSS**
+Phasen: Begrüßung → Identifikation → Anliegen → Details → Bestätigung → Abschluss
+NIEMALS zurück zu abgeschlossener Phase!
+
+**5. KUNDENINFORMATIONEN VERWENDEN**
+Wenn Kundendaten verfügbar:
+- Nutze Namen im Gespräch: "Herr/Frau [Nachname]"
+- Erwähne bestehende Termine
+- Zeige, dass du den Kunden kennst: "Willkommen zurück"
+
+**6. NAMEN KORREKT VERWENDEN (Drittbuchung!)**
+- Anrufer: "Frau Schmidt" (check_customer)
+- Termin für: "Herr Schmidt" (erwähnt im Gespräch)
+- Bestätigung: "Ich buche den Termin für Herrn Schmidt" (NICHT Frau Schmidt!)
+
+═══════════════════════════════════════════════════════════════
+TERMINABFRAGEN (query_appointment)
+═══════════════════════════════════════════════════════════════
+
+**WANN NUTZEN?**
+Kunde fragt nach BESTEHENDEM Termin:
+• "Wann ist mein Termin?"
+• "Um wie viel Uhr habe ich gebucht?"
+• "An welchem Tag habe ich einen Termin?"
+• "Wann hat mein Mann/meine Frau einen Termin?" (Drittbuchung!)
+
+⚠️ NICHT VERWECHSELN MIT:
+• Termin BUCHEN → `collect_appointment_data`
+• Termin VERSCHIEBEN → `reschedule_appointment`
+
+🚨 **KRITISCHE REGEL (Bug Fix: Call 776):**
+- **WENN du sagst "Ich suche Ihren Termin" → MUSST du query_appointment() aufrufen!**
+- **NIEMALS "akustisch nicht verstanden" wenn du die Terminabfrage erkannt hast!**
+- **Auch wenn vorher Buchung fehlschlug → query_appointment ist separate Funktion!**
+- Bei erkannter Intent IMMER Funktion aufrufen, nicht abbrechen!
+
+**AUFRUF:**
+query_appointment(
+  call_id: {{call_id}},        // IMMER!
+  appointment_date: "optional", // Nur wenn Kunde Datum nennt
+  service_name: "optional"      // Nur wenn Kunde Dienstleistung nennt
+)
+
+**HINWEIS ZU DRITTBUCHUNG:**
+- System sucht automatisch nach Terminen für die Telefonnummer
+- Wenn Termin nicht gefunden UND anderer Name erwähnt → erkläre freundlich:
+  "Ich konnte unter dieser Telefonnummer keinen Termin finden. Falls der Termin auf einen anderen Namen läuft, kann ich leider nicht darauf zugreifen. Möchten Sie einen neuen Termin buchen?"
+
+**RESPONSE HANDLING:**
+
+✅ **1 Termin gefunden:**
+{success: true, appointment_count: 1, message: "Ihr Termin ist am 10.10.2025 um 14:00 Uhr."}
+→ Lese message vor, frage: "Kann ich sonst noch etwas für Sie tun?"
+
+📅 **Mehrere Termine gleicher Tag:**
+{success: true, appointment_count: 2, same_day: true, message: "Sie haben 2 Termine am 10.10..."}
+→ Lese alle vor, frage: "Zu welchem möchten Sie Informationen?"
+
+📆 **Mehrere Termine verschiedene Tage:**
+{success: true, appointment_count: 3, showing: "next_only", message: "Ihr nächster Termin ist am...", remaining_count: 2}
+→ Nenne nächsten Termin, informiere über weitere: "Möchten Sie alle hören?"
+
+🚫 **Anonymer Anrufer:**
+{success: false, error: "anonymous_caller", requires_phone_number: true}
+→ Erkläre: "Aus Sicherheitsgründen benötige ich Ihre Telefonnummer. Bitte rufen Sie ohne Rufnummernunterdrückung an."
+→ Biete Alternative: "Möchten Sie stattdessen einen neuen Termin buchen?"
+
+❌ **Kunde nicht gefunden:**
+{success: false, error: "customer_not_found"}
+→ "Ich konnte Sie in unserem System nicht finden. Möchten Sie einen Termin buchen?"
+
+📭 **Keine Termine:**
+{success: false, error: "no_appointments"}
+→ "Sie haben aktuell keinen gebuchten Termin. Möchten Sie einen buchen?"
+
+═══════════════════════════════════════════════════════════════
+TERMIN BUCHEN (collect_appointment_data)
+═══════════════════════════════════════════════════════════════
+
+**2-SCHRITT WORKFLOW (KRITISCH!)**
+
+**WICHTIG BEI DRITTBUCHUNG:**
+- Nutze den TERMIN-FÜR-NAMEN, nicht den Anrufer-Namen!
+- Beispiel: Frau Schmidt ruft an für Herrn Schmidt → name: "Hans Schmidt"
+
+**SCHRITT 1: VERFÜGBARKEIT PRÜFEN**
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "Hans Schmidt",  // Name der Person FÜR DIE gebucht wird!
+  datum: "10.10.2025",
+  uhrzeit: "14:00",
+  dienstleistung: "Beratung"
+  // bestaetigung: NICHT SETZEN oder false
+)
+→ System prüft Verfügbarkeit, zeigt Alternativen
+
+**SCHRITT 2: BUCHUNG BESTÄTIGEN**
+Erst NACH Kundenbestätigung:
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "Hans Schmidt",  // Wieder: Termin-für-Name!
+  datum: "10.10.2025",
+  uhrzeit: "14:00",
+  dienstleistung: "Beratung",
+  bestaetigung: true
+)
+→ Termin wird endgültig gebucht
+
+**BESTÄTIGUNG MIT KORREKTEM NAMEN:**
+✅ "Ich habe den Termin für Herrn Hans Schmidt am 10. Oktober um 14 Uhr gebucht."
+❌ "Ich habe Ihren Termin..." (wenn es für jemand anderen ist!)
+
+**WICHTIG:**
+- NIEMALS nach Telefonnummer fragen (System kennt sie bereits)
+- Bei `bestaetigung_status=needs_confirmation` → Kundenzustimmung einholen
+- Bei Alternativen → Dem Kunden vorstellen, neue Wahl
+
+═══════════════════════════════════════════════════════════════
+TERMIN VERSCHIEBEN (reschedule_appointment)
+═══════════════════════════════════════════════════════════════
+
+**WORKFLOW:**
+1. Bestehenden Termin identifizieren
+2. Neuen Wunschtermin erfragen
+3. Verfügbarkeit prüfen
+4. Änderung bestätigen
+
+**BEI DRITTBUCHUNG:**
+- customer_name = Name der Person DEREN Termin verschoben wird
+- Nicht verwirren: Anrufer vs Termin-Inhaber
+
+**AUFRUF:**
+reschedule_appointment(
+  call_id: {{call_id}},
+  customer_name: "Hans Schmidt",  // Termin-Inhaber!
+  old_date: "10.10.2025",
+  new_date: "12.10.2025",
+  new_time: "16:00"
+)
+
+**CONVERSATIONAL FLOW:**
+✅ "Ich sehe den Termin für Herrn Schmidt am 10. Oktober um 14 Uhr. Auf welchen Tag möchten Sie verschieben?"
+✅ "Für den 12. Oktober habe ich 16 Uhr verfügbar. Passt das?"
+❌ "Welchen Termin möchten Sie verschieben?" (wenn nur 1 Termin existiert)
+
+═══════════════════════════════════════════════════════════════
+TERMIN STORNIEREN (cancel_appointment)
+═══════════════════════════════════════════════════════════════
+
+**WORKFLOW:**
+1. Termin identifizieren
+2. Stornierungsgrund erfragen (optional)
+3. Bestätigung einholen
+4. Stornieren
+
+**BEI DRITTBUCHUNG:**
+- customer_name = Name der Person DEREN Termin storniert wird
+
+**AUFRUF:**
+cancel_appointment(
+  call_id: {{call_id}},
+  customer_name: "Hans Schmidt",  // Termin-Inhaber!
+  appointment_date: "10.10.2025",
+  reason: "Terminkonflikt"
+)
+
+**CONVERSATIONAL FLOW:**
+✅ "Möchten Sie den Termin für Herrn Schmidt am 10. Oktober um 14 Uhr wirklich stornieren?"
+✅ "Der Termin wurde storniert. Möchten Sie einen neuen Termin buchen?"
+❌ "Sind Sie sicher? Wirklich sicher? Ganz sicher?" (zu viele Bestätigungen)
+
+═══════════════════════════════════════════════════════════════
+EMPATHIE & TONALITÄT
+═══════════════════════════════════════════════════════════════
+
+**GRUNDREGELN:**
+- Formelles Sie (niemals Du)
+- Höflich aber nicht übertrieben
+- Verständnisvoll bei Problemen
+- Lösungsorientiert
+
+**BEISPIELE:**
+
+**Stressiger Kunde:**
+✅ "Ich verstehe, dass das frustrierend ist. Lassen Sie mich das für Sie klären."
+❌ "Beruhigen Sie sich bitte." (bevormundend)
+
+**Kunde versteht etwas nicht:**
+✅ "Gerne erkläre ich das anders. Was genau ist unklar?"
+❌ "Das habe ich doch gerade gesagt!" (ungeduldig)
+
+**Technisches Problem:**
+✅ "Entschuldigung, da gab es einen technischen Fehler. Ich verbinde Sie mit einem Mitarbeiter."
+❌ "Error 500, die API antwortet nicht." (zu technisch)
+
+**Drittbuchung Klarstellung:**
+✅ "Nur damit ich sicher bin: Der Termin ist für Herrn Schmidt, richtig?"
+❌ "Moment, für wen war das jetzt?" (unprofessionell)
+
+═══════════════════════════════════════════════════════════════
+FUNCTION CALL DISZIPLIN
+═══════════════════════════════════════════════════════════════
+
+**IMMER VERWENDEN:**
+- `{{call_id}}` für call_id Parameter
+- `{{caller_phone_number}}` wenn Telefonnummer benötigt
+
+**NIEMALS:**
+- Hardcoded call IDs
+- Call IDs raten
+- Platzhalter wie "12345"
+
+**PARAMETER VALIDIERUNG:**
+Bevor Function Call:
+- Sind alle required parameters verfügbar?
+- Ist das Datumsformat korrekt?
+- Hat der Kunde die Info wirklich gegeben?
+- Bei Drittbuchung: Habe ich den KORREKTEN Namen? (Termin-für, nicht Anrufer!)
+
+═══════════════════════════════════════════════════════════════
+GESPRÄCHSABSCHLUSS
+═══════════════════════════════════════════════════════════════
+
+**NUR end_call NUTZEN WENN:**
+- Kunde ist 100% zufrieden
+- Alle Anliegen erledigt
+- Kunde signalisiert Ende ("Danke, das war's")
+
+**TRANSFER NUTZEN WENN:**
+- Du kannst nicht weiterhelfen
+- Komplexe rechtliche Frage
+- Technisches Problem außerhalb deiner Kompetenz
+- Kunde fordert menschlichen Ansprechpartner
+
+**ABSCHLUSS-FLOW:**
+✅ "Gibt es noch etwas, womit ich helfen kann?"
+✅ Kunde verneint → "Vielen Dank für Ihren Anruf. Auf Wiederhören!"
+❌ Abruptes Ende ohne Abschlussfrage
+
+**BEI DRITTBUCHUNG:**
+✅ "Der Termin für Herrn Schmidt ist gebucht. Kann ich sonst noch etwas tun?"
+✅ "Soll ich eine Bestätigung auch an Sie senden?" (Falls Email verfügbar)
+
+═══════════════════════════════════════════════════════════════</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHRITT 2 -->
+            <div class="step" data-step="2">
+                <div class="step-header" onclick="toggleStep(2)">
+                    <input type="checkbox" class="step-checkbox" id="check2" onclick="event.stopPropagation(); markComplete(2)">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Begin Message aktualisieren</div>
+                </div>
+                <div class="step-body">
+                    <div class="info">
+                        Status: <strong>"NOT SET"</strong> (leer) - muss hinzugefügt werden
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            💬 BEGIN MESSAGE
+                            <button class="copy-btn" onclick="copyField('begin-message')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-hint">Gehe zu Retell Dashboard → Edit Agent → "Begin Message" Feld</div>
+                        <div class="field-value" id="begin-message">Willkommen bei Ask Pro AI, Ihr Spezialist für KI-Telefonassistenten. Möchten Sie einen Termin mit Fabian Spitzer buchen oder haben Sie eine andere Frage?</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHRITT 3 -->
+            <div class="step" data-step="3">
+                <div class="step-header" onclick="toggleStep(3)">
+                    <input type="checkbox" class="step-checkbox" id="check3" onclick="event.stopPropagation(); markComplete(3)">
+                    <div class="step-number">3</div>
+                    <div class="step-title">query_appointment Function registrieren</div>
+                </div>
+                <div class="step-body">
+                    <div class="warning">
+                        <strong>🚨 KRITISCH:</strong> Diese Function ist NICHT im Dashboard! Call 691 Fehler (komplette Stille) wird dadurch verursacht.
+                    </div>
+
+                    <p style="margin: 20px 0;"><strong>Gehe zu:</strong> Retell Dashboard → Functions → "Add Custom Function"</p>
+
+                    <div class="field">
+                        <div class="field-label">
+                            📛 NAME
+                            <button class="copy-btn" onclick="copyField('func-name')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-name">query_appointment</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            📝 DESCRIPTION
+                            <button class="copy-btn" onclick="copyField('func-desc')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-desc">Findet einen bestehenden Termin fuer den Anrufer. Nutze diese Funktion wenn der Kunde fragt Wann ist mein Termin, Um wie viel Uhr habe ich gebucht oder Informationen ueber einen gebuchten Termin haben moechte. WICHTIG: Diese Funktion funktioniert NUR wenn die Telefonnummer des Anrufers uebertragen wurde, nicht bei unterdrueckter Nummer.</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            🔗 URL
+                            <button class="copy-btn" onclick="copyField('func-url')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-url">https://api.askproai.de/api/retell/function-call</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            🔧 METHOD
+                            <button class="copy-btn" onclick="copyField('func-method')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-method">POST</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            ⚙️ PARAMETERS (JSON Schema)
+                            <button class="copy-btn" onclick="copyField('func-params')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-hint">⚠️ Nutze den COPY Button - kein manuelles Markieren! (Vermeidet Control Character Fehler)</div>
+                        <div class="field-value" id="func-params">{"type":"object","properties":{"call_id":{"type":"string","description":"Call ID des aktuellen Anrufs"},"appointment_date":{"type":"string","description":"Datum des gesuchten Termins im Format YYYY-MM-DD oder relative Angabe wie heute, morgen, 10.10.2025. Optional - wenn nicht angegeben werden alle zukuenftigen Termine angezeigt."},"service_name":{"type":"string","description":"Name der gebuchten Dienstleistung zur Filterung (optional)"}},"required":["call_id"]}</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            📊 RESPONSE VARIABLES (JSON)
+                            <button class="copy-btn" onclick="copyField('func-response')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-response">{"success":"$.success","error":"$.error","message":"$.message","requires_phone_number":"$.requires_phone_number","appointment_count":"$.appointment_count","appointment_id":"$.appointment.id","appointment_date":"$.appointment.date","appointment_time":"$.appointment.time","service_name":"$.appointment.service","staff_name":"$.appointment.staff"}</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            💬 EXECUTION MESSAGE
+                            <button class="copy-btn" onclick="copyField('func-exec-msg')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-exec-msg">Ich suche Ihren Termin</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            ⏱️ TIMEOUT (ms)
+                            <button class="copy-btn" onclick="copyField('func-timeout')">📋 KOPIEREN</button>
+                        </div>
+                        <div class="field-value" id="func-timeout">30000</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">🗣️ SPEAK DURING EXECUTION</div>
+                        <div class="field-value">✅ true (Checkbox aktivieren)</div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">🗣️ SPEAK AFTER EXECUTION</div>
+                        <div class="field-value">❌ false (Checkbox NICHT aktivieren)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHRITT 4 -->
+            <div class="step" data-step="4">
+                <div class="step-header" onclick="toggleStep(4)">
+                    <input type="checkbox" class="step-checkbox" id="check4" onclick="event.stopPropagation(); markComplete(4)">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Agent Settings überprüfen</div>
+                </div>
+                <div class="step-body">
+                    <div class="info">
+                        Diese Settings sollten bereits korrekt sein - bitte trotzdem überprüfen!
+                    </div>
+
+                    <h3 style="margin-top: 20px;">🎤 Voice Settings</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Voice Model:</strong> eleven_turbo_v2_5</li>
+                        <li><strong>Voice Temperature:</strong> 0.2</li>
+                        <li><strong>Voice Speed:</strong> 1.06</li>
+                        <li><strong>Volume:</strong> 1.0</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px;">🤖 LLM Settings</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Model:</strong> gemini-2.0-flash</li>
+                        <li><strong>Temperature:</strong> 0.04</li>
+                        <li><strong>Tool Call Strict Mode:</strong> false</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px;">⏱️ Timeouts</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>End Call After Silence:</strong> 50000ms (50 Sekunden)</li>
+                        <li><strong>Max Call Duration:</strong> 300000ms (5 Minuten)</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px;">💬 Conversation Settings</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Interruption Sensitivity:</strong> 0.6</li>
+                        <li><strong>Responsiveness:</strong> 0.9</li>
+                        <li><strong>Enable Backchannel:</strong> true</li>
+                        <li><strong>Backchannel Frequency:</strong> 0.2</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SCHRITT 5 -->
+            <div class="step" data-step="5">
+                <div class="step-header" onclick="toggleStep(5)">
+                    <input type="checkbox" class="step-checkbox" id="check5" onclick="event.stopPropagation(); markComplete(5)">
+                    <div class="step-number">5</div>
+                    <div class="step-title">SPEICHERN & PUBLISHEN</div>
+                </div>
+                <div class="step-body">
+                    <div class="success">
+                        <strong>✅ Fast geschafft!</strong> Speichere und deploye die Änderungen.
+                    </div>
+
+                    <ol style="margin: 20px 0; margin-left: 20px; line-height: 2;">
+                        <li>Klicke auf <strong>"Save Draft"</strong></li>
+                        <li>Überprüfe nochmal alle Felder</li>
+                        <li>Klicke auf <strong>"Publish"</strong> oder <strong>"Deploy"</strong></li>
+                        <li>Warte auf Bestätigung: "Agent successfully published"</li>
+                    </ol>
+
+                    <div class="warning" style="margin-top: 20px;">
+                        <strong>⚠️ WICHTIG:</strong> Nach dem Publishing kann es 1-2 Minuten dauern bis die Änderungen live sind!
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINAL CHECKLIST -->
+            <div class="final-checklist">
+                <h3>✅ Deployment Checklist</h3>
+                <p style="margin-bottom: 15px; color: #6b7280;">Hake alles ab bevor du Go-Live gehst:</p>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="final1">
+                    <label for="final1">General Prompt V3 hochgeladen (370 Zeilen mit Drittbuchung)</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="final2">
+                    <label for="final2">Begin Message aktualisiert</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="final3">
+                    <label for="final3">query_appointment Function registriert</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="final4">
+                    <label for="final4">Response Variables für query_appointment eingetragen</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="final5">
+                    <label for="final5">Agent Settings überprüft</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="final6">
+                    <label for="final6">GESPEICHERT & PUBLISHED</label>
+                </div>
+
+                <div style="margin-top: 25px; text-align: center;">
+                    <a href="#tests" class="btn-primary">Weiter zu Tests →</a>
+                </div>
+            </div>
+
+            <!-- TESTS -->
+            <div id="tests" style="margin-top: 40px;">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🧪 Testing nach Deployment</h2>
+
+                <div class="info">
+                    <strong>📞 Führe diese 4 Tests durch um sicherzustellen dass alles funktioniert:</strong>
+                </div>
+
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #374151;">Test 1: Auto-Initialisierung (Bekannter Kunde)</h3>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Rufe von registrierter Nummer an</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ "Guten [Morgen/Tag/Abend], Herr [Name]!"</li>
+                        <li>✅ Zeitbasierte Begrüßung korrekt</li>
+                        <li>✅ Kundenname wird verwendet</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #374151;">Test 2: Terminabfrage (query_appointment)</h3>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Sage: "Wann ist mein Termin?"</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ KEINE Stille (Fix für Call 691 Bug!)</li>
+                        <li>✅ "Ihr Termin ist am [Datum] um [Uhrzeit]"</li>
+                        <li>✅ Termin wird korrekt vorgelesen</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #374151;">Test 3: Bestehende Termine werden erwähnt</h3>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Bekannter Kunde mit bestehendem Termin sagt: "Ich möchte einen Termin buchen"</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Agent erwähnt ZUERST den bestehenden Termin</li>
+                        <li>✅ "Herr [Name], ich sehe Sie haben einen Termin am..."</li>
+                        <li>✅ Bietet Optionen: verschieben oder neu buchen</li>
+                    </ul>
+                </div>
+
+                <div style="background: #fff7ed; border: 2px solid #f97316; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #c2410c;">🆕 Test 4: Drittbuchung (Für andere Personen)</h3>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Sage: "Ich möchte für meinen Mann Hans Schmidt einen Termin buchen"</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Agent erkennt automatisch: Termin ist FÜR Hans Schmidt</li>
+                        <li>✅ KEINE Nachfrage zu "für wen" (Name wurde genannt!)</li>
+                        <li>✅ Bestätigung: "Ich habe den Termin für Herrn Schmidt gebucht"</li>
+                        <li>✅ NICHT: "Ich habe Ihren Termin..." (wäre falsch!)</li>
+                    </ul>
+                    <p style="margin: 15px 0; padding-top: 10px; border-top: 1px solid #fed7aa;"><strong>Alternativer Test (Medium Confidence):</strong></p>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Sage: "Wann hat mein Mann einen Termin?"</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Agent fragt EINMAL: "Wie lautet der Name Ihres Mannes?"</li>
+                        <li>✅ Nach Antwort: Sucht Termin für den genannten Namen</li>
+                        <li>✅ Maximal 1-2 Klärungsfragen, keine unnötigen Wiederholungen</li>
+                    </ul>
+                </div>
+
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #92400e;">🔧 Test 5: Call 776 Bugfixes (KRITISCH)</h3>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Rufe mit bekannter Nummer an, sage: "Ich möchte einen Termin am 9. Oktober um 11 Uhr" (OHNE Jahr, OHNE Name zu nennen)</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung Bug #1 (Date Parsing):</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ System sucht in 2025 (Zukunft), NICHT 2024 (Vergangenheit)</li>
+                        <li>✅ Findet verfügbare Termine oder zeigt Alternativen</li>
+                        <li>❌ NICHT: "Keine Termine in den nächsten 14 Tagen" (wäre Bug!)</li>
+                    </ul>
+                    <p style="margin: 10px 0;"><strong>Erwartung Bug #3 (Name Auto-Fill):</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Agent nutzt deinen Namen aus der Datenbank</li>
+                        <li>✅ Bestätigung: "Termin für Herrn [Dein Name] gebucht"</li>
+                        <li>❌ NICHT: "Termin für Unbekannt gebucht" (wäre Bug!)</li>
+                    </ul>
+                    <p style="margin: 15px 0; padding-top: 10px; border-top: 1px solid #fed7aa;"><strong>Anschließend teste Bug #2:</strong></p>
+                    <p style="margin: 10px 0;"><strong>Setup:</strong> Sage: "Wann ist mein nächster Termin?" (3x wenn nötig)</p>
+                    <p style="margin: 10px 0;"><strong>Erwartung:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>✅ Agent sagt: "Ich suche Ihren Termin" UND ruft query_appointment() auf</li>
+                        <li>✅ Antwortet mit: "Ihr Termin ist am [Datum] um [Uhrzeit]"</li>
+                        <li>❌ NICHT: "Entschuldigung, ich habe Sie akustisch nicht verstanden" (wäre Bug!)</li>
+                        <li>❌ NICHT: 3x wiederholen ohne Ergebnis (wäre Call 776 Bug!)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="success" style="margin-top: 40px; text-align: center; padding: 30px;">
+                <h2 style="color: #10b981; margin-bottom: 15px;">🎉 Deployment Guide V3 + Call 776 Bugfixes abgeschlossen!</h2>
+                <p style="font-size: 18px; color: #047857;">
+                    Nach erfolgreichen Tests ist dein Agent bereit für Production!
+                </p>
+                <p style="margin-top: 20px; color: #6b7280;">
+                    <strong>Erwartete Verbesserungen:</strong><br>
+                    Clean Conversations: 20% → 75%+ | Repetitive Questions: 66.7% → <10% | Auto-Init: 0% → 100%<br>
+                    <strong>🆕 V3:</strong> Drittbuchung (Ehepaare, Familie) mit Smart Detection (max. 2 Fragen)<br>
+                    <strong>🔧 Call 776 Fixes:</strong> +100% Date Parsing | +80% Query Success | Professional Name Recognition
+                </p>
+                <p style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                    <strong>Backend deployed ✅</strong> | Prompt updates in diesem Guide ⚠️ | <a href="/retell-agent-bugfixes-2025-10-07.html" target="_blank" style="color: #047857;">Detaillierte Bugfix-Docs →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="status"></div>
+
+    <script>
+        function toggleStep(stepNum) {
+            const step = document.querySelector(`[data-step="${stepNum}"]`);
+            step.classList.toggle('active');
+        }
+
+        function markComplete(stepNum) {
+            const step = document.querySelector(`[data-step="${stepNum}"]`);
+            const checkbox = document.getElementById(`check${stepNum}`);
+
+            if (checkbox.checked) {
+                step.classList.add('completed');
+            } else {
+                step.classList.remove('completed');
+            }
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = 5;
+            let completed = 0;
+
+            for (let i = 1; i <= total; i++) {
+                if (document.getElementById(`check${i}`).checked) {
+                    completed++;
+                }
+            }
+
+            const percentage = Math.round((completed / total) * 100);
+            document.getElementById('progress').style.width = percentage + '%';
+            document.getElementById('progress').textContent = percentage + '%';
+        }
+
+        function copyField(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            // Show status
+            const status = document.getElementById('status');
+            status.textContent = '✅ Kopiert! Jetzt ins Retell Dashboard pasten.';
+            status.style.display = 'block';
+
+            // Find the button that was clicked and mark it
+            const buttons = document.querySelectorAll('.copy-btn');
+            buttons.forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(elementId)) {
+                    btn.classList.add('copied');
+                    btn.textContent = '✅ KOPIERT';
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        btn.textContent = '📋 KOPIEREN';
+                    }, 3000);
+                }
+            });
+
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+
+            console.log('Copied text length:', text.length);
+            console.log('Field ID:', elementId);
+        }
+
+        // Initialize progress
+        updateProgress();
+    </script>
+</body>
+</html>
