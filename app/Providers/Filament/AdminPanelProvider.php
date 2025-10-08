@@ -26,6 +26,10 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Admin\\Resources'
             )
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->assets([
+                \Filament\Support\Assets\Js::make('app', 'resources/js/app.js'),
+                \Filament\Support\Assets\Js::make('flowbite', 'resources/js/flowbite.js'),
+            ])
             // State-of-the-Art: Reihenfolge selbst festlegen!
             ->widgets([
                 \App\Filament\Widgets\StatsOverviewWidget::class,
