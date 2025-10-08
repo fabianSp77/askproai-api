@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         }
     )
+    ->withProviders([
+        App\Providers\ViewBindingFixServiceProvider::class,
+    ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(\App\Http\Middleware\PerformanceMonitoring::class);
         $middleware->append(\App\Http\Middleware\ErrorCatcher::class);
