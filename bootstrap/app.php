@@ -51,6 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
             /* ✨ Eigener Alias – Cal.com-Webhook-Signaturprüfung */
             'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
 
+            /* 🔒 Admin panel security - internal network only */
+            'restrict.internal' => \App\Http\Middleware\RestrictToInternalNetwork::class,
+
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
             'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
