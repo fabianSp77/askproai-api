@@ -1,0 +1,8 @@
+# Datenmodell (Ausschnitt)
+customers(id, company_id, phone_numbers[m:n])
+appointments(id, company_id, branch_id, staff_id, service_id, cal_event_id, ts_start, ts_end, status)
+services(id, company_id, event_type_id, price, duration, composite_segments[])
+staff(id, company_id, skills[service_id], availability)
+policies(scope, values)
+ledger(account_id, entry_type, amount, ts, idem_key)
+callback_requests(id, customer_id?, phone, reason, ts, status)
