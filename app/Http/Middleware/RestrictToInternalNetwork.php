@@ -66,9 +66,9 @@ class RestrictToInternalNetwork
         ]);
 
         // Return 404 to avoid revealing admin panel existence
-        return response()->view('errors.404', [
-            'message' => 'The requested resource could not be found.'
-        ], 404);
+        return request()->expectsJson()
+    ? response()->json(["message"=>"Not Found"], 404)
+    : response("", 404);
     }
 
     /**
