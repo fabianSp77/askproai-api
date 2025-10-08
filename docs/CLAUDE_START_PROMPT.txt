@@ -1,0 +1,5 @@
+Lade Kontext aus /docs.
+Lies zuerst: CLAUDE_BRIEF.md, BACKLOG_INDEX.md.
+Dann: TASKS_PHASE_1.md lesen und umsetzen.
+Nutze /docs/CONTEXT/* als Packs, beginne mit product.md, flows-booking.md, apis.md, data-model.md.
+Alle PRs müssen ASK-IDs enthalten. E2E-Tests gemäß TESTPLAN_E2E.md.

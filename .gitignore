@@ -21,10 +21,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-.env*.bak
-+491234567890,
-true,
-.env
-.env.*
-*.bak
-*.bak*
+backups/
+*.sql
+backups/
+*.sql
