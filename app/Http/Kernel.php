@@ -28,7 +28,7 @@ class Kernel extends HttpKernel
     /* -------------------------------------------------------------------- *
      | 2) **Hier** gehören Route-Aliase hin – funktioniert ab Laravel 8-11  |
      * -------------------------------------------------------------------- */
-    protected array $middlewareAliases = [
+    protected $middlewareAliases = [
         // ✨ unsere neue Signatur-Prüfung
         'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
         'livewire.csrf' => \App\Http\Middleware\VerifyLivewireCsrf::class,

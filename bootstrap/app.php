@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Rate limiting for specific routes
         $middleware->alias([
+            /* ── Project-specific middleware ───────────────────── */
             'rate.limit' => \App\Http\Middleware\RateLimiting::class,
             'stripe.webhook' => \App\Http\Middleware\VerifyStripeWebhookSignature::class,
             'retell.webhook' => \App\Http\Middleware\VerifyRetellWebhookSignature::class,
@@ -30,6 +31,23 @@ return Application::configure(basePath: dirname(__DIR__))
             'retell.function' => \App\Http\Middleware\VerifyRetellFunctionSignature::class,
             'retell.function.whitelist' => \App\Http\Middleware\VerifyRetellFunctionSignatureWithWhitelist::class,
             'retell.call.ratelimit' => \App\Http\Middleware\RetellCallRateLimiter::class,
+
+            /* ✨ Eigener Alias – Cal.com-Webhook-Signaturprüfung */
+            'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
+
+            /* 🔒 Admin panel security - internal network only */
+            'restrict.internal' => \App\Http\Middleware\RestrictToInternalNetwork::class,
+
+            /* ── Laravel-Standard ─────────────────────────────── */
+            'auth'              => \App\Http\Middleware\Authenticate::class,
+            'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+            'cache.headers'     => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+            'can'               => \Illuminate\Auth\Middleware\Authorize::class,
+            'guest'             => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'password.confirm'  => \Illuminate\Auth\Middleware\RequirePassword::class,
+            'signed'            => \Illuminate\Routing\Middleware\ValidateSignature::class,
+            'throttle'          => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            'verified'          => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
