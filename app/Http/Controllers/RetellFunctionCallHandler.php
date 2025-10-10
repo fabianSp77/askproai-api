@@ -211,7 +211,19 @@ class RetellFunctionCallHandler extends Controller
                 ]);
             }
 
-            // If not available, automatically find alternatives
+            // LATENZ-OPTIMIERUNG: Alternative-Suche nur wenn Feature enabled
+            // Voice-AI braucht <1s Response → Alternative-Suche (3s+) ist zu langsam!
+            if (config('features.skip_alternatives_for_voice', true)) {
+                return $this->responseFormatter->success([
+                    'available' => false,
+                    'message' => "Dieser Termin ist leider nicht verfügbar. Welche Zeit würde Ihnen alternativ passen?",
+                    'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                    'alternatives' => [],
+                    'suggest_user_alternative' => true
+                ]);
+            }
+
+            // If not available, automatically find alternatives (SLOW - 3s+!)
             // SECURITY: Set tenant context for cache isolation
             $alternatives = $this->alternativeFinder
                 ->setTenantContext($companyId, $branchId)
@@ -516,6 +528,35 @@ class RetellFunctionCallHandler extends Controller
                 return $this->responseFormatter->error('Keine verfügbaren Services für diese Filiale');
             }
 
+            // FEATURE: ASK-009 Auto-select when only one service available
+            if (config('features.auto_service_select', false) && $services->count() === 1) {
+                $service = $services->first();
+
+                Log::info('Auto-selecting single available service', [
+                    'company_id' => $companyId,
+                    'branch_id' => $branchId,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'call_id' => $callId
+                ]);
+
+                $message = "Ich buche Ihnen einen Termin für {$service->name}.";
+
+                return $this->responseFormatter->success([
+                    'auto_selected' => true,
+                    'service' => [
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'duration' => $service->duration,
+                        'price' => $service->price,
+                        'description' => $service->description
+                    ],
+                    'message' => $message,
+                    'count' => 1
+                ]);
+            }
+
+            // Standard behavior: List multiple services for manual selection
             $serviceList = $services->map(function($service) {
                 return [
                     'id' => $service->id,
@@ -530,6 +571,7 @@ class RetellFunctionCallHandler extends Controller
             $message .= $services->pluck('name')->join(', ');
 
             return $this->responseFormatter->success([
+                'auto_selected' => false,
                 'services' => $serviceList,
                 'message' => $message,
                 'count' => $services->count()
@@ -1640,6 +1682,8 @@ class RetellFunctionCallHandler extends Controller
     /**
      * Handle cancellation attempt from Retell AI
      * Called when customer says: "Ich möchte stornieren" or "Cancel my appointment"
+     *
+     * Security: Anonymous callers → CallbackRequest instead of direct cancellation
      */
     private function handleCancellationAttempt(array $params, ?string $callId)
     {
@@ -1653,6 +1697,11 @@ class RetellFunctionCallHandler extends Controller
 
             // Get call by internal ID from context
             $call = Call::find($callContext['call_id']);
+
+            // 🔒 SECURITY: Anonymous callers → CallbackRequest for verification
+            if ($call && ($call->from_number === 'anonymous' || in_array(strtolower($call->from_number ?? ''), ['anonymous', 'unknown', 'withheld', 'restricted', '']))) {
+                return $this->createAnonymousCallbackRequest($call, $params, 'cancellation');
+            }
 
             // 2. Find appointment
             $appointment = $this->findAppointmentFromCall($call, $params);
@@ -1804,6 +1853,8 @@ class RetellFunctionCallHandler extends Controller
     /**
      * Handle reschedule attempt from Retell AI
      * Called when customer says: "Kann ich den Termin verschieben?" or "I need to reschedule"
+     *
+     * Security: Anonymous callers → CallbackRequest instead of direct reschedule
      */
     private function handleRescheduleAttempt(array $params, ?string $callId)
     {
@@ -1816,6 +1867,11 @@ class RetellFunctionCallHandler extends Controller
             }
 
             $call = $this->callLifecycle->findCallByRetellId($callId);
+
+            // 🔒 SECURITY: Anonymous callers → CallbackRequest for verification
+            if ($call && ($call->from_number === 'anonymous' || in_array(strtolower($call->from_number ?? ''), ['anonymous', 'unknown', 'withheld', 'restricted', '']))) {
+                return $this->createAnonymousCallbackRequest($call, $params, 'reschedule');
+            }
 
             // 2. Find current appointment
             $oldDate = $params['old_date'] ?? $params['appointment_date'] ?? $params['datum'] ?? null;
@@ -2053,6 +2109,10 @@ class RetellFunctionCallHandler extends Controller
 
     /**
      * Find appointment from call and date information
+     *
+     * FIX 2025-10-10: Use DateTimeParser service instead of deprecated parseDateString()
+     * Root cause: parseDateString() cannot parse German relative dates (heute, morgen)
+     * Impact: reschedule_appointment and cancel_appointment failed to find appointments
      */
     private function findAppointmentFromCall(Call $call, array $data): ?Appointment
     {
@@ -2063,14 +2123,17 @@ class RetellFunctionCallHandler extends Controller
             return null;
         }
 
-        $date = $this->parseDateString($dateString);
-        if (!$date) {
+        // FIX: Use DateTimeParser service for German relative dates support
+        $parsedDate = $this->dateTimeParser->parseDateString($dateString);
+        if (!$parsedDate) {
             Log::warning('findAppointmentFromCall: Could not parse date', [
                 'call_id' => $call->id,
                 'date_string' => $dateString
             ]);
             return null;
         }
+
+        $date = Carbon::parse($parsedDate);  // parseDateString returns YYYY-MM-DD format
 
         Log::info('🔍 Finding appointment', [
             'call_id' => $call->id,
@@ -2204,6 +2267,81 @@ class RetellFunctionCallHandler extends Controller
         ]);
 
         return null;
+    }
+
+    /**
+     * Create callback request for anonymous caller modifications
+     *
+     * Security: Anonymous callers cannot directly cancel/reschedule.
+     * Instead, create a CallbackRequest for staff to handle within business hours.
+     *
+     * @param Call $call Current call
+     * @param array $params Request parameters
+     * @param string $action 'cancellation' or 'reschedule'
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function createAnonymousCallbackRequest(Call $call, array $params, string $action): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $callbackRequest = \App\Models\CallbackRequest::create([
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'phone_number' => 'anonymous_' . time(),
+                'customer_name' => $params['customer_name'] ?? $params['name'] ?? 'Anonymer Anrufer',
+                'priority' => 'high',
+                'status' => 'pending',
+                'notes' => sprintf(
+                    'Anonymer Anrufer möchte Termin %s. Datum: %s',
+                    $action === 'cancellation' ? 'stornieren' : 'verschieben',
+                    $params['old_date'] ?? $params['appointment_date'] ?? $params['datum'] ?? 'unbekannt'
+                ),
+                'metadata' => [
+                    'call_id' => $call->retell_call_id,
+                    'action_requested' => $action,
+                    'appointment_date' => $params['old_date'] ?? $params['appointment_date'] ?? $params['datum'] ?? null,
+                    'new_date' => $params['new_date'] ?? null,
+                    'new_time' => $params['new_time'] ?? null,
+                    'customer_name_provided' => $params['customer_name'] ?? $params['name'] ?? null,
+                    'from_number' => 'anonymous',
+                    'created_via' => 'retell_webhook_anonymous'
+                ],
+                'expires_at' => now()->addHours(24)
+            ]);
+
+            Log::info('📋 Anonymous caller callback request created', [
+                'callback_request_id' => $callbackRequest->id,
+                'action' => $action,
+                'call_id' => $call->id,
+                'retell_call_id' => $call->retell_call_id
+            ]);
+
+            $actionText = $action === 'cancellation' ? 'Stornierung' : 'Umbuchung';
+
+            return response()->json([
+                'success' => true,
+                'status' => 'callback_queued',
+                'message' => sprintf(
+                    'Aus Sicherheitsgründen können wir %s nur mit übertragener Rufnummer durchführen. Wir haben Ihre Anfrage notiert und rufen Sie innerhalb der nächsten 2 Stunden zurück, um die %s zu bestätigen. Alternativ können Sie während unserer Geschäftszeiten direkt anrufen.',
+                    $actionText,
+                    $actionText
+                ),
+                'callback_request_id' => $callbackRequest->id,
+                'estimated_callback_time' => '2 Stunden'
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to create callback request for anonymous caller', [
+                'error' => $e->getMessage(),
+                'call_id' => $call->id ?? null,
+                'action' => $action
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Es ist ein Fehler aufgetreten. Bitte rufen Sie direkt während unserer Geschäftszeiten an.'
+            ], 200);
+        }
     }
 
     /**

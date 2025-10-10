@@ -103,20 +103,25 @@ class AppointmentCustomerResolver
                 'call_id' => $call->id
             ]);
 
-            // Update name/email if they've changed
+            // FIX 2025-10-10: DON'T update customer.name - it should be stable (caller identity)
+            // Attendee name (for whom the appointment is) is stored in Appointment.metadata.customer_name instead
+            // This prevents name corruption in third-party bookings (mother booking for child, etc.)
+            //
+            // Previous bug: Customer "Hansi" books for "Max" → Customer.name changed to "Max" ❌
+            // Fixed: Customer.name stays "Hansi", metadata.customer_name = "Max" ✅
+
             $updated = false;
-            if ($customer->name !== $name && strlen($name) > 2) {
-                $customer->name = $name;
-                $updated = true;
-            }
+            // ONLY update email (email can change, name should not)
             if ($email && $customer->email !== $email) {
                 $customer->email = $email;
                 $updated = true;
             }
             if ($updated) {
                 $customer->save();
-                Log::info('Updated customer information', [
-                    'customer_id' => $customer->id
+                Log::info('Updated customer email', [
+                    'customer_id' => $customer->id,
+                    'old_email' => $customer->getOriginal('email'),
+                    'new_email' => $email
                 ]);
             }
 

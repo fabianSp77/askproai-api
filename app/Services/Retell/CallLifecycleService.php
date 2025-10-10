@@ -492,9 +492,22 @@ class CallLifecycleService implements CallLifecycleInterface
             return $this->callCache[$retellCallId];
         }
 
-        // Load from database with relationships
+        // Load from database with relationships (optimized with select for performance)
         $call = Call::where('retell_call_id', $retellCallId)
-            ->with(['phoneNumber', 'company', 'branch'])
+            ->with([
+                'phoneNumber:id,company_id,branch_id,phone_number',
+                'company:id,name',
+                'branch:id,name',
+                'customer' => function ($query) {
+                    $query->select('id', 'name', 'phone', 'email')
+                        ->with(['appointments' => function ($q) {
+                            $q->where('start', '>=', now())
+                                ->select('id', 'customer_id', 'start', 'end', 'service_id', 'status')
+                                ->orderBy('start')
+                                ->limit(5);
+                        }]);
+                }
+            ])
             ->first();
 
         if ($call) {
