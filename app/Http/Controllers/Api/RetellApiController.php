@@ -1465,17 +1465,27 @@ class RetellApiController extends Controller
     private function parseDateTime($date, $time)
     {
         try {
-            // Handle German date format (DD.MM.YYYY or DD.MM.)
-            if (strpos($date, '.') !== false) {
-                $dateParts = explode('.', $date);
-                $day = intval($dateParts[0]);
-                $month = intval($dateParts[1]);
-                $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+            // FIX 2025-10-10: Use DateTimeParser service for German dates (heute, morgen, etc.)
+            $dateTimeParser = app(\App\Services\Retell\DateTimeParser::class);
 
-                $parsedDate = Carbon::create($year, $month, $day);
+            // Try DateTimeParser first (handles German: heute, morgen, DD.MM.YYYY, etc.)
+            $parsedDateString = $dateTimeParser->parseDateString($date);
+
+            if ($parsedDateString) {
+                $parsedDate = Carbon::parse($parsedDateString);
             } else {
-                // Try ISO format or other formats
-                $parsedDate = Carbon::parse($date);
+                // Fallback: Handle German date format (DD.MM.YYYY or DD.MM.)
+                if (strpos($date, '.') !== false) {
+                    $dateParts = explode('.', $date);
+                    $day = intval($dateParts[0]);
+                    $month = intval($dateParts[1]);
+                    $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+
+                    $parsedDate = Carbon::create($year, $month, $day);
+                } else {
+                    // Last resort: Try ISO format
+                    $parsedDate = Carbon::parse($date);
+                }
             }
 
             // Parse time (HH:MM or just HH)
