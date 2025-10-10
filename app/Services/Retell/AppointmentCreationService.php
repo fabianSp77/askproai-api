@@ -570,7 +570,8 @@ class AppointmentCreationService implements AppointmentCreationInterface
         $cacheKey = sprintf('service.%s.%d.%s', md5($serviceName), $companyId, $branchId ?? 'null');
 
         return Cache::remember($cacheKey, 3600, function () use ($serviceName, $companyId, $branchId) {
-            return $this->serviceSelector->findService($serviceName, $companyId, $branchId);
+            // ServiceSelectionService doesn't have findService(), use getDefaultService()
+            return $this->serviceSelector->getDefaultService($companyId, $branchId);
         });
     }
 
