@@ -384,8 +384,10 @@ class AppointmentCreationService implements AppointmentCreationInterface
             }
         }
 
-        $appointment = Appointment::create([
-            'company_id' => $customer->company_id,  // FIX: Auto-set company_id from customer
+        // FIX 2025-10-10: Use forceFill() because company_id is guarded
+        $appointment = new Appointment();
+        $appointment->forceFill([
+            'company_id' => $customer->company_id,  // Use customer's company_id (guaranteed match!)
             'customer_id' => $customer->id,
             'service_id' => $service->id,
             'branch_id' => $branchId,
@@ -400,6 +402,7 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'external_id' => $calcomBookingId,            // ✅ Backup reference
             'metadata' => json_encode($bookingDetails)
         ]);
+        $appointment->save();
 
         // PHASE 2: Staff Assignment from Cal.com hosts array
         if ($calcomBookingData) {
