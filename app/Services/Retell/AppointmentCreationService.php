@@ -392,7 +392,7 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'customer_id' => $customer->id,
             'service_id' => $service->id,
             'branch_id' => $branchId,
-            'tenant_id' => $customer->tenant_id ?? 1,
+            // REMOVED: 'tenant_id' - column doesn't exist in table!
             'starts_at' => $bookingDetails['starts_at'],
             'ends_at' => $bookingDetails['ends_at'],
             'call_id' => $call ? $call->id : null,
