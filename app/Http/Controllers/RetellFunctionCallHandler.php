@@ -408,11 +408,13 @@ class RetellFunctionCallHandler extends Controller
                         $customer = $this->customerResolver->ensureCustomerFromCall($call, $customerName, $customerEmail);
 
                         // Create local appointment with full context
-                        $appointment = Appointment::create([
+                        // FIX 2025-10-10: Use forceFill() because company_id/branch_id are guarded
+                        $appointment = new Appointment();
+                        $appointment->forceFill([
                             'calcom_v2_booking_id' => $calcomBookingId,
                             'external_id' => $calcomBookingId,
                             'customer_id' => $customer->id,
-                            'company_id' => $companyId,
+                            'company_id' => $customer->company_id,  // Use customer's company_id (guaranteed match!)
                             'branch_id' => $branchId,
                             'service_id' => $service->id,
                             'call_id' => $call->id,
@@ -432,6 +434,7 @@ class RetellFunctionCallHandler extends Controller
                                 'retell_call_id' => $callId
                             ])
                         ]);
+                        $appointment->save();
 
                         Log::info('✅ Appointment created immediately after Cal.com booking', [
                             'appointment_id' => $appointment->id,
