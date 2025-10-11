@@ -106,11 +106,20 @@ Route::prefix('health')->group(function () {
 // ---- Utility Routes -------------------------------------------
 // Current time in German timezone (for Retell AI Agent)
 Route::get('/zeitinfo', function () {
-    date_default_timezone_set('Europe/Berlin');
+    $now = new DateTime('now', new DateTimeZone('Europe/Berlin'));
 
-    // Retell Agent erwartet einfach nur: YYYY-MM-DD HH:MM:SS
-    return response(date('Y-m-d H:i:s'), 200)
-        ->header('Content-Type', 'text/plain');
+    $germanWeekdays = [
+        'Sonntag', 'Montag', 'Dienstag', 'Mittwoch',
+        'Donnerstag', 'Freitag', 'Samstag'
+    ];
+
+    return response()->json([
+        'date' => $now->format('d.m.Y'),
+        'time' => $now->format('H:i'),
+        'weekday' => $germanWeekdays[(int)$now->format('w')],
+        'iso_date' => $now->format('Y-m-d'),
+        'week_number' => $now->format('W')
+    ]);
 })
 ->name('api.zeitinfo')
 ->middleware(['throttle:100,1']);

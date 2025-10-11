@@ -202,7 +202,56 @@ class RetellFunctionCallHandler extends Controller
             $slots = $response->json()['data']['slots'] ?? [];
             $isAvailable = $this->isTimeAvailable($requestedDate, $slots);
 
+            // 🔧 FIX 2025-10-11: Check if customer already has appointment at this time
+            // Bug: Customer asked for Wednesday 9:00 but system didn't detect existing appointment
             if ($isAvailable) {
+                // Get customer from call context to check for existing appointments
+                $call = $this->callLifecycle->findCallByRetellId($callId);
+
+                if ($call && $call->customer_id) {
+                    // Check if customer already has an appointment at or around this time
+                    $existingAppointment = Appointment::where('customer_id', $call->customer_id)
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->where(function($query) use ($requestedDate, $duration) {
+                            // Check for overlapping appointments (within requested time window)
+                            $query->whereBetween('starts_at', [
+                                $requestedDate->copy()->subMinutes($duration),
+                                $requestedDate->copy()->addMinutes($duration)
+                            ])
+                            ->orWhere(function($q) use ($requestedDate, $duration) {
+                                // Or check if requested time falls within existing appointment
+                                $q->where('starts_at', '<=', $requestedDate)
+                                  ->where('ends_at', '>', $requestedDate);
+                            });
+                        })
+                        ->first();
+
+                    if ($existingAppointment) {
+                        // Customer already has an appointment at this time!
+                        $appointmentTime = $existingAppointment->starts_at;
+                        $germanDate = $appointmentTime->locale('de')->isoFormat('dddd, [den] D. MMMM');
+
+                        Log::info('🚨 Customer already has appointment at requested time', [
+                            'call_id' => $callId,
+                            'customer_id' => $call->customer_id,
+                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                            'existing_appointment_id' => $existingAppointment->id,
+                            'existing_appointment_time' => $appointmentTime->format('Y-m-d H:i')
+                        ]);
+
+                        return $this->responseFormatter->success([
+                            'available' => false,
+                            'has_existing_appointment' => true,
+                            'existing_appointment_id' => $existingAppointment->id,
+                            'message' => "Sie haben bereits einen Termin am {$germanDate} um {$appointmentTime->format('H:i')} Uhr. Möchten Sie diesen Termin umbuchen oder einen weiteren Termin vereinbaren?",
+                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                            'existing_appointment_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'alternatives' => []
+                        ]);
+                    }
+                }
+
+                // No existing appointment found - slot is truly available
                 return $this->responseFormatter->success([
                     'available' => true,
                     'message' => "Ja, {$requestedDate->format('H:i')} Uhr ist noch frei.",
@@ -425,14 +474,20 @@ class RetellFunctionCallHandler extends Controller
                             'booking_type' => 'single',
                             'notes' => $notes,
                             'metadata' => json_encode([
+                                'call_id' => $call->id,  // ✅ FIX 2025-10-11: For reschedule/cancel lookup
+                                'retell_call_id' => $callId,  // ✅ FIX 2025-10-11: For Same-Call policy
                                 'calcom_booking' => $bookingData,
                                 'customer_name' => $customerName,
                                 'customer_email' => $customerEmail,
                                 'customer_phone' => $customerPhone,
                                 'synced_at' => now()->toIso8601String(),
                                 'sync_method' => 'immediate',
-                                'retell_call_id' => $callId
-                            ])
+                                'created_at' => now()->toIso8601String()  // ✅ For Same-Call time validation
+                            ]),
+                            // ✅ METADATA FIX 2025-10-10: Populate tracking fields
+                            'created_by' => 'customer',
+                            'booking_source' => 'retell_phone',
+                            'booked_by_user_id' => null  // Customer bookings have no user
                         ]);
                         $appointment->save();
 
