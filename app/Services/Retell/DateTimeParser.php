@@ -158,6 +158,90 @@ class DateTimeParser
             return Carbon::parse(self::GERMAN_DATE_MAP[$normalizedDate])->format('Y-m-d');
         }
 
+        // 🔥 FIX: German SHORT date format (DD.M or D.M) - Phase 1.3.3
+        // When user says "fünfzehnte Punkt eins" → STT transcribes as "15.1"
+        // CRITICAL: "X.1" where 1 is ambiguous → default to CURRENT month, not January!
+        // Example: In October, "15.1" = 15. Oktober (NOT 15. Januar!)
+        if (preg_match('/^(\d{1,2})\.(\d{1,2})$/', $dateString, $matches)) {
+            $day = (int) $matches[1];
+            $monthInput = (int) $matches[2];
+
+            try {
+                $now = Carbon::now('Europe/Berlin');
+                $currentYear = $now->year;
+                $currentMonth = $now->month;
+
+                // SPECIAL CASE: Single digit "1" is ambiguous in speech-to-text
+                // ONLY substitute current month when day is MID-MONTH (day > 10)
+                // Examples:
+                // - "15.1" in October → likely means "15th of October" (substitute)
+                // - "1.1" in October → likely means "January 1st" (don't substitute)
+                $month = $monthInput;
+                if ($monthInput === 1 && $currentMonth > 2 && $day > 10) {
+                    // High day number with ".1" → likely STT artifact, use current month
+                    $month = $currentMonth;
+                    Log::info('📅 German short format: ".1" interpreted as current month (not January)', [
+                        'input' => $dateString,
+                        'original_month' => $monthInput,
+                        'interpreted_month' => $month,
+                        'current_month' => $currentMonth,
+                        'day' => $day,
+                        'reason' => 'ambiguous_stt_mid_month_date'
+                    ]);
+                }
+
+                // Build date with interpreted month
+                $carbon = Carbon::createFromDate($currentYear, $month, $day, 'Europe/Berlin');
+
+                // LOGIC: If date is in the past (>2 days), try next occurrence
+                if ($carbon->isPast() && $carbon->diffInDays($now, true) > 2) {
+                    // If month < current month → assume next year
+                    if ($month < $currentMonth) {
+                        $carbon->addYear();
+                        Log::info('📅 German short format: month in past, assuming next year', [
+                            'input' => $dateString,
+                            'parsed' => $carbon->format('Y-m-d'),
+                            'day' => $day,
+                            'month' => $month,
+                            'current_month' => $currentMonth
+                        ]);
+                    }
+                    // If same month but day passed → assume next month
+                    elseif ($month === $currentMonth && $day < $now->day) {
+                        $carbon->addMonth();
+                        Log::info('📅 German short format: day in past, assuming next month', [
+                            'input' => $dateString,
+                            'parsed' => $carbon->format('Y-m-d'),
+                            'day' => $day,
+                            'month' => $month
+                        ]);
+                    }
+                    // If month > current month but still past → assume next year
+                    else {
+                        $carbon->addYear();
+                        Log::info('📅 German short format: assuming next year', [
+                            'input' => $dateString,
+                            'parsed' => $carbon->format('Y-m-d')
+                        ]);
+                    }
+                } else {
+                    Log::info('📅 German short format: using current year', [
+                        'input' => $dateString,
+                        'parsed' => $carbon->format('Y-m-d'),
+                        'day' => $day,
+                        'month' => $month
+                    ]);
+                }
+
+                return $carbon->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::warning('Failed to parse German short date format', [
+                    'input' => $dateString,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
         // Try parsing German date format (DD.MM.YYYY or D.M.YYYY)
         if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $dateString, $matches)) {
             try {
