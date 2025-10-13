@@ -114,7 +114,8 @@ class AppointmentCreationService implements AppointmentCreationInterface
             $companyId = $call->company_id ?? $customer->company_id ?? 15;
             $branchId = $call->branch_id ?? $customer->branch_id ?? null;
 
-            $service = $this->findService($bookingDetails, $companyId, $branchId);
+            // Get default service for company/branch
+            $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
             if (!$service) {
                 Log::error('No service found for booking', [
                     'service_name' => $bookingDetails['service'] ?? 'unknown',
@@ -384,12 +385,23 @@ class AppointmentCreationService implements AppointmentCreationInterface
             }
         }
 
-        $appointment = Appointment::create([
-            'company_id' => $customer->company_id,  // FIX: Auto-set company_id from customer
+        // FIX 2025-10-10: Use forceFill() because company_id is guarded
+        $appointment = new Appointment();
+
+        // FIX 2025-10-11: Add call_id to metadata for reschedule/cancel lookup
+        $metadataWithCallId = array_merge($bookingDetails, [
+            'call_id' => $call ? $call->id : null,
+            'retell_call_id' => $call ? $call->retell_call_id : null,
+            'created_via' => 'retell_webhook',
+            'created_at' => now()->toIso8601String()
+        ]);
+
+        $appointment->forceFill([
+            'company_id' => $customer->company_id,  // Use customer's company_id (guaranteed match!)
             'customer_id' => $customer->id,
             'service_id' => $service->id,
             'branch_id' => $branchId,
-            'tenant_id' => $customer->tenant_id ?? 1,
+            // REMOVED: 'tenant_id' - column doesn't exist in table!
             'starts_at' => $bookingDetails['starts_at'],
             'ends_at' => $bookingDetails['ends_at'],
             'call_id' => $call ? $call->id : null,
@@ -398,8 +410,13 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'source' => 'retell_webhook',
             'calcom_v2_booking_id' => $calcomBookingId,  // ✅ Correct column for V2 UIDs
             'external_id' => $calcomBookingId,            // ✅ Backup reference
-            'metadata' => json_encode($bookingDetails)
+            'metadata' => json_encode($metadataWithCallId),  // ✅ FIX: Include call_id for reschedule/cancel
+            // ✅ METADATA FIX 2025-10-10: Populate tracking fields
+            'created_by' => 'customer',
+            'booking_source' => 'retell_webhook',
+            'booked_by_user_id' => null  // Customer bookings have no user
         ]);
+        $appointment->save();
 
         // PHASE 2: Staff Assignment from Cal.com hosts array
         if ($calcomBookingData) {
@@ -566,7 +583,8 @@ class AppointmentCreationService implements AppointmentCreationInterface
         $cacheKey = sprintf('service.%s.%d.%s', md5($serviceName), $companyId, $branchId ?? 'null');
 
         return Cache::remember($cacheKey, 3600, function () use ($serviceName, $companyId, $branchId) {
-            return $this->serviceSelector->findService($serviceName, $companyId, $branchId);
+            // ServiceSelectionService doesn't have findService(), use getDefaultService()
+            return $this->serviceSelector->getDefaultService($companyId, $branchId);
         });
     }
 

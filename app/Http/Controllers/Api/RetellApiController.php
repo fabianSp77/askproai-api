@@ -58,26 +58,46 @@ class RetellApiController extends Controller
             // Get phone number from call record
             $phoneNumber = null;
             $customerName = null;
+            $companyId = null;
 
             if ($callId) {
                 $call = Call::where('retell_call_id', $callId)->first();
                 if ($call && $call->from_number) {
                     $phoneNumber = $call->from_number;
+                    $companyId = $call->company_id;  // 🔧 FIX 2025-10-11: Get company_id for tenant isolation
                 }
             }
 
             // Search for customer by phone number
             $customer = null;
-            if ($phoneNumber) {
+            if ($phoneNumber && $phoneNumber !== 'anonymous') {
                 // Normalize phone number (remove spaces, dashes, etc.)
                 $normalizedPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
-                $customer = Customer::where('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%')
-                    ->first();
+
+                // 🔧 FIX 2025-10-11: MULTI-TENANCY - Filter by company_id!
+                // Prevents finding wrong customer from different company
+                $query = Customer::where(function($q) use ($normalizedPhone) {
+                    $q->where('phone', $normalizedPhone)
+                      ->orWhere('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%');
+                });
+
+                // SECURITY: Tenant isolation - only search within same company
+                if ($companyId) {
+                    $query->where('company_id', $companyId);
+                    Log::info('🔒 SECURITY: Tenant-isolated customer search', [
+                        'company_id' => $companyId,
+                        'phone_last_8' => substr($normalizedPhone, -8)
+                    ]);
+                }
+
+                $customer = $query->first();
             }
 
             // If not found by phone, try by name
-            if (!$customer && $customerName) {
-                $customer = Customer::where('name', 'LIKE', '%' . $customerName . '%')
+            if (!$customer && $customerName && $companyId) {
+                // 🔧 FIX 2025-10-11: Also filter by company_id for name search
+                $customer = Customer::where('company_id', $companyId)
+                    ->where('name', 'LIKE', '%' . $customerName . '%')
                     ->first();
             }
 
@@ -104,11 +124,13 @@ class RetellApiController extends Controller
             }
 
             return response()->json([
-                'success' => false,
-                'status' => 'not_found',
-                'message' => 'Neuer Kunde',
+                'success' => true,  // ✅ NOT an error - just a new customer scenario
+                'status' => 'new_customer',
+                'message' => 'Dies ist ein neuer Kunde. Bitte fragen Sie nach Name und E-Mail-Adresse.',
                 'customer_exists' => false,
-                'suggested_action' => 'collect_customer_data'
+                'customer_name' => null,
+                'next_steps' => 'ask_for_customer_details',
+                'suggested_prompt' => 'Kein Problem! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?'
             ], 200);
 
         } catch (\Exception $e) {
@@ -194,7 +216,7 @@ class RetellApiController extends Controller
             );
 
             return response()->json([
-                'success' => false,
+                'success' => true,  // ✅ NOT an error - just unavailable slot (valid business scenario)
                 'status' => 'unavailable',
                 'message' => $alternatives['responseText'] ?? "Dieser Termin ist leider nicht verfügbar.",
                 'requested_time' => $appointmentDate->format('Y-m-d H:i'),
@@ -460,6 +482,55 @@ class RetellApiController extends Controller
             $call = null;
             if ($callId) {
                 $call = Call::where('retell_call_id', $callId)->first();
+
+                // FIX 2025-10-11: PRIORITY search for anonymous callers - check THIS call's appointments FIRST
+                if ($call && $call->from_number === 'anonymous' && $appointmentDate) {
+                    $parsedDate = $this->parseDateTime($appointmentDate, null);
+
+                    Log::info('🔒 SECURITY: Anonymous caller cancellation - checking THIS call appointments FIRST', [
+                        'call_id' => $callId,
+                        'appointment_date' => $parsedDate->toDateString(),
+                        'reason' => 'Same-call policy for anonymous'
+                    ]);
+
+                    // Check appointments from THIS call only (last 30 minutes for security)
+                    $booking = Appointment::where(function($q) use ($callId, $call) {
+                            $q->where('metadata->retell_call_id', $callId)
+                              ->orWhere('call_id', $call->id);
+                        })
+                        ->whereDate('starts_at', $parsedDate->toDateString())
+                        ->where('starts_at', '>=', now())
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->where('created_at', '>=', now()->subMinutes(30))  // Only recent (same call)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+
+                    if ($booking) {
+                        Log::info('✅ Found same-call appointment for anonymous cancellation', [
+                            'appointment_id' => $booking->id,
+                            'starts_at' => $booking->starts_at,
+                            'created_minutes_ago' => now()->diffInMinutes($booking->created_at),
+                            'policy' => 'same_call_allowed'
+                        ]);
+
+                        // Skip customer search strategies - we found the appointment via call_id
+                        goto process_cancellation;
+                    } else {
+                        Log::warning('⚠️ No same-call appointment found for anonymous caller', [
+                            'call_id' => $callId,
+                            'date' => $parsedDate->toDateString(),
+                            'reason' => 'Anonymous callers can only modify appointments from current call'
+                        ]);
+
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'not_found',
+                            'message' => 'Entschuldigung, ich kann diesen Termin nicht finden. Bei unterdrückter Rufnummer kann ich nur Termine aus dem aktuellen Gespräch ändern. Für ältere Termine rufen Sie bitte direkt an.'
+                        ], 200);
+                    }
+                }
+
+                // Continue with regular customer search strategies for non-anonymous...
                 if ($call) {
                     // Strategy 1: Customer already linked to call
                     if ($call->customer_id) {
@@ -674,6 +745,9 @@ class RetellApiController extends Controller
                 ], 200);
             }
 
+            // Label for goto from anonymous same-call search
+            process_cancellation:
+
             // Check cancellation policy
             $policyResult = $this->policyEngine->canCancel($booking);
 
@@ -735,7 +809,10 @@ class RetellApiController extends Controller
                 $booking->update([
                     'status' => 'cancelled',
                     'cancelled_at' => now(),
-                    'cancellation_reason' => $reason
+                    'cancellation_reason' => $reason,
+                    // ✅ METADATA FIX 2025-10-10: Populate cancellation tracking fields
+                    'cancelled_by' => 'customer',
+                    'cancellation_source' => 'retell_api'
                 ]);
 
                 // Track modification for quota/analytics
@@ -1114,28 +1191,46 @@ class RetellApiController extends Controller
             }
 
             // Strategy 4: Fallback search by call_id in metadata (for same-call reschedules)
+            // FIX 2025-10-11: PRIORITY for anonymous callers - check THIS call first!
             if (!$booking && $callId && $oldDate) {
                 $parsedOldDate = $this->parseDateTime($oldDate, null);
 
-                Log::info('🔍 Fallback search by call_id in metadata', [
+                Log::info('🔍 Fallback search by call_id in metadata (PRIORITY for anonymous)', [
                     'call_id' => $callId,
-                    'old_date' => $parsedOldDate->toDateString()
+                    'old_date' => $parsedOldDate->toDateString(),
+                    'is_anonymous' => $call && $call->from_number === 'anonymous'
                 ]);
 
-                // Use 'where' for scalar JSON values, not 'whereJsonContains' (which is for arrays)
-                $booking = Appointment::where('metadata->call_id', $callId)
+                // SECURITY: For anonymous callers, ONLY allow reschedule of appointments from THIS call
+                // Check both metadata->retell_call_id AND direct call_id match
+                $query = Appointment::where(function($q) use ($callId, $call) {
+                        $q->where('metadata->retell_call_id', $callId)
+                          ->orWhere('call_id', $call ? $call->id : null);
+                    })
                     ->whereDate('starts_at', $parsedOldDate->toDateString())
                     ->where('starts_at', '>=', now())
-                    ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
-                    // Allow appointments with or without booking IDs
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+                    ->whereIn('status', ['scheduled', 'confirmed', 'booked']);
+
+                // Additional security for anonymous: Only recent appointments (last 30 minutes)
+                if ($call && $call->from_number === 'anonymous') {
+                    $query->where('created_at', '>=', now()->subMinutes(30));
+
+                    Log::info('🔒 SECURITY: Anonymous caller - restricting to appointments from THIS call only', [
+                        'call_id' => $callId,
+                        'time_window' => '30 minutes',
+                        'reason' => 'Cannot verify identity for old appointments'
+                    ]);
+                }
+
+                $booking = $query->orderBy('created_at', 'desc')->first();
 
                 if ($booking) {
                     Log::info('✅ Found appointment via call_id metadata search', [
                         'booking_id' => $booking->id,
                         'starts_at' => $booking->starts_at,
-                        'search_strategy' => 'call_id_metadata'
+                        'search_strategy' => 'call_id_metadata',
+                        'is_same_call' => true,
+                        'created_minutes_ago' => now()->diffInMinutes($booking->created_at)
                     ]);
                 }
             }
@@ -1189,6 +1284,57 @@ class RetellApiController extends Controller
 
             // Get duration from original booking
             $duration = $booking->starts_at->diffInMinutes($booking->ends_at);
+
+            // 🔧 FIX 2025-10-11: CHECK AVAILABILITY before rescheduling!
+            // Prevents rescheduling to already occupied slots
+            $service = Service::find($booking->service_id);
+            if ($service && $service->calcom_event_type_id) {
+                Log::info('🔍 Checking availability before reschedule', [
+                    'target_datetime' => $rescheduleDate->toIso8601String(),
+                    'service_id' => $service->id,
+                    'event_type_id' => $service->calcom_event_type_id
+                ]);
+
+                // Check 1-hour window around target time
+                $checkStart = $rescheduleDate->copy()->subMinutes(30);
+                $checkEnd = $rescheduleDate->copy()->addMinutes(30);
+
+                $availabilityResponse = $this->calcomService->getAvailableSlots(
+                    $service->calcom_event_type_id,
+                    $checkStart->format('Y-m-d H:i:s'),
+                    $checkEnd->format('Y-m-d H:i:s')
+                );
+
+                $slots = $availabilityResponse->json()['data']['slots'] ?? [];
+                $isAvailable = $this->isTimeAvailable($rescheduleDate, $slots);
+
+                if (!$isAvailable) {
+                    Log::warning('⚠️ Target time not available for reschedule', [
+                        'target_time' => $rescheduleDate->format('Y-m-d H:i'),
+                        'reason' => 'Slot occupied or not available'
+                    ]);
+
+                    // Find alternatives near the requested time
+                    $alternatives = $this->alternativeFinder->findAlternatives(
+                        $rescheduleDate,
+                        $duration,
+                        $service->calcom_event_type_id
+                    );
+
+                    return response()->json([
+                        'success' => false,
+                        'status' => 'unavailable',
+                        'message' => "Der gewünschte Termin um {$rescheduleDate->format('H:i')} Uhr ist leider nicht verfügbar. " .
+                                    ($alternatives['responseText'] ?? "Möchten Sie eine andere Zeit?"),
+                        'requested_time' => $rescheduleDate->format('Y-m-d H:i'),
+                        'alternatives' => $this->formatAlternatives($alternatives['alternatives'] ?? [])
+                    ], 200);
+                }
+
+                Log::info('✅ Target time available for reschedule', [
+                    'target_time' => $rescheduleDate->format('Y-m-d H:i')
+                ]);
+            }
 
             // Resolve Cal.com booking ID from all possible columns
             $calcomBookingId = $booking->calcom_v2_booking_id
@@ -1303,7 +1449,12 @@ class RetellApiController extends Controller
                         'call_id' => $callId,
                         'calcom_synced' => $calcomBookingId ? $calcomSuccess : false,
                         'previous_booking_id' => $calcomBookingId // Track old booking ID
-                    ])
+                    ]),
+                    // ✅ METADATA FIX 2025-10-10: Populate reschedule tracking fields
+                    'rescheduled_at' => now(),
+                    'rescheduled_by' => 'customer',
+                    'reschedule_source' => 'retell_api',
+                    'previous_starts_at' => $oldStartsAt
                 ];
 
                 // CRITICAL: Update booking ID if Cal.com returned a new one
@@ -1465,17 +1616,27 @@ class RetellApiController extends Controller
     private function parseDateTime($date, $time)
     {
         try {
-            // Handle German date format (DD.MM.YYYY or DD.MM.)
-            if (strpos($date, '.') !== false) {
-                $dateParts = explode('.', $date);
-                $day = intval($dateParts[0]);
-                $month = intval($dateParts[1]);
-                $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+            // FIX 2025-10-10: Use DateTimeParser service for German dates (heute, morgen, etc.)
+            $dateTimeParser = app(\App\Services\Retell\DateTimeParser::class);
 
-                $parsedDate = Carbon::create($year, $month, $day);
+            // Try DateTimeParser first (handles German: heute, morgen, DD.MM.YYYY, etc.)
+            $parsedDateString = $dateTimeParser->parseDateString($date);
+
+            if ($parsedDateString) {
+                $parsedDate = Carbon::parse($parsedDateString);
             } else {
-                // Try ISO format or other formats
-                $parsedDate = Carbon::parse($date);
+                // Fallback: Handle German date format (DD.MM.YYYY or DD.MM.)
+                if (strpos($date, '.') !== false) {
+                    $dateParts = explode('.', $date);
+                    $day = intval($dateParts[0]);
+                    $month = intval($dateParts[1]);
+                    $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+
+                    $parsedDate = Carbon::create($year, $month, $day);
+                } else {
+                    // Last resort: Try ISO format
+                    $parsedDate = Carbon::parse($date);
+                }
             }
 
             // Parse time (HH:MM or just HH)
