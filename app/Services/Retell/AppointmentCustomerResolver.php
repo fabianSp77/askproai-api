@@ -156,7 +156,23 @@ class AppointmentCustomerResolver
             'status' => 'active',
             'notes' => '⚠️ Created from anonymous call - phone number unknown'
         ]);
-        $customer->save();
+
+        // 🔧 PHASE 5.5: Enhanced error handling for customer save
+        try {
+            $customer->save();
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to save anonymous customer to database', [
+                'error' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'name' => $name,
+                'email' => $email,
+                'placeholder_phone' => $uniquePhone,
+                'company_id' => $call->company_id,
+                'call_id' => $call->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;  // Re-throw to be caught by caller
+        }
 
         Log::info('✅ New anonymous customer created', [
             'customer_id' => $customer->id,
@@ -190,7 +206,23 @@ class AppointmentCustomerResolver
             'source' => 'retell_webhook',
             'status' => 'active'
         ]);
-        $customer->save();
+
+        // 🔧 PHASE 5.5: Enhanced error handling for customer save
+        try {
+            $customer->save();
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to save regular customer to database', [
+                'error' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'name' => $name,
+                'email' => $email,
+                'phone' => $call->from_number,
+                'company_id' => $call->company_id,
+                'call_id' => $call->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;  // Re-throw to be caught by caller
+        }
 
         Log::info('✅ New customer created from call', [
             'customer_id' => $customer->id,

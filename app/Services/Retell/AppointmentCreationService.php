@@ -327,6 +327,18 @@ class AppointmentCreationService implements AppointmentCreationInterface
         ?Call $call = null,
         ?array $calcomBookingData = null  // Phase 2: Full Cal.com response for staff assignment
     ): Appointment {
+        // 🔧 PHASE 5.5: Enhanced logging for appointment creation start
+        Log::info('📝 Starting appointment creation', [
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'starts_at' => $bookingDetails['starts_at'] ?? null,
+            'calcom_booking_id' => $calcomBookingId,
+            'call_id' => $call?->id,
+            'call_retell_id' => $call?->retell_call_id
+        ]);
+
         // FIX 3: Check for existing appointment with same Cal.com booking ID (duplicate prevention)
         if ($calcomBookingId) {
             $existingAppointment = Appointment::where('calcom_v2_booking_id', $calcomBookingId)
@@ -382,6 +394,15 @@ class AppointmentCreationService implements AppointmentCreationInterface
                     return Branch::where('company_id', $companyId)->first();
                 });
                 $branchId = $defaultBranch ? $defaultBranch->id : null;
+
+                // 🔧 PHASE 5.5: Log branch resolution
+                Log::info('🏢 Branch resolved for appointment', [
+                    'customer_id' => $customer->id,
+                    'customer_branch_id' => $customer->branch_id,
+                    'resolved_branch_id' => $branchId,
+                    'company_id' => $companyId,
+                    'resolution_method' => $customer->branch_id ? 'customer_branch' : ($defaultBranch ? 'default_branch' : 'no_branch')
+                ]);
             }
         }
 
@@ -416,7 +437,24 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'booking_source' => 'retell_webhook',
             'booked_by_user_id' => null  // Customer bookings have no user
         ]);
-        $appointment->save();
+
+        // 🔧 PHASE 5.5: Enhanced error handling for appointment save
+        try {
+            $appointment->save();
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to save appointment record to database', [
+                'error' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'customer_id' => $customer->id,
+                'service_id' => $service->id,
+                'branch_id' => $branchId,
+                'starts_at' => $bookingDetails['starts_at'],
+                'calcom_booking_id' => $calcomBookingId,
+                'call_id' => $call?->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;  // Re-throw to be caught by caller
+        }
 
         // PHASE 2: Staff Assignment from Cal.com hosts array
         if ($calcomBookingData) {
