@@ -43,8 +43,15 @@ class CalcomWebhookController extends Controller
     {
         $data = $request->sanitized();
 
-        // Log the webhook event
-        $webhookEvent = $this->logWebhookEvent($request, 'calcom', $data);
+        // Log the webhook event (non-blocking - continue even if logging fails)
+        $webhookEvent = null;
+        try {
+            $webhookEvent = $this->logWebhookEvent($request, 'calcom', $data);
+        } catch (\Exception $e) {
+            Log::warning('[Cal.com] Webhook event logging failed (non-critical)', [
+                'error' => $e->getMessage()
+            ]);
+        }
 
         /* ───── TEMP-DEBUG – Header & Body in calcom-Channel loggen (GDPR-compliant) ───── */
         Log::channel('calcom')->debug('[Debug] headers', LogSanitizer::sanitizeHeaders($request->headers->all()));
@@ -63,6 +70,11 @@ class CalcomWebhookController extends Controller
             $relatedModel = null;
 
             switch ($triggerEvent) {
+                // PING event (Cal.com test)
+                case 'PING':
+                    Log::channel('calcom')->info('[Cal.com] PING event processed');
+                    return response()->json(['received' => true, 'status' => 'ok', 'message' => 'PING received']);
+
                 // Event Type events
                 case 'EVENT_TYPE.CREATED':
                     $this->handleEventTypeCreated($payload);
@@ -272,6 +284,10 @@ class CalcomWebhookController extends Controller
                         'meeting_url' => $payload['meetingUrl'] ?? null,
                     ]),
                     'calcom_event_type_id' => $payload['eventTypeId'] ?? null,
+                    // ✅ METADATA FIX 2025-10-10: Populate tracking fields
+                    'created_by' => 'customer',
+                    'booking_source' => 'calcom_webhook',
+                    'booked_by_user_id' => null  // Customer bookings have no user
                 ], $assignmentMetadata) // Merge assignment metadata (model_used, was_fallback, assignment_metadata)
             );
 
@@ -283,6 +299,26 @@ class CalcomWebhookController extends Controller
                 'assignment_model' => $assignmentMetadata['assignment_model_used'] ?? 'none',
                 'time' => $startTime->format('Y-m-d H:i')
             ]);
+
+            // 🔧 FIX 2025-10-11: Invalidate availability cache after webhook booking
+            // Prevents showing booked slots as "available" to other callers
+            if ($service && $service->calcom_event_type_id) {
+                try {
+                    app(\App\Services\CalcomService::class)
+                        ->clearAvailabilityCacheForEventType($service->calcom_event_type_id);
+
+                    Log::channel('calcom')->info('✅ Cache invalidated after webhook booking', [
+                        'event_type_id' => $service->calcom_event_type_id,
+                        'appointment_id' => $appointment->id
+                    ]);
+                } catch (\Exception $e) {
+                    // Non-blocking: Log but don't fail the webhook
+                    Log::channel('calcom')->warning('⚠️ Cache invalidation failed (non-critical)', [
+                        'error' => $e->getMessage(),
+                        'appointment_id' => $appointment->id
+                    ]);
+                }
+            }
 
             return $appointment;
 
@@ -308,6 +344,9 @@ class CalcomWebhookController extends Controller
                 ->first();
 
             if ($appointment) {
+                // Store old start time before update
+                $oldStartsAt = $appointment->starts_at;
+
                 $appointment->update([
                     'starts_at' => Carbon::parse($payload['startTime']),
                     'ends_at' => Carbon::parse($payload['endTime']),
@@ -317,12 +356,34 @@ class CalcomWebhookController extends Controller
                         json_decode($appointment->metadata ?? '{}', true),
                         ['last_update' => $payload]
                     )),
+                    // ✅ METADATA FIX 2025-10-10: Populate reschedule tracking fields
+                    'rescheduled_at' => now(),
+                    'rescheduled_by' => 'customer',
+                    'reschedule_source' => 'calcom_webhook',
+                    'previous_starts_at' => $oldStartsAt
                 ]);
 
                 Log::channel('calcom')->info('[Cal.com] Appointment rescheduled', [
                     'appointment_id' => $appointment->id,
                     'new_time' => $payload['startTime']
                 ]);
+
+                // 🔧 FIX 2025-10-11: Invalidate cache after reschedule
+                if ($appointment->service && $appointment->service->calcom_event_type_id) {
+                    try {
+                        app(\App\Services\CalcomService::class)
+                            ->clearAvailabilityCacheForEventType($appointment->service->calcom_event_type_id);
+
+                        Log::channel('calcom')->info('✅ Cache invalidated after webhook reschedule', [
+                            'event_type_id' => $appointment->service->calcom_event_type_id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::channel('calcom')->warning('⚠️ Cache invalidation failed', [
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
                 return $appointment;
             } else {
                 // If appointment doesn't exist, create it
@@ -357,12 +418,35 @@ class CalcomWebhookController extends Controller
                         json_decode($appointment->metadata ?? '{}', true),
                         ['cancellation' => $payload]
                     )),
+                    // ✅ METADATA FIX 2025-10-10: Populate cancellation tracking fields
+                    'cancelled_at' => now(),
+                    'cancelled_by' => 'customer',
+                    'cancellation_source' => 'calcom_webhook',
+                    'cancellation_reason' => $payload['cancellationReason'] ?? 'No reason provided'
                 ]);
 
                 Log::channel('calcom')->info('[Cal.com] Appointment cancelled', [
                     'appointment_id' => $appointment->id,
                     'reason' => $payload['cancellationReason'] ?? null
                 ]);
+
+                // 🔧 FIX 2025-10-11: Invalidate cache after cancellation
+                // Makes cancelled slot available again immediately
+                if ($appointment->service && $appointment->service->calcom_event_type_id) {
+                    try {
+                        app(\App\Services\CalcomService::class)
+                            ->clearAvailabilityCacheForEventType($appointment->service->calcom_event_type_id);
+
+                        Log::channel('calcom')->info('✅ Cache invalidated after webhook cancellation', [
+                            'event_type_id' => $appointment->service->calcom_event_type_id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::channel('calcom')->warning('⚠️ Cache invalidation failed', [
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
                 return $appointment;
             } else {
                 Log::channel('calcom')->warning('[Cal.com] Appointment not found for cancellation', [
