@@ -1291,18 +1291,9 @@ class RetellFunctionCallHandler extends Controller
                             if ($response->successful()) {
                                 $booking = $response->json()['data'] ?? [];
 
-                                // Store booking in call record
-                                // OPTIMIZATION: Reuse $call from earlier
+                                // 🔧 PHASE 5.4 FIX: Create Appointment FIRST, then set booking_confirmed
+                                // This ensures atomic transaction - booking_confirmed only after successful appointment creation
                                 if ($callId && $call) {
-                                    $call->booking_confirmed = true;
-                                    $call->booking_id = $booking['uid'] ?? null;
-                                    $call->booking_details = json_encode([
-                                        'confirmed_at' => now()->toIso8601String(),
-                                        'calcom_booking' => $booking
-                                    ]);
-                                    $call->save();
-
-                                    // 🆕 PHASE 1 FIX: Create Appointment record after successful Cal.com booking
                                     try {
                                         // Ensure customer exists
                                         $customer = $this->customerResolver->ensureCustomerFromCall($call, $name, $email);
@@ -1327,6 +1318,17 @@ class RetellFunctionCallHandler extends Controller
                                             calcomBookingData: $booking  // Pass Cal.com booking data for staff assignment
                                         );
 
+                                        // ✅ ATOMIC TRANSACTION: Only set booking_confirmed=true AFTER appointment created successfully
+                                        $call->booking_confirmed = true;
+                                        $call->booking_id = $booking['uid'] ?? null;
+                                        $call->booking_details = json_encode([
+                                            'confirmed_at' => now()->toIso8601String(),
+                                            'calcom_booking' => $booking
+                                        ]);
+                                        $call->appointment_id = $appointment->id;
+                                        $call->appointment_made = true;
+                                        $call->save();
+
                                         Log::info('✅ Appointment record created from Cal.com booking', [
                                             'appointment_id' => $appointment->id,
                                             'call_id' => $call->id,
@@ -1338,6 +1340,17 @@ class RetellFunctionCallHandler extends Controller
                                         ]);
 
                                     } catch (\Exception $e) {
+                                        // ❌ Appointment creation failed - DO NOT set booking_confirmed
+                                        // Store booking details for manual recovery but keep booking_confirmed=false
+                                        $call->booking_id = $booking['uid'] ?? null;
+                                        $call->booking_details = json_encode([
+                                            'confirmed_at' => now()->toIso8601String(),
+                                            'calcom_booking' => $booking,
+                                            'appointment_creation_failed' => true,
+                                            'appointment_creation_error' => $e->getMessage()
+                                        ]);
+                                        $call->save();
+
                                         Log::error('❌ Failed to create Appointment record after Cal.com booking', [
                                             'error' => $e->getMessage(),
                                             'call_id' => $call->id,
@@ -1345,8 +1358,13 @@ class RetellFunctionCallHandler extends Controller
                                             'trace' => $e->getTraceAsString()
                                         ]);
 
-                                        // Continue - Cal.com booking exists, appointment can be synced later via Phase 2 command
-                                        // This prevents blocking user confirmation message
+                                        // Return error to user - Cal.com booking exists but local appointment failed
+                                        return response()->json([
+                                            'success' => false,
+                                            'status' => 'partial_booking',
+                                            'message' => "Die Buchung wurde erstellt, aber es gab ein Problem bei der Speicherung. Bitte kontaktieren Sie uns direkt.",
+                                            'error' => 'appointment_creation_failed'
+                                        ], 500);
                                     }
                                 }
 
