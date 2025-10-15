@@ -207,12 +207,19 @@
                     </div>
                 @endforeach
 
-                {{-- Time Rows (08:00 - 18:00) --}}
-                @foreach(range(8, 18) as $hour)
-                    @php
-                        $timeLabel = sprintf('%02d:00', $hour);
-                    @endphp
+                {{-- Time Rows (07:00 - 19:00, 30-minute intervals) --}}
+                @php
+                    // Generate 30-minute time slots from 07:00 to 19:00
+                    $timeSlots = [];
+                    for ($hour = 7; $hour <= 19; $hour++) {
+                        foreach ([0, 30] as $minute) {
+                            if ($hour === 19 && $minute === 30) continue; // Stop at 19:00
+                            $timeSlots[] = sprintf('%02d:%02d', $hour, $minute);
+                        }
+                    }
+                @endphp
 
+                @foreach($timeSlots as $timeLabel)
                     {{-- Time Label --}}
                     <div class="fi-time-label fi-calendar-cell">{{ $timeLabel }}</div>
 
@@ -220,19 +227,19 @@
                     @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $dayKey)
                         <div class="fi-calendar-cell">
                             @php
-                                // Find slots for this hour on this day
+                                // Find slot for this exact time on this day
                                 $daySlots = $weekData[$dayKey] ?? [];
-                                $slotForHour = collect($daySlots)->first(function($slot) use ($timeLabel) {
-                                    return str_starts_with($slot['time'], $timeLabel);
+                                $slotForTime = collect($daySlots)->first(function($slot) use ($timeLabel) {
+                                    return $slot['time'] === $timeLabel;
                                 });
                             @endphp
 
-                            @if($slotForHour)
+                            @if($slotForTime)
                                 <button
-                                    wire:click="selectSlot('{{ $slotForHour['full_datetime'] }}', '{{ $slotForHour['day_name'] }} um {{ $slotForHour['time'] }}')"
-                                    class="fi-slot-button {{ $this->isSlotSelected($slotForHour['full_datetime']) ? 'selected' : '' }}"
+                                    wire:click="selectSlot('{{ $slotForTime['full_datetime'] }}', '{{ $slotForTime['day_name'] }} um {{ $slotForTime['time'] }}')"
+                                    class="fi-slot-button {{ $this->isSlotSelected($slotForTime['full_datetime']) ? 'selected' : '' }}"
                                     wire:loading.attr="disabled">
-                                    {{ $slotForHour['time'] }}
+                                    {{ $slotForTime['time'] }}
                                 </button>
                             @endif
                         </div>
