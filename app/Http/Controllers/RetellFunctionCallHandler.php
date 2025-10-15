@@ -193,10 +193,13 @@ class RetellFunctionCallHandler extends Controller
             $startTime = $requestedDate->copy()->startOfHour();
             $endTime = $requestedDate->copy()->endOfHour();
 
+            // 🔧 FIX 2025-10-15: Add teamId parameter for multi-tenant isolation and correct cache keys
+            // Bug: Retell AI calls were missing teamId, causing cache-key mismatches and potential 404s
             $response = $this->calcomService->getAvailableSlots(
                 $service->calcom_event_type_id,
                 $startTime->format('Y-m-d H:i:s'),
-                $endTime->format('Y-m-d H:i:s')
+                $endTime->format('Y-m-d H:i:s'),
+                $service->company->calcom_team_id  // ← CRITICAL: teamId added for multi-tenant scoping
             );
 
             $slots = $response->json()['data']['slots'] ?? [];
@@ -1220,7 +1223,8 @@ class RetellFunctionCallHandler extends Controller
                     $slotsResponse = $calcomService->getAvailableSlots(
                         $service->calcom_event_type_id,
                         $appointmentDate->format('Y-m-d'),
-                        $appointmentDate->format('Y-m-d')
+                        $appointmentDate->format('Y-m-d'),
+                        $service->company->calcom_team_id  // ← FIX 2025-10-15: teamId added
                     );
 
                     if ($slotsResponse->successful()) {
@@ -1373,7 +1377,8 @@ class RetellFunctionCallHandler extends Controller
                             $recheckResponse = $calcomService->getAvailableSlots(
                                 $service->calcom_event_type_id,
                                 $appointmentDate->format('Y-m-d'),
-                                $appointmentDate->format('Y-m-d')
+                                $appointmentDate->format('Y-m-d'),
+                                $service->company->calcom_team_id  // ← FIX 2025-10-15: teamId added
                             );
 
                             if ($recheckResponse->successful()) {
@@ -1828,6 +1833,7 @@ class RetellFunctionCallHandler extends Controller
 
             Log::info('🔍 Querying Cal.com for availability', [
                 'event_type_id' => $service->calcom_event_type_id,
+                'team_id' => $service->company->calcom_team_id,  // ← FIX 2025-10-15: Added for logging
                 'start' => $startDateTime,
                 'end' => $endDateTime
             ]);
@@ -1835,7 +1841,8 @@ class RetellFunctionCallHandler extends Controller
             $response = $calcom->getAvailableSlots(
                 $service->calcom_event_type_id,
                 $startDateTime,
-                $endDateTime
+                $endDateTime,
+                $service->company->calcom_team_id  // ← FIX 2025-10-15: teamId added
             );
 
             if ($response->successful()) {
@@ -2256,7 +2263,8 @@ class RetellFunctionCallHandler extends Controller
             $slotsResponse = $calcomService->getAvailableSlots(
                 $service->calcom_event_type_id,
                 $newDateTime->format('Y-m-d'),
-                $newDateTime->format('Y-m-d')
+                $newDateTime->format('Y-m-d'),
+                $service->company->calcom_team_id  // ← FIX 2025-10-15: teamId added
             );
 
             $isAvailable = false;

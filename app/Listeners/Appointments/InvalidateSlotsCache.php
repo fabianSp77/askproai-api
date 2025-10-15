@@ -140,13 +140,12 @@ class InvalidateSlotsCache
     /**
      * Generate all cache keys affected by this appointment
      *
-     * Invalidates a 3-hour window:
-     * - 1 hour before appointment
-     * - Appointment hour
-     * - 1 hour after appointment
+     * 🔧 FIX 2025-10-15: Updated to match ACTUAL cache key formats used by the system
+     * Bug: Previous keys didn't match WeeklyAvailabilityService or CalcomService formats
      *
-     * This ensures all slot queries overlapping with this appointment
-     * are invalidated, preventing stale cache hits
+     * Invalidates TWO cache key formats:
+     * 1. WeeklyAvailabilityService: week_availability:{teamId}:{serviceId}:{weekStart}
+     * 2. CalcomService: calcom:slots:{teamId}:{eventTypeId}:{startDate}:{endDate}
      *
      * @param \App\Models\Appointment $appointment
      * @param Carbon $startTime
@@ -156,50 +155,72 @@ class InvalidateSlotsCache
     {
         $keys = [];
 
-        // Extract event type ID from service
-        $eventTypeId = $appointment->service?->calcom_event_type_id;
-        if (!$eventTypeId) {
-            Log::warning('⚠️ No event type ID found for appointment', [
+        // Load relationships
+        $service = $appointment->service;
+        $company = $service?->company;
+
+        // Extract required IDs
+        $eventTypeId = $service?->calcom_event_type_id;
+        $serviceId = $service?->id;
+        $teamId = $company?->calcom_team_id;
+
+        if (!$eventTypeId || !$serviceId || !$teamId) {
+            Log::warning('⚠️ Missing required IDs for cache invalidation', [
                 'appointment_id' => $appointment->id,
-                'service_id' => $appointment->service_id,
+                'event_type_id' => $eventTypeId,
+                'service_id' => $serviceId,
+                'team_id' => $teamId,
             ]);
-            return $keys; // Return empty array
+            return $keys;
         }
 
-        // Tenant isolation fields (prevent cross-tenant cache pollution)
-        $companyId = $appointment->company_id ?? 0;
-        $branchId = $appointment->branch_id ?? 0;
+        // ============================================================
+        // FORMAT 1: WeeklyAvailabilityService Cache Keys
+        // Pattern: week_availability:{teamId}:{serviceId}:{weekStart}
+        // ============================================================
+        $weekStart = $startTime->copy()->startOfWeek()->format('Y-m-d');
+        $keys[] = "week_availability:{$teamId}:{$serviceId}:{$weekStart}";
 
-        // Generate cache keys for 3-hour time window
-        // Cache key format matches AppointmentAlternativeFinder::getAvailableSlots()
-        // cal_slots_{company_id}_{branch_id}_{event_type_id}_{start_hour}_{end_hour}
+        // Also invalidate previous and next week (for edge cases)
+        $prevWeekStart = $startTime->copy()->subWeek()->startOfWeek()->format('Y-m-d');
+        $nextWeekStart = $startTime->copy()->addWeek()->startOfWeek()->format('Y-m-d');
+        $keys[] = "week_availability:{$teamId}:{$serviceId}:{$prevWeekStart}";
+        $keys[] = "week_availability:{$teamId}:{$serviceId}:{$nextWeekStart}";
 
-        $hourBefore = $startTime->copy()->subHour();
-        $appointmentHour = $startTime->copy();
-        $hourAfter = $startTime->copy()->addHour();
+        // ============================================================
+        // FORMAT 2: CalcomService Cache Keys (with wildcard)
+        // Pattern: calcom:slots:{teamId}:{eventTypeId}:{startDate}:{endDate}
+        // ============================================================
+        // We use Redis KEYS command to find all matching cache entries
+        // This catches all date ranges that might include this appointment
+        $calcomPattern = "calcom:slots:{$teamId}:{$eventTypeId}:*";
 
-        foreach ([$hourBefore, $appointmentHour, $hourAfter] as $time) {
-            $startHour = $time->format('Y-m-d-H');
-            $endHour = $time->copy()->addHour()->format('Y-m-d-H');
+        // Use Laravel's cache store to get Redis keys
+        try {
+            if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
+                $redis = Cache::getStore()->connection();
+                $matchingKeys = $redis->keys($calcomPattern);
+                $keys = array_merge($keys, $matchingKeys);
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Redis wildcard search failed, using date-based keys', [
+                'error' => $e->getMessage()
+            ]);
 
-            $keys[] = sprintf(
-                'cal_slots_%d_%d_%d_%s_%s',
-                $companyId,
-                $branchId,
-                $eventTypeId,
-                $startHour,
-                $endHour
-            );
+            // Fallback: Generate specific date keys (7 days around appointment)
+            for ($i = -3; $i <= 3; $i++) {
+                $date = $startTime->copy()->addDays($i)->format('Y-m-d');
+                $keys[] = "calcom:slots:{$teamId}:{$eventTypeId}:{$date}:{$date}";
+            }
         }
 
-        Log::debug('🔑 Generated cache keys for invalidation', [
+        Log::debug('🔑 Generated cache keys for invalidation (FIX 2025-10-15)', [
             'appointment_id' => $appointment->id,
             'keys_count' => count($keys),
-            'keys' => $keys,
-            'time_window' => sprintf('%s to %s',
-                $hourBefore->format('Y-m-d H:i'),
-                $hourAfter->format('Y-m-d H:i')
-            ),
+            'sample_keys' => array_slice($keys, 0, 5),
+            'team_id' => $teamId,
+            'service_id' => $serviceId,
+            'event_type_id' => $eventTypeId,
         ]);
 
         return $keys;

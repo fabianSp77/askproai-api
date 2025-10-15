@@ -63,6 +63,10 @@ class CalcomService
         // Get event type ID
         $eventTypeId = (int)($bookingDetails['eventTypeId'] ?? $this->eventTypeId);
 
+        // 🔧 FIX 2025-10-15: Extract teamId for cache invalidation
+        // Bug: Cache invalidation was missing teamId, causing multi-tenant cache collision
+        $teamId = isset($bookingDetails['teamId']) ? (int)$bookingDetails['teamId'] : null;
+
         // Build V2 API payload - simpler format without end, language, responses
         $payload = [
             'eventTypeId' => $eventTypeId,
@@ -116,7 +120,8 @@ class CalcomService
 
         // Wrap Cal.com API call with circuit breaker for reliability
         try {
-            return $this->circuitBreaker->call(function() use ($payload, $eventTypeId) {
+            // 🔧 FIX 2025-10-15: Include $teamId in closure for cache invalidation
+            return $this->circuitBreaker->call(function() use ($payload, $eventTypeId, $teamId) {
                 $fullUrl = $this->baseUrl . '/bookings';
                 $resp = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $this->apiKey,
@@ -134,8 +139,11 @@ class CalcomService
                     throw CalcomApiException::fromResponse($resp, '/bookings', $payload, 'POST');
                 }
 
-                // Invalidate availability cache after successful booking
-                $this->clearAvailabilityCacheForEventType($eventTypeId);
+                // 🔧 FIX 2025-10-15: Pass teamId to cache invalidation for correct multi-tenant cache keys
+                // Only invalidate if teamId is available (backward compatibility)
+                if ($teamId) {
+                    $this->clearAvailabilityCacheForEventType($eventTypeId, $teamId);
+                }
 
                 return $resp;
             });
@@ -305,18 +313,28 @@ class CalcomService
     /**
      * Clear availability cache for a specific event type
      * Called after bookings to ensure fresh availability data
+     *
+     * 🔧 FIX 2025-10-15: Added teamId parameter for correct cache key format
+     * Bug: Cache keys were missing teamId, causing multi-tenant cache collision
+     * - Old format: calcom:slots:{eventTypeId}:{date}:{date}
+     * - New format: calcom:slots:{teamId}:{eventTypeId}:{date}:{date}
+     *
+     * @param int $eventTypeId Cal.com Event Type ID
+     * @param int $teamId Cal.com Team ID (required for multi-tenant isolation)
      */
-    public function clearAvailabilityCacheForEventType(int $eventTypeId): void
+    public function clearAvailabilityCacheForEventType(int $eventTypeId, int $teamId): void
     {
         // Clear cache for next 30 days (reasonable booking window)
         $today = Carbon::today();
         for ($i = 0; $i < 30; $i++) {
             $date = $today->copy()->addDays($i)->format('Y-m-d');
-            $cacheKey = "calcom:slots:{$eventTypeId}:{$date}:{$date}";
+            // 🔧 FIX 2025-10-15: Include teamId in cache key for multi-tenant isolation
+            $cacheKey = "calcom:slots:{$teamId}:{$eventTypeId}:{$date}:{$date}";
             Cache::forget($cacheKey);
         }
 
-        Log::info('Cleared availability cache after booking', [
+        Log::info('Cleared availability cache after booking (FIX 2025-10-15: with teamId)', [
+            'team_id' => $teamId,
             'event_type_id' => $eventTypeId,
             'days_cleared' => 30,
         ]);
