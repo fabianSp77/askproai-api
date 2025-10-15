@@ -165,6 +165,9 @@
         {{-- Calendar Grid --}}
         @if(!$loading && !$error)
             @php
+                // FIX: Use $this-> to access Livewire properties in @php blocks!
+                $weekData = $this->weekData;  // Copy to local scope
+                $weekMetadata = $this->weekMetadata;  // Copy to local scope
                 $totalSlots = collect($weekData)->flatten(1)->count();
             @endphp
 
@@ -195,7 +198,8 @@
                     </div>
                 </div>
             @else
-                <div class="fi-calendar-grid">
+                {{-- DESKTOP: 7-Day Grid (hidden on mobile) --}}
+                <div class="fi-calendar-grid hidden md:grid">
                     {{-- Header Row --}}
                     <div class="fi-calendar-header" style="grid-column: 1;">Zeit</div>
                 @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $dayKey)
@@ -238,13 +242,82 @@
                                 <button
                                     wire:click="selectSlot('{{ $slotForTime['full_datetime'] }}', '{{ $slotForTime['day_name'] }} um {{ $slotForTime['time'] }}')"
                                     class="fi-slot-button {{ $this->isSlotSelected($slotForTime['full_datetime']) ? 'selected' : '' }}"
-                                    wire:loading.attr="disabled">
+                                    wire:loading.attr="disabled"
+                                    style="display: block !important; visibility: visible !important; opacity: 1 !important;">
                                     {{ $slotForTime['time'] }}
                                 </button>
                             @endif
                         </div>
                     @endforeach
                 @endforeach
+                </div>
+
+                {{-- MOBILE: Accordion Day-Stack (shown on mobile only) --}}
+                <div class="fi-calendar-mobile md:hidden">
+                    @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $dayKey)
+                        @php
+                            $daySlots = $weekData[$dayKey] ?? [];
+                            $slotCount = count($daySlots);
+                        @endphp
+
+                        <div class="fi-calendar-day-section"
+                             x-data="{ open: @js($loop->first && $slotCount > 0) }"
+                             wire:key="mobile-day-{{ $dayKey }}">
+
+                            {{-- Day Header (Accordion Toggle) --}}
+                            <button @click="open = !open"
+                                    type="button"
+                                    class="fi-day-accordion-header"
+                                    :aria-expanded="open.toString()"
+                                    aria-controls="slots-{{ $dayKey }}"
+                                    :class="{ 'has-slots': {{ $slotCount }} > 0 }">
+                                <div class="flex-1 text-left">
+                                    <span class="fi-day-name">{{ $this->getDayLabel($dayKey) }}</span>
+                                    @if(isset($weekMetadata['days'][$dayKey]))
+                                        <span class="fi-day-date">{{ $weekMetadata['days'][$dayKey] }}</span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="fi-slot-count">
+                                        @if($slotCount > 0)
+                                            {{ $slotCount }} {{ $slotCount === 1 ? 'Slot' : 'Slots' }}
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">Keine Slots</span>
+                                        @endif
+                                    </span>
+                                    <svg class="fi-chevron w-5 h-5 transition-transform duration-200"
+                                         :class="{ 'rotate-180': open }"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </button>
+
+                            {{-- Day Slots Grid (Collapsed/Expanded) --}}
+                            <div x-show="open"
+                                 x-collapse
+                                 id="slots-{{ $dayKey }}"
+                                 class="fi-day-slots-grid">
+                                @if($slotCount > 0)
+                                    @foreach($daySlots as $slot)
+                                        <button wire:click="selectSlot('{{ $slot['full_datetime'] }}', '{{ $slot['day_name'] }} um {{ $slot['time'] }}')"
+                                                type="button"
+                                                class="fi-slot-button-mobile {{ $this->isSlotSelected($slot['full_datetime']) ? 'selected' : '' }}"
+                                                wire:loading.attr="disabled"
+                                                wire:key="mobile-slot-{{ $slot['full_datetime'] }}">
+                                            {{ $slot['time'] }}
+                                        </button>
+                                    @endforeach
+                                @else
+                                    <div class="fi-empty-slots-message">
+                                        Keine Termine verfügbar
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
 
                 {{-- Info Banner --}}
@@ -785,14 +858,196 @@
         to { transform: rotate(360deg); }
     }
 
+    /* ========================================
+       MOBILE CALENDAR ACCORDION STYLES
+       ======================================== */
+
+    /* Mobile Container */
+    .fi-calendar-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* Day Section */
+    .fi-calendar-day-section {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background: var(--color-gray-50);
+    }
+
+    .dark .fi-calendar-day-section {
+        background: var(--color-gray-800);
+    }
+
+    /* Accordion Header (Day Toggle) */
+    .fi-day-accordion-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--color-gray-100);
+        border: 2px solid var(--color-gray-300);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        min-height: 56px; /* WCAG AAA touch target */
+        font-weight: 500;
+        color: var(--color-gray-900);
+    }
+
+    .dark .fi-day-accordion-header {
+        background: var(--color-gray-700);
+        border-color: var(--color-gray-500);
+        color: var(--color-gray-100);
+    }
+
+    .fi-day-accordion-header:hover {
+        background: var(--color-gray-200);
+        border-color: var(--color-primary-500);
+    }
+
+    .dark .fi-day-accordion-header:hover {
+        background: var(--color-gray-600);
+        border-color: var(--color-primary-400);
+    }
+
+    .fi-day-accordion-header.has-slots {
+        border-color: var(--color-primary-600);
+        background: var(--color-primary-50);
+    }
+
+    .dark .fi-day-accordion-header.has-slots {
+        border-color: var(--color-primary-500);
+        background: var(--color-gray-700);
+    }
+
+    /* Day Name & Date */
+    .fi-day-name {
+        font-weight: 600;
+        font-size: 1rem;
+        display: block;
+        margin-bottom: 0.125rem;
+    }
+
+    .fi-day-date {
+        font-size: 0.875rem;
+        color: var(--color-gray-500);
+        display: block;
+    }
+
+    .dark .fi-day-date {
+        color: var(--color-gray-400);
+    }
+
+    /* Slot Count Badge */
+    .fi-slot-count {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-primary-700);
+    }
+
+    .dark .fi-slot-count {
+        color: var(--color-primary-300);
+    }
+
+    /* Chevron Icon */
+    .fi-chevron {
+        transition: transform 200ms ease;
+    }
+
+    /* Day Slots Grid (3 columns on mobile) */
+    .fi-day-slots-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--color-white);
+    }
+
+    .dark .fi-day-slots-grid {
+        background: var(--color-gray-800);
+    }
+
+    /* Mobile Slot Buttons (WCAG AAA compliant: 56x56px) */
+    .fi-slot-button-mobile {
+        min-height: 56px;
+        min-width: 56px;
+        padding: 0.75rem;
+        background-color: var(--color-primary-600);
+        color: white;
+        border: 2px solid var(--color-primary-700);
+        border-radius: 0.5rem;
+        font-size: 1rem; /* 16px for better readability on mobile */
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fi-slot-button-mobile:hover:not(:disabled) {
+        background-color: var(--color-primary-700);
+        border-color: var(--color-primary-800);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .fi-slot-button-mobile.selected {
+        background-color: var(--color-success-600);
+        border-color: var(--color-success-700);
+        color: white;
+    }
+
+    .fi-slot-button-mobile:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .fi-slot-button-mobile:focus {
+        outline: 2px solid var(--color-white);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px var(--color-primary-400);
+    }
+
+    /* Empty Slots Message */
+    .fi-empty-slots-message {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--color-gray-500);
+        font-size: 0.875rem;
+    }
+
+    .dark .fi-empty-slots-message {
+        color: var(--color-gray-400);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .fi-radio-option {
             min-width: 100%;
         }
 
+        /* Desktop grid should NOT scroll horizontally on mobile (it's hidden) */
         .fi-calendar-grid {
             overflow-x: auto;
+        }
+
+        /* Ensure all interactive elements meet WCAG AAA touch targets */
+        .fi-button-nav,
+        .fi-radio-option,
+        .fi-slot-button {
+            min-height: 56px;
+        }
+    }
+
+    /* Small phones (< 360px) - 2 columns instead of 3 */
+    @media (max-width: 360px) {
+        .fi-day-slots-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 </style>
