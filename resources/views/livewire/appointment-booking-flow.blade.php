@@ -164,9 +164,40 @@
 
         {{-- Calendar Grid --}}
         @if(!$loading && !$error)
-            <div class="fi-calendar-grid">
-                {{-- Header Row --}}
-                <div class="fi-calendar-header" style="grid-column: 1;">Zeit</div>
+            @php
+                $totalSlots = collect($weekData)->flatten(1)->count();
+            @endphp
+
+            @if($totalSlots === 0)
+                {{-- No Availability Message --}}
+                <div class="fi-warning-banner" style="padding: 1.5rem; margin: 1rem 0; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 0.5rem;">
+                    <div style="display: flex; align-items: start; gap: 0.75rem;">
+                        <div style="font-size: 1.5rem;">⚠️</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 1rem; color: #92400e; margin-bottom: 0.5rem;">
+                                Keine verfügbaren Termine
+                            </div>
+                            <div style="color: #78350f; font-size: 0.875rem; line-height: 1.5;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    Für diesen Service wurden keine Termine gefunden. Dies kann folgende Gründe haben:
+                                </p>
+                                <ul style="list-style: disc; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    <li>In Cal.com sind keine Mitarbeiter für Event Type zugewiesen</li>
+                                    <li>Die zugewiesenen Mitarbeiter haben keine Verfügbarkeit konfiguriert</li>
+                                    <li>Alle Termine für diese Woche sind bereits gebucht</li>
+                                </ul>
+                                <p style="margin-top: 0.75rem;">
+                                    <strong>Lösung:</strong> Bitte prüfen Sie in Cal.com die Konfiguration des Event Types
+                                    (Service: <strong>{{ $serviceName ?? 'N/A' }}</strong>)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="fi-calendar-grid">
+                    {{-- Header Row --}}
+                    <div class="fi-calendar-header" style="grid-column: 1;">Zeit</div>
                 @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $dayKey)
                     <div class="fi-calendar-header">
                         {{ $this->getDayLabel($dayKey) }}
@@ -207,23 +238,24 @@
                         </div>
                     @endforeach
                 @endforeach
-            </div>
+                </div>
 
-            {{-- Info Banner --}}
-            <div class="fi-info-banner">
-                <strong>Info:</strong>
-                Slots basieren auf {{ $serviceDuration }} Minuten Dauer.
-                @if($employeePreference === 'any')
-                    Zeigt alle verfügbaren Mitarbeiter.
-                @else
-                    @php
-                        $selectedEmp = collect($availableEmployees)->firstWhere('id', $employeePreference);
-                    @endphp
-                    @if($selectedEmp)
-                        Zeigt nur Termine von {{ $selectedEmp['name'] }}.
+                {{-- Info Banner --}}
+                <div class="fi-info-banner">
+                    <strong>Info:</strong>
+                    Slots basieren auf {{ $serviceDuration }} Minuten Dauer.
+                    @if($employeePreference === 'any')
+                        Zeigt alle verfügbaren Mitarbeiter.
+                    @else
+                        @php
+                            $selectedEmp = collect($availableEmployees)->firstWhere('id', $employeePreference);
+                        @endphp
+                        @if($selectedEmp)
+                            Zeigt nur Termine von {{ $selectedEmp['name'] }}.
+                        @endif
                     @endif
-                @endif
-            </div>
+                </div>
+            @endif
         @endif
     </div>
 

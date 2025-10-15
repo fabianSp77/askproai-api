@@ -59,21 +59,33 @@ x-on:service-selected.window="
     selectedServiceId = $event.detail.serviceId;
     console.log('[BookingFlowWrapper] Service selected:', $event.detail.serviceId);
 
-    // Find parent form
-    const form = $el.closest('form');
-    if (!form) {
-        console.error('[BookingFlowWrapper] Form not found');
-        return;
+    // Find ALL Livewire components (we need both the form and the booking flow)
+    const livewireComponents = document.querySelectorAll('[wire\\\\:id]');
+
+    let formUpdated = false;
+
+    for (const component of livewireComponents) {
+        const livewireId = component.getAttribute('wire:id');
+        const livewire = window.Livewire.find(livewireId);
+
+        if (!livewire) continue;
+
+        // Try to update Filament form data (if this is the form component)
+        if (livewire.__instance && livewire.__instance.fingerprint &&
+            livewire.__instance.fingerprint.name.includes('appointment-resource')) {
+            try {
+                livewire.set('data.service_id', $event.detail.serviceId);
+                console.log('[BookingFlowWrapper] ✅ Filament form service_id updated');
+                formUpdated = true;
+            } catch (e) {
+                // Not the form component, continue
+            }
+        }
     }
 
-    // Update service_id field (hidden in create mode, but still exists)
-    const serviceSelect = form.querySelector('select[name=service_id]') || form.querySelector('input[name=service_id]');
-    if (serviceSelect) {
-        serviceSelect.value = $event.detail.serviceId;
-        serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('[BookingFlowWrapper] service_id updated:', $event.detail.serviceId);
-    } else {
-        console.warn('[BookingFlowWrapper] service_id field not found');
+    if (!formUpdated) {
+        console.warn('[BookingFlowWrapper] ⚠️  Form component not found, service_id not updated');
+        console.log('[BookingFlowWrapper] Note: This is OK if booking flow handles it internally');
     }
 "
 x-on:employee-selected.window="
