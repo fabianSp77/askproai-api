@@ -21,12 +21,12 @@ use Filament\Tables\Filters\SelectFilter;
 class CompanyAssignmentConfigResource extends Resource
 {
     protected static ?string $model = CompanyAssignmentConfig::class;
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationGroup = 'Mitarbeiter-Zuordnung';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $navigationLabel = 'Firmen-Konfiguration';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = '👥 Mitarbeiter';
+    protected static ?int $navigationSort = 50;
+    protected static ?string $navigationLabel = 'Mitarbeiter-Zuordnung';
     protected static ?string $modelLabel = 'Zuordnungsmodell';
-    protected static ?string $pluralModelLabel = 'Zuordnungsmodelle';
+    protected static ?string $pluralModelLabel = 'Mitarbeiter-Zuordnung';
 
     public static function form(Form $form): Form
     {

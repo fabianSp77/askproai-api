@@ -52,6 +52,7 @@ class PolicyConfiguration extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'company_id',
         'configurable_type',
         'configurable_id',
         'policy_type',

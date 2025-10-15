@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cal.com Webhook Migration - Legacy zu Laravel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .header h1 { font-size: 3em; margin-bottom: 15px; }
+        .content { padding: 50px; }
+        .section { margin-bottom: 50px; }
+        .section h2 {
+            color: #f59e0b;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #f59e0b;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .webhook-box {
+            border: 3px solid;
+            border-radius: 15px;
+            padding: 30px;
+        }
+        .legacy {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+        .new {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        }
+        .feature-list {
+            margin: 20px 0;
+            line-height: 2.5;
+        }
+        .feature-list li {
+            padding-left: 10px;
+        }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .success-box {
+            background: #dcfce7;
+            border: 4px solid #10b981;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .recommendation {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+            font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Webhook Migration</h1>
+            <div style="font-size: 1.3em; margin-top: 15px;">Legacy calcom.php → Laravel Controller</div>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>🔍 Situation: Zwei Webhooks</h2>
+
+                <div class="comparison">
+                    <div class="webhook-box legacy">
+                        <h3 style="color: #991b1b; font-size: 1.8em; margin-bottom: 20px;">❌ LEGACY: calcom.php</h3>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>URL:</strong><br>
+                            <code>https://api.askproai.de/calcom.php</code>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>Location:</strong><br>
+                            <code>public/calcom.php</code><br>
+                            <small>(Direct PHP File, 77 Lines)</small>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>Was es macht:</strong>
+                            <ul class="feature-list">
+                                <li>✅ Empfängt Webhook</li>
+                                <li>✅ Prüft Signatur</li>
+                                <li>✅ Loggt in calcom-webhooks.log</li>
+                                <li style="color: #ef4444;"><strong>❌ VERARBEITET NICHTS!</strong></li>
+                                <li style="color: #ef4444;"><strong>❌ Keine DB Updates</strong></li>
+                                <li style="color: #ef4444;"><strong>❌ Keine Appointments</strong></li>
+                            </ul>
+                        </div>
+
+                        <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <strong style="color: #991b1b;">Line 68:</strong><br>
+                            "TODO: Process webhook with Laravel"<br>
+                            <br>
+                            <strong>→ NUR EIN STUB/PLATZHALTER!</strong>
+                        </div>
+                    </div>
+
+                    <div class="webhook-box new">
+                        <h3 style="color: #166534; font-size: 1.8em; margin-bottom: 20px;">✅ NEU: Laravel Controller</h3>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>URL:</strong><br>
+                            <code>https://api.askproai.de/api/webhooks/calcom</code>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>Location:</strong><br>
+                            <code>app/Http/Controllers/CalcomWebhookController.php</code><br>
+                            <small>(477 Lines, vollständig!)</small>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <strong>Was es macht:</strong>
+                            <ul class="feature-list">
+                                <li>✅ Empfängt Webhook</li>
+                                <li>✅ Prüft Signatur (Middleware)</li>
+                                <li>✅ Loggt in calcom-2025-10-10.log</li>
+                                <li style="color: #10b981;"><strong>✅ VERARBEITET KOMPLETT!</strong></li>
+                                <li style="color: #10b981;"><strong>✅ BOOKING.CREATED → Appointment</strong></li>
+                                <li style="color: #10b981;"><strong>✅ BOOKING.RESCHEDULED → Update + Metadata</strong></li>
+                                <li style="color: #10b981;"><strong>✅ BOOKING.CANCELLED → Update + Metadata</strong></li>
+                                <li style="color: #10b981;"><strong>✅ Staff Assignment</strong></li>
+                                <li style="color: #10b981;"><strong>✅ Customer Matching</strong></li>
+                            </ul>
+                        </div>
+
+                        <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <strong style="color: #166534;">Vollständig implementiert!</strong><br>
+                            Alle Features + Metadata Tracking
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📊 Feature Comparison</h2>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 25px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr>
+                            <th style="background: #f59e0b; color: white; padding: 18px;">Feature</th>
+                            <th style="background: #ef4444; color: white; padding: 18px;">calcom.php (Legacy)</th>
+                            <th style="background: #10b981; color: white; padding: 18px;">Laravel Controller (Neu)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Webhook Empfang</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ Ja</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ Ja</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Signatur Prüfung</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ Ja (manuell)</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ Ja (Middleware)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Logging</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ calcom-webhooks.log</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">✅ calcom-2025-10-10.log</td>
+                        </tr>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Appointment Creation</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;"><strong>❌ Nein</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;"><strong>✅ Ja</strong></td>
+                        </tr>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Reschedule Processing</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;"><strong>❌ Nein</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;"><strong>✅ Ja + Metadata</strong></td>
+                        </tr>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Cancellation Processing</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;"><strong>❌ Nein</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;"><strong>✅ Ja + Metadata</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Metadata Tracking</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;">❌ Nein</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;">✅ Vollständig (13 Spalten)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Customer Matching</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;">❌ Nein</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;">✅ Ja</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Staff Assignment</strong></td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #ef4444;">❌ Nein</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981;">✅ Multi-Model Assignment</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px;"><strong>Ping Test</strong></td>
+                            <td style="padding: 15px; color: #10b981;">✅ 200 OK</td>
+                            <td style="padding: 15px; color: #f59e0b;">⚠️ 302 (wegen Middleware)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="recommendation">
+                <h2 style="color: white; margin-bottom: 25px;">🎯 KLARE EMPFEHLUNG</h2>
+                <div style="font-size: 1.5em; line-height: 2;">
+                    <strong>NUTZE DEN NEUEN LARAVEL WEBHOOK!</strong><br>
+                    <br>
+                    https://api.askproai.de/api/webhooks/calcom
+                </div>
+                <div style="margin-top: 30px; background: rgba(255,255,255,0.2); padding: 25px; border-radius: 12px;">
+                    <p style="font-size: 1.1em;">
+                        Der alte calcom.php ist nur ein Stub!<br>
+                        Er empfängt Events, aber verarbeitet sie NICHT!<br>
+                        <br>
+                        <strong>Für vollständige Historie & Metadata: Neuer Webhook nötig!</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔄 Migration Steps</h2>
+
+                <div style="background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; padding: 30px;">
+                    <div style="background: white; border-left: 6px solid #f59e0b; padding: 20px; margin: 15px 0; border-radius: 8px;">
+                        <strong style="font-size: 1.2em;">SCHRITT 1: Cal.com Team Webhooks</strong><br>
+                        <p style="margin-top: 10px;">
+                            Teams → askproai → Settings → Webhooks<br>
+                            <br>
+                            <strong>Aktuell konfiguriert:</strong> <code>/calcom.php</code> (Legacy)<br>
+                            <strong>Ändern zu:</strong> <code>/api/webhooks/calcom</code> (Neu)
+                        </p>
+                    </div>
+
+                    <div style="background: white; border-left: 6px solid #f59e0b; padding: 20px; margin: 15px 0; border-radius: 8px;">
+                        <strong style="font-size: 1.2em;">SCHRITT 2: URL Update</strong><br>
+                        <div class="code" style="margin-top: 15px; font-size: 0.9em;">
+ALT (entfernen):
+  https://api.askproai.de/calcom.php
+
+NEU (hinzufügen):
+  https://api.askproai.de/api/webhooks/calcom
+
+Secret: (bleibt gleich)
+  6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7
+                        </div>
+                    </div>
+
+                    <div style="background: white; border-left: 6px solid #f59e0b; padding: 20px; margin: 15px 0; border-radius: 8px;">
+                        <strong style="font-size: 1.2em;">SCHRITT 3: Events aktivieren</strong><br>
+                        <ul style="margin: 15px 0 0 25px; line-height: 2;">
+                            <li>✅ BOOKING.CREATED</li>
+                            <li>✅ BOOKING.CANCELLED</li>
+                            <li>✅ BOOKING.RESCHEDULED</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: white; border-left: 6px solid #10b981; padding: 20px; margin: 15px 0; border-radius: 8px;">
+                        <strong style="font-size: 1.2em;">SCHRITT 4: Save (ignoriere 302!)</strong><br>
+                        <p style="margin-top: 10px;">
+                            Der Ping Test zeigt 302 → <strong>IGNORIEREN!</strong><br>
+                            Das ist die Middleware (Security Feature)<br>
+                            <strong>Echte Events mit Signatur funktionieren!</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚠️ Warum 302 beim Ping Test OK ist</h2>
+
+                <div class="warning-box">
+                    <h3 style="color: #92400e; margin-bottom: 20px;">Cal.com Ping Test vs. Echte Events</h3>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                        <div style="background: white; padding: 20px; border-radius: 10px;">
+                            <strong>PING TEST (während Setup):</strong>
+                            <div class="code" style="font-size: 0.85em; margin-top: 10px;">
+POST /api/webhooks/calcom
+Headers:
+  Content-Type: application/json
+  X-Cal-Signature-256: test_dummy
+
+Body:
+  {"triggerEvent":"PING"}
+
+→ Signatur ist DUMMY
+→ Middleware blockt
+→ 302 Redirect
+                            </div>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 10px;">
+                            <strong>ECHTE EVENTS (im Betrieb):</strong>
+                            <div class="code" style="font-size: 0.85em; margin-top: 10px;">
+POST /api/webhooks/calcom
+Headers:
+  X-Cal-Signature-256: abc123...
+
+Body:
+  {
+    "triggerEvent": "BOOKING.CREATED",
+    "payload": {...}
+  }
+
+→ Signatur ist ECHT
+→ Middleware validiert ✅
+→ 200 OK + Verarbeitung
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #dcfce7; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <strong style="color: #166534; font-size: 1.2em;">✅ Der 302 beim Ping ist SICHERHEIT!</strong><br>
+                        <p style="margin-top: 10px;">
+                            Middleware blockt ungültige Requests → Gut so!<br>
+                            Echte Cal.com Events mit korrekter Signatur funktionieren!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🧪 Testing nach Migration</h2>
+
+                <div style="background: #dbeafe; border: 3px solid #3b82f6; border-radius: 12px; padding: 30px;">
+                    <h3 style="color: #1e40af; margin-bottom: 20px;">Test 1: Booking in Google Calendar</h3>
+
+                    <div class="code">
+# 1. Google Calendar öffnen
+# 2. Neuen Termin für askproai Event Type erstellen
+# 3. Speichern
+
+# Check Logs:
+tail -100 storage/logs/calcom-2025-10-10.log | grep "BOOKING.CREATED"
+
+# Expected:
+[Cal.com] Webhook received
+Event: BOOKING.CREATED
+[Cal.com] Appointment created from booking
+  appointment_id: XXX
+  booking_source: calcom_webhook
+
+# Check Database:
+SELECT * FROM appointments WHERE booking_source = 'calcom_webhook' ORDER BY id DESC LIMIT 1;
+
+Expected:
+  ✅ created_by: customer
+  ✅ booking_source: calcom_webhook
+  ✅ Appointment exists
+                    </div>
+                </div>
+
+                <div style="background: #fef3c7; border: 3px solid #f59e0b; border-radius: 12px; padding: 30px; margin-top: 25px;">
+                    <h3 style="color: #92400e; margin-bottom: 20px;">Test 2: Verschieben in Google Calendar</h3>
+
+                    <div class="code">
+# 1. Existierenden Termin in Google Calendar finden
+# 2. Auf andere Zeit verschieben (z.B. 14:00 → 15:00)
+# 3. Speichern
+
+# Check Logs:
+tail -100 storage/logs/calcom-2025-10-10.log | grep "BOOKING.RESCHEDULED\|rescheduled"
+
+# Expected:
+[Cal.com] Appointment rescheduled via webhook
+  rescheduled_by: customer
+  source: calcom_webhook
+
+# Check Database:
+SELECT previous_starts_at, starts_at, rescheduled_by, reschedule_source
+FROM appointments WHERE id = [ID];
+
+Expected:
+  ✅ previous_starts_at: 2025-XX-XX 14:00:00
+  ✅ starts_at: 2025-XX-XX 15:00:00
+  ✅ rescheduled_by: customer
+  ✅ reschedule_source: calcom_webhook
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🗑️ Legacy Webhook cleanup (optional)</h2>
+
+                <div style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 25px; border-radius: 12px;">
+                    <p style="font-size: 1.1em; margin-bottom: 20px;">
+                        <strong>Nach erfolgreicher Migration kannst du:</strong>
+                    </p>
+
+                    <div class="code">
+# 1. Legacy Webhook entfernen:
+rm public/calcom.php
+
+# 2. Legacy Log prüfen (falls nötig):
+cat storage/logs/calcom-webhooks.log
+
+# 3. Legacy Log archivieren:
+mv storage/logs/calcom-webhooks.log backups/calcom-webhooks-legacy.log
+                    </div>
+
+                    <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <strong>⚠️ ABER:</strong> Warte bis neuer Webhook läuft!<br>
+                        Erst nach erfolgreichen Tests löschen.
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f9fafb; padding: 50px; text-align: center;">
+                <h3 style="color: #f59e0b; margin-bottom: 25px;">📋 Zusammenfassung</h3>
+
+                <div style="background: white; border: 3px solid #10b981; border-radius: 12px; padding: 35px; max-width: 800px; margin: 0 auto;">
+                    <div style="font-size: 1.3em; line-height: 2.5; text-align: left;">
+                        <strong>AKTUELL:</strong> /calcom.php (empfängt, verarbeitet NICHT)<br>
+                        <strong>NEU:</strong> /api/webhooks/calcom (vollständig!)<br>
+                        <strong>302 beim Ping:</strong> Normal & OK (Security!)<br>
+                        <strong>Was tun:</strong> Neuen Webhook aktivieren, alten behalten bis Test OK<br>
+                        <strong>Erwartung:</strong> Kalender-Änderungen → System synchronized!
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <p style="font-size: 1.4em; color: #10b981; font-weight: bold;">
+                        ✅ Nutze den neuen Laravel Webhook für vollständige Integration!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -21,7 +21,8 @@ class Branch extends Model
         'notification_email', 'send_call_summaries', 'call_summary_recipients',
         'include_transcript_in_summary', 'include_csv_export', 'summary_email_frequency',
         'call_notification_overrides', 'active', 'invoice_recipient', 'invoice_name',
-        'invoice_email', 'invoice_address', 'invoice_phone', 'calcom_event_type_id',
+        'invoice_email', 'invoice_address', 'invoice_phone',
+        // NOTE: calcom_event_type_id removed - branches link to services (which have event_type_ids)
         'calcom_api_key', 'retell_agent_id', 'integration_status', 'calendar_mode',
         'integrations_tested_at', 'calcom_user_id', 'retell_agent_cache', 'retell_last_sync',
         'configuration_status', 'parent_settings', 'address', 'postal_code', 'website',

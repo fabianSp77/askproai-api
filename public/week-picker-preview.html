@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week Picker UI Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .slot-button.slot-selected {
+            background: rgb(37 99 235) !important;
+            color: white !important;
+            font-weight: bold !important;
+            border-color: rgb(29 78 216) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            transform: scale(1.05) !important;
+        }
+
+        @media (max-width: 767px) {
+            .week-picker-desktop {
+                display: none !important;
+            }
+            .week-picker-mobile {
+                display: block !important;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .week-picker-desktop {
+                display: grid !important;
+            }
+            .week-picker-mobile {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold text-white mb-6">Week Picker UI Preview</h1>
+
+        <!-- Debug Box -->
+        <div id="debug-info" class="mb-4 p-4 bg-green-100 dark:bg-green-900 border-2 border-green-500 rounded-lg text-sm">
+            <strong class="text-green-900 dark:text-green-100">✅ DEBUG INFO:</strong><br>
+            <span class="font-mono">serviceId = <strong class="text-green-600">47</strong></span><br>
+            <span class="font-mono">preselectedSlot = <span id="debug-slot">NULL</span></span><br>
+            <span class="text-xs text-green-700 dark:text-green-300">API Fix applied: Cal.com slots should now load correctly!</span><br>
+            <span id="slot-status" class="text-xs text-yellow-700 dark:text-yellow-300">⏳ Warten auf Slot-Auswahl...</span>
+        </div>
+
+        <!-- Desktop Week Picker -->
+        <div class="week-picker-desktop grid-cols-7 gap-2" x-data="{hoveredSlot: null}">
+            <!-- Monday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Mo</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">14.10.</div>
+                </div>
+                <div class="space-y-1 overflow-y-auto" style="max-height: 400px;">
+                    <!-- Slot Button -->
+                    <button
+                        type="button"
+                        @click="
+                            $el.classList.toggle('slot-selected');
+                            document.getElementById('debug-slot').textContent = '2025-10-14T08:00:00Z';
+                            document.getElementById('slot-status').textContent = '✅ SLOT GESETZT: 14.10. 08:00';
+                            document.getElementById('slot-status').className = 'text-xs text-green-700 dark:text-green-300 font-bold';
+                        "
+                        class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <span class="block font-medium">08:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">🌅 Morgen</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700">
+                        <span class="block font-medium">09:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">🌅 Morgen</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700">
+                        <span class="block font-medium">12:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">☀️ Mittag</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tuesday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Di</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">15.10.</div>
+                </div>
+                <div class="space-y-1 overflow-y-auto" style="max-height: 400px;">
+                    <button type="button" class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700">
+                        <span class="block font-medium">10:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">🌅 Morgen</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Wednesday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Mi</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">16.10.</div>
+                </div>
+                <div class="space-y-1 overflow-y-auto" style="max-height: 400px;">
+                    <button type="button" class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700">
+                        <span class="block font-medium">14:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">☀️ Mittag</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thursday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Do</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">17.10.</div>
+                </div>
+                <div class="space-y-1">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 text-center py-4 italic">
+                        Keine Slots
+                    </div>
+                </div>
+            </div>
+
+            <!-- Friday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Fr</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">18.10.</div>
+                </div>
+                <div class="space-y-1 overflow-y-auto" style="max-height: 400px;">
+                    <button type="button" class="slot-button w-full px-2 py-1.5 text-xs text-center rounded-md transition-all duration-150 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 hover:scale-105 border-gray-200 dark:border-gray-700">
+                        <span class="block font-medium">16:00</span>
+                        <span class="block text-[10px] text-gray-500 dark:text-gray-400">🌆 Abend</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Saturday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">Sa</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">19.10.</div>
+                </div>
+                <div class="space-y-1">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 text-center py-4 italic">
+                        Keine Slots
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sunday -->
+            <div class="flex flex-col min-h-[200px]">
+                <div class="text-center font-semibold text-sm mb-2 py-2 px-1 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div class="text-gray-900 dark:text-white">So</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">20.10.</div>
+                </div>
+                <div class="space-y-1">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 text-center py-4 italic">
+                        Keine Slots
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-white">
+            <p><strong>Viewport Width:</strong> <span id="viewport-width"></span>px</p>
+            <p><strong>Device Pixel Ratio:</strong> <span id="dpr"></span></p>
+            <p><strong>Zoom Level:</strong> <span id="zoom"></span>%</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('viewport-width').textContent = window.innerWidth;
+        document.getElementById('dpr').textContent = window.devicePixelRatio;
+        document.getElementById('zoom').textContent = Math.round(window.devicePixelRatio * 100);
+    </script>
+</body>
+</html>

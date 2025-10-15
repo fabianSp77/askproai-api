@@ -24,11 +24,37 @@ class TenantMiddleware
 
             // Optional: Set tenant context globally for models
             config(['tenant.current_company_id' => $user->company_id]);
+
+            // 🔒 SECURITY FIX (RISK-004): Validate X-Company-ID header override
+            // Only super_admin can override company context via header
+            if ($request->header('X-Company-ID')) {
+                $requestedCompanyId = $request->header('X-Company-ID');
+
+                // Regular users can ONLY access their own company
+                if (!$user->hasRole('super_admin')) {
+                    if ($requestedCompanyId != $user->company_id) {
+                        abort(403, 'Unauthorized company access attempt. Only super admins can access other companies.');
+                    }
+                }
+
+                // Super admin or same company - allow override
+                $request->merge(['company_id' => $requestedCompanyId]);
+                config(['tenant.current_company_id' => $requestedCompanyId]);
+
+                // Log security event for audit trail
+                logger()->warning('Company context override via X-Company-ID header', [
+                    'user_id' => $user->id,
+                    'user_company_id' => $user->company_id,
+                    'requested_company_id' => $requestedCompanyId,
+                    'is_super_admin' => $user->hasRole('super_admin'),
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
         } elseif ($request->header('X-Company-ID')) {
-            // Allow tenant override via header (for API clients)
-            $companyId = $request->header('X-Company-ID');
-            $request->merge(['company_id' => $companyId]);
-            config(['tenant.current_company_id' => $companyId]);
+            // No authenticated user but X-Company-ID header present
+            // This is a security risk - reject the request
+            abort(401, 'Authentication required for company context override');
         }
 
         return $next($request);

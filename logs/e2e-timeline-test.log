@@ -1,0 +1,18 @@
+🚀 Starting Appointment Timeline E2E Tests
+════════════════════════════════════════════════════════════
+📅 Date: 2025-10-11T06:00:00.822Z
+🌐 Base URL: https://api.askproai.de
+📂 Screenshots: /var/www/api-gateway/tests/puppeteer/screenshots/appointment-timeline
+════════════════════════════════════════════════════════════
+
+📋 TEST 1: ViewAppointment Page - Appointment #675
+════════════════════════════════════════════════════════════
+🔐 Logging in to admin panel...
+📸 Screenshot saved: 01_login_page_2025-10-11T06-00-03-971Z.png
+❌ TEST 1 FAILED: Navigation timeout of 30000 ms exceeded
+📸 Screenshot saved: error_test1_2025-10-11T06-00-34-399Z.png
+
+📋 TEST 2: Customer #461 - Appointments Tab
+════════════════════════════════════════════════════════════
+🔐 Logging in to admin panel...
+📸 Screenshot saved: 01_login_page_2025-10-11T06-00-36-220Z.png

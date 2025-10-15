@@ -26,7 +26,7 @@ class CustomerFactory extends Factory
             'company_id' => Company::factory(),
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'phone' => $this->faker->phoneNumber(),
+            // Note: phone field removed - use phone_primary or phone_variants instead
         ];
     }
 
