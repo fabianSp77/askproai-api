@@ -85,13 +85,92 @@
                     </button>
                 @endforeach
             </div>
-        @elseif(strlen($customerSearchQuery) >= 3 && count($searchResults) === 0 && !$selectedCustomerId)
-            <div class="text-sm text-gray-400 text-center py-4">
-                Kein Kunde gefunden. Bitte anderen Suchbegriff eingeben.
+        @elseif(strlen($customerSearchQuery) >= 3 && count($searchResults) === 0 && !$selectedCustomerId && !$showNewCustomerForm)
+            <div class="text-center py-4">
+                <div class="text-sm text-gray-500 mb-3">
+                    Kein Kunde mit "{{ $customerSearchQuery }}" gefunden.
+                </div>
+                <button
+                    wire:click="showCreateCustomerForm"
+                    class="fi-btn fi-btn-success inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-success-600 text-white hover:bg-success-700 focus:ring-2 focus:ring-success-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Neuen Kunden "{{ $customerSearchQuery }}" anlegen
+                </button>
             </div>
         @elseif(strlen($customerSearchQuery) > 0 && strlen($customerSearchQuery) < 3 && !$selectedCustomerId)
             <div class="text-xs text-gray-400 py-2">
                 Mindestens 3 Zeichen eingeben...
+            </div>
+        @endif
+
+        {{-- NEW CUSTOMER INLINE FORM --}}
+        @if($showNewCustomerForm)
+            <div class="fi-new-customer-form mt-4 p-4 border-2 border-success-500 rounded-lg bg-success-50 dark:bg-success-950">
+                <div class="text-sm font-medium text-success-900 dark:text-success-100 mb-3">
+                    ➕ Neuen Kunden anlegen
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Name *
+                        </label>
+                        <input
+                            type="text"
+                            wire:model="newCustomerName"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 text-sm"
+                            placeholder="Vollständiger Name">
+                        @error('newCustomerName')
+                            <span class="text-xs text-danger-600 mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Telefon
+                        </label>
+                        <input
+                            type="tel"
+                            wire:model="newCustomerPhone"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 text-sm"
+                            placeholder="+49 123 456789">
+                        @error('newCustomerPhone')
+                            <span class="text-xs text-danger-600 mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            E-Mail
+                        </label>
+                        <input
+                            type="email"
+                            wire:model="newCustomerEmail"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 text-sm"
+                            placeholder="kunde@example.com">
+                        @error('newCustomerEmail')
+                            <span class="text-xs text-danger-600 mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button
+                            wire:click="createNewCustomer"
+                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-success-600 text-white hover:bg-success-700 focus:ring-2 focus:ring-success-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Speichern
+                        </button>
+                        <button
+                            wire:click="cancelCreateCustomer"
+                            class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500">
+                            Abbrechen
+                        </button>
+                    </div>
+                </div>
             </div>
         @endif
     </div>
