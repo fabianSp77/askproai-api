@@ -1,0 +1,3 @@
+<svg class="w-5 h-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+</svg><?php /**PATH /var/www/api-gateway/storage/framework/views/c3936c6e53d8f3636f916d5b41f9b529.blade.php ENDPATH**/ ?>

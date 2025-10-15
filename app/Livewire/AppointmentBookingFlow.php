@@ -622,6 +622,20 @@ class AppointmentBookingFlow extends Component
      */
     public function render()
     {
+        // DEBUG: Log what data is being rendered
+        $totalSlots = collect($this->weekData)->flatten(1)->count();
+
+        Log::info('[AppointmentBookingFlow] Rendering', [
+            'service_id' => $this->selectedServiceId,
+            'service_name' => $this->serviceName,
+            'week_offset' => $this->weekOffset,
+            'total_slots' => $totalSlots,
+            'loading' => $this->loading,
+            'error' => $this->error,
+            'weekData_keys' => array_keys($this->weekData),
+            'slots_per_day' => array_map('count', $this->weekData),
+        ]);
+
         return view('livewire.appointment-booking-flow');
     }
 }
