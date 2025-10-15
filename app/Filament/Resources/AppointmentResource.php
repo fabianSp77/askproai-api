@@ -293,8 +293,7 @@ class AppointmentResource extends Resource
 
                                 return "⏱️ **Dauer:** {$duration} Min | 💰 **Preis:** {$price} €";
                             })
-                            ->visible(fn (callable $get) => $get('service_id') !== null)
-                            ->hidden(fn ($context) => $context === 'create'), // HIDE in create mode
+                            ->visible(fn (callable $get, $context) => $get('service_id') !== null && $context !== 'create')
                             ->columnSpanFull(),
 
                     ])
