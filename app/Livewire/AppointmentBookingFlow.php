@@ -307,16 +307,23 @@ class AppointmentBookingFlow extends Component
     }
 
     /**
-     * Set default service (Damenhaarschnitt or first available)
+     * Set default service (prioritize service with most availability)
      */
     protected function setDefaultService(): void
     {
-        // Try to find "Damenhaarschnitt"
+        // Priority 1: Service with name containing "30 Minuten" (typically has availability)
         $default = collect($this->availableServices)->first(function ($service) {
-            return str_contains(strtolower($service['name']), 'damenhaarschnitt');
+            return str_contains(strtolower($service['name']), '30 minuten');
         });
 
-        // Fallback to first service
+        // Priority 2: Try to find "Damenhaarschnitt"
+        if (!$default) {
+            $default = collect($this->availableServices)->first(function ($service) {
+                return str_contains(strtolower($service['name']), 'damenhaarschnitt');
+            });
+        }
+
+        // Fallback: First service
         if (!$default && count($this->availableServices) > 0) {
             $default = $this->availableServices[0];
         }
