@@ -64,8 +64,8 @@ class WeeklyAvailabilityService
 
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
 
-        // Get service with Cal.com Event Type ID
-        $service = Service::findOrFail($serviceId);
+        // Get service with Cal.com Event Type ID AND company relation (for team ID)
+        $service = Service::with('company')->findOrFail($serviceId);
 
         if (!$service->calcom_event_type_id) {
             throw new \Exception(
@@ -74,26 +74,39 @@ class WeeklyAvailabilityService
             );
         }
 
-        // Check cache first (service-specific + week-specific)
-        // Cache key pattern: week_availability:{service_id}:{week_start_date}
-        $cacheKey = "week_availability:{$serviceId}:{$weekStart->format('Y-m-d')}";
+        // Validate company has Cal.com team ID configured
+        $teamId = $service->company->calcom_team_id ?? null;
+        if (!$teamId) {
+            throw new \Exception(
+                "Company '{$service->company->name}' has no Cal.com Team ID configured. " .
+                "Please configure the Cal.com integration for this company in Settings."
+            );
+        }
+
+        // Check cache first (team + service + week specific)
+        // Cache key pattern: week_availability:{team_id}:{service_id}:{week_start_date}
+        $cacheKey = "week_availability:{$teamId}:{$serviceId}:{$weekStart->format('Y-m-d')}";
 
         Log::debug('[WeeklyAvailability] Fetching week availability', [
             'service_id' => $serviceId,
             'service_name' => $service->name,
+            'company_id' => $service->company_id,
+            'company_name' => $service->company->name,
+            'calcom_team_id' => $teamId,
             'calcom_event_type_id' => $service->calcom_event_type_id,
             'week_start' => $weekStart->format('Y-m-d'),
             'week_end' => $weekEnd->format('Y-m-d'),
             'cache_key' => $cacheKey,
         ]);
 
-        return Cache::remember($cacheKey, 60, function() use ($service, $weekStart, $weekEnd, $cacheKey) {
+        return Cache::remember($cacheKey, 60, function() use ($service, $weekStart, $weekEnd, $cacheKey, $teamId) {
             try {
-                // Fetch from Cal.com API
+                // Fetch from Cal.com API with team context
                 $response = $this->calcomService->getAvailableSlots(
                     eventTypeId: $service->calcom_event_type_id,
                     startDate: $weekStart->format('Y-m-d'),
-                    endDate: $weekEnd->format('Y-m-d')
+                    endDate: $weekEnd->format('Y-m-d'),
+                    teamId: $teamId  // ← ADDED: Team context for API v2
                 );
 
                 $calcomData = $response->json();

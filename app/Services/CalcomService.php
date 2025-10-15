@@ -155,10 +155,18 @@ class CalcomService
     /**
      * Get available slots for a given event type and date range
      * Caches responses for 5 minutes to reduce API calls (300-800ms → <5ms)
+     *
+     * @param int $eventTypeId Cal.com Event Type ID
+     * @param string $startDate Start date (Y-m-d format)
+     * @param string $endDate End date (Y-m-d format)
+     * @param int|null $teamId Cal.com Team ID (required by API v2)
      */
-    public function getAvailableSlots(int $eventTypeId, string $startDate, string $endDate): Response
+    public function getAvailableSlots(int $eventTypeId, string $startDate, string $endDate, ?int $teamId = null): Response
     {
-        $cacheKey = "calcom:slots:{$eventTypeId}:{$startDate}:{$endDate}";
+        // Include teamId in cache key if provided
+        $cacheKey = $teamId
+            ? "calcom:slots:{$teamId}:{$eventTypeId}:{$startDate}:{$endDate}"
+            : "calcom:slots:{$eventTypeId}:{$startDate}:{$endDate}";
 
         // Check cache first (99% faster: <5ms vs 300-800ms)
         $cachedResponse = Cache::get($cacheKey);
@@ -181,6 +189,11 @@ class CalcomService
             'startTime' => $startDateTime,
             'endTime' => $endDateTime
         ];
+
+        // Add teamId if provided (REQUIRED by Cal.com API v2 for team-based event types)
+        if ($teamId) {
+            $query['teamId'] = $teamId;
+        }
 
         $fullUrl = $this->baseUrl . '/slots/available?' . http_build_query($query);
 
