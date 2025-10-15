@@ -345,19 +345,15 @@ class AppointmentResource extends Resource
                             ->visible(fn ($context) => $context === 'create'), // Only in CREATE mode
 
                         // Hidden Fields: For BookingFlowWrapper to populate (CREATE mode only)
-                        Forms\Components\TextInput::make('branch_id')
-                            ->hidden()
-                            ->visible(fn ($context) => $context === 'create')
-                            ->dehydrated(),
+                        // Note: Using Hidden component instead of TextInput to ensure DOM rendering
+                        Forms\Components\Hidden::make('branch_id')
+                            ->default(null),
 
-                        Forms\Components\TextInput::make('customer_id')
-                            ->hidden()
-                            ->visible(fn ($context) => $context === 'create')
-                            ->dehydrated(),
+                        Forms\Components\Hidden::make('customer_id')
+                            ->default(null),
 
-                        Forms\Components\TextInput::make('service_id')
-                            ->hidden()
-                            ->visible(fn ($context) => $context === 'create')
+                        Forms\Components\Hidden::make('service_id')
+                            ->default(null)
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
@@ -367,13 +363,10 @@ class AppointmentResource extends Resource
                                         $set('price', $service->price);
                                     }
                                 }
-                            })
-                            ->dehydrated(),
+                            }),
 
-                        Forms\Components\TextInput::make('staff_id')
-                            ->hidden()
-                            ->visible(fn ($context) => $context === 'create')
-                            ->dehydrated(),
+                        Forms\Components\Hidden::make('staff_id')
+                            ->default(null),
 
                         // Hidden Field: starts_at (populated by Week Picker via Livewire)
                         Forms\Components\Hidden::make('starts_at')
