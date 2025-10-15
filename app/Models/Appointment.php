@@ -63,6 +63,49 @@ class Appointment extends Model
         'requires_manual_review' => 'boolean',
     ];
 
+    /**
+     * Boot the model - Multi-tenant isolation validation
+     *
+     * CRITICAL: Ensures all appointments have valid branch_id for:
+     * - Multi-tenant isolation (company_id alone is insufficient)
+     * - Cal.com sync context (branch determines staff assignment)
+     * - Data integrity (prevents partial records)
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($appointment) {
+            // ═══════════════════════════════════════════════════════════
+            // CRITICAL: branch_id MUST NOT be NULL
+            // ═══════════════════════════════════════════════════════════
+            if (is_null($appointment->branch_id)) {
+                throw new \Exception(
+                    'CRITICAL: Appointments must have a branch_id. ' .
+                    'This is a multi-tenant isolation requirement. ' .
+                    'Ensure createAppointment() passes branch_id parameter.'
+                );
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // SECURITY: Validate branch belongs to company
+            // ═══════════════════════════════════════════════════════════
+            if ($appointment->company_id && $appointment->branch_id) {
+                $branchBelongsToCompany = Branch::where('id', $appointment->branch_id)
+                    ->where('company_id', $appointment->company_id)
+                    ->exists();
+
+                if (!$branchBelongsToCompany) {
+                    throw new \Exception(
+                        "SECURITY VIOLATION: Branch {$appointment->branch_id} " .
+                        "does not belong to company {$appointment->company_id}. " .
+                        'Tenant isolation violated.'
+                    );
+                }
+            }
+        });
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
