@@ -40,22 +40,25 @@
     </div>
 
     {{-- 2. SERVICE SELECTION --}}
-    <div class="fi-section">
-        <div class="fi-section-header">Service auswählen</div>
+    <div class="fi-section" role="region" aria-labelledby="service-selection-header">
+        <div class="fi-section-header" id="service-selection-header">Service auswählen</div>
 
-        <div class="fi-radio-group">
+        <div class="fi-radio-group" role="radiogroup" aria-labelledby="service-selection-header">
             @foreach($availableServices as $service)
                 <label
                     class="fi-radio-option {{ $selectedServiceId === $service['id'] ? 'selected' : '' }}"
-                    wire:key="service-{{ $service['id'] }}">
+                    wire:key="service-{{ $service['id'] }}"
+                    aria-label="Service auswählen: {{ $service['name'] }}, Dauer {{ $service['duration_minutes'] }} Minuten">
                     <input
                         type="radio"
                         name="service"
                         value="{{ $service['id'] }}"
                         wire:model.live="selectedServiceId"
                         wire:change="selectService('{{ $service['id'] }}')"
-                        class="fi-radio-input">
-                    <div class="flex-1">
+                        class="fi-radio-input"
+                        aria-describedby="service-{{ $service['id'] }}-desc"
+                        {{ $selectedServiceId === $service['id'] ? 'checked' : '' }}>
+                    <div class="flex-1" id="service-{{ $service['id'] }}-desc">
                         <div class="font-medium text-sm">{{ $service['name'] }}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">{{ $service['duration_minutes'] }} Minuten</div>
                     </div>
@@ -71,20 +74,23 @@
     </div>
 
     {{-- 3. EMPLOYEE PREFERENCE --}}
-    <div class="fi-section">
-        <div class="fi-section-header">Mitarbeiter-Präferenz</div>
+    <div class="fi-section" role="region" aria-labelledby="employee-selection-header">
+        <div class="fi-section-header" id="employee-selection-header">Mitarbeiter-Präferenz</div>
 
-        <div class="fi-radio-group">
+        <div class="fi-radio-group" role="radiogroup" aria-labelledby="employee-selection-header">
             {{-- "Any Available" Option --}}
-            <label class="fi-radio-option {{ $employeePreference === 'any' ? 'selected' : '' }}">
+            <label class="fi-radio-option {{ $employeePreference === 'any' ? 'selected' : '' }}"
+                   aria-label="Mitarbeiter auswählen: Nächster verfügbarer Mitarbeiter, Maximale Auswahl an Terminen">
                 <input
                     type="radio"
                     name="employee"
                     value="any"
                     wire:model.live="employeePreference"
                     wire:change="selectEmployee('any')"
-                    class="fi-radio-input">
-                <div class="flex-1">
+                    class="fi-radio-input"
+                    aria-describedby="employee-any-desc"
+                    {{ $employeePreference === 'any' ? 'checked' : '' }}>
+                <div class="flex-1" id="employee-any-desc">
                     <div class="font-medium text-sm">Nächster verfügbarer Mitarbeiter</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">Maximale Auswahl an Terminen</div>
                 </div>
@@ -94,15 +100,18 @@
             @foreach($availableEmployees as $employee)
                 <label
                     class="fi-radio-option {{ $employeePreference === $employee['id'] ? 'selected' : '' }}"
-                    wire:key="employee-{{ $employee['id'] }}">
+                    wire:key="employee-{{ $employee['id'] }}"
+                    aria-label="Mitarbeiter auswählen: {{ $employee['name'] }}{{ !empty($employee['email']) ? ', ' . $employee['email'] : '' }}">
                     <input
                         type="radio"
                         name="employee"
                         value="{{ $employee['id'] }}"
                         wire:model.live="employeePreference"
                         wire:change="selectEmployee('{{ $employee['id'] }}')"
-                        class="fi-radio-input">
-                    <div class="flex-1">
+                        class="fi-radio-input"
+                        aria-describedby="employee-{{ $employee['id'] }}-desc"
+                        {{ $employeePreference === $employee['id'] ? 'checked' : '' }}>
+                    <div class="flex-1" id="employee-{{ $employee['id'] }}-desc">
                         <div class="font-medium text-sm">{{ $employee['name'] }}</div>
                         @if(!empty($employee['email']))
                             <div class="text-xs text-gray-500 dark:text-gray-400">{{ $employee['email'] }}</div>
@@ -125,27 +134,35 @@
         </div>
 
         {{-- Week Navigation --}}
-        <div class="flex items-center justify-between mb-4">
+        <nav class="flex items-center justify-between mb-4" aria-label="Wochennavigation">
             <button
                 wire:click="previousWeek"
+                type="button"
                 class="fi-button-nav"
-                wire:loading.attr="disabled">
+                wire:loading.attr="disabled"
+                aria-label="Vorherige Woche anzeigen">
                 ← Vorherige Woche
             </button>
 
-            <div class="text-sm font-semibold text-gray-200">
+            <div class="text-sm font-semibold text-gray-200"
+                 aria-live="polite"
+                 aria-atomic="true"
+                 role="status">
                 @if(isset($weekMetadata['start_date']) && isset($weekMetadata['end_date']))
+                    <span class="sr-only">Aktuell angezeigte Woche: </span>
                     {{ $weekMetadata['start_date'] }} - {{ $weekMetadata['end_date'] }}
                 @endif
             </div>
 
             <button
                 wire:click="nextWeek"
+                type="button"
                 class="fi-button-nav"
-                wire:loading.attr="disabled">
+                wire:loading.attr="disabled"
+                aria-label="Nächste Woche anzeigen">
                 Nächste Woche →
             </button>
-        </div>
+        </nav>
 
         {{-- Loading State --}}
         @if($loading)
@@ -241,8 +258,11 @@
                             @if($slotForTime)
                                 <button
                                     wire:click="selectSlot('{{ $slotForTime['full_datetime'] }}', '{{ $slotForTime['day_name'] }} um {{ $slotForTime['time'] }}')"
+                                    type="button"
                                     class="fi-slot-button {{ $this->isSlotSelected($slotForTime['full_datetime']) ? 'selected' : '' }}"
                                     wire:loading.attr="disabled"
+                                    aria-label="Termin buchen: {{ $slotForTime['day_name'] }}, {{ $slotForTime['date'] }} um {{ $slotForTime['time'] }} Uhr"
+                                    aria-pressed="{{ $this->isSlotSelected($slotForTime['full_datetime']) ? 'true' : 'false' }}"
                                     style="display: block !important; visibility: visible !important; opacity: 1 !important;">
                                     {{ $slotForTime['time'] }}
                                 </button>
@@ -856,6 +876,23 @@
 
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+
+    /* ========================================
+       ACCESSIBILITY UTILITIES
+       ======================================== */
+
+    /* Screen Reader Only (SR-Only) */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
     }
 
     /* ========================================
