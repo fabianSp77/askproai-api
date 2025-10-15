@@ -66,8 +66,9 @@ class ListPolicyConfigurations extends ListRecords
 
     protected function prepareAnalyticsData(int $companyId): array
     {
+        // Count active policies (not soft-deleted)
         $activePolicies = \App\Models\PolicyConfiguration::where('company_id', $companyId)
-            ->where('is_active', true)
+            ->whereNull('deleted_at')
             ->count();
 
         $violations30Days = \App\Models\AppointmentModificationStat::whereHas('customer', function ($query) use ($companyId) {
@@ -201,6 +202,24 @@ class ListPolicyConfigurations extends ListRecords
 
     protected function getHeaderWidgets(): array
     {
-        return PolicyConfigurationResource::getWidgets();
+        // Show only the most important widget at the top
+        // Other widgets moved to footer to keep table visible
+        return [
+            \App\Filament\Widgets\PolicyAnalyticsWidget::class,
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        // Optional analytics widgets at the bottom (collapsible section would be better)
+        return [
+            \App\Filament\Widgets\TimeBasedAnalyticsWidget::class,
+            \App\Filament\Widgets\PolicyEffectivenessWidget::class,
+            \App\Filament\Widgets\PolicyTrendWidget::class,
+            \App\Filament\Widgets\PolicyChartsWidget::class,
+            \App\Filament\Widgets\CustomerComplianceWidget::class,
+            \App\Filament\Widgets\PolicyViolationsTableWidget::class,
+            \App\Filament\Widgets\StaffPerformanceWidget::class,
+        ];
     }
 }

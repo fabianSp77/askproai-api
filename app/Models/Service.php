@@ -16,34 +16,81 @@ class Service extends Model
     use HasFactory, SoftDeletes, HasConfigurationInheritance, BelongsToCompany;
 
     /**
-     * Mass Assignment Protection
+     * Mass Assignment Protection - WHITELIST APPROACH
      *
      * SECURITY: Protects against VULN-009 - Mass Assignment vulnerability
-     * Tenant isolation and pricing fields must never be mass-assigned
+     * Using $fillable (whitelist) instead of $guarded (blacklist) for clarity
+     *
+     * NOTE 2025-10-14: Switched from $guarded to $fillable
+     * - Explicit whitelist is safer and clearer
+     * - Settings Dashboard can edit all business fields
+     * - Authorization: Already protected by SettingsDashboard::canAccess()
+     * - System fields (sync, assignment) are NOT in this list
+     * - Tenant isolation fields (company_id, branch_id) are NOT in this list
      */
-    protected $guarded = [
-        'id',                    // Primary key
+    protected $fillable = [
+        // Basic Info
+        'name',
+        'display_name',
+        'calcom_name',
+        'slug',
+        'description',
 
-        // Multi-tenant isolation (CRITICAL)
-        'company_id',            // Must be set only during creation by admin
-        'branch_id',             // Must be set only during creation by admin
+        // Settings
+        'is_active',
+        'is_default',
+        'is_online',
+        'priority',
 
-        // Pricing (should be controlled)
-        'price',                 // Should be set by admin only
-        'deposit_amount',        // Should be set by admin only
+        // Timing
+        'duration_minutes',
+        'buffer_time_minutes',
+        'minimum_booking_notice',
+        'before_event_buffer',
 
-        // System fields
-        'last_calcom_sync',      // Set by sync system
-        'sync_status',           // Set by sync system
-        'sync_error',            // Set by sync system
-        'assignment_date',       // Set by assignment system
-        'assigned_by',           // Set by assignment system
+        // Pricing
+        'price',
 
-        // System timestamps
-        'created_at',
-        'updated_at',
-        'deleted_at',
+        // Composite Services
+        'composite',
+        'segments',
+        'min_staff_required',
+
+        // Policies
+        'pause_bookable_policy',
+        'reminder_policy',
+        'reschedule_policy',
+        'requires_confirmation',
+        'disable_guests',
+
+        // Integration
+        'calcom_event_type_id',
+        'schedule_id',
+        'booking_link',
+
+        // Metadata
+        'locations_json',
+        'metadata_json',
+        'booking_fields_json',
+        'assignment_notes',
+        'assignment_method',
+        'assignment_confidence',
     ];
+
+    /**
+     * PROTECTED FIELDS (NOT in $fillable):
+     * - id                    (Primary key - never mass-assign)
+     * - company_id            (Multi-tenant isolation - CRITICAL)
+     * - branch_id             (Multi-tenant isolation - CRITICAL)
+     * - last_calcom_sync      (System field - set by sync)
+     * - sync_status           (System field - set by sync)
+     * - sync_error            (System field - set by sync)
+     * - assignment_date       (System field - set by assignment)
+     * - assigned_by           (System field - set by assignment)
+     * - created_at            (Timestamp - automatic)
+     * - updated_at            (Timestamp - automatic)
+     * - deleted_at            (Timestamp - automatic)
+     */
 
     protected $casts = [
         'metadata' => 'array',

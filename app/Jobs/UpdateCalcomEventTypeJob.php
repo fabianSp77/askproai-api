@@ -92,7 +92,14 @@ class UpdateCalcomEventTypeJob implements ShouldQueue
                     'response' => $responseBody
                 ]);
 
-                throw new \Exception($errorMessage);
+                // NOTE 2025-10-14: Do NOT throw exception here
+                // Reason: Job runs synchronously (SyncQueue), throwing breaks user's save operation
+                // The error is already logged and service status is updated above - that's sufficient
+                // Cal.com sync is "best effort" - if it fails, user can manually sync later
+                //
+                // throw new \Exception($errorMessage); // REMOVED - was causing 500 errors
+
+                return; // Exit gracefully without throwing
             }
 
         } catch (\Exception $e) {
@@ -110,7 +117,12 @@ class UpdateCalcomEventTypeJob implements ShouldQueue
                 'last_calcom_sync' => now()
             ]);
 
-            throw $e; // Re-throw to mark job as failed
+            // NOTE 2025-10-14: Do NOT re-throw exception
+            // Reason: Job runs synchronously (SyncQueue), re-throwing breaks user's save operation
+            // The error is already logged and service status is updated - that's sufficient
+            // Cal.com sync is "best effort" - if it fails, user can manually sync later
+            //
+            // throw $e; // REMOVED - was causing 500 errors in Livewire update
         }
     }
 

@@ -12,6 +12,7 @@ class SystemSetting extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'group',
         'category',
         'key',
@@ -203,10 +204,10 @@ class SystemSetting extends Model
     {
         $value = $this->value;
 
-        // Decrypt if needed
+        // Decrypt if needed (use decryptString to avoid serialization)
         if ($this->is_encrypted && $value) {
             try {
-                $value = decrypt($value);
+                $value = \Illuminate\Support\Facades\Crypt::decryptString($value);
             } catch (\Exception $e) {
                 // Return default if decryption fails
                 return $this->getDefaultParsedValue();
@@ -256,12 +257,12 @@ class SystemSetting extends Model
     }
 
     /**
-     * Set value with encryption if needed
+     * Set value with encryption if needed (use encryptString to avoid serialization)
      */
     public function setValueAttribute($value)
     {
         if ($this->is_encrypted && $value !== null) {
-            $this->attributes['value'] = encrypt($value);
+            $this->attributes['value'] = \Illuminate\Support\Facades\Crypt::encryptString($value);
         } else {
             $this->attributes['value'] = is_array($value) ? json_encode($value) : $value;
         }

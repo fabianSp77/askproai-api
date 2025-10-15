@@ -12,7 +12,6 @@
     ])
 >
     <head>
-        <script src="{{ asset('js/final-solution.js?v=' . time()) }}"></script>
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_START, scopes: $livewire?->getRenderHookScopes()) }}
 
         <meta charset="utf-8" />

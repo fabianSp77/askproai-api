@@ -21,9 +21,8 @@ class PolicyAnalyticsWidget extends BaseWidget
         // Get company_id from authenticated user
         $companyId = auth()->user()->company_id;
 
-        // 1. Total Active Policies
+        // 1. Total Active Policies (soft-deleted ones are automatically excluded)
         $activePolicies = PolicyConfiguration::where('company_id', $companyId)
-            ->where('is_active', true)
             ->count();
 
         // 2. Total Policy Configurations
@@ -66,9 +65,8 @@ class PolicyAnalyticsWidget extends BaseWidget
             ? round((($violations7Days - $violationsPrevious7Days) / $violationsPrevious7Days) * 100, 1)
             : 0;
 
-        // 6. Most violated policy type
-        $mostViolatedPolicy = PolicyConfiguration::where('company_id', $companyId)
-            ->where('is_active', true)
+        // 6. Most violated policy type (soft-deleted ones are automatically excluded)
+        $mostViolatedPolicy = PolicyConfiguration::where('policy_configurations.company_id', $companyId)
             ->select('policy_type', DB::raw('COUNT(*) as violation_count'))
             ->join('appointment_modification_stats', function ($join) {
                 $join->on('policy_configurations.id', '=', DB::raw('JSON_EXTRACT(appointment_modification_stats.metadata, "$.policy_id")'))
@@ -127,7 +125,6 @@ class PolicyAnalyticsWidget extends BaseWidget
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->startOfDay();
             $count = PolicyConfiguration::where('company_id', $companyId)
-                ->where('is_active', true)
                 ->where('created_at', '<=', $date->endOfDay())
                 ->count();
 

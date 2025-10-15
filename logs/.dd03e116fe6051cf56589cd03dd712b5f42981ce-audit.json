@@ -6,26 +6,6 @@
     "auditLog": "/var/www/api-gateway/logs/.dd03e116fe6051cf56589cd03dd712b5f42981ce-audit.json",
     "files": [
         {
-            "date": 1758705369275,
-            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-24.log",
-            "hash": "5cba184fadce277a9e2bd320797ae9a75fa4731c91f4e8ae72eb8d5ab1a18142"
-        },
-        {
-            "date": 1758802207125,
-            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-25.log",
-            "hash": "0b7b31c9c39890ec045741944259dd27e8097549d566ac3df5dcae5ba27afa2e"
-        },
-        {
-            "date": 1759227629937,
-            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-09-30.log",
-            "hash": "5629b640644b337b127c48534af0174a74ebf282c998cf956323a756fab8d2cf"
-        },
-        {
-            "date": 1759293462478,
-            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-01.log",
-            "hash": "bbf78dc91c2ff6761ce8448b6124f3032cd3a3f7cac018b259011da3125aa722"
-        },
-        {
             "date": 1759470033615,
             "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-03.log",
             "hash": "14276eb9bc83467742296291218ef647fe9b0acfb80dfd0fccbd877de59c3c47"
@@ -44,6 +24,21 @@
             "date": 1759725851895,
             "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-06.log",
             "hash": "c1d936b16740abf069806a00266de1e46de9ff9e7c6a7cccd7e613ddd4129c16"
+        },
+        {
+            "date": 1760379834655,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-13.log",
+            "hash": "7e4db974910aee31eee5458d6f3e63fc472fe01382a55f9dad5b81c9dfaae6c1"
+        },
+        {
+            "date": 1760435148320,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-14.log",
+            "hash": "43f2703ccaf700f7ba9e6abb1f3a6a0b697f6ab0faf5472536e408be1ed5198f"
+        },
+        {
+            "date": 1760513721635,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-15.log",
+            "hash": "c7dcb24479ed9643888fcda401d5f02962e59361f552c429f4cefca1083374cc"
         }
     ],
     "hashType": "sha256"

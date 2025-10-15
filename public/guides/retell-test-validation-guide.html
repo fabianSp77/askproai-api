@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETELL - Test & Validierung</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        }
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 60px;
+            text-align: center;
+        }
+        h1 { font-size: 64px; margin-bottom: 20px; }
+        .subtitle { font-size: 24px; color: #bfdbfe; }
+        .test-section {
+            padding: 50px;
+        }
+        .test-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 4px solid #3b82f6;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 30px 0;
+        }
+        .test-card h3 { color: #1e40af; font-size: 32px; margin-bottom: 25px; }
+        .test-step {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #10b981;
+            border-radius: 8px;
+        }
+        .test-step h4 { color: #047857; font-size: 22px; margin-bottom: 15px; }
+        .test-step p { color: #4b5563; font-size: 18px; line-height: 2; }
+        .validation-check {
+            background: #ecfdf5;
+            border: 3px solid #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .validation-check h5 { color: #065f46; font-size: 20px; margin-bottom: 12px; }
+        .validation-check ul { margin-left: 25px; color: #047857; line-height: 2.5; font-size: 17px; }
+        .error-check {
+            background: #fef2f2;
+            border: 3px solid #ef4444;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .error-check h5 { color: #991b1b; font-size: 20px; margin-bottom: 12px; }
+        .error-check ul { margin-left: 25px; color: #dc2626; line-height: 2.5; font-size: 17px; }
+        .cmd-block {
+            background: #1f2937;
+            color: #10b981;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: monospace;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 TEST & VALIDIERUNG</h1>
+            <div class="subtitle">
+                V81-OPTION-A ist deployed | Jetzt systematisch testen
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 style="color: #1f2937; font-size: 48px; margin-bottom: 40px; text-align: center;">
+                📋 TEST-SZENARIEN
+            </h2>
+
+            <!-- TEST 1: MIT NUMMER + BEKANNT -->
+            <div class="test-card">
+                <h3>🧪 Test #1: MIT NUMMER + BEKANNT (Optimal-Flow)</h3>
+
+                <div class="test-step">
+                    <h4>📞 Was tun:</h4>
+                    <p>
+                        1. Rufe mit DEINER Nummer an: <strong>+491604366218</strong><br>
+                        2. Warte auf Begrüßung<br>
+                        3. Sage: <strong>"Ich hätte gern einen Termin am Montag um 14 Uhr"</strong>
+                    </p>
+                </div>
+
+                <div class="validation-check">
+                    <h5>✅ ERFOLG wenn:</h5>
+                    <ul>
+                        <li>Agent sagt: "Willkommen bei Ask Pro AI..." ✅</li>
+                        <li>Agent sagt: "Guten Tag Hansi!" oder "Hansi Hinterseer" ✅</li>
+                        <li>Agent fragt <strong>NICHT</strong> nach deinem Namen ✅</li>
+                        <li>Agent antwortet innerhalb 1-2 Sekunden ✅</li>
+                        <li>Agent sagt "Montag, der 13. Oktober" (ohne Jahr!) ✅</li>
+                        <li>Termin wird gebucht ✅</li>
+                        <li>Dauer: <30 Sekunden ✅</li>
+                    </ul>
+                </div>
+
+                <div class="error-check">
+                    <h5>❌ FEHLER wenn:</h5>
+                    <ul>
+                        <li>Agent fragt nach Namen (sollte dich kennen!)</li>
+                        <li>Agent schweigt >2 Sekunden</li>
+                        <li>Agent sagt "Herr Hinterseer" (verboten!)</li>
+                        <li>Agent sagt "2025" (Jahr verboten!)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TEST 2: ANONYM + "15.1" DATUM -->
+            <div class="test-card">
+                <h3>🧪 Test #2: ANONYM + "15.1" Datum-Bug (Kritischer Fix!)</h3>
+
+                <div class="test-step">
+                    <h4>📞 Was tun:</h4>
+                    <p>
+                        1. Rufe mit <strong>anonymer/unterdrückter Nummer</strong> an<br>
+                        2. Sage Namen: <strong>"Hans Müller mein Name"</strong><br>
+                        3. Sage: <strong>"Ich hätte gern einen Termin am fünfzehnten Punkt eins um 9 Uhr"</strong>
+                    </p>
+                </div>
+
+                <div class="validation-check">
+                    <h5>✅ ERFOLG wenn:</h5>
+                    <ul>
+                        <li>Agent fragt nach Namen ✅ (unbekannter anonymer Anrufer)</li>
+                        <li>Agent sagt: "Mittwoch, der <strong>15. OKTOBER</strong>" ✅</li>
+                        <li>Agent sagt <strong>NICHT</strong> "15. Januar" ✅</li>
+                        <li>Agent erkennt: 15.10. 09:00 ist BELEGT (Appointment #674 existiert!) ✅</li>
+                        <li>Agent bietet Alternativen: "9 Uhr ist belegt, 10 Uhr oder 11 Uhr?" ✅</li>
+                    </ul>
+                </div>
+
+                <div class="error-check">
+                    <h5>❌ FEHLER wenn:</h5>
+                    <ul>
+                        <li>Agent sagt "15. Januar" (DATUM-BUG!)</li>
+                        <li>Agent bucht 9 Uhr obwohl belegt</li>
+                        <li>Agent sagt "Erfolgreich gebucht" ohne Verfügbarkeits-Check</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TEST 3: ANONYM + "Wann frei?" -->
+            <div class="test-card">
+                <h3>🧪 Test #3: ANONYM + "Wann frei?" (Anti-Silence Test)</h3>
+
+                <div class="test-step">
+                    <h4>📞 Was tun:</h4>
+                    <p>
+                        1. Rufe anonym an<br>
+                        2. Sage: <strong>"Wann haben Sie den nächsten freien Termin?"</strong><br>
+                        3. Achte auf Reaktionszeit!
+                    </p>
+                </div>
+
+                <div class="validation-check">
+                    <h5>✅ ERFOLG wenn:</h5>
+                    <ul>
+                        <li>Agent antwortet <strong>innerhalb 1-2 Sekunden</strong> ✅</li>
+                        <li>Agent fragt zurück: "Für welchen Tag? Heute, morgen oder nächste Woche?" ✅</li>
+                        <li>Agent schweigt <strong>NICHT</strong> ✅</li>
+                        <li>Kein "Hallo?" vom User nötig ✅</li>
+                    </ul>
+                </div>
+
+                <div class="error-check">
+                    <h5>❌ FEHLER wenn:</h5>
+                    <ul>
+                        <li>Agent schweigt >3 Sekunden</li>
+                        <li>User muss "Hallo?" fragen</li>
+                        <li>Agent antwortet erst bei 15-20s</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TEST 4: RESCHEDULE AUF BELEGTEN SLOT -->
+            <div class="test-card">
+                <h3>🧪 Test #4: Reschedule Availability-Check</h3>
+
+                <div class="test-step">
+                    <h4>📞 Was tun:</h4>
+                    <p>
+                        1. Buche Termin Sonntag 10 Uhr<br>
+                        2. Sage: <strong>"Bitte verschieben auf Montag 9 Uhr"</strong><br>
+                        3. (Montag 9 Uhr ist belegt - Appointment #677 existiert!)
+                    </p>
+                </div>
+
+                <div class="validation-check">
+                    <h5>✅ ERFOLG wenn:</h5>
+                    <ul>
+                        <li>Agent prüft Verfügbarkeit VOR Verschiebung ✅</li>
+                        <li>Agent sagt: "9 Uhr ist nicht verfügbar. Alternativen: 8, 10, 14 Uhr?" ✅</li>
+                        <li>Agent bucht <strong>NICHT</strong> auf belegten Slot ✅</li>
+                    </ul>
+                </div>
+
+                <div class="error-check">
+                    <h5>❌ FEHLER wenn:</h5>
+                    <ul>
+                        <li>Agent sagt "Erfolgreich verschoben" ohne Verfügbarkeits-Check</li>
+                        <li>Termin wird auf 9 Uhr verschoben (obwohl belegt!)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 60px; background: #f9fafb;">
+            <h2 style="color: #1f2937; font-size: 48px; margin-bottom: 40px; text-align: center;">
+                📊 MONITORING - Wie du siehst ob es funktioniert
+            </h2>
+
+            <div style="background: white; padding: 40px; border-radius: 14px; border: 3px solid #6366f1; max-width: 1400px; margin: 0 auto;">
+                <h3 style="color: #1e40af; font-size: 32px; margin-bottom: 25px;">Option 1: Live-Logs beobachten (Echtzeit)</h3>
+
+                <div class="cmd-block">tail -f /var/www/api-gateway/storage/logs/laravel.log | grep -E "check_customer|Check|customer_exists|new_customer"</div>
+
+                <p style="color: #4b5563; font-size: 18px; margin-top: 20px; line-height: 2;">
+                    <strong>Was du sehen solltest:</strong><br>
+                    • "🔍 Checking customer" (check_customer wird aufgerufen)<br>
+                    • "customer_id: 461" (bei deiner Nummer)<br>
+                    • "status: found" (bekannter Kunde erkannt)
+                </p>
+
+                <h3 style="color: #1e40af; font-size: 32px; margin: 35px 0 25px 0;">Option 2: Nach Test-Call Daten prüfen</h3>
+
+                <div class="cmd-block">mysql -u root -proot askproai_db -e "
+SELECT
+  id,
+  retell_call_id,
+  from_number,
+  customer_id,
+  customer_name,
+  duration_ms,
+  session_outcome,
+  SUBSTRING(transcript, 1, 300) as start
+FROM calls
+ORDER BY created_at DESC
+LIMIT 1\G"</div>
+
+                <p style="color: #4b5563; font-size: 18px; margin-top: 20px; line-height: 2;">
+                    <strong>Was du checken solltest:</strong><br>
+                    • <code>customer_id</code> sollte gefüllt sein (nicht NULL)<br>
+                    • <code>transcript</code> sollte "Guten Tag Hansi" zeigen (personalisiert!)<br>
+                    • <code>duration_ms</code> sollte <30000 sein (unter 30 Sekunden)<br>
+                    • <code>session_outcome</code> sollte "appointment_booked" sein
+                </p>
+
+                <h3 style="color: #1e40af; font-size: 32px; margin: 35px 0 25px 0;">Option 3: Appointment-Validierung</h3>
+
+                <div class="cmd-block">mysql -u root -proot askproai_db -e "
+SELECT
+  a.id,
+  a.starts_at,
+  a.status,
+  c.name as customer_name,
+  JSON_EXTRACT(a.metadata, '$.call_id') as has_call_id,
+  JSON_EXTRACT(a.metadata, '$.retell_call_id') as has_retell_id
+FROM appointments a
+JOIN customers c ON a.customer_id = c.id
+WHERE a.created_at >= NOW() - INTERVAL 10 MINUTE
+ORDER BY a.created_at DESC\G"</div>
+
+                <p style="color: #4b5563; font-size: 18px; margin-top: 20px; line-height: 2;">
+                    <strong>Validiere:</strong><br>
+                    • Appointment wurde erstellt ✅<br>
+                    • <code>metadata->call_id</code> ist NICHT NULL (neuer Fix!) ✅<br>
+                    • <code>metadata->retell_call_id</code> ist befüllt ✅<br>
+                    • Datum ist korrekt (15. Oktober NICHT 15. Januar!) ✅
+                </p>
+            </div>
+        </div>
+
+        <div style="padding: 60px; background: #ecfdf5;">
+            <h2 style="color: #065f46; font-size: 48px; margin-bottom: 40px; text-align: center;">
+                ✅ SUCCESS CRITERIA
+            </h2>
+
+            <div style="background: white; padding: 45px; border-radius: 14px; max-width: 1400px; margin: 0 auto; border: 4px solid #10b981;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #047857; color: white;">
+                        <th style="padding: 22px; font-size: 20px;">Test</th>
+                        <th style="padding: 22px; font-size: 20px;">Erwartung</th>
+                        <th style="padding: 22px; font-size: 20px;">Status</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <strong>Bekannter Kunde erkannt</strong>
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            "Guten Tag Hansi!" (personalisiert)
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <strong>Kein Schweigen</strong>
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            Antwort innerhalb 1-2s
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <strong>"15.1" = Oktober</strong>
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            Agent sagt "15. Oktober" NICHT "15. Januar"
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <strong>Belegter Slot erkannt</strong>
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            "9 Uhr belegt, Alternativen: 10, 11 Uhr?"
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <strong>Keine verbotenen Phrasen</strong>
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            KEIN "Herr/Frau", kein "Problem", kein Jahr
+                        </td>
+                        <td style="padding: 22px; border-bottom: 1px solid #e5e7eb;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 22px;">
+                            <strong>Gespräch-Dauer</strong>
+                        </td>
+                        <td style="padding: 22px;">
+                            <30 Sekunden (für bekannte Kunden)
+                        </td>
+                        <td style="padding: 22px;">
+                            <input type="checkbox"> Geprüft
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div style="padding: 60px; background: #1f2937; color: white;">
+            <h2 style="margin-bottom: 50px; font-size: 52px; text-align: center;">
+                🚀 NÄCHSTE SCHRITTE
+            </h2>
+
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <ol style="line-height: 3.5; font-size: 24px;">
+                    <li><strong>Test-Call #1:</strong> Mit deiner Nummer (+491604366218)</li>
+                    <li><strong>Validiere:</strong> "Guten Tag Hansi!" (personalisiert, kein Namen-Frage)</li>
+                    <li><strong>Test-Call #2:</strong> Anonym, "15.1" Datum testen</li>
+                    <li><strong>Validiere:</strong> Agent sagt "15. Oktober" NICHT "15. Januar"</li>
+                    <li><strong>Test-Call #3:</strong> Anonym, "Wann frei?" → Sofort Antwort?</li>
+                    <li><strong>Monitoring:</strong> Logs prüfen (Befehle oben)</li>
+                    <li><strong>Bei Erfolg:</strong> System ist produktionsbereit! ✅</li>
+                    <li><strong>Bei Fehler:</strong> Logs analysieren, ggf. Option B testen</li>
+                </ol>
+
+                <div style="margin-top: 50px; padding: 40px; background: rgba(16, 185, 129, 0.2); border-radius: 16px;">
+                    <p style="font-size: 22px; line-height: 2.5; text-align: center;">
+                        <strong>Nach erfolgreichen Tests:</strong><br>
+                        System ist produktionsbereit!<br>
+                        Alle 10 Backend-Fixes sind live.<br>
+                        Prompt V81-OPTION-A ist deployed.<br>
+                        Alle deine Anforderungen sind erfüllt! 🎉
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 50px; text-align: center; background: #f3f4f6;">
+            <p style="color: #4b5563; font-size: 18px; line-height: 2.2;">
+                <strong>Guide erstellt:</strong> 2025-10-11 |
+                <strong>Backend-Fixes:</strong> 10 committed (Git 4049d556)<br>
+                <strong>Prompt:</strong> V81-OPTION-A deployed |
+                <strong>Status:</strong> Bereit für Production Testing
+            </p>
+        </div>
+    </div>
+</body>
+</html>

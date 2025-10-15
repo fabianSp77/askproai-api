@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Form - Neue Reihenfolge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-900 p-6 text-white">
+    <div class="max-w-5xl mx-auto" x-data="{
+        step: 1,
+        company: null,
+        service: null,
+        employee: null,
+        slot: null,
+        customerType: null,
+        customerName: ''
+    }">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Neuen Termin erstellen</h1>
+            <p class="text-gray-400">Neue Reihenfolge: Verfügbarkeit zuerst, Kunde zuletzt</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="flex items-center gap-2 mb-8">
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'">
+                <span class="font-bold">1</span>
+                <span>Filiale</span>
+            </div>
+            <div class="w-8 h-0.5 bg-gray-700"></div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'">
+                <span class="font-bold">2</span>
+                <span>Service</span>
+            </div>
+            <div class="w-8 h-0.5 bg-gray-700"></div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'">
+                <span class="font-bold">3</span>
+                <span>Mitarbeiter</span>
+            </div>
+            <div class="w-8 h-0.5 bg-gray-700"></div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="step >= 4 ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'">
+                <span class="font-bold">4</span>
+                <span>Zeitslot</span>
+            </div>
+            <div class="w-8 h-0.5 bg-gray-700"></div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="step >= 5 ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'">
+                <span class="font-bold">5</span>
+                <span>Kunde</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Filiale -->
+        <div x-show="step === 1" class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Wähle eine Filiale</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button @click="company = 'hauptfiliale'; step = 2" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg text-left border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-xl font-bold mb-2">🏢 Hauptfiliale</div>
+                    <div class="text-sm text-gray-400">Musterstraße 123, Berlin</div>
+                </button>
+                <button @click="company = 'zweigstelle'; step = 2" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg text-left border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-xl font-bold mb-2">🏪 Zweigstelle</div>
+                    <div class="text-sm text-gray-400">Beispielweg 456, München</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Service -->
+        <div x-show="step === 2" class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-2">Wähle einen Service</h2>
+            <p class="text-gray-400 mb-6">Welche Dienstleistung benötigt der Kunde?</p>
+            <div class="grid grid-cols-3 gap-4">
+                <button @click="service = 'haircut'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">✂️</div>
+                    <div class="font-bold text-lg mb-1">Haarschnitt</div>
+                    <div class="text-sm text-gray-400">30 Min • 35€</div>
+                </button>
+                <button @click="service = 'coloring'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">🎨</div>
+                    <div class="font-bold text-lg mb-1">Färben</div>
+                    <div class="text-sm text-gray-400">90 Min • 65€</div>
+                </button>
+                <button @click="service = 'perm'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">💆</div>
+                    <div class="font-bold text-lg mb-1">Dauerwelle</div>
+                    <div class="text-sm text-gray-400">120 Min • 85€</div>
+                </button>
+                <button @click="service = 'styling'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">💇</div>
+                    <div class="font-bold text-lg mb-1">Styling</div>
+                    <div class="text-sm text-gray-400">45 Min • 45€</div>
+                </button>
+                <button @click="service = 'treatment'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">✨</div>
+                    <div class="font-bold text-lg mb-1">Behandlung</div>
+                    <div class="text-sm text-gray-400">60 Min • 55€</div>
+                </button>
+                <button @click="service = 'consultation'; step = 3" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">💬</div>
+                    <div class="font-bold text-lg mb-1">Beratung</div>
+                    <div class="text-sm text-gray-400">20 Min • 0€</div>
+                </button>
+            </div>
+            <button @click="step = 1" class="mt-6 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                ← Zurück
+            </button>
+        </div>
+
+        <!-- Step 3: Mitarbeiter -->
+        <div x-show="step === 3" class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-2">Wähle einen Mitarbeiter</h2>
+            <p class="text-gray-400 mb-6">Bei wem soll der Termin stattfinden?</p>
+            <div class="grid grid-cols-4 gap-4">
+                <button @click="employee = 'anna'; step = 4" class="p-4 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-pink-400 to-pink-600 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
+                        👩
+                    </div>
+                    <div class="font-bold">Anna</div>
+                    <div class="text-xs text-gray-400">Stylistin</div>
+                </button>
+                <button @click="employee = 'max'; step = 4" class="p-4 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
+                        👨
+                    </div>
+                    <div class="font-bold">Max</div>
+                    <div class="text-xs text-gray-400">Senior Stylist</div>
+                </button>
+                <button @click="employee = 'lisa'; step = 4" class="p-4 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
+                        👩‍🦰
+                    </div>
+                    <div class="font-bold">Lisa</div>
+                    <div class="text-xs text-gray-400">Color Expert</div>
+                </button>
+                <button @click="employee = 'tom'; step = 4" class="p-4 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">
+                        🧔
+                    </div>
+                    <div class="font-bold">Tom</div>
+                    <div class="text-xs text-gray-400">Barber</div>
+                </button>
+            </div>
+            <button @click="step = 2" class="mt-6 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                ← Zurück
+            </button>
+        </div>
+
+        <!-- Step 4: Zeitslot (Week Picker wird hier eingebunden) -->
+        <div x-show="step === 4" class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-2">Wähle einen Zeitslot</h2>
+            <p class="text-gray-400 mb-6">Wann soll der Termin stattfinden?</p>
+
+            <div class="bg-gray-900 p-4 rounded-lg mb-6">
+                <p class="text-sm text-blue-400">📅 Hier wird der neue Calendar-View Week Picker eingebunden</p>
+                <p class="text-xs text-gray-500 mt-2">(Siehe: /week-picker-calendar-prototype.html)</p>
+            </div>
+
+            <button @click="slot = '2025-10-14T10:00:00Z'; step = 5" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold">
+                Weiter mit ausgewähltem Slot →
+            </button>
+
+            <button @click="step = 3" class="ml-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                ← Zurück
+            </button>
+        </div>
+
+        <!-- Step 5: Kunde (ZULETZT!) -->
+        <div x-show="step === 5" class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-2">Kundeninformationen</h2>
+            <p class="text-gray-400 mb-6">Fast geschafft! Für wen ist der Termin?</p>
+
+            <!-- Customer Type Selection -->
+            <div x-show="!customerType" class="grid grid-cols-2 gap-4 mb-6">
+                <button @click="customerType = 'new'" class="p-8 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">✨</div>
+                    <div class="font-bold text-xl mb-2">Neukunde</div>
+                    <div class="text-sm text-gray-400">Erstmals bei uns</div>
+                </button>
+                <button @click="customerType = 'existing'" class="p-8 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                    <div class="text-4xl mb-3">👤</div>
+                    <div class="font-bold text-xl mb-2">Bestandskunde</div>
+                    <div class="text-sm text-gray-400">Bereits registriert</div>
+                </button>
+            </div>
+
+            <!-- New Customer -->
+            <div x-show="customerType === 'new'" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Vor- und Nachname *</label>
+                    <input type="text" x-model="customerName" placeholder="z.B. Max Mustermann" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Telefonnummer (optional)</label>
+                    <input type="tel" placeholder="z.B. +49 123 456789" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">E-Mail (optional)</label>
+                    <input type="email" placeholder="z.B. max@example.com" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+                <button @click="customerType = null" class="text-sm text-blue-400 hover:text-blue-300">
+                    ← Zurück zur Auswahl
+                </button>
+            </div>
+
+            <!-- Existing Customer -->
+            <div x-show="customerType === 'existing'" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Kunde suchen</label>
+                    <input type="text" placeholder="Name, Telefon oder E-Mail eingeben..." class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4 space-y-2">
+                    <div class="text-sm text-gray-400 mb-2">Vorschläge:</div>
+                    <button class="w-full text-left p-3 bg-gray-600 hover:bg-blue-600 rounded-lg transition">
+                        <div class="font-semibold">Maria Schmidt</div>
+                        <div class="text-sm text-gray-400">maria@example.com • +49 123 456789</div>
+                    </button>
+                    <button class="w-full text-left p-3 bg-gray-600 hover:bg-blue-600 rounded-lg transition">
+                        <div class="font-semibold">Thomas Müller</div>
+                        <div class="text-sm text-gray-400">thomas@example.com • +49 987 654321</div>
+                    </button>
+                </div>
+                <button @click="customerType = null" class="text-sm text-blue-400 hover:text-blue-300">
+                    ← Zurück zur Auswahl
+                </button>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <button class="px-8 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-lg">
+                    ✅ Termin erstellen
+                </button>
+                <button @click="step = 4; customerType = null" class="ml-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                    ← Zurück
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Box -->
+        <div x-show="step > 1" class="mt-8 bg-blue-900/30 border border-blue-700 rounded-lg p-6">
+            <h3 class="font-bold mb-4">📋 Zusammenfassung</h3>
+            <div class="space-y-2 text-sm">
+                <div x-show="company"><strong>Filiale:</strong> <span x-text="company"></span></div>
+                <div x-show="service"><strong>Service:</strong> <span x-text="service"></span></div>
+                <div x-show="employee"><strong>Mitarbeiter:</strong> <span x-text="employee"></span></div>
+                <div x-show="slot"><strong>Zeitslot:</strong> <span x-text="slot"></span></div>
+                <div x-show="customerName"><strong>Kunde:</strong> <span x-text="customerName"></span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,366 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    WEEK PICKER - ARCHITECTURE DIAGRAM
+                        Root Cause Analysis 2025-10-14
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                          FILAMENT FORM PANEL                                │
+│                         (Main Form Container)                               │
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐ │
+│  │                     SECTION: ⏰ WANN?                                  │ │
+│  │                 (Appointment Time Selection)                           │ │
+│  │                                                                        │ │
+│  │  ┌──────────────────────────────────────────────────────────────────┐ │ │
+│  │  │              ViewField: week_picker                              │ │ │
+│  │  │            (Filament Form Component)                             │ │ │
+│  │  │                                                                  │ │ │
+│  │  │  ┌────────────────────────────────────────────────────────────┐ │ │ │
+│  │  │  │    WRAPPER: appointment-week-picker-wrapper.blade.php      │ │ │ │
+│  │  │  │          (Alpine.js Integration Layer)                     │ │ │ │
+│  │  │  │                                                            │ │ │ │
+│  │  │  │  x-data="{ selectedSlot, handleSlotSelected() }"          │ │ │ │
+│  │  │  │  x-on:slot-selected.window="handleSlotSelected($event)"   │ │ │ │
+│  │  │  │                        ↑                                   │ │ │ │
+│  │  │  │                        │ Browser Event (window)            │ │ │ │
+│  │  │  │                        │                                   │ │ │ │
+│  │  │  │  ┌──────────────────────────────────────────────────────┐ │ │ │ │
+│  │  │  │  │  LIVEWIRE: AppointmentWeekPicker.php                 │ │ │ │ │
+│  │  │  │  │      (Week Picker Component)                         │ │ │ │ │
+│  │  │  │  │                                                      │ │ │ │ │
+│  │  │  │  │  Properties:                                         │ │ │ │ │
+│  │  │  │  │  • serviceId (string)                                │ │ │ │ │
+│  │  │  │  │  • weekOffset (int)                                  │ │ │ │ │
+│  │  │  │  │  • weekData (array)                                  │ │ │ │ │
+│  │  │  │  │  • selectedSlot (string)                             │ │ │ │ │
+│  │  │  │  │                                                      │ │ │ │ │
+│  │  │  │  │  Methods:                                            │ │ │ │ │
+│  │  │  │  │  ┌────────────────────────────────────────────────┐ │ │ │ │ │
+│  │  │  │  │  │  selectSlot(string $datetime)                  │ │ │ │ │ │
+│  │  │  │  │  │  {                                              │ │ │ │ │ │
+│  │  │  │  │  │    // Update component state                   │ │ │ │ │ │
+│  │  │  │  │  │    $this->selectedSlot = $datetime;            │ │ │ │ │ │
+│  │  │  │  │  │                                                │ │ │ │ │ │
+│  │  │  │  │  │    // ✅ FIX: Dispatch browser event          │ │ │ │ │ │
+│  │  │  │  │  │    $this->js(<<<JS                            │ │ │ │ │ │
+│  │  │  │  │  │      window.dispatchEvent(                    │ │ │ │ │ │
+│  │  │  │  │  │        new CustomEvent('slot-selected', {     │ │ │ │ │ │
+│  │  │  │  │  │          detail: { datetime: '...' }          │ │ │ │ │ │
+│  │  │  │  │  │        })                                     │ │ │ │ │ │
+│  │  │  │  │  │      );                                       │ │ │ │ │ │
+│  │  │  │  │  │    JS);                                       │ │ │ │ │ │
+│  │  │  │  │  │  }                                            │ │ │ │ │ │
+│  │  │  │  │  └────────────────────────────────────────────────┘ │ │ │ │ │
+│  │  │  │  │           ↑                                          │ │ │ │ │
+│  │  │  │  │           │ wire:click                               │ │ │ │ │
+│  │  │  │  │           │                                          │ │ │ │ │
+│  │  │  │  │  ┌────────────────────────────────────────────────┐ │ │ │ │ │
+│  │  │  │  │  │  TEMPLATE: appointment-week-picker.blade.php   │ │ │ │ │ │
+│  │  │  │  │  │                                                │ │ │ │ │ │
+│  │  │  │  │  │  Week Grid (7 columns: Mon-Sun)                │ │ │ │ │ │
+│  │  │  │  │  │  ┌──────────────────────────────────────────┐ │ │ │ │ │ │
+│  │  │  │  │  │  │  Monday  │  Tuesday │ ... │  Sunday       │ │ │ │ │ │ │
+│  │  │  │  │  │  ├──────────────────────────────────────────┤ │ │ │ │ │ │
+│  │  │  │  │  │  │ ┌──────┐ │ ┌──────┐ │     │ ┌──────┐     │ │ │ │ │ │ │
+│  │  │  │  │  │  │ │ 9:00 │ │ │ 9:00 │ │     │ │ 9:00 │     │ │ │ │ │ │ │
+│  │  │  │  │  │  │ └──────┘ │ └──────┘ │     │ └──────┘     │ │ │ │ │ │ │
+│  │  │  │  │  │  │ ┌──────┐ │ ┌──────┐ │     │ ┌──────┐     │ │ │ │ │ │ │
+│  │  │  │  │  │  │ │10:00 │ │ │10:00 │ │ ... │ │10:00 │     │ │ │ │ │ │ │
+│  │  │  │  │  │  │ └──────┘ │ └──────┘ │     │ └──────┘     │ │ │ │ │ │ │
+│  │  │  │  │  │  │   ...    │   ...    │     │   ...        │ │ │ │ │ │ │
+│  │  │  │  │  │  └──────────────────────────────────────────┘ │ │ │ │ │ │
+│  │  │  │  │  │                                                │ │ │ │ │ │
+│  │  │  │  │  │  Each Slot Button:                             │ │ │ │ │ │
+│  │  │  │  │  │  ┌────────────────────────────────────────────┐ │ │ │ │ │ │
+│  │  │  │  │  │  │ <button                                    │ │ │ │ │ │ │
+│  │  │  │  │  │  │   wire:click="selectSlot('datetime')"      │ │ │ │ │ │ │
+│  │  │  │  │  │  │   class="slot-button"                      │ │ │ │ │ │ │
+│  │  │  │  │  │  │   :class="{                                │ │ │ │ │ │ │
+│  │  │  │  │  │  │     'selected-slot':                       │ │ │ │ │ │ │
+│  │  │  │  │  │  │       datetime === @entangle('selectedSlot')│ │ │ │ │ │ │
+│  │  │  │  │  │  │   }">                                      │ │ │ │ │ │ │
+│  │  │  │  │  │  │     {{ $slot['time'] }}                    │ │ │ │ │ │ │
+│  │  │  │  │  │  │ </button>                                  │ │ │ │ │ │ │
+│  │  │  │  │  │  └────────────────────────────────────────────┘ │ │ │ │ │ │
+│  │  │  │  │  └────────────────────────────────────────────────┘ │ │ │ │ │
+│  │  │  │  └──────────────────────────────────────────────────────┘ │ │ │ │
+│  │  │  │                                                            │ │ │ │
+│  │  │  │  handleSlotSelected(event):                                │ │ │ │
+│  │  │  │  ┌────────────────────────────────────────────────────┐   │ │ │ │
+│  │  │  │  │  1. Extract datetime from event.detail             │   │ │ │ │
+│  │  │  │  │  2. Update local selectedSlot state                │   │ │ │ │
+│  │  │  │  │  3. Find parent form: $el.closest('form')          │   │ │ │ │
+│  │  │  │  │  4. Query hidden field within form scope           │   │ │ │ │
+│  │  │  │  │  5. Update hidden field value                      │   │ │ │ │
+│  │  │  │  │  6. Dispatch input/change events                   │   │ │ │ │
+│  │  │  │  └────────────────────────────────────────────────────┘   │ │ │ │
+│  │  │  │                        │                                   │ │ │ │
+│  │  │  │                        ↓ DOM Update                        │ │ │ │
+│  │  │  └────────────────────────┼───────────────────────────────────┘ │ │ │
+│  │  │                           │                                     │ │ │
+│  │  └───────────────────────────┼─────────────────────────────────────┘ │ │
+│  │                              │                                       │ │
+│  │                              ↓                                       │ │
+│  │  ┌───────────────────────────────────────────────────────────────┐  │ │
+│  │  │         Hidden Field: starts_at                                │  │ │
+│  │  │         Forms\Components\Hidden::make('starts_at')             │  │ │
+│  │  │           ->required()                                         │  │ │
+│  │  │           ->reactive()                                         │  │ │
+│  │  │           ->live(onBlur: false)  ✅ Immediate updates         │  │ │
+│  │  │           ->afterStateUpdated(function($state, $get, $set) {  │  │ │
+│  │  │             // Calculate ends_at automatically                │  │ │
+│  │  │             $duration = $get('duration_minutes') ?? 30;       │  │ │
+│  │  │             $endsAt = Carbon::parse($state)                   │  │ │
+│  │  │                        ->addMinutes($duration);               │  │ │
+│  │  │             $set('ends_at', $endsAt);                         │  │ │
+│  │  │           })                                                  │  │ │
+│  │  │                                                               │  │ │
+│  │  │         HTML: <input type="hidden" name="starts_at"          │  │ │
+│  │  │                      wire:model="starts_at"                  │  │ │
+│  │  │                      value="2025-10-23T08:00:00+02:00" />    │  │ │
+│  │  └───────────────────────────────────────────────────────────────┘  │ │
+│  │                              │                                       │ │
+│  │                              ↓ Filament Reactivity                   │ │
+│  │  ┌───────────────────────────────────────────────────────────────┐  │ │
+│  │  │         Calculated Field: ends_at                              │  │ │
+│  │  │         Forms\Components\Hidden::make('ends_at')               │  │ │
+│  │  │           ->dehydrated()                                       │  │ │
+│  │  │                                                                │  │ │
+│  │  │         Value: starts_at + duration_minutes                    │  │ │
+│  │  └───────────────────────────────────────────────────────────────┘  │ │
+│  │                                                                       │ │
+│  └───────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐ │
+│  │                     FORM VALIDATION                                   │ │
+│  │                                                                       │ │
+│  │  Required Fields:                                                    │ │
+│  │  ✅ branch_id                                                        │ │
+│  │  ✅ customer_id                                                      │ │
+│  │  ✅ service_id                                                       │ │
+│  │  ✅ staff_id                                                         │ │
+│  │  ✅ starts_at  ← FROM WEEK PICKER                                   │ │
+│  │  ✅ status                                                           │ │
+│  │                                                                       │ │
+│  │  Calculated Fields:                                                  │ │
+│  │  ✅ ends_at (automatic)                                              │ │
+│  │  ✅ duration_minutes (from service)                                  │ │
+│  └───────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│  [Speichern] Button → Form Submit → Appointment Created ✅                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              DATA FLOW - FIXED
+═══════════════════════════════════════════════════════════════════════════════
+
+   USER ACTION                    LIVEWIRE                    ALPINE.JS
+       │                              │                           │
+       │  1. Click slot button        │                           │
+       ├──────────────────────────────>                           │
+       │  wire:click="selectSlot(dt)" │                           │
+       │                              │                           │
+       │                        2. Execute method                 │
+       │                      selectSlot(datetime)                │
+       │                              │                           │
+       │                     3. Update component state            │
+       │                   selectedSlot = datetime                │
+       │                              │                           │
+       │                   4. Dispatch browser event              │
+       │               $this->js("window.dispatchEvent(...)")     │
+       │                              │                           │
+       │                              ├───────────────────────────>
+       │                              │   Browser Event (window)  │
+       │                              │   'slot-selected'         │
+       │                              │                           │
+       │                              │         5. x-on:slot-selected.window
+       │                              │         handleSlotSelected(event)
+       │                              │                           │
+       │                              │              6. Extract datetime
+       │                              │              7. Find parent form
+       │                              │       form = $el.closest('form')
+       │                              │                           │
+       │                              │              8. Query hidden field
+       │                              │     input = form.querySelector(...)
+       │                              │                           │
+       │                              │              9. Update field value
+       │                              │         input.value = datetime
+       │                              │                           │
+       │                              │              10. Dispatch events
+       │                              │       input.dispatchEvent('input')
+       │                              │                           │
+       │                              <───────────────────────────┤
+       │                  11. Filament detects change             │
+       │                  wire:model triggers                     │
+       │                              │                           │
+       │               12. afterStateUpdated() fires              │
+       │               Calculate ends_at automatically            │
+       │                              │                           │
+       │               13. Form validation passes ✅              │
+       │                              │                           │
+       │  14. Notification shown      │                           │
+       <──────────────────────────────┤                           │
+       │  "Slot ausgewählt: ..."      │                           │
+       │                              │                           │
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         KEY ARCHITECTURAL PATTERNS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. LIVEWIRE-TO-ALPINE COMMUNICATION
+   ────────────────────────────────
+   Pattern:  $this->js("window.dispatchEvent(new CustomEvent(...))")
+   Purpose:  Bridge Livewire (server) to Alpine.js (browser)
+   Location: AppointmentWeekPicker.php:252
+
+2. SCOPE TRAVERSAL
+   ────────────────
+   Pattern:  $el.closest('form').querySelector('input[name=starts_at]')
+   Purpose:  Reliably find hidden field across component boundaries
+   Location: appointment-week-picker-wrapper.blade.php
+
+3. FILAMENT REACTIVITY
+   ────────────────────
+   Pattern:  ->reactive()->live()->afterStateUpdated()
+   Purpose:  Trigger side effects when form field changes
+   Location: AppointmentResource.php:348
+
+4. LIVEWIRE WIRE:CLICK
+   ────────────────────
+   Pattern:  wire:click="method('param')"
+   Purpose:  Call Livewire component methods from template
+   Location: appointment-week-picker.blade.php:174
+
+5. ALPINE X-ON EVENT LISTENER
+   ──────────────────────────
+   Pattern:  x-on:event-name.window="handler($event)"
+   Purpose:  Listen for browser events on window object
+   Location: appointment-week-picker-wrapper.blade.php:16
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                            COMPONENT BOUNDARIES
+═══════════════════════════════════════════════════════════════════════════════
+
+   Filament Form Scope        Livewire Component Scope       Alpine.js Scope
+   ┌──────────────────┐       ┌───────────────────┐         ┌──────────────┐
+   │                  │       │                   │         │              │
+   │  Form Fields     │       │  Week Picker      │         │  Wrapper     │
+   │  • starts_at ←───────────────────────────────────────── x-data       │
+   │  • ends_at       │       │  • selectSlot()   │         │  handlers    │
+   │  • service_id    │       │  • weekData       │         │              │
+   │                  │       │  • selectedSlot   │         │              │
+   │  Validation      │       │                   │         │              │
+   │  Submission      │       │  $this->js() ─────────────> window event  │
+   │                  │       │                   │         │              │
+   └──────────────────┘       └───────────────────┘         └──────────────┘
+           ↑                           │                           │
+           │                           │                           │
+           └───────────────────────────┴───────────────────────────┘
+                          Bridge via DOM events
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              FILES CHANGED
+═══════════════════════════════════════════════════════════════════════════════
+
+1. app/Livewire/AppointmentWeekPicker.php
+   Line 237-267: selectSlot() method
+   Change: Use $this->js() for browser events
+
+2. resources/views/livewire/appointment-week-picker.blade.php
+   Line 174-215: Desktop slot buttons
+   Line 267-306: Mobile slot buttons
+   Change: @click → wire:click
+
+3. resources/views/livewire/appointment-week-picker-wrapper.blade.php
+   Line 12-47: Alpine.js wrapper
+   Change: Use handleSlotSelected() method with closest('form')
+
+4. app/Filament/Resources/AppointmentResource.php
+   Line 348-358: Hidden field configuration
+   Change: Add ->live(onBlur: false)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              VALIDATION FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+Form Validation Chain:
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  1. User clicks [Speichern] button                                        │
+│     ↓                                                                      │
+│  2. Filament collects all form field values                               │
+│     ├─ branch_id:    ✅ Set                                               │
+│     ├─ customer_id:  ✅ Set                                               │
+│     ├─ service_id:   ✅ Set                                               │
+│     ├─ staff_id:     ✅ Set                                               │
+│     ├─ starts_at:    ✅ Set (from week picker)                            │
+│     └─ ends_at:      ✅ Calculated automatically                          │
+│     ↓                                                                      │
+│  3. Run validation rules                                                  │
+│     ├─ ->required() on all fields                                         │
+│     ├─ ->afterStateUpdated() callbacks                                    │
+│     └─ Custom validation logic                                            │
+│     ↓                                                                      │
+│  4. If validation passes:                                                 │
+│     ├─ Create appointment in database                                     │
+│     ├─ Show success notification                                          │
+│     └─ Redirect to appointments list                                      │
+│                                                                            │
+│  5. If validation fails:                                                  │
+│     ├─ Show error messages                                                │
+│     ├─ Highlight invalid fields                                           │
+│     └─ Keep user on form                                                  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         BEFORE FIX (BROKEN)
+═══════════════════════════════════════════════════════════════════════════════
+
+User clicks slot
+      ↓
+Alpine.js @click handler
+      ↓
+querySelector('input[name=starts_at]')  ❌ FAILS (wrong scope)
+      ↓
+DEAD END
+      ↓
+Form validation fails ❌
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                          AFTER FIX (WORKING)
+═══════════════════════════════════════════════════════════════════════════════
+
+User clicks slot
+      ↓
+wire:click="selectSlot(datetime)"
+      ↓
+Livewire method executes
+      ↓
+$this->js() dispatches browser event
+      ↓
+Alpine.js x-on:slot-selected.window receives event
+      ↓
+closest('form').querySelector() finds hidden field ✅
+      ↓
+Hidden field updated
+      ↓
+Filament reactivity triggers
+      ↓
+afterStateUpdated() calculates ends_at
+      ↓
+Form validation passes ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              END OF DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════

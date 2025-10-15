@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cal.com Webhook Setup - Team vs Account</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: #3b82f6;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #3b82f6;
+        }
+
+        .decision-box {
+            background: #fef3c7;
+            border: 4px solid #f59e0b;
+            border-radius: 15px;
+            padding: 35px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .decision-box h3 {
+            color: #92400e;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .option:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .option-recommended {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+        }
+
+        .recommendation-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .steps {
+            counter-reset: step-counter;
+        }
+
+        .step {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+            padding-left: 80px;
+        }
+
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3b82f6;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .warning-box {
+            background: #fee2e2;
+            border-left: 8px solid #ef4444;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+
+        .success-box {
+            background: #dcfce7;
+            border-left: 8px solid #10b981;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 8px solid #3b82f6;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #3b82f6;
+            color: white;
+            padding: 18px;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .screenshot-placeholder {
+            background: #f3f4f6;
+            border: 3px dashed #9ca3af;
+            border-radius: 12px;
+            padding: 60px;
+            text-align: center;
+            color: #6b7280;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📡 Cal.com Webhook Setup</h1>
+            <div style="font-size: 1.4em; margin: 20px 0;">Team vs Account Configuration</div>
+            <div style="font-size: 1em; opacity: 0.9;">Wo genau konfigurieren?</div>
+        </div>
+
+        <div class="content">
+            <!-- DEIN SETUP -->
+            <div class="section">
+                <h2>🔍 Dein aktuelles Cal.com Setup</h2>
+
+                <div class="info-box">
+                    <h3 style="color: #1e40af; margin-bottom: 20px;">Analyse aus Logs:</h3>
+                    <div class="code" style="font-size: 0.95em;">
+Event Type ID: 2563193
+Team ID: 39203
+Team Slug: "askproai"
+Scheduling Type: ROUND_ROBIN
+
+→ Du nutzt ein TEAM EVENT TYPE!
+                    </div>
+                    <p style="margin-top: 20px; font-size: 1.1em;">
+                        <strong>Das bedeutet:</strong> Dein Event Type gehört zu einem Team (askproai)<br>
+                        <strong>Scheduling:</strong> Round-Robin (Termine werden auf Team-Mitglieder verteilt)
+                    </p>
+                </div>
+            </div>
+
+            <!-- ENTSCHEIDUNG -->
+            <div class="section">
+                <h2>🎯 Wo konfigurieren? TEAM!</h2>
+
+                <div class="decision-box">
+                    <h3>⚠️ WICHTIG: Da du ein TEAM Event Type nutzt...</h3>
+                    <p style="font-size: 1.3em; margin: 20px 0; line-height: 2;">
+                        Webhook muss auf <strong>TEAM-EBENE</strong> konfiguriert werden!
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
+                    <div class="option option-recommended">
+                        <div class="recommendation-badge">✅ EMPFOHLEN</div>
+                        <h3 style="color: #166534; margin: 15px 0;">TEAM WEBHOOKS</h3>
+                        <div style="font-size: 1.1em; line-height: 2; margin: 15px 0;">
+                            <strong>Wo:</strong> Team Settings → askproai Team<br>
+                            <strong>Path:</strong> Teams → askproai → Webhooks<br>
+                            <strong>Warum:</strong> Team Event Type!
+                        </div>
+                        <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <strong style="color: #166534;">✅ Vorteile:</strong>
+                            <ul style="margin: 10px 0 0 25px; line-height: 2; text-align: left;">
+                                <li>Nur Team-Events triggern Webhook</li>
+                                <li>Saubere Isolation</li>
+                                <li>Keine persönlichen Events</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="option">
+                        <h3 style="color: #6b7280; margin: 15px 0;">ACCOUNT WEBHOOKS</h3>
+                        <div style="font-size: 1.1em; line-height: 2; margin: 15px 0;">
+                            <strong>Wo:</strong> Settings → Developer → Webhooks<br>
+                            <strong>Path:</strong> Account → Settings → Webhooks<br>
+                            <strong>Warum:</strong> Für alle Events
+                        </div>
+                        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <strong style="color: #92400e;">⚠️ Nachteile:</strong>
+                            <ul style="margin: 10px 0 0 25px; line-height: 2; text-align: left;">
+                                <li>ALLE Events triggern (auch private)</li>
+                                <li>Mehr Webhook Calls</li>
+                                <li>Schwerer zu filtern</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP BY STEP -->
+            <div class="section">
+                <h2>📝 Step-by-Step Anleitung (TEAM Webhooks)</h2>
+
+                <div class="steps">
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Cal.com Login</strong><br>
+                        <a href="https://app.cal.com" target="_blank" style="color: #3b82f6;">https://app.cal.com</a>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Navigate zu Teams</strong><br>
+                        Linke Sidebar → <strong>"Teams"</strong>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Wähle dein Team</strong><br>
+                        Click auf: <strong>"askproai"</strong> Team<br>
+                        <small style="color: #666;">(Team ID: 39203)</small>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Team Settings öffnen</strong><br>
+                        Im Team → Click <strong>"Settings"</strong> oder <strong>"⚙️"</strong> Icon
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Webhooks Section</strong><br>
+                        In Settings → Suche nach <strong>"Webhooks"</strong> oder <strong>"Integrations"</strong><br>
+                        <small style="color: #666;">Manchmal unter: Developer → Webhooks</small>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">New Webhook erstellen</strong><br>
+                        Click: <strong>"Add Webhook"</strong> oder <strong>"New Webhook"</strong>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Webhook konfigurieren</strong><br>
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
+                            <div style="margin: 10px 0;">
+                                <strong>Subscriber URL:</strong><br>
+                                <code style="background: #f3f4f6; padding: 8px 15px; border-radius: 6px; display: inline-block; margin-top: 5px;">
+                                    https://api.askproai.de/api/calcom/webhook
+                                </code>
+                            </div>
+                            <div style="margin: 15px 0;">
+                                <strong>Secret:</strong><br>
+                                <code style="background: #f3f4f6; padding: 8px 15px; border-radius: 6px; display: inline-block; margin-top: 5px;">
+                                    6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7
+                                </code>
+                                <br>
+                                <small style="color: #666;">(aus .env: CALCOM_WEBHOOK_SECRET)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Events auswählen</strong><br>
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
+                            <div style="margin: 10px 0;">
+                                ✅ <strong>BOOKING_CREATED</strong> - Wenn Termin gebucht wird<br>
+                                ✅ <strong>BOOKING_CANCELLED</strong> - Wenn Termin storniert wird<br>
+                                ✅ <strong>BOOKING_RESCHEDULED</strong> - Wenn Termin verschoben wird<br>
+                            </div>
+                            <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                <strong style="color: #166534;">Optional (für Event Type Management):</strong><br>
+                                ✅ EVENT_TYPE_CREATED<br>
+                                ✅ EVENT_TYPE_UPDATED<br>
+                                ✅ EVENT_TYPE_DELETED
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Save Webhook</strong><br>
+                        Click: <strong>"Save"</strong> oder <strong>"Create Webhook"</strong>
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.3em; color: #3b82f6;">Test Webhook</strong><br>
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
+                            <strong>Option 1: Cal.com Test Button</strong><br>
+                            In Webhook Settings → "Test Webhook" Button<br>
+                            <br>
+                            <strong>Option 2: Echte Aktion</strong><br>
+                            Buche Testtermin in Google Calendar → Prüfe Logs
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERIFICATION -->
+            <div class="section">
+                <h2>✅ Webhook Verification</h2>
+
+                <h3>Nach Konfiguration prüfen:</h3>
+
+                <div class="code">
+# 1. Check Logs
+tail -100 storage/logs/calcom-2025-10-10.log | grep "BOOKING\."
+
+Expected:
+  [Cal.com] Webhook received
+  Event: BOOKING.CREATED / BOOKING.CANCELLED / BOOKING.RESCHEDULED
+
+# 2. Check Database
+SELECT * FROM webhook_events
+WHERE provider = 'calcom'
+ORDER BY created_at DESC
+LIMIT 5;
+
+Expected: Events mit status='processed'
+
+# 3. Test Booking in Google Calendar
+1. Öffne Google Calendar
+2. Erstelle Termin
+3. Prüfe DB:
+   SELECT * FROM appointments ORDER BY id DESC LIMIT 1;
+
+Expected:
+  booking_source: 'calcom_webhook'
+  created_by: 'customer'
+                </div>
+            </div>
+
+            <!-- COMPARISON -->
+            <div class="section">
+                <h2>📊 Team vs Account Webhooks</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Team Webhooks</th>
+                            <th>Account Webhooks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Wo konfigurieren</strong></td>
+                            <td>Teams → askproai → Webhooks</td>
+                            <td>Settings → Developer → Webhooks</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scope</strong></td>
+                            <td>Nur Team Events</td>
+                            <td>Alle Events (inkl. private)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Event Filter</strong></td>
+                            <td>Automatisch (nur Team)</td>
+                            <td>Manuell (backend muss filtern)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Webhook Calls</strong></td>
+                            <td>Weniger (nur relevant)</td>
+                            <td>Mehr (alle Events)</td>
+                        </tr>
+                        <tr style="background: #dcfce7;">
+                            <td><strong>Empfohlen für dich</strong></td>
+                            <td style="color: #10b981; font-weight: bold;">✅ JA</td>
+                            <td>❌ Nein</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- WARUM TEAM -->
+            <div class="section">
+                <h2>💡 Warum TEAM Webhooks?</h2>
+
+                <div class="success-box">
+                    <h3 style="color: #166534; margin-bottom: 20px;">✅ Gründe für Team-Level:</h3>
+
+                    <div style="font-size: 1.1em; line-height: 2.5;">
+                        <strong>1. Dein Event Type ist Team-owned</strong><br>
+                        → Event Type ID 2563193 gehört zu Team askproai<br>
+                        → Round-Robin Scheduling = Team Feature<br>
+                        <br>
+                        <strong>2. Saubere Isolation</strong><br>
+                        → Nur geschäftsrelevante Events<br>
+                        → Keine privaten Kalender-Events<br>
+                        → Einfachere Verarbeitung<br>
+                        <br>
+                        <strong>3. Weniger Webhook Calls</strong><br>
+                        → Nur Team-Bookings triggern<br>
+                        → Weniger Traffic<br>
+                        → Geringere Kosten<br>
+                        <br>
+                        <strong>4. Bessere Organisation</strong><br>
+                        → Pro Team separate Webhooks möglich<br>
+                        → Einfacher zu verwalten<br>
+                        → Klare Zuordnung
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h3 style="color: #991b1b; margin-bottom: 15px;">❌ Warum NICHT Account-Level?</h3>
+                    <p style="font-size: 1.1em; line-height: 2;">
+                        <strong>Problem 1:</strong> Private Events werden auch gesendet<br>
+                        → Dein persönlicher Zahnarzt-Termin triggert Webhook<br>
+                        → Unnötiger Traffic<br>
+                        <br>
+                        <strong>Problem 2:</strong> Schwerer zu filtern<br>
+                        → Backend muss prüfen ob Event zu Team gehört<br>
+                        → Mehr Komplexität<br>
+                        <br>
+                        <strong>Problem 3:</strong> Mehrere Teams?<br>
+                        → Alle Teams sharen gleichen Webhook<br>
+                        → Keine separate Config pro Team
+                    </p>
+                </div>
+            </div>
+
+            <!-- ALTERNATIVE PATH -->
+            <div class="section">
+                <h2>🔄 Alternative: Falls Team Webhooks nicht verfügbar</h2>
+
+                <div class="info-box">
+                    <h3 style="color: #1e40af; margin-bottom: 15px;">Cal.com Plan abhängig</h3>
+                    <p style="font-size: 1.1em; line-height: 2;">
+                        <strong>Teams Plan:</strong> Team Webhooks verfügbar ✅<br>
+                        <strong>Pro Plan:</strong> Nur Account Webhooks<br>
+                        <strong>Free Plan:</strong> Keine Webhooks
+                    </p>
+                </div>
+
+                <h3>Falls NUR Account Webhooks verfügbar:</h3>
+
+                <div class="steps">
+                    <div class="step">
+                        <strong style="font-size: 1.2em; color: #3b82f6;">Settings → Developer</strong><br>
+                        Account Settings → Developer Section
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.2em; color: #3b82f6;">Webhooks → New Webhook</strong><br>
+                        Gleiche URL & Secret wie oben
+                    </div>
+
+                    <div class="step">
+                        <strong style="font-size: 1.2em; color: #3b82f6;">Backend Filter hinzufügen</strong><br>
+                        <div class="code" style="margin-top: 10px; font-size: 0.85em;">
+// CalcomWebhookController.php
+// Prüfe ob Event zu Team gehört:
+
+if (isset($payload['eventTypeId'])) {
+    if ($payload['eventTypeId'] !== 2563193) {
+        // Nicht unser Team Event → Ignore
+        return response()->json(['received' => true, 'ignored' => true]);
+    }
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TESTING -->
+            <div class="section">
+                <h2>🧪 Nach Setup - Testing</h2>
+
+                <h3>Test 1: Webhook empfangen</h3>
+                <div class="code">
+# Cal.com Dashboard → Test Webhook Button
+→ Sendet Test-Event
+
+# Check Backend Logs:
+tail -50 storage/logs/calcom-2025-10-10.log
+
+Expected:
+  [Cal.com] Webhook received
+  Event: test_event oder BOOKING.CREATED
+  Status: processed
+                </div>
+
+                <h3>Test 2: Echte Buchung in Google Calendar</h3>
+                <div class="code">
+# 1. Google Calendar öffnen
+# 2. Neuen Termin erstellen für askproai Event Type
+# 3. Speichern
+
+# Check Backend:
+tail -100 storage/logs/calcom-2025-10-10.log | grep "BOOKING.CREATED"
+
+# Check Database:
+SELECT * FROM appointments
+WHERE booking_source = 'calcom_webhook'
+ORDER BY id DESC LIMIT 1;
+
+Expected:
+  ✅ Appointment created
+  ✅ booking_source = 'calcom_webhook'
+  ✅ created_by = 'customer'
+                </div>
+
+                <h3>Test 3: Verschiebung in Google Calendar</h3>
+                <div class="code">
+# 1. Existierenden Termin in Google Calendar finden
+# 2. Auf andere Zeit verschieben
+# 3. Speichern
+
+# Check Backend:
+tail -100 storage/logs/calcom-2025-10-10.log | grep "BOOKING.RESCHEDULED"
+
+# Check Database:
+SELECT previous_starts_at, starts_at, rescheduled_by, reschedule_source
+FROM appointments WHERE id = [ID];
+
+Expected:
+  ✅ previous_starts_at = alte Zeit
+  ✅ starts_at = neue Zeit
+  ✅ rescheduled_by = 'customer'
+  ✅ reschedule_source = 'calcom_webhook'
+                </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 50px; text-align: center; border-radius: 15px; margin: 40px 0;">
+                <h2 style="color: #1e40af; font-size: 2.5em; margin-bottom: 30px;">📋 Quick Summary</h2>
+
+                <div style="background: white; padding: 35px; border-radius: 12px; max-width: 800px; margin: 0 auto;">
+                    <div style="font-size: 1.3em; line-height: 3; text-align: left;">
+                        <strong style="color: #3b82f6;">WO:</strong> Teams → askproai → Webhooks<br>
+                        <strong style="color: #3b82f6;">URL:</strong> https://api.askproai.de/api/calcom/webhook<br>
+                        <strong style="color: #3b82f6;">SECRET:</strong> Aus .env (CALCOM_WEBHOOK_SECRET)<br>
+                        <strong style="color: #3b82f6;">EVENTS:</strong> BOOKING.CREATED, BOOKING.CANCELLED, BOOKING.RESCHEDULED<br>
+                        <strong style="color: #3b82f6;">WARUM TEAM:</strong> Event Type gehört zu Team!
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <p style="font-size: 1.4em; color: #1e40af; font-weight: bold;">
+                        ✅ Nach Setup: Änderungen in Google Calendar werden automatisch ins System übernommen!
+                    </p>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div style="background: #f9fafb; padding: 40px; text-align: center;">
+                <p style="color: #6b7280; line-height: 2.5;">
+                    <strong>Webhook Handler:</strong> app/Http/Controllers/CalcomWebhookController.php<br>
+                    <strong>Route:</strong> routes/api.php:38<br>
+                    <strong>Middleware:</strong> VerifyCalcomWebhookSignature<br>
+                    <br>
+                    <strong style="color: #10b981; font-size: 1.2em;">Backend ist ready - nur Cal.com Config nötig!</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
