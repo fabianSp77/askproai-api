@@ -1,0 +1,49 @@
+🚀 Starting Booking Slots Debug Test
+
+Target: https://api.askproai.de/admin/appointments/create
+Service: 30 Minuten Beratung (ID: 45)
+Expected: 147 slots available (Wed-Sun)
+Screenshots: /var/www/api-gateway/tests/puppeteer/screenshots/slot-debug
+
+🌐 Monitoring network requests...
+
+🔐 Logging in...
+Using credentials: test-puppeteer@askproai.de
+✅ Login successful
+
+📍 Navigating to appointment creation...
+[BROWSER ERROR]: Failed to load resource: the server responded with a status of 403 ()
+✅ Page loaded
+⏳ Waiting for Livewire to initialize...
+⚠️  Livewire wait timeout - continuing anyway
+
+🔍 Inspecting service dropdown...
+Service dropdown inspection: {
+  "select[wire\\:model=\"data.service_id\"]": {
+    "found": false
+  },
+  "select[name=\"service_id\"]": {
+    "found": false
+  },
+  "[data-field=\"service_id\"]": {
+    "found": false
+  },
+  "div[wire\\:key*=\"service\"]": {
+    "found": false
+  },
+  ".fi-fo-select[data-field-wrapper]": {
+    "found": false
+  }
+}
+
+🎯 Selecting service...
+Selection result: {
+  "success": false,
+  "error": "Could not find service dropdown"
+}
+
+❌ Test failed: Failed to select service
+
+❌ Test suite failed: Error: Failed to select service
+    at selectService (/var/www/api-gateway/tests/puppeteer/debug-booking-slots.cjs:286:15)
+    at async runTest (/var/www/api-gateway/tests/puppeteer/debug-booking-slots.cjs:546:33)

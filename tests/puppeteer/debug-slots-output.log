@@ -1,0 +1,18 @@
+🚀 Starting Booking Slots Debug Test
+
+Target: https://api.askproai.de/admin/appointments/create
+Service: 30 Minuten Beratung (ID: 45)
+Expected: 147 slots available (Wed-Sun)
+Screenshots: /var/www/api-gateway/tests/puppeteer/screenshots/slot-debug
+
+🌐 Monitoring network requests...
+
+🔐 Logging in...
+Using credentials: test-puppeteer@askproai.de
+❌ Login error: page.waitForTimeout is not a function
+
+❌ Test failed: page.waitForTimeout is not a function
+
+❌ Test suite failed: TypeError: page.waitForTimeout is not a function
+    at login (/var/www/api-gateway/tests/puppeteer/debug-booking-slots.cjs:137:20)
+    at async runTest (/var/www/api-gateway/tests/puppeteer/debug-booking-slots.cjs:531:9)
