@@ -57,6 +57,10 @@ class Appointment extends Model
         'segments' => 'array',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        // Sync orchestration casts (Phase 2: Bidirectional Cal.com Sync)
+        'sync_initiated_at' => 'datetime',
+        'manual_review_flagged_at' => 'datetime',
+        'requires_manual_review' => 'boolean',
     ];
 
     public function company(): BelongsTo
@@ -98,6 +102,15 @@ class Appointment extends Model
     public function calcomHostMapping(): BelongsTo
     {
         return $this->belongsTo(CalcomHostMapping::class, 'calcom_host_id', 'calcom_host_id');
+    }
+
+    /**
+     * User who initiated the sync to Cal.com (Phase 2: Bidirectional Sync)
+     * NULL for system/phone-initiated syncs
+     */
+    public function syncInitiatedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sync_initiated_by_user_id');
     }
 
     /**

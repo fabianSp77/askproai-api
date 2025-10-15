@@ -28,13 +28,16 @@ class PolicyOnboarding extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static ?string $navigationLabel = 'Policy Setup Wizard';
+    protected static ?string $navigationLabel = 'Setup-Assistent (Anfänger)';
 
-    protected static ?string $title = 'Policy Onboarding Wizard';
+    protected static ?string $title = 'Richtlinien-Assistent';
 
-    protected static ?string $navigationGroup = 'Help & Setup';
+    protected static ?string $navigationGroup = '⚙️ Termin-Richtlinien';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 100;
+
+    // Hide from navigation by default - can be accessed via direct URL
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static string $view = 'filament.pages.policy-onboarding';
 

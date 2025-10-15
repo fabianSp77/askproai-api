@@ -435,7 +435,10 @@ class AppointmentCreationService implements AppointmentCreationInterface
             // ✅ METADATA FIX 2025-10-10: Populate tracking fields
             'created_by' => 'customer',
             'booking_source' => 'retell_webhook',
-            'booked_by_user_id' => null  // Customer bookings have no user
+            'booked_by_user_id' => null,  // Customer bookings have no user
+            // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
+            'sync_origin' => 'retell',  // ← Mark origin for bidirectional sync
+            'calcom_sync_status' => $calcomBookingId ? 'synced' : 'pending',  // If has Cal.com ID, already synced
         ]);
 
         // 🔧 PHASE 5.5: Enhanced error handling for appointment save

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termin buchen - Professional V4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Filament-inspired professional styling */
+        .fi-section {
+            background: rgb(31, 41, 55);
+            border: 1px solid rgb(55, 65, 81);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+        .fi-section-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgb(243, 244, 246);
+            margin-bottom: 1rem;
+        }
+        .fi-radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .fi-radio-option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgb(55, 65, 81);
+            border: 2px solid rgb(75, 85, 99);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .fi-radio-option:hover {
+            background: rgb(65, 75, 91);
+            border-color: rgb(96, 165, 250);
+        }
+        .fi-radio-option.selected {
+            background: rgb(59, 130, 246);
+            border-color: rgb(37, 99, 235);
+        }
+        .fi-radio-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+            cursor: pointer;
+        }
+        .fi-calendar-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: rgb(55, 65, 81);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .fi-calendar-cell {
+            background: rgb(31, 41, 55);
+            padding: 0.75rem;
+            min-height: 60px;
+        }
+        .fi-calendar-header {
+            background: rgb(55, 65, 81);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: rgb(209, 213, 219);
+        }
+        .fi-slot-button {
+            width: 100%;
+            padding: 0.625rem 0.5rem;
+            background: rgb(243, 244, 246);
+            color: rgb(17, 24, 39);
+            border: 2px solid rgb(209, 213, 219);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .fi-slot-button:hover {
+            background: rgb(219, 234, 254);
+            border-color: rgb(96, 165, 250);
+            transform: translateY(-1px);
+        }
+        .fi-slot-button.selected {
+            background: rgb(59, 130, 246);
+            color: white;
+            border-color: rgb(29, 78, 216);
+        }
+        .fi-time-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            color: rgb(156, 163, 175);
+            font-weight: 500;
+            background: rgb(31, 41, 55);
+            position: sticky;
+            left: 0;
+            z-index: 10;
+        }
+        .fi-info-banner {
+            background: rgb(30, 58, 138);
+            border: 1px solid rgb(59, 130, 246);
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            font-size: 0.875rem;
+            color: rgb(191, 219, 254);
+            margin-top: 1rem;
+        }
+        .fi-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem 0;
+        }
+        .fi-button-nav {
+            padding: 0.5rem 1rem;
+            background: rgb(55, 65, 81);
+            color: rgb(243, 244, 246);
+            border: 1px solid rgb(75, 85, 99);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .fi-button-nav:hover {
+            background: rgb(75, 85, 99);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white" x-data="{
+    // Defaults
+    selectedService: 'damenhaarschnitt',
+    serviceDuration: 45,
+    employeePreference: 'any',
+    selectedSlot: null,
+    selectedSlotLabel: '',
+
+    // Services mit Dauer
+    services: {
+        'damenhaarschnitt': { name: 'Damenhaarschnitt', duration: 45 },
+        'herrenhaarschnitt': { name: 'Herrenhaarschnitt', duration: 30 },
+        'faerben': { name: 'Färben', duration: 90 },
+        'dauerwelle': { name: 'Dauerwelle', duration: 120 }
+    },
+
+    selectService(serviceKey) {
+        this.selectedService = serviceKey;
+        this.serviceDuration = this.services[serviceKey].duration;
+        this.selectedSlot = null;
+        console.log('Service gewählt:', serviceKey, 'Dauer:', this.serviceDuration, 'Min');
+        // In real app: Kalender neu laden mit dieser Dauer
+    },
+
+    selectEmployee(emp) {
+        this.employeePreference = emp;
+        this.selectedSlot = null;
+        console.log('Mitarbeiter gewählt:', emp);
+        // In real app: Kalender neu laden für diesen Mitarbeiter
+    },
+
+    selectSlot(datetime, label) {
+        this.selectedSlot = datetime;
+        this.selectedSlotLabel = label;
+        console.log('Slot gewählt:', datetime, label);
+    }
+}">
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-white mb-1">Termin buchen</h1>
+            <p class="text-sm text-gray-400">Wählen Sie Service, optional Mitarbeiter und verfügbaren Zeitslot</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- LEFT SIDEBAR: Service + Mitarbeiter -->
+            <div class="lg:col-span-1 space-y-6">
+
+                <!-- SERVICE AUSWAHL -->
+                <div class="fi-section">
+                    <div class="fi-section-header">Service auswählen</div>
+                    <div class="fi-radio-group">
+                        <label
+                            :class="selectedService === 'damenhaarschnitt' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="service"
+                                value="damenhaarschnitt"
+                                x-model="selectedService"
+                                @change="selectService('damenhaarschnitt')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Damenhaarschnitt</div>
+                                <div class="text-xs text-gray-400">45 Minuten</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="selectedService === 'herrenhaarschnitt' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="service"
+                                value="herrenhaarschnitt"
+                                x-model="selectedService"
+                                @change="selectService('herrenhaarschnitt')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Herrenhaarschnitt</div>
+                                <div class="text-xs text-gray-400">30 Minuten</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="selectedService === 'faerben' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="service"
+                                value="faerben"
+                                x-model="selectedService"
+                                @change="selectService('faerben')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Färben</div>
+                                <div class="text-xs text-gray-400">90 Minuten</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="selectedService === 'dauerwelle' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="service"
+                                value="dauerwelle"
+                                x-model="selectedService"
+                                @change="selectService('dauerwelle')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Dauerwelle</div>
+                                <div class="text-xs text-gray-400">120 Minuten</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="fi-info-banner">
+                        <strong>Hinweis:</strong> Verfügbarkeit wird basierend auf gewähltem Service (<span x-text="serviceDuration"></span> Min) berechnet.
+                    </div>
+                </div>
+
+                <!-- MITARBEITER-PRÄFERENZ -->
+                <div class="fi-section">
+                    <div class="fi-section-header">Mitarbeiter-Präferenz</div>
+                    <div class="fi-radio-group">
+                        <label
+                            :class="employeePreference === 'any' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="employee"
+                                value="any"
+                                x-model="employeePreference"
+                                @change="selectEmployee('any')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Nächster verfügbarer Mitarbeiter</div>
+                                <div class="text-xs text-gray-400">Maximale Auswahl</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="employeePreference === 'anna' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="employee"
+                                value="anna"
+                                x-model="employeePreference"
+                                @change="selectEmployee('anna')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Anna Schmidt</div>
+                                <div class="text-xs text-gray-400">Senior Stylistin</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="employeePreference === 'max' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="employee"
+                                value="max"
+                                x-model="employeePreference"
+                                @change="selectEmployee('max')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Max Müller</div>
+                                <div class="text-xs text-gray-400">Friseurmeister</div>
+                            </div>
+                        </label>
+
+                        <label
+                            :class="employeePreference === 'lisa' ? 'selected' : ''"
+                            class="fi-radio-option">
+                            <input
+                                type="radio"
+                                name="employee"
+                                value="lisa"
+                                x-model="employeePreference"
+                                @change="selectEmployee('lisa')"
+                                class="fi-radio-input">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">Lisa Wagner</div>
+                                <div class="text-xs text-gray-400">Coloristin</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT MAIN: Kalender -->
+            <div class="lg:col-span-3">
+                <div class="fi-section">
+                    <div class="fi-section-header">
+                        Verfügbare Termine
+                        (<span x-text="services[selectedService].name"></span> - <span x-text="serviceDuration"></span> Min)
+                    </div>
+
+                    <!-- Week Navigation -->
+                    <div class="fi-header-bar">
+                        <button class="fi-button-nav">← Vorherige Woche</button>
+                        <div class="text-sm font-semibold text-gray-200">14. - 20. Oktober 2025</div>
+                        <button class="fi-button-nav">Nächste Woche →</button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="fi-calendar-grid">
+                        <!-- Header Row -->
+                        <div class="fi-calendar-header" style="grid-column: 1;">Zeit</div>
+                        <div class="fi-calendar-header">Mo<br><span class="text-xs text-gray-400">14.10.</span></div>
+                        <div class="fi-calendar-header">Di<br><span class="text-xs text-gray-400">15.10.</span></div>
+                        <div class="fi-calendar-header">Mi<br><span class="text-xs text-gray-400">16.10.</span></div>
+                        <div class="fi-calendar-header">Do<br><span class="text-xs text-gray-400">17.10.</span></div>
+                        <div class="fi-calendar-header">Fr<br><span class="text-xs text-gray-400">18.10.</span></div>
+                        <div class="fi-calendar-header">Sa<br><span class="text-xs text-gray-400">19.10.</span></div>
+                        <div class="fi-calendar-header">So<br><span class="text-xs text-gray-400">20.10.</span></div>
+
+                        <!-- 08:00 -->
+                        <div class="fi-time-label fi-calendar-cell">08:00</div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-15T08:00', 'Di 15.10. um 08:00')"
+                                :class="selectedSlot === '2025-10-15T08:00' ? 'selected' : ''"
+                                class="fi-slot-button">08:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-17T08:00', 'Do 17.10. um 08:00')"
+                                :class="selectedSlot === '2025-10-17T08:00' ? 'selected' : ''"
+                                class="fi-slot-button">08:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+
+                        <!-- 09:00 -->
+                        <div class="fi-time-label fi-calendar-cell">09:00</div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-14T09:00', 'Mo 14.10. um 09:00')"
+                                :class="selectedSlot === '2025-10-14T09:00' ? 'selected' : ''"
+                                class="fi-slot-button">09:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-16T09:00', 'Mi 16.10. um 09:00')"
+                                :class="selectedSlot === '2025-10-16T09:00' ? 'selected' : ''"
+                                class="fi-slot-button">09:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-18T09:00', 'Fr 18.10. um 09:00')"
+                                :class="selectedSlot === '2025-10-18T09:00' ? 'selected' : ''"
+                                class="fi-slot-button">09:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+
+                        <!-- 10:00 -->
+                        <div class="fi-time-label fi-calendar-cell">10:00</div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-14T10:00', 'Mo 14.10. um 10:00')"
+                                :class="selectedSlot === '2025-10-14T10:00' ? 'selected' : ''"
+                                class="fi-slot-button">10:00</button>
+                        </div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-15T10:00', 'Di 15.10. um 10:00')"
+                                :class="selectedSlot === '2025-10-15T10:00' ? 'selected' : ''"
+                                class="fi-slot-button">10:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+
+                        <!-- 14:00 -->
+                        <div class="fi-time-label fi-calendar-cell">14:00</div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-14T14:00', 'Mo 14.10. um 14:00')"
+                                :class="selectedSlot === '2025-10-14T14:00' ? 'selected' : ''"
+                                class="fi-slot-button">14:00</button>
+                        </div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-15T14:00', 'Di 15.10. um 14:00')"
+                                :class="selectedSlot === '2025-10-15T14:00' ? 'selected' : ''"
+                                class="fi-slot-button">14:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+
+                        <!-- 16:00 -->
+                        <div class="fi-time-label fi-calendar-cell">16:00</div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-14T16:00', 'Mo 14.10. um 16:00')"
+                                :class="selectedSlot === '2025-10-14T16:00' ? 'selected' : ''"
+                                class="fi-slot-button">16:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell">
+                            <button
+                                @click="selectSlot('2025-10-18T16:00', 'Fr 18.10. um 16:00')"
+                                :class="selectedSlot === '2025-10-18T16:00' ? 'selected' : ''"
+                                class="fi-slot-button">16:00</button>
+                        </div>
+                        <div class="fi-calendar-cell"></div>
+                        <div class="fi-calendar-cell"></div>
+                    </div>
+
+                    <div class="fi-info-banner">
+                        <strong>Info:</strong> Slots werden basierend auf Service-Dauer gefiltert.
+                        <span x-show="employeePreference === 'any'">Zeigt alle verfügbaren Mitarbeiter.</span>
+                        <span x-show="employeePreference !== 'any'">Zeigt nur Slots von <span x-text="employeePreference === 'anna' ? 'Anna Schmidt' : employeePreference === 'max' ? 'Max Müller' : 'Lisa Wagner'"></span>.</span>
+                    </div>
+                </div>
+
+                <!-- Slot Selected Confirmation -->
+                <div x-show="selectedSlot" class="mt-4 fi-section" style="background: rgb(22, 101, 52); border-color: rgb(34, 197, 94);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold text-green-100">Zeitslot ausgewählt</div>
+                            <div class="text-sm text-green-200 mt-1" x-text="selectedSlotLabel"></div>
+                            <div class="text-xs text-green-300 mt-1">
+                                Service: <span x-text="services[selectedService].name"></span>
+                                (<span x-text="serviceDuration"></span> Min)
+                            </div>
+                        </div>
+                        <button
+                            @click="selectedSlot = null"
+                            class="px-4 py-2 bg-green-700 hover:bg-green-600 rounded text-sm text-white transition">
+                            Ändern
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+</html>

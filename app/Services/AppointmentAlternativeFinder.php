@@ -73,11 +73,19 @@ class AppointmentAlternativeFinder
 
     /**
      * Find alternative appointment slots when desired time is not available
+     *
+     * @param Carbon $desiredDateTime The desired date and time
+     * @param int $durationMinutes Duration in minutes
+     * @param int $eventTypeId Cal.com event type ID
+     * @param int|null $customerId Customer ID to filter out existing appointments
+     * @param string|null $preferredLanguage Preferred language for responses
+     * @return array Array with 'alternatives' and 'responseText'
      */
     public function findAlternatives(
         Carbon $desiredDateTime,
         int $durationMinutes,
         int $eventTypeId,
+        ?int $customerId = null,
         ?string $preferredLanguage = 'de'
     ): array {
         // Use actual dates without year mapping
@@ -86,7 +94,8 @@ class AppointmentAlternativeFinder
         Log::info('🔍 Searching for appointment alternatives', [
             'desired' => $desiredDateTime->format('Y-m-d H:i'),
             'duration' => $durationMinutes,
-            'eventTypeId' => $eventTypeId
+            'eventTypeId' => $eventTypeId,
+            'customer_id' => $customerId
         ]);
 
         // EDGE CASE FIX: Adjust times outside business hours to nearest business hour
@@ -111,6 +120,27 @@ class AppointmentAlternativeFinder
 
                 $found = $this->executeStrategy($strategy, $desiredDateTime, $durationMinutes, $eventTypeId);
                 $alternatives = $alternatives->merge($found);
+            }
+
+            // 🔧 FIX 2025-10-13: Filter out customer's existing appointments
+            // Prevents offering times where customer already has appointments
+            if ($customerId) {
+                $beforeCount = $alternatives->count();
+                $alternatives = $this->filterOutCustomerConflicts(
+                    $alternatives,
+                    $customerId,
+                    $desiredDateTime
+                );
+                $afterCount = $alternatives->count();
+
+                if ($beforeCount > $afterCount) {
+                    Log::info('✅ Filtered out customer conflicts', [
+                        'customer_id' => $customerId,
+                        'before_count' => $beforeCount,
+                        'after_count' => $afterCount,
+                        'removed' => $beforeCount - $afterCount
+                    ]);
+                }
             }
 
             // Rank and limit alternatives
@@ -923,5 +953,87 @@ class AppointmentAlternativeFinder
         }
 
         return $isWithin;
+    }
+
+    /**
+     * Filter out alternatives that conflict with customer's existing appointments
+     *
+     * 🔧 FIX 2025-10-13: Prevents offering times where customer already has appointments
+     * This resolves the bug where system offered 14:00 when customer already had appointment at that time
+     *
+     * @param Collection $alternatives Collection of alternative time slots from Cal.com
+     * @param int $customerId Customer ID to check existing appointments
+     * @param Carbon $searchDate Date to search for existing appointments
+     * @return Collection Filtered alternatives without conflicts
+     */
+    private function filterOutCustomerConflicts(
+        Collection $alternatives,
+        int $customerId,
+        Carbon $searchDate
+    ): Collection {
+        // Get customer's existing appointments for the search date
+        $existingAppointments = \App\Models\Appointment::where('customer_id', $customerId)
+            ->where('status', '!=', 'cancelled')
+            ->whereDate('starts_at', $searchDate->format('Y-m-d'))
+            ->get();
+
+        // If no existing appointments, no conflicts possible
+        if ($existingAppointments->isEmpty()) {
+            Log::debug('No existing appointments for customer on this date', [
+                'customer_id' => $customerId,
+                'date' => $searchDate->format('Y-m-d')
+            ]);
+            return $alternatives;
+        }
+
+        Log::info('🔍 Checking alternatives against existing appointments', [
+            'customer_id' => $customerId,
+            'date' => $searchDate->format('Y-m-d'),
+            'existing_count' => $existingAppointments->count(),
+            'existing_times' => $existingAppointments->map(fn($appt) => $appt->starts_at->format('H:i'))->toArray(),
+            'alternatives_count' => $alternatives->count()
+        ]);
+
+        // Filter out conflicting times
+        $filtered = $alternatives->filter(function($alt) use ($existingAppointments) {
+            $altTime = $alt['datetime'];
+
+            foreach ($existingAppointments as $appt) {
+                // Check for time overlap (alternative time falls within existing appointment)
+                // Use between() with exclusive boundaries to check if times overlap
+                $startsWithin = $altTime->between($appt->starts_at, $appt->ends_at, false);
+
+                // Also check if alternative ends within existing appointment
+                $altEnd = $altTime->copy()->addMinutes(30); // Assume 30min duration
+                $endsWithin = $altEnd->between($appt->starts_at, $appt->ends_at, false);
+
+                // Check if alternative completely encompasses existing appointment
+                $encompassesAppointment = $altTime->lte($appt->starts_at) && $altEnd->gte($appt->ends_at);
+
+                if ($startsWithin || $endsWithin || $encompassesAppointment) {
+                    Log::debug('🚫 Filtered out conflicting time', [
+                        'alternative_time' => $altTime->format('H:i'),
+                        'conflicts_with_appointment' => $appt->id,
+                        'appointment_time' => $appt->starts_at->format('H:i') . '-' . $appt->ends_at->format('H:i'),
+                        'conflict_type' => $startsWithin ? 'starts_within' : ($endsWithin ? 'ends_within' : 'encompasses')
+                    ]);
+                    return false;  // Exclude this alternative (conflict detected)
+                }
+            }
+
+            return true;  // No conflict, keep this alternative
+        });
+
+        $removedCount = $alternatives->count() - $filtered->count();
+        if ($removedCount > 0) {
+            Log::info('✅ Removed conflicting alternatives', [
+                'customer_id' => $customerId,
+                'removed_count' => $removedCount,
+                'remaining_count' => $filtered->count(),
+                'removed_times' => $alternatives->diff($filtered)->map(fn($alt) => $alt['datetime']->format('H:i'))->toArray()
+            ]);
+        }
+
+        return $filtered;
     }
 }

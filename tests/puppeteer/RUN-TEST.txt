@@ -1,0 +1,154 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         CRM Customer History E2E Test - Quick Reference          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 QUICK START
+─────────────────────────────────────────────────────────────────
+
+1. Setup (one-time):
+   npm install puppeteer
+   export ADMIN_PASSWORD=your_password
+
+2. Verify setup:
+   ./tests/puppeteer/verify-test-setup.sh
+
+3. Run test:
+   ./tests/run-customer-history-test.sh
+
+4. View results:
+   ls -lh screenshots/
+
+─────────────────────────────────────────────────────────────────
+🎯 TEST COVERAGE
+─────────────────────────────────────────────────────────────────
+
+✅ Admin login authentication
+✅ Customer navigation (to Customer #461)
+✅ Appointments section verification
+✅ Appointments #672, #673 visibility
+✅ Appointment detail/metadata display
+✅ Automatic screenshot capture
+
+─────────────────────────────────────────────────────────────────
+⚙️  CONFIGURATION
+─────────────────────────────────────────────────────────────────
+
+Required:
+  ADMIN_PASSWORD=your_password_here
+
+Optional (defaults provided):
+  APP_URL=https://api.askproai.de
+  ADMIN_EMAIL=fabian@askproai.de
+  HEADLESS=true
+
+─────────────────────────────────────────────────────────────────
+🛠️  COMMANDS
+─────────────────────────────────────────────────────────────────
+
+Basic run:
+  ./tests/run-customer-history-test.sh
+
+Debug with visible browser:
+  ./tests/run-customer-history-test.sh --no-headless
+
+Verbose output:
+  ./tests/run-customer-history-test.sh --verbose
+
+Show help:
+  ./tests/run-customer-history-test.sh --help
+
+Verify setup first:
+  ./tests/puppeteer/verify-test-setup.sh
+
+─────────────────────────────────────────────────────────────────
+📸 SCREENSHOTS
+─────────────────────────────────────────────────────────────────
+
+Location: /var/www/api-gateway/screenshots/
+
+Success:
+  - customer-461-detail.png
+  - customer-461-appointments.png
+  - appointment-672-detail.png
+  - test-complete.png
+
+Errors (timestamped):
+  - error-login-failed-[timestamp].png
+  - error-appointments-verification-failed-[timestamp].png
+  - etc.
+
+─────────────────────────────────────────────────────────────────
+🔧 TROUBLESHOOTING
+─────────────────────────────────────────────────────────────────
+
+Login failed:
+  php artisan tinker --execute="\$u = \App\Models\User::where('email', 'fabian@askproai.de')->first(); \$u->password = bcrypt('newpass'); \$u->save();"
+
+Puppeteer not found:
+  npm install puppeteer
+
+Test data missing:
+  php artisan tinker --execute="echo \App\Models\Customer::find(461);"
+  php artisan tinker --execute="echo \App\Models\Appointment::whereIn('id', [672, 673])->count();"
+
+Visual debugging:
+  HEADLESS=false ./tests/run-customer-history-test.sh --no-headless
+
+─────────────────────────────────────────────────────────────────
+📚 DOCUMENTATION
+─────────────────────────────────────────────────────────────────
+
+Quick Start:
+  tests/puppeteer/QUICK-START.md
+
+Full Documentation:
+  tests/puppeteer/README-CUSTOMER-HISTORY.md
+
+Implementation Summary:
+  claudedocs/E2E_TEST_CUSTOMER_HISTORY_SUMMARY.md
+
+Test Script:
+  tests/puppeteer/crm-customer-history-e2e.cjs
+
+─────────────────────────────────────────────────────────────────
+✨ EXPECTED OUTPUT
+─────────────────────────────────────────────────────────────────
+
+✅ All tests passed!
+
+Test Summary
+====================================
+✅ Passed: 6
+❌ Failed: 0
+📊 Total:  6
+====================================
+
+Screenshots saved:
+  screenshots/customer-461-detail.png (245K)
+  screenshots/customer-461-appointments.png (198K)
+  screenshots/test-complete.png (225K)
+
+─────────────────────────────────────────────────────────────────
+📋 FILES CREATED
+─────────────────────────────────────────────────────────────────
+
+Tests:
+  /var/www/api-gateway/tests/puppeteer/crm-customer-history-e2e.cjs
+  /var/www/api-gateway/tests/run-customer-history-test.sh
+
+Documentation:
+  /var/www/api-gateway/tests/puppeteer/README-CUSTOMER-HISTORY.md
+  /var/www/api-gateway/tests/puppeteer/QUICK-START.md
+  /var/www/api-gateway/tests/puppeteer/RUN-TEST.txt (this file)
+  /var/www/api-gateway/claudedocs/E2E_TEST_CUSTOMER_HISTORY_SUMMARY.md
+
+Utilities:
+  /var/www/api-gateway/tests/puppeteer/verify-test-setup.sh
+
+Screenshots:
+  /var/www/api-gateway/screenshots/ (created automatically)
+
+─────────────────────────────────────────────────────────────────
+
+Created: 2025-10-11
+Status: ✅ Ready to run

@@ -1,0 +1,29 @@
+[00:00:00.116468320 / 00:00:00.116468320] [10294176 bytes] PHPUnit Started (PHPUnit 11.5.33 using PHP 8.3.23 (cli) on Linux)
+[00:00:00.127033560 / 00:00:00.010565240] [10294176 bytes] Test Runner Configured
+[00:00:00.127814080 / 00:00:00.000780520] [10294176 bytes] Bootstrap Finished (/var/www/api-gateway/vendor/autoload.php)
+[00:00:00.156240440 / 00:00:00.028426360] [10294176 bytes] Event Facade Sealed
+[00:00:00.188605400 / 00:00:00.032364960] [10294176 bytes] Test Suite Loaded (6 tests)
+[00:00:00.191898920 / 00:00:00.003293520] [10294176 bytes] Test Runner Started
+[00:00:00.195156400 / 00:00:00.003257480] [10294176 bytes] Test Suite Sorted
+[00:00:00.196541160 / 00:00:00.001384760] [10294176 bytes] Test Suite Filtered (1 test)
+[00:00:00.196869880 / 00:00:00.000328720] [10294176 bytes] Test Runner Execution Started (1 test)
+[00:00:00.197290280 / 00:00:00.000420400] [10294176 bytes] Test Suite Started (Tests\Feature\Security\CalcomMultiTenantSecurityTest, 1 test)
+[00:00:00.213168800 / 00:00:00.015878520] [10294176 bytes] Test Preparation Started (Tests\Feature\Security\CalcomMultiTenantSecurityTest::test_webhook_cannot_cancel_cross_tenant_appointment)
+[00:00:01.657228400 / 00:00:01.444059600] [16658536 bytes] Before Test Method Called (Tests\Feature\Security\CalcomMultiTenantSecurityTest::setUp)
+[00:00:01.657412560 / 00:00:00.000184160] [16658536 bytes] Before Test Method Finished:
+                                                           - Tests\Feature\Security\CalcomMultiTenantSecurityTest::setUp
+[00:00:01.657497360 / 00:00:00.000084800] [16196224 bytes] Test Prepared (Tests\Feature\Security\CalcomMultiTenantSecurityTest::test_webhook_cannot_cancel_cross_tenant_appointment)
+[00:00:01.935014360 / 00:00:00.277517000] [18097000 bytes] Test Failed (Tests\Feature\Security\CalcomMultiTenantSecurityTest::test_webhook_cannot_cancel_cross_tenant_appointment)
+                                                           Expected response status code [500] but received 200.
+                                                           Failed asserting that 200 is identical to 500.
+[00:00:01.950454200 / 00:00:00.015439840] [18097000 bytes] After Test Method Called (Tests\Feature\Security\CalcomMultiTenantSecurityTest::tearDown)
+[00:00:01.950954320 / 00:00:00.000500120] [18097000 bytes] After Test Method Finished:
+                                                           - Tests\Feature\Security\CalcomMultiTenantSecurityTest::tearDown
+[00:00:01.957708720 / 00:00:00.006754400] [18097000 bytes] Test Finished (Tests\Feature\Security\CalcomMultiTenantSecurityTest::test_webhook_cannot_cancel_cross_tenant_appointment)
+[00:00:01.958745400 / 00:00:00.001036680] [18097000 bytes] After Last Test Method Called (Tests\Feature\Security\CalcomMultiTenantSecurityTest::tearDownAfterClass)
+[00:00:01.958883720 / 00:00:00.000138320] [18097000 bytes] After Last Test Method Finished:
+                                                           - Tests\Feature\Security\CalcomMultiTenantSecurityTest::tearDownAfterClass
+[00:00:01.958932480 / 00:00:00.000048760] [18097000 bytes] Test Suite Finished (Tests\Feature\Security\CalcomMultiTenantSecurityTest, 1 test)
+[00:00:01.961257120 / 00:00:00.002324640] [18097000 bytes] Test Runner Execution Finished
+[00:00:01.990926680 / 00:00:00.029669560] [18097000 bytes] Test Runner Finished
+[00:00:01.992807880 / 00:00:00.001881200] [18097000 bytes] PHPUnit Finished (Shell Exit Code: 1)

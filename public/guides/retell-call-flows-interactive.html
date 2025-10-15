@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETELL Call-Flows | Alle Szenarien</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 50px 120px rgba(0,0,0,0.8);
+        }
+        .header {
+            background: linear-gradient(135deg, #3730a3 0%, #4c1d95 100%);
+            color: white;
+            padding: 70px;
+            text-align: center;
+        }
+        h1 { font-size: 68px; margin-bottom: 25px; }
+        .subtitle { font-size: 26px; color: #c4b5fd; }
+        .tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-bottom: 3px solid #6366f1;
+        }
+        .tab {
+            flex: 1;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border-right: 1px solid #d1d5db;
+        }
+        .tab:hover { background: #e5e7eb; }
+        .tab.active {
+            background: #6366f1;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 50px;
+        }
+        .tab-content.active { display: block; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 3px solid #10b981;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-value { font-size: 48px; font-weight: bold; color: #059669; }
+        .stat-label { color: #6b7280; font-size: 15px; margin-top: 10px; }
+        .flow-diagram {
+            background: #f9fafb;
+            border: 4px solid #6366f1;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 30px 0;
+        }
+        .flow-step {
+            background: white;
+            border-left: 5px solid #10b981;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .flow-step h4 { color: #1f2937; font-size: 22px; margin-bottom: 15px; }
+        .flow-step p { color: #4b5563; font-size: 17px; line-height: 1.8; }
+        .code-sample {
+            background: #1f2937;
+            color: #6ee7b7;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 15px 0;
+            font-size: 15px;
+        }
+        .arrow { font-size: 32px; color: #6366f1; text-align: center; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 RETELL CALL-FLOWS</h1>
+            <div class="subtitle">
+                Komplette Visualisierung | 4 Szenarien | Basiert auf 23 echten Calls
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('scenario1')">
+                MIT NUMMER<br>+ BEKANNT
+            </div>
+            <div class="tab" onclick="showTab('scenario2')">
+                MIT NUMMER<br>+ UNBEKANNT
+            </div>
+            <div class="tab" onclick="showTab('scenario3')">
+                ANONYM<br>+ BEKANNT
+            </div>
+            <div class="tab" onclick="showTab('scenario4')">
+                ANONYM<br>+ UNBEKANNT
+            </div>
+        </div>
+
+        <!-- SZENARIO 1: MIT NUMMER + BEKANNT -->
+        <div id="scenario1" class="tab-content active">
+            <h2 style="color: #1f2937; font-size: 42px; margin-bottom: 30px;">
+                🟢 Szenario 1: MIT NUMMER + BEKANNT
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Calls heute</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">60%</div>
+                    <div class="stat-label">Erfolgsrate<br>(9 booked)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">82s</div>
+                    <div class="stat-label">Ø Dauer</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">✅</div>
+                    <div class="stat-label">Optimal-Flow</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h3 style="color: #1e3a8a; font-size: 32px; margin-bottom: 30px;">Call-Flow (Happy Path)</h3>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 1: Call Start (0s)</h4>
+                    <p><strong>System:</strong> Erkennt from_number: +491604366218</p>
+                    <p><strong>Action:</strong> begin_message abgespielt</p>
+                    <div class="code-sample">begin_message: "Guten Tag! Wie kann ich Ihnen helfen?"
+Duration: ~0.5s</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 2: Initialization (0.5-2s)</h4>
+                    <p><strong>Parallel ausgeführt:</strong></p>
+                    <div class="code-sample">[1.0s] current_time_berlin()
+Response: { "weekday": "Samstag", "date": "11.10.2025" }
+
+[1.5s] check_customer(call_id)
+System sucht: +491604366218 in company_id=15
+Findet: Customer #461 (Hansi Hinterseer)
+Response: { "status": "found", "name": "Hansi Hinterseer" }</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🟢 Step 3: Personalisierte Begrüßung (2-3s)</h4>
+                    <p><strong>Agent:</strong> "Guten Tag Hansi! Wie kann ich helfen?"</p>
+                    <p><strong>User Experience:</strong> Wird erkannt, fühlt sich persönlich</p>
+                    <p><strong>Vorteil:</strong> KEIN Namen-Erfrage nötig → Gespräch kürzer!</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 4: User-Request (3-10s)</h4>
+                    <p><strong>User:</strong> "Ich möchte einen Termin am Montag um 14 Uhr"</p>
+                    <p><strong>System extrahiert:</strong></p>
+                    <div class="code-sample">datum: "Montag" → berechnet: 2025-10-13
+uhrzeit: "14 Uhr" → "14:00"
+dienstleistung: "Beratung" (Standard)
+name: "Hansi Hinterseer" (von check_customer!)</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 5: Availability Check (10-12s)</h4>
+                    <p><strong>Function:</strong> collect_appointment_data()</p>
+                    <div class="code-sample">collect_appointment_data(
+  call_id: "call_xxx",
+  name: "Hansi Hinterseer",  ← Von check_customer!
+  datum: "2025-10-13",
+  uhrzeit: "14:00",
+  dienstleistung: "Beratung"
+)
+
+System → Cal.com API: getAvailableSlots()
+Response: 14:00 ist frei ✅</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🟢 Step 6: Confirmation (12-15s)</h4>
+                    <p><strong>Agent:</strong> "Montag, der 13. Oktober um 14 Uhr ist frei. Soll ich buchen?"</p>
+                    <p><strong>User:</strong> "Ja, bitte."</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 7: Booking (15-18s)</h4>
+                    <p><strong>Function:</strong> collect_appointment_data(bestaetigung: true)</p>
+                    <div class="code-sample">System → Cal.com: createBooking()
+Response: { "uid": "abc123", "status": "accepted" }
+
+System → DB: Appointment::create()
+✅ Cache-Invalidierung ausgeführt!</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #ecfdf5; border-color: #10b981;">
+                    <h4>✅ Step 8: Success (~18-20s)</h4>
+                    <p><strong>Agent:</strong> "Perfekt! Ihr Termin am Montag, den 13. Oktober um 14 Uhr ist gebucht."</p>
+                    <p><strong>Total Duration:</strong> ~20 Sekunden</p>
+                    <p><strong>User Experience:</strong> ⭐⭐⭐⭐⭐ Schnell & effizient!</p>
+                </div>
+            </div>
+
+            <div style="background: #eff6ff; padding: 35px; border-radius: 12px; margin-top: 30px;">
+                <h3 style="color: #1e40af; font-size: 28px; margin-bottom: 20px;">🔑 Key Success Factors:</h3>
+                <ul style="color: #1e3a8a; font-size: 18px; line-height: 2.2; margin-left: 30px;">
+                    <li><strong>check_customer() findet Kunden</strong> → Keine Namen-Erfrage</li>
+                    <li><strong>Name von check_customer()</strong> → Direkt in collect_appointment_data()</li>
+                    <li><strong>Kurze Begrüßung</strong> → Functions haben Zeit parallel zu laufen</li>
+                    <li><strong>Multi-Tenancy Fix</strong> → Korrekte Customer-Zuordnung</li>
+                    <li><strong>Cache-Invalidierung</strong> → Frische Availability-Daten</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SZENARIO 2: MIT NUMMER + UNBEKANNT -->
+        <div id="scenario2" class="tab-content">
+            <h2 style="color: #1f2937; font-size: 42px; margin-bottom: 30px;">
+                🟡 Szenario 2: MIT NUMMER + UNBEKANNT
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Calls heute</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">~85%</div>
+                    <div class="stat-label">Erwartete Erfolgsrate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">~40s</div>
+                    <div class="stat-label">Erwartete Dauer</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">🟡</div>
+                    <div class="stat-label">Selten</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h3 style="color: #1e3a8a; font-size: 32px; margin-bottom: 30px;">Call-Flow (Happy Path)</h3>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 1-2: Call Start + Init (0-2s)</h4>
+                    <p>Identisch zu Szenario 1</p>
+                    <div class="code-sample">current_time_berlin() → OK
+check_customer() → "new_customer" (nicht gefunden!)</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef3c7; border-color: #f59e0b;">
+                    <h4>🟡 Step 3: Generische Begrüßung (2-3s)</h4>
+                    <p><strong>Agent:</strong> "Guten Tag! Wie kann ich Ihnen helfen?"</p>
+                    <p><strong>Unterschied:</strong> KEIN Name (Kunde unbekannt)</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 4-5: User-Request + Namen-Erfrage (10-20s)</h4>
+                    <p><strong>User:</strong> "Termin am Montag um 14 Uhr"</p>
+                    <p><strong>Agent:</strong> "Gerne! Einen Moment, Ihr Name bitte?"</p>
+                    <p><strong>User:</strong> "Schmidt"</p>
+                    <div class="code-sample">name: "Schmidt" (erfasst!)
+datum: "2025-10-13"
+uhrzeit: "14:00"</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 6-7: Availability + Booking (20-35s)</h4>
+                    <p>Identisch zu Szenario 1</p>
+                    <p><strong>System:</strong> Erstellt neuen Customer + Appointment</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #ecfdf5; border-color: #10b981;">
+                    <h4>✅ Step 8: Success (~35-40s)</h4>
+                    <p><strong>Dauer:</strong> +15-20s länger (wegen Namen-Erfrage)</p>
+                    <p><strong>User Experience:</strong> ⭐⭐⭐⭐ Gut (etwas länger)</p>
+                </div>
+            </div>
+
+            <div style="background: #fef3c7; padding: 35px; border-radius: 12px; margin-top: 30px; border: 3px solid #f59e0b;">
+                <h3 style="color: #92400e; font-size: 28px; margin-bottom: 20px;">⚠️ Kritischer Unterschied:</h3>
+                <p style="color: #78350f; font-size: 18px; line-height: 2;">
+                    Namen-Erfrage fügt 10-15 Sekunden hinzu zum Gespräch.<br>
+                    Wichtig: NUR Name erfragen, KEINE Email (funktioniert schlecht im Transcript)!
+                </p>
+            </div>
+        </div>
+
+        <!-- SZENARIO 3: ANONYM + BEKANNT -->
+        <div id="scenario3" class="tab-content">
+            <h2 style="color: #1f2937; font-size: 42px; margin-bottom: 30px;">
+                🟡 Szenario 3: ANONYM + BEKANNT (via Namen erkannt)
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Calls heute<br>(#841, #853)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Erfolgsrate<br>(2/2 booked)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">188s</div>
+                    <div class="stat-label">Ø Dauer<br>(lang!)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">🟡</div>
+                    <div class="stat-label">Komplex</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h3 style="color: #1e3a8a; font-size: 32px; margin-bottom: 30px;">Call-Flow (Realer Call #853)</h3>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 1-2: Call Start + Init (0-2s)</h4>
+                    <div class="code-sample">from_number: "anonymous"
+current_time_berlin() → "Samstag 11.10.2025"
+check_customer() → "new_customer" (kein Matching möglich!)</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef3c7; border-color: #f59e0b;">
+                    <h4>🟡 Step 3: User nennt Namen von sich aus (5-13s)</h4>
+                    <p><strong>User:</strong> "Hans Schuster mein Name. Ich hätte gern einen Termin..."</p>
+                    <p><strong>System:</strong> Extrahiert "Hans Schuster" aus Transcript</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef2f2; border-color: #ef4444;">
+                    <h4>🔴 Step 4: LANGE PAUSE / Schweigen (13-30s)</h4>
+                    <p><strong>User bei 13s:</strong> "Hallo?" ← Wartet auf Antwort!</p>
+                    <p><strong>Agent erst bei 30s:</strong> Antwortet endlich</p>
+                    <p><strong>Problem:</strong> begin_message zu lang → Functions zu spät</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef2f2; border-color: #ef4444;">
+                    <h4>🔴 Step 5: Datum-Parsing-Fehler (30-50s)</h4>
+                    <p><strong>User:</strong> "Mittwoch fünfzehnte Punkt eins" (15.10.)</p>
+                    <p><strong>Agent interpretiert:</strong> "15. Januar" ❌</p>
+                    <div class="code-sample">collect_appointment_data(
+  datum: "15.01.2026"  ← FALSCH! User meinte 15.10.2025
+)</div>
+                    <p><strong>Folge:</strong> Schaut im falschen Monat → Kein Konflikt erkannt</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 6-7: Booking (50-70s)</h4>
+                    <p><strong>System:</strong> Bucht für 15. Januar 2026 (falsch!)</p>
+                    <p><strong>Agent:</strong> "Erfolgreich gebucht für 15. Januar"</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef3c7; border-color: #f59e0b;">
+                    <h4>🟡 Step 8: Success but suboptimal (~70s)</h4>
+                    <p><strong>Outcome:</strong> appointment_booked ✅</p>
+                    <p><strong>ABER:</strong> Falscher Monat + zu lange Dauer</p>
+                    <p><strong>User Experience:</strong> ⭐⭐⭐ Funktioniert aber frustrierend</p>
+                </div>
+            </div>
+
+            <div style="background: #fef2f2; padding: 35px; border-radius: 12px; margin-top: 30px; border: 3px solid #dc2626;">
+                <h3 style="color: #991b1b; font-size: 28px; margin-bottom: 20px;">❌ Probleme in diesem Flow:</h3>
+                <ul style="color: #7f1d1d; font-size: 18px; line-height: 2.2; margin-left: 30px;">
+                    <li><strong>Schweigen:</strong> 17 Sekunden keine Antwort (begin_message Problem)</li>
+                    <li><strong>Datum-Bug:</strong> "15.1" als "15. Januar" statt "15. Oktober"</li>
+                    <li><strong>Keine Konflikt-Erkennung:</strong> Schaute im falschen Monat</li>
+                    <li><strong>Verbotene Phrasen:</strong> "Herr Schuster" (Prompt-Regel ignoriert)</li>
+                    <li><strong>Zu lang:</strong> 70s statt erwartete 30s</li>
+                </ul>
+            </div>
+
+            <div style="background: #ecfdf5; padding: 35px; border-radius: 12px; margin-top: 30px; border: 3px solid #10b981;">
+                <h3 style="color: #065f46; font-size: 28px; margin-bottom: 20px;">✅ Fixes für diesen Flow:</h3>
+                <ul style="color: #047857; font-size: 18px; line-height: 2.2; margin-left: 30px;">
+                    <li><strong>begin_message kürzen</strong> → Kein Schweigen mehr</li>
+                    <li><strong>V80 Prompt Datum-Regel:</strong> "15.1" = Oktober!</li>
+                    <li><strong>V80 Prompt:</strong> KEIN "Herr/Frau"</li>
+                    <li><strong>Erwartete Verbesserung:</strong> 70s → 35s Dauer</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SZENARIO 4: ANONYM + UNBEKANNT -->
+        <div id="scenario4" class="tab-content">
+            <h2 style="color: #1f2937; font-size: 42px; margin-bottom: 30px;">
+                🔴 Szenario 4: ANONYM + UNBEKANNT (PROBLEMATISCH!)
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                    <div class="stat-value" style="color: #dc2626;">8</div>
+                    <div class="stat-label">Calls heute</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                    <div class="stat-value" style="color: #dc2626;">25%</div>
+                    <div class="stat-label">Erfolgsrate<br>(2/8 booked)</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                    <div class="stat-value" style="color: #dc2626;">35s</div>
+                    <div class="stat-label">Ø Dauer<br>(kurz = abgebrochen!)</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                    <div class="stat-value" style="color: #dc2626;">❌</div>
+                    <div class="stat-label">75% scheitern!</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h3 style="color: #991b1b; font-size: 32px; margin-bottom: 30px;">Call-Flow (Broken Path - Call #842)</h3>
+
+                <div class="flow-step">
+                    <h4>🔵 Step 1-2: Call Start + Init (0-2s)</h4>
+                    <div class="code-sample">from_number: "anonymous"
+check_customer() → "new_customer"</div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef2f2; border-color: #ef4444;">
+                    <h4>🔴 Step 3: begin_message BLOCKIERT (2-10s)</h4>
+                    <p><strong>begin_message:</strong> "Willkommen bei Ask Pro AI, Ihr Spezialist..." (ZU LANG!)</p>
+                    <p><strong>User antwortet SOFORT:</strong> "Wann haben Sie den nächsten freien Termin?"</p>
+                    <p><strong>Problem:</strong> Functions laufen noch (Sekunde 16-18)!</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef2f2; border-color: #ef4444;">
+                    <h4>🔴 Step 4: SCHWEIGEN (10-30s)</h4>
+                    <p><strong>Agent:</strong> [KEINE ANTWORT]</p>
+                    <p><strong>User bei 22s:</strong> "Hallo?" ← Wartet verzweifelt</p>
+                    <p><strong>Agent:</strong> [IMMER NOCH SCHWEIGEN]</p>
+                    <p><strong>Root Cause:</strong> V77 Prompt hat KEINE Anti-Silence Rule!</p>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step" style="background: #fef2f2; border-color: #ef4444;">
+                    <h4>❌ Step 5: User Hangup (~30s)</h4>
+                    <p><strong>User:</strong> *legt genervt auf*</p>
+                    <p><strong>Outcome:</strong> abandoned</p>
+                    <p><strong>Conversion:</strong> 0% (TOTALER FEHLSCHLAG)</p>
+                </div>
+            </div>
+
+            <div style="background: #fef2f2; padding: 35px; border-radius: 12px; margin-top: 30px; border: 3px solid #dc2626;">
+                <h3 style="color: #991b1b; font-size: 28px; margin-bottom: 20px;">❌ Warum 75% scheitern:</h3>
+                <ol style="color: #7f1d1d; font-size: 18px; line-height: 2.2; margin-left: 30px;">
+                    <li><strong>begin_message zu lang</strong> → User antwortet bevor Functions fertig</li>
+                    <li><strong>V77 Prompt ohne Anti-Silence</strong> → Agent weiß nicht wie reagieren</li>
+                    <li><strong>collect_appointment_data Trigger matcht nicht</strong> → "wann haben sie den nächsten" nicht erkannt</li>
+                    <li><strong>User ungeduldig</strong> → Legt nach 20-30s auf</li>
+                </ol>
+            </div>
+
+            <div style="background: #ecfdf5; padding: 35px; border-radius: 12px; margin-top: 30px; border: 3px solid #10b981;">
+                <h3 style="color: #065f46; font-size: 28px; margin-bottom: 20px;">✅ V80-FINAL Fixes:</h3>
+                <ul style="color: #047857; font-size: 18px; line-height: 2.2; margin-left: 30px;">
+                    <li><strong>begin_message kurz</strong> → "Guten Tag! Wie kann ich helfen?" (0.5s statt 3s)</li>
+                    <li><strong>Anti-Silence Rule VORNE</strong> → "Für welchen Tag?" statt Schweigen</li>
+                    <li><strong>Trigger erweitert</strong> → "wann haben sie frei" erkannt</li>
+                    <li><strong>Erwartete Verbesserung:</strong> 75% Abandoned → 15% Abandoned</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="padding: 70px; background: #1e3a8a; color: white; text-align: center;">
+            <h2 style="margin-bottom: 50px; font-size: 56px;">🎯 FINALE ZUSAMMENFASSUNG</h2>
+
+            <table style="background: white; color: #1f2937; border-radius: 16px; overflow: hidden; max-width: 1600px; margin: 0 auto;">
+                <tr>
+                    <th>Szenario</th>
+                    <th>Häufigkeit</th>
+                    <th>Erfolgsrate</th>
+                    <th>Ø Dauer</th>
+                    <th>Kritische Faktoren</th>
+                </tr>
+                <tr>
+                    <td><strong>1. MIT NUMMER + BEKANNT</strong></td>
+                    <td>15 Calls (65%)</td>
+                    <td style="color: #10b981; font-weight: bold;">60%</td>
+                    <td>82s</td>
+                    <td>check_customer() Multi-Tenancy</td>
+                </tr>
+                <tr>
+                    <td><strong>2. MIT NUMMER + UNBEKANNT</strong></td>
+                    <td>0 Calls (0%)</td>
+                    <td style="color: #6b7280;">~85% (erwartet)</td>
+                    <td>~40s</td>
+                    <td>Namen-Erfrage (+15s)</td>
+                </tr>
+                <tr>
+                    <td><strong>3. ANONYM + BEKANNT</strong></td>
+                    <td>2 Calls (9%)</td>
+                    <td style="color: #10b981; font-weight: bold;">100%</td>
+                    <td>188s</td>
+                    <td>Datum-Parsing, Schweigen</td>
+                </tr>
+                <tr style="background: #fee2e2;">
+                    <td><strong>4. ANONYM + UNBEKANNT</strong></td>
+                    <td>8 Calls (35%)</td>
+                    <td style="color: #dc2626; font-weight: bold;">25% ❌</td>
+                    <td>35s</td>
+                    <td>Schweigen → User legt auf</td>
+                </tr>
+            </table>
+
+            <div style="margin-top: 50px; padding: 45px; background: rgba(255,255,255,0.1); border-radius: 18px; max-width: 1200px; margin-left: auto; margin-right: auto; margin-top: 50px;">
+                <h3 style="margin-bottom: 25px; font-size: 34px;">🔑 Kritischster Fix:</h3>
+                <p style="font-size: 24px; line-height: 2.2;">
+                    <strong>Szenario 4</strong> (35% der Calls, 75% scheitern!)<br>
+                    <strong>Lösung:</strong> begin_message kürzen + V80 Prompt<br>
+                    <strong>Erwartung:</strong> 25% → 85% Erfolgsrate
+                </p>
+            </div>
+        </div>
+
+        <div style="padding: 50px; text-align: center; background: #f3f4f6;">
+            <p style="color: #4b5563; font-size: 17px; line-height: 2.2;">
+                <strong>Analysierte Calls:</strong> 23 (heute) |
+                <strong>Szenarien:</strong> 4 identifiziert |
+                <strong>Backend-Fixes:</strong> 10 committed<br>
+                <strong>Dashboard-TODO:</strong> begin_message + Prompt |
+                <strong>Kritischster Flow:</strong> Anonym + Unbekannt (75% scheitern)<br>
+                <strong>Datum:</strong> 2025-10-11 | <strong>Status:</strong> Dokumentation ✅ Implementation ⏳
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

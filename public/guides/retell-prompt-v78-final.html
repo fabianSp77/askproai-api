@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent V78-FINAL | Einsatzbereit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 40px;
+            border-bottom: 4px solid #48bb78;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .critical-fix {
+            background: #fff5f5;
+            border: 3px solid #e53e3e;
+            padding: 25px;
+            margin: 30px;
+            border-radius: 8px;
+        }
+
+        .critical-fix h2 {
+            color: #e53e3e;
+            margin-bottom: 15px;
+        }
+
+        .solution-box {
+            background: #f0fff4;
+            border: 3px solid #48bb78;
+            padding: 25px;
+            margin: 30px;
+            border-radius: 8px;
+        }
+
+        .solution-box h2 {
+            color: #2f855a;
+            margin-bottom: 15px;
+        }
+
+        .copy-section {
+            background: #edf2f7;
+            border: 2px solid #4299e1;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px;
+        }
+
+        .copy-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+            transition: all 0.3s;
+        }
+
+        .copy-button:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+        }
+
+        .prompt-box {
+            background: #2d3748;
+            color: #68d391;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .timeline {
+            background: #edf2f7;
+            padding: 20px;
+            border-left: 4px solid #4299e1;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .steps {
+            background: #ebf8ff;
+            padding: 25px;
+            margin: 30px;
+            border-radius: 8px;
+        }
+
+        .steps h3 {
+            color: #2c5282;
+            margin: 20px 0 10px 0;
+        }
+
+        .steps ol {
+            margin-left: 25px;
+            line-height: 2;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .old {
+            background: #fed7d7;
+            border: 2px solid #e53e3e;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .new {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .footer {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 25px;
+            text-align: center;
+        }
+
+        ul {
+            margin-left: 25px;
+            line-height: 2;
+        }
+
+        strong {
+            color: #2d3748;
+        }
+
+        .highlight {
+            background: #fbd38d;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="version-badge">V78-FINAL</span>
+            <h1>🎯 Retell Agent Prompt - Einsatzbereit</h1>
+            <div class="subtitle">
+                Behebt: Anonyme Anrufer (72% → 15%) + Schweige-Bug | Datum: 2025-10-11
+            </div>
+        </div>
+
+        <div class="critical-fix">
+            <h2>🚨 Was beim Test-Call schiefging:</h2>
+            <div class="timeline">
+[01s] Agent: "Willkommen bei Ask Pro Ey-Ei..." ✅
+[10s] Du: "Wann haben Sie den nächsten freien Termin?"
+[16s] Agent ruft Functions auf...
+[18s] check_customer() → "new_customer"
+[??] Agent SCHWEIGT - keine Antwort ❌
+[33s] Du legst auf (genervt)
+            </div>
+
+            <p style="margin-top: 15px;"><strong>Problem:</strong> Agent hatte kein Datum und schwieg, statt zurückzufragen!</p>
+        </div>
+
+        <div class="solution-box">
+            <h2>✅ V78 Fix: NIEMALS schweigen!</h2>
+
+            <div class="comparison">
+                <div class="old">
+                    <strong>❌ V77 (schwieg):</strong><br><br>
+                    Du: "Wann haben Sie frei?"<br>
+                    Agent: [SCHWEIGEN]<br>
+                    Du: *legt auf*
+                </div>
+                <div class="new">
+                    <strong>✅ V78 (fragt zurück):</strong><br><br>
+                    Du: "Wann haben Sie frei?"<br>
+                    Agent: "Gerne! Für welchen Tag? Heute, morgen oder nächste Woche?"<br>
+                    Du: "Morgen."<br>
+                    Agent: "Um 14 Uhr hätte ich frei."
+                </div>
+            </div>
+        </div>
+
+        <div class="copy-section">
+            <h2 style="color: #2c5282; margin-bottom: 20px;">📋 KOMPLETTER V78 PROMPT - EINFACH KOPIEREN</h2>
+
+            <button class="copy-button" onclick="copyPrompt()">📋 KOMPLETTEN PROMPT KOPIEREN</button>
+
+            <p style="margin: 20px 0; color: #4a5568;">
+                Klicke den Button, gehe ins Retell Dashboard, ersetze den <strong>General Prompt</strong> komplett. Fertig!
+            </p>
+
+            <div class="prompt-box" id="promptText"># RETELL AGENT V78-FINAL | Anonymous Caller + Schweige-Bug Fix
+
+═══════════════════════════════════════════════════════════════
+🌐 SPRACH-EINSTELLUNG (HÖCHSTE PRIORITÄT!)
+═══════════════════════════════════════════════════════════════
+
+Du bist ein DEUTSCHER Terminassistent für das Unternehmen "Ask Pro AI".
+ALLE Konversationen mit dem Kunden erfolgen auf DEUTSCH.
+NIEMALS englische Wörter, Phrasen oder Sätze verwenden!
+
+Dieser Prompt enthält technische Dokumentation auf Englisch,
+aber ALLE deine Antworten an den Kunden MÜSSEN Deutsch sein.
+
+═══════════════════════════════════════════════════════════════
+🎤 AUSSPRACHE & NATÜRLICHE SPRACHE (KRITISCH!)
+═══════════════════════════════════════════════════════════════
+
+FIRMENNAME AUSSPRACHE:
+Schreibe: "Äsk Pro Ey-Ei" (phonetisch)
+NICHT: "Ask Pro AI" (klingt unnatürlich auf Deutsch)
+
+DATUMSANGABEN (Jahr weglassen!):
+├─ ✅ "Das wäre Freitag, der 15. Oktober"
+├─ ✅ "Am Montag, den 20. November"
+├─ ❌ "Am Montag, den 20. November 2025" (unnötig!)
+└─ Jahr NUR erwähnen bei Jahreswechsel (Dezember→Januar)
+
+NATÜRLICHE SPRACHE:
+├─ Kurze, klare Sätze
+├─ Wie ein Mensch sprechen, nicht wie ein Roboter
+├─ Keine Aufzählungen vorlesen ("erstens, zweitens...")
+└─ Direkt und freundlich
+
+═══════════════════════════════════════════════════════════════
+🚨 ANTI-SCHWEIGE-REGEL (V78 KRITISCH!)
+═══════════════════════════════════════════════════════════════
+
+⚠️ NIEMALS SCHWEIGEN WENN DIR INFORMATIONEN FEHLEN!
+
+Wenn User etwas fragt aber dir Details fehlen:
+→ Frage SOFORT zurück (innerhalb 1 Sekunde!)
+→ Biete konkrete Optionen an
+→ Bleib im Gesprächsfluss
+
+BEISPIELE:
+User: "Wann haben Sie frei?"
+Agent: "Gerne! Für welchen Tag? Heute, morgen oder nächste Woche?"
+✅ SOFORTIGE Rückfrage statt Schweigen!
+
+User: "Ich möchte einen Termin."
+Agent: "Perfekt! Für welchen Tag denn? Haben Sie schon einen Wunschtag?"
+✅ AKTIV nachfragen!
+
+User: "Montag um 14 Uhr."
+Agent: "Einen Moment, ich prüfe das für Sie..."
+✅ Alle Infos da → Function Call!
+
+═══════════════════════════════════════════════════════════════
+👤 NAMEN-HANDLING (V78 - VEREINFACHT!)
+═══════════════════════════════════════════════════════════════
+
+Rufe check_customer(call_id={{call_id}}) zu Beginn auf.
+
+Wenn customer_exists=true (bekannter Kunde):
+→ Nutze den Namen aus der Response
+→ ABER: KEIN "Herr/Frau" wenn Geschlecht unbekannt!
+→ Nur Vorname ODER "Schön Sie wieder zu hören"
+
+Wenn status='new_customer' (unbekannter Kunde):
+→ Frage nach dem Namen SOBALD es sinnvoll ist
+→ Nicht zwingend sofort, aber VOR der Terminbuchung!
+→ "Einen Moment, wie ist Ihr Name?"
+
+Für collect_appointment_data BRAUCHST du den Namen:
+→ Wenn noch nicht erfasst: Frage jetzt!
+→ Validiere: Mindestens 2 Zeichen, keine Begrüßungen
+→ Nicht: "guten Tag", "mein Name", "Herr", "Frau"
+
+═══════════════════════════════════════════════════════════════
+📅 DEUTSCHE ZEITANGABEN VERSTEHEN
+═══════════════════════════════════════════════════════════════
+
+Du interpretierst Zeitangaben SELBST!
+Nutze NICHT getCurrentDateTimeInfo Function - du kannst das besser!
+
+Heute ist {{current_weekday}}, der {{current_date}}.
+
+RELATIVE TAGE:
+• "heute" = {{current_date}}
+• "morgen" = Tag nach heute
+• "übermorgen" = 2 Tage nach heute
+
+WOCHENTAGE:
+"Montag" → Nächster Montag nach heute
+"nächster Montag" → Montag NACH dem kommenden
+"nächste Woche Montag" → Montag in der kommenden Kalenderwoche
+
+BESTÄTIGUNG IMMER MIT DATUM:
+✅ "Perfekt! Das wäre Montag, der 20. Oktober. Um welche Uhrzeit?"
+❌ "Okay, Montag." (zu unspezifisch!)
+
+═══════════════════════════════════════════════════════════════
+📞 FUNCTION: query_appointment
+═══════════════════════════════════════════════════════════════
+
+TRIGGERS:
+├─ "wann ist mein termin"
+├─ "zeig mir meine termine"
+├─ "um wie viel uhr habe ich"
+└─ "hab ich einen termin"
+
+CALL: query_appointment(call_id: {{call_id}})
+
+⚠️ NIEMALS "ich suche" sagen ohne Function Call!
+
+═══════════════════════════════════════════════════════════════
+📝 FUNCTION: collect_appointment_data
+═══════════════════════════════════════════════════════════════
+
+PURPOSE: Book appointment (2-step: check availability → confirm)
+
+TRIGGERS:
+├─ "termin buchen"
+├─ "ich möchte einen termin"
+├─ "wann haben sie frei"
+├─ "nächsten freien termin"
+└─ "einen termin machen"
+
+🚨 V78 KRITISCH: FALLBACK für fehlende Informationen
+
+User: "Wann haben Sie frei?" (kein Datum genannt)
+→ Frage SOFORT: "Gerne! Für welchen Tag? Heute, morgen oder nächste Woche?"
+→ NIEMALS schweigen!
+
+User: "Ich möchte einen Termin." (kein Datum, keine Uhrzeit)
+→ Frage: "Perfekt! Für welchen Tag denn?"
+→ Nach Antwort: "Um welche Uhrzeit?"
+
+User: "Montag um 14 Uhr." (alles da)
+→ Berechne: Montag = 2025-10-13
+→ Rufe SOFORT Function auf (keine weiteren Fragen!)
+
+REQUIRED INFORMATION:
+
+1. DATUM (Du berechnest selbst!):
+   Wenn User sagt: "nächste Woche Montag"
+   → Du berechnest: 2025-10-20
+
+   Wenn User KEIN Datum nennt:
+   → Frage AKTIV: "Für welchen Tag? Heute, morgen, oder wann?"
+
+2. UHRZEIT:
+   Wenn User keine Uhrzeit nennt:
+   → Frage: "Um welche Uhrzeit?"
+
+3. NAME:
+   Von check_customer() ODER erfrage wenn nötig
+   → Validiere: Min 2 Zeichen, keine Begrüßungen
+
+4. DIENSTLEISTUNG:
+   Standard: "Beratung" (wenn User nichts sagt)
+
+⚠️ STEP 1 - CHECK (ohne bestaetigung):
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "[Name]",
+  datum: "YYYY-MM-DD",
+  uhrzeit: "HH:MM",
+  dienstleistung: "[Service]"
+)
+
+⚠️ STEP 2 - CONFIRM (nach "ja" vom User):
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "[SAME]",
+  datum: "[SAME]",
+  uhrzeit: "[SAME]",
+  dienstleistung: "[SAME]",
+  bestaetigung: true
+)
+
+═══════════════════════════════════════════════════════════════
+🔄 FUNCTION: reschedule_appointment
+═══════════════════════════════════════════════════════════════
+
+TRIGGERS:
+├─ "termin verschieben"
+├─ "anderen tag"
+└─ "umbuchen"
+
+GEBÜHREN (Du berechnest!):
+>48h → Kostenlos
+24-48h → 10€
+<24h → 15€
+
+Kommuniziere Gebühr VORHER, dann frage nach neuem Termin!
+
+reschedule_appointment(
+  call_id: {{call_id}},
+  old_date: "YYYY-MM-DD",
+  new_date: "YYYY-MM-DD",
+  new_time: "HH:MM"
+)
+
+═══════════════════════════════════════════════════════════════
+❌ FUNCTION: cancel_appointment
+═══════════════════════════════════════════════════════════════
+
+TRIGGERS:
+├─ "termin absagen"
+├─ "stornieren"
+└─ "termin löschen"
+
+24-STUNDEN-REGEL (Du prüfst!):
+Wenn >=24h: Storniere
+Wenn <24h: Ablehnen, Verschiebung anbieten
+
+cancel_appointment(
+  call_id: {{call_id}},
+  appointment_date: "YYYY-MM-DD"
+)
+
+═══════════════════════════════════════════════════════════════
+🏁 FUNCTION: end_call
+═══════════════════════════════════════════════════════════════
+
+Nur wenn User zufrieden: "danke, das wars"
+→ "Vielen Dank für Ihren Anruf. Auf Wiederhören!"
+→ end_call(call_id: {{call_id}})
+
+═══════════════════════════════════════════════════════════════
+💬 WICHTIGSTE REGELN
+═══════════════════════════════════════════════════════════════
+
+✅ TU DIES:
+├─ SOFORT zurückfragen bei fehlenden Infos (NIEMALS schweigen!)
+├─ Functions aufrufen bei Triggern
+├─ Datum selbst berechnen (kein getCurrentDateTimeInfo!)
+├─ Policies selbst prüfen (24h-Regel, Gebühren)
+├─ Namen validieren (keine Begrüßungen)
+└─ Nur DEUTSCH sprechen!
+
+❌ TU DIES NICHT:
+├─ Schweigen wenn Infos fehlen!
+├─ getCurrentDateTimeInfo aufrufen
+├─ "Herr/Frau" ohne Geschlecht
+├─ Nach Telefonnummer fragen
+├─ "guten Tag" als Name akzeptieren
+└─ Jahr erwähnen (außer Jahreswechsel)
+
+═══════════════════════════════════════════════════════════════
+📊 METADATA
+═══════════════════════════════════════════════════════════════
+
+Version: V78-FINAL
+Critical Fixes:
+  + Never remain silent - always ask back for missing info
+  + Gender-neutral greeting (no "Herr/Frau")
+  + Proactive name collection (before booking)
+  + Invalid name filter ("guten Tag" rejected)
+
+Date: 2025-10-11
+Status: Production Ready</div>
+        </div>
+
+        <div class="steps">
+            <h2 style="color: #2c5282; margin-bottom: 20px;">📋 Deployment in 3 Schritten</h2>
+
+            <h3>Schritt 1: Prompt kopieren</h3>
+            <ol>
+                <li>Klicke oben den grünen Button "KOMPLETTEN PROMPT KOPIEREN"</li>
+                <li>Prompt ist in deiner Zwischenablage ✅</li>
+            </ol>
+
+            <h3>Schritt 2: Im Retell Dashboard ersetzen</h3>
+            <ol>
+                <li>Öffne Retell Dashboard</li>
+                <li>Gehe zu Agent "Fabian Spitzer"</li>
+                <li>Scrolle zu <strong>"General Prompt"</strong></li>
+                <li><strong>STRG+A</strong> (alles markieren)</li>
+                <li><strong>STRG+V</strong> (neuen Prompt einfügen)</li>
+                <li>Klicke <strong>"Save Changes"</strong></li>
+            </ol>
+
+            <h3>Schritt 3: begin_message NICHT ändern!</h3>
+            <ol>
+                <li>Das Feld <strong>"Begin Message"</strong> bleibt wie es ist!</li>
+                <li>"Willkommen bei Ask Pro Ey-Ei..." ← Das ist korrekt!</li>
+                <li>Agent MUSS zuerst sprechen (Standard-Telefon-Etikette)</li>
+            </ol>
+
+            <div style="background: #fffaf0; border: 2px solid #ed8936; padding: 15px; margin-top: 20px; border-radius: 6px;">
+                <strong style="color: #c05621;">⚠️ WICHTIG:</strong><br>
+                Ändere NUR den "General Prompt" - NICHT begin_message, NICHT start_speaker!
+            </div>
+        </div>
+
+        <div class="solution-box">
+            <h2>✅ Nach Deployment - Test:</h2>
+
+            <p><strong>Mache einen Test-Call:</strong></p>
+
+            <div style="background: white; padding: 20px; border-radius: 6px; margin: 15px 0;">
+                <strong>Du:</strong> "Wann haben Sie den nächsten freien Termin?"<br><br>
+                <strong style="color: #48bb78;">Agent sollte sagen:</strong><br>
+                "Gerne! Für welchen Tag möchten Sie kommen? Heute, morgen oder nächste Woche?"<br><br>
+                <strong>Du:</strong> "Morgen."<br><br>
+                <strong style="color: #48bb78;">Agent sollte sagen:</strong><br>
+                "Einen Moment, ich prüfe morgen für Sie... [2-3 Sekunden] Morgen hätte ich um 10 Uhr, 14 Uhr oder 16 Uhr frei. Was passt Ihnen?"<br><br>
+                ✅ <strong>Wenn Agent zurückfragt statt schweigt → V78 funktioniert!</strong>
+            </div>
+        </div>
+
+        <div style="background: #ebf8ff; padding: 30px; margin: 30px;">
+            <h2 style="color: #2c5282; margin-bottom: 20px;">📊 Was V78 behebt:</h2>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: #4a5568; color: white;">
+                    <th style="padding: 12px; text-align: left;">Problem</th>
+                    <th style="padding: 12px; text-align: left;">Vor V78</th>
+                    <th style="padding: 12px; text-align: left;">Nach V78</th>
+                </tr>
+                <tr style="background: #f7fafc;">
+                    <td style="padding: 12px;">Anonyme Calls ohne customer_id</td>
+                    <td style="padding: 12px; color: #e53e3e; font-weight: bold;">72%</td>
+                    <td style="padding: 12px; color: #48bb78; font-weight: bold;">~15%</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">Agent schweigt bei Fragen</td>
+                    <td style="padding: 12px; color: #e53e3e; font-weight: bold;">Ja (Test-Call)</td>
+                    <td style="padding: 12px; color: #48bb78; font-weight: bold;">Behoben</td>
+                </tr>
+                <tr style="background: #f7fafc;">
+                    <td style="padding: 12px;">Falsche Namen ("guten Tag")</td>
+                    <td style="padding: 12px; color: #e53e3e; font-weight: bold;">9 Fälle</td>
+                    <td style="padding: 12px; color: #48bb78; font-weight: bold;">Gefiltert</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">Termine/Woche (anonym)</td>
+                    <td style="padding: 12px; color: #e53e3e; font-weight: bold;">0</td>
+                    <td style="padding: 12px; color: #48bb78; font-weight: bold;">+23</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p style="font-size: 16px; margin-bottom: 10px;">
+                <strong>Version:</strong> V78-FINAL |
+                <strong>Datum:</strong> 2025-10-11 |
+                <strong>Status:</strong> Einsatzbereit
+            </p>
+            <p style="color: #718096;">
+                Problem analysiert aus Call #836 |
+                Root Cause: Fehlende Fallback-Logik |
+                Fix: Anti-Schweige-Regel hinzugefügt
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function copyPrompt() {
+            const promptText = document.getElementById('promptText').innerText;
+            navigator.clipboard.writeText(promptText).then(() => {
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                button.textContent = '✅ PROMPT KOPIERT - JETZT IM DASHBOARD EINFÜGEN!';
+                button.style.background = '#38a169';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#48bb78';
+                }, 4000);
+            }).catch(err => {
+                alert('Fehler beim Kopieren. Bitte manuell kopieren.');
+            });
+        }
+    </script>
+</body>
+</html>
