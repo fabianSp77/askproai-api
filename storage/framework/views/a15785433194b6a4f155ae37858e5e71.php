@@ -1,12 +1,8 @@
-{{--
-    Appointment Booking Flow Wrapper
-    Integrates AppointmentBookingFlow Livewire component into Filament form
-    Handles Livewire events and updates form fields
---}}
+
 
 <div x-data="{
-    selectedSlot: @js($preselectedSlot ?? null),
-    selectedServiceId: @js($preselectedServiceId ?? null),
+    selectedSlot: <?php echo \Illuminate\Support\Js::from($preselectedSlot ?? null)->toHtml() ?>,
+    selectedServiceId: <?php echo \Illuminate\Support\Js::from($preselectedServiceId ?? null)->toHtml() ?>,
     selectedBranchId: null,
     selectedCustomerId: null,
 }"
@@ -83,9 +79,10 @@ x-on:service-selected.window="
         }
     }
 
-    // Note: Form component not found is OK - the booking flow handles service selection internally
-    // The form fields will be populated when user selects a time slot
-    console.log('[BookingFlowWrapper] Service selection handled by booking flow component');
+    if (!formUpdated) {
+        console.warn('[BookingFlowWrapper] ⚠️  Form component not found, service_id not updated');
+        console.log('[BookingFlowWrapper] Note: This is OK if booking flow handles it internally');
+    }
 "
 x-on:employee-selected.window="
     // Capture employee/staff selection
@@ -156,9 +153,25 @@ x-on:slot-selected.window="
         }
     }
 ">
-    @livewire('appointment-booking-flow', [
+    <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('appointment-booking-flow', [
         'companyId' => $companyId,
         'preselectedServiceId' => $preselectedServiceId,
         'preselectedSlot' => $preselectedSlot,
-    ])
+    ]);
+
+$__html = app('livewire')->mount($__name, $__params, 'lw-3420277767-0', $__slots ?? [], get_defined_vars());
+
+echo $__html;
+
+unset($__html);
+unset($__name);
+unset($__params);
+unset($__split);
+if (isset($__slots)) unset($__slots);
+?>
 </div>
+<?php /**PATH /var/www/api-gateway/resources/views/livewire/appointment-booking-flow-wrapper.blade.php ENDPATH**/ ?>
