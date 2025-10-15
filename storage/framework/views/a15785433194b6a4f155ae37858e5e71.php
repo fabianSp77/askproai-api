@@ -55,21 +55,23 @@ x-on:service-selected.window="
     selectedServiceId = $event.detail.serviceId;
     console.log('[BookingFlowWrapper] Service selected:', $event.detail.serviceId);
 
-    // Find parent form
-    const form = $el.closest('form');
-    if (!form) {
-        console.error('[BookingFlowWrapper] Form not found');
+    // Find parent Livewire component (Filament uses Livewire for forms)
+    const livewireComponent = $el.closest('[wire\\\\:id]');
+    if (!livewireComponent) {
+        console.error('[BookingFlowWrapper] Livewire component not found');
         return;
     }
 
-    // Update service_id field (hidden in create mode, but still exists)
-    const serviceSelect = form.querySelector('select[name=service_id]') || form.querySelector('input[name=service_id]');
-    if (serviceSelect) {
-        serviceSelect.value = $event.detail.serviceId;
-        serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('[BookingFlowWrapper] service_id updated:', $event.detail.serviceId);
+    // Get Livewire instance
+    const livewireId = livewireComponent.getAttribute('wire:id');
+    const livewire = window.Livewire.find(livewireId);
+
+    if (livewire) {
+        // Update Livewire data directly (Filament form data is in data.field_name)
+        livewire.set('data.service_id', $event.detail.serviceId);
+        console.log('[BookingFlowWrapper] Livewire service_id updated:', $event.detail.serviceId);
     } else {
-        console.warn('[BookingFlowWrapper] service_id field not found');
+        console.error('[BookingFlowWrapper] Livewire instance not found');
     }
 "
 x-on:employee-selected.window="
