@@ -79,10 +79,9 @@ x-on:service-selected.window="
         }
     }
 
-    if (!formUpdated) {
-        console.warn('[BookingFlowWrapper] ⚠️  Form component not found, service_id not updated');
-        console.log('[BookingFlowWrapper] Note: This is OK if booking flow handles it internally');
-    }
+    // Note: Form component not found is OK - the booking flow handles service selection internally
+    // The form fields will be populated when user selects a time slot
+    console.log('[BookingFlowWrapper] Service selection handled by booking flow component');
 "
 x-on:employee-selected.window="
     // Capture employee/staff selection
