@@ -13,6 +13,7 @@ class CalcomV2Client
     private string $apiKey;
     private string $apiVersion;
     private string $baseUrl = 'https://api.cal.com/v2';
+    private ?int $teamId = null;
 
     public function __construct(?Company $company = null)
     {
@@ -25,6 +26,11 @@ class CalcomV2Client
 
         // Get API version from ENV with fallback
         $this->apiVersion = config('services.calcom.api_version', '2024-08-13');
+
+        // Store team ID for team-scoped endpoints
+        if ($company && $company->calcom_team_id) {
+            $this->teamId = $company->calcom_team_id;
+        }
     }
 
     /**
@@ -40,7 +46,25 @@ class CalcomV2Client
     }
 
     /**
-     * GET /v2/slots - Get available time slots
+     * Build team-scoped URL
+     *
+     * CRITICAL: Event Types, Slots, and Bookings are team-scoped in Cal.com v2 API.
+     * Global endpoints /v2/event-types return 404.
+     * Must use /v2/teams/{teamId}/event-types instead.
+     */
+    private function getTeamUrl(string $endpoint): string
+    {
+        if (!$this->teamId) {
+            // Fallback to global endpoint if no team (will likely fail)
+            return "{$this->baseUrl}/{$endpoint}";
+        }
+        return "{$this->baseUrl}/teams/{$this->teamId}/{$endpoint}";
+    }
+
+    /**
+     * GET /v2/teams/{teamId}/slots - Get available time slots
+     *
+     * CRITICAL: Must use team-scoped endpoint. Global /v2/slots returns 404.
      */
     public function getAvailableSlots(int $eventTypeId, Carbon $start, Carbon $end, string $timezone = 'Europe/Berlin'): Response
     {
@@ -48,7 +72,7 @@ class CalcomV2Client
             ->retry(3, 200, function ($exception, $request) {
                 return optional($exception->response)->status() === 429;
             })
-            ->get("{$this->baseUrl}/slots", [
+            ->get($this->getTeamUrl('slots'), [
                 'eventTypeId' => $eventTypeId,
                 'startTime' => $start->toIso8601String(),
                 'endTime' => $end->toIso8601String(),
@@ -115,12 +139,14 @@ class CalcomV2Client
     }
 
     /**
-     * POST /v2/event-types - Create an event type
+     * POST /v2/teams/{teamId}/event-types - Create an event type
+     *
+     * CRITICAL: Must use team-scoped endpoint. Global /v2/event-types returns 404.
      */
     public function createEventType(array $data): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->post("{$this->baseUrl}/event-types", [
+            ->post($this->getTeamUrl('event-types'), [
                 'title' => $data['name'], // e.g. "ACME-BER-FARBE-A-S123"
                 'slug' => Str::slug($data['name']),
                 'description' => $data['description'] ?? '',
@@ -138,39 +164,47 @@ class CalcomV2Client
     }
 
     /**
-     * PATCH /v2/event-types/{id} - Update an event type
+     * PATCH /v2/teams/{teamId}/event-types/{id} - Update an event type
+     *
+     * CRITICAL: Must use team-scoped endpoint.
      */
     public function updateEventType(int $eventTypeId, array $data): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->patch("{$this->baseUrl}/event-types/{$eventTypeId}", $data);
+            ->patch($this->getTeamUrl("event-types/{$eventTypeId}"), $data);
     }
 
     /**
-     * DELETE /v2/event-types/{id} - Delete an event type
+     * DELETE /v2/teams/{teamId}/event-types/{id} - Delete an event type
+     *
+     * CRITICAL: Must use team-scoped endpoint.
      */
     public function deleteEventType(int $eventTypeId): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->delete("{$this->baseUrl}/event-types/{$eventTypeId}");
+            ->delete($this->getTeamUrl("event-types/{$eventTypeId}"));
     }
 
     /**
-     * GET /v2/event-types - Get all event types
+     * GET /v2/teams/{teamId}/event-types - Get all event types
+     *
+     * CRITICAL: Must use team-scoped endpoint. Global /v2/event-types returns 404.
      */
     public function getEventTypes(): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->get("{$this->baseUrl}/event-types");
+            ->get($this->getTeamUrl('event-types'));
     }
 
     /**
-     * GET /v2/event-types/{id} - Get single event type
+     * GET /v2/teams/{teamId}/event-types/{id} - Get single event type
+     *
+     * CRITICAL: Must use team-scoped endpoint. Global /v2/event-types/{id} returns 404.
      */
     public function getEventType(int $eventTypeId): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->get("{$this->baseUrl}/event-types/{$eventTypeId}");
+            ->get($this->getTeamUrl("event-types/{$eventTypeId}"));
     }
 
     /**
@@ -225,11 +259,13 @@ class CalcomV2Client
 
     /**
      * Reserve a slot temporarily
+     *
+     * CRITICAL: Must use team-scoped endpoint.
      */
     public function reserveSlot(int $eventTypeId, string $start, string $end): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->post("{$this->baseUrl}/slots/reserve", [
+            ->post($this->getTeamUrl('slots/reserve'), [
                 'eventTypeId' => $eventTypeId,
                 'start' => $start,
                 'end' => $end,
@@ -239,10 +275,12 @@ class CalcomV2Client
 
     /**
      * Release a reserved slot
+     *
+     * CRITICAL: Must use team-scoped endpoint.
      */
     public function releaseSlot(string $reservationId): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->delete("{$this->baseUrl}/slots/reserve/{$reservationId}");
+            ->delete($this->getTeamUrl("slots/reserve/{$reservationId}"));
     }
 }
