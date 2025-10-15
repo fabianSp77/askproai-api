@@ -427,14 +427,19 @@ class AppointmentBookingWizard extends Component
             // ═══════════════════════════════════════════════════════════
             // CRITICAL: Ensure selectedBranchId is set
             // ═══════════════════════════════════════════════════════════
-            // Fallback: If not selected, try to auto-select from company
-            if (!$this->selectedBranchId) {
+            // Fallback: If not selected or empty, try to auto-select from company
+            if (empty($this->selectedBranchId)) {
                 $companyId = auth()->user()->company_id;
 
                 // Try to find and auto-select the only branch
                 $branches = Branch::where('company_id', $companyId)
                     ->where('is_active', true)
                     ->get(['id']);
+
+                Log::warning('[AppointmentBookingWizard] Branch selection missing', [
+                    'selected_branch_id' => $this->selectedBranchId ?? 'NULL',
+                    'branches_found' => $branches->count(),
+                ]);
 
                 if ($branches->count() === 1) {
                     // Auto-select the only branch
