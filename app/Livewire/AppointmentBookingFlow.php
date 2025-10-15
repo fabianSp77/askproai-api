@@ -55,6 +55,12 @@ class AppointmentBookingFlow extends Component
     public array $searchResults = [];
     public ?string $selectedCustomerName = null;
 
+    // NEW: Create customer inline
+    public bool $showNewCustomerForm = false;
+    public string $newCustomerName = '';
+    public string $newCustomerPhone = '';
+    public string $newCustomerEmail = '';
+
     // Service selection
     public ?string $selectedServiceId = null;
     public int $serviceDuration = 45; // Default: Damenhaarschnitt
@@ -205,9 +211,9 @@ class AppointmentBookingFlow extends Component
 
         $this->searchResults = Customer::where('company_id', $this->companyId)
             ->where(function ($q) use ($query) {
-                $q->where('name', 'ILIKE', "%{$query}%")
-                  ->orWhere('email', 'ILIKE', "%{$query}%")
-                  ->orWhere('phone', 'ILIKE', "%{$query}%");
+                $q->where('name', 'LIKE', "%{$query}%")
+                  ->orWhere('email', 'LIKE', "%{$query}%")
+                  ->orWhere('phone', 'LIKE', "%{$query}%");
             })
             ->limit(10)
             ->get(['id', 'name', 'email', 'phone'])
@@ -240,6 +246,64 @@ class AppointmentBookingFlow extends Component
                 'name' => $customer->name,
             ]);
         }
+    }
+
+    /**
+     * NEW: Show create customer form
+     */
+    public function showCreateCustomerForm(): void
+    {
+        $this->showNewCustomerForm = true;
+        $this->newCustomerName = $this->customerSearchQuery; // Pre-fill with search query
+        $this->newCustomerPhone = '';
+        $this->newCustomerEmail = '';
+    }
+
+    /**
+     * NEW: Create new customer
+     */
+    public function createNewCustomer(): void
+    {
+        // Validation
+        $this->validate([
+            'newCustomerName' => 'required|min:2',
+            'newCustomerPhone' => 'nullable|string',
+            'newCustomerEmail' => 'nullable|email',
+        ]);
+
+        // Create customer
+        $customer = Customer::create([
+            'company_id' => $this->companyId,
+            'name' => $this->newCustomerName,
+            'phone' => $this->newCustomerPhone ?: null,
+            'email' => $this->newCustomerEmail ?: null,
+        ]);
+
+        // Auto-select the new customer
+        $this->selectedCustomerId = $customer->id;
+        $this->selectedCustomerName = $customer->name;
+        $this->customerSearchQuery = $customer->name;
+        $this->showNewCustomerForm = false;
+        $this->searchResults = [];
+
+        // Dispatch event for form integration
+        $this->dispatch('customer-selected', customerId: $customer->id);
+
+        Log::info('[AppointmentBookingFlow] New customer created', [
+            'customer_id' => $customer->id,
+            'name' => $customer->name,
+        ]);
+    }
+
+    /**
+     * NEW: Cancel create customer
+     */
+    public function cancelCreateCustomer(): void
+    {
+        $this->showNewCustomerForm = false;
+        $this->newCustomerName = '';
+        $this->newCustomerPhone = '';
+        $this->newCustomerEmail = '';
     }
 
     /**
