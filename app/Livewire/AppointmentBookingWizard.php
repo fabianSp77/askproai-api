@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\BookingStep;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Staff;
