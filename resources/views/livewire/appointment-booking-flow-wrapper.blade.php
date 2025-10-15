@@ -1,13 +1,102 @@
 {{--
     Appointment Booking Flow Wrapper
     Integrates AppointmentBookingFlow Livewire component into Filament form
-    Handles browser events and updates hidden form fields
+    Handles Livewire events and updates form fields
 --}}
 
 <div x-data="{
     selectedSlot: @js($preselectedSlot ?? null),
     selectedServiceId: @js($preselectedServiceId ?? null),
+    selectedBranchId: null,
+    selectedCustomerId: null,
 }"
+x-on:branch-selected.window="
+    // Capture branch selection
+    selectedBranchId = $event.detail.branchId;
+    console.log('[BookingFlowWrapper] Branch selected:', $event.detail.branchId);
+
+    // Find parent form
+    const form = $el.closest('form');
+    if (!form) {
+        console.error('[BookingFlowWrapper] Form not found');
+        return;
+    }
+
+    // Update branch_id field (SELECT element in Filament)
+    const branchSelect = form.querySelector('select[name=branch_id]');
+    if (branchSelect) {
+        branchSelect.value = $event.detail.branchId;
+        branchSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[BookingFlowWrapper] branch_id updated:', $event.detail.branchId);
+    } else {
+        console.warn('[BookingFlowWrapper] branch_id select not found');
+    }
+"
+x-on:customer-selected.window="
+    // Capture customer selection
+    selectedCustomerId = $event.detail.customerId;
+    console.log('[BookingFlowWrapper] Customer selected:', $event.detail.customerId);
+
+    // Find parent form
+    const form = $el.closest('form');
+    if (!form) {
+        console.error('[BookingFlowWrapper] Form not found');
+        return;
+    }
+
+    // Update customer_id field (SELECT element in Filament)
+    const customerSelect = form.querySelector('select[name=customer_id]');
+    if (customerSelect) {
+        customerSelect.value = $event.detail.customerId;
+        customerSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[BookingFlowWrapper] customer_id updated:', $event.detail.customerId);
+    } else {
+        console.warn('[BookingFlowWrapper] customer_id select not found');
+    }
+"
+x-on:service-selected.window="
+    // Capture service selection
+    selectedServiceId = $event.detail.serviceId;
+    console.log('[BookingFlowWrapper] Service selected:', $event.detail.serviceId);
+
+    // Find parent form
+    const form = $el.closest('form');
+    if (!form) {
+        console.error('[BookingFlowWrapper] Form not found');
+        return;
+    }
+
+    // Update service_id field (hidden in create mode, but still exists)
+    const serviceSelect = form.querySelector('select[name=service_id]') || form.querySelector('input[name=service_id]');
+    if (serviceSelect) {
+        serviceSelect.value = $event.detail.serviceId;
+        serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[BookingFlowWrapper] service_id updated:', $event.detail.serviceId);
+    } else {
+        console.warn('[BookingFlowWrapper] service_id field not found');
+    }
+"
+x-on:employee-selected.window="
+    // Capture employee/staff selection
+    console.log('[BookingFlowWrapper] Employee selected:', $event.detail.employeeId);
+
+    // Find parent form
+    const form = $el.closest('form');
+    if (!form) {
+        console.error('[BookingFlowWrapper] Form not found');
+        return;
+    }
+
+    // Update staff_id field (optional - user selected specific employee)
+    const staffSelect = form.querySelector('select[name=staff_id]') || form.querySelector('input[name=staff_id]');
+    if (staffSelect) {
+        staffSelect.value = $event.detail.employeeId;
+        staffSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[BookingFlowWrapper] staff_id updated:', $event.detail.employeeId);
+    } else {
+        console.warn('[BookingFlowWrapper] staff_id field not found');
+    }
+"
 x-on:slot-selected.window="
     // Capture event data
     selectedSlot = $event.detail.datetime;
