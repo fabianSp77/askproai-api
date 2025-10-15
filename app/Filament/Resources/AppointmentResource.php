@@ -198,7 +198,8 @@ class AppointmentResource extends Resource
                     ])
                     ->collapsible()
                     ->collapsed(false)  // IMMER OFFEN
-                    ->persistCollapsed(),
+                    ->persistCollapsed()
+                    ->visible(fn ($context) => $context !== 'create'), // Hide in CREATE mode (handled by Booking Flow)
 
                 // 💇 WAS WIRD GEMACHT? - Service & Staff Section
                 Section::make('💇 Was wird gemacht?')
@@ -299,10 +300,11 @@ class AppointmentResource extends Resource
                     ])
                     ->collapsible()
                     ->collapsed(false)  // IMMER OFFEN
-                    ->persistCollapsed(),
+                    ->persistCollapsed()
+                    ->visible(fn ($context) => $context !== 'create'), // Hide in CREATE mode (handled by Booking Flow)
 
                 // ⏰ WANN? Section - Time Selection with Week Picker
-                Section::make('⏰ Wann?')
+                Section::make(fn ($context) => $context === 'create' ? '📅 Termin buchen' : '⏰ Wann?')
                     ->description(function ($context, $record) {
                         if ($context === 'edit' && $record) {
                             $start = Carbon::parse($record->starts_at);
@@ -318,7 +320,7 @@ class AppointmentResource extends Resource
                             };
                             return "**{$start->format('d.m.Y H:i')} - {$end->format('H:i')} Uhr** ({$statusLabel})";
                         }
-                        return 'Zeitpunkt des Termins festlegen';
+                        return 'Wählen Sie Filiale, Kunde, Service, Mitarbeiter und Termin';
                     })
                     ->schema([
                         // NEW: V4 Professional Booking Flow (Service-First)
@@ -339,7 +341,39 @@ class AppointmentResource extends Resource
                             ->live()
                             ->columnSpanFull()
                             ->dehydrated(false)
-                            ->extraAttributes(['class' => 'booking-flow-field']),
+                            ->extraAttributes(['class' => 'booking-flow-field'])
+                            ->visible(fn ($context) => $context === 'create'), // Only in CREATE mode
+
+                        // Hidden Fields: For BookingFlowWrapper to populate (CREATE mode only)
+                        Forms\Components\TextInput::make('branch_id')
+                            ->hidden()
+                            ->visible(fn ($context) => $context === 'create')
+                            ->dehydrated(),
+
+                        Forms\Components\TextInput::make('customer_id')
+                            ->hidden()
+                            ->visible(fn ($context) => $context === 'create')
+                            ->dehydrated(),
+
+                        Forms\Components\TextInput::make('service_id')
+                            ->hidden()
+                            ->visible(fn ($context) => $context === 'create')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $service = Service::find($state);
+                                    if ($service) {
+                                        $set('duration_minutes', $service->duration_minutes ?? 30);
+                                        $set('price', $service->price);
+                                    }
+                                }
+                            })
+                            ->dehydrated(),
+
+                        Forms\Components\TextInput::make('staff_id')
+                            ->hidden()
+                            ->visible(fn ($context) => $context === 'create')
+                            ->dehydrated(),
 
                         // Hidden Field: starts_at (populated by Week Picker via Livewire)
                         Forms\Components\Hidden::make('starts_at')
