@@ -345,15 +345,18 @@ class AppointmentResource extends Resource
                             ->visible(fn ($context) => $context === 'create'), // Only in CREATE mode
 
                         // Hidden Fields: For BookingFlowWrapper to populate (CREATE mode only)
-                        // Note: Using Hidden component instead of TextInput to ensure DOM rendering
+                        // Note: Using Hidden component with empty string default to force DOM rendering
                         Forms\Components\Hidden::make('branch_id')
-                            ->default(null),
+                            ->default('')
+                            ->dehydrated(),
 
                         Forms\Components\Hidden::make('customer_id')
-                            ->default(null),
+                            ->default('')
+                            ->dehydrated(),
 
                         Forms\Components\Hidden::make('service_id')
-                            ->default(null)
+                            ->default('')
+                            ->dehydrated()
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
@@ -366,7 +369,8 @@ class AppointmentResource extends Resource
                             }),
 
                         Forms\Components\Hidden::make('staff_id')
-                            ->default(null),
+                            ->default('')
+                            ->dehydrated(),
 
                         // Hidden Field: starts_at (populated by Week Picker via Livewire)
                         Forms\Components\Hidden::make('starts_at')
