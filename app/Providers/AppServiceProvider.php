@@ -17,12 +17,26 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Number;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\Appointments\Contracts\AvailabilityServiceInterface;
+use App\Services\Appointments\WeeklyAvailabilityService;
+use App\Services\Appointments\Contracts\BookingServiceInterface;
+use App\Services\Appointments\BookingService;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Bind Availability Service Interface
+        $this->app->bind(
+            AvailabilityServiceInterface::class,
+            WeeklyAvailabilityService::class
+        );
+
+        // Bind Booking Service Interface
+        $this->app->bind(
+            BookingServiceInterface::class,
+            BookingService::class
+        );
     }
 
     public function boot(): void
