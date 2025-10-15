@@ -116,6 +116,32 @@ class Service extends Model
         'reschedule_policy' => 'array',
     ];
 
+    /**
+     * Boot the model - Add Cal.com event type ownership validation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($service) {
+            // Validate Cal.com event type ownership (Multi-Tenant Security)
+            if ($service->calcom_event_type_id && $service->company_id) {
+                $isValid = \Illuminate\Support\Facades\DB::table('calcom_event_mappings')
+                    ->where('calcom_event_type_id', (string)$service->calcom_event_type_id)
+                    ->where('company_id', $service->company_id)
+                    ->exists();
+
+                if (!$isValid) {
+                    throw new \Exception(
+                        "Security violation: Event Type {$service->calcom_event_type_id} does not " .
+                        "belong to company {$service->company_id}'s Cal.com team. " .
+                        "Only event types from your Cal.com team are allowed."
+                    );
+                }
+            }
+        });
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
