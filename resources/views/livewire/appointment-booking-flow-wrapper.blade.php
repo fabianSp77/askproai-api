@@ -60,7 +60,7 @@ x-on:service-selected.window="
     console.log('[BookingFlowWrapper] Service selected:', $event.detail.serviceId);
 
     // Find ALL Livewire components (we need both the form and the booking flow)
-    const livewireComponents = document.querySelectorAll('[wire\\\\:id]');
+    const livewireComponents = document.querySelectorAll('[wire\\:id]');
 
     let formUpdated = false;
 
