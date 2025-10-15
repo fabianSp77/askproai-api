@@ -274,12 +274,17 @@ class RetellFunctionCallHandler extends Controller
 
             // If not available, automatically find alternatives (SLOW - 3s+!)
             // SECURITY: Set tenant context for cache isolation
+            // 🔧 FIX 2025-10-13: Get customer_id to filter out existing appointments
+            $call = $call ?? $this->callLifecycle->findCallByRetellId($callId);
+            $customerId = $call?->customer_id;
+
             $alternatives = $this->alternativeFinder
                 ->setTenantContext($companyId, $branchId)
                 ->findAlternatives(
                     $requestedDate,
                     $duration,
-                    $service->calcom_event_type_id
+                    $service->calcom_event_type_id,
+                    $customerId  // Pass customer ID to prevent offering conflicting times
                 );
 
             return $this->responseFormatter->success([
@@ -349,12 +354,17 @@ class RetellFunctionCallHandler extends Controller
 
             // Find alternatives using our sophisticated finder
             // SECURITY: Set tenant context for cache isolation
+            // 🔧 FIX 2025-10-13: Get customer_id to filter out existing appointments
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+            $customerId = $call?->customer_id;
+
             $alternatives = $this->alternativeFinder
                 ->setTenantContext($companyId, $branchId)
                 ->findAlternatives(
                     $requestedDate,
                     $duration,
-                    $service->calcom_event_type_id
+                    $service->calcom_event_type_id,
+                    $customerId  // Pass customer ID to prevent offering conflicting times
                 );
 
             // Format response for natural conversation
@@ -947,6 +957,51 @@ class RetellFunctionCallHandler extends Controller
                 ]);
             }
 
+            // 🔧 FIX V84 (Call 872): Name Validation - Reject placeholder names
+            // Prevent bookings with "Unbekannt", "Anonym", or empty names
+            $placeholderNames = ['Unbekannt', 'Anonym', 'Anonymous', 'Unknown'];
+            $isPlaceholder = empty($name) || in_array(trim($name), $placeholderNames);
+
+            if ($isPlaceholder) {
+                Log::warning('⚠️ PROMPT-VIOLATION: Attempting to book without real customer name', [
+                    'call_id' => $callId,
+                    'name' => $name,
+                    'violation_type' => 'missing_customer_name',
+                    'datum' => $datum,
+                    'uhrzeit' => $uhrzeit
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'missing_customer_name',
+                    'message' => 'Bitte erfragen Sie zuerst den Namen des Kunden. Sagen Sie: "Darf ich Ihren Namen haben?"',
+                    'prompt_violation' => true,
+                    'bestaetigung_status' => 'error'
+                ], 200);
+            }
+
+            // 🔧 FIX (Call 863): Required Fields Validation
+            // Prevent agent from calling collect_appointment without date/time
+            if (empty($datum) || empty($uhrzeit)) {
+                Log::warning('⚠️ PROMPT-VIOLATION: Agent called collect_appointment without date/time', [
+                    'call_id' => $callId,
+                    'datum' => $datum,
+                    'uhrzeit' => $uhrzeit,
+                    'name' => $name
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'missing_required_fields',
+                    'message' => 'Bitte fragen Sie nach Datum und Uhrzeit bevor Sie einen Termin prüfen. Sagen Sie: "Für welchen Tag und welche Uhrzeit möchten Sie den Termin?"',
+                    'missing_fields' => [
+                        'datum' => empty($datum),
+                        'uhrzeit' => empty($uhrzeit)
+                    ],
+                    'bestaetigung_status' => 'error'
+                ], 200);
+            }
+
             // Parse the date and time using existing helper methods
             $appointmentDate = null;
             if ($datum && $uhrzeit) {
@@ -971,6 +1026,31 @@ class RetellFunctionCallHandler extends Controller
                         'parsed_date' => $parsedDateStr,
                         'final_datetime' => $appointmentDate->format('Y-m-d H:i')
                     ]);
+
+                    // 🔧 FIX (Call 863): Past-Time-Validation
+                    // Reject appointments in the past
+                    $now = Carbon::now('Europe/Berlin');
+                    if ($appointmentDate->isPast()) {
+                        $diffHours = abs($appointmentDate->diffInHours($now, false));
+
+                        Log::critical('🚨 PAST-TIME-BOOKING-ATTEMPT', [
+                            'call_id' => $callId,
+                            'requested' => $appointmentDate->format('Y-m-d H:i'),
+                            'current_time' => $now->format('Y-m-d H:i'),
+                            'diff_hours' => $diffHours,
+                            'datum_input' => $datum,
+                            'uhrzeit_input' => $uhrzeit
+                        ]);
+
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'past_time',
+                            'message' => 'Dieser Termin liegt in der Vergangenheit. Bitte wählen Sie einen zukünftigen Zeitpunkt. Sagen Sie: "Meinen Sie heute um ' . $appointmentDate->format('H:i') . ' Uhr oder morgen?"',
+                            'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                            'current_time' => $now->format('Y-m-d H:i'),
+                            'bestaetigung_status' => 'error'
+                        ], 200);
+                    }
                 }
             }
 
@@ -1183,13 +1263,18 @@ class RetellFunctionCallHandler extends Controller
                 if (!$exactTimeAvailable) {
                     Log::info('🔍 Exact time not available, searching for alternatives...');
 
+                    // 🔧 FIX 2025-10-13: Get customer_id to filter out existing appointments
+                    // Use customer if already loaded, otherwise try to get from call
+                    $customerId = ($customer ?? null)?->id ?? $call?->customer_id;
+
                     // SECURITY: Set tenant context for cache isolation
                     $alternatives = $this->alternativeFinder
                         ->setTenantContext($companyId, $branchId)
                         ->findAlternatives(
                             $checkDate,
                             60, // duration in minutes
-                            $service->calcom_event_type_id
+                            $service->calcom_event_type_id,
+                            $customerId  // Pass customer ID to prevent offering conflicting times
                         );
                     $alternativesChecked = true;
                 }
@@ -1235,20 +1320,31 @@ class RetellFunctionCallHandler extends Controller
                     $call->save();
                 }
 
-                // SIMPLIFIED WORKFLOW: Book directly if time available, unless explicitly told not to
-                // This eliminates the need for two-step process in most cases
-                // - confirmBooking = null/not set → BOOK (default behavior)
-                // - confirmBooking = true → BOOK (explicit confirmation)
-                // - confirmBooking = false → DON'T BOOK (check only)
-                $shouldBook = $exactTimeAvailable && ($confirmBooking !== false);
+                // 🔧 V84 FIX: 2-STEP ENFORCEMENT - Default to CHECK-ONLY instead of AUTO-BOOK
+                // This prevents direct booking without user confirmation
+                // - confirmBooking = null/not set → CHECK-ONLY (default behavior - V84 change)
+                // - confirmBooking = true → BOOK (explicit confirmation required)
+                // - confirmBooking = false → CHECK-ONLY (explicit check only)
+                $shouldBook = $exactTimeAvailable && ($confirmBooking === true);
+
+                // Track prompt violations for monitoring
+                if ($confirmBooking === null && $exactTimeAvailable) {
+                    Log::warning('⚠️ PROMPT-VIOLATION: Missing bestaetigung parameter - defaulting to CHECK-ONLY', [
+                        'call_id' => $callId,
+                        'defaulting_to' => 'check_only',
+                        'expected' => 'bestaetigung: false for STEP 1, bestaetigung: true for STEP 2',
+                        'date' => $appointmentDate->format('Y-m-d'),
+                        'time' => $appointmentDate->format('H:i')
+                    ]);
+                }
 
                 if ($shouldBook) {
-                    // Book the exact requested time
-                    Log::info('📅 Booking exact requested time (simplified workflow)', [
+                    // Book the exact requested time (V84: ONLY with explicit confirmation)
+                    Log::info('📅 Booking exact requested time (V84: 2-step confirmation)', [
                         'requested' => $appointmentDate->format('H:i'),
                         'exact_match' => true,
-                        'auto_book' => $confirmBooking === null || !isset($confirmBooking),
-                        'explicit_confirm' => $confirmBooking === true
+                        'confirmation_received' => $confirmBooking === true,
+                        'workflow' => '2-step (bestaetigung: false → user confirms → bestaetigung: true)'
                     ]);
 
                     Log::info('🎯 Booking attempt', [
@@ -1264,6 +1360,88 @@ class RetellFunctionCallHandler extends Controller
                     $calcomService = app(\App\Services\CalcomService::class);
 
                     try {
+                        // 🔧 FIX V85 (Calls 874/875): DOUBLE-CHECK availability immediately before booking
+                        // Problem: 14-second gap between initial check and booking allows slot to be taken
+                        // Solution: Re-check availability right before createBooking() to prevent race condition
+                        Log::info('🔍 V85: Double-checking availability before booking...', [
+                            'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                            'reason' => 'Prevent race condition from initial check to booking'
+                        ]);
+
+                        $stillAvailable = false;
+                        try {
+                            $recheckResponse = $calcomService->getAvailableSlots(
+                                $service->calcom_event_type_id,
+                                $appointmentDate->format('Y-m-d'),
+                                $appointmentDate->format('Y-m-d')
+                            );
+
+                            if ($recheckResponse->successful()) {
+                                $recheckData = $recheckResponse->json();
+                                $recheckSlots = $recheckData['data']['slots'][$appointmentDate->format('Y-m-d')] ?? [];
+                                $requestedTimeStr = $appointmentDate->format('H:i');
+
+                                foreach ($recheckSlots as $slot) {
+                                    $slotTime = Carbon::parse($slot['time']);
+                                    if ($slotTime->format('H:i') === $requestedTimeStr) {
+                                        $stillAvailable = true;
+                                        Log::info('✅ V85: Slot STILL available - proceeding with booking', [
+                                            'requested' => $requestedTimeStr,
+                                            'verified_at' => now()->toIso8601String()
+                                        ]);
+                                        break;
+                                    }
+                                }
+
+                                if (!$stillAvailable) {
+                                    Log::warning('⚠️ V85: Slot NO LONGER available - offering alternatives', [
+                                        'requested' => $requestedTimeStr,
+                                        'reason' => 'Taken between initial check and booking attempt',
+                                        'time_gap' => 'Race condition detected'
+                                    ]);
+
+                                    // Slot was taken in the meantime - find alternatives immediately
+                                    if (!$alternativesChecked) {
+                                        $customerId = $customer?->id ?? $call?->customer_id;
+                                        $alternatives = $this->alternativeFinder
+                                            ->setTenantContext($companyId, $branchId)
+                                            ->findAlternatives(
+                                                $appointmentDate,
+                                                60,
+                                                $service->calcom_event_type_id,
+                                                $customerId
+                                            );
+                                        $alternativesChecked = true;
+                                    }
+
+                                    // Return alternatives instead of attempting booking
+                                    $alternativesList = array_slice($alternatives['alternatives'] ?? [], 0, 2);
+                                    if (!empty($alternativesList)) {
+                                        return response()->json([
+                                            'success' => false,
+                                            'status' => 'slot_taken',
+                                            'message' => "Der Termin um {$appointmentDate->format('H:i')} Uhr wurde gerade vergeben. Ich habe Alternativen gefunden:",
+                                            'alternatives' => $alternativesList,
+                                            'reason' => 'race_condition_detected'
+                                        ], 200);
+                                    } else {
+                                        return response()->json([
+                                            'success' => false,
+                                            'status' => 'no_availability',
+                                            'message' => "Der Termin um {$appointmentDate->format('H:i')} Uhr wurde gerade vergeben und leider sind keine Alternativen verfügbar.",
+                                            'reason' => 'race_condition_detected'
+                                        ], 200);
+                                    }
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('V85: Double-check failed - proceeding with booking attempt', [
+                                'error' => $e->getMessage(),
+                                'fallback' => 'Will attempt booking and handle error if slot taken'
+                            ]);
+                            // Continue with booking attempt even if double-check fails
+                        }
+
                         // Prepare booking data
                         // OPTIMIZATION: Reuse $call from earlier for email lookup
                         $currentCall = $call;
@@ -1393,13 +1571,17 @@ class RetellFunctionCallHandler extends Controller
                                 try {
                                     // OPTIMIZATION: Use cached alternatives if already checked
                                     if (!$alternativesChecked) {
+                                        // 🔧 FIX 2025-10-13: Get customer_id to filter out existing appointments
+                                        $customerId = $customer?->id ?? $call?->customer_id;
+
                                         // SECURITY: Set tenant context for cache isolation
                                         $alternatives = $this->alternativeFinder
                                             ->setTenantContext($companyId, $branchId)
                                             ->findAlternatives(
                                                 $appointmentDate,
                                                 60,
-                                                $service->calcom_event_type_id
+                                                $service->calcom_event_type_id,
+                                                $customerId  // Pass customer ID to prevent offering conflicting times
                                             );
                                         $alternativesChecked = true;
                                     }
@@ -1453,7 +1635,30 @@ class RetellFunctionCallHandler extends Controller
                     }
                 }
 
-                // If time is not available OR if explicitly checking only (confirmBooking=false)
+                // 🔧 V84 FIX: Handle CHECK-ONLY mode (STEP 1 of 2-step process)
+                // If time IS available BUT no confirmation (STEP 1), ask user for confirmation
+                elseif ($exactTimeAvailable && ($confirmBooking === false || $confirmBooking === null)) {
+                    Log::info('✅ V84: STEP 1 - Time available, requesting user confirmation', [
+                        'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                        'bestaetigung' => $confirmBooking,
+                        'next_step' => 'Wait for user confirmation, then call with bestaetigung: true'
+                    ]);
+
+                    // Format German date/time for natural language
+                    $germanDate = $appointmentDate->locale('de')->translatedFormat('l, d. F');
+                    $germanTime = $appointmentDate->format('H:i');
+
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'available',
+                        'message' => "Der Termin am {$germanDate} um {$germanTime} Uhr ist noch frei. Soll ich den Termin für Sie buchen?",
+                        'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                        'awaiting_confirmation' => true,
+                        'next_action' => 'Wait for user "Ja", then call collect_appointment_data with bestaetigung: true'
+                    ], 200);
+                }
+
+                // If time is not available OR if explicitly checking only
                 elseif (!$exactTimeAvailable || $confirmBooking === false) {
                     // AlternativeFinder now handles ALL fallback logic with Cal.com verification
 
@@ -2068,10 +2273,13 @@ class RetellFunctionCallHandler extends Controller
 
             if (!$isAvailable) {
                 // Find alternatives
+                // 🔧 FIX 2025-10-13: Get customer_id to filter out existing appointments
+                $customerId = $call?->customer_id ?? $appointment?->customer_id;
+
                 $alternativeFinder = app(\App\Services\AppointmentAlternativeFinder::class);
                 $alternatives = $alternativeFinder
                     ->setTenantContext($companyId, $branchId)
-                    ->findAlternatives($newDateTime, 60, $service->calcom_event_type_id);
+                    ->findAlternatives($newDateTime, 60, $service->calcom_event_type_id, $customerId);
 
                 $message = "Der Termin am {$newDate} um {$newTime} Uhr ist leider nicht verfügbar.";
                 if (!empty($alternatives['responseText'])) {

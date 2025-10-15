@@ -2,7 +2,11 @@
 
 namespace App\Observers;
 
+use App\Events\ConfigurationCreated;
+use App\Events\ConfigurationDeleted;
+use App\Events\ConfigurationUpdated;
 use App\Models\PolicyConfiguration;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class PolicyConfigurationObserver
@@ -14,6 +18,39 @@ class PolicyConfigurationObserver
     {
         $this->validatePolicyConfig($policyConfiguration);
         $this->sanitizeConfigValues($policyConfiguration);
+
+        // Ensure company_id is set from auth user if not already set
+        if (!$policyConfiguration->company_id && auth()->check()) {
+            $policyConfiguration->company_id = auth()->user()->company_id;
+        }
+    }
+
+    /**
+     * Handle the PolicyConfiguration "created" event.
+     */
+    public function created(PolicyConfiguration $policyConfiguration): void
+    {
+        try {
+            ConfigurationCreated::dispatch(
+                (string) $policyConfiguration->company_id,
+                PolicyConfiguration::class,
+                $policyConfiguration->id,
+                [
+                    'policy_type' => $policyConfiguration->policy_type,
+                    'configurable_type' => $policyConfiguration->configurable_type,
+                    'configurable_id' => $policyConfiguration->configurable_id,
+                    'config' => $policyConfiguration->config,
+                    'is_override' => $policyConfiguration->is_override,
+                ],
+                auth()->id(),
+                $this->getSource()
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch ConfigurationCreated event', [
+                'error' => $e->getMessage(),
+                'model_id' => $policyConfiguration->id,
+            ]);
+        }
     }
 
     /**
@@ -24,6 +61,96 @@ class PolicyConfigurationObserver
         if ($policyConfiguration->isDirty('config') || $policyConfiguration->isDirty('policy_type')) {
             $this->validatePolicyConfig($policyConfiguration);
             $this->sanitizeConfigValues($policyConfiguration);
+        }
+    }
+
+    /**
+     * Handle the PolicyConfiguration "updated" event.
+     */
+    public function updated(PolicyConfiguration $policyConfiguration): void
+    {
+        try {
+            $changes = $policyConfiguration->getChanges();
+            $original = $policyConfiguration->getRawOriginal();
+
+            // Fire an event for each changed field
+            foreach ($changes as $key => $newValue) {
+                if ($key === 'updated_at') {
+                    continue; // Skip timestamp changes
+                }
+
+                $oldValue = $original[$key] ?? null;
+
+                ConfigurationUpdated::dispatch(
+                    (string) $policyConfiguration->company_id,
+                    PolicyConfiguration::class,
+                    $policyConfiguration->id,
+                    $key,
+                    $oldValue,
+                    $newValue,
+                    auth()->id(),
+                    $this->getSource()
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch ConfigurationUpdated event', [
+                'error' => $e->getMessage(),
+                'model_id' => $policyConfiguration->id,
+            ]);
+        }
+    }
+
+    /**
+     * Handle the PolicyConfiguration "deleted" event.
+     */
+    public function deleted(PolicyConfiguration $policyConfiguration): void
+    {
+        try {
+            ConfigurationDeleted::dispatch(
+                (string) $policyConfiguration->company_id,
+                PolicyConfiguration::class,
+                $policyConfiguration->id,
+                [
+                    'policy_type' => $policyConfiguration->policy_type,
+                    'configurable_type' => $policyConfiguration->configurable_type,
+                    'configurable_id' => $policyConfiguration->configurable_id,
+                    'config' => $policyConfiguration->config,
+                ],
+                true,
+                auth()->id(),
+                $this->getSource()
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch ConfigurationDeleted event', [
+                'error' => $e->getMessage(),
+                'model_id' => $policyConfiguration->id,
+            ]);
+        }
+    }
+
+    /**
+     * Handle the PolicyConfiguration "forceDeleted" event.
+     */
+    public function forceDeleted(PolicyConfiguration $policyConfiguration): void
+    {
+        try {
+            ConfigurationDeleted::dispatch(
+                (string) $policyConfiguration->company_id,
+                PolicyConfiguration::class,
+                $policyConfiguration->id,
+                [
+                    'policy_type' => $policyConfiguration->policy_type,
+                    'config' => $policyConfiguration->config,
+                ],
+                false,
+                auth()->id(),
+                $this->getSource()
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch ConfigurationDeleted event (force)', [
+                'error' => $e->getMessage(),
+                'model_id' => $policyConfiguration->id,
+            ]);
         }
     }
 
@@ -147,5 +274,21 @@ class PolicyConfigurationObserver
             'array' => is_array($value),
             default => false,
         };
+    }
+
+    /**
+     * Determine the source of the change
+     */
+    private function getSource(): string
+    {
+        if (app()->runningInConsole()) {
+            return 'console';
+        }
+
+        if (request()->is('api/*')) {
+            return 'api';
+        }
+
+        return 'ui';
     }
 }

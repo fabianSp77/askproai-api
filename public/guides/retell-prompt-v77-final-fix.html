@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell V77 - FINAL FIX</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2d3748;
+            border-bottom: 3px solid #48bb78;
+            padding-bottom: 15px;
+        }
+        .problem {
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .solution {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .timeline {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        .fix {
+            background: #fffaf0;
+            border: 2px solid #ed8936;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        pre {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: #fbd38d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .copy-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .copy-btn:hover {
+            background: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Retell V77 - FINAL FIX: "Nächster freier Termin" Handling</h1>
+
+        <div class="problem">
+            <h2>❌ Was im Test-Call schiefging:</h2>
+            <div class="timeline">
+[01.09s] Agent: "Willkommen bei Ask Pro Ey-Ei..." ✅
+[10.66s] User: "Wann haben Sie den nächsten freien Termin?" ✅
+[16.47s] Agent ruft current_time_berlin() auf
+[18.62s] Agent ruft check_customer() auf → "new_customer"
+[???] Agent SCHWEIGT - keine Antwort! ❌
+[33.87s] User legt auf (frustrated)
+            </div>
+
+            <h3>Warum schwieg der Agent?</h3>
+            <ul>
+                <li>User fragte nach "nächstem freien Termin" OHNE spezifisches Datum</li>
+                <li>Prompt sagt: "REQUIRED: DATUM" vor Function Call</li>
+                <li>Agent hat kein Datum → blockiert</li>
+                <li>Prompt definiert KEINEN Fallback für diese Situation</li>
+                <li>Agent wartet... schweigt... User legt auf</li>
+            </ul>
+        </div>
+
+        <div class="solution">
+            <h2>✅ Die Lösung: Fallback-Handling hinzufügen</h2>
+            <p>Der Prompt braucht eine KLARE Anweisung was zu tun ist wenn User nach "nächstem freien Termin" fragt OHNE Datum zu nennen.</p>
+        </div>
+
+        <div class="fix">
+            <h2>🔧 Änderung im collect_appointment_data Abschnitt:</h2>
+
+            <h3>ALT (verursacht Schweigen):</h3>
+            <pre>TRIGGERS:
+├─ "wann haben sie frei"
+├─ "nächsten freien termin"
+
+REQUIRED INFORMATION (Collect BEFORE calling function):
+1. DATUM
+2. UHRZEIT
+3. NAME
+4. DIENSTLEISTUNG</pre>
+
+            <h3>NEU (mit Fallback):</h3>
+            <pre>TRIGGERS:
+├─ "wann haben sie frei"
+├─ "nächsten freien termin"
+├─ "nächster freier termin"
+├─ "wann ist der nächste termin"
+
+⚠️ SPECIAL CASE: "Nächster freier Termin" OHNE spezifisches Datum
+
+Wenn User fragt "Wann ist der nächste freie Termin?" OHNE Datum:
+→ Antworte AKTIV mit Rückfrage (NICHT schweigen!)
+→ "Gerne! Für welchen Tag möchten Sie denn kommen? Heute? Morgen? Oder nächste Woche?"
+→ Warte auf User-Antwort
+→ DANN berechne Datum und rufe Function auf
+
+BEISPIEL:
+User: "Wann haben Sie den nächsten freien Termin?"
+Agent: "Gerne! Für welchen Tag möchten Sie kommen? Heute, morgen oder nächste Woche?"
+User: "Morgen."
+Agent: [Berechnet: morgen = 2025-10-12]
+       "Einen Moment, ich prüfe morgen für Sie..."
+       [Ruft collect_appointment_data auf]
+
+REQUIRED INFORMATION (Collect BEFORE calling function):
+
+1. DATUM (Du berechnest selbst!):
+   User sagt: "nächste Woche Montag"
+   Du berechnest: 2025-10-20
+
+   FALLBACK wenn kein Datum:
+   → Frage: "Für welchen Tag? Heute, morgen oder nächste Woche?"
+   → Nutze: "2025-10-20" in Function
+
+2. UHRZEIT:
+   FALLBACK wenn keine Uhrzeit:
+   → Frage: "Um welche Uhrzeit möchten Sie kommen?"
+   → ODER biete Vorschläge: "Vormittags oder nachmittags?"
+
+3. DIENSTLEISTUNG:
+   FALLBACK: Standard = "Beratung"
+   → Nur fragen wenn unklar
+
+4. NAME (V77 - 3-STUFEN-PRIORITÄT):
+   [... wie vorher ...]</pre>
+        </div>
+
+        <div class="solution">
+            <h2>✅ Was sich ändert:</h2>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #4a5568; color: white;">
+                    <th style="padding: 12px;">Situation</th>
+                    <th style="padding: 12px;">V77 Alt (schweigt)</th>
+                    <th style="padding: 12px;">V77 Final (antwortet)</th>
+                </tr>
+                <tr style="background: #f7fafc;">
+                    <td style="padding: 12px;">"Wann nächster freier Termin?"</td>
+                    <td style="padding: 12px; background: #fed7d7;">❌ [Schweigen] → User legt auf</td>
+                    <td style="padding: 12px; background: #c6f6d5;">✅ "Für welchen Tag? Heute, morgen...?"</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">"Termin am Montag"</td>
+                    <td style="padding: 12px; background: #c6f6d5;">✅ Funktioniert</td>
+                    <td style="padding: 12px; background: #c6f6d5;">✅ Funktioniert</td>
+                </tr>
+                <tr style="background: #f7fafc;">
+                    <td style="padding: 12px;">"Ich möchte einen Termin"</td>
+                    <td style="padding: 12px; background: #fed7d7;">❌ [Schweigen]</td>
+                    <td style="padding: 12px; background: #c6f6d5;">✅ "Gerne! Für welchen Tag?"</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="fix">
+            <h2>📋 Was du ändern musst:</h2>
+
+            <h3>1. begin_message BEHALTEN (Agent muss zuerst sprechen!)</h3>
+            <p>Du hattest recht - das muss so bleiben:</p>
+            <pre>"begin_message": "Willkommen bei Ask Pro Ey-Ei, Ihr Spezialist für
+KI-Telefonassistenten. Möchten Sie einen Termin mit Fabian Spitzer
+buchen oder haben Sie eine andere Frage?"</pre>
+
+            <h3>2. Prompt-Abschnitt "collect_appointment_data" ERWEITERN</h3>
+            <p>Füge den Fallback-Handler hinzu (siehe oben)</p>
+
+            <button class="copy-btn" onclick="copyText()">📋 Ergänzten Abschnitt kopieren</button>
+
+            <pre id="copyText">═══════════════════════════════════════════════════════════════
+📝 FUNCTION: collect_appointment_data (2-STEP PROCESS!)
+═══════════════════════════════════════════════════════════════
+
+PURPOSE: Book new appointment with availability check + confirmation
+
+TRIGGERS:
+├─ "termin buchen"
+├─ "ich möchte einen termin"
+├─ "wann haben sie frei"
+├─ "nächsten freien termin"
+├─ "nächster freier termin"
+├─ "wann ist der nächste termin"
+└─ "einen termin machen"
+
+⚠️ SPECIAL CASE: "Nächster freier Termin" OHNE spezifisches Datum
+
+Wenn User fragt "Wann ist der nächste freie Termin?" OHNE Datum zu nennen:
+→ Antworte SOFORT mit Rückfrage (NIEMALS schweigen!)
+→ "Gerne! Für welchen Tag möchten Sie denn kommen? Heute? Morgen? Oder nächste Woche?"
+→ Warte auf User-Antwort
+→ DANN berechne Datum und rufe Function auf
+
+BEISPIEL KONVERSATION:
+User: "Wann haben Sie den nächsten freien Termin?"
+Agent: "Gerne! Für welchen Tag möchten Sie kommen? Heute, morgen oder nächste Woche?"
+User: "Morgen."
+Agent: [Berechnet: morgen = 2025-10-12]
+       "Einen Moment, ich prüfe morgen für Sie..."
+       [Ruft collect_appointment_data auf]
+
+⚠️ NIEMALS bei fehlenden Informationen schweigen!
+→ IMMER aktiv zurückfragen!
+
+REQUIRED INFORMATION (Collect BEFORE calling function):
+
+1. DATUM (Du berechnest selbst!):
+   User sagt: "nächste Woche Montag"
+   Du berechnest: 2025-10-20
+   → Nutze: "2025-10-20" in Function
+
+   FALLBACK wenn User kein Datum nennt:
+   → Frage AKTIV: "Für welchen Tag? Heute, morgen oder nächste Woche?"
+   → Nach Antwort: Berechne und nutze Datum
+
+2. UHRZEIT:
+   FALLBACK wenn User keine Uhrzeit nennt:
+   → Frage: "Um welche Uhrzeit möchten Sie kommen?"
+   → ODER biete an: "Vormittags oder nachmittags?"
+
+3. DIENSTLEISTUNG:
+   Standard: "Beratung" (wenn User nichts spezifisches sagt)
+   FALLBACK: Nur bei Unklarheit nachfragen
+
+4. NAME (V77 - 3-STUFEN-PRIORITÄT):
+
+   PRIORITY 1: Von check_customer() (bekannter Kunde)
+   → Nutze diesen Namen ✅
+
+   PRIORITY 2: In Greeting erfragt (unbekannter Kunde)
+   → Nutze den genannten Namen ✅
+   → Validiere: Mindestens 2 Zeichen
+   → NICHT: "guten Tag", "mein Name", "Herr", "Frau"
+
+   PRIORITY 3: Falls noch immer kein Name:
+   → Frage AKTIV: "Einen Moment, für die Buchung benötige ich Ihren Namen."
+   → Warte auf Namen
+   → Validiere erneut
+   → Dann erst Function aufrufen
+
+⚠️ NIEMALS collect_appointment_data() OHNE gültigen Namen aufrufen!
+⚠️ NIEMALS schweigen wenn Informationen fehlen - IMMER zurückfragen!
+
+[... Rest wie vorher ...]</pre>
+        </div>
+
+        <div class="solution">
+            <h2>🎯 Zusammenfassung:</h2>
+
+            <h3>Was bleibt gleich:</h3>
+            <ul>
+                <li>✅ begin_message bleibt (Agent spricht zuerst)</li>
+                <li>✅ start_speaker = "agent" (korrekt!)</li>
+                <li>✅ V77 Begrüßung für bekannte/unbekannte Kunden</li>
+            </ul>
+
+            <h3>Was sich ändert:</h3>
+            <ul>
+                <li>🆕 Fallback-Handling für "nächster freier Termin" ohne Datum</li>
+                <li>🆕 Klare Anweisung: NIEMALS schweigen, immer zurückfragen</li>
+                <li>🆕 Aktive Vorschläge: "Heute, morgen oder nächste Woche?"</li>
+            </ul>
+
+            <h3>Erwartetes Verhalten nach Fix:</h3>
+            <pre style="background: #f0fff4; color: #2d3748; border: 2px solid #48bb78;">User: "Wann haben Sie den nächsten freien Termin?"
+Agent: "Gerne! Für welchen Tag möchten Sie kommen?
+        Heute, morgen oder nächste Woche?"
+User: "Morgen."
+Agent: "Einen Moment, ich prüfe morgen für Sie..."
+       [2-3 Sekunden]
+Agent: "Morgen habe ich um 10 Uhr, 14 Uhr oder 16 Uhr frei.
+        Was passt Ihnen am besten?"
+User: "14 Uhr."
+Agent: "Perfekt! Einen Moment, Ihr Name bitte?"
+User: "Schmidt."
+Agent: "Ich buche morgen, den 12. Oktober um 14 Uhr für Sie..."</pre>
+        </div>
+
+        <div style="background: #ebf8ff; padding: 20px; border-radius: 8px; margin-top: 30px;">
+            <h3>📁 Deployment:</h3>
+            <ol>
+                <li>Kopiere den ergänzten Abschnitt (Copy-Button oben)</li>
+                <li>Ersetze im V77 Prompt den "collect_appointment_data" Abschnitt</li>
+                <li>Save Changes im Retell Dashboard</li>
+                <li>Deploy neue Version</li>
+                <li>Test-Call: Frage "Wann nächster freier Termin?"</li>
+                <li>Agent sollte zurückfragen: "Für welchen Tag?"</li>
+            </ol>
+        </div>
+
+        <div class="problem">
+            <h2>🔍 Warum "begin_message löschen" FALSCH war:</h2>
+            <p>Du hast absolut recht! Wenn ein Kunde anruft, MUSS der Agent zuerst sprechen:</p>
+            <ul>
+                <li>✅ Kunde ruft an → Agent: "Guten Tag!" → Kunde antwortet</li>
+                <li>❌ Kunde ruft an → [Schweigen] → Kunde: "Hallo?" ← absurd!</li>
+            </ul>
+            <p><strong>Entschuldigung für die Verwirrung!</strong> begin_message muss bleiben.</p>
+        </div>
+    </div>
+
+    <script>
+        function copyText() {
+            const text = document.getElementById('copyText').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✅ Kopiert!';
+                setTimeout(() => btn.textContent = '📋 Ergänzten Abschnitt kopieren', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

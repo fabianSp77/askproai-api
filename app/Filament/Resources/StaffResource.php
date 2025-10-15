@@ -225,7 +225,6 @@ class StaffResource extends Resource
                                                     'calcom' => 'Cal.com',
                                                     'other' => 'Sonstige',
                                                 ])
-                                                ->maxLength(255),
                                         ]),
                                     ]),
                             ]),
@@ -445,7 +444,7 @@ class StaffResource extends Resource
                     // Schedule appointment
                     Tables\Actions\Action::make('scheduleAppointment')
                         ->label('Termin planen')
-                        ->icon('heroicon-m-calendar-plus')
+                        ->icon('heroicon-o-calendar-days')
                         ->color('success')
                         ->url(fn ($record) => route('filament.admin.resources.appointments.create', [
                             'staff_id' => $record->id
@@ -478,14 +477,28 @@ class StaffResource extends Resource
                                 ])
                                 ->default(fn ($record) => $record->experience_level),
                         ])
+                        ->modalWidth('2xl')
+                        ->modalHeading('Qualifikationen bearbeiten')
+                        ->modalSubmitActionLabel('Speichern')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($record, array $data) {
-                            $record->update($data);
+                            try {
+                                $record->update($data);
 
-                            Notification::make()
-                                ->title('Qualifikationen aktualisiert')
-                                ->body('Fähigkeiten und Zertifikate wurden aktualisiert.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Qualifikationen aktualisiert')
+                                    ->body('Fähigkeiten und Zertifikate wurden aktualisiert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff updateSkills error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler beim Aktualisieren')
+                                    ->body('Die Qualifikationen konnten nicht gespeichert werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     // Working hours management
@@ -507,14 +520,28 @@ class StaffResource extends Resource
                                 ->numeric()
                                 ->default(fn ($record) => $record->mobility_radius_km),
                         ])
+                        ->modalWidth('2xl')
+                        ->modalHeading('Arbeitszeiten bearbeiten')
+                        ->modalSubmitActionLabel('Speichern')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($record, array $data) {
-                            $record->update($data);
+                            try {
+                                $record->update($data);
 
-                            Notification::make()
-                                ->title('Arbeitszeiten aktualisiert')
-                                ->body('Zeitplan und Verfügbarkeit wurden geändert.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Arbeitszeiten aktualisiert')
+                                    ->body('Zeitplan und Verfügbarkeit wurden geändert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff updateSchedule error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler beim Aktualisieren')
+                                    ->body('Die Arbeitszeiten konnten nicht gespeichert werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     // Availability toggle
@@ -536,18 +563,32 @@ class StaffResource extends Resource
                                 ->label('Notiz zur Änderung')
                                 ->rows(2),
                         ])
+                        ->modalWidth('xl')
+                        ->modalHeading('Verfügbarkeit ändern')
+                        ->modalSubmitActionLabel('Speichern')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($record, array $data) {
-                            $record->update(array_filter($data, fn ($key) => $key !== 'notes', ARRAY_FILTER_USE_KEY));
+                            try {
+                                $record->update(array_filter($data, fn ($key) => $key !== 'notes', ARRAY_FILTER_USE_KEY));
 
-                            if ($data['notes']) {
-                                // TODO: Log availability change with note
+                                if ($data['notes']) {
+                                    // TODO: Log availability change with note
+                                }
+
+                                Notification::make()
+                                    ->title('Verfügbarkeit geändert')
+                                    ->body('Mitarbeiter-Verfügbarkeit wurde aktualisiert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff toggleAvailability error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler beim Aktualisieren')
+                                    ->body('Die Verfügbarkeit konnte nicht geändert werden.')
+                                    ->danger()
+                                    ->send();
                             }
-
-                            Notification::make()
-                                ->title('Verfügbarkeit geändert')
-                                ->body('Mitarbeiter-Verfügbarkeit wurde aktualisiert.')
-                                ->success()
-                                ->send();
                         }),
 
                     // Branch transfer
@@ -566,18 +607,32 @@ class StaffResource extends Resource
                                 ->label('Grund für Wechsel')
                                 ->rows(2),
                         ])
+                        ->modalWidth('xl')
+                        ->modalHeading('Filiale wechseln')
+                        ->modalSubmitActionLabel('Versetzung durchführen')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($record, array $data) {
-                            $oldBranch = $record->branch?->name;
-                            $record->update(['branch_id' => $data['branch_id']]);
-                            $newBranch = $record->fresh()->branch?->name;
+                            try {
+                                $oldBranch = $record->branch?->name;
+                                $record->update(['branch_id' => $data['branch_id']]);
+                                $newBranch = $record->fresh()->branch?->name;
 
-                            // TODO: Log branch transfer
+                                // TODO: Log branch transfer
 
-                            Notification::make()
-                                ->title('Filiale gewechselt')
-                                ->body("Mitarbeiter von '{$oldBranch}' nach '{$newBranch}' versetzt.")
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Filiale gewechselt')
+                                    ->body("Mitarbeiter von '{$oldBranch}' nach '{$newBranch}' versetzt.")
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff transferBranch error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler beim Wechseln')
+                                    ->body('Der Filialwechsel konnte nicht durchgeführt werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         })
                         ->requiresConfirmation(),
 
@@ -601,15 +656,29 @@ class StaffResource extends Resource
                                 ->label('Grund für Änderung')
                                 ->rows(2),
                         ])
+                        ->modalWidth('xl')
+                        ->modalHeading('Verfügbarkeit setzen (Massenbearbeitung)')
+                        ->modalSubmitActionLabel('Aktualisieren')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($records, array $data) {
-                            $updates = array_filter($data, fn ($key) => $key !== 'reason', ARRAY_FILTER_USE_KEY);
-                            $records->each->update($updates);
+                            try {
+                                $updates = array_filter($data, fn ($key) => $key !== 'reason', ARRAY_FILTER_USE_KEY);
+                                $records->each->update($updates);
 
-                            Notification::make()
-                                ->title('Verfügbarkeit aktualisiert')
-                                ->body(count($records) . ' Mitarbeiter wurden aktualisiert.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Verfügbarkeit aktualisiert')
+                                    ->body(count($records) . ' Mitarbeiter wurden aktualisiert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff bulkAvailabilityUpdate error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler bei Massenbearbeitung')
+                                    ->body('Die Verfügbarkeit konnte nicht aktualisiert werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         })
                         ->requiresConfirmation(),
 
@@ -624,14 +693,28 @@ class StaffResource extends Resource
                                 ->required()
                                 ->searchable(),
                         ])
+                        ->modalWidth('xl')
+                        ->modalHeading('Filiale wechseln (Massenbearbeitung)')
+                        ->modalSubmitActionLabel('Versetzung durchführen')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($records, array $data) {
-                            $records->each->update($data);
+                            try {
+                                $records->each->update($data);
 
-                            Notification::make()
-                                ->title('Massen-Transfer durchgeführt')
-                                ->body(count($records) . ' Mitarbeiter wurden zur neuen Filiale versetzt.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Massen-Transfer durchgeführt')
+                                    ->body(count($records) . ' Mitarbeiter wurden zur neuen Filiale versetzt.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff bulkBranchTransfer error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler bei Massen-Transfer')
+                                    ->body('Der Filialwechsel konnte nicht durchgeführt werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         })
                         ->requiresConfirmation(),
 
@@ -651,14 +734,28 @@ class StaffResource extends Resource
                                 ])
                                 ->required(),
                         ])
+                        ->modalWidth('lg')
+                        ->modalHeading('Erfahrungslevel anpassen (Massenbearbeitung)')
+                        ->modalSubmitActionLabel('Level aktualisieren')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($records, array $data) {
-                            $records->each->update($data);
+                            try {
+                                $records->each->update($data);
 
-                            Notification::make()
-                                ->title('Erfahrungslevel aktualisiert')
-                                ->body(count($records) . ' Mitarbeiter haben ein neues Level erhalten.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Erfahrungslevel aktualisiert')
+                                    ->body(count($records) . ' Mitarbeiter haben ein neues Level erhalten.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Log::error('Staff bulkExperienceUpdate error: ' . $e->getMessage());
+
+                                Notification::make()
+                                    ->title('Fehler bei Level-Anpassung')
+                                    ->body('Das Erfahrungslevel konnte nicht aktualisiert werden.')
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     Tables\Actions\ExportBulkAction::make()

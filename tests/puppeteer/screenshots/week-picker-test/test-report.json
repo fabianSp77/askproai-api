@@ -1,0 +1,77 @@
+[
+  {
+    "scenario": "desktop-normal",
+    "description": "Desktop - Normal Zoom",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "deviceScaleFactor": 1,
+    "steps": [],
+    "success": false,
+    "errors": [
+      "page.waitForTimeout is not a function"
+    ],
+    "screenshots": []
+  },
+  {
+    "scenario": "desktop-zoom-67",
+    "description": "Desktop - Zoom 66.67%",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "deviceScaleFactor": 0.6667,
+    "steps": [],
+    "success": false,
+    "errors": [
+      "page.waitForTimeout is not a function"
+    ],
+    "screenshots": []
+  },
+  {
+    "scenario": "desktop-4k-zoom-67",
+    "description": "Desktop 4K - Zoom 66.67% (Issue #701)",
+    "viewport": {
+      "width": 1802,
+      "height": 1430
+    },
+    "deviceScaleFactor": 0.6667,
+    "steps": [],
+    "success": false,
+    "errors": [
+      "page.waitForTimeout is not a function"
+    ],
+    "screenshots": []
+  },
+  {
+    "scenario": "mobile-iphone",
+    "description": "iPhone SE",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "deviceScaleFactor": 2,
+    "steps": [],
+    "success": false,
+    "errors": [
+      "page.waitForTimeout is not a function"
+    ],
+    "screenshots": []
+  },
+  {
+    "scenario": "tablet-ipad",
+    "description": "iPad",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "deviceScaleFactor": 2,
+    "steps": [],
+    "success": false,
+    "errors": [
+      "page.waitForTimeout is not a function"
+    ],
+    "screenshots": []
+  }
+]

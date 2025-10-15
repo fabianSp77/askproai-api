@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CalcomHostMapping extends Model
 {
     protected $fillable = [
+        'company_id',       // 🔧 FIX 2025-10-13: Added to prevent "Field 'company_id' doesn't have a default value" error
         'staff_id',
         'calcom_host_id',
         'calcom_name',

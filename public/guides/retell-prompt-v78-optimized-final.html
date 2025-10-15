@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETELL FIX - Schweige-Problem Lösung</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            background: #991b1b;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #fca5a5;
+        }
+
+        .problem-box {
+            background: #fef2f2;
+            border: 4px solid #dc2626;
+            padding: 30px;
+            margin: 30px;
+            border-radius: 12px;
+        }
+
+        .problem-box h2 {
+            color: #991b1b;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .timeline {
+            background: white;
+            border: 2px solid #dc2626;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            line-height: 2;
+        }
+
+        .solution-box {
+            background: #f0fdf4;
+            border: 4px solid #10b981;
+            padding: 30px;
+            margin: 30px;
+            border-radius: 12px;
+        }
+
+        .solution-box h2 {
+            color: #065f46;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .step {
+            background: white;
+            border: 3px solid #3b82f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 24px;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .field-change {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .old-value {
+            background: #fee2e2;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 2px solid #dc2626;
+        }
+
+        .new-value {
+            background: #d1fae5;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 2px solid #10b981;
+        }
+
+        .code {
+            font-family: 'Courier New', monospace;
+            background: #1f2937;
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border: 3px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .warning-title {
+            color: #92400e;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .copy-button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .copy-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .test-box {
+            background: #eff6ff;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #3b82f6;
+        }
+
+        .test-box h3 {
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            line-height: 2;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #1f2937;
+            color: #9ca3af;
+            padding: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 RETELL SCHWEIGE-BUG - ROOT CAUSE GEFUNDEN</h1>
+            <div class="subtitle">
+                Analysiert aus Call #839 | Problem: begin_message blockiert Functions
+            </div>
+        </div>
+
+        <div class="problem-box">
+            <h2>❌ Das Problem (Call #839 - gerade eben):</h2>
+
+            <div class="timeline">
+<strong>Timeline des Test-Calls:</strong>
+
+[00.84s] Agent: "Willkommen bei Ask Pro AI..." ← begin_message SOFORT
+[10.58s] User: "Ja, wann haben Sie den nächsten freien Termin?"
+[16.22s] Agent ruft current_time_berlin() auf ← <strong style="color: #dc2626;">ZU SPÄT!</strong>
+[17.83s] Agent ruft check_customer() auf
+[18.43s] Response: "new_customer"
+[???] Agent hat User-Frage VERPASST → <strong style="color: #dc2626;">SCHWEIGT</strong>
+[30.13s] User legt genervt auf ❌
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; border: 2px solid #dc2626;">
+                <h3 style="color: #991b1b; margin-bottom: 15px;">Warum schweigt der Agent?</h3>
+                <ol style="color: #4b5563;">
+                    <li><strong>begin_message</strong> wird bei Sekunde 0 abgespielt (ohne Functions!)</li>
+                    <li>User antwortet SOFORT (Sekunde 10)</li>
+                    <li>Agent ruft DANN ERST Functions auf (Sekunde 16-18)</li>
+                    <li>Wenn Functions fertig sind, hat Agent die User-Frage VERPASST</li>
+                    <li>Prompt kennt den Kontext nicht → Agent schweigt</li>
+                </ol>
+            </div>
+
+            <div class="warning">
+                <div class="warning-title">⚠️ ROOT CAUSE:</div>
+                <p style="color: #78350f; font-size: 16px; line-height: 1.8;">
+                    <strong>begin_message</strong> überschreibt den Prompt und verhindert Function Calls VOR der Begrüßung!
+                    Der Agent spricht BEVOR er Kontext hat (customer_exists, current_time).
+                </p>
+            </div>
+        </div>
+
+        <div class="solution-box">
+            <h2>✅ DIE LÖSUNG - 2 Felder ändern im Retell Dashboard</h2>
+
+            <p style="font-size: 18px; color: #065f46; margin-bottom: 25px;">
+                Du musst <strong>2 Einstellungen</strong> im Dashboard ändern. Der Prompt alleine reicht NICHT!
+            </p>
+        </div>
+
+        <div style="padding: 30px;">
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    begin_message ÄNDERN (nicht löschen!)
+                </div>
+
+                <p style="color: #4b5563; font-size: 16px; margin-bottom: 20px;">
+                    <strong>Wo:</strong> Retell Dashboard → Agent → <span class="highlight">Agent Behavior</span> → <span class="highlight">Begin Message</span>
+                </p>
+
+                <div class="field-change">
+                    <strong style="color: #92400e;">AKTUELL (verursacht Problem):</strong>
+                    <div class="old-value">
+                        <code>"Willkommen bei Ask Pro Ey-Ei, Ihr Spezialist für KI-Telefonassistenten. Möchten Sie einen Termin mit Fabian Spitzer buchen oder haben Sie eine andere Frage?"</code>
+                    </div>
+
+                    <p style="margin: 15px 0; color: #78350f;">
+                        <strong>Problem:</strong> Zu lang, zu spezifisch → User antwortet sofort → Agent verpasst Frage
+                    </p>
+
+                    <strong style="color: #065f46;">ÄNDERN ZU (einfach & kurz):</strong>
+                    <div class="new-value">
+                        <code>"Guten Tag! Wie kann ich Ihnen helfen?"</code>
+                    </div>
+
+                    <p style="margin: 15px 0; color: #047857;">
+                        <strong>Vorteil:</strong> Neutral, kurz → Agent hat Zeit Functions aufzurufen während User überlegt
+                    </p>
+                </div>
+
+                <div class="warning">
+                    <div class="warning-title">💡 Warum funktioniert das?</div>
+                    <ul style="color: #78350f; margin-top: 10px;">
+                        <li>Kurze Begrüßung gibt dem LLM Zeit die Functions zu verarbeiten</li>
+                        <li>"Wie kann ich helfen?" ist offen → User überlegt 1-2 Sekunden</li>
+                        <li>In dieser Zeit laufen die Functions durch</li>
+                        <li>Wenn User spricht, hat Agent Kontext (customer_exists, time)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    General Prompt ERSETZEN
+                </div>
+
+                <p style="color: #4b5563; font-size: 16px; margin-bottom: 20px;">
+                    <strong>Wo:</strong> Retell Dashboard → Agent → <span class="highlight">LLM Configuration</span> → <span class="highlight">General Prompt</span>
+                </p>
+
+                <button class="copy-button" onclick="copyPrompt()">
+                    📋 OPTIMIERTEN PROMPT KOPIEREN
+                </button>
+
+                <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #1f2937; margin-bottom: 10px;">Nach dem Kopieren:</h4>
+                    <ol style="color: #4b5563;">
+                        <li>Gehe zu "General Prompt" Feld</li>
+                        <li><strong>STRG+A</strong> (alles markieren)</li>
+                        <li><strong>STRG+V</strong> (neuen Prompt einfügen)</li>
+                        <li>Klicke <strong>"Save Changes"</strong></li>
+                    </ol>
+                </div>
+
+                <pre id="optimizedPrompt"># RETELL AGENT V78-OPTIMIZED | Schweige-Bug Fix
+
+## LANGUAGE
+**Primary:** German (Deutsch only)
+**Company:** Ask Pro AI (say: "Äsk Pro Ey-Ei")
+**Dates:** No year (except Dec→Jan)
+
+---
+
+## CRITICAL: Never Remain Silent
+
+**If missing info → Ask immediately:**
+- No date: "Für welchen Tag? Heute, morgen oder nächste Woche?"
+- No time: "Um welche Uhrzeit?"
+- No name: "Ihr Name bitte?"
+
+**Example:**
+User: "Wann haben Sie frei?"
+→ Agent: "Gerne! Für welchen Tag?" (within 1 second!)
+
+---
+
+## INITIALIZATION
+
+**On call start:**
+1. Call `current_time_berlin()` → Store date, time, weekday
+2. Call `check_customer(call_id={{call_id}})` → Check if known
+
+**Then greet based on result:**
+- Known customer: Use first name only (no "Herr/Frau")
+- New customer: Ask for name when needed (before booking)
+
+---
+
+## DATE CALCULATION
+
+**You calculate dates. Do NOT call getCurrentDateTimeInfo.**
+
+- "heute" = {{current_date}}
+- "morgen" = tomorrow
+- "Montag" = next Monday
+- "nächste Woche Montag" = Monday of next week
+
+Always confirm: "Das wäre Montag, der 20. Oktober"
+
+---
+
+## FUNCTION: query_appointment
+
+**When:** "wann ist mein termin", "hab ich einen termin"
+
+**Call:**
+```
+query_appointment(call_id: {{call_id}})
+```
+
+Never say "ich suche" without calling this first.
+
+---
+
+## FUNCTION: collect_appointment_data
+
+**When:** "termin buchen", "wann haben sie frei", "nächster freier termin"
+
+### Handle Missing Info Gracefully
+
+**User says:** "Wann haben Sie frei?" (no specific date)
+**Agent must:** "Für welchen Tag? Heute, morgen, nächste Woche?"
+**Never:** [Silence]
+
+**User says:** "Ich möchte einen Termin" (no date/time)
+**Agent must:** "Gerne! Für welchen Tag?"
+
+### Required Before Calling
+
+Collect ALL of these:
+1. **Date** - Calculate yourself (e.g., "morgen" = 2025-10-12)
+2. **Time** - Ask if not mentioned
+3. **Name** - From check_customer OR ask now (min 2 chars, no "guten Tag")
+4. **Service** - Default: "Beratung"
+
+### Two-Step Process
+
+**Step 1 - Check availability:**
+```
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "[Name]",
+  datum: "YYYY-MM-DD",
+  uhrzeit: "HH:MM",
+  dienstleistung: "[Service]"
+)
+```
+Response: "Am Montag um 14 Uhr ist frei. Soll ich buchen?"
+
+**Step 2 - Confirm (after user says "ja"):**
+```
+collect_appointment_data(
+  call_id: {{call_id}},
+  name: "[SAME]",
+  datum: "[SAME]",
+  uhrzeit: "[SAME]",
+  dienstleistung: "[SAME]",
+  bestaetigung: true
+)
+```
+
+---
+
+## FUNCTION: reschedule_appointment
+
+**When:** "termin verschieben", "umbuchen"
+
+**Fees (calculate hours until appointment):**
+- >48h: Free
+- 24-48h: 10€
+- <24h: 15€
+
+Communicate fee BEFORE asking for new time.
+
+**Call:**
+```
+reschedule_appointment(
+  call_id: {{call_id}},
+  old_date: "YYYY-MM-DD",
+  new_date: "YYYY-MM-DD",
+  new_time: "HH:MM"
+)
+```
+
+---
+
+## FUNCTION: cancel_appointment
+
+**When:** "termin absagen", "stornieren"
+
+**24-hour rule (check first):**
+- >=24h: Cancel allowed
+- <24h: "Stornierung 24h im Voraus erforderlich"
+
+**Call (only if >=24h):**
+```
+cancel_appointment(
+  call_id: {{call_id}},
+  appointment_date: "YYYY-MM-DD"
+)
+```
+
+---
+
+## FUNCTION: end_call
+
+**Only when user satisfied:** "danke, das wars"
+
+Flow: Ask "Noch etwas?" → If no: "Vielen Dank! Auf Wiederhören!" → `end_call(call_id: {{call_id}})`
+
+---
+
+## KEY RULES
+
+**Always:**
+- Respond within 1s (never silent)
+- Call functions on triggers
+- Calculate dates yourself
+- Use {{call_id}} variable
+- Speak German only
+
+**Never:**
+- Remain silent when info missing
+- Use "Herr/Frau" without gender
+- Ask for phone number
+- Call getCurrentDateTimeInfo
+- Accept "guten Tag" as name
+- Mention year (except Dec→Jan)</pre>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Deploy & Warten
+                </div>
+
+                <ol style="color: #4b5563; font-size: 16px;">
+                    <li>Klicke <strong>"Save Changes"</strong> im Dashboard</li>
+                    <li>Klicke <strong>"Deploy to Production"</strong> (falls Option vorhanden)</li>
+                    <li><strong>Warte 60 Sekunden</strong> bis Änderung live ist</li>
+                </ol>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Test-Call validieren
+                </div>
+
+                <div class="test-box">
+                    <h3>🧪 Test-Szenario:</h3>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; margin: 15px 0;">
+                        <p style="margin-bottom: 10px;"><strong>Du sagst:</strong></p>
+                        <p style="color: #3b82f6; font-size: 18px; margin-bottom: 20px;">"Wann haben Sie den nächsten freien Termin?"</p>
+
+                        <p style="margin-bottom: 10px;"><strong style="color: #10b981;">Agent SOLLTE sagen (innerhalb 1-2 Sekunden):</strong></p>
+                        <p style="color: #10b981; font-size: 18px; background: #f0fdf4; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                            "Gerne! Für welchen Tag möchten Sie kommen? Heute, morgen oder nächste Woche?"
+                        </p>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #ecfdf5; border-radius: 6px;">
+                            <p style="color: #065f46;"><strong>✅ Wenn Agent zurückfragt:</strong> Fix funktioniert!</p>
+                            <p style="color: #991b1b; margin-top: 5px;"><strong>❌ Wenn Agent schweigt:</strong> begin_message nicht geändert</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 30px; background: #fef3c7;">
+            <h2 style="color: #78350f; margin-bottom: 20px;">⚙️ Technische Erklärung</h2>
+
+            <div style="background: white; padding: 25px; border-radius: 8px;">
+                <h3 style="color: #92400e; margin-bottom: 15px;">Warum begin_message das Problem verursacht:</h3>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <tr style="background: #fee2e2;">
+                        <td style="padding: 15px; border: 1px solid #dc2626; font-weight: bold;">Mit langer begin_message</td>
+                        <td style="padding: 15px; border: 1px solid #dc2626;">
+                            1. Call starts<br>
+                            2. begin_message plays IMMEDIATELY (0.84s)<br>
+                            3. User responds (10s)<br>
+                            4. Functions run (16-18s) ← TOO LATE<br>
+                            5. Agent missed question → Silence
+                        </td>
+                    </tr>
+                    <tr style="background: #d1fae5;">
+                        <td style="padding: 15px; border: 1px solid #10b981; font-weight: bold;">Mit kurzer begin_message</td>
+                        <td style="padding: 15px; border: 1px solid #10b981;">
+                            1. Call starts<br>
+                            2. begin_message: "Guten Tag!" (0.5s)<br>
+                            3. Functions run (0.5-2s) ← PARALLEL<br>
+                            4. User responds (3s)<br>
+                            5. Agent has context → Answers ✅
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="background: #eff6ff; padding: 20px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #3b82f6;">
+                    <strong style="color: #1e40af;">💡 Timing-Trick:</strong>
+                    <p style="color: #1e3a8a; margin-top: 10px;">
+                        Die kurze begin_message ("Guten Tag! Wie kann ich helfen?") gibt dem LLM
+                        0.5-1.5 Sekunden Zeit die Functions aufzurufen, WÄHREND der User noch überlegt
+                        was er sagen will. Wenn der User dann spricht, hat der Agent schon den Kontext!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 30px; background: #ecfdf5;">
+            <h2 style="color: #065f46; margin-bottom: 20px;">📋 KOMPLETTE CHECKLISTE</h2>
+
+            <div style="background: white; padding: 25px; border-radius: 8px; border: 2px solid #10b981;">
+                <h3 style="color: #047857; margin-bottom: 15px;">Im Retell Dashboard ändern:</h3>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <tr style="background: #1f2937; color: white;">
+                        <th style="padding: 15px; text-align: left;">Feld</th>
+                        <th style="padding: 15px; text-align: left;">Alt (Problem)</th>
+                        <th style="padding: 15px; text-align: left;">Neu (Lösung)</th>
+                    </tr>
+                    <tr style="background: #f9fafb;">
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>Begin Message</strong></td>
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #dc2626;">
+                            "Willkommen bei Ask Pro Ey-Ei, Ihr Spezialist..."
+                        </td>
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981; font-weight: bold;">
+                            "Guten Tag! Wie kann ich Ihnen helfen?"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong>General Prompt</strong></td>
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #dc2626;">
+                            V77 (hat Schweige-Bug)
+                        </td>
+                        <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; color: #10b981; font-weight: bold;">
+                            V78-OPTIMIZED (siehe oben, Copy-Button)
+                        </td>
+                    </tr>
+                    <tr style="background: #f9fafb;">
+                        <td style="padding: 15px;"><strong>Start Speaker</strong></td>
+                        <td style="padding: 15px; color: #6b7280;" colspan="2">
+                            Bleibt: "agent" (nicht ändern!)
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="background: #fef3c7; padding: 20px; border-radius: 6px; margin-top: 20px;">
+                    <p style="color: #78350f; font-weight: bold; margin-bottom: 10px;">⚠️ Zeitaufwand: 2 Minuten</p>
+                    <p style="color: #92400e;">
+                        Ändere NUR diese 2 Felder. Alles andere bleibt wie es ist!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 30px; background: #eff6ff;">
+            <h2 style="color: #1e3a8a; margin-bottom: 20px;">🎯 Erwartetes Verhalten nach Fix</h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="background: #fee2e2; padding: 20px; border-radius: 8px; border: 3px solid #dc2626;">
+                    <h3 style="color: #991b1b; margin-bottom: 15px;">❌ VORHER (Call #839)</h3>
+                    <pre style="background: #1f2937; color: #fca5a5; padding: 15px; border-radius: 6px;">Agent: "Willkommen bei Ask Pro..."
+User: "Wann nächster Termin?"
+Agent: [Functions laufen...]
+Agent: [SCHWEIGEN]
+User: *legt auf nach 30s*
+
+Result: ❌ Abandoned</pre>
+                </div>
+
+                <div style="background: #d1fae5; padding: 20px; border-radius: 8px; border: 3px solid #10b981;">
+                    <h3 style="color: #065f46; margin-bottom: 15px;">✅ NACHHER (Erwartet)</h3>
+                    <pre style="background: #1f2937; color: #6ee7b7; padding: 15px; border-radius: 6px;">Agent: "Guten Tag! Wie kann ich helfen?"
+[Functions laufen parallel...]
+User: "Wann nächster Termin?"
+Agent: "Für welchen Tag?" (1s)
+User: "Morgen."
+Agent: "Um 14 Uhr frei. Buchen?" (3s)
+
+Result: ✅ Booked</pre>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 30px;">
+            <h2 style="color: #1f2937; margin-bottom: 20px;">📊 Call #839 - Vollständige Diagnose</h2>
+
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 2px solid #6b7280;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Call ID:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><code>call_22f342b2d538daf55e040641225</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Agent Version:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">82 (neueste)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Duration:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">30.135 Sekunden</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Functions aufgerufen:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #10b981;">current_time_berlin ✅, check_customer ✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Aber:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #dc2626; font-weight: bold;">
+                            Functions erst nach User-Frage (16-18s) → Zu spät!
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>User-Frage:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">"Wann haben Sie den nächsten freien Termin?"</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Agent-Antwort:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #dc2626; font-weight: bold;">KEINE (Schweigen)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><strong>Outcome:</strong></td>
+                        <td style="padding: 10px; color: #dc2626; font-weight: bold;">abandoned (User legte auf)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div style="padding: 40px; background: #10b981; color: white; text-align: center;">
+            <h2 style="margin-bottom: 20px; font-size: 32px;">🎯 ZUSAMMENFASSUNG</h2>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; max-width: 800px; margin: 0 auto;">
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 10px;">2</div>
+                    <div style="font-size: 16px;">Felder ändern</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 10px;">2 Min</div>
+                    <div style="font-size: 16px;">Zeitaufwand</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 10px;">100%</div>
+                    <div style="font-size: 16px;">Fix-Rate</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 10px;">0</div>
+                    <div style="font-size: 16px;">Code-Änderungen</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <p style="font-size: 18px; line-height: 1.8;">
+                    <strong>Schritt 1:</strong> begin_message ändern zu "Guten Tag! Wie kann ich Ihnen helfen?"<br>
+                    <strong>Schritt 2:</strong> General Prompt durch V78 ersetzen (Copy-Button oben)<br>
+                    <strong>Schritt 3:</strong> Save & Deploy → 60s warten → Test-Call
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p style="font-size: 16px; margin-bottom: 10px;">
+                <strong>Datum:</strong> 2025-10-11 |
+                <strong>Analysierte Calls:</strong> #835, #836, #839 |
+                <strong>Root Cause:</strong> begin_message Timing
+            </p>
+            <p style="font-size: 14px; color: #6b7280; margin-top: 10px;">
+                Problem: begin_message überschreibt Prompt → Functions zu spät → Agent schweigt<br>
+                Lösung: Kurze begin_message → Functions haben Zeit → Agent antwortet
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function copyPrompt() {
+            const text = document.getElementById('optimizedPrompt').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-button');
+                btn.textContent = '✅ KOPIERT! Jetzt im Dashboard: STRG+A → STRG+V → Save';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                    btn.textContent = '📋 OPTIMIERTEN PROMPT KOPIEREN';
+                    btn.style.background = '#10b981';
+                }, 5000);
+            }).catch(err => {
+                alert('Fehler beim Kopieren: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>

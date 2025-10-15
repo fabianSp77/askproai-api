@@ -1,0 +1,305 @@
+# Cal.com Team Architecture - Visual Reference
+# Date: 2025-10-14
+
+================================================================================
+                        CORRECT ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                        CAL.COM TEAM STRUCTURE                              │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                       │  │
+│  │  Cal.com Team: 39203 (AskProAI)                                     │  │
+│  │  ├─ Team Slug: askproai                                             │  │
+│  │  ├─ API Key: cal_live_e9aa...                                       │  │
+│  │  │                                                                   │  │
+│  │  ├─ Event Types (Services):                                         │  │
+│  │  │  ├─ 2026300: "Geheimer Termin"                                   │  │
+│  │  │  ├─ 2031135: "Herren: Waschen, Schneiden, Styling"              │  │
+│  │  │  ├─ 2031368: "Damen: Waschen, Schneiden, Styling"               │  │
+│  │  │  ├─ 2026301: "15 Minuten Termin"                                 │  │
+│  │  │  ├─ 2547902: "30 Minuten Termin mit Fabian Spitzer"            │  │
+│  │  │  ├─ 2027031: "Damen Haarschnitt"                                 │  │
+│  │  │  ├─ 2026302: "30 Minuten Termin mit Fabian Spitzer"            │  │
+│  │  │  ├─ 1321041: "30 Minuten Beratung"                               │  │
+│  │  │  ├─ 1320965: "15 Minuten Schnellberatung"                        │  │
+│  │  │  └─ 2563193: "AskProAI Beratung + 30% mehr Umsatz"             │  │
+│  │  │                                                                   │  │
+│  │  └─ Team Members (Hosts/Identities):                                │  │
+│  │     ├─ Fabian Spitzer (user_id: XXXX)                               │  │
+│  │     ├─ Team Member 2                                                 │  │
+│  │     └─ Team Member 3                                                 │  │
+│  │                                                                       │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                    ▼ ▼ ▼
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                        LARAVEL DATABASE STRUCTURE                          │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  companies                                                            │  │
+│  │  ├─ id: 15                                                            │  │
+│  │  ├─ name: "AskProAI"                                                  │  │
+│  │  ├─ calcom_team_id: 39203         ← ONE TEAM PER COMPANY            │  │
+│  │  └─ calcom_event_type_id: NULL    ← Optional default (legacy)       │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│                                    │                                        │
+│                  ┌─────────────────┴─────────────────┐                     │
+│                  │                                   │                      │
+│                  ▼                                   ▼                      │
+│                                                                             │
+│  ┌───────────────────────────────┐   ┌───────────────────────────────┐   │
+│  │  services                      │   │  branches                      │   │
+│  │  ├─ id: 31                     │   │  ├─ id: 9f4d5e2a-46f7-...     │   │
+│  │  ├─ company_id: 15             │   │  ├─ company_id: 15            │   │
+│  │  ├─ name: "Geheimer Termin"   │   │  ├─ name: "Hauptsitz München"│   │
+│  │  ├─ calcom_event_type_id:     │   │  ├─ city: "München"           │   │
+│  │  │   2026300    ← UNIQUE!      │   │  ├─ calcom_api_key: NULL     │   │
+│  │  └─ duration: 30               │   │  ├─ calcom_user_id: NULL     │   │
+│  │                                 │   │  └─ ❌ NO event_type_id!     │   │
+│  │  ├─ id: 32                     │   └───────────────────────────────┘   │
+│  │  ├─ company_id: 15             │                                        │
+│  │  ├─ name: "Herren Haarschnitt"│                  │                     │
+│  │  ├─ calcom_event_type_id:     │                  │                     │
+│  │  │   2031135    ← UNIQUE!      │                  │                     │
+│  │  └─ duration: 45               │                  │                     │
+│  │                                 │                  │                     │
+│  │  ├─ id: 47                     │                  │                     │
+│  │  ├─ company_id: 15             │                  │                     │
+│  │  ├─ name: "AskProAI Beratung" │                  │                     │
+│  │  ├─ calcom_event_type_id:     │                  │                     │
+│  │  │   2563193    ← UNIQUE!      │                  │                     │
+│  │  └─ duration: 30               │                  │                     │
+│  └───────────────────────────────┘                  │                     │
+│                                                      │                      │
+│                          ┌───────────────────────────┘                     │
+│                          │                                                  │
+│                          ▼                                                  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  branch_service (PIVOT TABLE - Many-to-Many)                         │  │
+│  │  ├─ branch_id: 9f4d5e2a-46f7-...                                     │  │
+│  │  ├─ service_id: 31                                                    │  │
+│  │  ├─ is_active: 0                   ← Service inactive in this branch│  │
+│  │  ├─ duration_override: NULL        ← Use service default            │  │
+│  │  └─ price_override: NULL           ← Use service default            │  │
+│  │                                                                       │  │
+│  │  ├─ branch_id: 9f4d5e2a-46f7-...                                     │  │
+│  │  ├─ service_id: 47                                                    │  │
+│  │  ├─ is_active: 1                   ← Service ACTIVE in this branch  │  │
+│  │  ├─ duration_override: NULL        ← Use service default            │  │
+│  │  └─ price_override: NULL           ← Use service default            │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                    SUPPORTING TABLES (Validation & Sync)
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  team_event_type_mappings (Registry of all team event types)               │
+│  ├─ company_id: 15                                                          │
+│  ├─ calcom_team_id: 39203                                                   │
+│  ├─ calcom_event_type_id: 2026300                                           │
+│  ├─ event_type_name: "Geheimer Termin"                                      │
+│  ├─ is_team_event: true                                                     │
+│  └─ hosts: [123, 456, 789]                                                  │
+│                                                                              │
+│  (Used for validation: Does event type 2026300 belong to team 39203?)      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  calcom_team_members (Team hosts/identities)                                │
+│  ├─ company_id: 15                                                          │
+│  ├─ calcom_team_id: 39203                                                   │
+│  ├─ calcom_user_id: 123                                                     │
+│  ├─ name: "Fabian Spitzer"                                                  │
+│  ├─ email: "fabian@askproai.de"                                             │
+│  └─ role: "admin"                                                           │
+│                                                                              │
+│  (Used for staff mapping and availability tracking)                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                       APPOINTMENT BOOKING FLOW
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  STEP 1: Customer selects service                                          │
+│  ├─ Input: "Ich möchte einen Herrenhaarschnitt"                            │
+│  └─ Match: Service #32 (company_id: 15, event_type: 2031135)              │
+│                                                                             │
+│  STEP 2: Check branch availability                                         │
+│  ├─ Query: branch_service WHERE branch_id = X AND service_id = 32         │
+│  └─ Result: is_active = 1 ✅                                                │
+│                                                                             │
+│  STEP 3: Query Cal.com availability                                        │
+│  ├─ API: GET /teams/39203/event-types/2031135/availability                │
+│  ├─ Team ID: 39203 (from company.calcom_team_id)                          │
+│  └─ Event Type: 2031135 (from service.calcom_event_type_id)               │
+│                                                                             │
+│  STEP 4: Customer selects slot                                             │
+│  └─ Slot: "2025-10-15 14:00:00"                                            │
+│                                                                             │
+│  STEP 5: Create appointment                                                │
+│  ├─ Appointment.create({                                                   │
+│  │    company_id: 15,                                                      │
+│  │    branch_id: 9f4d5e2a...,                                              │
+│  │    service_id: 32,          ← Links to service with event_type_id     │
+│  │    customer_id: XXX,                                                    │
+│  │    start_time: "2025-10-15 14:00:00"                                   │
+│  │  })                                                                     │
+│  └─ Result: Appointment #123                                               │
+│                                                                             │
+│  STEP 6: Sync to Cal.com                                                   │
+│  ├─ API: POST /bookings                                                    │
+│  ├─ Body: {                                                                │
+│  │    eventTypeId: 2031135,    ← From service.calcom_event_type_id       │
+│  │    start: "2025-10-15T14:00:00Z",                                      │
+│  │    responses: { name: "Max Mustermann", email: "..." }                │
+│  │  }                                                                      │
+│  └─ Result: Cal.com Booking #ABC123                                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        ❌ WRONG ARCHITECTURE (Don't Do This)
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ❌ WRONG: Branch with Event Type ID                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  branches                                                             │  │
+│  │  ├─ id: 9f4d5e2a-46f7-...                                            │  │
+│  │  ├─ company_id: 15                                                    │  │
+│  │  ├─ name: "Hauptsitz München"                                        │  │
+│  │  └─ calcom_event_type_id: 2026300    ← ❌ WRONG!                     │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  PROBLEMS:                                                                  │
+│  1. Branch can only have ONE event type                                    │
+│     → What about the other 9 services?                                     │
+│                                                                             │
+│  2. Conflicts with services.calcom_event_type_id (UNIQUE constraint)      │
+│     → Database integrity violation                                         │
+│                                                                             │
+│  3. Breaks many-to-many relationship                                        │
+│     → Can't have same service in multiple branches                         │
+│                                                                             │
+│  4. Already removed in migration 2025_09_29                                 │
+│     → Adding it back creates migration conflicts                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        MULTI-BRANCH SCENARIO EXAMPLE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Company: "Friseur Kette"                                                   │
+│  ├─ calcom_team_id: 40000                                                   │
+│  └─ Services:                                                               │
+│     ├─ Service #1: "Herrenhaarschnitt" (event_type: 3000000)              │
+│     ├─ Service #2: "Damenhaarschnitt" (event_type: 3000001)               │
+│     └─ Service #3: "Färben" (event_type: 3000002)                          │
+│                                                                             │
+│  Branches:                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  Branch A: München                                                    │  │
+│  │  ├─ Service #1: ✅ Active (price: €25)                                │  │
+│  │  ├─ Service #2: ✅ Active (price: €35)                                │  │
+│  │  └─ Service #3: ❌ Inactive (not offered here)                        │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  Branch B: Berlin                                                     │  │
+│  │  ├─ Service #1: ✅ Active (price: €30 override!)                      │  │
+│  │  ├─ Service #2: ✅ Active (price: €40 override!)                      │  │
+│  │  └─ Service #3: ✅ Active (price: €50)                                │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │  Branch C: Hamburg                                                    │  │
+│  │  ├─ Service #1: ✅ Active (price: €25)                                │  │
+│  │  ├─ Service #2: ❌ Inactive (no female clients here)                  │  │
+│  │  └─ Service #3: ❌ Inactive (no coloring service)                     │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  Implementation via branch_service pivot:                                   │
+│  ├─ (Branch A, Service 1): is_active=1, price_override=NULL               │
+│  ├─ (Branch A, Service 2): is_active=1, price_override=NULL               │
+│  ├─ (Branch A, Service 3): is_active=0, price_override=NULL               │
+│  ├─ (Branch B, Service 1): is_active=1, price_override=30.00              │
+│  ├─ (Branch B, Service 2): is_active=1, price_override=40.00              │
+│  ├─ (Branch B, Service 3): is_active=1, price_override=NULL               │
+│  └─ ... etc.                                                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        VALIDATION & SECURITY
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Security Boundary: Team-Based Access Control                               │
+│                                                                             │
+│  Team 39203 (AskProAI) can ONLY:                                           │
+│  ✅ Access event types: 2026300, 2031135, 2031368, ...                     │
+│  ✅ Query availability for these event types                               │
+│  ✅ Create bookings for these event types                                  │
+│  ❌ Access event types from Team 34209 (Krückeberg)                        │
+│  ❌ Create bookings for other teams' event types                           │
+│                                                                             │
+│  Validation Process:                                                        │
+│  1. GET /teams/39203/event-types                                           │
+│  2. Check if requested event_type_id is in response                        │
+│  3. Cache result for 1 hour                                                │
+│  4. Reject if event type doesn't belong to team                            │
+│                                                                             │
+│  Implementation:                                                            │
+│  CalcomV2Service::validateTeamAccess(39203, 2031135)                       │
+│  └─ Returns: true (event type belongs to team)                             │
+│                                                                             │
+│  CalcomV2Service::validateTeamAccess(39203, 9999999)                       │
+│  └─ Returns: false (event type doesn't exist in team)                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        SUMMARY & KEY TAKEAWAYS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ✅ CORRECT: Company → Team → Multiple Services (Event Types)              │
+│  ✅ CORRECT: Services → Many-to-Many → Branches (via pivot)                │
+│  ✅ CORRECT: Pivot table stores is_active and overrides                    │
+│  ❌ WRONG: Branch → calcom_event_type_id (one event type per branch)       │
+│                                                                             │
+│  Database Fields:                                                           │
+│  ├─ companies.calcom_team_id: ✅ Required (one team per company)           │
+│  ├─ companies.calcom_event_type_id: ⚠️ Optional (legacy/default)           │
+│  ├─ services.calcom_event_type_id: ✅ Required (UNIQUE constraint)         │
+│  ├─ branches.calcom_event_type_id: ❌ WRONG (remove immediately)           │
+│  └─ branch_service.is_active: ✅ Required (service activation)             │
+│                                                                             │
+│  Migration Actions:                                                         │
+│  1. DELETE: database/migrations/2025_10_14_add_calcom_event_type_id_to_... │
+│  2. UPDATE: app/Models/Branch.php (remove field from $fillable)            │
+│  3. VERIFY: Migration 2025_09_29 already removed this field                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘

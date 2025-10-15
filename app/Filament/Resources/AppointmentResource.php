@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasCachedNavigationBadge;
+use App\Events\Appointments\AppointmentCancelled;
+use App\Events\Appointments\AppointmentRescheduled;
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Filament\Resources\AppointmentResource\RelationManagers;
 use App\Models\Appointment;
@@ -61,40 +63,159 @@ class AppointmentResource extends Resource
     {
         return $form
             ->schema([
-                // Main appointment details in a prominent section
-                Section::make('Termindetails')
-                    ->description('Hauptinformationen zum Termin')
-                    ->icon('heroicon-o-calendar')
+                // 🏢 KONTEXT Section
+                Section::make('🏢 Kontext')
+                    ->description(function ($context, $record) {
+                        if ($context === 'edit' && $record) {
+                            $company = $record->company->name ?? 'Unbekannt';
+                            $branch = $record->branch->name ?? 'Unbekannt';
+                            return "**{$company}** → {$branch}";
+                        }
+                        return 'Wo findet der Termin statt?';
+                    })
                     ->schema([
+                        // Company - hidden, auto-filled
+                        Forms\Components\Hidden::make('company_id')
+                            ->default(function ($context, $record) {
+                                if ($context === 'edit' && $record) {
+                                    return $record->company_id;
+                                }
+                                return auth()->user()->company_id ?? 1;
+                            }),
+
+                        // Branch - FIRST interactive field!
+                        Forms\Components\Select::make('branch_id')
+                            ->label('Filiale')
+                            ->relationship('branch', 'name', function ($query, $context, $record) {
+                                $companyId = ($context === 'edit' && $record)
+                                    ? $record->company_id
+                                    : (auth()->user()->company_id ?? 1);
+                                return $query->where('company_id', $companyId);
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->default(function ($context, $record) {
+                                if ($context === 'edit' && $record) {
+                                    return $record->branch_id;
+                                }
+                                $companyId = auth()->user()->company_id ?? 1;
+                                $branches = \App\Models\Branch::where('company_id', $companyId)->get();
+                                return $branches->count() === 1 ? $branches->first()->id : null;
+                            })
+                            ->helperText(fn ($context) =>
+                                $context === 'create'
+                                    ? '⚠️ Wählen Sie zuerst die Filiale aus'
+                                    : null
+                            ),
+                    ])
+                    ->collapsible()
+                    ->collapsed(false)  // IMMER OFFEN
+                    ->persistCollapsed(),  // User-Präferenz speichern
+
+                // 👤 WER KOMMT? - Customer Section
+                Section::make('👤 Wer kommt?')
+                    ->description(function ($context, $record) {
+                        if ($context === 'edit' && $record && $record->customer) {
+                            $customer = $record->customer;
+                            $apptCount = Appointment::where('customer_id', $customer->id)->count();
+                            return "**{$customer->name}** ({$apptCount} Termine)";
+                        }
+                        return 'Kunde auswählen';
+                    })
+                    ->schema([
+                        Forms\Components\Select::make('customer_id')
+                            ->label('Kunde')
+                            ->relationship('customer', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required(),
+                                Forms\Components\TextInput::make('phone')
+                                    ->tel(),
+                                Forms\Components\TextInput::make('email')
+                                    ->email(),
+                            ])
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $customer = Customer::find($state);
+                                    if ($customer && $customer->preferred_branch_id) {
+                                        $set('branch_id', $customer->preferred_branch_id);
+                                    }
+                                }
+                            })
+                            ->columnSpanFull(),
+
+                        // Customer History - COMPACT VERSION
+                        Forms\Components\Placeholder::make('customer_history_compact')
+                            ->label('')
+                            ->content(function (callable $get) {
+                                $customerId = $get('customer_id');
+                                if (!$customerId) return '';
+
+                                $totalCount = Appointment::where('customer_id', $customerId)->count();
+                                if ($totalCount === 0) {
+                                    return '🆕 **Neukunde** - Keine bisherigen Termine';
+                                }
+
+                                $mostFrequent = Appointment::where('customer_id', $customerId)
+                                    ->with('service:id,name')
+                                    ->selectRaw('service_id, COUNT(*) as count')
+                                    ->groupBy('service_id')
+                                    ->orderBy('count', 'desc')
+                                    ->first();
+
+                                $preferredHour = Appointment::where('customer_id', $customerId)
+                                    ->selectRaw('HOUR(starts_at) as hour')
+                                    ->groupBy('hour')
+                                    ->orderBy(\DB::raw('COUNT(*)'), 'desc')
+                                    ->value('hour');
+
+                                $lastAppt = Appointment::where('customer_id', $customerId)
+                                    ->orderBy('starts_at', 'desc')
+                                    ->first();
+
+                                $statusIcon = $lastAppt ? match($lastAppt->status) {
+                                    'completed' => '✅',
+                                    'cancelled' => '❌',
+                                    'no_show' => '👻',
+                                    default => '📅'
+                                } : '';
+
+                                $lastDate = $lastAppt ? Carbon::parse($lastAppt->starts_at)->format('d.m.Y') : '';
+
+                                return "📊 **{$totalCount} Termine** | " .
+                                       "❤️ " . ($mostFrequent->service->name ?? 'N/A') . " | " .
+                                       "🕐 {$preferredHour}:00 Uhr | " .
+                                       "Letzter: {$statusIcon} {$lastDate}";
+                            })
+                            ->visible(fn (callable $get) => $get('customer_id') !== null)
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(false)  // IMMER OFFEN
+                    ->persistCollapsed(),
+
+                // 💇 WAS WIRD GEMACHT? - Service & Staff Section
+                Section::make('💇 Was wird gemacht?')
+                    ->description(function ($context, $record) {
+                        if ($context === 'edit' && $record && $record->service && $record->staff) {
+                            $service = $record->service;
+                            $staff = $record->staff;
+                            $duration = $record->duration_minutes ?? 30;
+                            return "**{$service->name}** ({$duration} Min) - {$staff->name}";
+                        }
+                        return 'Service und Mitarbeiter auswählen';
+                    })
+                    ->schema([
+                        // DEPRECATED: Old service/staff dropdowns - now replaced by BookingFlow component
+                        // Only shown in EDIT mode for reference
                         Grid::make(2)
                             ->schema([
-                                Forms\Components\Select::make('customer_id')
-                                    ->label('Kunde')
-                                    ->relationship('customer', 'name')
-                                    ->searchable()
-                                    ->preload()
-                                    ->required()
-                                    ->createOptionForm([
-                                        Forms\Components\TextInput::make('name')
-                                            ->required(),
-                                        Forms\Components\TextInput::make('phone')
-                                            ->tel(),
-                                        Forms\Components\TextInput::make('email')
-                                            ->email(),
-                                    ])
-                                    ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        if ($state) {
-                                            $customer = Customer::find($state);
-                                            if ($customer) {
-                                                // Auto-fill branch if customer has preferred branch
-                                                if ($customer->preferred_branch_id) {
-                                                    $set('branch_id', $customer->preferred_branch_id);
-                                                }
-                                            }
-                                        }
-                                    }),
-
                                 Forms\Components\Select::make('service_id')
                                     ->label('Dienstleistung')
                                     ->relationship('service', 'name')
@@ -106,62 +227,237 @@ class AppointmentResource extends Resource
                                         if ($state) {
                                             $service = Service::find($state);
                                             if ($service) {
-                                                // Auto-calculate end time based on service duration
                                                 $set('duration_minutes', $service->duration_minutes ?? 30);
-                                                // Auto-set price
                                                 $set('price', $service->price);
                                             }
                                         }
                                     }),
-                            ]),
 
-                        Grid::make(3)
-                            ->schema([
-                                Forms\Components\DateTimePicker::make('starts_at')
-                                    ->label('Beginn')
-                                    ->required()
-                                    ->native(false)
-                                    ->seconds(false)
-                                    ->minutesStep(15)
-                                    ->displayFormat('d.m.Y H:i')
-                                    ->minDate(fn ($context) => $context === 'create' ? now() : null)
-                                    ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                                        if ($state && $get('duration_minutes')) {
-                                            $set('ends_at', Carbon::parse($state)->addMinutes($get('duration_minutes')));
-                                        }
-                                    }),
-
-                                Forms\Components\DateTimePicker::make('ends_at')
-                                    ->label('Ende')
-                                    ->required()
-                                    ->native(false)
-                                    ->seconds(false)
-                                    ->minutesStep(15)
-                                    ->displayFormat('d.m.Y H:i')
-                                    ->after('starts_at'),
-
-                                Forms\Components\Hidden::make('duration_minutes')
-                                    ->default(30),
-                            ]),
-
-                        Grid::make(2)
-                            ->schema([
+                                // Staff - SMART FILTER: Branch + Service
                                 Forms\Components\Select::make('staff_id')
                                     ->label('Mitarbeiter')
-                                    ->relationship('staff', 'name')
+                                    ->relationship('staff', 'name', function ($query, callable $get) {
+                                        $branchId = $get('branch_id');
+                                        $serviceId = $get('service_id');
+
+                                        // Filter by branch (direct foreign key)
+                                        if ($branchId) {
+                                            $query->where('branch_id', $branchId);
+                                        }
+
+                                        // Filter by service (pivot table)
+                                        if ($serviceId) {
+                                            $query->whereHas('services', function ($q) use ($serviceId) {
+                                                $q->where('services.id', $serviceId)
+                                                  ->where('service_staff.is_active', true)
+                                                  ->where('service_staff.can_book', true);
+                                            });
+                                        }
+
+                                        return $query;
+                                    })
                                     ->searchable()
                                     ->preload()
-                                    ->required(),
+                                    ->required()
+                                    ->helperText(function (callable $get) {
+                                        $branchId = $get('branch_id');
+                                        $serviceId = $get('service_id');
 
-                                Forms\Components\Select::make('branch_id')
-                                    ->label('Filiale')
-                                    ->relationship('branch', 'name')
-                                    ->searchable()
-                                    ->preload()
-                                    ->required(),
-                            ]),
+                                        if (!$branchId && !$serviceId) {
+                                            return '⚠️ Bitte zuerst Filiale und Service wählen';
+                                        }
+                                        if (!$branchId) {
+                                            return '⚠️ Bitte zuerst Filiale wählen';
+                                        }
+                                        if (!$serviceId) {
+                                            return '⚠️ Bitte zuerst Service wählen';
+                                        }
 
+                                        return 'Nur Mitarbeiter die diesen Service in dieser Filiale anbieten';
+                                    }),
+                            ])
+                            ->hidden(fn ($context) => $context === 'create'), // HIDE in create mode
+
+                        // Service Info (Duration + Price)
+                        Forms\Components\Placeholder::make('service_info')
+                            ->label('')
+                            ->content(function (callable $get) {
+                                $serviceId = $get('service_id');
+                                if (!$serviceId) return '';
+
+                                $service = Service::find($serviceId);
+                                if (!$service) return '';
+
+                                $duration = $service->duration_minutes ?? 30;
+                                $price = $service->price ? number_format($service->price, 2, ',', '.') : '0,00';
+
+                                return "⏱️ **Dauer:** {$duration} Min | 💰 **Preis:** {$price} €";
+                            })
+                            ->visible(fn (callable $get, $context) => $get('service_id') !== null && $context !== 'create')
+                            ->columnSpanFull(),
+
+                    ])
+                    ->collapsible()
+                    ->collapsed(false)  // IMMER OFFEN
+                    ->persistCollapsed(),
+
+                // ⏰ WANN? Section - Time Selection with Week Picker
+                Section::make('⏰ Wann?')
+                    ->description(function ($context, $record) {
+                        if ($context === 'edit' && $record) {
+                            $start = Carbon::parse($record->starts_at);
+                            $end = Carbon::parse($record->ends_at);
+                            $statusLabel = match($record->status) {
+                                'pending' => '⏳ Ausstehend',
+                                'confirmed' => '✅ Bestätigt',
+                                'in_progress' => '🔄 In Bearbeitung',
+                                'completed' => '✨ Abgeschlossen',
+                                'cancelled' => '❌ Storniert',
+                                'no_show' => '👻 Nicht erschienen',
+                                default => $record->status
+                            };
+                            return "**{$start->format('d.m.Y H:i')} - {$end->format('H:i')} Uhr** ({$statusLabel})";
+                        }
+                        return 'Zeitpunkt des Termins festlegen';
+                    })
+                    ->schema([
+                        // NEW: V4 Professional Booking Flow (Service-First)
+                        Forms\Components\ViewField::make('booking_flow')
+                            ->label('')
+                            ->view('livewire.appointment-booking-flow-wrapper', function (callable $get, $context, $record) {
+                                $companyId = ($context === 'edit' && $record)
+                                    ? $record->company_id
+                                    : (auth()->user()->company_id ?? 1);
+
+                                return [
+                                    'companyId' => $companyId,
+                                    'preselectedServiceId' => $get('service_id'),
+                                    'preselectedSlot' => $get('starts_at'),
+                                ];
+                            })
+                            ->reactive()
+                            ->live()
+                            ->columnSpanFull()
+                            ->dehydrated(false)
+                            ->extraAttributes(['class' => 'booking-flow-field']),
+
+                        // Hidden Field: starts_at (populated by Week Picker via Livewire)
+                        Forms\Components\Hidden::make('starts_at')
+                            ->required()
+                            ->live()  // CRITICAL: Detects DOM changes immediately
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                if ($state) {
+                                    // Berechne automatisch ends_at
+                                    $duration = $get('duration_minutes') ?? 30;
+                                    $endsAt = Carbon::parse($state)->addMinutes($duration);
+                                    $set('ends_at', $endsAt);
+                                }
+                            }),
+
+                        // Fallback: Manual DateTimePicker (optional, nur wenn Week Picker nicht genutzt wird)
+                        Grid::make(2)->schema([
+                            Forms\Components\DateTimePicker::make('starts_at_manual')
+                                ->label('⏰ Oder: Manuell Termin-Beginn wählen')
+                                ->seconds(false)
+                                ->minDate(now())
+                                ->maxDate(now()->addWeeks(4))
+                                ->native(false)
+                                ->displayFormat('d.m.Y H:i')
+                                ->reactive()
+                                ->disabled(fn (callable $get) => !$get('service_id'))
+                                ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                    if ($state) {
+                                        // Copy to starts_at
+                                        $set('starts_at', $state);
+                                        // Berechne automatisch ends_at
+                                        $duration = $get('duration_minutes') ?? 30;
+                                        $endsAt = Carbon::parse($state)->addMinutes($duration);
+                                        $set('ends_at', $endsAt);
+                                    }
+                                })
+                                ->helperText(fn (callable $get) =>
+                                    !$get('service_id')
+                                        ? '⚠️ Bitte zuerst Service wählen'
+                                        : 'Alternativ zu Wochenkalender: Datum/Uhrzeit manuell eingeben'
+                                )
+                                ->suffixAction(
+                                    Forms\Components\Actions\Action::make('findNextSlot')
+                                        ->label('Nächster freier Slot')
+                                        ->icon('heroicon-m-sparkles')
+                                        ->color('success')
+                                        ->action(function (callable $get, callable $set) {
+                                            $staffId = $get('staff_id');
+                                            $duration = $get('duration_minutes') ?? 30;
+
+                                            if (!$staffId) {
+                                                return;
+                                            }
+
+                                            // Finde nächsten verfügbaren Slot
+                                            $slots = self::findAvailableSlots($staffId, $duration, 1);
+
+                                            if (!empty($slots)) {
+                                                $nextSlot = $slots[0];
+                                                $set('starts_at', $nextSlot);
+                                                $set('ends_at', $nextSlot->copy()->addMinutes($duration));
+
+                                                \Filament\Notifications\Notification::make()
+                                                    ->success()
+                                                    ->title('Slot gefunden!')
+                                                    ->body('Nächster freier Termin: ' . $nextSlot->format('d.m.Y H:i') . ' Uhr')
+                                                    ->send();
+                                            } else {
+                                                \Filament\Notifications\Notification::make()
+                                                    ->warning()
+                                                    ->title('Keine freien Slots')
+                                                    ->body('In den nächsten 2 Wochen sind keine Termine frei.')
+                                                    ->send();
+                                            }
+                                        })
+                                        ->disabled(fn (callable $get) => !$get('staff_id'))
+                                ),
+
+                            Forms\Components\DateTimePicker::make('ends_at')
+                                ->label('🏁 Termin-Ende')
+                                ->seconds(false)
+                                ->native(false)
+                                ->displayFormat('d.m.Y H:i')
+                                ->disabled()
+                                ->dehydrated()
+                                ->helperText('= Beginn + Dauer (automatisch berechnet)'),
+                        ]),
+
+                        // Dauer & Ende Info anzeigen
+                        Grid::make(2)
+                            ->schema([
+                                // DAUER SICHTBAR
+                                Forms\Components\TextInput::make('duration_minutes')
+                                    ->label('Dauer')
+                                    ->suffix('Min')
+                                    ->numeric()
+                                    ->disabled()
+                                    ->dehydrated()
+                                    ->default(30)
+                                    ->helperText('⏱️ Automatisch aus Service'),
+
+                                // ENDE INFO (berechnet)
+                                Forms\Components\Placeholder::make('end_time_display')
+                                    ->label('Ende')
+                                    ->content(function (callable $get) {
+                                        $startsAt = $get('starts_at');
+                                        $duration = $get('duration_minutes') ?? 30;
+
+                                        if (!$startsAt) {
+                                            return '—';
+                                        }
+
+                                        $endsAt = Carbon::parse($startsAt)->addMinutes($duration);
+                                        return '🕐 ' . $endsAt->format('H:i') . ' Uhr (= Beginn + Dauer)';
+                                    }),
+                            ])
+                            ->visible(fn (callable $get) => $get('time_slot') && $get('time_slot') !== 'no_slots'),
+
+                        // Status Field - Moved from Additional Information
                         Forms\Components\Select::make('status')
                             ->label('Status')
                             ->options([
@@ -174,8 +470,24 @@ class AppointmentResource extends Resource
                             ])
                             ->default('pending')
                             ->required()
-                            ->reactive(),
+                            ->reactive()
+                            ->helperText(fn (callable $get, $context) =>
+                                $context === 'edit'
+                                    ? 'Status nach Termin aktualisieren'
+                                    : 'Neue Termine sind standardmäßig "Ausstehend"'
+                            )
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(false)  // IMMER OFFEN
+                    ->persistCollapsed(),
 
+                // Additional Information Section
+                Section::make('Zusätzliche Informationen')
+                    ->description('Erweiterte Einstellungen und Details')
+                    ->icon('heroicon-o-cog')
+                    ->schema([
+                        // Internal notes and booking metadata
                         Forms\Components\RichEditor::make('notes')
                             ->label('Notizen')
                             ->toolbarButtons([
@@ -185,14 +497,7 @@ class AppointmentResource extends Resource
                                 'orderedList',
                             ])
                             ->columnSpanFull(),
-                    ])
-                    ->collapsible(),
 
-                // Additional Information Section
-                Section::make('Zusätzliche Informationen')
-                    ->description('Erweiterte Einstellungen und Details')
-                    ->icon('heroicon-o-cog')
-                    ->schema([
                         Grid::make(3)
                             ->schema([
                                 Forms\Components\Select::make('source')
@@ -258,9 +563,7 @@ class AppointmentResource extends Resource
                     ])
                     ->collapsed(),
 
-                // Hidden technical fields (kept for data integrity but not shown)
-                Forms\Components\Hidden::make('company_id')
-                    ->default(fn () => auth()->user()->company_id ?? 1),
+                // Hidden technical fields (kept for data integrity)
                 Forms\Components\Hidden::make('version')
                     ->default(0),
             ]);
@@ -494,7 +797,20 @@ class AppointmentResource extends Resource
                         ->modalHeading('Termin stornieren')
                         ->modalDescription('Sind Sie sicher, dass Sie diesen Termin stornieren möchten?')
                         ->action(function ($record) {
-                            $record->update(['status' => 'cancelled']);
+                            // Update status and set sync origin
+                            $record->update([
+                                'status' => 'cancelled',
+                                'sync_origin' => 'admin',  // Mark as admin-initiated
+                                'cancellation_reason' => 'Cancelled by admin',
+                            ]);
+
+                            // 🔄 Fire AppointmentCancelled event for Cal.com sync
+                            event(new AppointmentCancelled(
+                                appointment: $record,
+                                reason: 'Cancelled by admin',
+                                cancelledBy: 'admin'
+                            ));
+
                             Notification::make()
                                 ->title('Termin storniert')
                                 ->warning()
@@ -505,24 +821,105 @@ class AppointmentResource extends Resource
                         ->label('Verschieben')
                         ->icon('heroicon-m-calendar')
                         ->color('warning')
-                        ->form([
-                            Forms\Components\DateTimePicker::make('starts_at')
-                                ->label('Neuer Starttermin')
-                                ->required()
-                                ->native(false)
-                                ->seconds(false)
-                                ->minutesStep(15)
-                                ->minDate(now()),
-                        ])
+                        ->modalWidth('7xl') // Wide modal for week view
+                        ->modalHeading('Termin verschieben - Wochenansicht')
+                        ->modalSubmitActionLabel('Verschieben')
+                        ->modalCancelActionLabel('Abbrechen')
+                        ->form(function ($record) {
+                            // VERSTÄRKTE Guard Clause: Check service_id UND starts_at UND service relation
+                            if (!$record->service_id || !$record->starts_at || !$record->relationLoaded('service') || !$record->service) {
+                                return [
+                                    Forms\Components\Placeholder::make('error')
+                                        ->label('')
+                                        ->content('⚠️ Termin hat keinen Service zugeordnet oder unvollständige Daten. Bitte bearbeiten Sie den Termin.')
+                                        ->columnSpanFull(),
+                                ];
+                            }
+
+                            return [
+                                // Service Info Display (NULL-SAFE)
+                                Forms\Components\Placeholder::make('service_info')
+                                    ->label('Service')
+                                    ->content(function () use ($record) {
+                                        $serviceName = $record->service?->name ?? 'Unbekannter Service';
+                                        $serviceDuration = $record->service?->duration_minutes ?? 30;
+                                        return "{$serviceName} ({$serviceDuration} min)";
+                                    })
+                                    ->columnSpanFull(),
+
+                                // Week Picker Component (CLOSURE statt Array - wie Create Form)
+                                Forms\Components\ViewField::make('week_picker')
+                                    ->label('')
+                                    ->view('livewire.appointment-week-picker-wrapper', function () use ($record) {
+                                        return [
+                                            'serviceId' => $record->service_id,
+                                            'preselectedSlot' => $record->starts_at?->toIso8601String() ?? null,
+                                        ];
+                                    })
+                                    ->reactive()  // ← FIX: Ensure proper rendering
+                                    ->live()      // ← FIX: Update immediately
+                                    ->columnSpanFull()
+                                    ->dehydrated(false)
+                                    ->extraAttributes(['class' => 'week-picker-field']),
+
+                                // Hidden field to store selected datetime (populated by week picker)
+                                Forms\Components\Hidden::make('starts_at')
+                                    ->required(),
+                            ];
+                        })
                         ->action(function ($record, array $data) {
-                            $duration = Carbon::parse($record->starts_at)->diffInMinutes($record->ends_at);
+                            // Store old time before update
+                            $oldStartTime = Carbon::parse($record->starts_at);
+                            $newStartTime = Carbon::parse($data['starts_at']);
+
+                            $duration = $oldStartTime->diffInMinutes($record->ends_at);
+
+                            // Check for conflicts before updating
+                            $conflicts = Appointment::where('staff_id', $record->staff_id)
+                                ->where('id', '!=', $record->id)
+                                ->where('status', '!=', 'cancelled')
+                                ->where(function ($query) use ($data, $newStartTime, $duration) {
+                                    $endsAt = $newStartTime->copy()->addMinutes($duration);
+                                    $query->where(function ($q) use ($data) {
+                                        $q->where('starts_at', '<=', $data['starts_at'])
+                                          ->where('ends_at', '>', $data['starts_at']);
+                                    })->orWhere(function ($q) use ($endsAt) {
+                                        $q->where('starts_at', '<', $endsAt)
+                                          ->where('ends_at', '>=', $endsAt);
+                                    })->orWhere(function ($q) use ($data, $endsAt) {
+                                        $q->where('starts_at', '>=', $data['starts_at'])
+                                          ->where('ends_at', '<=', $endsAt);
+                                    });
+                                })
+                                ->exists();
+
+                            if ($conflicts) {
+                                Notification::make()
+                                    ->title('⚠️ Konflikt erkannt!')
+                                    ->body('Der Mitarbeiter hat bereits einen Termin zu dieser Zeit.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            // Update appointment and set sync origin
                             $record->update([
                                 'starts_at' => $data['starts_at'],
-                                'ends_at' => Carbon::parse($data['starts_at'])->addMinutes($duration),
+                                'ends_at' => $newStartTime->copy()->addMinutes($duration),
+                                'sync_origin' => 'admin',  // Mark as admin-initiated
                             ]);
+
+                            // 🔄 Fire AppointmentRescheduled event for Cal.com sync
+                            event(new AppointmentRescheduled(
+                                appointment: $record,
+                                oldStartTime: $oldStartTime,
+                                newStartTime: $newStartTime,
+                                reason: 'Rescheduled by admin'
+                            ));
+
                             Notification::make()
                                 ->title('Termin verschoben')
-                                ->body("Neuer Termin: " . Carbon::parse($data['starts_at'])->format('d.m.Y H:i'))
+                                ->body("Neuer Termin: " . $newStartTime->format('d.m.Y H:i'))
                                 ->success()
                                 ->send();
                         }),
@@ -566,7 +963,22 @@ class AppointmentResource extends Resource
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
                         ->action(function ($records) {
-                            $records->each->update(['status' => 'cancelled']);
+                            // Cancel each appointment and fire events
+                            $records->each(function ($record) {
+                                $record->update([
+                                    'status' => 'cancelled',
+                                    'sync_origin' => 'admin',
+                                    'cancellation_reason' => 'Bulk cancelled by admin',
+                                ]);
+
+                                // 🔄 Fire AppointmentCancelled event for Cal.com sync
+                                event(new AppointmentCancelled(
+                                    appointment: $record,
+                                    reason: 'Bulk cancelled by admin',
+                                    cancelledBy: 'admin'
+                                ));
+                            });
+
                             Notification::make()
                                 ->title('Termine storniert')
                                 ->body(count($records) . ' Termine wurden storniert.')
@@ -889,7 +1301,7 @@ class AppointmentResource extends Resource
         return parent::getEloquentQuery()
             ->with([
                 'customer:id,name,email,phone',
-                'service:id,name,price,duration',
+                'service:id,name,price,duration_minutes',
                 'staff:id,name',
                 'branch:id,name',
                 'company:id,name'
@@ -903,5 +1315,80 @@ class AppointmentResource extends Resource
     public static function getGloballySearchableAttributes(): array
     {
         return ['customer.name', 'service.name', 'staff.name', 'notes'];
+    }
+
+    /**
+     * Find available time slots for a staff member
+     *
+     * @param string $staffId Staff member ID (UUID)
+     * @param int $duration Duration in minutes
+     * @param int $count Number of slots to find
+     * @return array Array of Carbon dates representing available slots
+     */
+    protected static function findAvailableSlots(string $staffId, int $duration, int $count = 5): array
+    {
+        $availableSlots = [];
+        $currentDate = Carbon::now()->startOfHour();
+
+        // If it's past 5 PM, start from tomorrow 9 AM
+        if ($currentDate->hour >= 17) {
+            $currentDate->addDay()->setTime(9, 0);
+        } elseif ($currentDate->hour < 9) {
+            $currentDate->setTime(9, 0);
+        }
+
+        $maxDays = 14; // Search up to 2 weeks ahead
+        $daysSearched = 0;
+
+        while (count($availableSlots) < $count && $daysSearched < $maxDays) {
+            // Skip weekends (optional - remove these lines if staff works weekends)
+            if ($currentDate->isWeekend()) {
+                $currentDate->addDay()->setTime(9, 0);
+                $daysSearched++;
+                continue;
+            }
+
+            // Check slots from 9 AM to 5 PM (minus duration to fit)
+            $dayStart = $currentDate->copy()->setTime(9, 0);
+            $dayEnd = $currentDate->copy()->setTime(17, 0)->subMinutes($duration);
+            $currentSlot = $dayStart->copy();
+
+            while ($currentSlot <= $dayEnd) {
+                // Check if this slot conflicts with existing appointments
+                $hasConflict = Appointment::where('staff_id', $staffId)
+                    ->where('status', '!=', 'cancelled')
+                    ->where(function ($query) use ($currentSlot, $duration) {
+                        $slotEnd = $currentSlot->copy()->addMinutes($duration);
+                        $query->where(function ($q) use ($currentSlot) {
+                            $q->where('starts_at', '<=', $currentSlot)
+                              ->where('ends_at', '>', $currentSlot);
+                        })->orWhere(function ($q) use ($slotEnd) {
+                            $q->where('starts_at', '<', $slotEnd)
+                              ->where('ends_at', '>=', $slotEnd);
+                        })->orWhere(function ($q) use ($currentSlot, $slotEnd) {
+                            $q->where('starts_at', '>=', $currentSlot)
+                              ->where('ends_at', '<=', $slotEnd);
+                        });
+                    })
+                    ->exists();
+
+                if (!$hasConflict) {
+                    $availableSlots[] = $currentSlot->copy();
+
+                    if (count($availableSlots) >= $count) {
+                        break 2; // Break out of both loops
+                    }
+                }
+
+                // Move to next 15-minute slot
+                $currentSlot->addMinutes(15);
+            }
+
+            // Move to next day at 9 AM
+            $currentDate->addDay()->setTime(9, 0);
+            $daysSearched++;
+        }
+
+        return $availableSlots;
     }
 }

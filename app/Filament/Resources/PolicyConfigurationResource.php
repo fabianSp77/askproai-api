@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -27,13 +28,13 @@ class PolicyConfigurationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationGroup = 'Richtlinien';
+    protected static ?string $navigationGroup = '⚙️ Termin-Richtlinien';
 
-    protected static ?string $navigationLabel = 'Richtlinienkonfigurationen';
+    protected static ?string $navigationLabel = 'Stornierung & Umbuchung';
 
-    protected static ?string $modelLabel = 'Richtlinienkonfiguration';
+    protected static ?string $modelLabel = 'Termin-Richtlinie';
 
-    protected static ?string $pluralModelLabel = 'Richtlinienkonfigurationen';
+    protected static ?string $pluralModelLabel = 'Termin-Richtlinien';
 
     protected static ?int $navigationSort = 10;
 
@@ -89,51 +90,239 @@ class PolicyConfigurationResource extends Resource
 
                 Forms\Components\Section::make('Richtliniendetails')
                     ->icon('heroicon-o-document-text')
+                    ->description('Definieren Sie die Regeln für Termine: Vorlaufzeiten, Gebühren und Limits')
                     ->schema([
                         Forms\Components\Select::make('policy_type')
                             ->label('Richtlinientyp')
                             ->options([
-                                PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'Stornierung',
-                                PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'Umbuchung',
-                                PolicyConfiguration::POLICY_TYPE_RECURRING => 'Wiederkehrend',
+                                PolicyConfiguration::POLICY_TYPE_CANCELLATION => '🚫 Stornierung - Regelt wann Kunden absagen dürfen',
+                                PolicyConfiguration::POLICY_TYPE_RESCHEDULE => '🔄 Umbuchung - Regelt wann Kunden verschieben dürfen',
+                                PolicyConfiguration::POLICY_TYPE_RECURRING => '🔁 Wiederkehrend - Regelt Serien-Termine',
                             ])
                             ->required()
                             ->native(false)
-                            ->helperText('Art der Richtlinie: Stornierung, Umbuchung oder wiederkehrende Termine')
+                            ->live()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Reset config when policy type changes
+                                $set('config', null);
+                            })
+                            ->helperText('💡 **Stornierung:** Kunde sagt Termin komplett ab | **Umbuchung:** Kunde verschiebt Termin auf anderen Tag/Zeit')
                             ->columnSpanFull(),
 
-                        Forms\Components\KeyValue::make('config')
-                            ->label('Konfiguration')
-                            ->keyLabel('Einstellung')
-                            ->valueLabel('Wert')
-                            ->addActionLabel('Einstellung hinzufügen')
-                            ->reorderable()
-                            ->helperText('📋 Verfügbare Einstellungen: **hours_before** (Vorlauf in Stunden, z.B. 24), **fee_percentage** (Gebühr in %, z.B. 50), **max_cancellations_per_month** (Max. Stornos/Monat, z.B. 3), **max_reschedules_per_appointment** (Max. Umbuchungen pro Termin, z.B. 2). ⚠️ Nur Zahlen als Werte, keine Anführungszeichen!')
+                        // ═══════════════════════════════════════════════════════════════
+                        // CANCELLATION (Stornierung) - Felder
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('config.hours_before')
+                                    ->label('⏰ Mindestvorlauf für Stornierung')
+                                    ->options([
+                                        1 => '1 Stunde vorher',
+                                        2 => '2 Stunden vorher',
+                                        4 => '4 Stunden vorher',
+                                        8 => '8 Stunden vorher',
+                                        12 => '12 Stunden vorher',
+                                        24 => '24 Stunden (1 Tag) vorher',
+                                        48 => '48 Stunden (2 Tage) vorher',
+                                        72 => '72 Stunden (3 Tage) vorher',
+                                        168 => '168 Stunden (1 Woche) vorher',
+                                    ])
+                                    ->default(24)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie früh muss der Kunde absagen? **Empfehlung: 24 Stunden**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\Select::make('config.max_cancellations_per_month')
+                                    ->label('🔢 Maximale Stornierungen pro Monat')
+                                    ->options([
+                                        1 => '1 Stornierung pro Monat',
+                                        2 => '2 Stornierungen pro Monat',
+                                        3 => '3 Stornierungen pro Monat',
+                                        5 => '5 Stornierungen pro Monat',
+                                        10 => '10 Stornierungen pro Monat',
+                                        999 => 'Unbegrenzt',
+                                    ])
+                                    ->default(5)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie oft darf ein Kunde pro Monat stornieren? **Empfehlung: 3-5 Stornierungen**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\Select::make('config.fee_percentage')
+                                    ->label('💰 Stornogebühr (Prozent vom Terminpreis)')
+                                    ->options([
+                                        0 => 'Kostenlos (0%)',
+                                        10 => '10% Gebühr',
+                                        25 => '25% Gebühr',
+                                        50 => '50% Gebühr',
+                                        75 => '75% Gebühr',
+                                        100 => '100% Gebühr (voller Preis)',
+                                    ])
+                                    ->default(0)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Prozentuale Gebühr vom Terminpreis. **Empfehlung: 0% (kostenlos) oder 50%**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('config.fee')
+                                    ->label('💵 Fixe Stornogebühr (in Euro)')
+                                    ->numeric()
+                                    ->suffix('€')
+                                    ->placeholder('z.B. 15')
+                                    ->helperText('**Optional:** Feste Gebühr in Euro (zusätzlich oder statt Prozent). Leer lassen = keine fixe Gebühr')
+                                    ->columnSpan(1),
+                            ])
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_CANCELLATION)
+                            ->columnSpanFull(),
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // RESCHEDULE (Umbuchung) - Felder
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('config.hours_before')
+                                    ->label('⏰ Mindestvorlauf für Umbuchung')
+                                    ->options([
+                                        1 => '1 Stunde vorher',
+                                        2 => '2 Stunden vorher',
+                                        4 => '4 Stunden vorher',
+                                        8 => '8 Stunden vorher',
+                                        12 => '12 Stunden vorher',
+                                        24 => '24 Stunden (1 Tag) vorher',
+                                        48 => '48 Stunden (2 Tage) vorher',
+                                        72 => '72 Stunden (3 Tage) vorher',
+                                    ])
+                                    ->default(12)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie früh muss der Kunde umbuchen? **Empfehlung: 12-24 Stunden**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\Select::make('config.max_reschedules_per_appointment')
+                                    ->label('🔄 Maximale Umbuchungen pro Termin')
+                                    ->options([
+                                        1 => '1x umbuchen pro Termin',
+                                        2 => '2x umbuchen pro Termin',
+                                        3 => '3x umbuchen pro Termin',
+                                        5 => '5x umbuchen pro Termin',
+                                        999 => 'Unbegrenzt oft umbuchen',
+                                    ])
+                                    ->default(3)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie oft darf ein Termin verschoben werden? **Empfehlung: 2-3 Umbuchungen**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\Select::make('config.fee_percentage')
+                                    ->label('💰 Umbuchungsgebühr (Prozent vom Terminpreis)')
+                                    ->options([
+                                        0 => 'Kostenlos (0%)',
+                                        10 => '10% Gebühr',
+                                        25 => '25% Gebühr',
+                                        50 => '50% Gebühr',
+                                    ])
+                                    ->default(0)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Prozentuale Gebühr vom Terminpreis. **Empfehlung: 0% (kostenlos) oder 10-25%**')
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('config.fee')
+                                    ->label('💵 Fixe Umbuchungsgebühr (in Euro)')
+                                    ->numeric()
+                                    ->suffix('€')
+                                    ->placeholder('z.B. 10')
+                                    ->helperText('**Optional:** Feste Gebühr in Euro (zusätzlich oder statt Prozent). Leer lassen = keine fixe Gebühr')
+                                    ->columnSpan(1),
+                            ])
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_RESCHEDULE)
+                            ->columnSpanFull(),
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // RECURRING (Wiederkehrend) - Felder
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('config.recurrence_frequency')
+                                    ->label('🔁 Wiederholungsfrequenz')
+                                    ->options([
+                                        'daily' => 'Täglich',
+                                        'weekly' => 'Wöchentlich',
+                                        'biweekly' => 'Alle 2 Wochen',
+                                        'monthly' => 'Monatlich',
+                                    ])
+                                    ->default('weekly')
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie oft soll der Termin wiederholt werden?')
+                                    ->columnSpan(1),
+
+                                Forms\Components\Select::make('config.max_occurrences')
+                                    ->label('🔢 Maximale Wiederholungen')
+                                    ->options([
+                                        5 => '5 Termine',
+                                        10 => '10 Termine',
+                                        20 => '20 Termine',
+                                        52 => '52 Termine (1 Jahr wöchentlich)',
+                                        999 => 'Unbegrenzt',
+                                    ])
+                                    ->default(10)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Wie viele Termine maximal erstellen?')
+                                    ->columnSpan(1),
+                            ])
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_RECURRING)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Placeholder::make('policy_info')
+                            ->label('ℹ️ Hinweis')
+                            ->content('Wählen Sie zuerst einen **Richtlinientyp** aus, um die Einstellungen zu sehen.')
+                            ->visible(fn (Get $get): bool => empty($get('policy_type')))
                             ->columnSpanFull(),
                     ]),
 
                 Forms\Components\Section::make('Hierarchie & Überschreibung')
                     ->icon('heroicon-o-arrows-up-down')
-                    ->description('Definieren Sie Überschreibungsbeziehungen in der Richtlinienhierarchie')
+                    ->description('⚠️ **OPTIONAL:** Nur ausfüllen wenn Sie verschiedene Regeln für Bereiche haben möchten')
+                    ->collapsed()
                     ->schema([
+                        Forms\Components\Placeholder::make('hierarchy_explanation')
+                            ->label('📊 Wie funktioniert die Hierarchie?')
+                            ->content(
+                                "**System prüft in dieser Reihenfolge (spezifisch → allgemein):**\n\n" .
+                                "1️⃣ **Mitarbeiter** (z.B. Fabian Spitzer hat eigene Regeln)\n" .
+                                "2️⃣ **Service** (z.B. VIP-Beratung hat strengere Regeln)\n" .
+                                "3️⃣ **Filiale** (z.B. München hat andere Regeln als Berlin)\n" .
+                                "4️⃣ **Unternehmen** (Standard-Regeln für alles)\n\n" .
+                                "💡 **Die spezifischste Policy gewinnt!**\n\n" .
+                                "**Beispiel:** Wenn Sie eine Service-Policy für \"VIP-Beratung\" erstellen, " .
+                                "überschreibt diese automatisch die Company-Policy nur für diesen Service."
+                            )
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('is_override')
-                            ->label('Ist Überschreibung')
-                            ->helperText('Aktivieren Sie diese Option, wenn diese Richtlinie eine übergeordnete Richtlinie überschreibt')
+                            ->label('Diese Policy soll Parent-Werte ERGÄNZEN (nicht komplett ersetzen)')
+                            ->helperText(
+                                '💡 **AUS (Standard):** Diese Policy ersetzt die Parent-Policy komplett | ' .
+                                '**AN:** Diese Policy ergänzt/überschreibt nur einzelne Werte der Parent-Policy'
+                            )
                             ->reactive()
                             ->afterStateUpdated(fn (callable $set, $state) => !$state ? $set('overrides_id', null) : null)
                             ->columnSpanFull(),
 
                         Forms\Components\Select::make('overrides_id')
-                            ->label('Überschreibt Richtlinie')
+                            ->label('Welche Parent-Policy soll ergänzt werden?')
                             ->relationship('overrides', 'id')
                             ->getOptionLabelFromRecordUsing(fn (PolicyConfiguration $record): string =>
-                                "#{$record->id} - {$record->configurable_type} ({$record->policy_type})"
+                                "#{$record->id} - " . class_basename($record->configurable_type) . " - {$record->policy_type}"
                             )
                             ->searchable()
                             ->preload()
                             ->nullable()
-                            ->visible(fn (Forms\Get $get): bool => $get('is_override') === true)
-                            ->helperText('Wählen Sie die übergeordnete Richtlinie aus, die überschrieben werden soll')
+                            ->visible(fn (Get $get): bool => $get('is_override') === true)
+                            ->helperText('⚠️ Nur ausfüllen wenn Toggle oben auf AN steht')
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -313,36 +502,8 @@ class PolicyConfigurationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('activate')
-                        ->label('Aktivieren')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
-                            $records->each(function (PolicyConfiguration $record): void {
-                                $record->is_active = true;
-                                $record->save();
-                            });
-                        })
-                        ->successNotificationTitle('Policies aktiviert')
-                        ->deselectRecordsAfterCompletion()
-                        ->requiresConfirmation(),
-
-                    Tables\Actions\BulkAction::make('deactivate')
-                        ->label('Deaktivieren')
-                        ->icon('heroicon-o-x-circle')
-                        ->color('danger')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
-                            $records->each(function (PolicyConfiguration $record): void {
-                                $record->is_active = false;
-                                $record->save();
-                            });
-                        })
-                        ->successNotificationTitle('Policies deaktiviert')
-                        ->deselectRecordsAfterCompletion()
-                        ->requiresConfirmation(),
-
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Löschen')
+                        ->label('Löschen (Soft Delete)')
                         ->requiresConfirmation(),
 
                     Tables\Actions\ForceDeleteBulkAction::make()
@@ -573,10 +734,33 @@ class PolicyConfigurationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        // 🔒 SECURITY FIX (RISK-001): Explicit company filtering to prevent tenant data leakage
+        // Even though CompanyScope global scope exists, Filament best practice requires explicit filtering
+        $user = auth()->user();
+
+        if (!$user || !$user->company_id) {
+            // No user or no company - return empty query
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Super admin can see all companies' policies
+        if ($user->hasRole('super_admin')) {
+            return $query;
+        }
+
+        // Regular users: Filter by company_id
+        // This handles both direct company_id and polymorphic configurable relationship
+        return $query->where(function (Builder $subQuery) use ($user) {
+            $subQuery->where('company_id', $user->company_id)
+                ->orWhereHas('configurable', function (Builder $configurableQuery) use ($user) {
+                    $configurableQuery->where('company_id', $user->company_id);
+                });
+        });
     }
 
     public static function getRecordTitle($record): ?string

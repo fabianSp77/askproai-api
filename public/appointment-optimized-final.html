@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking - FINAL OPTIMIERT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .time-slot {
+            min-height: 50px;
+        }
+        .slot-button {
+            transition: all 0.15s ease;
+        }
+        .slot-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .slot-button.selected {
+            background: linear-gradient(135deg, rgb(59 130 246), rgb(37 99 235));
+            color: white;
+            font-weight: 700;
+            border-color: rgb(29 78 216);
+            box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.4);
+        }
+        .time-morning { background: linear-gradient(90deg, rgba(251, 191, 36, 0.03), transparent); }
+        .time-noon { background: linear-gradient(90deg, rgba(59, 130, 246, 0.03), transparent); }
+        .time-evening { background: linear-gradient(90deg, rgba(139, 92, 246, 0.03), transparent); }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 70px repeat(7, 1fr);
+            gap: 1px;
+            background: rgb(55, 65, 81);
+        }
+        .day-column { background: rgb(31, 41, 55); }
+        .time-label {
+            position: sticky;
+            left: 0;
+            background: rgb(31, 41, 55);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white" x-data="{
+    step: 1,
+    company: 'Hauptfiliale Berlin',
+    selectedSlot: null,
+    selectedSlotTime: '',
+    selectedSlotDay: '',
+    service: null,
+    assignedEmployee: null,
+    customerType: null,
+    customerName: '',
+
+    selectSlot(datetime, dayLabel, timeLabel) {
+        this.selectedSlot = datetime;
+        this.selectedSlotDay = dayLabel;
+        this.selectedSlotTime = timeLabel;
+        this.step = 2;
+        // Auto-assign employee when service is selected
+    },
+
+    selectService(serviceName) {
+        this.service = serviceName;
+        // Auto-assign best available employee
+        const employees = ['Anna Schmidt', 'Max Müller', 'Lisa Wagner', 'Tom Klein'];
+        this.assignedEmployee = employees[Math.floor(Math.random() * employees.length)];
+    }
+}">
+    <div class="max-w-[1600px] mx-auto p-4 md:p-6">
+
+        <!-- STEP 1: CALENDAR (Availability-First!) -->
+        <div x-show="step === 1">
+            <!-- Header with Company Selector -->
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">📅 Termin buchen</h1>
+                    <p class="text-gray-400">Wähle einen verfügbaren Zeitslot</p>
+                </div>
+
+                <!-- Company Selector (Pre-selected, changeable) -->
+                <div class="flex items-center gap-3 bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
+                    <span class="text-sm text-gray-400">Filiale:</span>
+                    <select x-model="company" class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm focus:border-blue-500 focus:outline-none">
+                        <option>Hauptfiliale Berlin</option>
+                        <option>Zweigstelle München</option>
+                        <option>Filiale Hamburg</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Week Navigation -->
+            <div class="flex items-center justify-between mb-4 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                    ← Vorherige
+                </button>
+                <div class="text-lg font-semibold">
+                    14. - 20. Oktober 2025
+                </div>
+                <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                    Nächste →
+                </button>
+            </div>
+
+            <!-- Calendar Grid (ALLE Slots sofort sichtbar!) -->
+            <div class="calendar-grid rounded-lg overflow-hidden border border-gray-700 shadow-2xl">
+
+                <!-- Header Row -->
+                <div class="time-label p-2 text-xs text-gray-500 font-semibold">ZEIT</div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Mo</div>
+                    <div class="text-lg">14.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Di</div>
+                    <div class="text-lg">15.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Mi</div>
+                    <div class="text-lg">16.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Do</div>
+                    <div class="text-lg">17.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Fr</div>
+                    <div class="text-lg">18.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">Sa</div>
+                    <div class="text-lg">19.10.</div>
+                </div>
+                <div class="day-column p-3 text-center font-semibold border-b-2 border-gray-600">
+                    <div class="text-sm text-gray-400">So</div>
+                    <div class="text-lg">20.10.</div>
+                </div>
+
+                <!-- 08:00 -->
+                <div class="time-label time-slot time-morning px-2 py-3 flex items-center text-xs text-gray-400 font-medium">08:00</div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-14T08:00', 'Mo 14.10.', '08:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">08:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-15T08:00', 'Di 15.10.', '08:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">08:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-17T08:00', 'Do 17.10.', '08:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">08:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+
+                <!-- 09:00 -->
+                <div class="time-label time-slot time-morning px-2 py-3 flex items-center text-xs text-gray-400 font-medium">09:00</div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-14T09:00', 'Mo 14.10.', '09:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">09:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-16T09:00', 'Mi 16.10.', '09:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">09:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-18T09:00', 'Fr 18.10.', '09:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">09:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+
+                <!-- 10:00 -->
+                <div class="time-label time-slot time-morning px-2 py-3 flex items-center text-xs text-gray-400 font-medium">10:00</div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-14T10:00', 'Mo 14.10.', '10:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">10:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-15T10:00', 'Di 15.10.', '10:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">10:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+
+                <!-- 11:00 -->
+                <div class="time-label time-slot time-morning px-2 py-3 flex items-center text-xs text-gray-400 font-medium">11:00</div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-15T11:00', 'Di 15.10.', '11:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">11:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"><button @click="selectSlot('2025-10-16T11:00', 'Mi 16.10.', '11:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">11:00</button></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+                <div class="day-column time-slot time-morning p-1.5"></div>
+
+                <!-- 12:00 - 15:00 (Noon) -->
+                <div class="time-label time-slot time-noon px-2 py-3 flex items-center text-xs text-gray-400 font-medium">12:00</div>
+                <div class="day-column time-slot time-noon p-1.5"><button @click="selectSlot('2025-10-14T12:00', 'Mo 14.10.', '12:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">12:00</button></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"><button @click="selectSlot('2025-10-18T12:00', 'Fr 18.10.', '12:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">12:00</button></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+
+                <!-- 14:00 -->
+                <div class="time-label time-slot time-noon px-2 py-3 flex items-center text-xs text-gray-400 font-medium">14:00</div>
+                <div class="day-column time-slot time-noon p-1.5"><button @click="selectSlot('2025-10-14T14:00', 'Mo 14.10.', '14:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">14:00</button></div>
+                <div class="day-column time-slot time-noon p-1.5"><button @click="selectSlot('2025-10-15T14:00', 'Di 15.10.', '14:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">14:00</button></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+                <div class="day-column time-slot time-noon p-1.5"></div>
+
+                <!-- 16:00 -->
+                <div class="time-label time-slot time-evening px-2 py-3 flex items-center text-xs text-gray-400 font-medium">16:00</div>
+                <div class="day-column time-slot time-evening p-1.5"><button @click="selectSlot('2025-10-14T16:00', 'Mo 14.10.', '16:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">16:00</button></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"><button @click="selectSlot('2025-10-18T16:00', 'Fr 18.10.', '16:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">16:00</button></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+
+                <!-- 18:00 -->
+                <div class="time-label time-slot time-evening px-2 py-3 flex items-center text-xs text-gray-400 font-medium">18:00</div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"><button @click="selectSlot('2025-10-15T18:00', 'Di 15.10.', '18:00')" class="slot-button w-full py-2 text-sm bg-white text-gray-900 rounded border-2 border-gray-300 hover:border-blue-400">18:00</button></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+                <div class="day-column time-slot time-evening p-1.5"></div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+                <p class="text-sm text-blue-300">💡 <strong>Tipp:</strong> Klicke auf einen verfügbaren Slot um fortzufahren. Alle Zeiten werden in Echtzeit aktualisiert.</p>
+            </div>
+        </div>
+
+        <!-- STEP 2: SERVICE + CUSTOMER (Nur 1 weiterer Step!) -->
+        <div x-show="step === 2">
+            <div class="max-w-4xl mx-auto">
+                <!-- Selected Slot Banner -->
+                <div class="mb-8 p-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-blue-200 mb-1">Ausgewählter Termin:</div>
+                            <div class="text-3xl font-bold" x-text="selectedSlotDay + ' um ' + selectedSlotTime + ' Uhr'"></div>
+                            <div class="text-sm text-blue-200 mt-1" x-text="company"></div>
+                        </div>
+                        <button @click="step = 1" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition">
+                            ✏️ Ändern
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Service Selection -->
+                <div class="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4">Welcher Service?</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <button @click="selectService('Haarschnitt')"
+                                :class="service === 'Haarschnitt' ? 'bg-blue-600 border-blue-500' : 'bg-gray-700 border-gray-600'"
+                                class="p-4 rounded-lg border-2 hover:border-blue-400 transition text-left">
+                            <div class="text-3xl mb-2">✂️</div>
+                            <div class="font-bold">Haarschnitt</div>
+                            <div class="text-sm text-gray-400">30 Min • 35€</div>
+                        </button>
+                        <button @click="selectService('Färben')"
+                                :class="service === 'Färben' ? 'bg-blue-600 border-blue-500' : 'bg-gray-700 border-gray-600'"
+                                class="p-4 rounded-lg border-2 hover:border-blue-400 transition text-left">
+                            <div class="text-3xl mb-2">🎨</div>
+                            <div class="font-bold">Färben</div>
+                            <div class="text-sm text-gray-400">90 Min • 65€</div>
+                        </button>
+                        <button @click="selectService('Dauerwelle')"
+                                :class="service === 'Dauerwelle' ? 'bg-blue-600 border-blue-500' : 'bg-gray-700 border-gray-600'"
+                                class="p-4 rounded-lg border-2 hover:border-blue-400 transition text-left">
+                            <div class="text-3xl mb-2">💆</div>
+                            <div class="font-bold">Dauerwelle</div>
+                            <div class="text-sm text-gray-400">120 Min • 85€</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Auto-Assigned Employee (shown after service selection) -->
+                <div x-show="service && assignedEmployee" class="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-3">✨ Für Sie reserviert</h3>
+                    <div class="flex items-center gap-4 p-4 bg-gray-700 rounded-lg">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-2xl">
+                            👤
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg" x-text="assignedEmployee"></div>
+                            <div class="text-sm text-gray-400">Ihr Stylist für diesen Termin</div>
+                            <div class="text-xs text-gray-500 mt-1">⭐ 4.9/5 • 250+ Termine</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Selection -->
+                <div x-show="service" class="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4">Für wen ist der Termin?</h2>
+
+                    <!-- Customer Type Selection -->
+                    <div x-show="!customerType" class="grid grid-cols-2 gap-4">
+                        <button @click="customerType = 'new'" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                            <div class="text-4xl mb-3">✨</div>
+                            <div class="font-bold text-lg">Neukunde</div>
+                            <div class="text-sm text-gray-400">Erstmals bei uns</div>
+                        </button>
+                        <button @click="customerType = 'existing'" class="p-6 bg-gray-700 hover:bg-blue-600 rounded-lg border-2 border-transparent hover:border-blue-400 transition">
+                            <div class="text-4xl mb-3">👤</div>
+                            <div class="font-bold text-lg">Bestandskunde</div>
+                            <div class="text-sm text-gray-400">Bereits registriert</div>
+                        </button>
+                    </div>
+
+                    <!-- Customer Input (shown after type selection) -->
+                    <div x-show="customerType === 'new'" class="space-y-4">
+                        <input x-model="customerName" type="text" placeholder="Vor- und Nachname"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                        <input type="tel" placeholder="Telefonnummer (optional)"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                        <button @click="customerType = null" class="text-sm text-blue-400 hover:text-blue-300">← Zurück</button>
+                    </div>
+
+                    <div x-show="customerType === 'existing'" class="space-y-4">
+                        <input type="search" placeholder="Name, Telefon oder E-Mail suchen..."
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                        <div class="space-y-2">
+                            <button class="w-full text-left p-3 bg-gray-700 hover:bg-blue-600 rounded-lg transition">
+                                <div class="font-semibold">Maria Schmidt</div>
+                                <div class="text-sm text-gray-400">+49 123 456789</div>
+                            </button>
+                        </div>
+                        <button @click="customerType = null" class="text-sm text-blue-400 hover:text-blue-300">← Zurück</button>
+                    </div>
+                </div>
+
+                <!-- Confirm Button -->
+                <div x-show="service && customerName" class="flex items-center gap-4">
+                    <button class="flex-1 px-8 py-4 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-lg transition shadow-lg">
+                        ✅ Termin bestätigen
+                    </button>
+                    <button @click="step = 1; service = null; customerType = null" class="px-6 py-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
+                        Abbrechen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Summary Toast (bottom right) -->
+    <div x-show="selectedSlot" class="fixed bottom-6 right-6 bg-gray-800 border-2 border-blue-500 rounded-lg p-4 shadow-2xl max-w-sm">
+        <div class="text-sm font-bold text-blue-400 mb-2">📋 Buchungsübersicht</div>
+        <div class="text-xs space-y-1">
+            <div><strong>Filiale:</strong> <span x-text="company"></span></div>
+            <div><strong>Termin:</strong> <span x-text="selectedSlotDay + ' ' + selectedSlotTime"></span></div>
+            <div x-show="service"><strong>Service:</strong> <span x-text="service"></span></div>
+            <div x-show="assignedEmployee"><strong>Mitarbeiter:</strong> <span x-text="assignedEmployee"></span></div>
+            <div x-show="customerName"><strong>Kunde:</strong> <span x-text="customerName"></span></div>
+        </div>
+    </div>
+</body>
+</html>

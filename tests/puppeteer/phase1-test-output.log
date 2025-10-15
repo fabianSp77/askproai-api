@@ -1,0 +1,50 @@
+2025-10-13T14:52:23.872Z 🧪 Starting Phase 1 UI/UX Browser Tests
+2025-10-13T14:52:23.874Z ℹ️ Base URL: https://api.askproai.de
+2025-10-13T14:52:23.874Z ℹ️ Screenshots: /var/www/api-gateway/tests/puppeteer/screenshots/phase1-tests
+2025-10-13T14:52:24.589Z 🧪 Attempting login...
+2025-10-13T14:52:26.386Z ℹ️ Screenshot saved: 1760367146238-login-page.png
+2025-10-13T14:52:26.937Z ℹ️ Screenshot saved: 1760367146810-login-form-filled.png
+2025-10-13T14:52:57.040Z ⚠️ Navigation timeout: Navigation timeout of 30000 ms exceeded
+2025-10-13T14:52:57.176Z ℹ️ Screenshot saved: 1760367177041-after-login.png
+2025-10-13T14:52:57.176Z ❌ Login failed
+2025-10-13T14:52:57.177Z ⚠️ Cannot proceed without login - tests may be limited
+2025-10-13T14:52:57.178Z 🧪 === TEST 1: Conflict Detection ===
+2025-10-13T14:52:59.188Z ❌ Test 1 error: page.waitForTimeout is not a function
+2025-10-13T14:52:59.342Z ℹ️ Screenshot saved: 1760367179189-test1-error.png
+2025-10-13T14:52:59.343Z 🧪 === TEST 2: Available Slots in Reschedule Modal ===
+2025-10-13T14:53:01.266Z ❌ Test 2 error: page.waitForTimeout is not a function
+2025-10-13T14:53:01.389Z ℹ️ Screenshot saved: 1760367181267-test2-error.png
+2025-10-13T14:53:01.390Z 🧪 === TEST 3: Customer History Widget ===
+2025-10-13T14:53:03.289Z ❌ Test 3 error: page.waitForTimeout is not a function
+2025-10-13T14:53:03.412Z ℹ️ Screenshot saved: 1760367183290-test3-error.png
+2025-10-13T14:53:03.413Z 🧪 === TEST 4: Next Available Slot Button ===
+2025-10-13T14:53:05.401Z ❌ Test 4 error: page.waitForTimeout is not a function
+2025-10-13T14:53:05.591Z ℹ️ Screenshot saved: 1760367185401-test4-error.png
+2025-10-13T14:53:05.592Z ℹ️ === GENERATING TEST REPORT ===
+2025-10-13T14:53:05.594Z ✅ Test report saved to: /var/www/api-gateway/tests/puppeteer/PHASE1_TEST_REPORT.md
+
+================================================================================
+TEST SUMMARY
+================================================================================
+Total Tests: 5
+✅ Passed: 0
+❌ Failed: 5
+⚠️  Skipped: 0
+Success Rate: 0%
+================================================================================
+
+❌ Login: FAIL
+   └─ Could not authenticate
+❌ Test 1: Conflict Detection: FAIL
+   └─ page.waitForTimeout is not a function
+❌ Test 2: Available Slots: FAIL
+   └─ page.waitForTimeout is not a function
+❌ Test 3: Customer History: FAIL
+   └─ page.waitForTimeout is not a function
+❌ Test 4: Next Available Slot: FAIL
+   └─ page.waitForTimeout is not a function
+
+
+2025-10-13T14:53:05.597Z ℹ️ Full report: /var/www/api-gateway/tests/puppeteer/PHASE1_TEST_REPORT.md
+2025-10-13T14:53:05.597Z ℹ️ Screenshots: /var/www/api-gateway/tests/puppeteer/screenshots/phase1-tests
+2025-10-13T14:53:05.597Z ✅ All tests completed!

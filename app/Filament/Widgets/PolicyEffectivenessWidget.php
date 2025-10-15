@@ -26,9 +26,8 @@ class PolicyEffectivenessWidget extends ChartWidget
     {
         $companyId = auth()->user()->company_id;
 
-        // Get all active policy configurations
+        // Get all policy configurations (soft-deleted ones are automatically excluded)
         $policies = PolicyConfiguration::where('company_id', $companyId)
-            ->where('is_active', true)
             ->get();
 
         if ($policies->isEmpty()) {

@@ -210,17 +210,21 @@ class CalcomWebhookController extends Controller
             $customerName = $attendee['name'] ?? $payload['name'] ?? 'Cal.com Customer';
             $customerPhone = $this->extractPhoneNumber($attendee, $payload);
 
-            // Find matching service FIRST (need company_id for customer)
-            $service = null;
-            if (isset($payload['eventTypeId'])) {
-                $service = Service::where('calcom_event_type_id', $payload['eventTypeId'])->first();
+            // 🛡️ SECURITY FIX (VULN-001): Verify company ownership via service lookup
+            // This prevents creating appointments for wrong companies
+            $expectedCompanyId = $this->verifyWebhookOwnership($payload);
+            if (!$expectedCompanyId) {
+                Log::channel('calcom')->error('[Security] Cannot create appointment - event type not found', [
+                    'event_type_id' => $payload['eventTypeId'] ?? 'missing'
+                ]);
+                throw new \Exception('Unauthorized webhook: Event type not found in system');
             }
 
-            // Get company_id from service or default
-            $companyId = $service?->company_id ?? \App\Models\Company::first()?->id ?? 1;
+            // Find matching service (already verified by verifyWebhookOwnership)
+            $service = Service::where('calcom_event_type_id', $payload['eventTypeId'])->first();
 
-            // Find or create customer WITH company_id
-            $customer = $this->findOrCreateCustomer($customerName, $customerEmail, $customerPhone, $companyId);
+            // Find or create customer WITH verified company_id
+            $customer = $this->findOrCreateCustomer($customerName, $customerEmail, $customerPhone, $expectedCompanyId);
 
             // PHASE 2: Staff Assignment Integration
             // Attempt to assign staff using multi-model assignment system
@@ -230,7 +234,7 @@ class CalcomWebhookController extends Controller
             if ($service) {
                 try {
                     $assignmentContext = new AssignmentContext(
-                        companyId: $companyId,
+                        companyId: $expectedCompanyId,
                         serviceId: $service->id,
                         startsAt: $startTime->toDateTime(),
                         endsAt: $endTime->toDateTime(),
@@ -263,14 +267,25 @@ class CalcomWebhookController extends Controller
                 }
             }
 
+            // 🏢 MULTI-BRANCH SUPPORT: Determine branch for appointment
+            // Priority: 1) Service.branch_id (filialspezifischer Service)
+            //          2) Staff.branch_id (Home-Filiale des Mitarbeiters)
+            //          3) null (fallback)
+            $branchId = $service?->branch_id;
+            if (!$branchId && $staffId) {
+                $staff = Staff::find($staffId);
+                $branchId = $staff?->branch_id;
+            }
+
             // Create appointment (use v2_booking_id for string IDs)
             $appointment = Appointment::updateOrCreate(
                 ['calcom_v2_booking_id' => $calcomId],
                 array_merge([
                     'customer_id' => $customer->id,
-                    'company_id' => $companyId,
+                    'company_id' => $expectedCompanyId,  // ← Use verified company ID
                     'service_id' => $service?->id,
                     'staff_id' => $staffId, // From multi-model assignment
+                    'branch_id' => $branchId, // 🏢 NEW: Multi-branch support via Service or Staff
                     'starts_at' => $startTime,
                     'ends_at' => $endTime,
                     'status' => 'confirmed',
@@ -287,7 +302,10 @@ class CalcomWebhookController extends Controller
                     // ✅ METADATA FIX 2025-10-10: Populate tracking fields
                     'created_by' => 'customer',
                     'booking_source' => 'calcom_webhook',
-                    'booked_by_user_id' => null  // Customer bookings have no user
+                    'booked_by_user_id' => null,  // Customer bookings have no user
+                    // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
+                    'sync_origin' => 'calcom',  // ← CRITICAL: Mark origin to prevent sync loop
+                    'calcom_sync_status' => 'synced',  // ← Already in Cal.com
                 ], $assignmentMetadata) // Merge assignment metadata (model_used, was_fallback, assignment_metadata)
             );
 
@@ -296,6 +314,8 @@ class CalcomWebhookController extends Controller
                 'calcom_id' => $calcomId,
                 'customer' => $customer->name,
                 'staff_id' => $staffId,
+                'branch_id' => $branchId,
+                'branch_source' => $service?->branch_id ? 'service' : ($staffId ? 'staff' : 'none'),
                 'assignment_model' => $assignmentMetadata['assignment_model_used'] ?? 'none',
                 'time' => $startTime->format('Y-m-d H:i')
             ]);
@@ -333,6 +353,37 @@ class CalcomWebhookController extends Controller
     }
 
     /**
+     * Verify webhook ownership by checking if event type belongs to our system
+     * Prevents cross-tenant attacks (VULN-001 FIX)
+     *
+     * @param array $payload Webhook payload
+     * @return int|null Company ID if valid, null if unauthorized
+     */
+    protected function verifyWebhookOwnership(array $payload): ?int
+    {
+        $eventTypeId = $payload['eventTypeId'] ?? null;
+
+        if (!$eventTypeId) {
+            Log::channel('calcom')->warning('[Security] Webhook missing eventTypeId', [
+                'payload_keys' => array_keys($payload)
+            ]);
+            return null;
+        }
+
+        $service = Service::where('calcom_event_type_id', $eventTypeId)->first();
+
+        if (!$service) {
+            Log::channel('calcom')->warning('[Security] Webhook for unknown service - potential cross-tenant attack', [
+                'event_type_id' => $eventTypeId,
+                'payload' => $payload
+            ]);
+            return null;
+        }
+
+        return $service->company_id;
+    }
+
+    /**
      * Handle BOOKING.UPDATED webhook
      */
     protected function handleBookingUpdated(array $payload): ?Appointment
@@ -340,7 +391,17 @@ class CalcomWebhookController extends Controller
         try {
             $calcomId = $payload['id'] ?? $payload['uid'] ?? null;
 
+            // 🛡️ SECURITY FIX (VULN-001): Verify company ownership before lookup
+            $expectedCompanyId = $this->verifyWebhookOwnership($payload);
+            if (!$expectedCompanyId) {
+                Log::channel('calcom')->error('[Security] Unauthorized webhook - rejecting', [
+                    'booking_id' => $calcomId
+                ]);
+                throw new \Exception('Unauthorized webhook: Event type not found in system');
+            }
+
             $appointment = Appointment::where('calcom_v2_booking_id', $calcomId)
+                ->where('company_id', $expectedCompanyId)  // ← CRITICAL: Enforce tenant isolation
                 ->first();
 
             if ($appointment) {
@@ -360,7 +421,10 @@ class CalcomWebhookController extends Controller
                     'rescheduled_at' => now(),
                     'rescheduled_by' => 'customer',
                     'reschedule_source' => 'calcom_webhook',
-                    'previous_starts_at' => $oldStartsAt
+                    'previous_starts_at' => $oldStartsAt,
+                    // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
+                    'sync_origin' => 'calcom',  // ← Mark origin to prevent sync loop
+                    'calcom_sync_status' => 'synced',  // ← Already in Cal.com
                 ]);
 
                 Log::channel('calcom')->info('[Cal.com] Appointment rescheduled', [
@@ -406,8 +470,26 @@ class CalcomWebhookController extends Controller
         try {
             $calcomId = $payload['id'] ?? $payload['uid'] ?? null;
 
-            $appointment = Appointment::where('calcom_v2_booking_id', $calcomId)
-                ->first();
+            // 🛡️ SECURITY FIX (VULN-001): For cancellations, eventTypeId might not be present
+            // So we lookup the appointment first, then verify ownership via its service
+            $appointment = Appointment::where('calcom_v2_booking_id', $calcomId)->first();
+
+            if (!$appointment) {
+                Log::channel('calcom')->warning('[Cal.com] Appointment not found for cancellation', [
+                    'calcom_id' => $calcomId
+                ]);
+                return null;
+            }
+
+            // 🛡️ SECURITY: Verify the appointment's service matches a known event type
+            // This prevents cross-tenant attacks even without eventTypeId in payload
+            if ($appointment->service && !$appointment->service->calcom_event_type_id) {
+                Log::channel('calcom')->warning('[Security] Appointment service has no Cal.com event type', [
+                    'appointment_id' => $appointment->id,
+                    'service_id' => $appointment->service_id
+                ]);
+                return null;
+            }
 
             if ($appointment) {
                 $appointment->update([
@@ -422,7 +504,10 @@ class CalcomWebhookController extends Controller
                     'cancelled_at' => now(),
                     'cancelled_by' => 'customer',
                     'cancellation_source' => 'calcom_webhook',
-                    'cancellation_reason' => $payload['cancellationReason'] ?? 'No reason provided'
+                    'cancellation_reason' => $payload['cancellationReason'] ?? 'No reason provided',
+                    // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
+                    'sync_origin' => 'calcom',  // ← Mark origin to prevent sync loop
+                    'calcom_sync_status' => 'synced',  // ← Already in Cal.com
                 ]);
 
                 Log::channel('calcom')->info('[Cal.com] Appointment cancelled', [

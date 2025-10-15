@@ -48,11 +48,14 @@ class RetellApiController extends Controller
     public function checkCustomer(Request $request)
     {
         try {
-            // WICHTIG: Agent sendet NUR call_id!
-            $callId = $request->input('call_id');
+            // 🔧 FIX 2025-10-13: Retell sendet Parameter im "args" Objekt, nicht als direkte POST-Parameter
+            // Same issue as in cancelAppointment() and rescheduleAppointment()
+            $args = $request->input('args', []);
+            $callId = $args['call_id'] ?? $request->input('call_id');  // Fallback for backward compatibility
 
             Log::info('🔍 Checking customer', [
-                'call_id' => $callId
+                'call_id' => $callId,
+                'extracted_from' => isset($args['call_id']) ? 'args_object' : 'direct_input'
             ]);
 
             // Get phone number from call record
@@ -1315,10 +1318,12 @@ class RetellApiController extends Controller
                     ]);
 
                     // Find alternatives near the requested time
+                    // 🔧 FIX 2025-10-13: Pass customer_id to filter out existing appointments
                     $alternatives = $this->alternativeFinder->findAlternatives(
                         $rescheduleDate,
                         $duration,
-                        $service->calcom_event_type_id
+                        $service->calcom_event_type_id,
+                        $booking->customer_id  // Pass customer ID to prevent offering conflicting times
                     );
 
                     return response()->json([
