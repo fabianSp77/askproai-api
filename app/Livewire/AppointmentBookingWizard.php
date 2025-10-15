@@ -499,24 +499,8 @@ class AppointmentBookingWizard extends Component
     }
 
     // ========================================
-    // Data Loading
+    // Data Loading (Availability & Staff)
     // ========================================
-
-    /**
-     * Load available services
-     */
-    protected function loadAvailableServices(): void
-    {
-        $this->availableServices = Service::where('company_id', auth()->user()->company_id)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get()
-            ->toArray();
-
-        Log::debug('[AppointmentBookingWizard] Services loaded', [
-            'count' => count($this->availableServices),
-        ]);
-    }
 
     /**
      * Load available staff for selected service
