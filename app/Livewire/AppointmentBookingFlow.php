@@ -46,7 +46,7 @@ class AppointmentBookingFlow extends Component
     public int $companyId;
 
     // NEW: Branch selection
-    public ?int $selectedBranchId = null;
+    public ?string $selectedBranchId = null;
     public array $availableBranches = [];
 
     // NEW: Customer selection
@@ -179,7 +179,7 @@ class AppointmentBookingFlow extends Component
     /**
      * NEW: Select branch
      */
-    public function selectBranch(int $branchId): void
+    public function selectBranch(string $branchId): void
     {
         $this->selectedBranchId = $branchId;
 
