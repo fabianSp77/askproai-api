@@ -62,22 +62,30 @@ class CalcomV2Client
     }
 
     /**
-     * GET /v2/teams/{teamId}/slots - Get available time slots
+     * GET /v2/slots/available - Get available time slots
      *
-     * CRITICAL: Must use team-scoped endpoint. Global /v2/slots returns 404.
+     * CRITICAL: Must use /slots/available endpoint (not /slots)
+     * and include teamId as query parameter (not in path)
      */
     public function getAvailableSlots(int $eventTypeId, Carbon $start, Carbon $end, string $timezone = 'Europe/Berlin'): Response
     {
+        $query = [
+            'eventTypeId' => $eventTypeId,
+            'startTime' => $start->toIso8601String(),
+            'endTime' => $end->toIso8601String(),
+            'timeZone' => $timezone // IMPORTANT: camelCase!
+        ];
+
+        // Add teamId to query if available
+        if ($this->teamId) {
+            $query['teamId'] = $this->teamId;
+        }
+
         return Http::withHeaders($this->getHeaders())
             ->retry(3, 200, function ($exception, $request) {
                 return optional($exception->response)->status() === 429;
             })
-            ->get($this->getTeamUrl('slots'), [
-                'eventTypeId' => $eventTypeId,
-                'startTime' => $start->toIso8601String(),
-                'endTime' => $end->toIso8601String(),
-                'timeZone' => $timezone // IMPORTANT: camelCase!
-            ]);
+            ->get("{$this->baseUrl}/slots/available", $query);
     }
 
     /**
