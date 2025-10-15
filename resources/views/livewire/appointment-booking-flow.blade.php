@@ -21,7 +21,7 @@
                         <div class="flex-1">
                             <div class="font-medium text-sm">{{ $branch['name'] }}</div>
                             @if(!empty($branch['address']))
-                                <div class="text-xs text-gray-400">{{ $branch['address'] }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $branch['address'] }}</div>
                             @endif
                         </div>
                     </label>
@@ -114,7 +114,7 @@
                         class="fi-radio-input">
                     <div class="flex-1">
                         <div class="font-medium text-sm">{{ $service['name'] }}</div>
-                        <div class="text-xs text-gray-400">{{ $service['duration_minutes'] }} Minuten</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $service['duration_minutes'] }} Minuten</div>
                     </div>
                 </label>
             @endforeach
@@ -143,7 +143,7 @@
                     class="fi-radio-input">
                 <div class="flex-1">
                     <div class="font-medium text-sm">Nächster verfügbarer Mitarbeiter</div>
-                    <div class="text-xs text-gray-400">Maximale Auswahl an Terminen</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Maximale Auswahl an Terminen</div>
                 </div>
             </label>
 
@@ -162,7 +162,7 @@
                     <div class="flex-1">
                         <div class="font-medium text-sm">{{ $employee['name'] }}</div>
                         @if(!empty($employee['email']))
-                            <div class="text-xs text-gray-400">{{ $employee['email'] }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $employee['email'] }}</div>
                         @endif
                     </div>
                 </label>
@@ -175,7 +175,7 @@
         <div class="fi-section-header">
             Verfügbare Termine
             @if($serviceName)
-                <span class="text-sm font-normal text-gray-400">
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
                     ({{ $serviceName }} - {{ $serviceDuration }} Min)
                 </span>
             @endif
@@ -207,15 +207,15 @@
         {{-- Loading State --}}
         @if($loading)
             <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <div class="mt-2 text-sm text-gray-400">Lade Verfügbarkeiten...</div>
+                <div class="fi-loading-spinner"></div>
+                <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">Lade Verfügbarkeiten...</div>
             </div>
         @endif
 
         {{-- Error State --}}
         @if($error)
-            <div class="bg-red-900/20 border border-red-700 rounded-lg p-4 text-sm text-red-300">
-                <strong>Fehler:</strong> {{ $error }}
+            <div class="fi-error-alert">
+                <strong>⚠️ Fehler:</strong> {{ $error }}
             </div>
         @endif
 
@@ -228,7 +228,7 @@
                     <div class="fi-calendar-header">
                         {{ $this->getDayLabel($dayKey) }}
                         @if(isset($weekMetadata['days'][$dayKey]))
-                            <br><span class="text-xs text-gray-400">{{ $weekMetadata['days'][$dayKey] }}</span>
+                            <br><span class="text-xs text-gray-500 dark:text-gray-400">{{ $weekMetadata['days'][$dayKey] }}</span>
                         @endif
                     </div>
                 @endforeach
@@ -318,7 +318,7 @@
 
     .dark .fi-section {
         background-color: var(--color-gray-800);
-        border-color: var(--color-gray-700);
+        border-color: var(--color-gray-500); /* FIXED: Improved contrast from gray-700 */
     }
 
     .fi-section-header {
@@ -354,7 +354,7 @@
 
     .dark .fi-radio-option {
         background-color: var(--color-gray-700);
-        border-color: var(--color-gray-600);
+        border-color: var(--color-gray-500); /* FIXED: Improved contrast from gray-600 */
     }
 
     .fi-radio-option:hover {
@@ -377,6 +377,18 @@
         border-color: var(--color-primary-500);
     }
 
+    /* NEW: Focus indicators for keyboard navigation (WCAG 2.4.7) */
+    .fi-radio-option:focus-within {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .dark .fi-radio-option:focus-within {
+        outline-color: var(--color-primary-400);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+    }
+
     .fi-radio-input {
         width: 1.25rem;
         height: 1.25rem;
@@ -395,7 +407,7 @@
     }
 
     .dark .fi-calendar-grid {
-        background-color: var(--color-gray-600);
+        background-color: var(--color-gray-500); /* FIXED: Improved contrast for grid lines */
     }
 
     .fi-calendar-cell {
@@ -453,6 +465,13 @@
         cursor: not-allowed;
     }
 
+    /* NEW: Focus indicator for slot buttons */
+    .fi-slot-button:focus {
+        outline: 2px solid var(--color-white);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px var(--color-primary-400);
+    }
+
     .fi-time-label {
         display: flex;
         align-items: center;
@@ -502,7 +521,7 @@
     .dark .fi-button-nav {
         background-color: var(--color-gray-700);
         color: var(--color-gray-200);
-        border-color: var(--color-gray-600);
+        border-color: var(--color-gray-500); /* FIXED: Improved contrast from gray-600 */
     }
 
     .fi-button-nav:hover:not(:disabled) {
@@ -512,12 +531,24 @@
 
     .dark .fi-button-nav:hover:not(:disabled) {
         background-color: var(--color-gray-600);
-        border-color: var(--color-gray-500);
+        border-color: var(--color-gray-400); /* FIXED: Better hover contrast */
     }
 
     .fi-button-nav:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    /* NEW: Focus indicator for navigation buttons */
+    .fi-button-nav:focus {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .dark .fi-button-nav:focus {
+        outline-color: var(--color-primary-400);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
     }
 
     /* Selected Confirmation */
@@ -539,9 +570,9 @@
     }
 
     .dark .fi-search-input {
-        background-color: var(--color-gray-800);
+        background-color: var(--color-gray-700);
         color: var(--color-gray-100);
-        border-color: var(--color-gray-600);
+        border-color: var(--color-gray-500); /* FIXED: Improved contrast from gray-600 */
     }
 
     .fi-search-input:focus {
@@ -562,8 +593,8 @@
     }
 
     .dark .fi-search-results {
-        background-color: var(--color-gray-800);
-        border-color: var(--color-gray-600);
+        background-color: var(--color-gray-700);
+        border-color: var(--color-gray-500); /* FIXED: Improved contrast from gray-600 */
     }
 
     .fi-customer-result {
@@ -585,6 +616,43 @@
     /* NEW: Selected Customer */
     .fi-selected-customer {
         margin-top: 0.5rem;
+    }
+
+    /* NEW: Error Alert - Improved visibility */
+    .fi-error-alert {
+        background-color: var(--color-danger-50);
+        border: 2px solid var(--color-danger-500); /* Stronger border */
+        border-radius: 0.5rem;
+        padding: 1rem;
+        font-size: 0.875rem;
+        color: var(--color-danger-700);
+        margin-bottom: 1rem;
+    }
+
+    .dark .fi-error-alert {
+        background-color: var(--color-danger-900);
+        border-color: var(--color-danger-400); /* Better contrast in dark mode */
+        color: var(--color-danger-200);
+    }
+
+    /* NEW: Loading Spinner - Better visibility */
+    .fi-loading-spinner {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border: 3px solid var(--color-gray-300);
+        border-top-color: var(--color-primary-600);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .dark .fi-loading-spinner {
+        border-color: var(--color-gray-600);
+        border-top-color: var(--color-primary-400); /* Better visibility in dark mode */
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
 
     /* Responsive */
