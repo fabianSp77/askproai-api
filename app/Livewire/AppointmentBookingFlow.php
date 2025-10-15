@@ -313,6 +313,9 @@ class AppointmentBookingFlow extends Component
             'duration' => $this->serviceDuration,
         ]);
 
+        // Dispatch event for form integration
+        $this->dispatch('service-selected', serviceId: $serviceId);
+
         $this->dispatch('notify', [
             'message' => "Service gewählt: {$this->serviceName} ({$this->serviceDuration} Min)",
             'type' => 'info',
@@ -342,6 +345,11 @@ class AppointmentBookingFlow extends Component
             'preference' => $preference,
             'name' => $employeeName,
         ]);
+
+        // Dispatch event for form integration (only if specific employee, not 'any')
+        if ($preference !== 'any') {
+            $this->dispatch('employee-selected', employeeId: $preference);
+        }
 
         $this->dispatch('notify', [
             'message' => "Mitarbeiter: {$employeeName}",
