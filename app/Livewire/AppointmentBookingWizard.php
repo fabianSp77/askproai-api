@@ -425,12 +425,30 @@ class AppointmentBookingWizard extends Component
 
         try {
             // ═══════════════════════════════════════════════════════════
-            // CRITICAL: Validate branch is selected
+            // CRITICAL: Ensure selectedBranchId is set
             // ═══════════════════════════════════════════════════════════
+            // Fallback: If not selected, try to auto-select from company
             if (!$this->selectedBranchId) {
-                throw new \Exception(
-                    'Keine Filiale ausgewählt. Bitte wählen Sie eine Filiale aus, bevor Sie einen Termin buchen.'
-                );
+                $companyId = auth()->user()->company_id;
+
+                // Try to find and auto-select the only branch
+                $branches = Branch::where('company_id', $companyId)
+                    ->where('is_active', true)
+                    ->get(['id']);
+
+                if ($branches->count() === 1) {
+                    // Auto-select the only branch
+                    $this->selectedBranchId = $branches->first()->id;
+
+                    Log::warning('[AppointmentBookingWizard] Auto-selected branch in completeBooking', [
+                        'branch_id' => $this->selectedBranchId,
+                    ]);
+                } else {
+                    // Multiple or no branches found
+                    throw new \Exception(
+                        'Keine Filiale ausgewählt. Bitte wählen Sie eine Filiale aus, bevor Sie einen Termin buchen.'
+                    );
+                }
             }
 
             $datetime = Carbon::parse($this->selectedDate . ' ' . $this->selectedTime);
