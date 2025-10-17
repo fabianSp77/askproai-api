@@ -1,7 +1,16 @@
+{{--
+  CRITICAL FIX: Instead of returning early (which breaks Livewire lazy-loading),
+  render empty modal placeholders so Livewire has DOM targets to attach to.
+  This prevents "Cannot set properties of null (setting 'innerHTML')" errors.
+--}}
 @if (! isset($this))
-    {{-- No Livewire/Filament component context resolved (e.g. auth pages). Skip modal scaffolding to avoid fatal errors. --}}
-    @php return; @endphp
-@endif
+    {{-- No Livewire/Filament component context - render empty placeholders for Livewire to attach to --}}
+    <div id="filament-action-modal-placeholder" style="display: none;"></div>
+    <div id="filament-table-action-modal-placeholder" style="display: none;"></div>
+    <div id="filament-table-bulk-action-modal-placeholder" style="display: none;"></div>
+    <div id="filament-infolist-action-modal-placeholder" style="display: none;"></div>
+    <div id="filament-form-component-action-modal-placeholder" style="display: none;"></div>
+@else
 
 @if ($this instanceof \Filament\Actions\Contracts\HasActions && (! $this->hasActionsModalRendered))
     <form wire:submit.prevent="callMountedAction">
@@ -318,3 +327,5 @@
         $this->hasFormsModalRendered = true;
     @endphp
 @endif
+
+@endif {{-- End of @else for Livewire component context check --}}
