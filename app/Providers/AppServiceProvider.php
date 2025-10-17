@@ -97,7 +97,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Disable debug mode for production
-        config(['app.debug' => false]);
+        // TEMPORARILY COMMENTED OUT FOR DEBUGGING 405 ERROR (2025-10-17)
+        // config(['app.debug' => false]);
 
         // CRITICAL DEBUG: Log boot end
         \Log::info('✅ AppServiceProvider::boot() END - Memory: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB');
