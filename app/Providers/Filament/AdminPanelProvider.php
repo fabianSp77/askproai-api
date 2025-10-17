@@ -45,16 +45,18 @@ class AdminPanelProvider extends PanelProvider
             // Calling start() on already-hydrated pages can interfere with directive attachment
             // Livewire will process wire:snapshot attributes automatically
             // MEMORY FIX APPLIED: Circular dependency eliminated (User model no longer has CompanyScope)
-            // Re-enabling Discovery after fixing root cause (User.php Line 17 - BelongsToCompany removed)
+            // WIDGET FIX APPLIED: Disabled auto-discovery to prevent crashes from widgets querying missing tables
+            // Only critical widgets with exception guards are registered manually (see widgets array below)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            // Widget discovery DISABLED - prevents black popup errors from widgets querying non-existent tables
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                // ALL WIDGETS DISABLED FOR DEBUGGING
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                // \App\Filament\Widgets\CalcomSyncStatusWidget::class,
-                // \App\Filament\Widgets\CalcomSyncActivityWidget::class,
+                // CRITICAL WIDGETS ONLY - registered manually after adding exception guards
+                // These widgets handle missing tables gracefully instead of crashing the dashboard
+                \App\Filament\Widgets\StatsOverviewWidget::class,
+                \App\Filament\Widgets\CalcomSyncStatusWidget::class,
+                \App\Filament\Widgets\OngoingCallsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
