@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'admin/*',
+        'livewire/*',  // ✅ FIX: Livewire requests (update, upload-file) need CSRF bypass
         'webhooks/*',
         'webhooks/retell',  // 🔥 FIX: Explicit exception for Retell webhook
         'webhooks/calcom',

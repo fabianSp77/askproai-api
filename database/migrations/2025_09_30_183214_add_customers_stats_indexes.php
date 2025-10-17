@@ -15,19 +15,25 @@ return new class extends Migration
             Schema::table('customers', function (Blueprint $table) {
                 // Composite index for customer stats aggregations
                 // Optimizes queries filtering by status, VIP, and date range
-                if (!$this->indexExists('customers', 'idx_customers_stats_aggregation')) {
+                if (!$this->indexExists('customers', 'idx_customers_stats_aggregation') &&
+                    Schema::hasColumn('customers', 'status') &&
+                    Schema::hasColumn('customers', 'is_vip')) {
                     $table->index(['status', 'is_vip', 'created_at'], 'idx_customers_stats_aggregation');
                 }
 
                 // Composite index for revenue calculations
                 // Optimizes total revenue queries with status filtering
-                if (!$this->indexExists('customers', 'idx_customers_revenue_status')) {
+                if (!$this->indexExists('customers', 'idx_customers_revenue_status') &&
+                    Schema::hasColumn('customers', 'status') &&
+                    Schema::hasColumn('customers', 'total_revenue')) {
                     $table->index(['status', 'total_revenue'], 'idx_customers_revenue_status');
                 }
 
                 // Composite index for journey status queries
                 // Optimizes customer journey distribution queries
-                if (!$this->indexExists('customers', 'idx_customers_journey_status')) {
+                if (!$this->indexExists('customers', 'idx_customers_journey_status') &&
+                    Schema::hasColumn('customers', 'journey_status') &&
+                    Schema::hasColumn('customers', 'status')) {
                     $table->index(['journey_status', 'status'], 'idx_customers_journey_status');
                 }
             });

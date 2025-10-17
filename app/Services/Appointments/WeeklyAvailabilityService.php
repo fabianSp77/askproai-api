@@ -2,12 +2,13 @@
 
 namespace App\Services\Appointments;
 
+use App\Exceptions\CalcomApiException;
 use App\Models\Service;
+use App\Services\Appointments\Contracts\AvailabilityServiceInterface;
 use App\Services\CalcomService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use App\Exceptions\CalcomApiException;
 
 /**
  * WeeklyAvailabilityService
@@ -24,7 +25,7 @@ use App\Exceptions\CalcomApiException;
  * @see CalcomService For Cal.com API integration
  * @see Service For service model with calcom_event_type_id
  */
-class WeeklyAvailabilityService
+class WeeklyAvailabilityService implements AvailabilityServiceInterface
 {
     public function __construct(
         protected CalcomService $calcomService

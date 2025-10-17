@@ -17,27 +17,42 @@ return new class extends Migration
         }
 
         Schema::table('calls', function (Blueprint $table) {
-            // Profit-Tracking Felder
-            $table->integer('platform_profit')->nullable()
-                ->comment('Platform profit (reseller_cost - base_cost or customer_cost - base_cost)');
+            // Add profit tracking fields only if they don't exist
+            if (!Schema::hasColumn('calls', 'platform_profit')) {
+                $table->integer('platform_profit')->nullable()
+                    ->comment('Platform profit (reseller_cost - base_cost or customer_cost - base_cost)');
+            }
 
-            $table->integer('reseller_profit')->nullable()
-                ->comment('Reseller/Mandant profit (customer_cost - reseller_cost)');
+            if (!Schema::hasColumn('calls', 'reseller_profit')) {
+                $table->integer('reseller_profit')->nullable()
+                    ->comment('Reseller/Mandant profit (customer_cost - reseller_cost)');
+            }
 
-            $table->integer('total_profit')->nullable()
-                ->comment('Total profit (customer_cost - base_cost)');
+            if (!Schema::hasColumn('calls', 'total_profit')) {
+                $table->integer('total_profit')->nullable()
+                    ->comment('Total profit (customer_cost - base_cost)');
+            }
 
-            $table->decimal('profit_margin_platform', 5, 2)->nullable()
-                ->comment('Platform profit margin percentage');
+            if (!Schema::hasColumn('calls', 'profit_margin_platform')) {
+                $table->decimal('profit_margin_platform', 5, 2)->nullable()
+                    ->comment('Platform profit margin percentage');
+            }
 
-            $table->decimal('profit_margin_reseller', 5, 2)->nullable()
-                ->comment('Reseller profit margin percentage');
+            if (!Schema::hasColumn('calls', 'profit_margin_reseller')) {
+                $table->decimal('profit_margin_reseller', 5, 2)->nullable()
+                    ->comment('Reseller profit margin percentage');
+            }
 
-            $table->decimal('profit_margin_total', 5, 2)->nullable()
-                ->comment('Total profit margin percentage');
+            if (!Schema::hasColumn('calls', 'profit_margin_total')) {
+                $table->decimal('profit_margin_total', 5, 2)->nullable()
+                    ->comment('Total profit margin percentage');
+            }
 
-            // Index für Performance bei Profit-Abfragen
-            $table->index(['platform_profit', 'reseller_profit', 'total_profit'], 'idx_profit_tracking');
+            // Add index only if columns exist
+            if (!Schema::hasIndex('calls', 'idx_profit_tracking') &&
+                Schema::hasColumn('calls', 'platform_profit')) {
+                $table->index(['platform_profit', 'reseller_profit', 'total_profit'], 'idx_profit_tracking');
+            }
         });
     }
 

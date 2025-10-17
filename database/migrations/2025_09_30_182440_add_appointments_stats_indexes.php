@@ -15,7 +15,8 @@ return new class extends Migration
             Schema::table('appointments', function (Blueprint $table) {
                 // Composite index for revenue aggregations with date and status filtering
                 // Optimizes monthly revenue queries in AppointmentStats widget
-                if (!$this->indexExists('appointments', 'idx_appointments_revenue_date_status')) {
+                if (!$this->indexExists('appointments', 'idx_appointments_revenue_date_status') &&
+                    Schema::hasColumn('appointments', 'price')) {
                     $table->index(['starts_at', 'status', 'price'], 'idx_appointments_revenue_date_status');
                 }
 
