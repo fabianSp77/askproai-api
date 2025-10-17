@@ -16,16 +16,16 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
 
-                // UUID foreign keys for branches and staff (char(36) primary keys)
-                $table->uuid('branch_id');
+                // Foreign key for branches (bigint unsigned primary key)
+                $table->unsignedBigInteger('branch_id');
                 $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
 
                 $table->foreignId('service_id')->constrained()->cascadeOnDelete();
                 $table->string('segment_key', 20)->nullable()
                     ->comment('A, B, C for composite segments');
 
-                // Staff ID as UUID (char(36) primary key)
-                $table->uuid('staff_id')->nullable();
+                // Staff ID as bigint unsigned (matching staff table)
+                $table->unsignedBigInteger('staff_id')->nullable();
                 $table->foreign('staff_id')->references('id')->on('staff')->nullOnDelete();
 
                 // Cal.com mapping

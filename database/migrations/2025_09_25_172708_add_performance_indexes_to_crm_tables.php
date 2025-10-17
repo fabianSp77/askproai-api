@@ -38,8 +38,9 @@ return new class extends Migration
                 $table->index(['service_id', 'status'], 'idx_appointments_service');
             }
 
-            // Index for branch filtering
-            if (!Schema::hasIndex('appointments', 'idx_appointments_branch')) {
+            // Index for branch filtering (if column exists)
+            if (!Schema::hasIndex('appointments', 'idx_appointments_branch') &&
+                Schema::hasColumn('appointments', 'branch_id')) {
                 $table->index(['branch_id', 'starts_at'], 'idx_appointments_branch');
             }
 
@@ -127,13 +128,15 @@ return new class extends Migration
                 $table->index('customer_number', 'idx_customers_number');
             }
 
-            // Index for email lookup (if not unique)
-            if (!Schema::hasIndex('customers', 'idx_customers_email')) {
+            // Index for email lookup (if not unique and column exists)
+            if (!Schema::hasIndex('customers', 'idx_customers_email') &&
+                Schema::hasColumn('customers', 'email')) {
                 $table->index('email', 'idx_customers_email');
             }
 
-            // Index for phone lookup
-            if (!Schema::hasIndex('customers', 'idx_customers_phone')) {
+            // Index for phone lookup (if column exists)
+            if (!Schema::hasIndex('customers', 'idx_customers_phone') &&
+                Schema::hasColumn('customers', 'phone')) {
                 $table->index('phone', 'idx_customers_phone');
             }
 
@@ -157,18 +160,21 @@ return new class extends Migration
                 $table->index(['company_id', 'is_active'], 'idx_services_active');
             }
 
-            // Index for branch services
-            if (!Schema::hasIndex('services', 'idx_services_branch')) {
+            // Index for branch services (if column exists)
+            if (!Schema::hasIndex('services', 'idx_services_branch') &&
+                Schema::hasColumn('services', 'branch_id')) {
                 $table->index(['branch_id', 'is_active'], 'idx_services_branch');
             }
 
-            // Index for category filtering
-            if (!Schema::hasIndex('services', 'idx_services_category')) {
+            // Index for category filtering (if column exists)
+            if (!Schema::hasIndex('services', 'idx_services_category') &&
+                Schema::hasColumn('services', 'category')) {
                 $table->index(['category', 'is_active'], 'idx_services_category');
             }
 
-            // Index for cal.com sync
-            if (!Schema::hasIndex('services', 'idx_services_calcom')) {
+            // Index for cal.com sync (if column exists)
+            if (!Schema::hasIndex('services', 'idx_services_calcom') &&
+                Schema::hasColumn('services', 'calcom_event_type_id')) {
                 $table->index('calcom_event_type_id', 'idx_services_calcom');
             }
         });
