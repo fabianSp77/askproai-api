@@ -8,6 +8,8 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 class OngoingCallsWidget extends BaseWidget
 {
@@ -29,34 +31,35 @@ class OngoingCallsWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        return $table
-            ->query(
-                Call::query()
-                    // PERFORMANCE: Select only needed columns, exclude LONGTEXT fields (raw, analysis, details)
-                    ->select([
-                        'id', 'created_at', 'status', 'call_status',
-                        'from_number', 'to_number', 'customer_id', 'customer_name',
-                        'agent_id', 'company_id', 'direction', 'start_timestamp'
-                    ])
-                    // Exclude calls that are definitely ended based on either status field
-                    ->whereNotIn('status', ['completed', 'ended', 'failed', 'analyzed', 'call_analyzed'])
-                    ->whereNotIn('call_status', ['ended', 'completed', 'failed', 'analyzed'])
-                    // Only include calls that have an active status in at least one field
-                    // Note: Database uses 'in_progress' (underscore), not 'in-progress' (hyphen)
-                    ->where(function (Builder $query) {
-                        $query->whereIn('status', ['ongoing', 'in_progress', 'in-progress', 'active', 'ringing'])
-                              ->orWhereIn('call_status', ['ongoing', 'in_progress', 'in-progress', 'active', 'ringing']);
-                    })
-                    // Add time filter to exclude stale calls (older than 2 hours)
-                    ->where('created_at', '>=', now()->subHours(2))
-                    // PERFORMANCE: Eager load with column selection to prevent N+1 queries
-                    ->with([
-                        'customer:id,name',
-                        'agent:id,name',
-                        'company:id,name'
-                    ])
-                    ->orderBy('created_at', 'desc')
-            )
+        try {
+            return $table
+                ->query(
+                    Call::query()
+                        // PERFORMANCE: Select only needed columns, exclude LONGTEXT fields (raw, analysis, details)
+                        ->select([
+                            'id', 'created_at', 'status', 'call_status',
+                            'from_number', 'to_number', 'customer_id', 'customer_name',
+                            'agent_id', 'company_id', 'direction', 'start_timestamp'
+                        ])
+                        // Exclude calls that are definitely ended based on either status field
+                        ->whereNotIn('status', ['completed', 'ended', 'failed', 'analyzed', 'call_analyzed'])
+                        ->whereNotIn('call_status', ['ended', 'completed', 'failed', 'analyzed'])
+                        // Only include calls that have an active status in at least one field
+                        // Note: Database uses 'in_progress' (underscore), not 'in-progress' (hyphen)
+                        ->where(function (Builder $query) {
+                            $query->whereIn('status', ['ongoing', 'in_progress', 'in-progress', 'active', 'ringing'])
+                                  ->orWhereIn('call_status', ['ongoing', 'in_progress', 'in-progress', 'active', 'ringing']);
+                        })
+                        // Add time filter to exclude stale calls (older than 2 hours)
+                        ->where('created_at', '>=', now()->subHours(2))
+                        // PERFORMANCE: Eager load with column selection to prevent N+1 queries
+                        ->with([
+                            'customer:id,name',
+                            'agent:id,name',
+                            'company:id,name'
+                        ])
+                        ->orderBy('created_at', 'desc')
+                )
             ->columns([
                 // Call ID removed - not needed for live overview
 
@@ -155,6 +158,24 @@ class OngoingCallsWidget extends BaseWidget
             ->emptyStateIcon('heroicon-o-phone')
             ->striped()
             ->defaultSort('created_at', 'desc');
+        } catch (QueryException $exception) {
+            // Table doesn't exist yet - log and return empty table instead of crashing dashboard
+            if ($exception->getCode() === '42S02') {
+                Log::warning('[OngoingCallsWidget] Calls table not found. Dashboard tables may still be migrating.', [
+                    'error' => $exception->getMessage(),
+                ]);
+                // Return empty table configuration
+                return $table
+                    ->query(Call::query()->whereRaw('1=0')) // Empty query
+                    ->columns([])
+                    ->actions([])
+                    ->bulkActions([])
+                    ->emptyStateHeading('Keine laufenden Anrufe')
+                    ->emptyStateIcon('heroicon-o-phone');
+            }
+            // Re-throw other database exceptions
+            throw $exception;
+        }
     }
 
     public function getTableRecordsPerPageSelectOptions(): array
