@@ -11,6 +11,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Company Assignment Configuration Resource
@@ -190,7 +192,21 @@ class CompanyAssignmentConfigResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('is_active', true)->count();
+        try {
+            $count = static::getModel()::where('is_active', true)->count();
+            return $count > 0 ? (string) $count : null;
+        } catch (QueryException $exception) {
+            // Table doesn't exist yet - log and return null instead of crashing
+            if ($exception->getCode() !== '42S02') {
+                throw $exception;
+            }
+
+            Log::warning('[CompanyAssignmentConfigResource] Table not found. Returning null for badge.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     public static function getNavigationBadgeColor(): ?string

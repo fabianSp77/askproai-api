@@ -11,6 +11,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
+use TypeError;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
@@ -28,6 +29,21 @@ class User extends Authenticatable implements FilamentUser
      * Guard flag to avoid spamming logs when permission tables are missing.
      */
     protected static bool $permissionTablesMissing = false;
+
+    /**
+     * Guard flag to avoid spamming logs for invalid role check types.
+     */
+    protected static bool $invalidRoleCheckTypeLogged = false;
+
+    protected function isValidRoleArgument($roles): bool
+    {
+        return is_string($roles)
+            || is_int($roles)
+            || is_array($roles)
+            || $roles instanceof \UnitEnum
+            || $roles instanceof \Illuminate\Support\Collection
+            || $roles instanceof \Illuminate\Database\Eloquent\Collection;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -93,17 +109,40 @@ class User extends Authenticatable implements FilamentUser
 
     public function hasRole($roles, string $guard = null): bool
     {
+        if (! $this->isValidRoleArgument($roles)) {
+            return $this->handleInvalidRoleArgument($roles);
+        }
+
         return $this->callSpatieRoleCheck(fn () => $this->spatieHasRole($roles, $guard));
     }
 
     public function hasAnyRole($roles, string $guard = null): bool
     {
+        if (! $this->isValidRoleArgument($roles)) {
+            return $this->handleInvalidRoleArgument($roles);
+        }
+
         return $this->callSpatieRoleCheck(fn () => $this->spatieHasAnyRole($roles, $guard));
     }
 
     public function hasPermissionTo($permission, $guardName = null): bool
     {
         return $this->callSpatieRoleCheck(fn () => $this->spatieHasPermissionTo($permission, $guardName));
+    }
+
+    protected function handleInvalidRoleArgument($roles): bool
+    {
+        if (! static::$invalidRoleCheckTypeLogged) {
+            static::$invalidRoleCheckTypeLogged = true;
+
+            Log::warning('[Permissions] Invalid hasRole argument type detected. Returning "false".', [
+                'type' => get_debug_type($roles),
+                'value' => $roles,
+                'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
+            ]);
+        }
+
+        return false;
     }
 
     /**
@@ -113,6 +152,17 @@ class User extends Authenticatable implements FilamentUser
     {
         try {
             return $callback();
+        } catch (TypeError $exception) {
+            if (! static::$invalidRoleCheckTypeLogged) {
+                static::$invalidRoleCheckTypeLogged = true;
+
+                Log::warning('[Permissions] Invalid type passed to role/permission check. Returning "false".', [
+                    'error' => $exception->getMessage(),
+                    'trace' => array_slice($exception->getTrace(), 0, 5),
+                ]);
+            }
+
+            return false;
         } catch (QueryException $exception) {
             if ($exception->getCode() !== '42S02') {
                 throw $exception;
