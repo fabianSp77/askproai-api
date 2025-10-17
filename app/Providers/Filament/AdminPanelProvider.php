@@ -41,6 +41,10 @@ class AdminPanelProvider extends PanelProvider
                     ->withEntryPoints(['resources/css/call-detail-full-width.css'])
                     ->toHtml()
             )
+            ->renderHook(
+                'panels::scripts.after',
+                fn (): string => '<script>Livewire.start()</script>'
+            )
             // MEMORY FIX APPLIED: Circular dependency eliminated (User model no longer has CompanyScope)
             // Re-enabling Discovery after fixing root cause (User.php Line 17 - BelongsToCompany removed)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

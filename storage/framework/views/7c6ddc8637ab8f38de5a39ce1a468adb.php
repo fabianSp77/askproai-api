@@ -123,12 +123,20 @@ unset($__defined_vars); ?>
 
         livewire: null,
 
+        getContainer: function () {
+            // Use dynamic query instead of cached ref to handle Livewire morphing
+            return this.$el.querySelector('[data-fi-modal-container]')
+        },
+
         close: function () {
             this.isOpen = false
 
-            this.$refs.modalContainer.dispatchEvent(
-                new CustomEvent('modal-closed', { detail: { id: '<?php echo e($id); ?>' } }),
-            )
+            const container = this.getContainer()
+            if (container) {
+                container.dispatchEvent(
+                    new CustomEvent('modal-closed', { detail: { id: '<?php echo e($id); ?>' } }),
+                )
+            }
         },
 
         open: function () {
@@ -139,9 +147,12 @@ unset($__defined_vars); ?>
                     this.$dispatch('ax-modal-opened')
                 <?php endif; ?>
 
-                this.$refs.modalContainer.dispatchEvent(
-                    new CustomEvent('modal-opened', { detail: { id: '<?php echo e($id); ?>' } }),
-                )
+                const container = this.getContainer()
+                if (container) {
+                    container.dispatchEvent(
+                        new CustomEvent('modal-opened', { detail: { id: '<?php echo e($id); ?>' } }),
+                    )
+                }
             })
         },
     }"
@@ -191,6 +202,7 @@ unset($__defined_vars); ?>
             ]); ?>"
         >
             <div
+                data-fi-modal-container
                 x-ref="modalContainer"
                 <?php if($closeByClickingAway): ?>
                     
