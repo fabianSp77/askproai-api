@@ -96,8 +96,10 @@ return new class extends Migration
         Schema::table('customers', function (Blueprint $table) {
             // Remove duplicate standalone company_id indexes
             // Keep composite indexes that provide additional query optimization
+            // IMPORTANT: Don't drop idx_customers_company_id if it's used by a foreign key constraint
 
-            if ($this->indexExists('customers', 'idx_customers_company_id')) {
+            if ($this->indexExists('customers', 'idx_customers_company_id') &&
+                !$this->isForeignKeyIndex('customers', 'idx_customers_company_id')) {
                 $table->dropIndex('idx_customers_company_id');
             }
 
@@ -107,7 +109,7 @@ return new class extends Migration
             // Keep customers_company_email_index for email lookups
         });
 
-        $this->logOptimization('customers', 'Removed 1 duplicate company_id index');
+        $this->logOptimization('customers', 'Removed duplicate company_id indexes (if safe to remove)');
     }
 
     /**
@@ -161,7 +163,8 @@ return new class extends Migration
 
         // Customers: Optimize "active customers by journey stage" query
         if (Schema::hasTable('customers') &&
-            !$this->indexExists('customers', 'idx_customers_journey_analysis')) {
+            !$this->indexExists('customers', 'idx_customers_journey_analysis') &&
+            Schema::hasColumn('customers', 'journey_status')) {
 
             Schema::table('customers', function (Blueprint $table) {
                 $table->index(
@@ -178,7 +181,8 @@ return new class extends Migration
 
         // Calls: Optimize sentiment analysis queries
         if (Schema::hasTable('calls') &&
-            !$this->indexExists('calls', 'idx_calls_sentiment_analysis')) {
+            !$this->indexExists('calls', 'idx_calls_sentiment_analysis') &&
+            Schema::hasColumn('calls', 'sentiment_score')) {
 
             Schema::table('calls', function (Blueprint $table) {
                 $table->index(
@@ -300,6 +304,44 @@ return new class extends Migration
     {
         $indexes = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
         return count($indexes) > 0;
+    }
+
+    /**
+     * Check if an index is used by a foreign key constraint
+     */
+    private function isForeignKeyIndex(string $table, string $index): bool
+    {
+        try {
+            $constraints = DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+                WHERE TABLE_NAME = ? AND CONSTRAINT_SCHEMA = ?
+            ", [$table, DB::connection()->getDatabaseName()]);
+
+            foreach ($constraints as $constraint) {
+                // Get the columns used in this constraint
+                $keyColumns = DB::select("
+                    SELECT COLUMN_NAME, ORDINAL_POSITION
+                    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                    WHERE TABLE_NAME = ?
+                    AND CONSTRAINT_NAME = ?
+                    AND TABLE_SCHEMA = ?
+                    ORDER BY ORDINAL_POSITION
+                ", [$table, $constraint->CONSTRAINT_NAME, DB::connection()->getDatabaseName()]);
+
+                if (count($keyColumns) > 0) {
+                    // Foreign key constraints need the first column of the index to match
+                    if ($keyColumns[0]->COLUMN_NAME === 'company_id') {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            // If we can't determine, assume it's safe to drop
+            return false;
+        }
     }
 
     /**

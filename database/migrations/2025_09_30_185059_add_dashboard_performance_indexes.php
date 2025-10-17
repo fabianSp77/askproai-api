@@ -49,13 +49,15 @@ return new class extends Migration
             Schema::table('customers', function (Blueprint $table) {
                 // Composite index for customer status and growth tracking
                 // Optimizes: Active customer counts, new customer trends
-                if (!$this->indexExists('customers', 'idx_customers_dashboard_growth')) {
+                if (!$this->indexExists('customers', 'idx_customers_dashboard_growth') &&
+                    Schema::hasColumn('customers', 'status')) {
                     $table->index(['status', 'created_at'], 'idx_customers_dashboard_growth');
                 }
 
                 // Index for customer churn rate calculations
                 // Optimizes: Inactive customer tracking with update time
-                if (!$this->indexExists('customers', 'idx_customers_dashboard_churn')) {
+                if (!$this->indexExists('customers', 'idx_customers_dashboard_churn') &&
+                    Schema::hasColumn('customers', 'status')) {
                     $table->index(['status', 'updated_at'], 'idx_customers_dashboard_churn');
                 }
             });
