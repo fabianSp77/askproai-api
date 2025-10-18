@@ -216,6 +216,7 @@ class AppointmentResource extends Resource
                         // DEPRECATED: Old service/staff dropdowns - now replaced by BookingFlow component
                         // Only shown in EDIT mode for reference
                         Grid::make(2)
+                            ->extraAttributes(['wire:key' => 'service-staff-grid'])
                             ->schema([
                                 Forms\Components\Select::make('service_id')
                                     ->label('Dienstleistung')
@@ -386,7 +387,9 @@ class AppointmentResource extends Resource
                             }),
 
                         // Fallback: Manual DateTimePicker (optional, nur wenn Week Picker nicht genutzt wird)
-                        Grid::make(2)->schema([
+                        Grid::make(2)
+                            ->extraAttributes(['wire:key' => 'manual-datetime-grid'])
+                            ->schema([
                             Forms\Components\DateTimePicker::make('starts_at_manual')
                                 ->label('⏰ Oder: Manuell Termin-Beginn wählen')
                                 ->seconds(false)
@@ -460,6 +463,7 @@ class AppointmentResource extends Resource
 
                         // Dauer & Ende Info anzeigen
                         Grid::make(2)
+                            ->extraAttributes(['wire:key' => 'duration-end-grid'])
                             ->schema([
                                 // DAUER SICHTBAR
                                 Forms\Components\TextInput::make('duration_minutes')
@@ -527,9 +531,11 @@ class AppointmentResource extends Resource
                                 'bulletList',
                                 'orderedList',
                             ])
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->extraAttributes(['wire:key' => 'notes-rich-editor']),
 
                         Grid::make(3)
+                            ->extraAttributes(['wire:key' => 'booking-source-grid'])
                             ->schema([
                                 Forms\Components\Select::make('source')
                                     ->label('Buchungsquelle')
@@ -574,10 +580,12 @@ class AppointmentResource extends Resource
                                     ->label('Bestätigung senden')
                                     ->default(true)
                                     ->helperText('Sofort nach der Buchung'),
-                            ]),
+                            ])
+                            ->extraAttributes(['wire:key' => 'reminder-settings-grid']),
 
                         // Package/Series fields (only shown when relevant)
                         Grid::make(3)
+                            ->extraAttributes(['wire:key' => 'package-sessions-grid'])
                             ->schema([
                                 Forms\Components\TextInput::make('package_sessions_total')
                                     ->label('Paket Sitzungen Gesamt')
