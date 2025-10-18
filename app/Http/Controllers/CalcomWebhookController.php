@@ -299,10 +299,6 @@ class CalcomWebhookController extends Controller
                         'meeting_url' => $payload['meetingUrl'] ?? null,
                     ]),
                     'calcom_event_type_id' => $payload['eventTypeId'] ?? null,
-                    // ✅ METADATA FIX 2025-10-10: Populate tracking fields
-                    'created_by' => 'customer',
-                    'booking_source' => 'calcom_webhook',
-                    'booked_by_user_id' => null,  // Customer bookings have no user
                     // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
                     'sync_origin' => 'calcom',  // ← CRITICAL: Mark origin to prevent sync loop
                     'calcom_sync_status' => 'synced',  // ← Already in Cal.com
