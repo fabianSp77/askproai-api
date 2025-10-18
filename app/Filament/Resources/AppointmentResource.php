@@ -568,11 +568,13 @@ class AppointmentResource extends Resource
                                     ->label('Erinnerung senden')
                                     ->default(true)
                                     ->reactive()
+                                    ->dehydrated(false)
                                     ->helperText('24 Stunden vor dem Termin'),
 
                                 Forms\Components\Toggle::make('send_confirmation')
                                     ->label('Bestätigung senden')
                                     ->default(true)
+                                    ->dehydrated(false)
                                     ->helperText('Sofort nach der Buchung'),
                             ]),
 
