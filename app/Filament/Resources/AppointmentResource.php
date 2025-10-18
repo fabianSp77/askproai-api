@@ -326,15 +326,15 @@ class AppointmentResource extends Resource
                         // NEW: V4 Professional Booking Flow (Service-First)
                         Forms\Components\ViewField::make('booking_flow')
                             ->label('')
-                            ->view('livewire.appointment-booking-flow-wrapper', function (callable $get, $context, $record) {
+                            ->view('livewire.appointment-booking-flow-wrapper', function ($context, $record) {
                                 $companyId = ($context === 'edit' && $record)
                                     ? $record->company_id
                                     : (auth()->user()->company_id ?? 1);
 
                                 return [
                                     'companyId' => $companyId,
-                                    'preselectedServiceId' => $get('service_id'),
-                                    'preselectedSlot' => $get('starts_at'),
+                                    'preselectedServiceId' => null,
+                                    'preselectedSlot' => null,
                                 ];
                             })
                             ->reactive()

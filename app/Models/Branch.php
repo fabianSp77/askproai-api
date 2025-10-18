@@ -72,6 +72,40 @@ class Branch extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    /**
+     * Get all calls processed for this branch
+     * Used for branch-level analytics and performance reporting
+     */
+    public function calls(): HasMany
+    {
+        return $this->hasMany(Call::class);
+    }
+
+    /**
+     * Get upcoming scheduled/confirmed appointments for this branch
+     * Used for branch scheduling, resource planning, and booking management
+     * Performance: More efficient than filtering appointments() every time
+     */
+    public function upcomingAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('starts_at', '>=', now())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->orderBy('starts_at', 'asc');
+    }
+
+    /**
+     * Get completed appointments for this branch (historical record)
+     * Used for branch metrics, performance tracking, and revenue analysis
+     * Performance: Specialized query for completed appointments only
+     */
+    public function completedAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('status', 'completed')
+            ->orderBy('starts_at', 'desc');
+    }
+
     public function services(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'branch_service')

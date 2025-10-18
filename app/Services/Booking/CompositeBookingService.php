@@ -141,23 +141,24 @@ class CompositeBookingService
         }
 
         return DB::transaction(function() use ($data, $compositeUid) {
-            $locks = [];
             $bookings = [];
 
             try {
-                // Acquire locks for all segments
-                foreach ($data['segments'] as $segment) {
-                    $lock = $this->locks->acquireStaffLock(
-                        $segment['staff_id'],
-                        Carbon::parse($segment['starts_at']),
-                        Carbon::parse($segment['ends_at'])
-                    );
+                // 🔒 RACE CONDITION FIX (RC4): Use deadlock-safe acquireMultipleLocks()
+                // This automatically sorts locks by key to prevent deadlocks
+                // See: claudedocs/08_REFERENCE/CONCURRENCY_RACE_CONDITIONS_2025-10-17.md#rc4
+                $lockRequests = collect($data['segments'])->map(function($segment) {
+                    return [
+                        'staff_id' => $segment['staff_id'],
+                        'start' => $segment['starts_at'],
+                        'end' => $segment['ends_at'],
+                    ];
+                })->toArray();
 
-                    if (!$lock) {
-                        throw new BookingConflictException('Unable to acquire lock for staff ' . $segment['staff_id']);
-                    }
+                $locks = $this->locks->acquireMultipleLocks($lockRequests);
 
-                    $locks[] = $lock;
+                if (empty($locks)) {
+                    throw new BookingConflictException('Unable to acquire locks for all staff members');
                 }
 
                 // Book in reverse order (B → A) for safer rollback
@@ -243,11 +244,9 @@ class CompositeBookingService
                 return $appointment;
 
             } finally {
-                // Always release locks
-                foreach ($locks as $lock) {
-                    if ($lock) {
-                        $lock->release();
-                    }
+                // Always release locks - use releaseMultipleLocks() for proper cleanup
+                if (!empty($locks)) {
+                    $this->locks->releaseMultipleLocks(array_map(fn($lockData) => $lockData['lock'], $locks));
                 }
             }
         });

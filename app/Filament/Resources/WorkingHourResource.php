@@ -28,7 +28,7 @@ use Filament\Tables\Actions\Action;
 class WorkingHourResource extends Resource
 {
     protected static ?string $model = WorkingHour::class;
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationGroup = 'Stammdaten';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'Arbeitszeiten';

@@ -14,10 +14,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('call_cost_migration_log', function (Blueprint $table) {
+        Schema::createIfNotExists('call_cost_migration_log', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('call_id');
-            $table->string('migration_batch', 50)->index();
+            $table->string('migration_batch', 50);
 
             // Old values (before migration)
             $table->decimal('old_retell_cost_usd', 10, 6)->nullable();

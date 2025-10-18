@@ -1,6 +1,11 @@
 {{-- AppointmentBookingFlow - Professional Single-Page Booking --}}
 <div class="appointment-booking-flow space-y-6">
 
+    {{-- Theme Toggle (Top Right) --}}
+    <div class="flex justify-end mb-2">
+        @livewire('theme-toggle')
+    </div>
+
     {{-- 1. BRANCH SELECTION --}}
     <div class="fi-section">
         <div class="fi-section-header">🏢 Filiale auswählen</div>
@@ -122,8 +127,21 @@
         </div>
     </div>
 
-    {{-- 4. CALENDAR/TIME SLOT SELECTION --}}
+    {{-- 4. CALENDAR/TIME SLOT SELECTION (NEW: Component-based with hourly calendar) --}}
     <div class="fi-section">
+        @include('livewire.components.hourly-calendar', [
+            'weekData' => $weekData,
+            'weekMetadata' => $weekMetadata,
+            'serviceName' => $serviceName,
+            'serviceDuration' => $serviceDuration,
+            'loading' => $loading,
+            'error' => $error,
+            'selectedSlot' => $selectedSlot,
+        ])
+    </div>
+
+    {{-- BACKUP: Old calendar section (commented out for future reference)
+    <div class="fi-section" style="display: none;">
         <div class="fi-section-header">
             Verfügbare Termine
             @if($serviceName)
@@ -1093,3 +1111,4 @@
         }
     }
 </style>
+</div>

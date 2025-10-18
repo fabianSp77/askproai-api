@@ -29,11 +29,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notification_event_mappings', function (Blueprint $table) {
-            // Add company_id column (non-nullable for security)
-            // Temporarily nullable during backfill, then enforce NOT NULL
-            $table->unsignedBigInteger('company_id')->nullable()->after('id');
-        });
+        // Check if column already exists
+        if (!Schema::hasColumn('notification_event_mappings', 'company_id')) {
+            Schema::table('notification_event_mappings', function (Blueprint $table) {
+                // Add company_id column (non-nullable for security)
+                // Temporarily nullable during backfill, then enforce NOT NULL
+                $table->unsignedBigInteger('company_id')->nullable()->after('id');
+            });
+        }
 
         // Backfill existing records
         $this->backfillCompanyId();
@@ -76,11 +79,17 @@ return new class extends Migration
      */
     protected function backfillCompanyId(): void
     {
-        $firstCompany = Company::orderBy('id')->first();
+        // Check if notification_event_mappings has any records
+        if (DB::table('notification_event_mappings')->count() === 0) {
+            // Table is empty - nothing to backfill
+            return;
+        }
+
+        // Get first company without SoftDelete filters
+        $firstCompany = DB::table('companies')->orderBy('id')->first();
 
         if (!$firstCompany) {
-            // No companies exist - cannot backfill
-            // This is safe for fresh installations
+            // No companies exist - delete all notification mappings
             DB::table('notification_event_mappings')->delete();
             return;
         }
@@ -95,8 +104,7 @@ return new class extends Migration
 
         // Log the backfill for audit purposes
         \Log::info('NotificationEventMapping backfill completed', [
-            'assigned_company_id' => $firstCompany->id,
-            'assigned_company_name' => $firstCompany->name,
+            'assigned_company_id' => $firstCompany?->id,
             'records_updated' => DB::table('notification_event_mappings')
                 ->where('company_id', $firstCompany->id)
                 ->count(),

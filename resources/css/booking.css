@@ -1,0 +1,671 @@
+/* ===================================================================
+   BOOKING CALENDAR - THEME & COMPONENT STYLES
+   ===================================================================
+   Light/Dark mode support with CSS Variables
+   ================================================================== */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ===================================================================
+   THEME VARIABLES (Auto-set by Tailwind config)
+   ================================================================== */
+
+/* Light mode (default) - set in :root */
+/* Dark mode - set in [data-theme="dark"] */
+
+/* ===================================================================
+   BOOKING FLOW LAYOUT
+   ================================================================== */
+
+.booking-flow {
+  @apply space-y-6 p-6 rounded-lg bg-[var(--calendar-bg)] text-[var(--calendar-text)];
+}
+
+.booking-section {
+  @apply space-y-4;
+}
+
+.booking-section-title {
+  @apply text-lg font-semibold text-[var(--calendar-text)];
+}
+
+.booking-section-subtitle {
+  @apply text-sm text-[var(--calendar-text-secondary)];
+}
+
+/* ===================================================================
+   SELECTOR COMPONENTS (Branch, Service, Staff)
+   ================================================================== */
+
+.selector-card {
+  @apply p-4 border-2 border-[var(--calendar-border)] rounded-lg
+         bg-[var(--calendar-surface)] cursor-pointer transition-all
+         hover:border-[var(--calendar-primary)] hover:bg-[var(--calendar-hover)];
+}
+
+.selector-card.active {
+  @apply border-[var(--calendar-primary)] bg-[var(--calendar-hover)];
+}
+
+.selector-card-header {
+  @apply flex items-center gap-3 mb-2;
+}
+
+.selector-card-title {
+  @apply font-medium text-[var(--calendar-text)];
+}
+
+.selector-card-subtitle {
+  @apply text-xs text-[var(--calendar-text-secondary)];
+}
+
+.selector-card-icon {
+  @apply text-2xl;
+}
+
+/* ===================================================================
+   HOURLY CALENDAR GRID - DESKTOP VIEW
+   ================================================================== */
+
+.hourly-calendar {
+  @apply border border-[var(--calendar-border)] rounded-lg overflow-hidden
+         bg-[var(--calendar-bg)] shadow-sm;
+}
+
+/* Calendar Header Row (Time + Day Names) */
+.calendar-header {
+  @apply grid grid-cols-8 gap-0 bg-[var(--calendar-surface)] border-b border-[var(--calendar-border)]
+         sticky top-0 z-10;
+}
+
+.calendar-header > div {
+  @apply p-3 text-center border-r border-[var(--calendar-border)] last:border-r-0
+         font-semibold text-sm text-[var(--calendar-text)];
+}
+
+.calendar-header > div:first-child {
+  @apply bg-[var(--calendar-hover)] font-bold;
+}
+
+/* Time Slots Container (Grid Layout) */
+.time-slots-container {
+  @apply grid grid-cols-8 gap-0 divide-x divide-[var(--calendar-border)]
+         max-h-[600px] overflow-y-auto;
+}
+
+/* Time Slot Cell */
+.time-slot {
+  @apply p-3 rounded-lg border-2 border-[var(--calendar-border)]
+         bg-[var(--calendar-surface)] cursor-pointer transition-all
+         text-center font-medium text-sm min-h-[60px] flex items-center justify-center;
+}
+
+/* Time Label Column (Leftmost - time labels in grid) */
+.time-slots-container > div:nth-child(8n+1) {
+  @apply border-0 text-xs text-[var(--calendar-text-secondary)]
+         bg-[var(--calendar-hover)] font-semibold p-3 flex items-center justify-center
+         border-r border-[var(--calendar-border)];
+}
+
+/* Available Slot Styling */
+.time-slot.available {
+  @apply border-[var(--calendar-available)] text-[var(--calendar-text)]
+         bg-gradient-to-b from-[var(--calendar-surface)] to-[var(--calendar-hover)]
+         hover:border-[var(--calendar-primary)] hover:bg-[var(--calendar-hover)]
+         hover:shadow-md transform hover:scale-105;
+}
+
+.time-slot.available .slot-badge {
+  @apply text-green-600 dark:text-green-400 text-xs font-semibold;
+}
+
+/* Booked Slot Styling */
+.time-slot.booked {
+  @apply border-[var(--calendar-booked)] text-[var(--calendar-booked)] cursor-not-allowed opacity-60;
+  background-color: rgba(156, 163, 175, 0.1);
+}
+
+/* Selected Slot Styling */
+.time-slot.selected {
+  @apply border-[var(--calendar-selected)] bg-[var(--calendar-selected)]
+         text-white font-bold shadow-lg scale-105 z-20;
+}
+
+.time-slot.selected::after {
+  content: '✓';
+  @apply ml-2 text-lg;
+}
+
+/* Unavailable Slot Styling */
+.time-slot.unavailable {
+  @apply border-[var(--calendar-border)] bg-[var(--calendar-unavailable)]
+         text-[var(--calendar-text-secondary)] cursor-not-allowed opacity-50;
+}
+
+/* Disabled Slot Styling */
+.time-slot.disabled {
+  @apply cursor-not-allowed opacity-50 pointer-events-none;
+}
+
+.slot-time {
+  @apply block text-base font-semibold;
+}
+
+.slot-duration {
+  @apply text-xs text-[var(--calendar-text-secondary)] mt-1;
+}
+
+/* ===================================================================
+   CALENDAR NAVIGATION
+   ================================================================== */
+
+.calendar-navigation {
+  @apply flex items-center justify-between gap-4 mb-4 px-2;
+}
+
+.calendar-nav-button {
+  @apply px-4 py-2 rounded-md bg-[var(--calendar-primary)] text-white
+         hover:opacity-90 hover:shadow-md transition-all font-medium text-sm;
+}
+
+.calendar-nav-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* REMOVED: Duplicate time-slots-container definition (now above in desktop section) */
+
+.slot-badge {
+  @apply inline-block ml-2 px-2 py-1 rounded text-xs font-semibold;
+}
+
+/* ===================================================================
+   DAY SELECTOR (Navigation between days)
+   ================================================================== */
+
+.day-selector {
+  @apply grid grid-cols-7 gap-2 mb-4;
+}
+
+.day-card {
+  @apply p-2 rounded-lg text-center text-xs border border-[var(--calendar-border)]
+         bg-[var(--calendar-surface)] cursor-pointer transition-all
+         hover:border-[var(--calendar-primary)];
+}
+
+.day-card.active {
+  @apply border-[var(--calendar-primary)] bg-[var(--calendar-primary)]
+         text-white font-bold;
+}
+
+.day-number {
+  @apply font-semibold text-[var(--calendar-text)];
+}
+
+.day-label {
+  @apply text-[10px] text-[var(--calendar-text-secondary)] mt-1;
+}
+
+/* ===================================================================
+   LOADING & EMPTY STATES
+   ================================================================== */
+
+.skeleton {
+  @apply animate-pulse bg-gradient-to-r from-[var(--calendar-surface)]
+         to-[var(--calendar-hover)] rounded-lg;
+}
+
+.skeleton-slot {
+  @apply h-12 mb-2 skeleton;
+}
+
+.skeleton-text {
+  @apply h-4 w-2/3 skeleton mb-2;
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+}
+
+.spinner {
+  @apply inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(14, 165, 233, 0.1);
+  border-top: 3px solid var(--calendar-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner.lg {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(14, 165, 233, 0.1);
+  border-top: 4px solid var(--calendar-primary);
+}
+
+.spinner.sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(14, 165, 233, 0.1);
+  border-top: 2px solid var(--calendar-primary);
+}
+
+/* Loading state overlay */
+.loading-overlay {
+  @apply fixed inset-0 bg-black/20 dark:bg-black/40 flex items-center justify-center z-50
+         backdrop-blur-sm;
+}
+
+.loading-content {
+  @apply bg-[var(--calendar-bg)] p-6 rounded-lg shadow-lg flex flex-col items-center gap-4;
+}
+
+.loading-text {
+  @apply text-sm font-medium text-[var(--calendar-text)] animate-pulse;
+}
+
+/* Loading states for buttons */
+.btn.loading {
+  @apply flex items-center justify-center gap-2 cursor-wait opacity-75;
+}
+
+.btn.loading::after {
+  @apply content-[''] inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Loading disabled state */
+.loading-disabled {
+  @apply opacity-50 cursor-not-allowed pointer-events-none;
+}
+
+.empty-state {
+  @apply flex flex-col items-center justify-center py-8 text-center;
+}
+
+.empty-state-icon {
+  @apply text-4xl mb-3 opacity-50 animate-bounce;
+}
+
+.empty-state-title {
+  @apply font-semibold text-[var(--calendar-text)] mb-1;
+}
+
+.empty-state-text {
+  @apply text-sm text-[var(--calendar-text-secondary)];
+}
+
+.empty-state-action {
+  @apply mt-4 px-4 py-2 bg-[var(--calendar-primary)] text-white
+         rounded-lg hover:opacity-90 transition-opacity;
+}
+
+/* ===================================================================
+   ALERTS & MESSAGES
+   ================================================================== */
+
+.booking-alert {
+  @apply p-4 rounded-lg text-sm mb-4 border-l-4 flex items-start gap-3;
+  animation: slideInAlert 0.3s ease-out;
+}
+
+.alert-icon {
+  @apply flex-shrink-0 text-lg mt-0.5;
+}
+
+.alert-content {
+  @apply flex-1;
+}
+
+.alert-title {
+  @apply font-semibold mb-1;
+}
+
+.alert-message {
+  @apply text-sm opacity-90;
+}
+
+.alert-action {
+  @apply mt-3 flex gap-2;
+}
+
+.alert-action button {
+  @apply px-3 py-1.5 text-xs font-medium rounded transition-all
+         hover:opacity-80;
+}
+
+.alert-info {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-500
+         text-blue-800 dark:text-blue-200;
+}
+
+.alert-info .alert-icon {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.alert-info button {
+  @apply bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200;
+}
+
+.alert-warning {
+  @apply bg-amber-50 dark:bg-amber-900/20 border-amber-500
+         text-amber-800 dark:text-amber-200;
+}
+
+.alert-warning .alert-icon {
+  @apply text-amber-600 dark:text-amber-400;
+}
+
+.alert-warning button {
+  @apply bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200;
+}
+
+.alert-success {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-500
+         text-green-800 dark:text-green-200;
+}
+
+.alert-success .alert-icon {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.alert-success button {
+  @apply bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200;
+}
+
+.alert-error {
+  @apply bg-red-50 dark:bg-red-900/20 border-red-500
+         text-red-800 dark:text-red-200 shadow-sm;
+}
+
+.alert-error .alert-icon {
+  @apply text-red-600 dark:text-red-400;
+}
+
+.alert-error button {
+  @apply bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200;
+}
+
+/* Alert animation - slide in from left */
+@keyframes slideInAlert {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Dismissible alert */
+.alert-close {
+  @apply flex-shrink-0 cursor-pointer font-bold text-lg opacity-70
+         hover:opacity-100 transition-opacity;
+}
+
+/* ===================================================================
+   SUMMARY & CONFIRMATION
+   ===================================================================*/
+
+.booking-summary {
+  @apply bg-[var(--calendar-surface)] p-4 rounded-lg border border-[var(--calendar-border)];
+}
+
+.summary-item {
+  @apply flex justify-between items-center py-2 border-b border-[var(--calendar-border)]
+         last:border-b-0;
+}
+
+.summary-label {
+  @apply text-sm text-[var(--calendar-text-secondary)];
+}
+
+.summary-value {
+  @apply font-semibold text-[var(--calendar-text)];
+}
+
+.summary-value.highlight {
+  @apply text-[var(--calendar-primary)] font-bold;
+}
+
+/* ===================================================================
+   ANIMATIONS & TRANSITIONS
+   ===================================================================*/
+
+@keyframes slideInVertical {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.booking-flow > * {
+  animation: slideInVertical 0.3s ease-out;
+}
+
+/* ===================================================================
+   RESPONSIVE DESIGN
+   ===================================================================*/
+
+@media (max-width: 640px) {
+  .booking-flow {
+    @apply p-4;
+  }
+
+  .time-slots-container {
+    @apply grid-cols-2 gap-2;
+  }
+
+  .selector-card {
+    @apply p-3;
+  }
+
+  .day-selector {
+    @apply grid-cols-5;
+  }
+
+  .time-slot {
+    @apply p-2 text-sm;
+  }
+
+  .slot-duration {
+    @apply hidden;
+  }
+}
+
+/* ===================================================================
+   ACCESSIBILITY
+   ===================================================================*/
+
+/* Skip to main content link */
+.skip-link {
+  @apply absolute -top-12 left-0 px-4 py-2 bg-[var(--calendar-primary)]
+         text-white rounded-b-lg focus:top-0 transition-all duration-300 z-50;
+}
+
+/* Focus states for keyboard navigation */
+.time-slot:focus,
+.selector-card:focus,
+.day-card:focus,
+.calendar-nav-button:focus,
+button:focus,
+input:focus,
+select:focus {
+  @apply outline-none ring-2 ring-offset-2 ring-[var(--calendar-primary)]
+         rounded-lg;
+}
+
+/* Enhanced visible focus indicators */
+.time-slot:focus-visible,
+.selector-card:focus-visible,
+.day-card:focus-visible,
+.calendar-nav-button:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  @apply outline-none ring-2 ring-offset-2 ring-[var(--calendar-primary)]
+         rounded-lg shadow-lg;
+}
+
+/* Tab focus indicator ring */
+:focus-visible {
+  @apply outline-none ring-2 ring-offset-2 ring-[var(--calendar-primary)];
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  .time-slot,
+  .selector-card,
+  button {
+    @apply border-2 border-current font-bold;
+  }
+
+  .time-slot.selected {
+    @apply border-4 shadow-lg;
+  }
+
+  .time-slot:focus-visible,
+  .selector-card:focus-visible,
+  button:focus-visible {
+    @apply ring-4 ring-offset-2 ring-current;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .booking-flow > * {
+    animation: none;
+  }
+
+  .time-slot,
+  .selector-card,
+  .day-card,
+  button,
+  .theme-toggle {
+    @apply transition-none;
+  }
+
+  .time-slot:hover,
+  .selector-card:hover,
+  .day-card:hover {
+    transform: none !important;
+  }
+
+  .time-slot.available:hover {
+    @apply scale-100;
+  }
+}
+
+/* ===================================================================
+   THEME TOGGLE BUTTON & TRANSITIONS
+   ===================================================================*/
+
+/* Smooth transitions for all color-related properties */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html * {
+  @apply transition-colors duration-300;
+}
+
+/* Theme toggle button */
+.theme-toggle-wrapper {
+  @apply inline-block;
+}
+
+.theme-toggle {
+  @apply px-3 py-2 rounded-lg bg-[var(--calendar-surface)]
+         border border-[var(--calendar-border)] cursor-pointer
+         hover:bg-[var(--calendar-hover)] hover:border-[var(--calendar-primary)]
+         transition-all duration-300 font-medium text-sm
+         flex items-center justify-center
+         focus:outline-2 focus:outline-offset-2 focus:outline-[var(--calendar-primary)];
+}
+
+.theme-toggle:hover {
+  @apply shadow-md transform scale-105;
+}
+
+.theme-toggle:active {
+  @apply scale-95;
+}
+
+/* Icon styling */
+.theme-toggle-icon {
+  @apply w-5 h-5 text-[var(--calendar-primary)];
+}
+
+/* Dark mode specific tweaks */
+.theme-toggle.dark {
+  @apply bg-[var(--calendar-surface)] border-[var(--calendar-border)];
+}
+
+/* Theme transition container */
+.theme-transition-container {
+  @apply transition-all duration-300;
+}
+
+/* ===================================================================
+   INTEGRATION WITH FLOWBITE
+   ===================================================================*/
+
+/* Use Flowbite colors when not overridden by CSS Variables */
+.flowbite-button {
+  @apply px-4 py-2 rounded-lg font-medium transition-all;
+}
+
+.flowbite-button.primary {
+  @apply bg-[var(--calendar-primary)] text-white hover:opacity-90;
+}
+
+.flowbite-button.secondary {
+  @apply bg-[var(--calendar-surface)] text-[var(--calendar-text)]
+         border border-[var(--calendar-border)] hover:bg-[var(--calendar-hover)];
+}
+
+.flowbite-button.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* ===================================================================
+   DARK MODE SPECIFIC TWEAKS
+   ===================================================================*/
+
+[data-theme="dark"] .time-slot.available {
+  @apply hover:bg-green-900/30;
+}
+
+[data-theme="dark"] .time-slot.booked {
+  @apply bg-gray-700/30;
+}
+
+[data-theme="dark"] .selector-card {
+  @apply hover:shadow-lg;
+}
+
+/* End of booking.css */

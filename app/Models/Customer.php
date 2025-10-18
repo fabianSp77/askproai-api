@@ -118,6 +118,52 @@ class Customer extends Model
         return $this->hasMany(AppointmentModificationStat::class);
     }
 
+    /**
+     * Get all appointment modifications (cancellations, reschedulings) for this customer
+     * Used for engagement scoring and policy violation tracking
+     */
+    public function appointmentModifications(): HasMany
+    {
+        return $this->hasMany(AppointmentModification::class);
+    }
+
+    /**
+     * Get upcoming scheduled/confirmed appointments for this customer
+     * Used for customer portal, booking confirmation, and engagement tracking
+     * Performance: More efficient than filtering appointments() every time
+     */
+    public function upcomingAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('starts_at', '>=', now())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->orderBy('starts_at', 'asc');
+    }
+
+    /**
+     * Get completed appointments for this customer (historical record)
+     * Used for customer history, completion tracking, and analytics
+     * Performance: Specialized query for completed appointments only
+     */
+    public function completedAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('status', 'completed')
+            ->orderBy('starts_at', 'desc');
+    }
+
+    /**
+     * Get recent calls within last 90 days for this customer
+     * Used for engagement scoring, call history, and quality assurance
+     * Performance: Filters to recent period for faster queries
+     */
+    public function recentCalls(): HasMany
+    {
+        return $this->calls()
+            ->where('created_at', '>=', now()->subDays(90))
+            ->orderBy('created_at', 'desc');
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);

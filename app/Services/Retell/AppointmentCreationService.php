@@ -340,8 +340,12 @@ class AppointmentCreationService implements AppointmentCreationInterface
         ]);
 
         // FIX 3: Check for existing appointment with same Cal.com booking ID (duplicate prevention)
+        // 🔒 RACE CONDITION FIX (RC1): Use pessimistic locking to prevent double-booking
+        // This prevents concurrent requests from creating duplicate appointments
+        // See: claudedocs/08_REFERENCE/CONCURRENCY_RACE_CONDITIONS_2025-10-17.md#rc1
         if ($calcomBookingId) {
             $existingAppointment = Appointment::where('calcom_v2_booking_id', $calcomBookingId)
+                ->lockForUpdate()  // ← Acquire exclusive lock, atomic check-then-act
                 ->first();
 
             if ($existingAppointment) {
@@ -566,44 +570,51 @@ class AppointmentCreationService implements AppointmentCreationInterface
             $customerName = 'Anonym ' . substr($customerPhone, -4);
         }
 
-        // Find or create customer
-        $customer = Customer::where('phone', $customerPhone)
-            ->where('company_id', $call->company_id)
-            ->first();
+        // 🔒 RACE CONDITION FIX (RC5): Use atomic firstOrCreate() instead of first() → create()
+        // This prevents duplicate customer creation during concurrent Retell calls
+        // See: claudedocs/08_REFERENCE/CONCURRENCY_RACE_CONDITIONS_2025-10-17.md#rc5
 
-        if (!$customer) {
-            // Get default branch
-            // SECURITY: Validate and cast company_id to prevent SQL injection
-            $companyId = (int) $call->company_id;
-            $defaultBranch = null;
-            if ($companyId > 0) {
-                // PERFORMANCE: Cache branch lookups for 1 hour
-                $cacheKey = "branch.default.{$companyId}";
-                $defaultBranch = Cache::remember($cacheKey, 3600, function () use ($companyId) {
-                    return Branch::where('company_id', $companyId)->first();
-                });
-            }
+        // Get default branch (cached)
+        $companyId = (int) $call->company_id;
+        $defaultBranch = null;
+        if ($companyId > 0) {
+            // PERFORMANCE: Cache branch lookups for 1 hour
+            $cacheKey = "branch.default.{$companyId}";
+            $defaultBranch = Cache::remember($cacheKey, 3600, function () use ($companyId) {
+                return Branch::where('company_id', $companyId)->first();
+            });
+        }
 
-            // 🔧 FIX: Create customer without guarded fields first
-            $customer = Customer::create([
-                'name' => $customerName,
+        // Atomic operation: find existing customer or create new one
+        // Unique constraint on (phone, company_id) ensures no duplicates
+        $customer = Customer::firstOrCreate(
+            [
                 'phone' => $customerPhone,
+                'company_id' => $call->company_id,
+            ],
+            [
+                'name' => $customerName,
                 'source' => 'phone_anonymous',
                 'status' => 'active',
-                'notes' => 'Automatisch erstellt aus Telefonanruf'
-            ]);
+                'notes' => 'Automatisch erstellt aus Telefonanruf',
+                'branch_id' => $call->branch_id ?? ($defaultBranch ? $defaultBranch->id : null),
+            ]
+        );
 
-            // Then set guarded fields directly (bypass mass assignment protection)
-            $customer->company_id = $call->company_id;
-            $customer->branch_id = $call->branch_id ?? ($defaultBranch ? $defaultBranch->id : null);
-            $customer->save();
-
+        // Log if customer was newly created (check if created_at is recent)
+        if ($customer->wasRecentlyCreated) {
             Log::info('✅ Customer created from anonymous call', [
                 'customer_id' => $customer->id,
-                'customer_name' => $customerName,
+                'customer_name' => $customer->name,
                 'phone' => $customerPhone,
                 'company_id' => $customer->company_id,
                 'branch_id' => $customer->branch_id
+            ]);
+        } else {
+            Log::debug('📋 Using existing customer for anonymous call', [
+                'customer_id' => $customer->id,
+                'phone' => $customerPhone,
+                'company_id' => $customer->company_id,
             ]);
         }
 

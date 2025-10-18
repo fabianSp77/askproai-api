@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\ServiceStaffAssignment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -128,36 +129,153 @@ class AppointmentBookingFlow extends Component
     }
 
     /**
-     * Load available services for company
+     * Load available services for company and selected branch
+     *
+     * NEW (2025-10-17): Cal.com-aware loading
+     * - Only shows services with Cal.com Event Type IDs configured
+     * - If branch is selected: filters to services available at that branch
+     * - Services must be active and have Cal.com integration
      */
     protected function loadAvailableServices(): void
     {
-        $this->availableServices = Service::where('company_id', $this->companyId)
+        $query = Service::where('company_id', $this->companyId)
             ->where('is_active', true)
+            ->whereNotNull('calcom_event_type_id'); // REQUIRED: Must have Cal.com event type
+
+        // If branch is selected, filter services available at that branch
+        if ($this->selectedBranchId) {
+            // Check if this branch has service overrides in settings
+            $branch = Branch::find($this->selectedBranchId);
+
+            if ($branch && $branch->services_override) {
+                // Use branch-specific service list
+                $serviceIds = collect($branch->services_override)->pluck('id')->toArray();
+                $query->whereIn('id', $serviceIds);
+            }
+            // Otherwise: use all company services (branch has access to all services)
+        }
+
+        $this->availableServices = $query
             ->orderBy('priority', 'asc')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'duration_minutes'])
+            ->get(['id', 'name', 'duration_minutes', 'calcom_event_type_id'])
             ->toArray();
 
         Log::debug('[AppointmentBookingFlow] Loaded services', [
             'count' => count($this->availableServices),
+            'branch_id' => $this->selectedBranchId,
+            'has_override' => isset($branch) && $branch->services_override ? true : false,
         ]);
     }
 
     /**
      * Load available employees for company
+     *
+     * NEW (2025-10-17): Cal.com-aware loading
+     * - Primary: Fetch from Cal.com team members API
+     * - Fallback: Load staff with calcom_user_id from local DB
+     * - Last Resort: Load all active staff (backward compatibility)
      */
     protected function loadAvailableEmployees(): void
     {
-        $this->availableEmployees = Staff::where('company_id', $this->companyId)
-            ->where('is_active', true)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'email'])
-            ->toArray();
+        try {
+            // Try to load from Cal.com first
+            $company = \App\Models\Company::find($this->companyId);
+
+            if ($company?->calcom_team_id) {
+                $this->loadFromCalcomTeam($company);
+            } else {
+                $this->loadFromLocalDatabase();
+            }
+        } catch (\Exception $e) {
+            Log::warning('[AppointmentBookingFlow] Cal.com unavailable, using local staff', [
+                'error' => $e->getMessage(),
+            ]);
+            $this->loadFromLocalDatabase();
+        }
 
         Log::debug('[AppointmentBookingFlow] Loaded employees', [
             'count' => count($this->availableEmployees),
+            'source' => $this->availableEmployees[0]['_source'] ?? 'unknown',
         ]);
+    }
+
+    /**
+     * Load employees from Cal.com team members
+     * Only shows staff that are linked to Cal.com users
+     */
+    protected function loadFromCalcomTeam(\App\Models\Company $company): void
+    {
+        try {
+            $calcomService = app(\App\Services\CalcomV2Service::class);
+            $response = $calcomService->fetchTeamMembers($company->calcom_team_id);
+
+            if (!$response->successful()) {
+                throw new \Exception("Cal.com API error: {$response->status()}");
+            }
+
+            $teamMembers = $response->json()['members'] ?? [];
+            $calcomUserIds = collect($teamMembers)->pluck('userId')->toArray();
+
+            if (empty($calcomUserIds)) {
+                Log::warning('[AppointmentBookingFlow] No team members found in Cal.com', [
+                    'company_id' => $this->companyId,
+                    'team_id' => $company->calcom_team_id,
+                ]);
+                $this->loadFromLocalDatabase();
+                return;
+            }
+
+            // Load only staff that are linked to Cal.com
+            $this->availableEmployees = \App\Models\Staff::where('company_id', $this->companyId)
+                ->whereIn('calcom_user_id', $calcomUserIds)
+                ->where('is_active', true)
+                ->orderBy('name', 'asc')
+                ->get(['id', 'name', 'email', 'calcom_user_id'])
+                ->map(fn($s) => array_merge($s->toArray(), ['_source' => 'calcom']))
+                ->toArray();
+
+            Log::debug('[AppointmentBookingFlow] Loaded employees from Cal.com', [
+                'count' => count($this->availableEmployees),
+                'team_id' => $company->calcom_team_id,
+            ]);
+
+        } catch (\Exception $e) {
+            throw $e; // Re-throw to be caught by parent method
+        }
+    }
+
+    /**
+     * Load employees from local database
+     * Priority: Staff with calcom_user_id > All active staff
+     */
+    protected function loadFromLocalDatabase(): void
+    {
+        // First, try to load staff with calcom_user_id
+        $staffWithCalcom = \App\Models\Staff::where('company_id', $this->companyId)
+            ->whereNotNull('calcom_user_id')
+            ->where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'email', 'calcom_user_id'])
+            ->map(fn($s) => array_merge($s->toArray(), ['_source' => 'local_calcom']))
+            ->toArray();
+
+        if (!empty($staffWithCalcom)) {
+            $this->availableEmployees = $staffWithCalcom;
+            return;
+        }
+
+        // Fallback: All active staff (for backward compatibility)
+        Log::warning('[AppointmentBookingFlow] No staff with calcom_user_id found, showing all staff', [
+            'company_id' => $this->companyId,
+        ]);
+
+        $this->availableEmployees = \App\Models\Staff::where('company_id', $this->companyId)
+            ->where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'email'])
+            ->map(fn($s) => array_merge($s->toArray(), ['_source' => 'local_all']))
+            ->toArray();
     }
 
     /**
@@ -184,16 +302,30 @@ class AppointmentBookingFlow extends Component
 
     /**
      * NEW: Select branch
+     * Triggers: Reload services for this branch and reset selections
      */
     public function selectBranch(string $branchId): void
     {
         $this->selectedBranchId = $branchId;
+        $this->selectedServiceId = null;
+        $this->selectedSlot = null;
+        $this->selectedSlotLabel = null;
+        $this->employeePreference = 'any';
+
+        // Reload services for this branch (may have overrides)
+        $this->loadAvailableServices();
 
         // Dispatch event for form integration
         $this->dispatch('branch-selected', branchId: $branchId);
 
         Log::info('[AppointmentBookingFlow] Branch selected', [
             'branch_id' => $branchId,
+            'available_services' => count($this->availableServices),
+        ]);
+
+        $this->dispatch('notify', [
+            'message' => "Filiale gewählt",
+            'type' => 'info',
         ]);
     }
 
@@ -362,7 +494,12 @@ class AppointmentBookingFlow extends Component
 
     /**
      * User selects a service
-     * Triggers: Reload calendar with new duration
+     * Triggers: Reload employees for this service, reload calendar with new duration
+     *
+     * NEW (2025-10-17): Filters employees to those qualified for this service
+     * - Only shows staff with Cal.com mapping
+     * - Only shows staff qualified for this service (ServiceStaffAssignment)
+     * - Only shows staff at selected branch (if branch is selected)
      *
      * @param string $serviceId Service UUID
      */
@@ -371,9 +508,13 @@ class AppointmentBookingFlow extends Component
         $this->selectedServiceId = $serviceId;
         $this->selectedSlot = null; // Reset slot selection
         $this->selectedSlotLabel = null;
+        $this->employeePreference = 'any'; // Reset to "any" to show available options
 
         // Load service info
         $this->loadServiceInfo();
+
+        // Load employees qualified for this service
+        $this->loadEmployeesForService($serviceId);
 
         // Reload week data with new duration
         $this->loadWeekData();
@@ -382,6 +523,7 @@ class AppointmentBookingFlow extends Component
             'service_id' => $serviceId,
             'name' => $this->serviceName,
             'duration' => $this->serviceDuration,
+            'qualified_employees' => count($this->availableEmployees),
         ]);
 
         // Dispatch event for form integration
@@ -391,6 +533,74 @@ class AppointmentBookingFlow extends Component
             'message' => "Service gewählt: {$this->serviceName} ({$this->serviceDuration} Min)",
             'type' => 'info',
         ]);
+    }
+
+    /**
+     * Load employees qualified for a specific service
+     *
+     * NEW (2025-10-17): Service-aware employee loading
+     * - Gets all staff qualified for this service via ServiceStaffAssignment
+     * - Filters to only those with Cal.com mapping
+     * - If branch is selected, only shows staff at that branch
+     * - Orders by priority (from assignment) then by name
+     *
+     * @param string $serviceId Service UUID
+     */
+    protected function loadEmployeesForService(string $serviceId): void
+    {
+        try {
+            // Get all qualified staff for this service
+            $qualifiedStaff = ServiceStaffAssignment::where('service_id', $serviceId)
+                ->where('company_id', $this->companyId)
+                ->where('is_active', true)
+                ->temporallyValid() // Check effective_from/until dates
+                ->with('staff')
+                ->orderBy('priority_order', 'asc')
+                ->get();
+
+            // Extract staff IDs
+            $staffIds = $qualifiedStaff->pluck('staff.id')->filter()->unique()->toArray();
+
+            if (empty($staffIds)) {
+                Log::warning('[AppointmentBookingFlow] No staff qualified for service', [
+                    'service_id' => $serviceId,
+                    'company_id' => $this->companyId,
+                ]);
+                $this->availableEmployees = [];
+                return;
+            }
+
+            // Query staff with Cal.com mapping
+            $query = Staff::whereIn('id', $staffIds)
+                ->where('company_id', $this->companyId)
+                ->where('is_active', true)
+                ->whereNotNull('calcom_user_id'); // REQUIRED: Must have Cal.com mapping
+
+            // Filter by branch if selected
+            if ($this->selectedBranchId) {
+                $query->where('branch_id', $this->selectedBranchId);
+            }
+
+            $this->availableEmployees = $query
+                ->orderBy('name', 'asc')
+                ->get(['id', 'name', 'email', 'calcom_user_id'])
+                ->map(fn($s) => array_merge($s->toArray(), ['_source' => 'service_qualified']))
+                ->toArray();
+
+            Log::debug('[AppointmentBookingFlow] Loaded qualified employees for service', [
+                'service_id' => $serviceId,
+                'qualified_count' => count($qualifiedStaff),
+                'with_calcom_mapping' => count($this->availableEmployees),
+                'branch_filtered' => $this->selectedBranchId ? true : false,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[AppointmentBookingFlow] Error loading service-qualified employees', [
+                'service_id' => $serviceId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->availableEmployees = [];
+        }
     }
 
     /**

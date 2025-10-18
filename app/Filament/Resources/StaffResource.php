@@ -25,7 +25,7 @@ use Filament\Notifications\Notification;
 class StaffResource extends Resource
 {
     protected static ?string $model = Staff::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-identification';
     protected static ?string $navigationGroup = 'Stammdaten';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Personal';

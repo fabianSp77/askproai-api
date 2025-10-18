@@ -29,7 +29,7 @@ class PhoneNumberResource extends Resource
 {
     protected static ?string $model = PhoneNumber::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-phone';
+    protected static ?string $navigationIcon = 'heroicon-o-device-phone-mobile';
 
     protected static ?string $navigationLabel = 'Telefonnummern';
 

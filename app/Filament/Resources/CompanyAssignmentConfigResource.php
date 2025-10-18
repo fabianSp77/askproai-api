@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Log;
 class CompanyAssignmentConfigResource extends Resource
 {
     protected static ?string $model = CompanyAssignmentConfig::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = '👥 Mitarbeiter';
+    protected static ?string $navigationIcon = 'heroicon-o-user-plus';
+    protected static ?string $navigationGroup = 'Mitarbeiter-Verwaltung';
     protected static ?int $navigationSort = 50;
     protected static ?string $navigationLabel = 'Mitarbeiter-Zuordnung';
     protected static ?string $modelLabel = 'Zuordnungsmodell';

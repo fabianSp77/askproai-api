@@ -226,6 +226,15 @@ class Appointment extends Model
     }
 
     /**
+     * Get all modifications (history) for this appointment
+     * Used for policy enforcement and customer engagement scoring
+     */
+    public function modifications(): HasMany
+    {
+        return $this->hasMany(AppointmentModification::class);
+    }
+
+    /**
      * Check if this is part of a recurring series
      */
     public function isPartOfRecurringSeries(): bool

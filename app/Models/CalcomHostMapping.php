@@ -5,13 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\BelongsToCompany;
 
 /**
  * CalcomHostMapping Model
  *
  * Maps Cal.com host IDs to internal staff records for automated staff assignment
  *
+ * SECURITY: Multi-tenant isolated via BelongsToCompany trait
+ * All queries automatically scoped to current company
+ *
  * @property int $id
+ * @property int $company_id
  * @property int $staff_id
  * @property int $calcom_host_id
  * @property string $calcom_name
@@ -28,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class CalcomHostMapping extends Model
 {
+    use BelongsToCompany;
     protected $fillable = [
         'company_id',       // 🔧 FIX 2025-10-13: Added to prevent "Field 'company_id' doesn't have a default value" error
         'staff_id',
