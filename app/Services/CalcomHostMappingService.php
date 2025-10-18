@@ -265,4 +265,75 @@ class CalcomHostMappingService
 
         return null;
     }
+
+    /**
+     * Link a Cal.com team member to local staff member
+     * Used during team member sync to establish calcom_user_id mapping
+     *
+     * @param int $companyId Company ID
+     * @param array $member Cal.com team member data (email, name, userId)
+     * @return bool True if successfully linked
+     */
+    public function linkStaffToTeamMember(int $companyId, array $member): bool
+    {
+        $email = $member['email'] ?? null;
+        $name = $member['name'] ?? null;
+        $calcomUserId = $member['userId'] ?? null;
+
+        if (!$calcomUserId) {
+            Log::warning('[CalcomHostMappingService] Missing userId in team member', [
+                'company_id' => $companyId,
+                'member' => $member,
+            ]);
+            return false;
+        }
+
+        // Try to find staff by email first (most reliable)
+        if ($email) {
+            $staff = Staff::where('company_id', $companyId)
+                ->where('email', $email)
+                ->whereNull('calcom_user_id')
+                ->first();
+
+            if ($staff) {
+                $staff->update(['calcom_user_id' => $calcomUserId]);
+                Log::info('[CalcomHostMappingService] Linked staff by email', [
+                    'company_id' => $companyId,
+                    'staff_id' => $staff->id,
+                    'staff_name' => $staff->name,
+                    'calcom_user_id' => $calcomUserId,
+                ]);
+                return true;
+            }
+        }
+
+        // Fallback: try to find by name (less reliable)
+        if ($name) {
+            $staff = Staff::where('company_id', $companyId)
+                ->where('name', 'LIKE', "%{$name}%")
+                ->whereNull('calcom_user_id')
+                ->first();
+
+            if ($staff) {
+                $staff->update(['calcom_user_id' => $calcomUserId]);
+                Log::info('[CalcomHostMappingService] Linked staff by name', [
+                    'company_id' => $companyId,
+                    'staff_id' => $staff->id,
+                    'staff_name' => $staff->name,
+                    'calcom_user_id' => $calcomUserId,
+                    'confidence' => 'name_match',
+                ]);
+                return true;
+            }
+        }
+
+        Log::debug('[CalcomHostMappingService] No staff match found for team member', [
+            'company_id' => $companyId,
+            'email' => $email,
+            'name' => $name,
+            'calcom_user_id' => $calcomUserId,
+        ]);
+
+        return false;
+    }
 }

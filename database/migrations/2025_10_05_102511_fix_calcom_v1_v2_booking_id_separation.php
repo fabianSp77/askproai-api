@@ -24,8 +24,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::beginTransaction();
-
         try {
             // Step 1: Add temporary backup column for rollback capability
             if (!Schema::hasColumn('appointments', '_migration_backup_v2_id')) {
@@ -129,10 +127,7 @@ return new class extends Migration
                 'conflicting_records' => count($conflictingRecords)
             ]);
 
-            DB::commit();
-
         } catch (\Exception $e) {
-            DB::rollBack();
             \Log::error('Migration failed: fix_calcom_v1_v2_booking_id_separation', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()

@@ -14,10 +14,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Appointments - Critical for TimeBasedAnalyticsWidget
+        // Appointments - Critical for TimeBasedAnalyticsWidget (skip if already indexed)
+        // Note: Oct 4 backup already has these indexes, so skip to avoid "too many keys" error
         Schema::table('appointments', function (Blueprint $table) {
-            $table->index(['company_id', 'starts_at'], 'idx_appointments_company_starts_at');
-            $table->index(['company_id', 'status'], 'idx_appointments_company_status');
+            // Already indexed in backup with names: appointments_company_starts_at_index, appointments_company_status_index
+            // $table->index(['company_id', 'starts_at'], 'idx_appointments_company_starts_at');
+            // $table->index(['company_id', 'status'], 'idx_appointments_company_status');
         });
 
         // Appointment Modification Stats - Critical for all policy widgets

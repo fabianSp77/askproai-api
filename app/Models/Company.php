@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Traits\HasConfigurationInheritance;
 
 class Company extends Model
@@ -122,6 +123,40 @@ class Company extends Model
         return $this->hasMany(Call::class);
     }
 
+    /**
+     * Get all appointments for this company (across all branches)
+     * Used for company-level analytics, revenue reporting, and scheduling overview
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Get upcoming scheduled/confirmed appointments across all branches
+     * Used for company-level scheduling dashboard and resource planning
+     * Performance: More efficient than filtering appointments() every time
+     */
+    public function upcomingAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('starts_at', '>=', now())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->orderBy('starts_at', 'asc');
+    }
+
+    /**
+     * Get completed appointments across all branches (historical record)
+     * Used for company-level performance metrics and revenue analytics
+     * Performance: Specialized query for completed appointments only
+     */
+    public function completedAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('status', 'completed')
+            ->orderBy('starts_at', 'desc');
+    }
+
     public function phoneNumbers(): HasMany
     {
         return $this->hasMany(PhoneNumber::class);
@@ -132,9 +167,16 @@ class Company extends Model
         return $this->belongsTo(Tenant::class);
     }
 
-    public function workingHours(): HasMany
+    public function workingHours(): HasManyThrough
     {
-        return $this->hasMany(WorkingHour::class)->through('staff');
+        return $this->hasManyThrough(
+            WorkingHour::class,  // Target model (working hours)
+            Staff::class,        // Intermediate model (staff)
+            'company_id',        // Foreign key on staff table pointing to company
+            'staff_id',          // Foreign key on working_hours table pointing to staff
+            'id',                // Local key on companies table
+            'id'                 // Local key on staff table
+        );
     }
 
     /**

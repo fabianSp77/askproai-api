@@ -28,7 +28,7 @@ class PolicyConfigurationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationGroup = '⚙️ Termin-Richtlinien';
+    protected static ?string $navigationGroup = 'Termine & Richtlinien';
 
     protected static ?string $navigationLabel = 'Stornierung & Umbuchung';
 

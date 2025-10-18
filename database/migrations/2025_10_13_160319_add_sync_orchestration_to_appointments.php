@@ -25,19 +25,24 @@ return new class extends Migration
             // - 'retell': Created/modified via Retell AI phone → SYNC to Cal.com
             // - 'admin': Created/modified via Admin UI → SYNC to Cal.com
             // - 'api': Created/modified via API → SYNC to Cal.com
-            $table->enum('sync_origin', ['calcom', 'retell', 'admin', 'api', 'system'])
-                  ->nullable()
-                  ->after('calcom_sync_status')
-                  ->comment('System that initiated this appointment (for loop prevention)');
+            if (!Schema::hasColumn('appointments', 'sync_origin')) {
+                $table->enum('sync_origin', ['calcom', 'retell', 'admin', 'api', 'system'])
+                      ->nullable()
+                      ->after('calcom_sync_status')
+                      ->comment('System that initiated this appointment (for loop prevention)');
+            }
 
             // When the sync was initiated (for tracking/debugging)
-            $table->timestamp('sync_initiated_at')
-                  ->nullable()
-                  ->after('sync_origin')
-                  ->comment('When sync to Cal.com was initiated');
+            if (!Schema::hasColumn('appointments', 'sync_initiated_at')) {
+                $table->timestamp('sync_initiated_at')
+                      ->nullable()
+                      ->after('sync_origin')
+                      ->comment('When sync to Cal.com was initiated');
+            }
 
             // User who initiated the sync (for audit trail)
-            $table->foreignId('sync_initiated_by_user_id')
+            if (!Schema::hasColumn('appointments', 'sync_initiated_by_user_id')) {
+                $table->foreignId('sync_initiated_by_user_id')
                   ->nullable()
                   ->constrained('users')
                   ->nullOnDelete()

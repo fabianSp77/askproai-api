@@ -132,4 +132,29 @@ class Staff extends Model
     {
         return $this->hasMany(CalcomHostMapping::class);
     }
+
+    /**
+     * Get upcoming scheduled/confirmed appointments for this staff member
+     * Used for staff scheduling, resource planning, and workload management
+     * Performance: More efficient than filtering appointments() every time
+     */
+    public function upcomingAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('starts_at', '>=', now())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->orderBy('starts_at', 'asc');
+    }
+
+    /**
+     * Get completed appointments for this staff member (historical record)
+     * Used for performance metrics, productivity tracking, and revenue analysis
+     * Performance: Specialized query for completed appointments only
+     */
+    public function completedAppointments(): HasMany
+    {
+        return $this->appointments()
+            ->where('status', 'completed')
+            ->orderBy('starts_at', 'desc');
+    }
 }

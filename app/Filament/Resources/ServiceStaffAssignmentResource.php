@@ -25,7 +25,7 @@ class ServiceStaffAssignmentResource extends Resource
 {
     protected static ?string $model = ServiceStaffAssignment::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
-    protected static ?string $navigationGroup = 'Mitarbeiter-Zuordnung';
+    protected static ?string $navigationGroup = 'Mitarbeiter-Verwaltung';
     protected static ?int $navigationSort = 2;
     protected static ?string $navigationLabel = 'Service-Mitarbeiter';
     protected static ?string $modelLabel = 'Service-Mitarbeiter-Zuordnung';

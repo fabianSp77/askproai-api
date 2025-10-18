@@ -24,6 +24,7 @@
         "@fullcalendar/resource-timeline": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
         "alpinejs": "^3.15.0",
+        "flowbite": "^3.1.2",
         "laravel-echo": "^2.2.3",
         "pusher-js": "^8.4.0",
         "sortablejs": "^1.15.6"

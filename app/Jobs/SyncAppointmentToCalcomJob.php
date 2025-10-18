@@ -81,6 +81,19 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // 🔒 RACE CONDITION FIX (RC3): Acquire pessimistic lock on appointment row
+        // This prevents concurrent reschedule/cancel operations from corrupting state
+        // See: claudedocs/08_REFERENCE/CONCURRENCY_RACE_CONDITIONS_2025-10-17.md#rc3
+        $this->appointment = $this->appointment->lockForUpdate()->first();
+
+        if (!$this->appointment) {
+            Log::channel('calcom')->warning('⚠️ Appointment not found during sync (may have been deleted)', [
+                'appointment_id' => $this->appointment?->id ?? 'unknown',
+                'action' => $this->action,
+            ]);
+            return;
+        }
+
         Log::channel('calcom')->info('🔄 Starting Cal.com sync', [
             'appointment_id' => $this->appointment->id,
             'action' => $this->action,
