@@ -16,29 +16,40 @@ class PhoneNumbersRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('phone_number')
-                    ->required()
-                    ->tel()
-                    ->maxLength(20),
-                Forms\Components\Select::make('type')
-                    ->options([
-                        'main' => 'Main',
-                        'support' => 'Support',
-                        'sales' => 'Sales',
-                        'mobile' => 'Mobile',
-                        'fax' => 'Fax',
-                    ])
-                    ->default('main')
-                    ->required(),
-                Forms\Components\TextInput::make('extension')
-                    ->maxLength(10),
-                Forms\Components\Textarea::make('description')
-                    ->maxLength(500)
-                    ->rows(3),
-                Forms\Components\Toggle::make('is_primary')
-                    ->default(false),
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                Forms\Components\Section::make('Telefonnummer Details')
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('phone_number')
+                                    ->required()
+                                    ->tel()
+                                    ->maxLength(20),
+                                Forms\Components\Select::make('type')
+                                    ->options([
+                                        'main' => 'Main',
+                                        'support' => 'Support',
+                                        'sales' => 'Sales',
+                                        'mobile' => 'Mobile',
+                                        'fax' => 'Fax',
+                                    ])
+                                    ->default('main')
+                                    ->required(),
+                            ]),
+                        Forms\Components\TextInput::make('extension')
+                            ->maxLength(10),
+                        Forms\Components\Textarea::make('description')
+                            ->maxLength(500)
+                            ->rows(3),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Toggle::make('is_primary')
+                                    ->default(false)
+                                    ->helperText('Markiert als Haupttelefon'),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->default(true)
+                                    ->helperText('Ist diese Nummer aktiv?'),
+                            ]),
+                    ]),
             ]);
     }
 

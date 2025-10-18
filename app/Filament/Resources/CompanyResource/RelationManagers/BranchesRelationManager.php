@@ -16,21 +16,36 @@ class BranchesRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('address')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->tel()
-                    ->maxLength(20),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->maxLength(255),
-                Forms\Components\TimePicker::make('opening_time'),
-                Forms\Components\TimePicker::make('closing_time'),
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                Forms\Components\Section::make('Filialdetails')
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('address')
+                                    ->maxLength(255),
+                            ]),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('phone')
+                                    ->tel()
+                                    ->maxLength(20),
+                                Forms\Components\TextInput::make('email')
+                                    ->email()
+                                    ->maxLength(255),
+                            ]),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TimePicker::make('opening_time')
+                                    ->label('Öffnungszeit'),
+                                Forms\Components\TimePicker::make('closing_time')
+                                    ->label('Schließungszeit'),
+                            ]),
+                        Forms\Components\Toggle::make('is_active')
+                            ->default(true)
+                            ->helperText('Ist diese Filiale aktiv?'),
+                    ]),
             ]);
     }
 

@@ -16,27 +16,41 @@ class StaffRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('Name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->tel()
-                    ->maxLength(20),
-                Forms\Components\Select::make('branch_id')
-                    ->relationship('branch', 'name')
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\TextInput::make('position')
-                    ->maxLength(255),
-                Forms\Components\DatePicker::make('hire_date')
-                    ->native(false),
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                Forms\Components\Section::make('Mitarbeiterdetails')
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Name')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('email')
+                                    ->email()
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('phone')
+                                    ->tel()
+                                    ->maxLength(20),
+                                Forms\Components\Select::make('branch_id')
+                                    ->relationship('branch', 'name')
+                                    ->searchable()
+                                    ->preload(),
+                            ]),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('position')
+                                    ->maxLength(255),
+                                Forms\Components\DatePicker::make('hire_date')
+                                    ->label('Einstellungsdatum')
+                                    ->native(false),
+                            ]),
+                        Forms\Components\Toggle::make('is_active')
+                            ->default(true)
+                            ->helperText('Ist dieser Mitarbeiter aktiv?'),
+                    ]),
             ]);
     }
 
