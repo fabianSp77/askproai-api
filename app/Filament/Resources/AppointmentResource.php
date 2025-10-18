@@ -562,16 +562,19 @@ class AppointmentResource extends Resource
                             ]),
 
                         // Reminder settings
-                        Forms\Components\Toggle::make('send_reminder')
-                            ->label('Erinnerung senden')
-                            ->default(true)
-                            ->reactive()
-                            ->helperText('24 Stunden vor dem Termin'),
+                        Grid::make(2)
+                            ->schema([
+                                Forms\Components\Toggle::make('send_reminder')
+                                    ->label('Erinnerung senden')
+                                    ->default(true)
+                                    ->reactive()
+                                    ->helperText('24 Stunden vor dem Termin'),
 
-                        Forms\Components\Toggle::make('send_confirmation')
-                            ->label('Bestätigung senden')
-                            ->default(true)
-                            ->helperText('Sofort nach der Buchung'),
+                                Forms\Components\Toggle::make('send_confirmation')
+                                    ->label('Bestätigung senden')
+                                    ->default(true)
+                                    ->helperText('Sofort nach der Buchung'),
+                            ]),
 
                         // Package/Series fields (only shown when relevant)
                         Grid::make(3)
