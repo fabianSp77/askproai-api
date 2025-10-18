@@ -436,12 +436,7 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'calcom_v2_booking_id' => $calcomBookingId,  // ✅ Correct column for V2 UIDs
             'external_id' => $calcomBookingId,            // ✅ Backup reference
             'metadata' => json_encode($metadataWithCallId),  // ✅ FIX: Include call_id for reschedule/cancel
-            // ✅ METADATA FIX 2025-10-10: Populate tracking fields
-            'created_by' => 'customer',
-            'booking_source' => 'retell_webhook',
-            'booked_by_user_id' => null,  // Customer bookings have no user
-            // 🔄 SYNC ORIGIN (Phase 2: Loop Prevention)
-            'sync_origin' => 'retell',  // ← Mark origin for bidirectional sync
+            'sync_origin' => 'retell',  // ← Mark origin for bidirectional sync (Phase 2: Loop Prevention)
             'calcom_sync_status' => $calcomBookingId ? 'synced' : 'pending',  // If has Cal.com ID, already synced
         ]);
 
