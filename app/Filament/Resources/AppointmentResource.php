@@ -561,20 +561,18 @@ class AppointmentResource extends Resource
                                     ->required(),
                             ]),
 
-                        // Reminder settings
+                        // Reminder settings - UI only, not persisted
                         Grid::make(2)
+                            ->extraAttributes(['wire:ignore' => true])
                             ->schema([
                                 Forms\Components\Toggle::make('send_reminder')
                                     ->label('Erinnerung senden')
                                     ->default(true)
-                                    ->reactive()
-                                    ->dehydrated(false)
                                     ->helperText('24 Stunden vor dem Termin'),
 
                                 Forms\Components\Toggle::make('send_confirmation')
                                     ->label('Bestätigung senden')
                                     ->default(true)
-                                    ->dehydrated(false)
                                     ->helperText('Sofort nach der Buchung'),
                             ]),
 
