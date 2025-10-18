@@ -595,7 +595,9 @@ class AppointmentResource extends Resource
                                     ->visible(fn (Get $get) => $get('booking_type') === 'package'),
                             ]),
                     ])
-                    ->collapsed(),
+                    ->collapsible()
+                    ->collapsed(false)
+                    ->persistCollapsed(),
 
                 // Hidden technical fields (kept for data integrity)
                 Forms\Components\Hidden::make('version')
