@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Traits\OptimizedAppointmentQueries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Appointment extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, SoftDeletes, BelongsToCompany, OptimizedAppointmentQueries;
 
     /**
      * Mass Assignment Protection
@@ -271,5 +272,43 @@ class Appointment extends Model
     {
         return $query->where('is_recurring', false)
             ->whereNull('parent_appointment_id');
+    }
+
+    /**
+     * PHASE 2: Scope - Find by idempotency key
+     * Used for deduplicating retried booking requests
+     */
+    public function scopeByIdempotencyKey($query, string $key)
+    {
+        return $query->where('idempotency_key', $key);
+    }
+
+    /**
+     * PHASE 2: Scope - Find duplicate booking in time window
+     * Prevents double bookings for same customer/service/time
+     *
+     * USAGE:
+     * ```php
+     * $duplicate = Appointment::findDuplicate(
+     *     customerId: 123,
+     *     serviceId: 456,
+     *     startsAt: '2025-10-20 14:00:00',
+     *     windowMinutes: 5  // within 5min window
+     * );
+     * ```
+     */
+    public function scopeFindDuplicate($query, int $customerId, int $serviceId, string $startsAt, int $windowMinutes = 5)
+    {
+        $startTime = \Carbon\Carbon::parse($startsAt);
+
+        return $query
+            ->where('customer_id', $customerId)
+            ->where('service_id', $serviceId)
+            ->whereBetween('starts_at', [
+                $startTime->copy()->subMinutes($windowMinutes),
+                $startTime->copy()->addMinutes($windowMinutes),
+            ])
+            ->whereIn('status', ['scheduled', 'confirmed', 'pending'])
+            ->orderBy('created_at', 'desc');
     }
 }
