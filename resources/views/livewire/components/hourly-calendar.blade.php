@@ -194,7 +194,7 @@
                                 type="button"
                                 class="w-full px-4 py-3 flex items-center justify-between bg-[var(--calendar-surface)] hover:bg-[var(--calendar-hover)] transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-[var(--calendar-primary)]"
                                 :aria-expanded="open.toString()"
-                                :aria-label="`${@js($this->getDayLabel($dayKey))}, ${$slotCount} Termine verfügbar. Klicken zum Öffnen`"
+                                :aria-label="`${@js($this->getDayLabel($dayKey))}, ${@js($slotCount)} Termine verfügbar. Klicken zum Öffnen`"
                                 :class="{ 'border-b border-[var(--calendar-border)]': open }">
                             <div class="text-left">
                                 <div class="font-medium text-sm">{{ $this->getDayLabel($dayKey) }}</div>
