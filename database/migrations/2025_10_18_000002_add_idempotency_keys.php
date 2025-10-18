@@ -22,10 +22,11 @@ return new class extends Migration
         // Add idempotency key to appointments
         Schema::table('appointments', function (Blueprint $table) {
             // Idempotency key: UUID v5 generated from customer+service+time+source
+            // NOTE: Not using unique index due to 64-index limit on appointments table
+            // Uniqueness enforced at application level via IdempotencyCache
             if (!Schema::hasColumn('appointments', 'idempotency_key')) {
                 $table->string('idempotency_key', 36)
                     ->nullable()
-                    ->unique()
                     ->after('id')
                     ->comment('UUID v5 for deduplication of retried requests');
 
@@ -95,7 +96,6 @@ return new class extends Migration
     {
         Schema::table('appointments', function (Blueprint $table) {
             if (Schema::hasColumn('appointments', 'idempotency_key')) {
-                $table->dropUnique('appointments_idempotency_key_unique');
                 $table->dropColumn('idempotency_key');
             }
             if (Schema::hasColumn('appointments', 'webhook_id')) {
