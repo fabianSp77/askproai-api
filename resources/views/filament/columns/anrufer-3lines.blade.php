@@ -26,7 +26,7 @@
     // Phone number
     $phoneNumber = $record->from_number ?? $record->to_number;
     if ($phoneNumber === 'anonymous' || !$phoneNumber) {
-        $phoneDisplay = "Rufnummer nicht übertragen";
+        $phoneDisplay = "Nicht übertragen";
         $showCopy = false;
     } else {
         $phoneDisplay = $phoneNumber;
@@ -60,28 +60,61 @@
         @endif
     </div>
 
-    <!-- Zeile 2: Telefonnummer (NICHT klickbar) -->
-    <div class="flex items-center gap-2">
-        <span class="text-xs text-gray-600 font-mono">
-            {{ $phoneDisplay }}
-        </span>
-
+    <!-- Zeile 2: Telefonnummer (klickbar zum kopieren) -->
+    <div class="flex items-center gap-2 group">
         @if($showCopy)
             <button
                 type="button"
-                onclick="navigator.clipboard.writeText('{{ $phoneNumber }}').then(() => alert('Kopiert!'))"
-                class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer transition-colors"
-                title="In Zwischenablage kopieren"
+                onclick="copyToClipboard('{{ addslashes($phoneNumber) }}', this)"
+                class="text-xs text-gray-600 font-mono hover:bg-gray-100 px-1 py-0.5 rounded transition-colors flex items-center gap-1"
+                title="Klicken zum Kopieren"
             >
-                copy
+                {{ $phoneDisplay }}
+                <span class="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">copy</span>
             </button>
+        @else
+            <span class="text-xs text-gray-600 font-mono">
+                {{ $phoneDisplay }}
+            </span>
         @endif
     </div>
 
-    <!-- Zeile 3: Email (falls vorhanden) -->
+    <!-- Zeile 3: Email (falls vorhanden, auch klickbar zum kopieren) -->
     @if($customerEmail)
-        <div class="text-xs text-gray-600 font-mono">
-            {{ $customerEmail }}
+        <div class="flex items-center gap-2 group">
+            <button
+                type="button"
+                onclick="copyToClipboard('{{ addslashes($customerEmail) }}', this)"
+                class="text-xs text-gray-600 font-mono hover:bg-gray-100 px-1 py-0.5 rounded transition-colors flex items-center gap-1"
+                title="Klicken zum Kopieren"
+            >
+                {{ $customerEmail }}
+                <span class="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">copy</span>
+            </button>
         </div>
     @endif
 </div>
+
+<script>
+if (typeof copyToClipboard === 'undefined') {
+    function copyToClipboard(text, element) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Visual feedback: briefly show success state
+            const originalText = element.textContent;
+            const originalBg = element.classList.contains('hover:bg-gray-100');
+
+            element.classList.add('bg-green-100');
+            element.textContent = 'Kopiert!';
+            element.style.color = '#059669';
+
+            setTimeout(() => {
+                element.classList.remove('bg-green-100');
+                element.textContent = originalText;
+                element.style.color = '';
+            }, 1500);
+        }).catch(() => {
+            alert('Fehler beim Kopieren');
+        });
+    }
+}
+</script>

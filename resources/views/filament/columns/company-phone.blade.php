@@ -70,19 +70,17 @@
         </div>
     @endif
 
-    <!-- Zeile 3: Phone Number (Kopier-funktionalität) -->
+    <!-- Zeile 3: Phone Number (klickbar zum kopieren) -->
     @if($phoneNumber)
-        <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-600 font-mono">
-                {{ $phoneNumber }}
-            </span>
+        <div class="flex items-center gap-2 group">
             <button
                 type="button"
-                onclick="navigator.clipboard.writeText('{{ $phoneNumber }}').then(() => alert('Kopiert!'))"
-                class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer transition-colors"
-                title="In Zwischenablage kopieren"
+                onclick="copyToClipboard('{{ addslashes($phoneNumber) }}', this)"
+                class="text-xs text-gray-600 font-mono hover:bg-gray-100 px-1 py-0.5 rounded transition-colors flex items-center gap-1"
+                title="Klicken zum Kopieren"
             >
-                copy
+                {{ $phoneNumber }}
+                <span class="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">copy</span>
             </button>
         </div>
     @endif

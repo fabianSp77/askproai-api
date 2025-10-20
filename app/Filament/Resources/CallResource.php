@@ -493,27 +493,33 @@ class CallResource extends Resource
                         // Level 2 (Reseller): reseller_cost (their costs from us)
                         // Level 3 (Customer): customer_cost (what THEY charge their customers)
 
-                        // 🔐 LEVEL 1: Super-admin sees BASE costs (OUR actual platform costs)
+                        // 🔐 LEVEL 1: Super-admin sees BASE costs + PROFIT
                         if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
                             $primaryCost = $record->base_cost ?? 0;
-                            $costType = '(Base)'; // Our cost
+                            // AskProAI's profit: what we charge reseller minus our cost
+                            $profitCost = ($record->reseller_cost ?? 0) - ($record->base_cost ?? 0);
+                            $costType = 'Cost';
+                            $profitLabel = 'AskProAI Profit';
                         }
-                        // 🔐 LEVEL 2: Reseller can see RESELLER costs - BUT ONLY IF THEY OWN THIS BRANCH
+                        // 🔐 LEVEL 2: Reseller can see RESELLER costs + PROFIT
                         elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
                             // Check if reseller owns this branch/company
                             $canViewResellerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
                                 || ($record->company_id && $user->company_id === $record->company_id);
 
                             if ($canViewResellerCost) {
-                                // Reseller sees THEIR cost (reseller_cost)
+                                // Reseller sees THEIR cost
                                 $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
-                                $costType = '(Your Cost)'; // Reseller's cost
+                                // Reseller's profit: what customer pays minus what reseller pays us
+                                $profitCost = ($record->customer_cost ?? 0) - ($record->reseller_cost ?? 0);
+                                $costType = 'Your Cost';
+                                $profitLabel = 'Your Profit';
                             } else {
                                 // SECURITY: Don't show costs for calls from other resellers
                                 return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
                             }
                         }
-                        // 🔐 LEVEL 3: Customer can see THEIR costs - ONLY IF THEY OWN THIS BRANCH
+                        // 🔐 LEVEL 3: Customer can see THEIR costs only
                         else {
                             // Check if customer owns this branch (direct employee)
                             $canViewCustomerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
@@ -529,10 +535,20 @@ class CallResource extends Resource
                             if (is_numeric($record->cost) && $primaryCost == 0) {
                                 $primaryCost = round($record->cost * 100);
                             }
-                            $costType = '(Your Charge)'; // Customer's charge
+                            $profitCost = 0; // Customer doesn't see profit
+                            $costType = 'Your Charge';
+                            $profitLabel = '';
                         }
 
                         $formattedCost = number_format($primaryCost / 100, 2, ',', '.');
+                        $formattedProfit = ($profitCost > 0) ? number_format($profitCost / 100, 2, ',', '.') : '0,00';
+
+                        // Build tooltip with cost breakdown
+                        $tooltipParts = [$costType . ': ' . $formattedCost . '€'];
+                        if ($profitCost > 0 && $profitLabel) {
+                            $tooltipParts[] = $profitLabel . ': ' . $formattedProfit . '€';
+                        }
+                        $tooltipText = implode(' | ', $tooltipParts);
 
                         // Status indicator (actual vs estimated)
                         $statusDot = '';
@@ -545,9 +561,13 @@ class CallResource extends Resource
                         }
 
                         return new HtmlString(
-                            '<div class="flex items-center gap-0.5">' .
-                            '<span class="font-semibold" title="' . $costType . '">' . $formattedCost . '€</span>' .
+                            '<div class="flex flex-col gap-0.5">' .
+                            '<div class="flex items-center gap-1">' .
+                            '<span class="font-semibold" title="' . $tooltipText . '">' . $formattedCost . '€</span>' .
+                            ($profitCost > 0 ? '<span class="text-green-600 text-xs font-medium">(+' . $formattedProfit . '€)</span>' : '') .
                             $statusDot .
+                            '</div>' .
+                            '<span class="text-xs text-gray-600">' . $costType . ($profitLabel ? ' / ' . $profitLabel : '') . '</span>' .
                             '</div>'
                         );
                     })
