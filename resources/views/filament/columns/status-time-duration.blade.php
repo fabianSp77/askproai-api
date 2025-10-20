@@ -6,20 +6,27 @@
     $isLive = in_array($status, ['ongoing', 'in_progress', 'active', 'ringing']);
 
     // Determine display badge: Show LIVE if active, otherwise show BOOKING STATUS
+    // Using inline styles directly since Tailwind might not work in ViewColumn context
     if ($isLive) {
         $displayText = 'LIVE';
-        $displayColor = 'bg-red-100 text-red-800 animate-pulse';
+        $bgColor = '#fee2e2';  // red-100
+        $textColor = '#991b1b'; // red-800
+        $isPulse = true;
     } else {
+        $isPulse = false;
         // Booking Status Logic (more relevant than "Completed")
         if ($record->appointment && $record->appointment->starts_at) {
             $displayText = 'Gebucht';
-            $displayColor = 'bg-green-100 text-green-800';
+            $bgColor = '#dcfce7';  // green-100
+            $textColor = '#15803d'; // green-800
         } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
             $displayText = 'Wunsch';
-            $displayColor = 'bg-yellow-100 text-yellow-800';
+            $bgColor = '#fef3c7';  // yellow-100
+            $textColor = '#b45309'; // yellow-800
         } else {
             $displayText = 'Offen';
-            $displayColor = 'bg-red-100 text-red-800';
+            $bgColor = '#fee2e2';  // red-100
+            $textColor = '#991b1b'; // red-800
         }
     }
 
@@ -30,10 +37,10 @@
         default => ''
     };
 
-    $directionColor = match($record->direction) {
-        'inbound' => 'text-green-600',
-        'outbound' => 'text-blue-600',
-        default => 'text-gray-600'
+    $directionColorValue = match($record->direction) {
+        'inbound' => '#16a34a',    // green-600
+        'outbound' => '#2563eb',   // blue-600
+        default => '#4b5563'       // gray-600
     };
 
     $tooltipLines = [];
@@ -58,25 +65,25 @@
     $tooltipText = implode("\n", $tooltipLines);
 @endphp
 
-<div class="space-y-1" title="{{ $tooltipText }}">
-    <!-- Zeile 1: Direction Icon + Status/Booking Badge (single badge, more relevant) -->
-    <div class="flex items-center gap-1">
-        <span class="text-lg {{ $directionColor }}">{{ $directionIcon }}</span>
-        <span class="px-2 py-1 rounded-full text-sm font-medium {{ $displayColor }}">
+<div style="display: flex; flex-direction: column; gap: 0.25rem;" title="{{ $tooltipText }}">
+    <!-- Zeile 1: Direction Icon + Status/Booking Badge -->
+    <div style="display: flex; align-items: center; gap: 0.25rem;">
+        <span style="font-size: 1.125rem; color: {{ $directionColorValue }};">{{ $directionIcon }}</span>
+        <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background-color: {{ $bgColor }}; color: {{ $textColor }}; {{ $isPulse ? 'animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;' : '' }}">
             {{ $displayText }}
         </span>
     </div>
 
-    <!-- Datum Zeile 1 -->
+    <!-- Datum Zeile 2 -->
     @if($record->created_at)
-        <div class="text-xs text-gray-600">
+        <div style="font-size: 0.75rem; color: #4b5563;">
             {{ $record->created_at->locale('de')->isoFormat('DD MMMM HH:mm') }} Uhr
         </div>
     @endif
 
     <!-- Dauer Zeile 3 -->
     @if($record->created_at)
-        <div class="text-xs text-gray-600">
+        <div style="font-size: 0.75rem; color: #4b5563;">
             @if($record->duration_sec)
                 @php
                     $mins = intval($record->duration_sec / 60);
@@ -89,3 +96,10 @@
         </div>
     @endif
 </div>
+
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
