@@ -209,55 +209,10 @@ class CallResource extends Resource
                     ->with('phoneNumber');
             })
             ->columns([
-                // 🟢 PREMIUM: Status / Zeit / Dauer Column (ALL-IN-ONE!)
-                Tables\Columns\TextColumn::make('call_status_display')
+                // 🟢 PREMIUM: Status / Zeit / Dauer Column (3-LINE LAYOUT)
+                Tables\Columns\ViewColumn::make('status_time_duration')
                     ->label('Status / Zeit / Dauer')
-                    ->html()
-                    ->getStateUsing(function ($record) {
-                        // Determine status icon and text
-                        $status = match ($record->status ?? 'unknown') {
-                            'ongoing', 'in_progress', 'active', 'ringing' => '🔴 LIVE',
-                            'completed' => '✅ Completed',
-                            'missed' => '📵 Missed',
-                            'failed' => '❌ Failed',
-                            'no_answer' => '🔇 No Answer',
-                            'busy' => '📳 Busy',
-                            'analyzed' => '📊 Analyzed',
-                            'call_analyzed' => '📊 Analyzed',
-                            default => '📞 ' . ucfirst($record->status ?? 'Unknown')
-                        };
-
-                        // Format as HTML with multiple lines
-                        return $status;
-                    })
-                    ->badge()
-                    ->color(function ($record) {
-                        return match ($record->status ?? 'unknown') {
-                            'ongoing', 'in_progress', 'active', 'ringing' => 'danger',
-                            'completed' => 'success',
-                            'missed', 'busy' => 'warning',
-                            'failed', 'no_answer' => 'danger',
-                            default => 'gray'
-                        };
-                    })
-                    ->icon(function ($record) {
-                        return match ($record->status ?? 'unknown') {
-                            'ongoing', 'in_progress', 'active', 'ringing' => 'heroicon-m-signal',
-                            'completed' => 'heroicon-m-check-circle',
-                            'missed' => 'heroicon-m-phone-x-mark',
-                            'failed' => 'heroicon-m-x-circle',
-                            'no_answer' => 'heroicon-m-bell-slash',
-                            'busy' => 'heroicon-m-ellipsis-horizontal-circle',
-                            default => 'heroicon-m-phone'
-                        };
-                    })
-                    ->extraAttributes(function ($record) {
-                        // Animate only LIVE calls
-                        if (in_array($record->status, ['ongoing', 'in_progress', 'active', 'ringing'])) {
-                            return ['class' => 'animate-pulse font-bold'];
-                        }
-                        return [];
-                    })
+                    ->view('filament.columns.status-time-duration')
                     ->sortable(query: fn($query, $direction) =>
                         $query
                             ->orderByRaw("CASE
@@ -267,403 +222,34 @@ class CallResource extends Resource
                                 ELSE 3
                                 END {$direction}")
                             ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
-                    )
-                    // 💾 NEW: Multi-line description (Datum + Dauer)
-                    ->description(function ($record) {
-                        if (!$record->created_at) {
-                            return '';
-                        }
-
-                        // Line 1: Datum + Uhrzeit (z.B. "20 Oktober 14:51 Uhr")
-                        $dateTime = $record->created_at->locale('de')->isoFormat('DD MMMM HH:mm') . ' Uhr';
-
-                        // Line 2: Dauer (z.B. "⏱️ 5:23")
-                        $duration = '';
-                        if ($record->duration_sec) {
-                            $mins = intval($record->duration_sec / 60);
-                            $secs = $record->duration_sec % 60;
-                            $duration = sprintf('⏱️ %d:%02d', $mins, $secs);
-                        } else {
-                            $duration = '⏱️ --:--';
-                        }
-
-                        return $dateTime . "\n" . $duration;
-                    })
-                    // 💾 PREMIUM: Tooltip shows EVERYTHING (full precision)
-                    ->tooltip(function ($record) {
-                        if (!$record->created_at) {
-                            return null;
-                        }
-
-                        $lines = [];
-
-                        // Full datetime with YEAR and SECONDS
-                        $lines[] = "📅 " . $record->created_at->format('d.m.Y H:i:s') . ' Uhr';
-
-                        // Duration with label
-                        if ($record->duration_sec) {
-                            $mins = intval($record->duration_sec / 60);
-                            $secs = $record->duration_sec % 60;
-                            $lines[] = "⏱️ Dauer: " . sprintf('%d:%02d Min', $mins, $secs);
-                        }
-
-                        // Relative time
-                        $lines[] = "🕐 " . $record->created_at->diffForHumans();
-
-                        return implode("\n", $lines);
-                    }),
-
-                // 💾 OPTIONAL: Zeit Spalte (versteckt, weil in Status/Zeit zusammengefasst)
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Zeit (optional)')
-                    ->dateTime('d.m.Y H:i:s')
-                    ->sortable()
-                    ->description(fn ($record) => $record->created_at?->diffForHumans())
-                    ->icon('heroicon-m-clock')
-                    ->toggleable(isToggledHiddenByDefault: true), // 🔴 HIDDEN BY DEFAULT
-
-                // Company/Branch column
-                Tables\Columns\TextColumn::make('company.name')
+                    ),
+                // Company/Branch column with Phone number
+                Tables\Columns\ViewColumn::make('company_phone_display')
                     ->label('Unternehmen/Filiale')
-                    ->getStateUsing(function ($record) {
-                        if ($record->branch_id) {
-                            return $record->branch->name ?? 'Filiale';
-                        }
-                        return $record->company->name ?? 'Unternehmen';
+                    ->view('filament.columns.company-phone')
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query
+                            ->orWhereHas('branch', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhereHas('company', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
                     })
-                    ->description(fn ($record) => $record->company->name ?? '')
-                    ->icon('heroicon-m-building-office')
-                    ->searchable()
                     ->toggleable(),
 
-                // Optimized Customer column with mobile-friendly verification badges
-                Tables\Columns\TextColumn::make('customer_name')
+                // Optimized Customer column with 3-line layout
+                Tables\Columns\ViewColumn::make('anrufer_display')
                     ->label('Anrufer')
+                    ->view('filament.columns.anrufer-3lines')
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query
                             ->where('customer_name', 'like', "%{$search}%")
                             ->orWhereHas('customer', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
                     })
                     ->sortable()
-                    ->html()
-                    ->getStateUsing(function ($record) {
-                        // Filter out transcript fragments that are NOT real names
-                        $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig', 'ja bitte', 'danke'];
-                        $customerNameLower = $record->customer_name ? strtolower(trim($record->customer_name)) : '';
-
-                        $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
-
-                        // Truly anonymous (no name, transcript fragment, OR anonymous number without real name)
-                        if ($record->from_number === 'anonymous' && (!$record->customer_name || trim($record->customer_name) === '' || $isTranscriptFragment)) {
-                            return '<span class="text-gray-600">Anonym</span>';
-                        }
-
-                        // Has customer linked - use mobile-friendly badge
-                        if ($record->customer_id && $record->customer) {
-                            return view('components.mobile-verification-badge', [
-                                'name' => $record->customer->name,
-                                'verified' => true,
-                                'verificationSource' => 'customer_linked',
-                                'additionalInfo' => $record->customer_link_confidence ? round($record->customer_link_confidence) . '%' : null,
-                                'phone' => $record->from_number !== 'anonymous' ? $record->from_number : null,
-                            ])->render();
-                        }
-
-                        // Has customer_name - use mobile-friendly badge
-                        if ($record->customer_name) {
-                            $verificationSource = match($record->verification_method ?? null) {
-                                'retell_agent_provided' => 'retell_agent',
-                                'phone_match' => 'phone_verified',
-                                'phonetic_match' => 'phonetic_match',
-                                default => 'ai_extracted'
-                            };
-
-                            return view('components.mobile-verification-badge', [
-                                'name' => $record->customer_name,
-                                'verified' => $record->customer_name_verified,
-                                'verificationSource' => $verificationSource,
-                                'additionalInfo' => $record->from_number === 'anonymous' ? 'Anonyme Telefonnummer' : null,
-                                'phone' => $record->from_number !== 'anonymous' ? $record->from_number : null,
-                            ])->render();
-                        }
-
-                        // No customer data - show phone or "Anonym"
-                        $fallback = $record->from_number === 'anonymous' ? 'Anonym' : ($record->from_number ?? 'Unbekannt');
-                        return '<span class="text-gray-600">' . htmlspecialchars($fallback) . '</span>';
-                    })
-                    ->icon(fn ($record): string => match ($record->direction) {
-                        'inbound' => 'heroicon-m-phone-arrow-down-left',
-                        'outbound' => 'heroicon-m-phone-arrow-up-right',
-                        default => 'heroicon-m-user',
-                    })
-                    ->iconColor(fn ($record): string => match ($record->direction) {
-                        'inbound' => 'success',
-                        'outbound' => 'info',
-                        default => 'gray',
-                    })
-                    ->description(function ($record) {
-                        $directionLabel = match ($record->direction) {
-                            'inbound' => '↓ Eingehend',
-                            'outbound' => '↑ Ausgehend',
-                            default => ''
-                        };
-
-                        // Don't show "anonymous" as phone number
-                        $phoneNumber = $record->from_number ?? $record->to_number;
-                        if ($phoneNumber === 'anonymous') {
-                            return $directionLabel . ($directionLabel ? ' • Anonyme Nummer' : 'Anonyme Nummer');
-                        }
-
-                        return $directionLabel . ($phoneNumber ? ' • ' . $phoneNumber : '');
-                    })
-                    ->url(fn ($record) => $record->customer_id
-                        ? CustomerResource::getUrl('view', ['record' => $record->customer_id])
-                        : null
-                    )
                     ->toggleable(),
 
-                // 💾 OPTIONAL: Dauer Spalte (versteckt, weil in Status/Zeit zusammengefasst)
-                Tables\Columns\TextColumn::make('duration_sec')
-                    ->label('Dauer (optional)')
-                    ->formatStateUsing(fn ($state) => FormatHelper::duration($state, 'long'))
-                    ->icon('heroicon-m-clock')
-                    ->color(fn ($state) => $state > 300 ? 'success' : ($state > 60 ? 'warning' : 'gray'))
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true), // 🔴 HIDDEN BY DEFAULT
-
-                Tables\Columns\TextColumn::make('summary')
-                    ->label('Zusammenfassung')
-                    ->limit(80)
-                    ->tooltip(function ($record) {
-                        return $record->summary;
-                    })
-                    ->getStateUsing(function ($record) {
-                        if ($record->summary) {
-                            // Return first 80 chars of summary
-                            $summary = is_string($record->summary) ? $record->summary : json_encode($record->summary);
-                            return mb_substr($summary, 0, 80) . (mb_strlen($summary) > 80 ? '...' : '');
-                        }
-                        return 'Keine Zusammenfassung';
-                    })
-                    ->wrap()
-                    ->toggleable(),
-
-                // 💾 OPTIMIZED: Show ACTUAL booked services from appointments
-                Tables\Columns\TextColumn::make('service_type')
-                    ->label('Service')
-                    ->badge()
-                    ->getStateUsing(function ($record) {
-                        try {
-                            // Use already-loaded appointments (eager-loaded on line 201)
-                            $appointments = $record->appointments ?? collect();
-
-                            // No appointments → show "-"
-                            if (!$appointments || $appointments->isEmpty()) {
-                                return '-';
-                            }
-
-                            // Get unique service names, safely handling null services
-                            $services = $appointments
-                                ->filter(fn($appt) => $appt && $appt->service)
-                                ->pluck('service.name')
-                                ->filter()
-                                ->unique()
-                                ->values();
-
-                            // No services found → show "-"
-                            if ($services->isEmpty()) {
-                                return '-';
-                            }
-
-                            // Return comma-separated list of all services
-                            return $services->implode(', ');
-                        } catch (\Throwable $e) {
-                            return '-';
-                        }
-                    })
-                    ->tooltip(function ($record) {
-                        try {
-                            // Use already-loaded appointments (eager-loaded on line 201)
-                            $appointments = $record->appointments ?? collect();
-
-                            if (!$appointments || $appointments->isEmpty()) {
-                                return 'Kein Termin gebucht';
-                            }
-
-                            // Show details: Service name + Duration (filter out null appointments)
-                            $details = $appointments
-                                ->filter(fn($appt) => $appt)
-                                ->map(function ($appt) {
-                                    $name = $appt->service?->name ?? 'Unbekannt';
-                                    $duration = $appt->service?->duration ?? $appt->duration ?? '?';
-                                    return "{$name} ({$duration} Min)";
-                                })
-                                ->implode("\n");
-
-                            return $details ?: 'Kein Termin gebucht';
-                        } catch (\Throwable $e) {
-                            return 'Fehler beim Laden';
-                        }
-                    })
-                    ->color(function ($state): string {
-                        if ($state === '-') return 'gray';
-                        return 'success';
-                    })
-                    ->icon(function ($state): string {
-                        if ($state === '-') return 'heroicon-m-dash';
-                        return 'heroicon-m-calendar-days';
-                    })
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('sentiment')
-                    ->label('Stimmung')
-                    ->badge()
-                    ->toggleable(isToggledHiddenByDefault: true) // Hidden by default - 95% are "Neutral"
-                    ->formatStateUsing(fn (?string $state): string => match (ucfirst(strtolower($state ?? ''))) {
-                        'Positive' => '😊 Positiv',
-                        'Neutral' => '😐 Neutral',
-                        'Negative' => '😟 Negativ',
-                        default => '❓ Unbekannt',
-                    })
-                    ->color(fn (?string $state): string => match (ucfirst(strtolower($state ?? ''))) {
-                        'Positive' => 'success',
-                        'Neutral' => 'gray',
-                        'Negative' => 'danger',
-                        default => 'gray',
-                    }),
-
-                // Ultra-compact appointment display with calendar icon + wish tracking
-                Tables\Columns\TextColumn::make('appointment_details')
+                // 3-line appointment display: Datum | Uhrzeit | Dauer
+                Tables\Columns\ViewColumn::make('appointment_3lines')
                     ->label('Termin')
-                    ->getStateUsing(function (Call $record) {
-                        // Smart accessor automatically loads from call_id or converted_appointment_id
-                        $appointment = $record->appointment;
-
-                        // 💾 NEW PHASE: Check for unfulfilled wishes
-                        $unresolvedWishes = $record->appointmentWishes()
-                            ->where('status', 'pending')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
-
-                        if (!$appointment) {
-                            // No appointment - show wish if exists
-                            if ($unresolvedWishes->isNotEmpty()) {
-                                $wish = $unresolvedWishes->first();
-                                $formattedDate = '';
-                                if ($wish->desired_date) {
-                                    $formattedDate = \Carbon\Carbon::parse($wish->desired_date)->format('d.m. H:i');
-                                } elseif ($wish->desired_time) {
-                                    $formattedDate = $wish->desired_time;
-                                } else {
-                                    $formattedDate = 'TBD';
-                                }
-
-                                return new HtmlString(
-                                    '<div class="flex items-center gap-1">' .
-                                    '<span class="text-lg">⏰</span>' .
-                                    '<span class="text-xs text-orange-600 font-medium">Wunsch: ' . htmlspecialchars($formattedDate) . '</span>' .
-                                    '</div>'
-                                );
-                            }
-
-                            return new HtmlString('<span class="text-gray-400 text-xs">Kein Termin</span>');
-                        }
-
-                        // Load appointment relationships if needed
-                        if ($appointment && !$appointment->relationLoaded('service')) {
-                            $appointment->load(['service', 'staff', 'customer']);
-                        }
-
-                        if (!$appointment || !$appointment->starts_at) {
-                            // No appointment data, just show the flag
-                            return new HtmlString(
-                                '<div class="flex items-center gap-1">' .
-                                '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>' .
-                                '<span class="text-xs text-green-600">Vereinbart</span>' .
-                                '</div>'
-                            );
-                        }
-
-                        // Parse dates
-                        $startDate = \Carbon\Carbon::parse($appointment->starts_at);
-                        $endDate = $appointment->ends_at ? \Carbon\Carbon::parse($appointment->ends_at) : null;
-
-                        // Calculate duration
-                        $duration = $endDate ? $startDate->diffInMinutes($endDate) : ($appointment->duration ?? 30);
-
-                        // Format date and time
-                        $dateStr = $startDate->format('d.m.');
-                        $timeStr = $startDate->format('H:i');
-
-                        // Build compact display
-                        return new HtmlString(
-                            '<div class="flex flex-col gap-0.5">' .
-                            '<div class="flex items-center gap-1">' .
-                            '<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>' .
-                            '<span class="text-xs font-medium">' . $dateStr . ' ' . $timeStr . '</span>' .
-                            '</div>' .
-                            '<span class="text-xs text-gray-500 pl-5">' . $duration . ' Min</span>' .
-                            '</div>'
-                        );
-                    })
-                    ->html()
-                    ->tooltip(function (Call $record) {
-                        // 💾 NEW PHASE: Show wishes in tooltip if no appointment
-                        $unresolvedWishes = $record->appointmentWishes()
-                            ->where('status', 'pending')
-                            ->orderBy('created_at', 'desc')
-                            ->first();
-
-                        if (!$record->appointment && $unresolvedWishes && $unresolvedWishes->desired_date) {
-                            $tooltip = "⏰ Terminwunsch:\n";
-                            $tooltip .= "━━━━━━━━━━━━━━━\n";
-                            $tooltip .= "Datum: " . \Carbon\Carbon::parse($unresolvedWishes->desired_date)->format('d.m.Y') . "\n";
-                            if ($unresolvedWishes->desired_time) {
-                                $tooltip .= "Zeit: " . $unresolvedWishes->desired_time . "\n";
-                            }
-                            $tooltip .= "Dauer: " . $unresolvedWishes->desired_duration . " Minuten\n";
-                            if ($unresolvedWishes->desired_service) {
-                                $tooltip .= "Service: " . $unresolvedWishes->desired_service . "\n";
-                            }
-                            $tooltip .= "\nGrund:\n";
-                            $tooltip .= ($unresolvedWishes->rejection_reason_label ?? $unresolvedWishes->rejection_reason) . "\n";
-
-                            if ($unresolvedWishes->alternatives_offered && count($unresolvedWishes->alternatives_offered) > 0) {
-                                $tooltip .= "\nAngebotene Alternativen:\n";
-                                foreach ($unresolvedWishes->alternatives_offered as $alt) {
-                                    $tooltip .= "• " . ($alt['datetime'] ?? 'N/A') . "\n";
-                                }
-                            }
-
-                            return $tooltip;
-                        }
-
-                        if (!$record->appointment) {
-                            return null;
-                        }
-
-                        $appointment = $record->appointment;
-                        if (!$appointment->starts_at) {
-                            return 'Termin vereinbart (Zeit noch nicht festgelegt)';
-                        }
-
-                        $startDate = \Carbon\Carbon::parse($appointment->starts_at);
-                        $endDate = $appointment->ends_at ? \Carbon\Carbon::parse($appointment->ends_at) : null;
-
-                        $tooltip = "Termindetails:\n";
-                        $tooltip .= "━━━━━━━━━━━━━━━\n";
-                        $tooltip .= "Datum: " . $startDate->format('d.m.Y') . "\n";
-                        $tooltip .= "Zeit: " . $startDate->format('H:i') . " - " . ($endDate ? $endDate->format('H:i') : '?') . "\n";
-                        $tooltip .= "Dauer: " . ($endDate ? $startDate->diffInMinutes($endDate) : ($appointment->duration ?? '?')) . " Minuten\n";
-
-                        if ($appointment->service) {
-                            $tooltip .= "Service: " . $appointment->service->name . "\n";
-                        }
-
-                        return $tooltip;
-                    })
+                    ->view('filament.columns.appointment-3lines')
                     ->toggleable(),
 
                 // Staff column - shows which employee handles the appointment
@@ -731,140 +317,206 @@ class CallResource extends Resource
                     })
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('session_outcome')
-                    ->label('Ergebnis')
-                    ->badge()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'appointment_scheduled' => 'Termin vereinbart',
-                        'information_provided' => 'Info gegeben',
-                        'callback_requested' => 'Rückruf',
-                        'complaint_registered' => 'Beschwerde',
-                        'no_interest' => 'Kein Interesse',
-                        'transferred' => 'Weitergeleitet',
-                        'voicemail' => 'Voicemail',
-                        default => '-',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'appointment_scheduled' => 'success',
-                        'information_provided' => 'info',
-                        'callback_requested' => 'warning',
-                        'complaint_registered' => 'danger',
-                        'no_interest' => 'gray',
-                        default => 'gray',
-                    }),
-
-                // Audio recording player column - simple HTML5 version
-                Tables\Columns\TextColumn::make('recording_url')
-                    ->label('Audio')
+                // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Service / Preis')
                     ->html()
                     ->getStateUsing(function ($record) {
-                        if (empty($record->recording_url)) {
+                        try {
+                            // Use already-loaded appointments (eager-loaded on line 201)
+                            $appointments = $record->appointments ?? collect();
+
+                            // No appointments → show "-"
+                            if (!$appointments || $appointments->isEmpty()) {
+                                return '<span class="text-gray-400 text-xs">-</span>';
+                            }
+
+                            // Build service + price display
+                            $lines = [];
+                            $seen = [];
+
+                            foreach ($appointments as $appt) {
+                                if (!$appt || !$appt->service) continue;
+
+                                $serviceId = $appt->service->id;
+                                if (in_array($serviceId, $seen)) continue; // Skip duplicates
+                                $seen[] = $serviceId;
+
+                                $name = $appt->service->name;
+                                $price = $appt->service->price;
+
+                                if ($price && $price > 0) {
+                                    $formattedPrice = number_format($price / 100, 2, ',', '.');
+                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
+                                              '<span class="text-xs text-green-600">💰 ' . $formattedPrice . '€</span>';
+                                } else {
+                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
+                                              '<span class="text-xs text-gray-400">Kein Preis</span>';
+                                }
+                            }
+
+                            if (empty($lines)) {
+                                return '<span class="text-gray-400 text-xs">-</span>';
+                            }
+
+                            $text = implode('<br><br>', $lines);
+                            // Limit display length (increased for better readability)
+                            if (mb_strlen(strip_tags($text)) > 100) {
+                                $text = mb_substr(strip_tags($text), 0, 100) . '...';
+                            }
+
+                            return '<div class="text-xs space-y-1 w-full">' . $text . '</div>';
+                        } catch (\Throwable $e) {
+                            return '<span class="text-gray-400 text-xs">-</span>';
+                        }
+                    })
+                    ->tooltip(function ($record) {
+                        try {
+                            // Use already-loaded appointments (eager-loaded on line 201)
+                            $appointments = $record->appointments ?? collect();
+
+                            if (!$appointments || $appointments->isEmpty()) {
+                                return 'Kein Termin gebucht';
+                            }
+
+                            // Show details: Service name + Price + Duration
+                            $details = $appointments
+                                ->filter(fn($appt) => $appt)
+                                ->map(function ($appt) {
+                                    $name = $appt->service?->name ?? 'Unbekannt';
+                                    $duration = $appt->service?->duration ?? $appt->duration ?? '?';
+                                    $price = $appt->service?->price ?? 0;
+
+                                    if ($price && $price > 0) {
+                                        $formattedPrice = number_format($price / 100, 2, ',', '.');
+                                        return "{$name} ({$duration} Min) - {$formattedPrice}€";
+                                    }
+                                    return "{$name} ({$duration} Min)";
+                                })
+                                ->implode("\n");
+
+                            return $details ?: 'Kein Termin gebucht';
+                        } catch (\Throwable $e) {
+                            return 'Fehler beim Laden';
+                        }
+                    })
+                    ->color(function ($state): string {
+                        if (strip_tags($state) === '-') return 'gray';
+                        return 'success';
+                    })
+                    ->icon(function ($state): ?string {
+                        if (strip_tags($state) === '-') return null;  // No icon for empty state
+                        return 'heroicon-m-calendar-days';
+                    })
+                    ->limit(150)
+                    ->wrap()
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+
+                // 🎙️ Combined: Summary + Audio Player (State of the Art)
+                Tables\Columns\TextColumn::make('summary_audio')
+                    ->label('Zusammenfassung & Audio')
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        $summary = '';
+                        if ($record->summary) {
+                            $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                            $summaryDisplay = mb_strlen($summaryText) > 100 ? mb_substr($summaryText, 0, 100) . '...' : $summaryText;
+                            $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-2">' .
+                                      htmlspecialchars($summaryDisplay) .
+                                      '</div>';
+                        }
+
+                        $audio = '';
+                        if (!empty($record->recording_url)) {
+                            $url = $record->recording_url;
+                            $audio = '<div class="flex items-center gap-2 mt-2">
+                                        <audio controls preload="none"
+                                               class="h-7 flex-shrink-0"
+                                               style="height: 28px; max-width: 250px;"
+                                               controlsList="nodownload">
+                                            <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
+                                            <source src="' . htmlspecialchars($url) . '" type="audio/wav">
+                                        </audio>
+                                      </div>';
+                        }
+
+                        if (empty($summary) && empty($audio)) {
                             return '<span class="text-gray-400 text-xs">-</span>';
                         }
 
-                        $url = $record->recording_url;
-                        $duration = $record->duration_sec ? gmdate("i:s", $record->duration_sec) : '--:--';
-
-                        // Simple HTML5 audio player that works reliably
-                        return '
-                            <div class="flex items-center gap-2">
-                                <audio controls preload="none"
-                                       class="h-8"
-                                       style="height: 32px; max-width: 200px;"
-                                       controlsList="nodownload">
-                                    <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
-                                    <source src="' . htmlspecialchars($url) . '" type="audio/wav">
-                                </audio>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">' . $duration . '</span>
-                            </div>
-                        ';
+                        return '<div>' . $summary . $audio . '</div>';
                     })
-                    ->toggleable(),
-
-                // Service Price column - shows the price of the booked service
-                Tables\Columns\TextColumn::make('service_price')
-                    ->label('Service-Preis')
-                    ->getStateUsing(function ($record) {
-                        // Smart accessor automatically loads appointment
-                        $appointment = $record->appointment;
-
-                        // Load service relationship if needed
-                        if ($appointment && !$appointment->relationLoaded('service')) {
-                            $appointment->load('service');
-                        }
-
-                        // Check if appointment exists and has service with price
-                        if (!$appointment || !$appointment->service) {
-                            return new HtmlString('<span class="text-gray-400 text-xs">Kein Service</span>');
-                        }
-
-                        $service = $appointment->service;
-
-                        // Check for service price
-                        if (!$service->price || $service->price == 0) {
-                            return new HtmlString('<span class="text-gray-400 text-xs">Kein Preis</span>');
-                        }
-
-                        // Format price (assuming price is in cents)
-                        $price = is_numeric($service->price) ? $service->price / 100 : $service->price;
-                        $formattedPrice = number_format($price, 2, ',', '.');
-
-                        // Get service duration for per-minute calculation if available
-                        $duration = $service->duration ?? 30; // Default 30 minutes
-                        $pricePerMinute = $price / $duration;
-
-                        return new HtmlString(
-                            '<div class="flex flex-col gap-0.5">' .
-                            '<span class="font-medium text-sm text-green-600 dark:text-green-400">' . $formattedPrice . '€</span>' .
-                            '<span class="text-xs text-gray-500">' . number_format($pricePerMinute, 2, ',', '.') . '€/Min</span>' .
-                            '</div>'
-                        );
-                    })
-                    ->html()
                     ->tooltip(function ($record) {
-                        if (!$record->appointment || !$record->appointment->service) {
-                            return 'Kein Service gebucht';
+                        $lines = [];
+
+                        if ($record->summary) {
+                            $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                            $lines[] = "📝 Zusammenfassung:\n" . $summaryText;
                         }
 
-                        $service = $record->appointment->service;
-                        $price = is_numeric($service->price) ? $service->price / 100 : $service->price;
-
-                        $tooltip = "💰 Service-Preisdetails:\n";
-                        $tooltip .= "━━━━━━━━━━━━━━━━━\n";
-                        $tooltip .= "Service: " . $service->name . "\n";
-                        $tooltip .= "Preis: " . number_format($price, 2, ',', '.') . "€\n";
-
-                        if ($service->duration) {
-                            $tooltip .= "Dauer: " . $service->duration . " Minuten\n";
-                            $tooltip .= "Preis/Min: " . number_format($price / $service->duration, 2, ',', '.') . "€\n";
+                        if (!empty($record->recording_url)) {
+                            $lines[] = "🎙️ Audio-Aufnahme verfügbar";
                         }
 
-                        if ($service->description) {
-                            $tooltip .= "\nBeschreibung:\n" . \Str::limit($service->description, 100);
+                        // Add sentiment/mood information
+                        $sentiment = $record->sentiment;
+                        if ($sentiment) {
+                            $sentimentLabel = match(ucfirst(strtolower($sentiment))) {
+                                'Positive' => '😊 Positiv',
+                                'Neutral' => '😐 Neutral',
+                                'Negative' => '😟 Negativ',
+                                default => '❓ Unbekannt',
+                            };
+                            $lines[] = "💭 Stimmung: " . $sentimentLabel;
                         }
 
-                        return $tooltip;
+                        return !empty($lines) ? implode("\n\n", $lines) : 'Keine Informationen';
                     })
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return $query->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
-                                    ->leftJoin('services', 'appointments.service_id', '=', 'services.id')
-                                    ->orderBy('services.price', $direction);
-                    })
+                    ->wrap()
                     ->toggleable(),
 
-                // 💰 Streamlined cost display - Mobile-first, minimal info density
+                // 💰 SECURE Cost display with tenant authorization
                 Tables\Columns\TextColumn::make('financials')
                     ->label('Tel.-Kosten')
                     ->getStateUsing(function (Call $record) {
                         $user = auth()->user();
-                        $primaryCost = 0;
 
+                        // SECURITY: Verify tenant access before showing cost
+                        // CRITICAL: Super-admin bypasses check, others must match company
+                        if (!$user) {
+                            return new HtmlString('<span class="text-gray-400">-</span>');
+                        }
+
+                        // 🔐 Super-admin can see BASE costs (our actual platform costs)
                         if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
                             $primaryCost = $record->base_cost ?? 0;
-                        } elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
-                            $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
-                        } else {
+                        }
+                        // 🔐 Reseller can see RESELLER costs - BUT ONLY IF THEY OWN THIS BRANCH
+                        elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+                            // Check if reseller owns this branch/company
+                            $canViewResellerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
+                                || ($record->company_id && $user->company_id === $record->company_id);
+
+                            if ($canViewResellerCost) {
+                                $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
+                            } else {
+                                // SECURITY: Don't show costs for calls from other resellers
+                                return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
+                            }
+                        }
+                        // 🔐 Customer can see THEIR costs - ONLY IF THEY OWN THIS BRANCH
+                        else {
+                            // Check if customer owns this branch (direct employee)
+                            $canViewCustomerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
+                                || ($record->company_id && $user->company_id === $record->company_id);
+
+                            if (!$canViewCustomerCost) {
+                                // SECURITY: Don't show costs for calls from other customers/branches
+                                return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
+                            }
+
                             $primaryCost = $record->customer_cost ?? $record->cost ?? 0;
                             if (is_numeric($record->cost) && $primaryCost == 0) {
                                 $primaryCost = round($record->cost * 100);
@@ -873,7 +525,7 @@ class CallResource extends Resource
 
                         $formattedCost = number_format($primaryCost / 100, 2, ',', '.');
 
-                        // Minimal status indicator (actual vs estimated)
+                        // Status indicator (actual vs estimated)
                         $statusDot = '';
                         if ($record->total_external_cost_eur_cents > 0) {
                             // Green dot for actual costs
@@ -897,54 +549,6 @@ class CallResource extends Resource
                     ->extraAttributes(['class' => 'font-mono'])
                     ->toggleable(),
 
-                // 💰 Streamlined revenue display - Minimal, focused on key amounts
-                Tables\Columns\TextColumn::make('revenue_profit')
-                    ->label('Einnahmen/Gewinn')
-                    ->getStateUsing(function (Call $record) {
-                        $revenue = $record->getAppointmentRevenue();
-                        $profit = $record->getCallProfit();
-
-                        // No revenue: Simple dash indicator
-                        if ($revenue === 0) {
-                            return new HtmlString('<span class="text-gray-400 text-sm">-</span>');
-                        }
-
-                        $revenueFormatted = number_format($revenue / 100, 2, ',', '.');
-                        $profitFormatted = number_format(abs($profit) / 100, 2, ',', '.');
-
-                        // Minimal profit indicator
-                        $isProfitable = $profit > 0;
-                        $profitColor = $isProfitable ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                        $profitSign = $isProfitable ? '+' : '-';
-
-                        return new HtmlString(
-                            '<div class="space-y-0.5">' .
-                            // Revenue (primary)
-                            '<div class="font-semibold">' . $revenueFormatted . '€</div>' .
-                            // Profit (secondary, minimal)
-                            '<div class="text-xs ' . $profitColor . '">' .
-                            $profitSign . $profitFormatted . '€' .
-                            '</div>' .
-                            '</div>'
-                        );
-                    })
-                    ->html()
-                    ->visible(fn () =>
-                        auth()->user()->hasRole(['super-admin', 'super_admin', 'Super Admin']) ||
-                        auth()->user()->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])
-                    )
-                    ->toggleable(isToggledHiddenByDefault: false),
-
-                Tables\Columns\TextColumn::make('external_id')
-                    ->label('ID')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('notes')
-                    ->label('Notizen')
-                    ->limit(50)
-                    ->tooltip(fn ($record) => $record->notes)
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\Filter::make('created_at')
