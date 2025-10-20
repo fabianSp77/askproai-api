@@ -2108,7 +2108,7 @@ class ServiceResource extends Resource
     /**
      * Save policy configuration for a record
      */
-    protected static function savePolicyConfiguration($record, array $data): void
+    public static function savePolicyConfiguration($record, array $data): void
     {
         foreach (['cancellation', 'reschedule', 'recurring'] as $policyType) {
             $overrideKey = "override_{$policyType}";
