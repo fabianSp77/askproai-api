@@ -69,13 +69,20 @@ class CallResource extends Resource
         }
 
         // Create intelligent title with customer name and date
-        // Priority: customer_name field > linked customer > fallback
-        if ($record->customer_name) {
+        // Filter out transcript fragments
+        $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig'];
+        $customerNameLower = $record->customer_name ? strtolower(trim($record->customer_name)) : '';
+        $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
+
+        // Priority: real customer_name > linked customer > anonymous
+        if ($record->customer_name && !$isTranscriptFragment) {
             $customerName = $record->customer_name;
         } elseif ($record->customer?->name) {
             $customerName = $record->customer->name;
+        } elseif ($record->from_number === 'anonymous') {
+            $customerName = 'Anonymer Anrufer';
         } else {
-            $customerName = $record->from_number === 'anonymous' ? 'Anonymer Anrufer' : 'Unbekannter Kunde';
+            $customerName = 'Unbekannter Kunde';
         }
         $date = $record->created_at?->format('d.m. H:i') ?? '';
         $status = match($record->status) {
@@ -187,15 +194,133 @@ class CallResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // 🚀 PERFORMANCE: Eager load relationships to prevent N+1 queries
+            ->modifyQueryUsing(function (Builder $query) {
+                return $query
+                    ->with('appointmentWishes', function ($q) {
+                        $q->where('status', 'pending')->latest();
+                    })
+                    ->with('appointments', function ($q) {
+                        $q->with('service');
+                    })
+                    ->with('customer')
+                    ->with('company')
+                    ->with('branch')
+                    ->with('phoneNumber');
+            })
             ->columns([
-                // Kompakte, wichtige Spalten
+                // 🟢 PREMIUM: Status / Zeit / Dauer Column (ALL-IN-ONE!)
+                Tables\Columns\TextColumn::make('call_status_display')
+                    ->label('Status / Zeit / Dauer')
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        // Determine status icon and text
+                        $status = match ($record->status ?? 'unknown') {
+                            'ongoing', 'in_progress', 'active', 'ringing' => '🔴 LIVE',
+                            'completed' => '✅ Completed',
+                            'missed' => '📵 Missed',
+                            'failed' => '❌ Failed',
+                            'no_answer' => '🔇 No Answer',
+                            'busy' => '📳 Busy',
+                            'analyzed' => '📊 Analyzed',
+                            'call_analyzed' => '📊 Analyzed',
+                            default => '📞 ' . ucfirst($record->status ?? 'Unknown')
+                        };
+
+                        // Format as HTML with multiple lines
+                        return $status;
+                    })
+                    ->badge()
+                    ->color(function ($record) {
+                        return match ($record->status ?? 'unknown') {
+                            'ongoing', 'in_progress', 'active', 'ringing' => 'danger',
+                            'completed' => 'success',
+                            'missed', 'busy' => 'warning',
+                            'failed', 'no_answer' => 'danger',
+                            default => 'gray'
+                        };
+                    })
+                    ->icon(function ($record) {
+                        return match ($record->status ?? 'unknown') {
+                            'ongoing', 'in_progress', 'active', 'ringing' => 'heroicon-m-signal',
+                            'completed' => 'heroicon-m-check-circle',
+                            'missed' => 'heroicon-m-phone-x-mark',
+                            'failed' => 'heroicon-m-x-circle',
+                            'no_answer' => 'heroicon-m-bell-slash',
+                            'busy' => 'heroicon-m-ellipsis-horizontal-circle',
+                            default => 'heroicon-m-phone'
+                        };
+                    })
+                    ->extraAttributes(function ($record) {
+                        // Animate only LIVE calls
+                        if (in_array($record->status, ['ongoing', 'in_progress', 'active', 'ringing'])) {
+                            return ['class' => 'animate-pulse font-bold'];
+                        }
+                        return [];
+                    })
+                    ->sortable(query: fn($query, $direction) =>
+                        $query
+                            ->orderByRaw("CASE
+                                WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
+                                WHEN status = 'completed' THEN 1
+                                WHEN status IN ('missed','busy') THEN 2
+                                ELSE 3
+                                END {$direction}")
+                            ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
+                    )
+                    // 💾 NEW: Multi-line description (Datum + Dauer)
+                    ->description(function ($record) {
+                        if (!$record->created_at) {
+                            return '';
+                        }
+
+                        // Line 1: Datum + Uhrzeit (z.B. "20 Oktober 14:51 Uhr")
+                        $dateTime = $record->created_at->locale('de')->isoFormat('DD MMMM HH:mm') . ' Uhr';
+
+                        // Line 2: Dauer (z.B. "⏱️ 5:23")
+                        $duration = '';
+                        if ($record->duration_sec) {
+                            $mins = intval($record->duration_sec / 60);
+                            $secs = $record->duration_sec % 60;
+                            $duration = sprintf('⏱️ %d:%02d', $mins, $secs);
+                        } else {
+                            $duration = '⏱️ --:--';
+                        }
+
+                        return $dateTime . "\n" . $duration;
+                    })
+                    // 💾 PREMIUM: Tooltip shows EVERYTHING (full precision)
+                    ->tooltip(function ($record) {
+                        if (!$record->created_at) {
+                            return null;
+                        }
+
+                        $lines = [];
+
+                        // Full datetime with YEAR and SECONDS
+                        $lines[] = "📅 " . $record->created_at->format('d.m.Y H:i:s') . ' Uhr';
+
+                        // Duration with label
+                        if ($record->duration_sec) {
+                            $mins = intval($record->duration_sec / 60);
+                            $secs = $record->duration_sec % 60;
+                            $lines[] = "⏱️ Dauer: " . sprintf('%d:%02d Min', $mins, $secs);
+                        }
+
+                        // Relative time
+                        $lines[] = "🕐 " . $record->created_at->diffForHumans();
+
+                        return implode("\n", $lines);
+                    }),
+
+                // 💾 OPTIONAL: Zeit Spalte (versteckt, weil in Status/Zeit zusammengefasst)
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Zeit')
-                    ->dateTime('d.m. H:i')
+                    ->label('Zeit (optional)')
+                    ->dateTime('d.m.Y H:i:s')
                     ->sortable()
                     ->description(fn ($record) => $record->created_at?->diffForHumans())
                     ->icon('heroicon-m-clock')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true), // 🔴 HIDDEN BY DEFAULT
 
                 // Company/Branch column
                 Tables\Columns\TextColumn::make('company.name')
@@ -211,7 +336,7 @@ class CallResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
-                // Optimized Customer column with integrated direction and verification
+                // Optimized Customer column with mobile-friendly verification badges
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Anrufer')
                     ->searchable(query: function (Builder $query, string $search): Builder {
@@ -222,80 +347,49 @@ class CallResource extends Resource
                     ->sortable()
                     ->html()
                     ->getStateUsing(function ($record) {
-                        $name = '';
-                        $verificationIcon = '';
-                        $tooltip = '';
+                        // Filter out transcript fragments that are NOT real names
+                        $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig', 'ja bitte', 'danke'];
+                        $customerNameLower = $record->customer_name ? strtolower(trim($record->customer_name)) : '';
 
-                        // Priority 1: Use customer_name field if available
-                        if ($record->customer_name) {
-                            $name = htmlspecialchars($record->customer_name);
+                        $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
 
-                            // Add verification icon based on status
-                            if ($record->customer_name_verified === true) {
-                                $verificationIcon = '<svg class="inline-block w-4 h-4 ml-1 text-green-600" fill="currentColor" viewBox="0 0 20 20" title="Verifizierter Name - Telefonnummer bekannt (99% Sicherheit)"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
-                            } elseif ($record->customer_name_verified === false) {
-                                $verificationIcon = '<svg class="inline-block w-4 h-4 ml-1 text-orange-600" fill="currentColor" viewBox="0 0 20 20" title="Unverifizierter Name - Aus anonymem Anruf extrahiert (0% Sicherheit)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>';
-                            }
-
-                            return '<span>' . $name . $verificationIcon . '</span>';
+                        // Truly anonymous (no name, transcript fragment, OR anonymous number without real name)
+                        if ($record->from_number === 'anonymous' && (!$record->customer_name || trim($record->customer_name) === '' || $isTranscriptFragment)) {
+                            return '<span class="text-gray-600">Anonym</span>';
                         }
 
-                        // Priority 2: If Customer linked, show Customer Name (always verified)
+                        // Has customer linked - use mobile-friendly badge
                         if ($record->customer_id && $record->customer) {
-                            $name = htmlspecialchars($record->customer->name);
-                            $verificationIcon = '<svg class="inline-block w-4 h-4 ml-1 text-green-600" fill="currentColor" viewBox="0 0 20 20" title="Verifizierter Kunde - Mit Kundenprofil verknüpft"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
-                            return '<span>' . $name . $verificationIcon . '</span>';
+                            return view('components.mobile-verification-badge', [
+                                'name' => $record->customer->name,
+                                'verified' => true,
+                                'verificationSource' => 'customer_linked',
+                                'additionalInfo' => $record->customer_link_confidence ? round($record->customer_link_confidence) . '%' : null,
+                                'phone' => $record->from_number !== 'anonymous' ? $record->from_number : null,
+                            ])->render();
                         }
 
-                        // Priority 3: Try to extract name from transcript
-                        if ($record->transcript) {
-                            $transcript = is_string($record->transcript) ? $record->transcript : json_encode($record->transcript);
+                        // Has customer_name - use mobile-friendly badge
+                        if ($record->customer_name) {
+                            $verificationSource = match($record->verification_method ?? null) {
+                                'retell_agent_provided' => 'retell_agent',
+                                'phone_match' => 'phone_verified',
+                                'phonetic_match' => 'phonetic_match',
+                                default => 'ai_extracted'
+                            };
 
-                            // Use centralized German name pattern library
-                            $name = GermanNamePatternLibrary::extractName($transcript);
-                            if ($name) {
-                                return htmlspecialchars($name);
-                            }
+                            return view('components.mobile-verification-badge', [
+                                'name' => $record->customer_name,
+                                'verified' => $record->customer_name_verified,
+                                'verificationSource' => $verificationSource,
+                                'additionalInfo' => $record->from_number === 'anonymous' ? 'Anonyme Telefonnummer' : null,
+                                'phone' => $record->from_number !== 'anonymous' ? $record->from_number : null,
+                            ])->render();
                         }
 
-                        // Then check notes
-                        if ($record->notes) {
-                            $notes = $record->notes;
-
-                            // Check if notes is JSON
-                            if (str_starts_with($notes, '{') || str_starts_with($notes, '[')) {
-                                $decoded = json_decode($notes, true);
-                                if ($decoded) {
-                                    // Try various JSON fields for name
-                                    if (isset($decoded['full_name'])) {
-                                        return htmlspecialchars($decoded['full_name']);
-                                    } elseif (isset($decoded['name'])) {
-                                        return htmlspecialchars($decoded['name']);
-                                    } elseif (isset($decoded['customer_name'])) {
-                                        return htmlspecialchars($decoded['customer_name']);
-                                    }
-                                }
-                            }
-
-                            // Plain text notes
-                            // Überspringe "Anruf abgebrochen" und ähnliche Status-Nachrichten
-                            if (!str_contains(strtolower($notes), 'abgebrochen') &&
-                                !str_contains(strtolower($notes), 'kein termin')) {
-                                // Suche nach Name Pattern (z.B. "Hans Schuster - Beratung...")
-                                if (preg_match('/^([^-–]+)\s*[-–]/', $notes, $matches)) {
-                                    return htmlspecialchars(trim($matches[1]));
-                                }
-                                // If notes is just a simple name (e.g., "Hansi Schuster")
-                                elseif (!str_contains($notes, '-') && !str_contains($notes, '{') &&
-                                        strlen($notes) < 50 && !str_contains($notes, "\n")) {
-                                    // Likely just a name, use it directly
-                                    return htmlspecialchars(trim($notes));
-                                }
-                            }
-                        }
-                        // Fallback: Zeige Nummer oder "Anonym"
+                        // No customer data - show phone or "Anonym"
                         $fallback = $record->from_number === 'anonymous' ? 'Anonym' : ($record->from_number ?? 'Unbekannt');
-                        return htmlspecialchars($fallback);
+                        return '<span class="text-gray-600">' . htmlspecialchars($fallback) . '</span>';
                     })
                     ->icon(fn ($record): string => match ($record->direction) {
                         'inbound' => 'heroicon-m-phone-arrow-down-left',
@@ -307,28 +401,18 @@ class CallResource extends Resource
                         'outbound' => 'info',
                         default => 'gray',
                     })
-                    ->tooltip(function ($record) {
-                        // Show tooltip with verification status details
-                        if (!$record->customer_name && (!$record->customer_id || !$record->customer)) {
-                            return null;
-                        }
-
-                        if ($record->customer_id && $record->customer) {
-                            return 'Verifizierter Kunde - Mit Kundenprofil verknüpft';
-                        } elseif ($record->customer_name_verified === true) {
-                            return 'Verifizierter Name - Telefonnummer bekannt (99% Sicherheit)';
-                        } elseif ($record->customer_name_verified === false) {
-                            return 'Unverifizierter Name - Aus anonymem Anruf extrahiert (0% Sicherheit)';
-                        }
-                        return null;
-                    })
                     ->description(function ($record) {
                         $directionLabel = match ($record->direction) {
                             'inbound' => '↓ Eingehend',
                             'outbound' => '↑ Ausgehend',
                             default => ''
                         };
+
+                        // Don't show "anonymous" as phone number
                         $phoneNumber = $record->from_number ?? $record->to_number;
+                        if ($phoneNumber === 'anonymous') {
+                            return $directionLabel . ($directionLabel ? ' • Anonyme Nummer' : 'Anonyme Nummer');
+                        }
 
                         return $directionLabel . ($phoneNumber ? ' • ' . $phoneNumber : '');
                     })
@@ -338,58 +422,14 @@ class CallResource extends Resource
                     )
                     ->toggleable(),
 
-                // Data Quality Indicator - Customer Link Status
-                Tables\Columns\TextColumn::make('customer_link_status')
-                    ->label('Datenqualität')
-                    ->badge()
-                    ->html()
-                    ->getStateUsing(function ($record) {
-                        $status = $record->customer_link_status ?? 'unlinked';
-                        $confidence = $record->customer_link_confidence ?? 0;
-
-                        return match ($status) {
-                            'linked' => '<span title="' . round($confidence) . '% Übereinstimmung">✓ Verknüpft</span>',
-                            'name_only' => '<span title="Name vorhanden, kein Kundenprofil">⚠ Nur Name</span>',
-                            'anonymous' => '<span title="Anonymer Anruf">👤 Anonym</span>',
-                            'pending_review' => '<span title="' . round($confidence) . '% - Manuelle Prüfung erforderlich">⏳ Prüfung</span>',
-                            'unlinked' => '<span title="Keine Kundeninformation">○ Nicht verknüpft</span>',
-                            'failed' => '<span title="Verknüpfung fehlgeschlagen">✗ Fehler</span>',
-                            default => '<span title="Unbekannter Status">' . $status . '</span>',
-                        };
-                    })
-                    ->color(fn ($record) => match ($record->customer_link_status ?? 'unlinked') {
-                        'linked' => 'success',
-                        'name_only' => 'warning',
-                        'anonymous' => 'gray',
-                        'pending_review' => 'info',
-                        'unlinked' => 'danger',
-                        'failed' => 'danger',
-                        default => 'gray',
-                    })
-                    ->description(function ($record) {
-                        if ($record->customer_link_method) {
-                            return match ($record->customer_link_method) {
-                                'phone_match' => '📞 Telefon',
-                                'name_match' => '📝 Name',
-                                'manual_link' => '👤 Manuell',
-                                'ai_match' => '🤖 KI',
-                                'appointment_link' => '📅 Termin',
-                                'auto_created' => '🆕 Neu erstellt',
-                                default => $record->customer_link_method,
-                            };
-                        }
-                        return null;
-                    })
-                    ->toggleable()
-                    ->sortable(),
-
+                // 💾 OPTIONAL: Dauer Spalte (versteckt, weil in Status/Zeit zusammengefasst)
                 Tables\Columns\TextColumn::make('duration_sec')
-                    ->label('Dauer')
+                    ->label('Dauer (optional)')
                     ->formatStateUsing(fn ($state) => FormatHelper::duration($state, 'long'))
                     ->icon('heroicon-m-clock')
                     ->color(fn ($state) => $state > 300 ? 'success' : ($state > 60 ? 'warning' : 'gray'))
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true), // 🔴 HIDDEN BY DEFAULT
 
                 Tables\Columns\TextColumn::make('summary')
                     ->label('Zusammenfassung')
@@ -408,124 +448,73 @@ class CallResource extends Resource
                     ->wrap()
                     ->toggleable(),
 
+                // 💾 OPTIMIZED: Show ACTUAL booked services from appointments
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service')
                     ->badge()
                     ->getStateUsing(function ($record) {
-                        // Priority 1: Extract from notes
-                        if ($record->notes) {
-                            $notes = $record->notes;
+                        try {
+                            // Use already-loaded appointments (eager-loaded on line 201)
+                            $appointments = $record->appointments ?? collect();
 
-                            // Check if notes is JSON
-                            if (str_starts_with($notes, '{') || str_starts_with($notes, '[')) {
-                                $decoded = json_decode($notes, true);
-                                if ($decoded && isset($decoded['service'])) {
-                                    $notes = $decoded['service'];
-                                } elseif ($decoded && isset($decoded['appointment_type'])) {
-                                    $notes = $decoded['appointment_type'];
-                                }
+                            // No appointments → show "-"
+                            if (!$appointments || $appointments->isEmpty()) {
+                                return '-';
                             }
 
-                            // Check if it's a cancelled call
-                            if (str_contains(strtolower($notes), 'abgebrochen')) {
-                                return 'Abgebrochen';
+                            // Get unique service names, safely handling null services
+                            $services = $appointments
+                                ->filter(fn($appt) => $appt && $appt->service)
+                                ->pluck('service.name')
+                                ->filter()
+                                ->unique()
+                                ->values();
+
+                            // No services found → show "-"
+                            if ($services->isEmpty()) {
+                                return '-';
                             }
 
-                            // Extract service type from notes (e.g., "Hans - Beratung am...")
-                            if (preg_match('/[-–]\s*([^-–]+?)(?:\s+am|\s+um|\s+für|$)/i', $notes, $matches)) {
-                                $service = trim($matches[1]);
-                                // Clean up and standardize
-                                $service = str_replace(['Termin', 'Buchung'], '', $service);
-                                $service = trim($service);
-
-                                // Standardize common services
-                                if (str_contains(strtolower($service), 'beratung')) {
-                                    return 'Beratung';
-                                } elseif (str_contains(strtolower($service), 'haarschnitt')) {
-                                    return 'Haarschnitt';
-                                }
-
-                                return $service ?: 'Termin';
-                            }
-
-                            // Check directly in notes text
-                            if (str_contains(strtolower($notes), 'beratung')) {
-                                return 'Beratung';
-                            }
-
-                            // If notes is just a simple name without service info
-                            if (!str_contains($notes, '-') && !str_contains($notes, '{') &&
-                                strlen($notes) < 50 && !str_contains($notes, "\n")) {
-                                // Just a name, check if appointment was made
-                                return $record->appointment_made ? 'Termin' : 'Anfrage';
-                            }
+                            // Return comma-separated list of all services
+                            return $services->implode(', ');
+                        } catch (\Throwable $e) {
+                            return '-';
                         }
+                    })
+                    ->tooltip(function ($record) {
+                        try {
+                            // Use already-loaded appointments (eager-loaded on line 201)
+                            $appointments = $record->appointments ?? collect();
 
-                        // Priority 2: Analyze transcript for service type
-                        if ($record->transcript) {
-                            $transcript = strtolower($record->transcript);
-
-                            // Check for specific duration mentions
-                            if (str_contains($transcript, '30 minuten') || str_contains($transcript, 'dreißig minuten')) {
-                                if (str_contains($transcript, 'beratung')) {
-                                    return '30 Min Beratung';
-                                }
-                                return '30 Min Termin';
+                            if (!$appointments || $appointments->isEmpty()) {
+                                return 'Kein Termin gebucht';
                             }
 
-                            if (str_contains($transcript, '15 minuten') || str_contains($transcript, 'fünfzehn minuten')) {
-                                if (str_contains($transcript, 'beratung')) {
-                                    return '15 Min Beratung';
-                                }
-                                return '15 Min Termin';
-                            }
+                            // Show details: Service name + Duration (filter out null appointments)
+                            $details = $appointments
+                                ->filter(fn($appt) => $appt)
+                                ->map(function ($appt) {
+                                    $name = $appt->service?->name ?? 'Unbekannt';
+                                    $duration = $appt->service?->duration ?? $appt->duration ?? '?';
+                                    return "{$name} ({$duration} Min)";
+                                })
+                                ->implode("\n");
 
-                            // Check for specific services
-                            if (str_contains($transcript, 'beratung')) {
-                                return 'Beratung';
-                            }
-                            if (str_contains($transcript, 'haarschnitt') || str_contains($transcript, 'haare schneiden')) {
-                                return 'Haarschnitt';
-                            }
-                            if (str_contains($transcript, 'friseur') || str_contains($transcript, 'frisör')) {
-                                return 'Friseur';
-                            }
-                            if (str_contains($transcript, 'physiotherapie') || str_contains($transcript, 'massage')) {
-                                return 'Physiotherapie';
-                            }
-                            if (str_contains($transcript, 'tierarzt') || str_contains($transcript, 'tierärztin')) {
-                                return 'Tierarzt';
-                            }
-
-                            // Generic appointment mention
-                            if (str_contains($transcript, 'termin')) {
-                                return 'Termin';
-                            }
+                            return $details ?: 'Kein Termin gebucht';
+                        } catch (\Throwable $e) {
+                            return 'Fehler beim Laden';
                         }
-
-                        // Priority 3: Fallback based on appointment status
-                        return $record->appointment_made ? 'Termin' : 'Anfrage';
                     })
                     ->color(function ($state): string {
-                        // Color coding based on service type
-                        if (str_contains($state, 'Beratung')) return 'success';
-                        if (str_contains($state, 'Haarschnitt') || str_contains($state, 'Friseur')) return 'purple';
-                        if (str_contains($state, 'Physiotherapie')) return 'indigo';
-                        if (str_contains($state, 'Tierarzt')) return 'orange';
-                        if (str_contains($state, 'Abgebrochen')) return 'danger';
-                        if ($state === 'Anfrage') return 'warning';
-                        return 'info';
+                        if ($state === '-') return 'gray';
+                        return 'success';
                     })
                     ->icon(function ($state): string {
-                        // Icons based on service type
-                        if (str_contains($state, 'Beratung')) return 'heroicon-m-chat-bubble-left-right';
-                        if (str_contains($state, 'Haarschnitt') || str_contains($state, 'Friseur')) return 'heroicon-m-scissors';
-                        if (str_contains($state, 'Physiotherapie')) return 'heroicon-m-heart';
-                        if (str_contains($state, 'Tierarzt')) return 'heroicon-m-sparkles';
-                        if (str_contains($state, 'Abgebrochen')) return 'heroicon-m-x-circle';
-                        if ($state === 'Anfrage') return 'heroicon-m-question-mark-circle';
+                        if ($state === '-') return 'heroicon-m-dash';
                         return 'heroicon-m-calendar-days';
                     })
+                    ->searchable()
+                    ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('sentiment')
@@ -545,69 +534,40 @@ class CallResource extends Resource
                         default => 'gray',
                     }),
 
-                // Auto-detected urgency from transcript keywords
-                Tables\Columns\TextColumn::make('urgency_auto')
-                    ->label('Dringlichkeit')
-                    ->badge()
-                    ->getStateUsing(function ($record) {
-                        // First check if urgency_level is already set
-                        if ($record->urgency_level) {
-                            return match ($record->urgency_level) {
-                                'urgent' => '🔴 Dringend',
-                                'high' => '🟠 Hoch',
-                                'medium' => '🟡 Mittel',
-                                'low' => '🟢 Niedrig',
-                                default => null,
-                            };
-                        }
-
-                        // Auto-detect from transcript
-                        if ($record->transcript) {
-                            $transcript = strtolower($record->transcript);
-
-                            // Urgent keywords
-                            if (str_contains($transcript, 'dringend') ||
-                                str_contains($transcript, 'notfall') ||
-                                str_contains($transcript, 'sofort')) {
-                                return '🔴 Dringend';
-                            }
-
-                            // High priority keywords
-                            if (str_contains($transcript, 'wichtig') ||
-                                str_contains($transcript, 'schnell') ||
-                                str_contains($transcript, 'heute')) {
-                                return '🟠 Hoch';
-                            }
-
-                            // Problem/complaint keywords
-                            if (str_contains($transcript, 'problem') ||
-                                str_contains($transcript, 'beschwerde') ||
-                                str_contains($transcript, 'fehler')) {
-                                return '🟡 Mittel';
-                            }
-                        }
-
-                        return null;
-                    })
-                    ->color(function ($state): string {
-                        if (!$state) return 'gray';
-                        if (str_contains($state, 'Dringend')) return 'danger';
-                        if (str_contains($state, 'Hoch')) return 'warning';
-                        if (str_contains($state, 'Mittel')) return 'info';
-                        if (str_contains($state, 'Niedrig')) return 'success';
-                        return 'gray';
-                    })
-                    ->toggleable(isToggledHiddenByDefault: false)
-                    ->tooltip('Automatisch aus Transkript erkannt'),
-
-                // Ultra-compact appointment display with calendar icon
+                // Ultra-compact appointment display with calendar icon + wish tracking
                 Tables\Columns\TextColumn::make('appointment_details')
                     ->label('Termin')
                     ->getStateUsing(function (Call $record) {
                         // Smart accessor automatically loads from call_id or converted_appointment_id
                         $appointment = $record->appointment;
 
+                        // 💾 NEW PHASE: Check for unfulfilled wishes
+                        $unresolvedWishes = $record->appointmentWishes()
+                            ->where('status', 'pending')
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+
                         if (!$appointment) {
+                            // No appointment - show wish if exists
+                            if ($unresolvedWishes->isNotEmpty()) {
+                                $wish = $unresolvedWishes->first();
+                                $formattedDate = '';
+                                if ($wish->desired_date) {
+                                    $formattedDate = \Carbon\Carbon::parse($wish->desired_date)->format('d.m. H:i');
+                                } elseif ($wish->desired_time) {
+                                    $formattedDate = $wish->desired_time;
+                                } else {
+                                    $formattedDate = 'TBD';
+                                }
+
+                                return new HtmlString(
+                                    '<div class="flex items-center gap-1">' .
+                                    '<span class="text-lg">⏰</span>' .
+                                    '<span class="text-xs text-orange-600 font-medium">Wunsch: ' . htmlspecialchars($formattedDate) . '</span>' .
+                                    '</div>'
+                                );
+                            }
+
                             return new HtmlString('<span class="text-gray-400 text-xs">Kein Termin</span>');
                         }
 
@@ -650,6 +610,36 @@ class CallResource extends Resource
                     })
                     ->html()
                     ->tooltip(function (Call $record) {
+                        // 💾 NEW PHASE: Show wishes in tooltip if no appointment
+                        $unresolvedWishes = $record->appointmentWishes()
+                            ->where('status', 'pending')
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+
+                        if (!$record->appointment && $unresolvedWishes && $unresolvedWishes->desired_date) {
+                            $tooltip = "⏰ Terminwunsch:\n";
+                            $tooltip .= "━━━━━━━━━━━━━━━\n";
+                            $tooltip .= "Datum: " . \Carbon\Carbon::parse($unresolvedWishes->desired_date)->format('d.m.Y') . "\n";
+                            if ($unresolvedWishes->desired_time) {
+                                $tooltip .= "Zeit: " . $unresolvedWishes->desired_time . "\n";
+                            }
+                            $tooltip .= "Dauer: " . $unresolvedWishes->desired_duration . " Minuten\n";
+                            if ($unresolvedWishes->desired_service) {
+                                $tooltip .= "Service: " . $unresolvedWishes->desired_service . "\n";
+                            }
+                            $tooltip .= "\nGrund:\n";
+                            $tooltip .= ($unresolvedWishes->rejection_reason_label ?? $unresolvedWishes->rejection_reason) . "\n";
+
+                            if ($unresolvedWishes->alternatives_offered && count($unresolvedWishes->alternatives_offered) > 0) {
+                                $tooltip .= "\nAngebotene Alternativen:\n";
+                                foreach ($unresolvedWishes->alternatives_offered as $alt) {
+                                    $tooltip .= "• " . ($alt['datetime'] ?? 'N/A') . "\n";
+                                }
+                            }
+
+                            return $tooltip;
+                        }
+
                         if (!$record->appointment) {
                             return null;
                         }
@@ -904,22 +894,6 @@ class CallResource extends Resource
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return $query->orderBy('customer_cost', $direction);
                     })
-                    ->action(
-                        Tables\Actions\Action::make('showFinancialDetails')
-                            ->modalHeading('📊 Finanzielle Details')
-                            ->modalSubheading('Detaillierte Profit-Analyse für diesen Anruf')
-                            ->modalContent(fn (Call $record) => view('filament.modals.profit-details', [
-                                'call' => $record,
-                                'costCalculator' => new CostCalculator()
-                            ]))
-                            ->modalWidth('md')
-                            ->modalSubmitAction(false) // Kein Submit-Button
-                            ->modalCancelActionLabel('Schließen')
-                            ->visible(fn () =>
-                                auth()->user()->hasRole(['super-admin', 'super_admin', 'Super Admin']) ||
-                                auth()->user()->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])
-                            )
-                    )
                     ->extraAttributes(['class' => 'font-mono'])
                     ->toggleable(),
 
@@ -1008,12 +982,24 @@ class CallResource extends Resource
                     ->searchable()
                     ->preload(),
 
+                // 🔴 NEW: Filter für Live Calls
+                Tables\Filters\Filter::make('live_calls')
+                    ->label('🔴 Laufende Anrufe')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->whereIn('status', ['ongoing', 'in_progress', 'active', 'ringing'])
+                    )
+                    ->toggle(),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'completed' => 'Abgeschlossen',
-                        'missed' => 'Verpasst',
-                        'failed' => 'Fehlgeschlagen',
+                        'ongoing' => '🔴 LIVE',
+                        'completed' => '✅ Abgeschlossen',
+                        'missed' => '📵 Verpasst',
+                        'failed' => '❌ Fehlgeschlagen',
+                        'no_answer' => '🔇 Keine Antwort',
+                        'busy' => '📳 Besetzt',
+                        'analyzed' => '📊 Analysiert',
                     ])
                     ->multiple(),
 
@@ -1624,8 +1610,18 @@ class CallResource extends Resource
                                                         $name = '';
                                                         $verificationIcon = '';
 
-                                                        // Check for customer_name first
-                                                        if ($record->customer_name) {
+                                                        // Filter out transcript fragments
+                                                        $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig'];
+                                                        $customerNameLower = $record->customer_name ? strtolower(trim($record->customer_name)) : '';
+                                                        $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
+
+                                                        // Anonymous (no name, transcript fragment, OR anonymous number without real name)
+                                                        if ($record->from_number === 'anonymous' && (!$record->customer_name || trim($record->customer_name) === '' || $isTranscriptFragment)) {
+                                                            return '<div class="flex items-center"><span class="font-bold text-lg text-gray-600">Anonym</span></div>';
+                                                        }
+
+                                                        // Check for customer_name first (even with anonymous number, if it's a real name)
+                                                        if ($record->customer_name && !$isTranscriptFragment) {
                                                             $name = htmlspecialchars($record->customer_name);
 
                                                             // Add verification icon based on status
@@ -1648,7 +1644,8 @@ class CallResource extends Resource
                                                 TextEntry::make('from_number')
                                                     ->label('Anrufer-Nummer')
                                                     ->icon('heroicon-m-phone-arrow-up-right')
-                                                    ->copyable(),
+                                                    ->getStateUsing(fn ($record) => $record->from_number === 'anonymous' ? 'Anonyme Nummer' : $record->from_number)
+                                                    ->copyable(fn ($record) => $record->from_number !== 'anonymous'),
 
                                                 TextEntry::make('to_number')
                                                     ->label('Angerufene Nummer')
