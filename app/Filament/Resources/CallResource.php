@@ -224,7 +224,8 @@ class CallResource extends Resource
                             ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
                     ),
 
-                // 🆕 BOOKING STATUS COLUMN: Quick visual indicator
+                // 🆕 BOOKING STATUS: Now embedded in Status/Zeit/Dauer column
+                // (Separate column kept for backwards compatibility but hidden)
                 Tables\Columns\TextColumn::make('booking_status')
                     ->label('Buchung')
                     ->getStateUsing(function (Call $record) {
@@ -250,7 +251,8 @@ class CallResource extends Resource
                             ELSE 1
                             END {$direction}")
                             ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
-                    ),
+                    )
+                    ->hidden(),  // 🚫 Hidden - now integrated into Status/Zeit/Dauer column
 
                 // Company/Branch column with Phone number
                 Tables\Columns\ViewColumn::make('company_phone_display')
