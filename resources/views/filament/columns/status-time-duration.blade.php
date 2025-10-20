@@ -24,6 +24,20 @@
 
     $isLive = in_array($status, ['ongoing', 'in_progress', 'active', 'ringing']);
 
+    // Booking Status Logic
+    $bookingStatus = null;
+    $bookingColor = null;
+    if ($record->appointment && $record->appointment->starts_at) {
+        $bookingStatus = 'Gebucht';
+        $bookingColor = 'bg-green-100 text-green-800';
+    } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
+        $bookingStatus = 'Wunsch';
+        $bookingColor = 'bg-yellow-100 text-yellow-800';
+    } else {
+        $bookingStatus = 'Offen';
+        $bookingColor = 'bg-red-100 text-red-800';
+    }
+
     // Direction icon
     $directionIcon = match($record->direction) {
         'inbound' => '↓',
@@ -60,12 +74,17 @@
 @endphp
 
 <div class="space-y-1" title="{{ $tooltipText }}">
-    <!-- Badge mit Direction Icon -->
-    <div class="flex items-center gap-1">
+    <!-- Zeile 1: Status Badge + Booking Status Badge -->
+    <div class="flex items-center gap-1 flex-wrap">
         <span class="text-lg {{ $directionColor }}">{{ $directionIcon }}</span>
         <span class="px-2 py-1 rounded-full text-sm font-medium {{ $badgeColor }} {{ $isLive ? 'animate-pulse' : '' }}">
             {{ $statusText }}
         </span>
+        @if($bookingStatus)
+            <span class="px-2 py-1 rounded-full text-xs font-medium {{ $bookingColor }}">
+                {{ $bookingStatus }}
+            </span>
+        @endif
     </div>
 
     <!-- Datum Zeile 1 -->
