@@ -2,40 +2,25 @@
     $record = $getRecord();
     $status = $record->status ?? 'unknown';
 
-    $statusText = match($status) {
-        'ongoing', 'in_progress', 'active', 'ringing' => 'LIVE',
-        'completed' => 'Completed',
-        'missed' => 'Missed',
-        'failed' => 'Failed',
-        'no_answer' => 'No Answer',
-        'busy' => 'Busy',
-        'analyzed' => 'Analyzed',
-        'call_analyzed' => 'Analyzed',
-        default => ucfirst($status ?? 'Unknown')
-    };
-
-    $badgeColor = match($status) {
-        'ongoing', 'in_progress', 'active', 'ringing' => 'bg-red-100 text-red-800',
-        'completed' => 'bg-green-100 text-green-800',
-        'missed', 'busy' => 'bg-yellow-100 text-yellow-800',
-        'failed', 'no_answer' => 'bg-red-100 text-red-800',
-        default => 'bg-gray-100 text-gray-800'
-    };
-
+    // Check if call is LIVE
     $isLive = in_array($status, ['ongoing', 'in_progress', 'active', 'ringing']);
 
-    // Booking Status Logic
-    $bookingStatus = null;
-    $bookingColor = null;
-    if ($record->appointment && $record->appointment->starts_at) {
-        $bookingStatus = 'Gebucht';
-        $bookingColor = 'bg-green-100 text-green-800';
-    } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
-        $bookingStatus = 'Wunsch';
-        $bookingColor = 'bg-yellow-100 text-yellow-800';
+    // Determine display badge: Show LIVE if active, otherwise show BOOKING STATUS
+    if ($isLive) {
+        $displayText = 'LIVE';
+        $displayColor = 'bg-red-100 text-red-800 animate-pulse';
     } else {
-        $bookingStatus = 'Offen';
-        $bookingColor = 'bg-red-100 text-red-800';
+        // Booking Status Logic (more relevant than "Completed")
+        if ($record->appointment && $record->appointment->starts_at) {
+            $displayText = 'Gebucht';
+            $displayColor = 'bg-green-100 text-green-800';
+        } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
+            $displayText = 'Wunsch';
+            $displayColor = 'bg-yellow-100 text-yellow-800';
+        } else {
+            $displayText = 'Offen';
+            $displayColor = 'bg-red-100 text-red-800';
+        }
     }
 
     // Direction icon
@@ -74,17 +59,12 @@
 @endphp
 
 <div class="space-y-1" title="{{ $tooltipText }}">
-    <!-- Zeile 1: Status Badge + Booking Status Badge -->
-    <div class="flex items-center gap-1 flex-wrap">
+    <!-- Zeile 1: Direction Icon + Status/Booking Badge (single badge, more relevant) -->
+    <div class="flex items-center gap-1">
         <span class="text-lg {{ $directionColor }}">{{ $directionIcon }}</span>
-        <span class="px-2 py-1 rounded-full text-sm font-medium {{ $badgeColor }} {{ $isLive ? 'animate-pulse' : '' }}">
-            {{ $statusText }}
+        <span class="px-2 py-1 rounded-full text-sm font-medium {{ $displayColor }}">
+            {{ $displayText }}
         </span>
-        @if($bookingStatus)
-            <span class="px-2 py-1 rounded-full text-xs font-medium {{ $bookingColor }}">
-                {{ $bookingStatus }}
-            </span>
-        @endif
     </div>
 
     <!-- Datum Zeile 1 -->
