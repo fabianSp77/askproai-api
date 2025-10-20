@@ -736,16 +736,25 @@ class CallResource extends Resource
                     ->placeholder('Alle')
                     ->trueLabel('Mit Termin')
                     ->falseLabel('Ohne Termin')
-                    ->queries(
-                        true: fn (Builder $query): Builder =>
-                            $query->whereHas('appointments', fn (Builder $q) =>
+                    ->query(function (Builder $query, array $data) {
+                        // $data['value'] can be: null (all), true (with appointment), false (without appointment)
+                        $value = $data['value'] ?? null;
+
+                        if ($value === true) {
+                            // Show ONLY calls WITH appointments that have starts_at
+                            return $query->whereHas('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
-                            ),
-                        false: fn (Builder $query): Builder =>
-                            $query->whereDoesntHave('appointments', fn (Builder $q) =>
+                            );
+                        } elseif ($value === false) {
+                            // Show ONLY calls WITHOUT appointments that have starts_at
+                            return $query->whereDoesntHave('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
-                            ),
-                    ),
+                            );
+                        }
+
+                        // Show all (null)
+                        return $query;
+                    }),
 
                 Tables\Filters\SelectFilter::make('sentiment')
                     ->label('Stimmung')
