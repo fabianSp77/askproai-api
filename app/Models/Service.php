@@ -125,7 +125,8 @@ class Service extends Model
 
         static::saving(function ($service) {
             // Validate Cal.com event type ownership (Multi-Tenant Security)
-            if ($service->calcom_event_type_id && $service->company_id) {
+            // ONLY check if the calcom_event_type_id is being CHANGED (not on every update)
+            if ($service->isDirty('calcom_event_type_id') && $service->calcom_event_type_id && $service->company_id) {
                 $isValid = \Illuminate\Support\Facades\DB::table('calcom_event_mappings')
                     ->where('calcom_event_type_id', (string)$service->calcom_event_type_id)
                     ->where('company_id', $service->company_id)
