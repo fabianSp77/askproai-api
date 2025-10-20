@@ -735,7 +735,22 @@ class CallResource extends Resource
                     ->label('Mit Termin')
                     ->placeholder('Alle')
                     ->trueLabel('Mit Termin')
-                    ->falseLabel('Ohne Termin'),
+                    ->falseLabel('Ohne Termin')
+                    ->query(function (Builder $query, $value) {
+                        if ($value === true) {
+                            // Show ONLY calls with appointments that have starts_at
+                            return $query->whereHas('appointments', fn (Builder $q) =>
+                                $q->where('starts_at', '!=', null)
+                            );
+                        } elseif ($value === false) {
+                            // Show ONLY calls WITHOUT appointments with starts_at
+                            return $query->whereDoesntHave('appointments', fn (Builder $q) =>
+                                $q->where('starts_at', '!=', null)
+                            );
+                        }
+                        // If null: show all (placeholder)
+                        return $query;
+                    }),
 
                 Tables\Filters\SelectFilter::make('sentiment')
                     ->label('Stimmung')
