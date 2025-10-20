@@ -437,7 +437,10 @@ class CallResource extends Resource
                                 if (in_array($serviceId, $seen)) continue; // Skip duplicates
                                 $seen[] = $serviceId;
 
-                                $name = $appt->service->name;
+                                // Use display_name if provided, otherwise use Cal.com name
+                                $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
+                                    ? $appt->service->display_name
+                                    : $appt->service->name;
                                 $price = $appt->service->price;
 
                                 if ($price && $price > 0) {
