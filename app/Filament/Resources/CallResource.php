@@ -208,13 +208,6 @@ class CallResource extends Resource
                     ->with('branch')
                     ->with('phoneNumber');
             })
-            // 🎨 ROW HIGHLIGHTING: Green background for successful bookings
-            ->rowClasses(function (Call $record) {
-                if ($record->appointment && $record->appointment->starts_at) {
-                    return 'bg-green-50 dark:bg-green-950/20';
-                }
-                return '';
-            })
             ->columns([
                 // 🟢 PREMIUM: Status / Zeit / Dauer Column (3-LINE LAYOUT)
                 Tables\Columns\ViewColumn::make('status_time_duration')
