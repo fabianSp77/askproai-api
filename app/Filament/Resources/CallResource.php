@@ -208,6 +208,13 @@ class CallResource extends Resource
                     ->with('branch')
                     ->with('phoneNumber');
             })
+            // 🎨 ROW HIGHLIGHTING: Green background for successful bookings
+            ->rowClasses(function (Call $record) {
+                if ($record->appointment && $record->appointment->starts_at) {
+                    return 'bg-green-50 dark:bg-green-950/20';
+                }
+                return '';
+            })
             ->columns([
                 // 🟢 PREMIUM: Status / Zeit / Dauer Column (3-LINE LAYOUT)
                 Tables\Columns\ViewColumn::make('status_time_duration')
@@ -223,6 +230,35 @@ class CallResource extends Resource
                                 END {$direction}")
                             ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
                     ),
+
+                // 🆕 BOOKING STATUS COLUMN: Quick visual indicator
+                Tables\Columns\TextColumn::make('booking_status')
+                    ->label('Buchung')
+                    ->getStateUsing(function (Call $record) {
+                        if ($record->appointment && $record->appointment->starts_at) {
+                            return '✅ Gebucht';
+                        } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
+                            return '⏰ Wunsch';
+                        }
+                        return '❓ Offen';
+                    })
+                    ->badge()
+                    ->color(function ($state) {
+                        return match($state) {
+                            '✅ Gebucht' => 'success',
+                            '⏰ Wunsch' => 'warning',
+                            '❓ Offen' => 'danger',
+                            default => 'gray',
+                        };
+                    })
+                    ->sortable(query: fn($query, $direction) =>
+                        $query->orderByRaw("CASE
+                            WHEN appointments.starts_at IS NOT NULL THEN 0
+                            ELSE 1
+                            END {$direction}")
+                            ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
+                    ),
+
                 // Company/Branch column with Phone number
                 Tables\Columns\ViewColumn::make('company_phone_display')
                     ->label('Unternehmen/Filiale')
@@ -246,13 +282,76 @@ class CallResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                // 3-line appointment display: Datum | Uhrzeit | Dauer
-                Tables\Columns\ViewColumn::make('appointment_3lines')
-                    ->label('Termin')
-                    ->view('filament.columns.appointment-3lines')
-                    ->toggleable(),
+                // 🆕 COMBINED: Appointment + Staff (Termin & Mitarbeiter)
+                Tables\Columns\TextColumn::make('appointment_summary')
+                    ->label('Termin & Mitarbeiter')
+                    ->getStateUsing(function (Call $record) {
+                        $appointment = $record->appointment;
 
-                // Staff column - shows which employee handles the appointment
+                        if (!$appointment || !$appointment->starts_at) {
+                            // No appointment - check for pending wishes
+                            $unresolvedWish = $record->appointmentWishes()
+                                ->where('status', 'pending')
+                                ->latest()
+                                ->first();
+
+                            if ($unresolvedWish && $unresolvedWish->desired_date) {
+                                $wishDate = \Carbon\Carbon::parse($unresolvedWish->desired_date);
+                                return new HtmlString(
+                                    '<span class="text-xs text-orange-600">⏰ ' .
+                                    $wishDate->locale('de')->isoFormat('ddd DD.MM') .
+                                    '</span>'
+                                );
+                            }
+
+                            return new HtmlString('<span class="text-xs text-gray-400">-</span>');
+                        }
+
+                        // Format: Mi 22.10 14:00 → Mitarbeiter
+                        $startDate = \Carbon\Carbon::parse($appointment->starts_at);
+                        $dateTime = $startDate->locale('de')->isoFormat('ddd DD.MM HH:mm');
+
+                        $staffName = $appointment->staff?->name ?? 'Unzugewiesen';
+                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
+
+                        return new HtmlString(
+                            '<span class="text-xs ' . $staffColor . ' font-medium">' .
+                            $dateTime . ' → ' . $staffName .
+                            '</span>'
+                        );
+                    })
+                    ->html()
+                    ->sortable(query: fn($query, $direction) =>
+                        $query->orderBy('appointments.starts_at', $direction)
+                            ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
+                    )
+                    ->tooltip(function (Call $record) {
+                        $appointment = $record->appointment;
+                        if (!$appointment) {
+                            return null;
+                        }
+
+                        $parts = [];
+                        if ($appointment->starts_at) {
+                            $start = \Carbon\Carbon::parse($appointment->starts_at);
+                            $parts[] = 'Datum: ' . $start->format('d.m.Y');
+                            $parts[] = 'Zeit: ' . $start->format('H:i') . ($appointment->ends_at ? ' - ' . \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : '');
+                        }
+
+                        if ($appointment->staff) {
+                            $parts[] = 'Mitarbeiter: ' . $appointment->staff->name;
+                        } else {
+                            $parts[] = 'Mitarbeiter: Nicht zugewiesen ⚠️';
+                        }
+
+                        if ($appointment->service) {
+                            $parts[] = 'Service: ' . $appointment->service->name;
+                        }
+
+                        return implode("\n", $parts);
+                    }),
+
+                // Staff column - DEPRECATED but kept for backwards compatibility (hidden)
                 Tables\Columns\TextColumn::make('appointment_staff')
                     ->label('Mitarbeiter:in')
                     ->getStateUsing(function (Call $record) {
@@ -315,7 +414,8 @@ class CallResource extends Resource
 
                         return $tooltip;
                     })
-                    ->toggleable(),
+                    ->toggleable()
+                    ->hidden(),  // 🚫 Hidden in favor of combined appointment_summary column
 
                 // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
                 Tables\Columns\TextColumn::make('service_type')
