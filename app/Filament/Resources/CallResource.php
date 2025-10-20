@@ -731,29 +731,49 @@ class CallResource extends Resource
                     ])
                     ->multiple(),
 
-                Tables\Filters\TernaryFilter::make('appointment_made')
+                // 🔴 DEBUGGING: Custom implementation to verify filter works
+                Tables\Filters\Filter::make('has_appointment')
                     ->label('Mit Termin')
-                    ->placeholder('Alle')
-                    ->trueLabel('Mit Termin')
-                    ->falseLabel('Ohne Termin')
-                    ->query(function (Builder $query, array $data) {
-                        // $data['value'] can be: null (all), true (with appointment), false (without appointment)
-                        $value = $data['value'] ?? null;
+                    ->form([
+                        Forms\Components\Select::make('appointment_status')
+                            ->label('Booking Status')
+                            ->options([
+                                'with' => 'Mit Termin',
+                                'without' => 'Ohne Termin',
+                            ])
+                            ->placeholder('Alle'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!isset($data['appointment_status'])) {
+                            return $query;
+                        }
 
-                        if ($value === true) {
-                            // Show ONLY calls WITH appointments that have starts_at
+                        if ($data['appointment_status'] === 'with') {
+                            // ONLY calls WITH appointments that have starts_at != null
                             return $query->whereHas('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
+                                  ->whereNull('deleted_at')
                             );
-                        } elseif ($value === false) {
-                            // Show ONLY calls WITHOUT appointments that have starts_at
+                        } elseif ($data['appointment_status'] === 'without') {
+                            // ONLY calls WITHOUT appointments that have starts_at != null
                             return $query->whereDoesntHave('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
+                                  ->whereNull('deleted_at')
                             );
                         }
 
-                        // Show all (null)
                         return $query;
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if (isset($data['appointment_status'])) {
+                            $indicators['appointment_status'] = match ($data['appointment_status']) {
+                                'with' => 'Mit Termin',
+                                'without' => 'Ohne Termin',
+                                default => '',
+                            };
+                        }
+                        return $indicators;
                     }),
 
                 Tables\Filters\SelectFilter::make('sentiment')
