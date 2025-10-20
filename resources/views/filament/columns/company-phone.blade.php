@@ -45,15 +45,15 @@
 
 <div class="space-y-1" title="{{ $tooltipText }}">
     <!-- Zeile 1: Unternehmen Name (klickbar wenn Link vorhanden) -->
-    <div class="text-xs font-medium text-gray-700">
+    <div class="text-xs font-medium text-gray-800">
         @if($companyLink && $companyName)
             <a href="{{ $companyLink }}" class="text-blue-600 hover:text-blue-800 hover:underline">
-                🏢 {{ $companyName }}
+                {{ $companyName }}
             </a>
         @elseif($companyName)
-            🏢 {{ $companyName }}
+            {{ $companyName }}
         @else
-            🏢 Unbekannt
+            Unbekannt
         @endif
     </div>
 
@@ -62,10 +62,10 @@
         <div class="text-xs text-gray-600">
             @if($branchLink)
                 <a href="{{ $branchLink }}" class="text-blue-600 hover:text-blue-800 hover:underline">
-                    🏪 {{ $branchName }}
+                    {{ $branchName }}
                 </a>
             @else
-                🏪 {{ $branchName }}
+                {{ $branchName }}
             @endif
         </div>
     @endif
@@ -73,16 +73,16 @@
     <!-- Zeile 3: Phone Number (Kopier-funktionalität) -->
     @if($phoneNumber)
         <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-600">
-                📞 {{ $phoneNumber }}
+            <span class="text-xs text-gray-600 font-mono">
+                {{ $phoneNumber }}
             </span>
             <button
                 type="button"
-                onclick="navigator.clipboard.writeText('{{ $phoneNumber }}').then(() => alert('📋 Nummer kopiert!'))"
-                class="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
-                title="Nummer kopieren"
+                onclick="navigator.clipboard.writeText('{{ $phoneNumber }}').then(() => alert('Kopiert!'))"
+                class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer transition-colors"
+                title="In Zwischenablage kopieren"
             >
-                📋
+                copy
             </button>
         </div>
     @endif
