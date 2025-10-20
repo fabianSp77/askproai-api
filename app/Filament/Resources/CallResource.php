@@ -477,36 +477,43 @@ class CallResource extends Resource
                     ->wrap()
                     ->toggleable(),
 
-                // 💰 SECURE Cost display with tenant authorization
+                // 💰 SECURE Cost display with HIERARCHICAL access
                 Tables\Columns\TextColumn::make('financials')
                     ->label('Tel.-Kosten')
                     ->getStateUsing(function (Call $record) {
                         $user = auth()->user();
 
                         // SECURITY: Verify tenant access before showing cost
-                        // CRITICAL: Super-admin bypasses check, others must match company
                         if (!$user) {
                             return new HtmlString('<span class="text-gray-400">-</span>');
                         }
 
-                        // 🔐 Super-admin can see BASE costs (our actual platform costs)
+                        // COST HIERARCHY - 3 LEVELS:
+                        // Level 1 (AskProAI/Super-Admin): base_cost (OUR costs)
+                        // Level 2 (Reseller): reseller_cost (their costs from us)
+                        // Level 3 (Customer): customer_cost (what THEY charge their customers)
+
+                        // 🔐 LEVEL 1: Super-admin sees BASE costs (OUR actual platform costs)
                         if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
                             $primaryCost = $record->base_cost ?? 0;
+                            $costType = '(Base)'; // Our cost
                         }
-                        // 🔐 Reseller can see RESELLER costs - BUT ONLY IF THEY OWN THIS BRANCH
+                        // 🔐 LEVEL 2: Reseller can see RESELLER costs - BUT ONLY IF THEY OWN THIS BRANCH
                         elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
                             // Check if reseller owns this branch/company
                             $canViewResellerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
                                 || ($record->company_id && $user->company_id === $record->company_id);
 
                             if ($canViewResellerCost) {
+                                // Reseller sees THEIR cost (reseller_cost)
                                 $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
+                                $costType = '(Your Cost)'; // Reseller's cost
                             } else {
                                 // SECURITY: Don't show costs for calls from other resellers
                                 return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
                             }
                         }
-                        // 🔐 Customer can see THEIR costs - ONLY IF THEY OWN THIS BRANCH
+                        // 🔐 LEVEL 3: Customer can see THEIR costs - ONLY IF THEY OWN THIS BRANCH
                         else {
                             // Check if customer owns this branch (direct employee)
                             $canViewCustomerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
@@ -517,10 +524,12 @@ class CallResource extends Resource
                                 return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
                             }
 
+                            // Customer sees what THEY are charged
                             $primaryCost = $record->customer_cost ?? $record->cost ?? 0;
                             if (is_numeric($record->cost) && $primaryCost == 0) {
                                 $primaryCost = round($record->cost * 100);
                             }
+                            $costType = '(Your Charge)'; // Customer's charge
                         }
 
                         $formattedCost = number_format($primaryCost / 100, 2, ',', '.');
@@ -537,7 +546,7 @@ class CallResource extends Resource
 
                         return new HtmlString(
                             '<div class="flex items-center gap-0.5">' .
-                            '<span class="font-semibold">' . $formattedCost . '€</span>' .
+                            '<span class="font-semibold" title="' . $costType . '">' . $formattedCost . '€</span>' .
                             $statusDot .
                             '</div>'
                         );
