@@ -457,16 +457,35 @@ class ServiceResource extends Resource
                                     ->label(__('services.allowed_segments'))
                                     ->multiple()
                                     ->options(function (Get $get) {
-                                        $segments = $get('../../segments') ?? [];
-                                        $options = [];
-                                        foreach ($segments as $segment) {
-                                            if (isset($segment['key']) && isset($segment['name'])) {
-                                                $options[$segment['key']] = "{$segment['key']}: {$segment['name']}";
+                                        try {
+                                            $isComposite = $get('../../composite');
+                                            if (!$isComposite) {
+                                                return [];
                                             }
+
+                                            $segments = $get('../../segments') ?? [];
+                                            $options = [];
+
+                                            if (is_array($segments)) {
+                                                foreach ($segments as $segment) {
+                                                    if (isset($segment['key']) && isset($segment['name'])) {
+                                                        $options[$segment['key']] = "{$segment['key']}: {$segment['name']}";
+                                                    }
+                                                }
+                                            }
+                                            return $options;
+                                        } catch (\Exception $e) {
+                                            // Silently fail - field will be hidden anyway
+                                            return [];
                                         }
-                                        return $options;
                                     })
-                                    ->visible(fn (Get $get): bool => $get('../../composite') === true)
+                                    ->visible(function (Get $get): bool {
+                                        try {
+                                            return $get('../../composite') === true;
+                                        } catch (\Exception $e) {
+                                            return false;
+                                        }
+                                    })
                                     ->helperText(__('services.segments_helper'))
                                     ->columnSpan(2),
 
@@ -528,11 +547,18 @@ class ServiceResource extends Resource
                             ->addActionLabel('Mitarbeiter hinzufügen')
                             ->reorderable()
                             ->collapsible()
-                            ->itemLabel(fn (array $state): ?string =>
-                                isset($state['id'])
-                                    ? \App\Models\Staff::find($state['id'])?->name
-                                    : null
-                            ),
+                            ->itemLabel(function (array $state): ?string {
+                                try {
+                                    if (!isset($state['id'])) {
+                                        return null;
+                                    }
+
+                                    $staff = \App\Models\Staff::find($state['id']);
+                                    return $staff?->name ?? 'Unknown Staff';
+                                } catch (\Exception $e) {
+                                    return 'Error loading staff';
+                                }
+                            }),
                     ])
                     ->collapsible()
                     ->collapsed(),
