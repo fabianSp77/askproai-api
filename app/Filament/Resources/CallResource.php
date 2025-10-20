@@ -712,7 +712,7 @@ class CallResource extends Resource
 
                 // 🔴 NEW: Filter für Live Calls
                 Tables\Filters\Filter::make('live_calls')
-                    ->label('🔴 Laufende Anrufe')
+                    ->label('Laufende Anrufe (LIVE)')
                     ->query(fn (Builder $query): Builder =>
                         $query->whereIn('status', ['ongoing', 'in_progress', 'active', 'ringing'])
                     )
@@ -721,13 +721,13 @@ class CallResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'ongoing' => '🔴 LIVE',
-                        'completed' => '✅ Abgeschlossen',
-                        'missed' => '📵 Verpasst',
-                        'failed' => '❌ Fehlgeschlagen',
-                        'no_answer' => '🔇 Keine Antwort',
-                        'busy' => '📳 Besetzt',
-                        'analyzed' => '📊 Analysiert',
+                        'ongoing' => 'LIVE',
+                        'completed' => 'Abgeschlossen',
+                        'missed' => 'Verpasst',
+                        'failed' => 'Fehlgeschlagen',
+                        'no_answer' => 'Keine Antwort',
+                        'busy' => 'Besetzt',
+                        'analyzed' => 'Analysiert',
                     ])
                     ->multiple(),
 
