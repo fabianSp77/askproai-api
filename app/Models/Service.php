@@ -35,6 +35,7 @@ class Service extends Model
         'calcom_name',
         'slug',
         'description',
+        'category',
 
         // Settings
         'is_active',
