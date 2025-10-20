@@ -83,7 +83,36 @@ class DateTimeParser
     {
         // Handle specific date if provided
         if (isset($params['date']) && isset($params['time'])) {
-            return Carbon::parse($params['date'] . ' ' . $params['time']);
+            $parsed = Carbon::parse($params['date'] . ' ' . $params['time']);
+
+            // 🔧 CRITICAL FIX 2025-10-20: ANY past time is invalid, not just >30 days
+            // User says "14:00 Uhr today" but it's already 14:00 → REJECT and suggest alternative
+            // This prevents infinite loop: "Ich überprüfe nochmal... Ich überprüfe nochmal..."
+            if ($parsed->isPast()) {
+                $minutesAgo = $parsed->diffInMinutes(now());
+
+                if ($minutesAgo > 0) {
+                    Log::warning('⏰ Past time requested - suggesting next available', [
+                        'requested' => $parsed->format('Y-m-d H:i'),
+                        'minutes_ago' => $minutesAgo,
+                        'params' => $params
+                    ]);
+
+                    // Suggest next available time: +2 hours from now, rounded to hour
+                    $suggestedTime = now('Europe/Berlin')
+                        ->addHours(2)
+                        ->floorHour()
+                        ->setMinutes(0);
+
+                    Log::info('✅ Suggesting alternative time', [
+                        'suggested' => $suggestedTime->format('Y-m-d H:i')
+                    ]);
+
+                    return $suggestedTime;
+                }
+            }
+
+            return $parsed;
         }
 
         // Handle relative dates (German)
@@ -156,6 +185,49 @@ class DateTimeParser
         // Handle relative German dates
         if (isset(self::GERMAN_DATE_MAP[$normalizedDate])) {
             return Carbon::parse(self::GERMAN_DATE_MAP[$normalizedDate])->format('Y-m-d');
+        }
+
+        // 🔧 FIX 2025-10-18: Handle "nächste Woche [WEEKDAY]" pattern
+        // Pattern: "nächste Woche Mittwoch" → Wednesday of next week
+        // User said: "nächste Woche Mittwoch um 14:15"
+        // Expected: Calculate next Wednesday and return date
+        if (preg_match('/nächste\s+woche\s+(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+
+            $weekdayMap = [
+                'montag' => 1,
+                'dienstag' => 2,
+                'mittwoch' => 3,
+                'donnerstag' => 4,
+                'freitag' => 5,
+                'samstag' => 6,
+                'sonntag' => 0
+            ];
+
+            if (isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $dayOfWeek = $weekdayMap[$weekdayName];
+
+                    // Carbon::next() returns the next occurrence of the given weekday
+                    $nextDate = $now->copy()->next($dayOfWeek);
+
+                    Log::info('📅 Parsed "nächste Woche [WEEKDAY]" pattern', [
+                        'input' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'today' => $now->format('Y-m-d (l)'),
+                        'next_occurrence' => $nextDate->format('Y-m-d (l)'),
+                        'days_away' => $nextDate->diffInDays($now)
+                    ]);
+
+                    return $nextDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse "nächste Woche [WEEKDAY]"', [
+                        'input' => $normalizedDate,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
         }
 
         // 🔥 FIX: German SHORT date format (DD.M or D.M) - Phase 1.3.3
@@ -330,6 +402,138 @@ class DateTimeParser
     }
 
     /**
+     * Parse time-only input with optional context date (V87 PHASE 2b support)
+     *
+     * FIX 2025-10-19: Support for context-aware time updates
+     *
+     * Scenario: Agent has confirmed date "2025-10-20"
+     *           User responds with only time: "14:00" or "vierzehn Uhr"
+     *           We need to combine confirmed date + new time
+     *
+     * Usage:
+     *   parseTimeOnly("14:00", "2025-10-20")
+     *   → Returns: Carbon instance for 2025-10-20 14:00:00
+     *
+     * @param string|null $timeString Time input (e.g., "14:00", "vierzehn Uhr")
+     * @param string|null $contextDate Optional confirmed date (YYYY-MM-DD format)
+     * @return Carbon|null Parsed datetime or null if invalid
+     */
+    public function parseTimeOnly(?string $timeString, ?string $contextDate = null): ?Carbon
+    {
+        if (empty($timeString)) {
+            return null;
+        }
+
+        try {
+            // Try to parse just the time
+            $timeCarbon = Carbon::parse($timeString);
+
+            // If we have a context date, combine them
+            if (!empty($contextDate)) {
+                try {
+                    $dateCarbon = Carbon::parse($contextDate);
+
+                    // Combine: use date from context, time from input
+                    $result = $dateCarbon->copy()->setTime(
+                        $timeCarbon->hour,
+                        $timeCarbon->minute,
+                        $timeCarbon->second
+                    );
+
+                    Log::info('⏰ Time-only parsed with context date (PHASE 2b)', [
+                        'time_input' => $timeString,
+                        'context_date' => $contextDate,
+                        'result' => $result->format('Y-m-d H:i:s'),
+                        'phase' => '2b'
+                    ]);
+
+                    return $result;
+                } catch (\Exception $e) {
+                    Log::warning('❌ Could not parse context date in parseTimeOnly', [
+                        'context_date' => $contextDate,
+                        'error' => $e->getMessage()
+                    ]);
+                    // Fall through to return time-only parse
+                }
+            }
+
+            // No context date, or context date parsing failed
+            // Return just the time (will be combined elsewhere)
+            Log::info('⏰ Time-only parsed without context', [
+                'time_input' => $timeString,
+                'result' => $timeCarbon->format('H:i:s')
+            ]);
+
+            return $timeCarbon;
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to parse time-only string', [
+                'time_input' => $timeString,
+                'context_date' => $contextDate,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Detect if input is time-only (no date information)
+     *
+     * Examples that return TRUE (time-only):
+     * - "14:00"
+     * - "14 Uhr"
+     * - "vierzehn Uhr"
+     * - "2 Uhr nachmittags"
+     * - "halb drei"
+     *
+     * Examples that return FALSE (contains date):
+     * - "Montag 14 Uhr"
+     * - "20. Oktober 14 Uhr"
+     * - "übermorgen 14 Uhr"
+     * - "nächster Montag"
+     *
+     * @param string $input User input string
+     * @return bool True if input appears to be time-only
+     */
+    public function isTimeOnly(string $input): bool
+    {
+        $normalized = strtolower(trim($input));
+
+        // Check for date keywords that would indicate it's NOT time-only
+        $dateKeywords = [
+            'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag',
+            'heute', 'morgen', 'übermorgen',
+            'nächste', 'nächster', 'diese', 'dieser',
+            'woche', 'oktober', 'september', 'november', 'dezember', 'januar', 'februar',
+            'märz', 'april', 'mai', 'juni', 'juli', 'august'
+        ];
+
+        foreach ($dateKeywords as $keyword) {
+            if (strpos($normalized, $keyword) !== false) {
+                return false;  // Contains date keyword
+            }
+        }
+
+        // Check if it contains time patterns
+        // - Numeric times: "14:00", "14 00", "1400"
+        // - German times: "14 Uhr", "vierzehn Uhr", "halb drei"
+        $timePatterns = [
+            '/\d{1,2}\s*:\s*\d{2}/',  // HH:MM
+            '/\d{1,2}\s*Uhr/',         // X Uhr
+            '/(ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|.*zehn)\s+(Uhr|Uhr)/',  // German numbers + Uhr
+            '/halb\s+(zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf)/',  // halb + number
+            '/viertel/',  // viertel nach/vor
+        ];
+
+        foreach ($timePatterns as $pattern) {
+            if (preg_match($pattern, $normalized)) {
+                return true;  // Contains time pattern and no date keywords
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Parse duration to minutes
      *
      * @param mixed $duration Duration in various formats (60, "60", "1h", "90m")
@@ -418,13 +622,27 @@ class DateTimeParser
                 $result = $now->copy()->next($targetDayOfWeek);
             }
         } elseif ($normalizedModifier === 'nächster' || $normalizedModifier === 'nächste' || $normalizedModifier === 'nächstes') {
-            // "nächster" = Always next week, minimum 7 days ahead
+            // "nächster" = The next calendar occurrence of this weekday
+            //
+            // CRITICAL FIX (2025-10-18): Removed faulty "add another week if < 7 days" logic
+            // Bug: Was transforming "next Tuesday" into "Tuesday-after-next"
+            //
+            // Examples (today = Saturday, 18. October):
+            // - "nächster Dienstag" = 21. Oktober (Tuesday next week, 3 days away)
+            // - "nächster Freitag" = 24. Oktober (Friday next week, 6 days away)
+            // - "nächster Sonntag" = 19. Oktober (Sunday this week, 1 day away)
+            //
+            // The native German meaning is: "The next calendar occurrence"
+            // NOT "A day that's at least 7 days away" (which was the buggy assumption)
+
             $result = $now->copy()->next($targetDayOfWeek);
 
-            // If result is less than 7 days away, add another week
-            if ($result->diffInDays($now) < 7) {
-                $result->addWeek();
-            }
+            // ✅ REMOVED: Old faulty logic that was:
+            //    if ($result->diffInDays($now) < 7) {
+            //        $result->addWeek();
+            //    }
+            // This was incorrectly adding one week for any occurrence less than 7 days away
+            // causing "nächster Dienstag" to become "Dienstag übernächste Woche"
         } else {
             throw new \InvalidArgumentException("Unknown modifier: {$modifier}. Expected 'dieser' or 'nächster'");
         }
