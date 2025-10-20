@@ -731,7 +731,7 @@ class CallResource extends Resource
                     ])
                     ->multiple(),
 
-                // 🔴 DEBUGGING: Custom implementation to verify filter works
+                // 🔴 WITH LOGGING: Custom implementation to verify filter works
                 Tables\Filters\Filter::make('has_appointment')
                     ->label('Mit Termin')
                     ->form([
@@ -745,23 +745,33 @@ class CallResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         if (!isset($data['appointment_status'])) {
+                            \Log::debug('[CallResource] Filter: appointment_status NOT SET - showing all');
                             return $query;
                         }
 
+                        \Log::debug('[CallResource] Filter: appointment_status = ' . $data['appointment_status']);
+
                         if ($data['appointment_status'] === 'with') {
                             // ONLY calls WITH appointments that have starts_at != null
-                            return $query->whereHas('appointments', fn (Builder $q) =>
+                            $filtered = $query->whereHas('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
                                   ->whereNull('deleted_at')
                             );
+                            $count = $filtered->count();
+                            \Log::debug("[CallResource] Filter: 'with' applied - Count: $count");
+                            return $filtered;
                         } elseif ($data['appointment_status'] === 'without') {
                             // ONLY calls WITHOUT appointments that have starts_at != null
-                            return $query->whereDoesntHave('appointments', fn (Builder $q) =>
+                            $filtered = $query->whereDoesntHave('appointments', fn (Builder $q) =>
                                 $q->where('starts_at', '!=', null)
                                   ->whereNull('deleted_at')
                             );
+                            $count = $filtered->count();
+                            \Log::debug("[CallResource] Filter: 'without' applied - Count: $count");
+                            return $filtered;
                         }
 
+                        \Log::debug('[CallResource] Filter: Unknown value - showing all');
                         return $query;
                     })
                     ->indicateUsing(function (array $data): array {
