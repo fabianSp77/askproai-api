@@ -89,9 +89,9 @@
                     $mins = intval($record->duration_sec / 60);
                     $secs = $record->duration_sec % 60;
                 @endphp
-                {{ sprintf('%d:%02d', $mins, $secs) }}
+                ⏱️ {{ sprintf('%d:%02d', $mins, $secs) }} Min
             @else
-                --:--
+                ⏱️ --:-- Min
             @endif
         </div>
     @endif

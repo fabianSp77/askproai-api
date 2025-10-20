@@ -42,7 +42,7 @@
             if ($appointment->staff) {
                 $tooltipLines[] = "Mitarbeiter:in: " . $appointment->staff->name;
             } else {
-                $tooltipLines[] = "⚠️ Mitarbeiter:in: Nicht zugewiesen";
+                $tooltipLines[] = "Mitarbeiter:in: Noch offen";
             }
         }
     }
@@ -96,9 +96,9 @@
         <div class="text-xs text-gray-600">
             {{ $duration }} Min
             @if($appointment->staff)
-                <span class="ml-1 text-xs text-green-700 font-medium">Zugewiesen</span>
+                <span class="ml-1 text-xs text-green-700 font-medium">✅ {{ $appointment->staff->name }}</span>
             @else
-                <span class="ml-1 text-xs text-orange-600 font-medium">Unzugewiesen</span>
+                <span class="ml-1 text-xs text-orange-600 font-medium">⏳ Offen</span>
             @endif
         </div>
     @endif
