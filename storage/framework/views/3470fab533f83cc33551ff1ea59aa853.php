@@ -16,18 +16,48 @@
             <p class="text-sm opacity-75 mt-2">⚠️ Restricted access: admin@askproai.de only</p>
         </div>
 
+        <!-- Company/Branch Selector -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <p class="text-sm font-medium text-gray-700 mb-3">Select Company/Branch for Testing:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <button
+                    wire:click="setTestContext('askproai')"
+                    class="<?php echo \Illuminate\Support\Arr::toCssClasses([
+                        'p-3 rounded-lg border-2 transition-all',
+                        'border-blue-500 bg-blue-50' => $this->selectedCompany === 'askproai',
+                        'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'askproai'
+                    ]); ?>"
+                >
+                    <span class="font-semibold text-gray-900">AskProAI</span>
+                    <span class="text-xs text-gray-600 block">Team 39203 | Events: 3664712, 2563193</span>
+                </button>
+
+                <button
+                    wire:click="setTestContext('friseur')"
+                    class="<?php echo \Illuminate\Support\Arr::toCssClasses([
+                        'p-3 rounded-lg border-2 transition-all',
+                        'border-blue-500 bg-blue-50' => $this->selectedCompany === 'friseur',
+                        'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'friseur'
+                    ]); ?>"
+                >
+                    <span class="font-semibold text-gray-900">Friseur 1</span>
+                    <span class="text-xs text-gray-600 block">Team 34209 | Events: 2942413, 3672814</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <?php if (isset($component)) { $__componentOriginal6330f08526bbb3ce2a0da37da512a11f = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal6330f08526bbb3ce2a0da37da512a11f = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.index','data' => ['wire:click' => 'runAllTests','disabled' => $this->isRunning,'icon' => 'heroicon-o-play','color' => 'success','size' => 'lg','class' => 'w-full']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.index','data' => ['wire:click' => 'runAllTests','disabled' => $this->isRunning || empty($this->selectedCompany),'icon' => 'heroicon-o-play','color' => 'success','size' => 'lg','class' => 'w-full']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('filament::button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'runAllTests','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->isRunning),'icon' => 'heroicon-o-play','color' => 'success','size' => 'lg','class' => 'w-full']); ?>
+<?php $component->withAttributes(['wire:click' => 'runAllTests','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->isRunning || empty($this->selectedCompany)),'icon' => 'heroicon-o-play','color' => 'success','size' => 'lg','class' => 'w-full']); ?>
                 <!--[if BLOCK]><![endif]--><?php if($this->isRunning): ?>
                     Running Tests...
                 <?php else: ?>
