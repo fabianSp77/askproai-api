@@ -77,13 +77,26 @@ class RetellAgentManagementService
                 throw new \Exception($llmUpdateResult['message']);
             }
 
+            $newLlmVersion = $llmUpdateResult['llm_version'] ?? 0;
+
+            // CRITICAL: Update agent to use new LLM version
+            $agentUpdateResult = $this->updateAgentLlmVersion($agentId, $llmId, $newLlmVersion);
+
+            if (!$agentUpdateResult['success']) {
+                Log::warning('Agent update failed but LLM was updated', [
+                    'llm_version' => $newLlmVersion,
+                    'error' => $agentUpdateResult['message']
+                ]);
+                // Don't fail deployment - LLM is updated, just warn
+            }
+
             // Update prompt version with deployment info
             $promptVersion->update([
                 'is_active' => true,
                 'deployed_at' => now(),
                 'deployed_by' => $deployedBy?->id,
                 'retell_agent_id' => $agentId,
-                'retell_version' => $llmUpdateResult['llm_version'] ?? 0,
+                'retell_version' => $newLlmVersion,
                 'validation_status' => 'valid',
             ]);
 
@@ -92,18 +105,20 @@ class RetellAgentManagementService
                 ->where('id', '!=', $promptVersion->id)
                 ->update(['is_active' => false]);
 
-            Log::info('Successfully deployed prompt to Retell LLM', [
+            Log::info('Successfully deployed prompt to Retell LLM and updated agent', [
                 'llm_id' => $llmId,
-                'llm_version' => $llmUpdateResult['llm_version'],
+                'llm_version' => $newLlmVersion,
+                'agent_updated' => $agentUpdateResult['success'],
                 'prompt_version_id' => $promptVersion->id
             ]);
 
             return [
                 'success' => true,
-                'message' => 'Prompt deployed successfully to Retell LLM',
-                'retell_version' => $llmUpdateResult['llm_version'] ?? 0,
+                'message' => 'Prompt deployed successfully to Retell LLM (Version ' . $newLlmVersion . ')',
+                'retell_version' => $newLlmVersion,
                 'deployed_at' => $promptVersion->deployed_at,
                 'llm_id' => $llmId,
+                'agent_updated' => $agentUpdateResult['success'],
             ];
 
         } catch (\Exception $e) {
@@ -525,6 +540,78 @@ class RetellAgentManagementService
 
             return $function;
         }, $functions);
+    }
+
+    /**
+     * Update agent to use a specific LLM version
+     *
+     * @param string $agentId The agent ID
+     * @param string $llmId The LLM ID
+     * @param int $llmVersion The LLM version to use
+     * @return array Result with success status
+     */
+    public function updateAgentLlmVersion(string $agentId, string $llmId, int $llmVersion): array
+    {
+        try {
+            // Get current agent data to preserve settings
+            $currentAgent = $this->getAgentStatus($agentId);
+
+            if (!$currentAgent) {
+                throw new \Exception("Agent not found: $agentId");
+            }
+
+            // Build minimal update payload - only update LLM version
+            $payload = [
+                'response_engine' => [
+                    'type' => 'retell-llm',
+                    'llm_id' => $llmId,
+                    'version' => $llmVersion
+                ]
+            ];
+
+            Log::info('Updating agent to use new LLM version', [
+                'agent_id' => $agentId,
+                'llm_id' => $llmId,
+                'llm_version' => $llmVersion
+            ]);
+
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json'
+            ])->patch("{$this->baseUrl}/update-agent/{$agentId}", $payload);
+
+            if (!$response->successful()) {
+                $errorMessage = $response->json()['error'] ?? $response->json()['message'] ?? $response->body();
+                throw new \Exception("Retell API error: $errorMessage");
+            }
+
+            $agentData = $response->json();
+
+            Log::info('Successfully updated agent to new LLM version', [
+                'agent_id' => $agentId,
+                'llm_version' => $llmVersion
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Agent updated to use LLM version ' . $llmVersion,
+                'agent_data' => $agentData
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update agent LLM version', [
+                'agent_id' => $agentId,
+                'llm_id' => $llmId,
+                'llm_version' => $llmVersion,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Agent update failed: ' . $e->getMessage(),
+                'errors' => [$e->getMessage()]
+            ];
+        }
     }
 
     /**
