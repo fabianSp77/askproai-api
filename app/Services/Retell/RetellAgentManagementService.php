@@ -459,8 +459,39 @@ class RetellAgentManagementService
     }
 
     /**
+     * Get LLM data (prompt + functions) from Retell API
+     *
+     * @param string $llmId The LLM ID
+     * @return array|null LLM data or null if not found
+     */
+    public function getLlmData(string $llmId): ?array
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json'
+            ])->get("{$this->baseUrl}/get-retell-llm/{$llmId}");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::warning('Failed to get LLM data from Retell API', [
+                'llm_id' => $llmId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get LLM data', ['error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
      * Get the currently live/published agent from Retell API
      * Uses the agent_id from config as the source of truth
+     * Includes LLM data (prompt + functions) merged into response
      *
      * @return array|null Agent data or null if agent not found
      */
@@ -478,17 +509,53 @@ class RetellAgentManagementService
             // Get full agent details directly
             $agentData = $this->getAgentStatus($configuredAgentId);
 
-            if ($agentData) {
-                Log::info('Successfully fetched live agent from Retell API', [
-                    'agent_id' => $configuredAgentId,
-                    'agent_name' => $agentData['agent_name'] ?? 'Unknown'
+            if (!$agentData) {
+                Log::warning('Could not fetch agent from Retell API', [
+                    'agent_id' => $configuredAgentId
                 ]);
-                return $agentData;
+                return null;
             }
 
-            Log::warning('Could not fetch agent from Retell API', [
-                'agent_id' => $configuredAgentId
+            // Extract LLM ID from response_engine
+            $llmId = $agentData['response_engine']['llm_id'] ?? null;
+
+            if ($llmId) {
+                // Fetch LLM data (contains prompt + functions)
+                $llmData = $this->getLlmData($llmId);
+
+                if ($llmData) {
+                    // Merge LLM data into agent data
+                    // Map general_prompt -> agent_prompt for compatibility
+                    $agentData['agent_prompt'] = $llmData['general_prompt'] ?? '';
+                    $agentData['functions'] = $llmData['general_tools'] ?? [];
+                    $agentData['begin_message'] = $llmData['begin_message'] ?? '';
+                    $agentData['llm_version'] = $llmData['version'] ?? null;
+                    $agentData['llm_model'] = $llmData['model'] ?? null;
+
+                    Log::info('Successfully merged LLM data into agent response', [
+                        'agent_id' => $configuredAgentId,
+                        'llm_id' => $llmId,
+                        'prompt_length' => strlen($agentData['agent_prompt']),
+                        'functions_count' => count($agentData['functions'])
+                    ]);
+                } else {
+                    Log::warning('Could not fetch LLM data, agent will have no prompt/functions', [
+                        'llm_id' => $llmId
+                    ]);
+                }
+            } else {
+                Log::warning('Agent has no LLM ID in response_engine', [
+                    'agent_id' => $configuredAgentId
+                ]);
+            }
+
+            Log::info('Successfully fetched live agent from Retell API', [
+                'agent_id' => $configuredAgentId,
+                'agent_name' => $agentData['agent_name'] ?? 'Unknown',
+                'has_prompt' => isset($agentData['agent_prompt']) && !empty($agentData['agent_prompt'])
             ]);
+
+            return $agentData;
 
         } catch (\Exception $e) {
             Log::error('Failed to get live agent from Retell API', [
