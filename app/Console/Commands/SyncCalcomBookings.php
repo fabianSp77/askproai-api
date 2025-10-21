@@ -66,10 +66,11 @@ class SyncCalcomBookings extends Command
 
     private function fetchBookings(int $pastDays, int $futureDays): array
     {
-        $this->info('Fetching bookings from Cal.com...');
+        $this->info('Fetching bookings from Cal.com (API v2)...');
 
         $apiKey = config('services.calcom.api_key');
-        $baseUrl = 'https://api.cal.com/v1'; // Use v1 API which works with API key
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
+        $baseUrl = 'https://api.cal.com/v2'; // ✅ V2 API (v1 deprecated end of 2025)
 
         if (!$apiKey) {
             $this->error('Cal.com API key not configured');
@@ -82,8 +83,10 @@ class SyncCalcomBookings extends Command
         $this->info("Date range: $from to $to");
 
         try {
-            $response = Http::get($baseUrl . '/bookings', [
-                'apiKey' => $apiKey,
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'cal-api-version' => $apiVersion,
+            ])->get($baseUrl . '/bookings', [
                 'from' => $from,
                 'to' => $to,
             ]);

@@ -26,7 +26,7 @@ class HealthCheckOrchestrator
         'calcom' => [
             'interval_seconds' => 30,
             'timeout_seconds' => 5,
-            'endpoint' => 'https://api.cal.com/v1/user',
+            'endpoint' => 'https://api.cal.com/v2/user', // ✅ V2 API (v1 deprecated end of 2025)
             'type' => 'http',
         ],
         'retell' => [

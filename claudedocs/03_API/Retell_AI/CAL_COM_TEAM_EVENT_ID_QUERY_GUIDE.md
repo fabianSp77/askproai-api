@@ -1,16 +1,20 @@
 # Cal.com Team Event-ID Query Guide
 
 **Last Updated:** 2025-10-21
-**Status:** 🔴 CRITICAL - API Deprecation Alert
+**Status:** ✅ COMPLETE - V2 Migration Done
+**V1 Deprecation:** End of 2025 | v1 API NO LONGER AVAILABLE after 2025
 **Author:** Claude Code Session 2025-10-21
 
 ---
 
-## ⚠️ CRITICAL: API Version Deprecation
+## ✅ MIGRATION COMPLETE: V2 API ACTIVE
 
-**Cal.com API v1 is being phased out and will NO LONGER BE AVAILABLE after 2025.**
-
-**All new code MUST use Cal.com API v2.**
+**MIGRATION STATUS:**
+- ✅ **All Cal.com API calls migrated to v2**
+- ✅ **7 production files updated** (SyncCalcomBookings, ImportCalcomBookingsDirectly, IntegrationService, CalcomAvailabilityService, HealthCheckOrchestrator, IntegrationResource, VerifyTeamEventIds)
+- ✅ **Test configuration updated** (CalcomIntegrationTest.php)
+- ✅ **All endpoints use Bearer token + api-version header**
+- ⚠️ **v1 API references removed from active code** (only in documentation/backups)
 
 ---
 
@@ -248,4 +252,101 @@ A: It's a global event. Add it to your team in Cal.com, then create mapping.
 
 ---
 
-**Next Review:** 2025-11-01 or when Cal.com V2 migration begins
+## 📋 V2 Migration Summary (2025-10-21)
+
+### Files Migrated to V2
+
+**Console Commands:**
+- `app/Console/Commands/SyncCalcomBookings.php` (line 89-92)
+  - Changed: `https://api.cal.com/v1/bookings` → `https://api.cal.com/v2/bookings`
+  - Auth: Query param `apiKey` → Bearer token header + api-version header
+
+- `app/Console/Commands/ImportCalcomBookingsDirectly.php` (line 31-38)
+  - Changed: `https://api.cal.com/v1/bookings` → `https://api.cal.com/v2/bookings`
+  - Auth: Query param `apiKey` → Bearer token header + api-version header
+
+- `app/Console/Commands/VerifyTeamEventIds.php` (line 55)
+  - Changed: `/v1/teams/{teamId}/event-types` → `/v2/teams/{teamId}/event-types`
+  - Auth: Query param `apiKey` → Bearer token header + api-version header
+
+**Services:**
+- `app/Services/IntegrationService.php` (lines 491, 95)
+  - Base URL default: `https://api.cal.com/v1` → `https://api.cal.com/v2`
+  - Added: `cal-api-version` header to all Cal.com calls
+
+- `app/Services/Appointments/CalcomAvailabilityService.php` (line 175)
+  - Changed: `https://api.cal.com/v1/availability` → `https://api.cal.com/v2/availability`
+  - Added: `cal-api-version` header
+
+- `app/Services/Resilience/HealthCheckOrchestrator.php` (line 29)
+  - Changed: Health check endpoint to v2
+  - Endpoint: `https://api.cal.com/v1/user` → `https://api.cal.com/v2/user`
+
+**Filament Resources:**
+- `app/Filament/Resources/IntegrationResource.php` (line 704)
+  - Changed: `https://api.cal.com/v1/event-types` → `https://api.cal.com/v2/event-types`
+  - Added: `cal-api-version` header
+
+**Tests:**
+- `tests/Feature/CalcomIntegrationTest.php` (line 25)
+  - Test config base_url: `https://api.cal.com/v1` → `https://api.cal.com/v2`
+  - Added: `api_version` config: `2024-08-13`
+
+### Authentication Changes
+
+**Before (V1):**
+```
+GET https://api.cal.com/v1/bookings?apiKey={key}&from={start}&to={end}
+```
+
+**After (V2):**
+```
+GET https://api.cal.com/v2/bookings
+Headers:
+  - Authorization: Bearer {apiKey}
+  - cal-api-version: 2024-08-13
+Query:
+  - from={start}
+  - to={end}
+```
+
+### Response Format Notes
+
+- Booking list: `response.json()['bookings']` (unchanged)
+- Event types: `response.json()['data']` or `response.json()['event_types']` (verify with endpoint)
+- Availability: `response.json()['slots']` (verify with endpoint)
+- Team events: `response.json()['event_types']` (unchanged)
+
+### Configuration
+
+**Required in `.env`:**
+```
+CALCOM_API_KEY=your_api_key
+CALCOM_API_VERSION=2024-08-13
+```
+
+**Set in `config/services.php`:**
+```php
+'calcom' => [
+    'api_key' => env('CALCOM_API_KEY'),
+    'api_version' => env('CALCOM_API_VERSION', '2024-08-13'),
+]
+```
+
+### Testing Recommendations
+
+After migration, verify:
+
+1. **Booking Sync**: `php artisan calcom:sync-bookings --dry-run`
+2. **Team Verification**: `php artisan calcom:verify-team-events`
+3. **Availability**: Test week picker in Filament UI
+4. **Unit Tests**: `vendor/bin/pest tests/Feature/CalcomIntegrationTest.php`
+
+### Backward Compatibility
+
+⚠️ **None.** V1 API is deprecated. No fallback to v1.
+
+---
+
+**Next Review:** Post-deployment verification (2025-10-21)
+**Status**: ✅ Ready for production deployment

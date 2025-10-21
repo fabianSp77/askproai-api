@@ -170,9 +170,13 @@ class CalcomAvailabilityService
             'staff_id' => $staffId,
         ]);
 
-        // Cal.com availability endpoint (V1 API)
+        // Cal.com availability endpoint (✅ V2 API - v1 deprecated end of 2025)
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
         $response = $this->calcomService->httpClient()
-            ->get('https://api.cal.com/v1/availability', $params);
+            ->withHeaders([
+                'cal-api-version' => $apiVersion,
+            ])
+            ->get('https://api.cal.com/v2/availability', $params);
 
         if (!$response->successful()) {
             Log::warning('[CalcomAvailability] Cal.com API error', [

@@ -25,11 +25,14 @@ class ImportCalcomBookingsDirectly extends Command
         $this->info(str_repeat('=', 60));
 
         $apiKey = config('services.calcom.api_key');
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
         $from = now()->subDays((int)$this->option('days'))->toIso8601String();
         $to = now()->addDays((int)$this->option('future'))->toIso8601String();
 
-        $response = Http::get('https://api.cal.com/v1/bookings', [
-            'apiKey' => $apiKey,
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$apiKey}",
+            'cal-api-version' => $apiVersion,
+        ])->get('https://api.cal.com/v2/bookings', [
             'from' => $from,
             'to' => $to,
         ]);
