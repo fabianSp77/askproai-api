@@ -189,7 +189,7 @@ class BranchResource extends Resource
                         // Tab 4: Integration & Settings (Admin only)
                         Tabs\Tab::make('Integration')
                             ->icon('heroicon-m-cog')
-                            ->visible(fn () => auth()->user()?->hasRole('admin'))
+                            ->visible(fn () => auth()->user() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Super Admin')))
                             ->schema([
                                 Section::make('Integration & Einstellungen')
                                     ->schema([
@@ -252,7 +252,7 @@ class BranchResource extends Resource
                         // Tab 5: Retell Agent Configuration
                         Tabs\Tab::make('Retell Agent')
                             ->icon('heroicon-m-microphone')
-                            ->visible(fn () => auth()->user()?->hasRole('admin'))
+                            ->visible(fn () => auth()->user() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Super Admin')))
                             ->schema([
                                 Section::make('Retell AI Agent Konfiguration')
                                     ->description('Verwalten Sie das Prompt und die Funktionen für den Retell AI Agenten dieser Filiale')
