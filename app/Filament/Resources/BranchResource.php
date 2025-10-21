@@ -368,7 +368,7 @@ class BranchResource extends Resource
 
                                         // LIVE AGENT STATUS SECTION
                                         Section::make('📡 Live Agent Status')
-                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
+                                            ->visible(fn (?Branch $record) => (bool) $record)
                                             ->description('Echtzeit-Daten vom Retell API Server')
                                             ->collapsible()
                                             ->schema([
@@ -504,25 +504,44 @@ class BranchResource extends Resource
                                                 ]),
                                             ]),
 
-                                        // PROMPT EDITOR SECTION (nur wenn Agent aktiv)
+                                        // PROMPT EDITOR SECTION
                                         Section::make('🎤 Prompt Editor')
-                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
-                                            ->description('Bearbeiten Sie die Ansprache des Agenten')
+                                            ->visible(fn (?Branch $record) => (bool) $record)
+                                            ->description('Bearbeiten Sie die Ansprache des Agenten - lädt automatisch den aktuellen Live-Prompt')
                                             ->schema([
                                                 Forms\Components\Textarea::make('retell_prompt_content')
                                                     ->label('Agent Ansprache (Prompt)')
-                                                    ->rows(12)
+                                                    ->rows(15)
                                                     ->maxLength(10000)
-                                                    ->helperText('Max 10.000 Zeichen. Sollte WORKFLOW & FUNKTION Sections enthalten.')
+                                                    ->helperText('Max 10.000 Zeichen. Lädt automatisch den aktuellen Live-Prompt vom Retell API.')
                                                     ->dehydrated(false)
                                                     ->afterStateHydrated(function (Forms\Set $set, ?Branch $record) {
-                                                        if ($record) {
-                                                            $activePrompt = $record->retellAgentPrompts()
-                                                                ->where('is_active', true)
-                                                                ->first();
-                                                            if ($activePrompt) {
-                                                                $set('retell_prompt_content', $activePrompt->prompt_content);
+                                                        if (!$record) return;
+
+                                                        // 1. Versuche lokalen aktiven Prompt zu laden
+                                                        $activePrompt = $record->retellAgentPrompts()
+                                                            ->where('is_active', true)
+                                                            ->first();
+
+                                                        if ($activePrompt && $activePrompt->prompt_content) {
+                                                            $set('retell_prompt_content', $activePrompt->prompt_content);
+                                                            return;
+                                                        }
+
+                                                        // 2. Wenn kein lokaler Prompt, lade Live-Prompt von Retell API
+                                                        try {
+                                                            $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                            $liveAgent = $service->getLiveAgent();
+
+                                                            if ($liveAgent && isset($liveAgent['agent_prompt'])) {
+                                                                $set('retell_prompt_content', $liveAgent['agent_prompt']);
                                                             }
+                                                        } catch (\Exception $e) {
+                                                            // Stiller Fehler - wird nicht angezeigt
+                                                            \Illuminate\Support\Facades\Log::warning('Could not load live prompt', [
+                                                                'branch_id' => $record->id,
+                                                                'error' => $e->getMessage()
+                                                            ]);
                                                         }
                                                     }),
 
@@ -532,7 +551,7 @@ class BranchResource extends Resource
 
                                                 Forms\Components\Actions::make([
                                                     Forms\Components\Actions\Action::make('update_prompt')
-                                                        ->label('Prompt aktualisieren & deployen')
+                                                        ->label('Prompt speichern & deployen')
                                                         ->action(function (Branch $record, Forms\Get $get) {
                                                             if (!$record) return;
 
@@ -547,31 +566,43 @@ class BranchResource extends Resource
                                                             }
 
                                                             try {
+                                                                $service = new \App\Services\Retell\RetellAgentManagementService();
                                                                 $activePrompt = $record->retellAgentPrompts()
                                                                     ->where('is_active', true)
                                                                     ->first();
 
-                                                                if (!$activePrompt) {
-                                                                    Notification::make()
-                                                                        ->title('Fehler')
-                                                                        ->body('Kein aktiver Agent konfiguriert')
-                                                                        ->danger()
-                                                                        ->send();
-                                                                    return;
-                                                                }
+                                                                if ($activePrompt) {
+                                                                    // Update existing prompt
+                                                                    $result = $service->updatePromptContent($activePrompt, $newPromptContent, auth()->user());
+                                                                } else {
+                                                                    // Create new prompt from live agent
+                                                                    $liveAgent = $service->getLiveAgent();
+                                                                    $functionsConfig = $liveAgent['functions'] ?? [];
 
-                                                                $service = new \App\Services\Retell\RetellAgentManagementService();
-                                                                $result = $service->updatePromptContent($activePrompt, $newPromptContent, auth()->user());
+                                                                    // Create new version
+                                                                    $newVersion = \App\Models\RetellAgentPrompt::create([
+                                                                        'branch_id' => $record->id,
+                                                                        'version' => \App\Models\RetellAgentPrompt::getNextVersionForBranch($record->id),
+                                                                        'prompt_content' => $newPromptContent,
+                                                                        'functions_config' => $functionsConfig,
+                                                                        'is_active' => false,
+                                                                        'is_template' => false,
+                                                                        'validation_status' => 'pending',
+                                                                        'deployment_notes' => 'Erstellt vom Live-Agent',
+                                                                    ]);
+
+                                                                    $result = $service->deployPromptVersion($newVersion, auth()->user());
+                                                                }
 
                                                                 if ($result['success']) {
                                                                     Notification::make()
-                                                                        ->title('✅ Erfolgreich aktualisiert')
-                                                                        ->body('Neue Version ' . ($activePrompt->version + 1) . ' ist jetzt aktiv')
+                                                                        ->title('✅ Erfolgreich gespeichert')
+                                                                        ->body('Der Prompt wurde deployed und ist jetzt live')
                                                                         ->success()
                                                                         ->send();
                                                                 } else {
                                                                     Notification::make()
-                                                                        ->title('❌ Aktualisierung fehlgeschlagen')
+                                                                        ->title('❌ Deployment fehlgeschlagen')
                                                                         ->body(implode(', ', $result['errors'] ?? [$result['message'] ?? 'Unbekannter Fehler']))
                                                                         ->danger()
                                                                         ->send();
@@ -584,40 +615,62 @@ class BranchResource extends Resource
                                                                     ->send();
                                                             }
                                                         })
-                                                        ->icon('heroicon-m-arrow-up'),
+                                                        ->icon('heroicon-m-arrow-up')
+                                                        ->color('success'),
                                                 ]),
                                             ]),
 
-                                        // FUNCTIONS MANAGER SECTION (nur wenn Agent aktiv)
+                                        // FUNCTIONS MANAGER SECTION
                                         Section::make('⚙️ Functions Manager')
-                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
-                                            ->description('Verwalten Sie die Funktionen des Agenten')
+                                            ->visible(fn (?Branch $record) => (bool) $record)
+                                            ->description('Verwalten Sie die Funktionen des Agenten - lädt automatisch die aktuellen Live-Functions')
                                             ->schema([
                                                 Forms\Components\Placeholder::make('functions_list')
                                                     ->label('Aktive Funktionen')
                                                     ->content(function (?Branch $record) {
                                                         if (!$record) return '—';
 
+                                                        // 1. Versuche lokale Functions zu laden
                                                         $activePrompt = $record->retellAgentPrompts()
                                                             ->where('is_active', true)
                                                             ->first();
 
-                                                        if (!$activePrompt || !$activePrompt->functions_config) {
+                                                        $functions = null;
+                                                        $source = 'lokal';
+
+                                                        if ($activePrompt && $activePrompt->functions_config) {
+                                                            $functions = $activePrompt->functions_config;
+                                                        } else {
+                                                            // 2. Lade Live Functions von Retell API
+                                                            try {
+                                                                $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                                $liveAgent = $service->getLiveAgent();
+                                                                if ($liveAgent && isset($liveAgent['functions'])) {
+                                                                    $functions = $liveAgent['functions'];
+                                                                    $source = 'live (Retell API)';
+                                                                }
+                                                            } catch (\Exception $e) {
+                                                                return '⚠️ Keine Funktionen gefunden';
+                                                            }
+                                                        }
+
+                                                        if (!$functions || empty($functions)) {
                                                             return '⚠️ Keine Funktionen konfiguriert';
                                                         }
 
-                                                        $html = '<div class="space-y-2">';
-                                                        foreach ($activePrompt->functions_config as $func) {
+                                                        $html = '<div class="mb-2 text-xs text-gray-500">Quelle: ' . $source . '</div>';
+                                                        $html .= '<div class="space-y-2">';
+                                                        foreach ($functions as $func) {
                                                             $html .= '<div class="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded">';
                                                             $html .= '<div>';
-                                                            $html .= '<p class="font-semibold text-blue-900">' . $func['name'] . '</p>';
+                                                            $html .= '<p class="font-semibold text-blue-900">' . ($func['name'] ?? 'Unnamed') . '</p>';
                                                             $html .= '<p class="text-sm text-blue-700">' . ($func['description'] ?? 'Keine Beschreibung') . '</p>';
                                                             $html .= '</div>';
                                                             $html .= '</div>';
                                                         }
                                                         $html .= '</div>';
 
-                                                        return $html;
+                                                        return new \Illuminate\Support\HtmlString($html);
                                                     }),
 
                                                 Section::make('➕ Neue Custom Function')
