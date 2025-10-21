@@ -6,3 +6,7 @@
 {"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-10-21 10:01:14.578"}
 {"arguments":{"targetUrl":"https://api.askproai.de/admin"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2025-10-21 11:22:21.134","tool":"puppeteer_connect_active_tab"}
 {"0":"n","1":"p","2":"x","level":"info","message":"Launching browser with config:","service":"mcp-puppeteer","timestamp":"2025-10-21 11:22:21.141"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-10-21 11:32:13.842"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-10-21 11:32:13.848"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2025-10-21 11:35:10.104"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2025-10-21 11:35:10.110"}

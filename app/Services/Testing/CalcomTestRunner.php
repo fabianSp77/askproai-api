@@ -19,21 +19,27 @@ class CalcomTestRunner
     /**
      * Run specific test type
      */
-    public function runTest(string $testType): SystemTestRun
+    public function runTest(string $testType, array $companyConfig = []): SystemTestRun
     {
         $testRun = SystemTestRun::create([
             'user_id' => auth()->id(),
             'test_type' => $testType,
             'status' => SystemTestRun::STATUS_RUNNING,
-            'started_at' => now()
+            'started_at' => now(),
+            'metadata' => [
+                'company' => $companyConfig['name'] ?? 'N/A',
+                'team_id' => $companyConfig['team_id'] ?? null,
+                'event_ids' => $companyConfig['event_ids'] ?? []
+            ]
         ]);
 
         try {
-            $output = $this->executeTest($testType);
+            $output = $this->executeTest($testType, $companyConfig);
             $testRun->markCompleted($output);
         } catch (\Exception $e) {
             Log::error('Test execution failed', [
                 'test_type' => $testType,
+                'company' => $companyConfig['name'] ?? 'N/A',
                 'error' => $e->getMessage()
             ]);
             $testRun->markCompleted([], $e->getMessage());
@@ -45,7 +51,7 @@ class CalcomTestRunner
     /**
      * Execute test and return output
      */
-    public function executeTest(string $testType): array
+    public function executeTest(string $testType, array $companyConfig = []): array
     {
         return match($testType) {
             SystemTestRun::TEST_EVENT_ID_VERIFICATION => $this->runEventIdVerification(),
@@ -202,7 +208,7 @@ class CalcomTestRunner
     /**
      * Run all tests
      */
-    public function runAllTests(): array
+    public function runAllTests(array $companyConfig = []): array
     {
         $testTypes = [
             SystemTestRun::TEST_EVENT_ID_VERIFICATION,
@@ -219,7 +225,7 @@ class CalcomTestRunner
         $results = [];
 
         foreach ($testTypes as $testType) {
-            $testRun = $this->runTest($testType);
+            $testRun = $this->runTest($testType, $companyConfig);
             $results[] = [
                 'test_type' => $testType,
                 'label' => $testRun->getTestTypeLabel(),
