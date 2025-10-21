@@ -32,6 +32,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\AppointmentModification::class => \App\Policies\AppointmentModificationPolicy::class,
         \App\Models\NotificationEventMapping::class => \App\Policies\NotificationEventMappingPolicy::class,
         \App\Models\CallbackEscalation::class => \App\Policies\CallbackEscalationPolicy::class,
+        \App\Models\AdminUpdate::class => \App\Policies\AdminUpdatePolicy::class,
     ];
 
     /**

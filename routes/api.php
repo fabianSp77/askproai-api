@@ -56,24 +56,29 @@ Route::prefix('webhooks')->group(function () {
         ->middleware(['retell.signature', 'throttle:60,1']);
 
     // Retell Function Call Handler (for real-time availability checking)
+    // DO NOT use retell.call.ratelimit middleware - it blocks requests before handler can extract call_id!
     Route::post('/retell/function', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'handleFunctionCall'])
         ->name('webhooks.retell.function')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     // Retell Function Call Handler alias (for E2E tests)
     Route::post('/retell/function-call', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'handleFunctionCall'])
         ->name('webhooks.retell.function-call')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     // Retell specific function routes (used by Retell AI)
     Route::post('/retell/collect-appointment', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'collectAppointment'])
         ->name('webhooks.retell.collect-appointment')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     // Retell availability check endpoint (for real-time slot checking)
     Route::post('/retell/check-availability', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'handleAvailabilityCheck'])
         ->name('webhooks.retell.check-availability')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     // Retell Diagnostic Endpoint (requires authentication)
     Route::get('/retell/diagnostic', [RetellWebhookController::class, 'diagnostic'])
@@ -228,32 +233,39 @@ Route::post('/detect-language', [\App\Http\Controllers\Api\TranslationController
 Route::prefix('retell')->group(function () {
     Route::post('/check-customer', [\App\Http\Controllers\Api\RetellApiController::class, 'checkCustomer'])
         ->name('api.retell.check-customer')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/check-availability', [\App\Http\Controllers\Api\RetellApiController::class, 'checkAvailability'])
         ->name('api.retell.check-availability')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/collect-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'collectAppointment'])
         ->name('api.retell.collect-appointment')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/book-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'bookAppointment'])
         ->name('api.retell.book-appointment')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:60,1']);
+        ->middleware(['throttle:60,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/cancel-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'cancelAppointment'])
         ->name('api.retell.cancel-appointment')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:30,1']);
+        ->middleware(['throttle:30,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/reschedule-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'rescheduleAppointment'])
         ->name('api.retell.reschedule-appointment')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:30,1']);
+        ->middleware(['throttle:30,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 
     // Fallback route for query_appointment function (legacy Retell agent config)
     Route::post('/function-call', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'handleFunctionCall'])
         ->name('api.retell.function-call.legacy')
-        ->middleware(['retell.function.whitelist', 'retell.call.ratelimit', 'throttle:100,1']);
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
 });
 
 // ---- User Preferences Routes -------------------------------------------

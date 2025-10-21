@@ -127,7 +127,7 @@ class CalcomService
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13'),
                     'Content-Type' => 'application/json'
-                ])->acceptJson()->post($fullUrl, $payload);
+                ])->timeout(5)->acceptJson()->post($fullUrl, $payload);
 
                 Log::channel('calcom')->debug('[Cal.com V2] Booking Response:', [
                     'status' => $resp->status(),
@@ -157,6 +157,16 @@ class CalcomService
                 'Cal.com API circuit breaker is open. Service appears to be down.',
                 null, '/bookings', $payload, 503
             );
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Network error (timeout, connection refused, DNS failure, etc.)
+            // 🔧 FIX 2025-10-19: Phase A.4 - Timeout fallback for Voice AI
+            Log::error('Cal.com API network error during createBooking', [
+                'endpoint' => '/bookings',
+                'error' => $e->getMessage(),
+                'timeout' => '5s'
+            ]);
+
+            throw CalcomApiException::networkError('/bookings', $payload, $e);
         }
     }
 
@@ -211,7 +221,7 @@ class CalcomService
                 $resp = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13')
-                ])->acceptJson()->timeout(5)->get($fullUrl);
+                ])->acceptJson()->timeout(3)->get($fullUrl);  // 5s → 3s for Voice AI optimization
 
                 // Check for HTTP errors
                 if (!$resp->successful()) {
@@ -319,25 +329,107 @@ class CalcomService
      * - Old format: calcom:slots:{eventTypeId}:{date}:{date}
      * - New format: calcom:slots:{teamId}:{eventTypeId}:{date}:{date}
      *
+     * 🔧 FIX 2025-10-19: Phase A+ - Clear BOTH cache layers to prevent race conditions
+     * Critical Bug: AppointmentAlternativeFinder has separate cache that wasn't invalidated
+     * - Race condition: User A books slot, User B still sees it as "available" for 60s
+     * - Solution: Clear both CalcomService AND AppointmentAlternativeFinder caches
+     *
      * @param int $eventTypeId Cal.com Event Type ID
-     * @param int $teamId Cal.com Team ID (required for multi-tenant isolation)
+     * @param int|null $teamId Cal.com Team ID (optional - if not provided, clears for all teams)
      */
-    public function clearAvailabilityCacheForEventType(int $eventTypeId, int $teamId): void
+    public function clearAvailabilityCacheForEventType(int $eventTypeId, ?int $teamId = null): void
     {
-        // Clear cache for next 30 days (reasonable booking window)
+        $clearedKeys = 0;
         $today = Carbon::today();
-        for ($i = 0; $i < 30; $i++) {
-            $date = $today->copy()->addDays($i)->format('Y-m-d');
-            // 🔧 FIX 2025-10-15: Include teamId in cache key for multi-tenant isolation
-            $cacheKey = "calcom:slots:{$teamId}:{$eventTypeId}:{$date}:{$date}";
-            Cache::forget($cacheKey);
+
+        // If teamId not provided, get all teams that use this event type
+        $teamIds = [];
+        if ($teamId !== null) {
+            $teamIds = [$teamId];
+        } else {
+            // Get team IDs from Services that use this event type
+            $services = \App\Models\Service::where('calcom_event_type_id', $eventTypeId)->get();
+            foreach ($services as $service) {
+                if ($service->calcom_team_id) {
+                    $teamIds[] = $service->calcom_team_id;
+                }
+            }
+            $teamIds = array_unique($teamIds);
         }
 
-        Log::info('Cleared availability cache after booking (FIX 2025-10-15: with teamId)', [
-            'team_id' => $teamId,
-            'event_type_id' => $eventTypeId,
-            'days_cleared' => 30,
-        ]);
+        // LAYER 1: Clear CalcomService cache (30 days, all teams)
+        foreach ($teamIds as $tid) {
+            for ($i = 0; $i < 30; $i++) {
+                $date = $today->copy()->addDays($i)->format('Y-m-d');
+                // CalcomService cache key format
+                $cacheKey = "calcom:slots:{$tid}:{$eventTypeId}:{$date}:{$date}";
+                Cache::forget($cacheKey);
+                $clearedKeys++;
+            }
+        }
+
+        // LAYER 2: Clear AppointmentAlternativeFinder cache (30 days, all hour combinations)
+        // 🔥 CRITICAL: AppointmentAlternativeFinder uses different cache key format!
+        // Pattern: cal_slots_{companyId}_{branchId}_{eventTypeId}_{Y-m-d-H}_{Y-m-d-H}
+        //
+        // Problem: We don't know all company_id/branch_id combinations here
+        // Solution: Use wildcard pattern with Cache::flush() or iterate all possible combinations
+        //
+        // For now: Clear using wildcard pattern if Redis, or use Cache tags
+        // This requires getting all Company records that use this eventTypeId
+
+        try {
+            // Get all companies/branches that might have cached this event type
+            // We need to clear cache for ALL tenants that might have cached this slot
+            $services = \App\Models\Service::where('calcom_event_type_id', $eventTypeId)->get();
+
+            foreach ($services as $service) {
+                $companyId = $service->company_id ?? 0;
+                $branchId = $service->branch_id ?? 0;
+
+                // Clear AlternativeFinder cache for this company/branch combination
+                // OPTIMIZATION: Only clear next 7 days (not 30) and only business hours (9-18)
+                // This reduces cache clearing from ~720 keys to ~70 keys per service
+                for ($i = 0; $i < 7; $i++) {  // 7 days instead of 30
+                    $date = $today->copy()->addDays($i);
+
+                    // Clear only business hours (9-18) instead of all 24 hours
+                    for ($hour = 9; $hour <= 18; $hour++) {
+                        $startTime = $date->copy()->setTime($hour, 0);
+                        $endTime = $startTime->copy()->addHours(1);
+
+                        // AppointmentAlternativeFinder cache key format
+                        $altCacheKey = sprintf(
+                            'cal_slots_%d_%d_%d_%s_%s',
+                            $companyId,
+                            $branchId,
+                            $eventTypeId,
+                            $startTime->format('Y-m-d-H'),
+                            $endTime->format('Y-m-d-H')
+                        );
+
+                        Cache::forget($altCacheKey);
+                        $clearedKeys++;
+                    }
+                }
+            }
+
+            Log::info('✅ Cleared BOTH cache layers after booking (Phase A+ Fix)', [
+                'team_id' => $teamId,
+                'event_type_id' => $eventTypeId,
+                'services_affected' => $services->count(),
+                'total_keys_cleared' => $clearedKeys,
+                'layers' => ['CalcomService', 'AppointmentAlternativeFinder']
+            ]);
+
+        } catch (\Exception $e) {
+            // If clearing AlternativeFinder cache fails, log but don't break
+            Log::warning('Failed to clear AlternativeFinder cache layer', [
+                'event_type_id' => $eventTypeId,
+                'error' => $e->getMessage(),
+                'cleared_calcom_keys' => $clearedKeys
+            ]);
+        }
     }
 
     /**

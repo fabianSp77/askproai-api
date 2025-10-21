@@ -9,6 +9,8 @@ use App\Events\Appointments\AppointmentPolicyViolation;
 use App\Events\Appointments\AppointmentRescheduled;
 use App\Events\Appointments\CallbackEscalated;
 use App\Events\Appointments\CallbackRequested;
+use App\Events\AppointmentWishCreated;
+use App\Listeners\SendUnfulfilledWishNotification;
 use App\Listeners\Appointments\AssignCallbackToStaff;
 use App\Listeners\Appointments\InvalidateWeekCacheListener;
 use App\Listeners\Appointments\SendCancellationNotifications;
@@ -81,6 +83,11 @@ class EventServiceProvider extends ServiceProvider
         // Policy Violation Events
         AppointmentPolicyViolation::class => [
             TriggerPolicyEnforcement::class,
+        ],
+
+        // 💾 NEW PHASE: Appointment Wish Events (Unfulfilled Requests)
+        AppointmentWishCreated::class => [
+            SendUnfulfilledWishNotification::class,  // Send email to team
         ],
 
         // Callback Events

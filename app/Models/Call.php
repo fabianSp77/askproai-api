@@ -161,6 +161,14 @@ class Call extends Model
     }
 
     /**
+     * ⏰ NEW: Appointment wishes for this call (unfulfilled requests)
+     */
+    public function appointmentWishes(): HasMany
+    {
+        return $this->hasMany(\App\Models\AppointmentWish::class, 'call_id');
+    }
+
+    /**
      * SMART ACCESSOR: Unified appointment access
      * Priority: Latest call_id appointment > converted appointment
      */

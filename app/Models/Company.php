@@ -73,6 +73,9 @@ class Company extends Model
         'calcom_handles_notifications' => 'boolean',
         'email_notifications_enabled' => 'boolean',
         'send_booking_confirmations' => 'boolean',
+        'notify_on_unfulfilled_wishes' => 'boolean',  // 💾 NEW: Notify on appointment wish failures
+        'wish_notification_emails' => 'array',          // 💾 NEW: Email recipients for wishes
+        'wish_notification_delay_minutes' => 'integer', // 💾 NEW: Notification delay
         'retell_enabled' => 'boolean',
         'auto_translate' => 'boolean',
         'prepaid_billing_enabled' => 'boolean',

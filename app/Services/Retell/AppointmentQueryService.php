@@ -154,6 +154,9 @@ class AppointmentQueryService
             });
         }
 
+        // Phase 4: Eager load relationships to prevent N+1 queries
+        $query->with(['service:id,name', 'staff:id,name', 'customer:id,name,email,phone']);
+
         return $query->orderBy('starts_at', 'asc')->get();
     }
 

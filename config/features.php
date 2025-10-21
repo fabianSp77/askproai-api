@@ -84,4 +84,45 @@ return [
     | @security CRITICAL - Do not increase without security review
     */
     'phonetic_matching_rate_limit' => env('FEATURE_PHONETIC_MATCHING_RATE_LIMIT', 3),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Alternative Finding for Voice AI (Retell)
+    |--------------------------------------------------------------------------
+    |
+    | Enable intelligent alternative appointment suggestion when requested
+    | time is not available during voice calls.
+    |
+    | When DISABLED (false): Agent offers alternatives using AppointmentAlternativeFinder
+    |   - Checks Cal.com for available slots
+    |   - Suggests best 2-3 alternatives (same day, next day, next week)
+    |   - Smart ranking by proximity to desired time
+    |   - ~1-2s additional latency per availability check
+    |
+    | When ENABLED (true): Agent skips alternatives (latency optimization)
+    |   - Returns "not available" immediately
+    |   - Agent asks customer for alternative time
+    |   - No Cal.com alternative search overhead
+    |   - <1s response time
+    |
+    | Performance Impact:
+    |   - Disabled (alternatives ON): +1-2s per check, higher success rate
+    |   - Enabled (alternatives OFF): <1s response, lower success rate
+    |
+    | Rollout Plan:
+    |   - Phase A (Week 1): DISABLE flag (enable alternatives) with caching
+    |   - Phase A (Week 1): Optimize timeout to 2s max with fallback
+    |   - Monitor: booking success rate, call duration, user satisfaction
+    |   - Phase C: Further latency optimization with parallel processing
+    |
+    | Related:
+    |   - Service: App\Services\AppointmentAlternativeFinder
+    |   - Controller: App\Http\Controllers\RetellFunctionCallHandler::handleFunctionCall
+    |   - Tests: Tests\Unit\RetellFunctionCallHandler\AvailabilityCheckTest
+    |   - Docs: PHASE_1_DEPLOYMENT_LINKS.md
+    |
+    | @default false (alternatives ENABLED for better UX)
+    | @since 2025-10-19 (Phase A: Fundamental Fixes)
+    */
+    'skip_alternatives_for_voice' => env('FEATURE_SKIP_ALTERNATIVES_FOR_VOICE', false),
 ];

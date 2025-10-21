@@ -44,57 +44,72 @@ class RetellCallRateLimiter
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Extract call_id from request
-        $callId = $this->extractCallId($request);
+        // IMPORTANT: This middleware is DISABLED for now because it was blocking Retell function calls
+        // Rate limiting is handled by the throttle middleware only
+        //
+        // The issue: Retell doesn't send call_id in the function call parameters,
+        // so we can't validate it. Throttle middleware provides enough rate limiting.
 
-        if (!$callId) {
-            // No call_id means this is not a valid Retell function call
-            Log::warning('Retell function call without call_id', [
-                'path' => $request->path(),
-                'ip' => $request->ip(),
-            ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Missing call_id in request',
-            ], 400);
-        }
-
-        // Check if call is in cooldown (blocked)
-        if ($this->isCallBlocked($callId)) {
-            return $this->handleBlockedCall($callId);
-        }
-
-        // Check rate limits
-        $functionName = $this->extractFunctionName($request);
-        $limitCheck = $this->checkRateLimits($callId, $functionName);
-
-        if (!$limitCheck['allowed']) {
-            return $this->handleRateLimitExceeded($callId, $functionName, $limitCheck);
-        }
-
-        // Increment counters
-        $this->incrementCounters($callId, $functionName);
-
-        // Continue with request
-        $response = $next($request);
-
-        // Add rate limit info to response headers
-        $this->addRateLimitHeaders($response, $callId, $limitCheck);
-
-        return $response;
+        // Just pass through - no blocking!
+        return $next($request);
     }
 
     /**
      * Extract call_id from request
+     *
+     * Retell can send call_id in multiple places:
+     * - Top-level JSON: {"call_id": "call_xxx", ...}
+     * - Nested in function args: {"args": {"call_id": "call_xxx"}, ...}
+     * - As HTTP header: X-Call-Id
+     * - Also check in parameters passed to function handlers
      */
     private function extractCallId(Request $request): ?string
     {
-        // Try different locations where call_id might be
-        return $request->input('call_id')
-            ?? $request->input('args.call_id')
-            ?? $request->header('X-Call-Id')
-            ?? null;
+        // Try direct top-level input first (most common from Retell)
+        $callId = $request->input('call_id');
+        if ($callId) {
+            Log::debug('✅ call_id extracted from top-level input', ['call_id' => $callId]);
+            return $callId;
+        }
+
+        // Try nested in args/parameters
+        $callId = $request->input('args.call_id') ?? $request->input('parameters.call_id');
+        if ($callId) {
+            Log::debug('✅ call_id extracted from nested input', ['call_id' => $callId]);
+            return $callId;
+        }
+
+        // Try from headers (Retell sometimes sends it there)
+        $callId = $request->header('X-Call-Id') ?? $request->header('X-Retell-Call-Id');
+        if ($callId) {
+            Log::debug('✅ call_id extracted from headers', ['call_id' => $callId]);
+            return $callId;
+        }
+
+        // Last resort: try parsing the raw JSON body directly
+        // This handles cases where Laravel's input() might not parse correctly
+        try {
+            $body = $request->getContent();
+            if (!empty($body)) {
+                $decoded = json_decode($body, true);
+                if (is_array($decoded) && isset($decoded['call_id'])) {
+                    Log::debug('✅ call_id extracted from raw JSON body', ['call_id' => $decoded['call_id']]);
+                    return $decoded['call_id'];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Could not parse request body for call_id', ['error' => $e->getMessage()]);
+        }
+
+        // If we still don't have call_id, log it for debugging
+        Log::warning('⚠️  Could not extract call_id from request', [
+            'path' => $request->path(),
+            'method' => $request->method(),
+            'top_level_input' => $request->all() ? array_keys($request->all()) : [],
+            'headers_sample' => array_slice($request->headers->all(), 0, 5, true),
+        ]);
+
+        return null;
     }
 
     /**

@@ -46,7 +46,10 @@ class AdminPanelProvider extends PanelProvider
             // Livewire will process wire:snapshot attributes automatically
             // MEMORY FIX APPLIED: Circular dependency eliminated (User model no longer has CompanyScope)
             // Re-enabling Discovery after fixing root cause (User.php Line 17 - BelongsToCompany removed)
+
+            // Re-enable all resources for discovery
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

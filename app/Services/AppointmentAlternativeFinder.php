@@ -437,6 +437,10 @@ class AppointmentAlternativeFinder
 
     /**
      * Rank alternatives by proximity to desired time and user preferences
+     *
+     * 🔧 FIX 2025-10-19: Prefer LATER slots over EARLIER for afternoon requests
+     * Bug: User requests 13:00, system suggested 10:30 (3h earlier) instead of 14:00 (1h later)
+     * User expectation: If I want afternoon, suggest afternoon alternatives first!
      */
     private function rankAlternatives(Collection $alternatives, Carbon $desiredDateTime): Collection
     {
@@ -444,14 +448,20 @@ class AppointmentAlternativeFinder
             $minutesDiff = abs($desiredDateTime->diffInMinutes($alt['datetime']));
 
             // Scoring based on proximity and type
-            $score = 10000 - $minutesDiff; // Base score from time proximity
+            $score = 10000 - $minutesDiff; // Base score from time proximity (most important!)
 
-            // Bonus points for preferred strategies
+            // 🔧 FIX 2025-10-19: Smart directional preference based on time of day
+            // For afternoon requests (>= 12:00), prefer LATER slots
+            // For morning requests (< 12:00), prefer EARLIER slots
+            $isAfternoonRequest = $desiredDateTime->hour >= 12;
+            $isLaterSlot = $alt['datetime']->greaterThan($desiredDateTime);
+
             $score += match($alt['type']) {
-                'same_day_earlier' => 500,
-                'same_day_later' => 400,
-                'next_workday' => 300,
-                'next_week' => 200,
+                // Same day alternatives: prefer direction matching user's preference
+                'same_day_later' => $isAfternoonRequest ? 500 : 300,   // Higher if user wants afternoon
+                'same_day_earlier' => $isAfternoonRequest ? 300 : 500, // Lower if user wants afternoon
+                'next_workday' => 250,
+                'next_week' => 150,
                 'next_available' => 100,
                 default => 0
             };

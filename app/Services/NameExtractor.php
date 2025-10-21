@@ -99,6 +99,36 @@ class NameExtractor
             return false;
         }
 
+        // PRIORITY 1: Use caller_full_name from Retell analysis (most reliable)
+        // This is provided by Retell agent directly, more accurate than transcript extraction
+        if ($call->analysis && is_array($call->analysis)) {
+            $callerName = $call->analysis['custom_analysis_data']['caller_full_name'] ??
+                         $call->analysis['custom_analysis_data']['patient_full_name'] ??
+                         $call->analysis['caller_full_name'] ??
+                         $call->analysis['patient_full_name'] ??
+                         null;
+
+            if ($callerName && is_string($callerName) && strlen(trim($callerName)) > 0) {
+                Log::info('✅ Using caller_full_name from Retell analysis (high quality)', [
+                    'call_id' => $call->id,
+                    'caller_full_name' => $callerName,
+                    'source' => 'retell_analysis'
+                ]);
+
+                $isAnonymous = AnonymousCallDetector::isAnonymous($call);
+
+                $call->update([
+                    'customer_name' => trim($callerName),
+                    'customer_name_verified' => !$isAnonymous, // Only verify if not anonymous
+                    'verification_confidence' => $isAnonymous ? 50 : 99, // Higher confidence from Retell
+                    'verification_method' => 'retell_agent_provided'
+                ]);
+
+                return true;
+            }
+        }
+
+        // PRIORITY 2: Fallback to transcript extraction (lower quality)
         $extractedName = $this->extractNameFromCall($call);
 
         if ($extractedName) {

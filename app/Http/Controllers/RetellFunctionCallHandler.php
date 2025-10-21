@@ -56,7 +56,7 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
-     * Get call context (company_id, branch_id) from call ID
+     * Get call context (company_id, branch_id) from call ID or phone number
      *
      * Loads the Call record with related PhoneNumber to determine
      * which company and branch this call belongs to for proper
@@ -64,14 +64,35 @@ class RetellFunctionCallHandler extends Controller
      *
      * Uses CallLifecycleService for request-scoped caching.
      *
+     * 🔧 FIX 2025-10-19: Fallback to most recent call if callId is invalid
+     * Bug: Retell sometimes sends "None" as call_id, breaking availability checks
+     *
      * @param string|null $callId Retell call ID
      * @return array|null ['company_id' => int, 'branch_id' => int|null, 'phone_number_id' => int]
      */
     private function getCallContext(?string $callId): ?array
     {
-        if (!$callId) {
-            Log::warning('Cannot get call context: callId is null');
-            return null;
+        if (!$callId || $callId === 'None') {
+            Log::warning('call_id is invalid, attempting fallback to most recent active call', [
+                'call_id' => $callId
+            ]);
+
+            // Fallback: Get most recent active call (within last 5 minutes)
+            $recentCall = \App\Models\Call::where('call_status', 'ongoing')
+                ->where('start_timestamp', '>=', now()->subMinutes(5))
+                ->orderBy('start_timestamp', 'desc')
+                ->first();
+
+            if ($recentCall) {
+                Log::info('✅ Fallback successful: using most recent active call', [
+                    'call_id' => $recentCall->retell_call_id,
+                    'started_at' => $recentCall->start_timestamp
+                ]);
+                $callId = $recentCall->retell_call_id;
+            } else {
+                Log::error('❌ Fallback failed: no recent active calls found');
+                return null;
+            }
         }
 
         $call = $this->callLifecycle->getCallContext($callId);
@@ -94,6 +115,15 @@ class RetellFunctionCallHandler extends Controller
     public function handleFunctionCall(Request $request)
     {
         $data = $request->all();
+
+        // 🚨 CRITICAL DEBUG: Log EVERYTHING Retell sends us
+        Log::warning('🚨 ===== RETELL FUNCTION CALL RECEIVED =====', [
+            'timestamp' => now()->toIso8601String(),
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'all_data' => json_encode($data),
+            'raw_body' => $request->getContent(),
+        ]);
 
         // ENHANCED MONITORING FOR TEST CALL
         Log::info('📞 ===== RETELL WEBHOOK RECEIVED =====', [
@@ -124,8 +154,30 @@ class RetellFunctionCallHandler extends Controller
         // Bug #6 Fix (Call 778): call_id is inside parameters/args, not at top level - CHECK PARAMETERS FIRST!
         $callId = $parameters['call_id'] ?? $data['call_id'] ?? null;
 
+        // 🔧 FIX 2025-10-19: Agent sometimes sends "None" as string when call_id variable not injected
+        // Fallback: Extract from root level webhook data
+        if ($callId === 'None' || $callId === 'null' || $callId === '' || is_null($callId)) {
+            $callId = $data['call_id'] ?? null;
+
+            if ($callId && $callId !== 'None') {
+                Log::warning('⚠️ call_id was invalid in parameters, extracted from webhook root', [
+                    'extracted_call_id' => $callId,
+                    'original_param' => $parameters['call_id'] ?? 'missing',
+                    'function' => $functionName
+                ]);
+            } else {
+                Log::error('❌ call_id is completely missing or invalid', [
+                    'param_value' => $parameters['call_id'] ?? 'missing',
+                    'root_value' => $data['call_id'] ?? 'missing',
+                    'function' => $functionName
+                ]);
+            }
+        }
+
         // Route to appropriate function handler
         return match($functionName) {
+            // 🔧 FIX 2025-10-18: Add parse_date handler to prevent agent from calculating dates incorrectly
+            'parse_date' => $this->handleParseDate($parameters, $callId),
             'check_availability' => $this->checkAvailability($parameters, $callId),
             'book_appointment' => $this->bookAppointment($parameters, $callId),
             'query_appointment' => $this->queryAppointment($parameters, $callId),
@@ -146,6 +198,8 @@ class RetellFunctionCallHandler extends Controller
     private function checkAvailability(array $params, ?string $callId)
     {
         try {
+            $startTime = microtime(true);
+
             // FEATURE: Branch-aware service selection for availability checks
             // Get call context to ensure branch isolation
             $callContext = $this->getCallContext($callId);
@@ -162,8 +216,25 @@ class RetellFunctionCallHandler extends Controller
 
             // Parse parameters
             $requestedDate = $this->dateTimeParser->parseDateTime($params);
+
+            // 🔧 FIX 2025-10-18: Validate that parseDateTime returned a valid Carbon instance
+            if (!$requestedDate || !($requestedDate instanceof \Carbon\Carbon)) {
+                Log::error('⚠️ dateTimeParser returned invalid value', [
+                    'call_id' => $callId,
+                    'parsed_value_type' => gettype($requestedDate),
+                    'params' => $params
+                ]);
+                return $this->responseFormatter->error('Fehler beim Parsen des Datums. Bitte versuchen Sie es später erneut.');
+            }
+
             $duration = $params['duration'] ?? 60;
             $serviceId = $params['service_id'] ?? null;
+
+            Log::info('⏱️ checkAvailability START', [
+                'call_id' => $callId,
+                'requested_date' => $requestedDate->format('Y-m-d H:i'),
+                'timestamp_ms' => round((microtime(true) - $startTime) * 1000, 2)
+            ]);
 
             // Get service with branch validation using ServiceSelectionService
             if ($serviceId) {
@@ -190,19 +261,94 @@ class RetellFunctionCallHandler extends Controller
             ]);
 
             // Check exact availability
-            $startTime = $requestedDate->copy()->startOfHour();
-            $endTime = $requestedDate->copy()->endOfHour();
+            $slotStartTime = $requestedDate->copy()->startOfHour();
+            $slotEndTime = $requestedDate->copy()->endOfHour();
 
-            // 🔧 FIX 2025-10-15: Add teamId parameter for multi-tenant isolation and correct cache keys
-            // Bug: Retell AI calls were missing teamId, causing cache-key mismatches and potential 404s
-            $response = $this->calcomService->getAvailableSlots(
-                $service->calcom_event_type_id,
-                $startTime->format('Y-m-d H:i:s'),
-                $endTime->format('Y-m-d H:i:s'),
-                $service->company->calcom_team_id  // ← CRITICAL: teamId added for multi-tenant scoping
-            );
+            // 🔧 FIX 2025-10-18: Add timeout and logging for Cal.com API calls
+            // Bug: Cal.com API calls were taking 19+ seconds, blocking response
+            Log::info('⏱️ Cal.com API call START', [
+                'call_id' => $callId,
+                'event_type_id' => $service->calcom_event_type_id,
+                'date_range' => "{$slotStartTime->format('Y-m-d H:i')} - {$slotEndTime->format('Y-m-d H:i')}",
+                'team_id' => $service->company->calcom_team_id
+            ]);
 
-            $slots = $response->json()['data']['slots'] ?? [];
+            $calcomStartTime = microtime(true);
+
+            // 🔧 FIX 2025-10-18: No retries for interactive call - fast failure is better than 19 second delay!
+            // Bug: RetryPolicy was causing 5+1+5+2+5 = 18+ second delays
+            // Solution: Use circuit breaker WITHOUT retries, with immediate timeout
+            set_time_limit(5); // Hard timeout: 5 seconds max, abort otherwise
+
+            $response = null;
+            try {
+                $response = $this->calcomService->getAvailableSlots(
+                    $service->calcom_event_type_id,
+                    $slotStartTime->format('Y-m-d H:i:s'),
+                    $slotEndTime->format('Y-m-d H:i:s'),
+                    $service->company->calcom_team_id  // ← CRITICAL: teamId added for multi-tenant scoping
+                );
+
+                $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
+                Log::info('⏱️ Cal.com API call END', [
+                    'call_id' => $callId,
+                    'duration_ms' => $calcomDuration,
+                    'status_code' => $response->status() ?? 'unknown'
+                ]);
+
+                if ($calcomDuration > 8000) {
+                    Log::warning('⚠️ Cal.com API slow response', [
+                        'call_id' => $callId,
+                        'duration_ms' => $calcomDuration,
+                        'threshold_ms' => 8000
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
+                Log::error('❌ Cal.com API error or timeout', [
+                    'call_id' => $callId,
+                    'duration_ms' => $calcomDuration,
+                    'error_message' => $e->getMessage(),
+                    'error_class' => get_class($e)
+                ]);
+                // Return conservative response: assume not available during errors
+                return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
+            }
+
+            // 🔧 FIX 2025-10-18: Validate response is not null before accessing json()
+            if (!$response) {
+                Log::error('⚠️ Cal.com API returned null response', [
+                    'call_id' => $callId
+                ]);
+                return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen: Leere Antwort.');
+            }
+
+            $slotsData = $response->json()['data']['slots'] ?? [];
+
+            // 🔧 FIX 2025-10-19: Cal.com V2 returns slots grouped by date
+            // Structure: {"2025-10-20": [{slot1}, {slot2}], "2025-10-21": [...]}
+            // We need to flatten this into a single array of all slots
+            $slots = [];
+            if (is_array($slotsData)) {
+                foreach ($slotsData as $date => $dateSlots) {
+                    if (is_array($dateSlots)) {
+                        $slots = array_merge($slots, $dateSlots);
+                    }
+                }
+            }
+
+            // 🔧 VERBOSE DEBUG 2025-10-19: Log COMPLETE slot data for debugging
+            Log::info('📊 Cal.com slots returned - VERBOSE DEBUG', [
+                'call_id' => $callId,
+                'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                'requested_timezone' => $requestedDate->timezone->getName(),
+                'total_slots_count' => count($slots),
+                'slots_data_structure' => gettype($slotsData),
+                'slots_data_keys' => is_array($slotsData) ? array_keys($slotsData) : 'not array',
+                'first_10_raw_slots' => array_slice($slots, 0, 10),  // COMPLETE slot objects
+                'structure' => 'flattened from date-grouped format'
+            ]);
+
             $isAvailable = $this->isTimeAvailable($requestedDate, $slots);
 
             // 🔧 FIX 2025-10-11: Check if customer already has appointment at this time
@@ -298,9 +444,15 @@ class RetellFunctionCallHandler extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error checking availability', [
-                'error' => $e->getMessage(),
-                'call_id' => $callId
+            Log::error('❌ CRITICAL: Error checking availability', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'error_class' => get_class($e),
+                'stack_trace' => $e->getTraceAsString(),
+                'call_id' => $callId,
+                'params' => $params,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
             return $this->responseFormatter->error('Fehler beim Prüfen der Verfügbarkeit');
         }
@@ -682,18 +834,155 @@ class RetellFunctionCallHandler extends Controller
 
     /**
      * Check if a specific time is available in the slots
+     * 🚨 CRITICAL FIX 2025-10-18: EXACT TIME ONLY - NO APPROXIMATIONS
+     *
+     * ISSUE: Previous 15-minute interval matching caused false-positive availability claims
+     * when the exact requested time was NOT available, leading to overbooking.
+     *
+     * NEW RULE: Only accept EXACT time matches (13:00 == 13:00)
+     * If user wants flexibility, they must explicitly say so.
      */
     private function isTimeAvailable(Carbon $requestedTime, array $slots): bool
     {
-        foreach ($slots as $date => $daySlots) {
-            foreach ($daySlots as $slot) {
-                $slotTime = Carbon::parse($slot['time']);
-                if ($slotTime->format('Y-m-d H:i') === $requestedTime->format('Y-m-d H:i')) {
+        $requestedDate = $requestedTime->format('Y-m-d');
+        $requestedHourMin = $requestedTime->format('Y-m-d H:i');
+
+        Log::info('🔍 VERBOSE: Checking exact time availability', [
+            'requested_time' => $requestedHourMin,
+            'requested_timezone' => $requestedTime->timezone->getName(),
+            'requested_timestamp' => $requestedTime->timestamp,
+            'total_slots' => count($slots),
+            'slots_structure' => $this->debugSlotStructure($slots),
+            'first_3_slots_raw' => array_slice($slots, 0, 3)
+        ]);
+
+        // FIX 2025-10-19: Handle Cal.com's flat array of slot objects
+        // Cal.com returns: [{'time': '13:30', ...}, {'time': '14:30', ...}]
+        // NOT: {'2025-10-20': ['13:30', '14:30']}
+
+        foreach ($slots as $slot) {
+            // Extract time from slot (could be string or array with 'time' key)
+            if (is_array($slot) && isset($slot['time'])) {
+                $slotTime = $slot['time'];
+            } elseif (is_string($slot)) {
+                $slotTime = $slot;
+            } else {
+                Log::debug('Skipping unrecognized slot format', ['slot' => $slot]);
+                continue;
+            }
+
+            try {
+                // Parse slot time - could be "13:15", "13:00 - 13:30", Unix timestamp, etc.
+                $parsedSlotTime = Carbon::parse((string)$slotTime);
+
+                // 🔧 CRITICAL FIX 2025-10-19: TIMEZONE CONVERSION!
+                // Cal.com returns UTC timestamps (e.g., "2025-10-20T12:00:00.000Z")
+                // User requests in Europe/Berlin timezone (e.g., "14:00")
+                // 12:00 UTC == 14:00 Europe/Berlin (same moment!)
+                // We MUST convert slots to Europe/Berlin before comparison
+                $parsedSlotTime = $parsedSlotTime->setTimezone('Europe/Berlin');
+
+                // 🔧 VERBOSE DEBUG: Log every slot parsing attempt
+                Log::debug('🔬 SLOT PARSE ATTEMPT', [
+                    'raw_slot_time' => $slotTime,
+                    'parsed_datetime' => $parsedSlotTime->format('Y-m-d H:i:s'),
+                    'parsed_timezone' => $parsedSlotTime->timezone->getName(),
+                    'parsed_timestamp' => $parsedSlotTime->timestamp,
+                ]);
+
+                // FIX 2025-10-19: If slot is only time (not full datetime), use requested date
+                // Check if the parsed time is on a default/epoch date (Carbon::parse adds epoch date for time-only strings)
+                $slotStr = (string)$slotTime;
+
+                // If slot is just a time string (no date separators like "-", "/", "."), apply requested date
+                if (!preg_match('/[-\/\.]|\d{4}/', $slotStr)) {
+                    // Only time provided, use requested date
+                    $parsedSlotTime = $requestedTime->copy()->setTime(
+                        $parsedSlotTime->hour,
+                        $parsedSlotTime->minute,
+                        $parsedSlotTime->second ?? 0
+                    );
+
+                    Log::debug('🔧 Applied requested date to time-only slot', [
+                        'time_only_input' => $slotTime,
+                        'combined_datetime' => $parsedSlotTime->format('Y-m-d H:i:s')
+                    ]);
+                }
+
+                // 🔴 EXACT MATCH ONLY: 14:15 == 14:15
+                $slotFormatted = $parsedSlotTime->format('Y-m-d H:i');
+
+                // 🔧 VERBOSE DEBUG: Log every comparison
+                Log::debug('🔬 SLOT COMPARISON', [
+                    'requested' => $requestedHourMin,
+                    'slot_formatted' => $slotFormatted,
+                    'match' => $slotFormatted === $requestedHourMin,
+                    'raw_slot' => $slotTime
+                ]);
+
+                if ($slotFormatted === $requestedHourMin) {
+                    Log::info('✅ EXACT slot match FOUND', [
+                        'requested' => $requestedHourMin,
+                        'matched_slot' => $slotFormatted,
+                        'raw_slot_time' => $slotTime,
+                        'available' => true
+                    ]);
                     return true;
                 }
+            } catch (\Exception $e) {
+                Log::debug('Could not parse slot time', [
+                    'slot_time' => $slotTime,
+                    'error' => $e->getMessage()
+                ]);
+                continue;
             }
         }
+
+        // 🔧 VERBOSE DEBUG: Show ALL slots that were checked but didn't match
+        $allSlotTimes = array_map(function($s) {
+            if (is_array($s) && isset($s['time'])) {
+                try {
+                    $parsed = Carbon::parse($s['time']);
+                    return [
+                        'raw' => $s['time'],
+                        'parsed' => $parsed->format('Y-m-d H:i:s'),
+                        'timezone' => $parsed->timezone->getName()
+                    ];
+                } catch (\Exception $e) {
+                    return ['raw' => $s['time'], 'parse_error' => $e->getMessage()];
+                }
+            }
+            return ['raw' => $s, 'type' => 'string'];
+        }, $slots);
+
+        Log::warning('❌ EXACT time NOT available - VERBOSE DEBUG', [
+            'requested_time' => $requestedHourMin,
+            'requested_timezone' => $requestedTime->timezone->getName(),
+            'available_slots_count' => count($slots),
+            'all_slot_times_parsed' => array_slice($allSlotTimes, 0, 15),  // First 15 with full details
+            'issue' => 'Requested time not found in available slots - check timezone mismatch'
+        ]);
+
         return false;
+    }
+
+    /**
+     * Debug helper to understand slot structure
+     */
+    private function debugSlotStructure(array $slots): string
+    {
+        if (empty($slots)) {
+            return 'empty';
+        }
+
+        $first = reset($slots);
+        if (is_array($first)) {
+            return count($first) . ' keys: ' . implode(', ', array_keys($first));
+        } elseif (is_string($first)) {
+            return 'flat strings, e.g.: ' . $first;
+        } else {
+            return 'unknown type: ' . gettype($first);
+        }
     }
 
     /**
@@ -1523,7 +1812,7 @@ class RetellFunctionCallHandler extends Controller
                                         ]);
 
                                     } catch (\Exception $e) {
-                                        // ❌ Appointment creation failed - DO NOT set booking_confirmed
+                                        // ❌ CRITICAL: Appointment creation failed - Cal.com booking exists locally
                                         // Store booking details for manual recovery but keep booking_confirmed=false
                                         $call->booking_id = $booking['uid'] ?? null;
                                         $call->booking_details = json_encode([
@@ -1534,18 +1823,40 @@ class RetellFunctionCallHandler extends Controller
                                         ]);
                                         $call->save();
 
-                                        Log::error('❌ Failed to create Appointment record after Cal.com booking', [
+                                        Log::error('❌ CRITICAL: Failed to create Appointment record after Cal.com booking', [
                                             'error' => $e->getMessage(),
                                             'call_id' => $call->id,
                                             'booking_id' => $booking['uid'] ?? null,
                                             'trace' => $e->getTraceAsString()
                                         ]);
 
+                                        // 🚨 CREATE URGENT FAILSAFE CALLBACK
+                                        // Customer's booking was created in Cal.com but we lost it locally
+                                        // Staff must follow up immediately
+                                        $this->createFailsafeCallback(
+                                            $call,
+                                            sprintf(
+                                                'Cal.com Buchung erfolgreich (ID: %s), aber lokale Speicherung fehlgeschlagen. Termin: %s um %s',
+                                                $booking['uid'] ?? 'unknown',
+                                                $datum ?? 'unbekannt',
+                                                $uhrzeit ?? 'unbekannt'
+                                            ),
+                                            'partial_booking',
+                                            \App\Models\CallbackRequest::PRIORITY_URGENT,
+                                            [
+                                                'calcom_booking_id' => $booking['uid'] ?? null,
+                                                'appointment_error' => $e->getMessage(),
+                                                'requested_time' => sprintf('%s %s', $datum, $uhrzeit),
+                                                'service_id' => $serviceId ?? null,
+                                                'staff_id' => $staffId ?? null,
+                                            ]
+                                        );
+
                                         // Return error to user - Cal.com booking exists but local appointment failed
                                         return response()->json([
                                             'success' => false,
                                             'status' => 'partial_booking',
-                                            'message' => "Die Buchung wurde erstellt, aber es gab ein Problem bei der Speicherung. Bitte kontaktieren Sie uns direkt.",
+                                            'message' => "Die Buchung wurde erstellt, aber es gab ein Problem bei der Speicherung. Ein Mitarbeiter wird Sie in Kürze anrufen.",
                                             'error' => 'appointment_creation_failed'
                                         ], 500);
                                     }
@@ -1618,24 +1929,65 @@ class RetellFunctionCallHandler extends Controller
                                         'error' => $e->getMessage()
                                     ]);
 
+                                    // 🚨 CREATE CALLBACK IF NO ALTERNATIVES AVAILABLE
+                                    // Customer wanted a specific time, Cal.com failed, and alternatives failed too
+                                    if ($call) {
+                                        $this->createFailsafeCallback(
+                                            $call,
+                                            sprintf(
+                                                'Verfügbarkeitsprüfung für %s um %s fehlgeschlagen. Weder Direktbuchung noch Alternativensuche möglich. Fehler: %s',
+                                                $datum ?? 'unbekannt',
+                                                $uhrzeit ?? 'unbekannt',
+                                                $e->getMessage()
+                                            ),
+                                            'api_error',
+                                            \App\Models\CallbackRequest::PRIORITY_HIGH,
+                                            [
+                                                'requested_time' => sprintf('%s %s', $datum ?? '', $uhrzeit ?? ''),
+                                                'error_during' => 'alternative_search',
+                                                'original_error' => $errorMessage ?? 'unknown',
+                                                'service_id' => $serviceId ?? null,
+                                            ]
+                                        );
+                                    }
+
                                     return response()->json([
                                         'success' => false,
                                         'status' => 'error',
-                                        'message' => 'Entschuldigung, dieser Termin ist leider nicht verfügbar. Bitte nennen Sie mir einen anderen Wunschtermin.'
+                                        'message' => 'Entschuldigung, der Termin ist nicht verfügbar. Ein Mitarbeiter wird Sie anrufen und sich um Ihren Wunschtermin kümmern.'
                                     ], 200);
                                 }
                             }
                     } catch (\Exception $e) {
-                        Log::error('Booking exception occurred', [
+                        Log::error('❌ Booking exception occurred', [
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString(),
                             'call_id' => $callId
                         ]);
 
+                        // 🚨 CREATE CALLBACK FOR CRITICAL BOOKING ERRORS
+                        // Unexpected exception during booking process
+                        if ($call) {
+                            $this->createFailsafeCallback(
+                                $call,
+                                sprintf(
+                                    'Kritischer Fehler bei der Terminbuchung. Exception: %s',
+                                    $e->getMessage()
+                                ),
+                                'exception',
+                                \App\Models\CallbackRequest::PRIORITY_HIGH,
+                                [
+                                    'requested_time' => sprintf('%s %s', $datum ?? '', $uhrzeit ?? ''),
+                                    'error_type' => 'booking_exception',
+                                    'exception_message' => $e->getMessage(),
+                                ]
+                            );
+                        }
+
                         return response()->json([
                             'success' => false,
                             'status' => 'error',
-                            'message' => 'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.'
+                            'message' => 'Es ist ein unerwarteter Fehler aufgetreten. Ein Mitarbeiter wird Sie bald anrufen um Ihnen zu helfen.'
                         ], 200);
                     }
                 }
@@ -1749,38 +2101,67 @@ class RetellFunctionCallHandler extends Controller
      */
     public function handleAvailabilityCheck(Request $request)
     {
-        $data = $request->all();
-        $args = $data['args'] ?? $data;
+        try {
+            Log::info('🔍 CHECKPOINT A: handleAvailabilityCheck START');
 
-        // ENHANCED MONITORING FOR TEST CALL
-        Log::info('🔍 ===== AVAILABILITY CHECK WEBHOOK =====', [
-            'timestamp' => now()->toIso8601String(),
-            'ip' => $request->ip(),
-            'forwarded_for' => $request->header('X-Forwarded-For'),
-            'method' => $request->method(),
-            'path' => $request->path(),
-            'raw_body' => LogSanitizer::sanitize($request->getContent()),
-            'parsed_data' => LogSanitizer::sanitize($data),
-            'args' => LogSanitizer::sanitize($args),
-            'service' => $args['service'] ?? $args['dienstleistung'] ?? null,
-            'date' => $args['date'] ?? $args['datum'] ?? null,
-            'time' => $args['time'] ?? $args['uhrzeit'] ?? null,
-            'all_headers' => LogSanitizer::sanitizeHeaders($request->headers->all())
-        ]);
+            $data = $request->all();
+            $args = $data['args'] ?? $data;
 
-        Log::info('📅 Checking availability', [
-            'args' => $args
-        ]);
+            Log::info('🔍 CHECKPOINT B: Data extracted', [
+                'has_args' => isset($data['args']),
+                'args' => $args
+            ]);
+
+            // ENHANCED MONITORING FOR TEST CALL
+            Log::info('🔍 ===== AVAILABILITY CHECK WEBHOOK =====', [
+                'timestamp' => now()->toIso8601String(),
+                'ip' => $request->ip(),
+                'forwarded_for' => $request->header('X-Forwarded-For'),
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'raw_body' => LogSanitizer::sanitize($request->getContent()),
+                'parsed_data' => LogSanitizer::sanitize($data),
+                'args' => LogSanitizer::sanitize($args),
+                'service' => $args['service'] ?? $args['dienstleistung'] ?? null,
+                'date' => $args['date'] ?? $args['datum'] ?? null,
+                'time' => $args['time'] ?? $args['uhrzeit'] ?? null,
+                'all_headers' => LogSanitizer::sanitizeHeaders($request->headers->all())
+            ]);
+
+            Log::info('📅 Checking availability', [
+                'args' => $args
+            ]);
+        } catch (\Exception $e) {
+            Log::error('🚨 Exception in handleAvailabilityCheck setup', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Fehler beim Prüfen der Verfügbarkeit',
+                'debug' => $e->getMessage()
+            ], 200);
+        }
 
         try {
-            $datum = $args['datum'] ?? null;
+            // 🔧 FIX 2025-10-18: Support both 'date' (from Retell) and 'datum' (from internal)
+            $datum = $args['datum'] ?? $args['date'] ?? null;
             $callId = $args['call_id'] ?? null;
             $serviceType = $args['service'] ?? $args['dienstleistung'] ?? null;
 
-            // Parse German date format
+            // Parse German date format OR ISO 8601 format
             $checkDate = null;
             if ($datum) {
-                if (preg_match('/(\d{1,2})\.(\d{1,2})\.?(\d{4})?/', $datum, $matches)) {
+                // Check if it's ISO 8601 format (YYYY-MM-DD) first
+                if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $datum, $matches)) {
+                    $year = intval($matches[1]);
+                    $month = intval($matches[2]);
+                    $day = intval($matches[3]);
+                    $checkDate = Carbon::create($year, $month, $day);
+                } elseif (preg_match('/(\d{1,2})\.(\d{1,2})\.?(\d{4})?/', $datum, $matches)) {
+                    // German date format (DD.MM.YYYY or DD.MM)
                     $day = intval($matches[1]);
                     $month = intval($matches[2]);
                     $year = isset($matches[3]) ? intval($matches[3]) : Carbon::now()->year;
@@ -1900,10 +2281,31 @@ class RetellFunctionCallHandler extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Error in checkAvailability', [
+            Log::error('❌ Error in checkAvailability', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'call_id' => $callId
             ]);
+
+            // 🚨 CREATE CALLBACK FOR AVAILABILITY CHECK FAILURES
+            // If we can't check availability, create a callback so staff can help
+            $call = $this->getCallRecord($callId);
+            if ($call) {
+                $this->createFailsafeCallback(
+                    $call,
+                    sprintf(
+                        'Verfügbarkeitsprüfung fehlgeschlagen. Kunde möchte Termin am %s prüfen. Fehler: %s',
+                        $checkDate?->format('d.m.Y') ?? 'unbekannt',
+                        $e->getMessage()
+                    ),
+                    'api_error',
+                    \App\Models\CallbackRequest::PRIORITY_NORMAL,
+                    [
+                        'requested_date' => $checkDate?->format('Y-m-d') ?? null,
+                        'error_during' => 'availability_check',
+                    ]
+                );
+            }
 
             return response()->json([
                 'success' => false,
@@ -2267,16 +2669,12 @@ class RetellFunctionCallHandler extends Controller
                 $service->company->calcom_team_id  // ← FIX 2025-10-15: teamId added
             );
 
+            // 🔧 FIX 2025-10-18: Use isTimeAvailable() for consistent 15-minute matching
+            // Previously only did exact time match, now uses same logic as collect_appointment_data
             $isAvailable = false;
             if ($slotsResponse->successful()) {
                 $slots = $slotsResponse->json()['data']['slots'][$newDateTime->format('Y-m-d')] ?? [];
-                foreach ($slots as $slot) {
-                    $slotTime = Carbon::parse($slot['time']);
-                    if ($slotTime->format('H:i') === $newDateTime->format('H:i')) {
-                        $isAvailable = true;
-                        break;
-                    }
-                }
+                $isAvailable = $this->isTimeAvailable($newDateTime, [$newDateTime->format('Y-m-d') => $slots]);
             }
 
             if (!$isAvailable) {
@@ -2306,6 +2704,38 @@ class RetellFunctionCallHandler extends Controller
                     }, $alternatives['alternatives'] ?? [])
                 ], 200);
             }
+
+            // 🔧 FIX 2025-10-18: Add 2-STEP CONFIRMATION for reschedule (like collect_appointment_data)
+            // STEP 1: If available but no confirmation yet → Ask for confirmation
+            $confirmReschedule = $params['bestaetigung'] ?? $params['confirm_reschedule'] ?? null;
+
+            if (!$confirmReschedule) {
+                Log::info('✅ STEP 1 - Reschedule available, requesting user confirmation', [
+                    'appointment_id' => $appointment->id,
+                    'call_id' => $callId,
+                    'new_date' => $newDateTime->format('Y-m-d H:i'),
+                    'old_date' => $appointment->starts_at->format('Y-m-d H:i')
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'status' => 'ready_for_confirmation',
+                    'message' => "Der Termin kann auf {$newDate} um {$newTime} Uhr verschoben werden. Ist das in Ordnung?",
+                    'new_appointment' => [
+                        'date' => $newDateTime->format('d.m.Y'),
+                        'time' => $newDateTime->format('H:i')
+                    ],
+                    'next_action' => 'Wait for user "Ja", then call reschedule_appointment with bestaetigung: true'
+                ], 200);
+            }
+
+            // STEP 2: User confirmed → Proceed with reschedule
+            Log::info('✅ STEP 2 - Reschedule confirmed by user, executing now', [
+                'appointment_id' => $appointment->id,
+                'call_id' => $callId,
+                'confirmation_received' => $confirmReschedule === true,
+                'workflow' => '2-step (bestaetigung: false → user confirms → bestaetigung: true)'
+            ]);
 
             // 5. ONLY NOW check policy (after we know slot is available)
             $policyEngine = app(\App\Services\Policies\AppointmentPolicyEngine::class);
@@ -2793,6 +3223,92 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
+     * Create failsafe callback for error scenarios
+     *
+     * Automatically creates a callback request when:
+     * - Booking fails (Cal.com API error)
+     * - Partial booking (Cal.com success but local appointment failed)
+     * - Exception during call processing
+     * - No availability found
+     *
+     * This ensures no customer request is lost due to technical issues.
+     *
+     * @param Call $call Current call record
+     * @param string $reason Error description (for notes)
+     * @param string $errorType 'partial_booking'|'api_error'|'exception'|'no_availability'
+     * @param string $priority 'urgent'|'high'|'normal'
+     * @param array $errorContext Additional error details
+     * @return \App\Models\CallbackRequest|null Created callback or null if failed
+     */
+    private function createFailsafeCallback(
+        Call $call,
+        string $reason,
+        string $errorType = 'exception',
+        string $priority = 'high',
+        array $errorContext = []
+    ): ?\App\Models\CallbackRequest {
+        try {
+            Log::warning("⚠️ Creating failsafe callback for error scenario", [
+                'error_type' => $errorType,
+                'reason' => $reason,
+                'call_id' => $call->id,
+                'priority' => $priority,
+            ]);
+
+            $callbackService = app(\App\Services\Appointments\CallbackManagementService::class);
+
+            // Prepare callback data
+            $callbackData = [
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'phone_number' => $call->customer?->phone_number ?? $call->from_number ?? 'unknown',
+                'customer_name' => $call->customer?->name ?? 'Telefonanruf',
+                'priority' => $priority,
+                'status' => \App\Models\CallbackRequest::STATUS_PENDING,
+                'notes' => sprintf(
+                    '[%s] %s\n\nKall-ID: %s\nZeit: %s',
+                    strtoupper($errorType),
+                    $reason,
+                    $call->id,
+                    now()->format('d.m.Y H:i')
+                ),
+                'metadata' => array_merge([
+                    'error_type' => $errorType,
+                    'call_id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'from_number' => $call->from_number,
+                    'created_from' => 'failsafe_callback',
+                    'created_at_iso' => now()->toIso8601String(),
+                ], $errorContext),
+            ];
+
+            // Create callback request
+            $callback = $callbackService->createRequest($callbackData);
+
+            Log::info("✅ Failsafe callback created", [
+                'callback_id' => $callback->id,
+                'error_type' => $errorType,
+                'priority' => $priority,
+                'call_id' => $call->id,
+                'assigned_to' => $callback->assigned_to,
+            ]);
+
+            return $callback;
+
+        } catch (\Exception $e) {
+            Log::error("❌ Failed to create failsafe callback", [
+                'error' => $e->getMessage(),
+                'error_type' => $errorType,
+                'call_id' => $call->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Silently fail - don't throw, to prevent cascade errors
+            return null;
+        }
+    }
+
+    /**
      * Find next available appointment slot
      *
      * Called when customer asks for next available time
@@ -2939,6 +3455,22 @@ class RetellFunctionCallHandler extends Controller
                 ];
             }
 
+            // 🔒 SECURITY FIX 2025-10-20: REJECT anonymous callers
+            // Anonymous callers cannot query existing appointments (no verification possible)
+            if (!$call->from_number || strtolower($call->from_number) === 'anonymous') {
+                Log::warning('🚨 SECURITY: Anonymous caller attempted to query appointments', [
+                    'call_id' => $callId,
+                    'from_number' => $call->from_number ?? 'NULL'
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'anonymous_caller',
+                    'requires_phone_number' => true,
+                    'message' => 'Ich kann Ihre Termine leider nicht abfragen, da Ihre Nummer unterdrückt ist. Bitte rufen Sie mit Ihrer normalen Nummer an oder geben Sie Ihren Namen an.'
+                ];
+            }
+
             // Use query service for secure appointment lookup
             $queryService = app(\App\Services\Retell\AppointmentQueryService::class);
 
@@ -2968,6 +3500,83 @@ class RetellFunctionCallHandler extends Controller
                 'success' => false,
                 'error' => 'query_error',
                 'message' => 'Entschuldigung, ich konnte Ihren Termin nicht finden. Bitte versuchen Sie es erneut.'
+            ], 200);
+        }
+    }
+
+    /**
+     * 🔧 FIX 2025-10-18: Parse German dates using our DateTimeParser
+     *
+     * The Retell AI Agent was calculating dates INCORRECTLY (e.g., "nächste Woche Montag" → "27. Mai" instead of "20. Oktober")
+     *
+     * Solution: Create a backend function that the Agent MUST CALL to parse dates correctly
+     * Instead of the Agent calculating dates with LLM logic, it now calls this function
+     * which uses our proven DateTimeParser with correct Carbon date logic
+     *
+     * @param array $params Parameters: ['date_string' => 'nächste Woche Montag']
+     * @param string|null $callId Call ID for logging
+     * @return \Illuminate\Http\JsonResponse with parsed date in Y-m-d format
+     */
+    private function handleParseDate(array $params, ?string $callId): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $dateString = $params['date_string'] ?? $params['datum'] ?? null;
+
+            if (!$dateString) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'missing_date_string',
+                    'message' => 'Bitte ein Datum angeben (z.B. "nächste Woche Montag", "heute", "morgen", "20.10.2025")'
+                ], 200);
+            }
+
+            // Use our proven DateTimeParser
+            $parser = new DateTimeParser();
+            $parsedDate = $parser->parseDateString($dateString);
+
+            if (!$parsedDate) {
+                // Try parsing as simple day (montag, dienstag, etc.)
+                $simpleParse = $parser->parseDateString(trim($dateString));
+                if (!$simpleParse) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'invalid_date_format',
+                        'message' => "Das Datum '{$dateString}' konnte nicht verstanden werden. Bitte nennen Sie es im Format: 'nächste Woche Montag', 'heute', 'morgen', oder '20.10.2025'."
+                    ], 200);
+                }
+                $parsedDate = $simpleParse;
+            }
+
+            // Format for display
+            $displayDate = Carbon::parse($parsedDate)->format('d.m.Y');
+            $dayName = Carbon::parse($parsedDate)->format('l');
+
+            Log::info('✅ Date parsed successfully via parse_date handler', [
+                'input' => $dateString,
+                'parsed_date' => $parsedDate,
+                'display' => $displayDate,
+                'day' => $dayName,
+                'call_id' => $callId
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'date' => $parsedDate,  // Y-m-d format for backend use
+                'display_date' => $displayDate,  // For user confirmation
+                'day_name' => $dayName  // Day of week
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Date parsing failed', [
+                'input' => $params['date_string'] ?? null,
+                'error' => $e->getMessage(),
+                'call_id' => $callId
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'parsing_error',
+                'message' => 'Entschuldigung, es gab einen Fehler beim Parsen des Datums.'
             ], 200);
         }
     }
