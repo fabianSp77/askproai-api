@@ -10,18 +10,22 @@
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <x-filament::button
-                @click="$wire.runAllTests()"
-                :disabled="$wire.isRunning"
+                wire:click="runAllTests"
+                :disabled="$this->isRunning"
                 icon="heroicon-o-play"
                 color="success"
                 size="lg"
                 class="w-full"
             >
-                {{ $wire.isRunning ? 'Running Tests...' : 'Run All Tests' }}
+                @if($this->isRunning)
+                    Running Tests...
+                @else
+                    Run All Tests
+                @endif
             </x-filament::button>
 
             <x-filament::button
-                @click="$wire.exportReport()"
+                wire:click="exportReport"
                 icon="heroicon-o-arrow-down-tray"
                 color="info"
                 size="lg"
@@ -31,7 +35,7 @@
             </x-filament::button>
 
             <x-filament::button
-                @click="$wire.downloadDocumentation()"
+                wire:click="downloadDocumentation"
                 icon="heroicon-o-document-text"
                 color="primary"
                 size="lg"
@@ -49,23 +53,6 @@
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                @foreach($this->testRunner?->executeTest() ?? [] as $testType => $label)
-                    @php
-                        $testTypeValue = match($testType) {
-                            'Event-ID Verification' => 'event_id_verification',
-                            'Availability Check' => 'availability_check',
-                            'Appointment Booking' => 'appointment_booking',
-                            'Appointment Reschedule' => 'appointment_reschedule',
-                            'Appointment Cancellation' => 'appointment_cancellation',
-                            'Appointment Query' => 'appointment_query',
-                            'Bidirectional Sync' => 'bidirectional_sync',
-                            'V2 API Compatibility' => 'v2_api_compatibility',
-                            'Multi-Tenant Isolation' => 'multi_tenant_isolation',
-                            default => $testType
-                        };
-                    @endphp
-                @endforeach
-
                 @php
                     $testTypes = [
                         'event_id_verification' => '1. Event-ID Verification',
@@ -82,8 +69,8 @@
 
                 @foreach($testTypes as $typeKey => $typeLabel)
                     <x-filament::button
-                        @click="$wire.runTest('{{ $typeKey }}')"
-                        :disabled="$wire.isRunning"
+                        wire:click="runTest('{{ $typeKey }}')"
+                        :disabled="$this->isRunning"
                         icon="heroicon-o-play-circle"
                         size="md"
                         class="w-full"
@@ -95,12 +82,12 @@
         </div>
 
         <!-- Live Output -->
-        @if($wire.isRunning || count($wire->liveOutput) > 0)
+        @if($this->isRunning || count($this->liveOutput) > 0)
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 class="text-lg font-semibold mb-4 flex items-center">
                     <span class="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-2">📊</span>
                     Live Test Output
-                    @if($wire.isRunning)
+                    @if($this->isRunning)
                         <span class="ml-auto">
                             <x-filament::badge color="warning">
                                 Running...
@@ -110,14 +97,14 @@
                 </h2>
 
                 <div class="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm overflow-x-auto max-h-96 overflow-y-auto">
-                    @if($wire.isRunning)
+                    @if($this->isRunning)
                         <div class="flex items-center space-x-2">
                             <span class="animate-spin">⏳</span>
-                            <span>Running {{ $this->getTestLabel($wire->currentTest) }}...</span>
+                            <span>Running {{ $this->getTestLabel($this->currentTest) }}...</span>
                         </div>
                     @endif
 
-                    @forelse($wire->liveOutput as $line)
+                    @forelse($this->liveOutput as $line)
                         @if(is_array($line))
                             <div class="mb-2">
                                 <span class="text-green-400">✓</span>
@@ -140,7 +127,7 @@
                 Test History
             </h2>
 
-            @if(count($wire->testRunHistory) > 0)
+            @if(count($this->testRunHistory) > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
@@ -153,7 +140,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($wire->testRunHistory as $testRun)
+                            @foreach($this->testRunHistory as $testRun)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $this->getTestLabel($testRun['test_type']) }}
