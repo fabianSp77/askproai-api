@@ -53,18 +53,26 @@ class CalcomTestRunner
      */
     public function executeTest(string $testType, array $companyConfig = []): array
     {
-        return match($testType) {
-            SystemTestRun::TEST_EVENT_ID_VERIFICATION => $this->runEventIdVerification(),
-            SystemTestRun::TEST_AVAILABILITY_CHECK => $this->runAvailabilityCheck(),
-            SystemTestRun::TEST_APPOINTMENT_BOOKING => $this->runAppointmentBooking(),
-            SystemTestRun::TEST_APPOINTMENT_RESCHEDULE => $this->runAppointmentReschedule(),
-            SystemTestRun::TEST_APPOINTMENT_CANCELLATION => $this->runAppointmentCancellation(),
-            SystemTestRun::TEST_APPOINTMENT_QUERY => $this->runAppointmentQuery(),
-            SystemTestRun::TEST_BIDIRECTIONAL_SYNC => $this->runBidirectionalSync(),
-            SystemTestRun::TEST_V2_API_COMPATIBILITY => $this->runV2ApiCompatibility(),
-            SystemTestRun::TEST_MULTI_TENANT_ISOLATION => $this->runMultiTenantIsolation(),
-            default => ['error' => 'Unknown test type: ' . $testType]
-        };
+        try {
+            return match($testType) {
+                SystemTestRun::TEST_EVENT_ID_VERIFICATION => $this->runEventIdVerification(),
+                SystemTestRun::TEST_AVAILABILITY_CHECK => $this->runAvailabilityCheck(),
+                SystemTestRun::TEST_APPOINTMENT_BOOKING => $this->runAppointmentBooking(),
+                SystemTestRun::TEST_APPOINTMENT_RESCHEDULE => $this->runAppointmentReschedule(),
+                SystemTestRun::TEST_APPOINTMENT_CANCELLATION => $this->runAppointmentCancellation(),
+                SystemTestRun::TEST_APPOINTMENT_QUERY => $this->runAppointmentQuery(),
+                SystemTestRun::TEST_BIDIRECTIONAL_SYNC => $this->runBidirectionalSync(),
+                SystemTestRun::TEST_V2_API_COMPATIBILITY => $this->runV2ApiCompatibility(),
+                SystemTestRun::TEST_MULTI_TENANT_ISOLATION => $this->runMultiTenantIsolation(),
+                default => ['error' => 'Unknown test type: ' . $testType]
+            };
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ];
+        }
     }
 
     /**
