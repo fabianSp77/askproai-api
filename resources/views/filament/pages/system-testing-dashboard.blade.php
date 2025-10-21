@@ -11,10 +11,12 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <p class="text-sm font-medium text-gray-700 mb-3">Select Company/Branch for Testing:</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <p class="text-sm text-gray-600 italic mb-2">Only AskProAI and Friseur 1 are configured for testing with Cal.com Team-IDs and Event-IDs:</p>
+
                 <button
                     wire:click="setTestContext('askproai')"
                     @class([
-                        'p-3 rounded-lg border-2 transition-all',
+                        'p-3 rounded-lg border-2 transition-all text-left',
                         'border-blue-500 bg-blue-50' => $this->selectedCompany === 'askproai',
                         'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'askproai'
                     ])
@@ -26,7 +28,7 @@
                 <button
                     wire:click="setTestContext('friseur')"
                     @class([
-                        'p-3 rounded-lg border-2 transition-all',
+                        'p-3 rounded-lg border-2 transition-all text-left',
                         'border-blue-500 bg-blue-50' => $this->selectedCompany === 'friseur',
                         'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'friseur'
                     ])
@@ -35,6 +37,12 @@
                     <span class="text-xs text-gray-600 block">Team 34209 | Events: 2942413, 3672814</span>
                 </button>
             </div>
+
+            @if(!empty($this->selectedCompany) && empty($this->companyConfig))
+                <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-sm text-red-800">⚠️ Company "{{ $this->selectedCompany }}" is not configured for testing. Please select AskProAI or Friseur 1.</p>
+                </div>
+            @endif
         </div>
 
         <!-- Quick Actions -->

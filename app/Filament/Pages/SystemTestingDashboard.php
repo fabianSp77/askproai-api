@@ -95,6 +95,11 @@ class SystemTestingDashboard extends Page
             return;
         }
 
+        if (empty($this->companyConfig)) {
+            $this->addError('The selected company is not configured for testing. Please select AskProAI or Friseur 1.');
+            return;
+        }
+
         if (!array_key_exists($testType, SystemTestRun::testTypes())) {
             $this->addError('Invalid test type');
             return;
@@ -136,6 +141,11 @@ class SystemTestingDashboard extends Page
     {
         if (empty($this->selectedCompany)) {
             $this->addError('Please select a company/branch first');
+            return;
+        }
+
+        if (empty($this->companyConfig)) {
+            $this->addError('The selected company is not configured for testing. Please select AskProAI or Friseur 1.');
             return;
         }
 
