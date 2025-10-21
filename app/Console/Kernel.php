@@ -89,6 +89,54 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->name('materialized-stats-cleanup')
             ->appendOutputTo(storage_path('logs/materialized-stats.log'));
+
+        // 🛡️ DATA CONSISTENCY MONITORING (2025-10-20)
+
+        // Real-time inconsistency detection - runs every 5 minutes
+        $schedule->call(function () {
+            $monitor = app(\App\Services\Monitoring\DataConsistencyMonitor::class);
+            $inconsistencies = $monitor->detectInconsistencies();
+
+            if (!empty($inconsistencies)) {
+                Log::warning('⚠️ Data inconsistencies detected', [
+                    'count' => count($inconsistencies),
+                    'issues' => $inconsistencies
+                ]);
+            }
+        })
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->name('data-consistency-check')
+            ->appendOutputTo(storage_path('logs/data-consistency.log'));
+
+        // Daily validation report - comprehensive data quality report
+        $schedule->call(function () {
+            $monitor = app(\App\Services\Monitoring\DataConsistencyMonitor::class);
+            $report = $monitor->generateDailyReport();
+
+            Log::info('📊 Daily data consistency report generated', $report);
+        })
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->name('data-consistency-daily-report')
+            ->appendOutputTo(storage_path('logs/data-consistency.log'))
+            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
+
+        // Manual review queue processing - runs every hour
+        $schedule->call(function () {
+            $monitor = app(\App\Services\Monitoring\DataConsistencyMonitor::class);
+            $processed = $monitor->processManualReviewQueue();
+
+            if ($processed > 0) {
+                Log::info("✅ Processed {$processed} items from manual review queue");
+            }
+        })
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->name('manual-review-queue-processing')
+            ->appendOutputTo(storage_path('logs/data-consistency.log'));
     }
 
     protected function commands(): void

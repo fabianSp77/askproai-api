@@ -630,6 +630,37 @@ class AppointmentResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-m-user')
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        if (!$record->customer) {
+                            return '<span class="text-gray-400">Kein Kunde</span>';
+                        }
+
+                        // Determine verification status from appointment metadata
+                        $verified = null;
+                        $verificationSource = null;
+                        $additionalInfo = null;
+
+                        // Check if appointment has verification metadata
+                        if ($record->metadata && is_array($record->metadata)) {
+                            $verified = $record->metadata['customer_verified'] ?? null;
+                            $verificationSource = $record->metadata['verification_source'] ?? 'customer_linked';
+                            $additionalInfo = $record->metadata['verification_info'] ?? null;
+                        } else {
+                            // Default: Customer linked = verified
+                            $verified = true;
+                            $verificationSource = 'customer_linked';
+                        }
+
+                        // Render the mobile-friendly verification badge
+                        return view('components.mobile-verification-badge', [
+                            'name' => $record->customer->name,
+                            'verified' => $verified,
+                            'verificationSource' => $verificationSource,
+                            'additionalInfo' => $additionalInfo,
+                            'phone' => $record->customer->phone,
+                        ])->render();
+                    })
                     ->description(fn ($record) => $record->customer?->phone)
                     ->url(fn ($record) => $record->customer
                         ? CustomerResource::getUrl('view', ['record' => $record->customer_id])

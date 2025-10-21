@@ -511,11 +511,49 @@ class CallLifecycleService implements CallLifecycleInterface
             ->first();
 
         if ($call) {
-            // Validate phone number exists
-            if (!$call->phoneNumber) {
-                Log::warning('Call context loaded but phone number missing', [
+            // 🔧 FIX 2025-10-18: If phone_number_id is NULL but company_id exists,
+            // try to resolve from company+branch context
+            if (!$call->phoneNumber && $call->company_id && $call->branch_id) {
+                Log::warning('⚠️ Phone number missing, attempting fallback resolution', [
                     'call_id' => $call->id,
                     'retell_call_id' => $retellCallId,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id,
+                ]);
+
+                // Fallback: Look up phone number by company/branch
+                $phoneNumber = \App\Models\PhoneNumber::where('company_id', $call->company_id)
+                    ->where('branch_id', $call->branch_id)
+                    ->first();
+
+                if ($phoneNumber) {
+                    // Set the relationship manually for this request
+                    $call->setRelation('phoneNumber', $phoneNumber);
+                    // Also update the call record to fix the missing phone_number_id
+                    if (!$call->phone_number_id) {
+                        $call->phone_number_id = $phoneNumber->id;
+                        $call->save();
+                        Log::info('✅ Fixed missing phone_number_id via fallback', [
+                            'call_id' => $call->id,
+                            'phone_number_id' => $phoneNumber->id,
+                        ]);
+                    }
+                } else {
+                    Log::error('❌ Call context load failed: Phone number not found even with fallback', [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $retellCallId,
+                        'company_id' => $call->company_id,
+                        'branch_id' => $call->branch_id,
+                    ]);
+                    return null;
+                }
+            } elseif (!$call->phoneNumber) {
+                // No phone number AND no company_id/branch_id to fall back on
+                Log::error('❌ Cannot resolve call context: Phone number missing and no company/branch fallback', [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $retellCallId,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id,
                 ]);
                 return null;
             }

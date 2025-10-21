@@ -64,7 +64,10 @@ class RetellApiController extends Controller
             $companyId = null;
 
             if ($callId) {
-                $call = Call::where('retell_call_id', $callId)->first();
+                // Phase 4: Eager load relationships to prevent N+1 queries
+                $call = Call::with(['customer', 'company', 'branch', 'phoneNumber'])
+                    ->where('retell_call_id', $callId)
+                    ->first();
                 if ($call && $call->from_number) {
                     $phoneNumber = $call->from_number;
                     $companyId = $call->company_id;  // 🔧 FIX 2025-10-11: Get company_id for tenant isolation
@@ -77,23 +80,31 @@ class RetellApiController extends Controller
                 // Normalize phone number (remove spaces, dashes, etc.)
                 $normalizedPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
 
-                // 🔧 FIX 2025-10-11: MULTI-TENANCY - Filter by company_id!
-                // Prevents finding wrong customer from different company
-                $query = Customer::where(function($q) use ($normalizedPhone) {
-                    $q->where('phone', $normalizedPhone)
-                      ->orWhere('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%');
+                // Phase 4: Cache customer lookups for 5 minutes to reduce database load
+                $cacheKey = "customer:phone:" . md5($normalizedPhone) . ":company:{$companyId}";
+                $customer = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function() use ($normalizedPhone, $companyId) {
+                    // 🔧 FIX 2025-10-11: MULTI-TENANCY - Filter by company_id!
+                    // Prevents finding wrong customer from different company
+                    $query = Customer::where(function($q) use ($normalizedPhone) {
+                        $q->where('phone', $normalizedPhone)
+                          ->orWhere('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%');
+                    });
+
+                    // SECURITY: Tenant isolation - only search within same company
+                    if ($companyId) {
+                        $query->where('company_id', $companyId);
+                    }
+
+                    return $query->first();
                 });
 
-                // SECURITY: Tenant isolation - only search within same company
-                if ($companyId) {
-                    $query->where('company_id', $companyId);
+                if ($customer) {
                     Log::info('🔒 SECURITY: Tenant-isolated customer search', [
                         'company_id' => $companyId,
-                        'phone_last_8' => substr($normalizedPhone, -8)
+                        'phone_last_8' => substr($normalizedPhone, -8),
+                        'cache_key' => $cacheKey
                     ]);
                 }
-
-                $customer = $query->first();
             }
 
             // If not found by phone, try by name
@@ -157,24 +168,67 @@ class RetellApiController extends Controller
     public function checkAvailability(Request $request)
     {
         try {
-            $callId = $request->input('call_id');
-            $date = $request->input('date');
-            $time = $request->input('time');
-            $duration = $request->input('duration', 60);
-            $serviceId = $request->input('service_id');
+            Log::info('🔍 CHECKPOINT 1: checkAvailability called');
+
+            // FIX 2025-10-20: Support BOTH flat parameters AND nested 'args' format
+            // from different Retell agent versions
+            $args = $request->input('args', []);
+
+            Log::info('🔍 CHECKPOINT 2: Args extracted', ['args' => $args]);
+
+            $callId = $args['call_id'] ?? $request->input('call_id');
+            $date = $args['date'] ?? $request->input('date');
+            $time = $args['time'] ?? $request->input('time');
+            $duration = $args['duration'] ?? $request->input('duration', 60);
+            $serviceId = $args['service_id'] ?? $request->input('service_id');
+
+            Log::info('🔍 CHECKPOINT 3: Parameters extracted', [
+                'call_id' => $callId,
+                'date' => $date,
+                'time' => $time
+            ]);
 
             Log::info('📅 Checking availability', [
                 'call_id' => $callId,
                 'date' => $date,
                 'time' => $time,
-                'duration' => $duration
+                'duration' => $duration,
+                'parameter_source' => isset($args['call_id']) ? 'nested_args' : 'flat_params'
             ]);
+
+            Log::info('🔍 CHECKPOINT 4: Before parseDateTime');
 
             // Parse date and time
             $appointmentDate = $this->parseDateTime($date, $time);
 
+            Log::info('🔍 CHECKPOINT 5: After parseDateTime', [
+                'parsed' => $appointmentDate->format('Y-m-d H:i')
+            ]);
+
+            // 🔧 FIX 2025-10-20: Get company_id from call context for proper service selection
+            $companyId = 15; // Default to AskProAI
+            if ($callId) {
+                $call = Call::where('retell_call_id', $callId)->first();
+                if ($call && $call->company_id) {
+                    $companyId = $call->company_id;
+                }
+            }
+
+            Log::info('🔍 CHECKPOINT 6: Company context', [
+                'company_id' => $companyId,
+                'call_id' => $callId
+            ]);
+
             // Get service configuration
-            $service = $serviceId ? Service::find($serviceId) : Service::whereNotNull('calcom_event_type_id')->first();
+            // 🔧 FIX 2025-10-20: Use ACTIVE services only, filtered by company
+            // Respects is_active flag and multi-tenant isolation
+            $service = $serviceId
+                ? Service::find($serviceId)
+                : Service::where('company_id', $companyId)
+                         ->where('is_active', 1)
+                         ->whereNotNull('calcom_event_type_id')
+                         ->latest()  // Newest active service
+                         ->first();
 
             if (!$service || !$service->calcom_event_type_id) {
                 return response()->json([
@@ -216,6 +270,16 @@ class RetellApiController extends Controller
                 $checkDate,
                 $duration,
                 $service->calcom_event_type_id
+            );
+
+            // 💾 NEW PHASE: Save appointment wish for follow-up tracking
+            $this->saveAppointmentWish(
+                $callId,
+                $appointmentDate,
+                $duration,
+                $service,
+                $alternatives,
+                'not_available'
             );
 
             return response()->json([
@@ -484,7 +548,10 @@ class RetellApiController extends Controller
             // Get customer from call
             $call = null;
             if ($callId) {
-                $call = Call::where('retell_call_id', $callId)->first();
+                // Phase 4: Eager load relationships to prevent N+1 queries
+                $call = Call::with(['customer', 'company', 'branch', 'phoneNumber'])
+                    ->where('retell_call_id', $callId)
+                    ->first();
 
                 // FIX 2025-10-11: PRIORITY search for anonymous callers - check THIS call's appointments FIRST
                 if ($call && $call->from_number === 'anonymous' && $appointmentDate) {
@@ -957,7 +1024,10 @@ class RetellApiController extends Controller
             // Get customer from call
             $call = null;
             if ($callId) {
-                $call = Call::where('retell_call_id', $callId)->first();
+                // Phase 4: Eager load relationships to prevent N+1 queries
+                $call = Call::with(['customer', 'company', 'branch', 'phoneNumber'])
+                    ->where('retell_call_id', $callId)
+                    ->first();
                 if ($call) {
                     // Strategy 1: Customer already linked to call
                     if ($call->customer_id) {
@@ -1621,26 +1691,35 @@ class RetellApiController extends Controller
     private function parseDateTime($date, $time)
     {
         try {
-            // FIX 2025-10-10: Use DateTimeParser service for German dates (heute, morgen, etc.)
-            $dateTimeParser = app(\App\Services\Retell\DateTimeParser::class);
+            // 🔧 FIX 2025-10-20: Handle ISO format FIRST (from Retell Agent)
+            // ISO format: YYYY-MM-DD (e.g., "2025-10-20")
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                $parsedDate = Carbon::parse($date);
 
-            // Try DateTimeParser first (handles German: heute, morgen, DD.MM.YYYY, etc.)
-            $parsedDateString = $dateTimeParser->parseDateString($date);
-
-            if ($parsedDateString) {
-                $parsedDate = Carbon::parse($parsedDateString);
+                Log::debug('✅ Parsed ISO date directly', [
+                    'input' => $date,
+                    'parsed' => $parsedDate->format('Y-m-d')
+                ]);
             } else {
-                // Fallback: Handle German date format (DD.MM.YYYY or DD.MM.)
-                if (strpos($date, '.') !== false) {
-                    $dateParts = explode('.', $date);
-                    $day = intval($dateParts[0]);
-                    $month = intval($dateParts[1]);
-                    $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+                // Use DateTimeParser for German dates (heute, morgen, DD.MM.YYYY, etc.)
+                $dateTimeParser = app(\App\Services\Retell\DateTimeParser::class);
+                $parsedDateString = $dateTimeParser->parseDateString($date);
 
-                    $parsedDate = Carbon::create($year, $month, $day);
+                if ($parsedDateString) {
+                    $parsedDate = Carbon::parse($parsedDateString);
                 } else {
-                    // Last resort: Try ISO format
-                    $parsedDate = Carbon::parse($date);
+                    // Fallback: Handle German date format (DD.MM.YYYY or DD.MM.)
+                    if (strpos($date, '.') !== false) {
+                        $dateParts = explode('.', $date);
+                        $day = intval($dateParts[0]);
+                        $month = intval($dateParts[1]);
+                        $year = isset($dateParts[2]) ? intval($dateParts[2]) : Carbon::now()->year;
+
+                        $parsedDate = Carbon::create($year, $month, $day);
+                    } else {
+                        // Last resort: Try Carbon parse
+                        $parsedDate = Carbon::parse($date);
+                    }
                 }
             }
 
@@ -1804,5 +1883,81 @@ class RetellApiController extends Controller
         // V1 IDs are integers but not obvious dummy values (already checked above)
         // Allow anything that doesn't match dummy patterns
         return true;
+    }
+
+    /**
+     * 💾 Save unfulfilled appointment wish for follow-up tracking
+     *
+     * Creates AppointmentWish record when:
+     * - Check-availability returns no available slots
+     * - Customer declines offered alternatives
+     * - Booking confidence is too low
+     */
+    private function saveAppointmentWish(
+        ?string $callId,
+        Carbon $desiredDateTime,
+        int $duration,
+        Service $service,
+        array $alternatives,
+        string $rejectionReason = 'not_available'
+    ): void {
+        try {
+            if (!$callId) {
+                return; // No call context, skip wish tracking
+            }
+
+            $call = Call::where('retell_call_id', $callId)->first();
+            if (!$call) {
+                return; // Call not found
+            }
+
+            // 💾 Create wish record
+            \App\Models\AppointmentWish::create([
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'call_id' => $call->id,
+                'customer_id' => $call->customer_id,
+                'desired_date' => $desiredDateTime,
+                'desired_time' => $desiredDateTime->format('H:i'),
+                'desired_duration' => $duration,
+                'desired_service' => $service->name,
+                'alternatives_offered' => collect($alternatives['alternatives'] ?? [])->map(function($alt) {
+                    return [
+                        'datetime' => $alt['datetime']->format('Y-m-d H:i'),
+                        'type' => $alt['type'] ?? null,
+                        'description' => $alt['description'] ?? null
+                    ];
+                })->toArray(),
+                'rejection_reason' => $rejectionReason,
+                'status' => 'pending',
+                'metadata' => [
+                    'call_retell_id' => $callId,
+                    'service_id' => $service->id,
+                    'source' => 'check_availability_api'
+                ]
+            ]);
+
+            Log::info('💾 Appointment wish recorded', [
+                'call_id' => $call->id,
+                'customer_id' => $call->customer_id,
+                'desired_date' => $desiredDateTime->format('Y-m-d H:i'),
+                'rejection_reason' => $rejectionReason,
+                'alternatives_count' => count($alternatives['alternatives'] ?? [])
+            ]);
+
+            // 📧 Trigger notification event (handled by listener in Phase 4)
+            event(new \App\Events\AppointmentWishCreated(
+                \App\Models\AppointmentWish::where('call_id', $call->id)->latest()->first(),
+                $call
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to save appointment wish', [
+                'error' => $e->getMessage(),
+                'call_id' => $callId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            // Don't throw - continue with response even if wish tracking fails
+        }
     }
 }

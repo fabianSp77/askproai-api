@@ -44,6 +44,20 @@ class AppointmentCustomerResolver
     /**
      * Handle anonymous caller (blocked/withheld caller ID)
      *
+     * CRITICAL BUSINESS RULE (2025-10-19):
+     * Anonymous callers (no phone number transfer) MUST ALWAYS create NEW records.
+     * NEVER match to existing customers by name or any other field.
+     *
+     * Rationale: Security & Privacy
+     * - Without verified phone number, we cannot confirm caller identity
+     * - Anonymous callers are treated as new customers even if name matches
+     * - Prevents accidental linking of unrelated callers to existing customers
+     *
+     * Example:
+     * - Caller 1: "Ich bin Max" (anonymous) → Creates Customer "Max" #1
+     * - Caller 2: "Ich bin Max" (anonymous) → Creates Customer "Max" #2 (NEW, not linked)
+     * - Why? We can't verify if it's the same Max without phone number
+     *
      * @param Call $call Call record
      * @param string $name Customer name
      * @param string|null $email Customer email
@@ -51,33 +65,16 @@ class AppointmentCustomerResolver
      */
     private function handleAnonymousCaller(Call $call, string $name, ?string $email): Customer
     {
-        Log::info('📞 Anonymous caller detected - searching by name', [
+        Log::info('📞 Anonymous caller detected - creating NEW customer (never match)', [
             'name' => $name,
             'company_id' => $call->company_id,
             'from_number' => $call->from_number,
-            'anonymity_reason' => AnonymousCallDetector::getReason($call)
+            'anonymity_reason' => AnonymousCallDetector::getReason($call),
+            'security_note' => 'Anonymous callers must always create new records - never match to existing'
         ]);
 
-        // Try to find customer by name + company (fuzzy match)
-        $customer = Customer::where('company_id', $call->company_id)
-            ->where(function($query) use ($name) {
-                $query->where('name', 'LIKE', '%' . $name . '%')
-                      ->orWhere('name', $name);
-            })
-            ->first();
-
-        if ($customer) {
-            Log::info('✅ Found existing customer by name (anonymous call)', [
-                'customer_id' => $customer->id,
-                'name' => $customer->name,
-                'call_id' => $call->id
-            ]);
-
-            $this->linkCustomerToCall($call, $customer);
-            return $customer;
-        }
-
-        // Create new customer with unique phone placeholder
+        // SECURITY FIX 2025-10-19: Always create new customer for anonymous callers
+        // DO NOT attempt to match by name - we cannot verify identity without phone number
         return $this->createAnonymousCustomer($call, $name, $email);
     }
 

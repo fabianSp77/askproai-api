@@ -21,11 +21,20 @@ use App\Services\Appointments\Contracts\AvailabilityServiceInterface;
 use App\Services\Appointments\WeeklyAvailabilityService;
 use App\Services\Appointments\Contracts\BookingServiceInterface;
 use App\Services\Appointments\BookingService;
+use App\Services\Validation\PostBookingValidationService;
+use App\Services\Monitoring\DataConsistencyMonitor;
+use App\Services\Resilience\AppointmentBookingCircuitBreaker;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Phase 5: Register EventBus singleton for event-driven architecture
+        $this->app->singleton(
+            \App\Shared\Events\EventBus::class,
+            fn () => new \App\Shared\Events\EventBus()
+        );
+
         // Bind Availability Service Interface
         $this->app->bind(
             AvailabilityServiceInterface::class,
@@ -37,12 +46,23 @@ class AppServiceProvider extends ServiceProvider
             BookingServiceInterface::class,
             BookingService::class
         );
+
+        // Register Data Consistency Prevention Services (2025-10-20)
+        $this->app->singleton(PostBookingValidationService::class);
+        $this->app->singleton(DataConsistencyMonitor::class);
+        $this->app->singleton(AppointmentBookingCircuitBreaker::class);
     }
 
     public function boot(): void
     {
         // CRITICAL DEBUG: Log boot start
         \Log::info('🚀 AppServiceProvider::boot() START - Memory: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB');
+
+        // Phase 4: Enable Database Performance Monitor for N+1 detection
+        \App\Services\Monitoring\DatabasePerformanceMonitor::enable();
+
+        // Phase 5: Register event listeners for event-driven architecture
+        $this->registerEventListeners();
 
         // Set German locale for Carbon dates
         Carbon::setLocale('de');
@@ -102,5 +122,26 @@ class AppServiceProvider extends ServiceProvider
 
         // CRITICAL DEBUG: Log boot end
         \Log::info('✅ AppServiceProvider::boot() END - Memory: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB');
+    }
+
+    /**
+     * Phase 5: Register event listeners for domain events
+     */
+    private function registerEventListeners(): void
+    {
+        $eventBus = $this->app->make(\App\Shared\Events\EventBus::class);
+
+        // Appointment domain listeners
+        $eventBus->subscribe(
+            \App\Domains\Appointments\Events\AppointmentCreatedEvent::class,
+            new \App\Domains\Appointments\Listeners\CalcomSyncListener()
+        );
+
+        $eventBus->subscribe(
+            \App\Domains\Appointments\Events\AppointmentCreatedEvent::class,
+            new \App\Domains\Appointments\Listeners\SendConfirmationListener()
+        );
+
+        \Log::info('✅ Event listeners registered for Phase 5 event-driven architecture');
     }
 }

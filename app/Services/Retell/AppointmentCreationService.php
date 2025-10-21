@@ -458,6 +458,40 @@ class AppointmentCreationService implements AppointmentCreationInterface
             throw $e;  // Re-throw to be caught by caller
         }
 
+        // 🛡️ POST-BOOKING VALIDATION (2025-10-20): Verify appointment was actually created
+        if ($call) {
+            try {
+                $validator = app(\App\Services\Validation\PostBookingValidationService::class);
+                $validation = $validator->validateAppointmentCreation($call, $appointment->id, $calcomBookingId);
+
+                if (!$validation->success) {
+                    Log::error('❌ Post-booking validation failed', [
+                        'appointment_id' => $appointment->id,
+                        'call_id' => $call->id,
+                        'reason' => $validation->reason
+                    ]);
+
+                    // Rollback call flags (appointment stays in DB for manual review)
+                    $validator->rollbackOnFailure($call, $validation->reason);
+
+                    throw new \Exception("Appointment validation failed: {$validation->reason}");
+                }
+
+                Log::info('✅ Post-booking validation successful', [
+                    'appointment_id' => $appointment->id,
+                    'call_id' => $call->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error('⚠️ Post-booking validation error', [
+                    'appointment_id' => $appointment->id,
+                    'call_id' => $call?->id,
+                    'error' => $e->getMessage()
+                ]);
+                // Don't throw - let appointment be created even if validation fails
+                // Manual review will catch issues
+            }
+        }
+
         // PHASE 2: Staff Assignment from Cal.com hosts array
         if ($calcomBookingData) {
             $this->assignStaffFromCalcomHost($appointment, $calcomBookingData, $call);
@@ -685,6 +719,27 @@ class AppointmentCreationService implements AppointmentCreationInterface
             $appointmentData = $response->json();
             $bookingData = $appointmentData['data'] ?? $appointmentData;
             $bookingId = $bookingData['id'] ?? $appointmentData['id'] ?? null;
+
+            // 🚨 CRITICAL FIX 2025-10-18: VALIDATE BOOKED TIME MATCHES REQUESTED TIME
+            // ISSUE: Cal.com sometimes books different time than requested (race condition)
+            // Our database was storing REQUESTED time instead of ACTUAL booked time
+            if (isset($bookingData['start'])) {
+                $bookedStart = Carbon::parse($bookingData['start']);
+                $bookedTimeStr = $bookedStart->format('Y-m-d H:i');
+                $requestedTimeStr = $startTime->format('Y-m-d H:i');
+
+                if ($bookedTimeStr !== $requestedTimeStr) {
+                    Log::error('🚨 CRITICAL: Cal.com booked WRONG time - rejecting booking!', [
+                        'requested_time' => $requestedTimeStr,
+                        'actual_booked_time' => $bookedTimeStr,
+                        'time_mismatch_minutes' => $startTime->diffInMinutes($bookedStart),
+                        'booking_id' => $bookingId,
+                        'reason' => 'Race condition: Slot was taken between availability check and booking',
+                        'action_taken' => 'Booking REJECTED to prevent data inconsistency'
+                    ]);
+                    return null; // REJECT this mismatched booking
+                }
+            }
 
             // FIX 1: Validate booking freshness - Prevent accepting stale bookings from Cal.com idempotency
             $createdAt = isset($bookingData['createdAt'])

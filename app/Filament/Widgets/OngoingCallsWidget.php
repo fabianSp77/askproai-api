@@ -17,9 +17,16 @@ class OngoingCallsWidget extends BaseWidget
 
     protected static ?string $heading = '📞 Laufende Anrufe - Echtzeit-Übersicht';
 
+    /**
+     * DEPRECATED: Functionality moved to CallResource table with LIVE badges
+     * Keep widget code for potential future use, but disabled for now
+     *
+     * @return bool
+     */
     public static function canView(): bool
     {
-        return true;
+        return false; // 🔴 NEW PHASE: Disabled to eliminate UI duplication
+        // Laufende Anrufe werden jetzt in der Hauptliste CallResource mit 🔴 LIVE Badge angezeigt
     }
 
     /**
