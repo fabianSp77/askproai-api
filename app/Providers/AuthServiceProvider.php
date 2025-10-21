@@ -33,6 +33,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\NotificationEventMapping::class => \App\Policies\NotificationEventMappingPolicy::class,
         \App\Models\CallbackEscalation::class => \App\Policies\CallbackEscalationPolicy::class,
         \App\Models\AdminUpdate::class => \App\Policies\AdminUpdatePolicy::class,
+        // System Testing Policy (admin@askproai.de only)
+        \App\Models\SystemTestRun::class => \App\Policies\SystemTestingPolicy::class,
     ];
 
     /**
