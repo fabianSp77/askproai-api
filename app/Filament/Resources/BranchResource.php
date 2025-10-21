@@ -365,6 +365,225 @@ class BranchResource extends Resource
                                                 })
                                                 ->icon('heroicon-m-rocket-launch'),
                                         ]),
+
+                                        // PROMPT EDITOR SECTION (nur wenn Agent aktiv)
+                                        Section::make('🎤 Prompt Editor')
+                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
+                                            ->description('Bearbeiten Sie die Ansprache des Agenten')
+                                            ->schema([
+                                                Forms\Components\Textarea::make('retell_prompt_content')
+                                                    ->label('Agent Ansprache (Prompt)')
+                                                    ->rows(12)
+                                                    ->maxLength(10000)
+                                                    ->helperText('Max 10.000 Zeichen. Sollte WORKFLOW & FUNKTION Sections enthalten.')
+                                                    ->dehydrated(false)
+                                                    ->afterStateHydrated(function (Forms\Set $set, ?Branch $record) {
+                                                        if ($record) {
+                                                            $activePrompt = $record->retellAgentPrompts()
+                                                                ->where('is_active', true)
+                                                                ->first();
+                                                            if ($activePrompt) {
+                                                                $set('retell_prompt_content', $activePrompt->prompt_content);
+                                                            }
+                                                        }
+                                                    }),
+
+                                                Forms\Components\Placeholder::make('prompt_status')
+                                                    ->label('Status')
+                                                    ->content(fn (Forms\Get $get) => '✅ ' . strlen($get('retell_prompt_content') ?? '') . ' / 10.000 Zeichen'),
+
+                                                Forms\Components\Actions::make([
+                                                    Forms\Components\Actions\Action::make('update_prompt')
+                                                        ->label('Prompt aktualisieren & deployen')
+                                                        ->action(function (Branch $record, Forms\Get $get) {
+                                                            if (!$record) return;
+
+                                                            $newPromptContent = $get('retell_prompt_content');
+                                                            if (!$newPromptContent) {
+                                                                Notification::make()
+                                                                    ->title('Fehler')
+                                                                    ->body('Prompt-Inhalt ist erforderlich')
+                                                                    ->danger()
+                                                                    ->send();
+                                                                return;
+                                                            }
+
+                                                            try {
+                                                                $activePrompt = $record->retellAgentPrompts()
+                                                                    ->where('is_active', true)
+                                                                    ->first();
+
+                                                                if (!$activePrompt) {
+                                                                    Notification::make()
+                                                                        ->title('Fehler')
+                                                                        ->body('Kein aktiver Agent konfiguriert')
+                                                                        ->danger()
+                                                                        ->send();
+                                                                    return;
+                                                                }
+
+                                                                $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                                $result = $service->updatePromptContent($activePrompt, $newPromptContent, auth()->user());
+
+                                                                if ($result['success']) {
+                                                                    Notification::make()
+                                                                        ->title('✅ Erfolgreich aktualisiert')
+                                                                        ->body('Neue Version ' . ($activePrompt->version + 1) . ' ist jetzt aktiv')
+                                                                        ->success()
+                                                                        ->send();
+                                                                } else {
+                                                                    Notification::make()
+                                                                        ->title('❌ Aktualisierung fehlgeschlagen')
+                                                                        ->body(implode(', ', $result['errors'] ?? [$result['message'] ?? 'Unbekannter Fehler']))
+                                                                        ->danger()
+                                                                        ->send();
+                                                                }
+                                                            } catch (\Exception $e) {
+                                                                Notification::make()
+                                                                    ->title('Fehler')
+                                                                    ->body($e->getMessage())
+                                                                    ->danger()
+                                                                    ->send();
+                                                            }
+                                                        })
+                                                        ->icon('heroicon-m-arrow-up'),
+                                                ]),
+                                            ]),
+
+                                        // FUNCTIONS MANAGER SECTION (nur wenn Agent aktiv)
+                                        Section::make('⚙️ Functions Manager')
+                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
+                                            ->description('Verwalten Sie die Funktionen des Agenten')
+                                            ->schema([
+                                                Forms\Components\Placeholder::make('functions_list')
+                                                    ->label('Aktive Funktionen')
+                                                    ->content(function (?Branch $record) {
+                                                        if (!$record) return '—';
+
+                                                        $activePrompt = $record->retellAgentPrompts()
+                                                            ->where('is_active', true)
+                                                            ->first();
+
+                                                        if (!$activePrompt || !$activePrompt->functions_config) {
+                                                            return '⚠️ Keine Funktionen konfiguriert';
+                                                        }
+
+                                                        $html = '<div class="space-y-2">';
+                                                        foreach ($activePrompt->functions_config as $func) {
+                                                            $html .= '<div class="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded">';
+                                                            $html .= '<div>';
+                                                            $html .= '<p class="font-semibold text-blue-900">' . $func['name'] . '</p>';
+                                                            $html .= '<p class="text-sm text-blue-700">' . ($func['description'] ?? 'Keine Beschreibung') . '</p>';
+                                                            $html .= '</div>';
+                                                            $html .= '</div>';
+                                                        }
+                                                        $html .= '</div>';
+
+                                                        return $html;
+                                                    }),
+
+                                                Section::make('➕ Neue Custom Function')
+                                                    ->collapsible()
+                                                    ->collapsed()
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('custom_function_name')
+                                                            ->label('Function Name')
+                                                            ->placeholder('z.B. check_availability_custom')
+                                                            ->required()
+                                                            ->helperText('Nur Kleinbuchstaben, Zahlen und Unterstrich')
+                                                            ->dehydrated(false),
+
+                                                        Forms\Components\Textarea::make('custom_function_description')
+                                                            ->label('Beschreibung')
+                                                            ->placeholder('Was macht diese Funktion?')
+                                                            ->required()
+                                                            ->dehydrated(false),
+
+                                                        Forms\Components\Textarea::make('custom_function_parameters')
+                                                            ->label('Parameters (JSON)')
+                                                            ->placeholder('{"type":"object","properties":{},"required":[]}')
+                                                            ->rows(6)
+                                                            ->required()
+                                                            ->hint('Gültige JSON-Struktur erforderlich')
+                                                            ->dehydrated(false),
+
+                                                        Forms\Components\Actions::make([
+                                                            Forms\Components\Actions\Action::make('add_custom_function')
+                                                                ->label('Custom Function hinzufügen')
+                                                                ->action(function (Branch $record, Forms\Get $get) {
+                                                                    if (!$record) return;
+
+                                                                    $name = $get('custom_function_name');
+                                                                    $description = $get('custom_function_description');
+                                                                    $parametersJson = $get('custom_function_parameters');
+
+                                                                    if (!$name || !$description || !$parametersJson) {
+                                                                        Notification::make()
+                                                                            ->title('Fehler')
+                                                                            ->body('Alle Felder sind erforderlich')
+                                                                            ->danger()
+                                                                            ->send();
+                                                                        return;
+                                                                    }
+
+                                                                    try {
+                                                                        $parameters = json_decode($parametersJson, true);
+                                                                        if (!$parameters) {
+                                                                            Notification::make()
+                                                                                ->title('Fehler')
+                                                                                ->body('Parameters JSON ist nicht gültig')
+                                                                                ->danger()
+                                                                                ->send();
+                                                                            return;
+                                                                        }
+
+                                                                        $activePrompt = $record->retellAgentPrompts()
+                                                                            ->where('is_active', true)
+                                                                            ->first();
+
+                                                                        if (!$activePrompt) {
+                                                                            Notification::make()
+                                                                                ->title('Fehler')
+                                                                                ->body('Kein aktiver Agent konfiguriert')
+                                                                                ->danger()
+                                                                                ->send();
+                                                                            return;
+                                                                        }
+
+                                                                        $customFunction = [
+                                                                            'name' => $name,
+                                                                            'description' => $description,
+                                                                            'parameters' => $parameters,
+                                                                        ];
+
+                                                                        $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                                        $result = $service->addCustomFunction($activePrompt, $customFunction, auth()->user());
+
+                                                                        if ($result['success']) {
+                                                                            Notification::make()
+                                                                                ->title('✅ Custom Function hinzugefügt')
+                                                                                ->body('Neue Version ' . ($activePrompt->version + 1) . ' ist jetzt aktiv')
+                                                                                ->success()
+                                                                                ->send();
+                                                                        } else {
+                                                                            Notification::make()
+                                                                                ->title('❌ Fehler beim Hinzufügen')
+                                                                                ->body(implode(', ', $result['errors'] ?? [$result['message'] ?? 'Unbekannter Fehler']))
+                                                                                ->danger()
+                                                                                ->send();
+                                                                        }
+                                                                    } catch (\Exception $e) {
+                                                                        Notification::make()
+                                                                            ->title('Fehler')
+                                                                            ->body($e->getMessage())
+                                                                            ->danger()
+                                                                            ->send();
+                                                                    }
+                                                                })
+                                                                ->icon('heroicon-m-plus'),
+                                                        ]),
+                                                    ]),
+                                            ]),
                                     ]),
                             ]),
                     ])

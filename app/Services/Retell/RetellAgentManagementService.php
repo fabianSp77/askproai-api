@@ -258,4 +258,197 @@ class RetellAgentManagementService
             'total_functions' => count($functionsConfig),
         ];
     }
+
+    /**
+     * Update prompt content and deploy new version
+     */
+    public function updatePromptContent(RetellAgentPrompt $activePrompt, string $newPromptContent, ?User $updatedBy = null): array
+    {
+        try {
+            // Validate new prompt
+            $validationErrors = $this->validationService->validatePromptContent($newPromptContent);
+            if (!empty($validationErrors)) {
+                return [
+                    'success' => false,
+                    'message' => 'Prompt validation failed',
+                    'errors' => $validationErrors,
+                ];
+            }
+
+            // Create new version
+            $newVersion = RetellAgentPrompt::create([
+                'branch_id' => $activePrompt->branch_id,
+                'version' => RetellAgentPrompt::getNextVersionForBranch($activePrompt->branch_id),
+                'prompt_content' => $newPromptContent,
+                'functions_config' => $activePrompt->functions_config,
+                'is_active' => false,
+                'is_template' => false,
+                'validation_status' => 'pending',
+                'deployment_notes' => 'Updated prompt content',
+            ]);
+
+            // Deploy new version
+            $deployResult = $this->deployPromptVersion($newVersion, $updatedBy);
+
+            if ($deployResult['success']) {
+                Log::info('Prompt updated successfully', [
+                    'branch_id' => $activePrompt->branch_id,
+                    'version' => $newVersion->version,
+                ]);
+            } else {
+                // Delete the failed version
+                $newVersion->delete();
+            }
+
+            return $deployResult;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update prompt', [
+                'error' => $e->getMessage(),
+                'version_id' => $activePrompt->id,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to update prompt: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Update functions configuration and deploy new version
+     */
+    public function updateFunctions(RetellAgentPrompt $activePrompt, array $newFunctions, ?User $updatedBy = null): array
+    {
+        try {
+            // Validate functions
+            $validationErrors = $this->validationService->validateFunctionsConfig($newFunctions);
+            if (!empty($validationErrors)) {
+                return [
+                    'success' => false,
+                    'message' => 'Functions validation failed',
+                    'errors' => $validationErrors,
+                ];
+            }
+
+            // Create new version
+            $newVersion = RetellAgentPrompt::create([
+                'branch_id' => $activePrompt->branch_id,
+                'version' => RetellAgentPrompt::getNextVersionForBranch($activePrompt->branch_id),
+                'prompt_content' => $activePrompt->prompt_content,
+                'functions_config' => $newFunctions,
+                'is_active' => false,
+                'is_template' => false,
+                'validation_status' => 'pending',
+                'deployment_notes' => 'Updated functions configuration',
+            ]);
+
+            // Deploy new version
+            $deployResult = $this->deployPromptVersion($newVersion, $updatedBy);
+
+            if ($deployResult['success']) {
+                Log::info('Functions updated successfully', [
+                    'branch_id' => $activePrompt->branch_id,
+                    'version' => $newVersion->version,
+                    'function_count' => count($newFunctions),
+                ]);
+            } else {
+                // Delete the failed version
+                $newVersion->delete();
+            }
+
+            return $deployResult;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update functions', [
+                'error' => $e->getMessage(),
+                'version_id' => $activePrompt->id,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to update functions: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Add a custom function to existing functions
+     */
+    public function addCustomFunction(RetellAgentPrompt $activePrompt, array $customFunction, ?User $updatedBy = null): array
+    {
+        try {
+            // Validate the new function
+            $functionErrors = $this->validationService->validateFunction($customFunction, count($activePrompt->functions_config));
+            if (!empty($functionErrors)) {
+                return [
+                    'success' => false,
+                    'message' => 'Custom function validation failed',
+                    'errors' => $functionErrors,
+                ];
+            }
+
+            // Check for duplicate names
+            $existingNames = array_column($activePrompt->functions_config, 'name');
+            if (in_array($customFunction['name'], $existingNames)) {
+                return [
+                    'success' => false,
+                    'message' => "Function name '{$customFunction['name']}' already exists",
+                ];
+            }
+
+            // Add to existing functions
+            $updatedFunctions = $activePrompt->functions_config;
+            $updatedFunctions[] = $customFunction;
+
+            // Validate all functions together
+            $allValidationErrors = $this->validationService->validateFunctionsConfig($updatedFunctions);
+            if (!empty($allValidationErrors)) {
+                return [
+                    'success' => false,
+                    'message' => 'Functions validation failed after adding custom function',
+                    'errors' => $allValidationErrors,
+                ];
+            }
+
+            // Create new version
+            $newVersion = RetellAgentPrompt::create([
+                'branch_id' => $activePrompt->branch_id,
+                'version' => RetellAgentPrompt::getNextVersionForBranch($activePrompt->branch_id),
+                'prompt_content' => $activePrompt->prompt_content,
+                'functions_config' => $updatedFunctions,
+                'is_active' => false,
+                'is_template' => false,
+                'validation_status' => 'pending',
+                'deployment_notes' => "Added custom function: {$customFunction['name']}",
+            ]);
+
+            // Deploy new version
+            $deployResult = $this->deployPromptVersion($newVersion, $updatedBy);
+
+            if ($deployResult['success']) {
+                Log::info('Custom function added successfully', [
+                    'branch_id' => $activePrompt->branch_id,
+                    'version' => $newVersion->version,
+                    'function_name' => $customFunction['name'],
+                ]);
+            } else {
+                // Delete the failed version
+                $newVersion->delete();
+            }
+
+            return $deployResult;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to add custom function', [
+                'error' => $e->getMessage(),
+                'version_id' => $activePrompt->id,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to add custom function: ' . $e->getMessage(),
+            ];
+        }
+    }
 }
