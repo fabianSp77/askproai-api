@@ -8,6 +8,7 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 
 #[Layout('filament-panels::components.layout.base')]
 class SystemTestingDashboard extends Page
@@ -31,9 +32,12 @@ class SystemTestingDashboard extends Page
 
     protected static string $view = 'filament.pages.system-testing-dashboard';
 
-    public ?CalcomTestRunner $testRunner = null;
+    // Private properties - custom objects not supported by Livewire 3
+    private ?CalcomTestRunner $testRunner = null;
+    private ?SystemTestRun $currentTestRun = null;
+
+    // Public reactive properties - Livewire 3 scalar types only
     public array $testRunHistory = [];
-    public ?SystemTestRun $currentTestRun = null;
     public string $currentTest = '';
     public array $liveOutput = [];
     public bool $isRunning = false;
