@@ -696,9 +696,12 @@ class IntegrationResource extends Resource
             throw new \Exception('API Key fehlt');
         }
 
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $integration->api_key,
-        ])->get('https://api.cal.com/v1/event-types');
+            'cal-api-version' => $apiVersion,
+        ])->get('https://api.cal.com/v2/event-types'); // ✅ V2 API (v1 deprecated end of 2025)
 
         if ($response->successful()) {
             $integration->incrementApiCalls();

@@ -48,13 +48,16 @@ class VerifyTeamEventIds extends Command
         $this->line("───────────────────────────────────────────────────────────────");
 
         try {
-            // CORRECT ENDPOINT: /v1/teams/{teamId}/event-types
+            // ✅ CORRECT ENDPOINT: /v2/teams/{teamId}/event-types
+            // V2 API (v1 deprecated end of 2025)
             // This returns ONLY events assigned to this specific team
-            $url = "https://api.cal.com/v1/teams/{$company->calcom_team_id}/event-types";
+            $apiVersion = config('services.calcom.api_version', '2024-08-13');
+            $url = "https://api.cal.com/v2/teams/{$company->calcom_team_id}/event-types";
 
             $response = $client->request('GET', $url, [
-                'query' => [
-                    'apiKey' => $apiKey,
+                'headers' => [
+                    'Authorization' => "Bearer {$apiKey}",
+                    'cal-api-version' => $apiVersion,
                 ]
             ]);
 

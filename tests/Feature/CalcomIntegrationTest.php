@@ -22,7 +22,8 @@ class CalcomIntegrationTest extends TestCase
         // Set up Cal.com configuration for testing
         config([
             'services.calcom.api_key' => 'test_api_key',
-            'services.calcom.base_url' => 'https://api.cal.com/v1',
+            'services.calcom.base_url' => 'https://api.cal.com/v2', // ✅ V2 API (v1 deprecated end of 2025)
+            'services.calcom.api_version' => '2024-08-13',
             'services.calcom.webhook_secret' => 'test_webhook_secret',
         ]);
     }

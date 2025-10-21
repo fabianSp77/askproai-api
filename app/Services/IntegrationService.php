@@ -60,9 +60,12 @@ class IntegrationService
             throw new \Exception('Cal.com API Key is missing');
         }
 
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $integration->api_key,
             'Content-Type' => 'application/json',
+            'cal-api-version' => $apiVersion,
         ])->get($this->getCalcomBaseUrl($integration) . '/event-types');
 
         $integration->incrementApiCalls();
@@ -82,10 +85,13 @@ class IntegrationService
             'availability' => 0,
         ];
 
+        $apiVersion = config('services.calcom.api_version', '2024-08-13');
+
         // Sync Event Types
         if ($this->shouldSync($integration, 'event_types')) {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $integration->api_key,
+                'cal-api-version' => $apiVersion,
             ])->get($this->getCalcomBaseUrl($integration) . '/event-types');
 
             if ($response->successful()) {
@@ -488,7 +494,8 @@ class IntegrationService
     protected function getCalcomBaseUrl(Integration $integration): string
     {
         $config = $integration->config ?? [];
-        $baseUrl = $config['base_url'] ?? 'https://api.cal.com/v1';
+        // ✅ V2 API (v1 deprecated end of 2025)
+        $baseUrl = $config['base_url'] ?? 'https://api.cal.com/v2';
 
         return rtrim($baseUrl, '/');
     }
