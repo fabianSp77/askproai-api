@@ -86,7 +86,7 @@ class RetellPromptValidationService
     /**
      * Validate a single function definition
      */
-    private function validateFunction(array $function, int $index): array
+    public function validateFunction(array $function, int $index = 0): array
     {
         $errors = [];
         $functionName = $function['name'] ?? "Function #" . ($index + 1);
