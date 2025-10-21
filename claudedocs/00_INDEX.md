@@ -2,9 +2,22 @@
 
 **Project**: Laravel + Filament Admin Panel | Cal.com + Retell.ai Integration
 **Total Files**: 571 organized | **Token-Optimized**: ⚡ 60-70% faster access
-**Last Update**: 2025-10-17 (Phase 1-4 Complete) | **Status**: ✅ Production Ready
+**Last Update**: 2025-10-21 (Cal.com API v1→v2 Migration Guide) | **Status**: ✅ Production Ready
 
-### 🎉 Latest Session (2025-10-17 Extended)
+### 🎉 Latest Session (2025-10-21)
+
+**Cal.com API Integration Documentation** ✅ (THIS SESSION)
+- ✅ **Team Event-ID Query Guide** created - how to query team-specific events
+- ✅ **API v1 Deprecation Alert** - Cal.com v1 ends 2025, all code must use v2
+- ✅ **VerifyTeamEventIds Command** - CLI tool to verify event assignments
+- ✅ **Multi-tenant Security** - Event-ID validation & ownership checks
+- 📝 Real data reference: AskProAI (3664712, 2563193) | Friseur 1 (2942413, 3672814)
+
+**Documentation Created**:
+- `03_API/Retell_AI/CAL_COM_TEAM_EVENT_ID_QUERY_GUIDE.md` - Complete reference
+- `app/Console/Commands/VerifyTeamEventIds.php` - Verification command
+
+### 📋 Previous Session (2025-10-17 Extended)
 
 **Phase 1-2 (Previous)**: ✅ Database fixes, relationships, navigation consolidation
 
@@ -67,10 +80,11 @@ UX Research    → 01_FRONTEND/UX_Research/
 
 ### 🔌 Integration Work
 ```
-Cal.com        → 02_BACKEND/Calcom/
+Cal.com Events → 03_API/Retell_AI/CAL_COM_TEAM_EVENT_ID_QUERY_GUIDE.md ⭐ START HERE
 Retell AI      → 03_API/Retell_AI/
 Webhooks       → 03_API/Webhooks/
 Sync Issues    → 02_BACKEND/Calcom/*_SYNC_*.md
+Verify Events  → php artisan calcom:verify-team-events
 ```
 
 ### 🧪 Testing & QA
@@ -182,6 +196,18 @@ grep -r "500\|error\|fix" 06_SECURITY/
 
 ---
 
-**Last Updated**: 2025-10-14
+**Last Updated**: 2025-10-21
 **Maintainer**: Claude Code
-**Index Version**: 1.0
+**Index Version**: 1.1
+
+---
+
+## 🔴 CRITICAL: Cal.com API v1 Deprecation
+
+**Important**: Cal.com API v1 will NOT be available after 2025
+
+**Action Required**: When working with Cal.com:
+1. ✅ Always use `/v1/teams/{teamId}/event-types` endpoint
+2. ✅ Read: `03_API/Retell_AI/CAL_COM_TEAM_EVENT_ID_QUERY_GUIDE.md`
+3. ✅ Plan v2 migration when Cal.com deprecates v1
+4. ✅ Use command: `php artisan calcom:verify-team-events` to verify
