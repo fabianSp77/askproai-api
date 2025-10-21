@@ -32,6 +32,9 @@ return new class extends Migration
             // Error message if test failed
             $table->text('error_message')->nullable();
 
+            // Metadata (company context: name, team_id, event_ids)
+            $table->json('metadata')->nullable();
+
             // Timestamps
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('completed_at')->nullable();

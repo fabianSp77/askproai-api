@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\SystemTestRun;
 use App\Services\Testing\CalcomTestRunner;
+use App\Services\Testing\RetellTestRunner;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Auth;
@@ -32,22 +33,33 @@ class SystemTestingDashboard extends Page
 
     protected static string $view = 'filament.pages.system-testing-dashboard';
 
-    // Private properties - custom objects not supported by Livewire 3
-    private ?CalcomTestRunner $testRunner = null;
-    private ?SystemTestRun $currentTestRun = null;
+    // Note: Private properties don't persist in Livewire 3, so we create fresh instances when needed
+    // See: https://livewire.laravel.com/docs/lifecycle#component-lifecycle
 
     // Public reactive properties - Livewire 3 scalar types only
     public array $testRunHistory = [];
     public string $currentTest = '';
     public array $liveOutput = [];
     public bool $isRunning = false;
-    public string $selectedCompany = '';  // 'askproai' or 'friseur'
-    public array $companyConfig = [];     // Team ID and Event IDs
+    public string $selectedCompany = '';     // 'askproai' or 'friseur'
+    public array $companyConfig = [];        // Team ID and Event IDs
+    public string $selectedTestSuite = '';   // 'calcom' or 'retell'
 
     public function mount(): void
     {
-        $this->testRunner = new CalcomTestRunner();
+        $this->selectedTestSuite = 'calcom';  // Default to Cal.com tests
         $this->loadTestHistory();
+    }
+
+    /**
+     * Get test runner instance (fresh each time)
+     */
+    private function getTestRunner()
+    {
+        if ($this->selectedTestSuite === 'retell') {
+            return new RetellTestRunner();
+        }
+        return new CalcomTestRunner();
     }
 
     /**
@@ -118,12 +130,12 @@ class SystemTestingDashboard extends Page
             $this->liveOutput[] = "";
             $this->liveOutput[] = "Executing...";
 
-            $this->currentTestRun = $this->testRunner->runTest($testType, $this->companyConfig ?? []);
-            $this->liveOutput = array_merge($this->liveOutput, (array)($this->currentTestRun->output ?? []));
+            $testRun = $this->getTestRunner()->runTest($testType, $this->companyConfig ?? []);
+            $this->liveOutput = array_merge($this->liveOutput, (array)($testRun->output ?? []));
 
             $this->dispatch('test-completed', [
                 'testType' => $testType,
-                'success' => $this->currentTestRun->succeeded()
+                'success' => $testRun->succeeded()
             ]);
         } catch (\Exception $e) {
             $this->addError('Test execution failed: ' . $e->getMessage());
@@ -153,15 +165,18 @@ class SystemTestingDashboard extends Page
         $this->liveOutput = [];
 
         try {
-            $this->liveOutput[] = "Starting all tests for: " . ($this->companyConfig['name'] ?? 'Unknown');
+            $testSuiteName = $this->selectedTestSuite === 'retell' ? 'Retell AI' : 'Cal.com';
+            $testCount = $this->selectedTestSuite === 'retell' ? '11' : '9';
+
+            $this->liveOutput[] = "Starting all $testSuiteName tests for: " . ($this->companyConfig['name'] ?? 'Unknown');
             $this->liveOutput[] = "Team ID: " . ($this->companyConfig['team_id'] ?? 'N/A');
             $eventIds = $this->companyConfig['event_ids'] ?? [];
             $this->liveOutput[] = "Event IDs: " . (is_array($eventIds) ? implode(', ', $eventIds) : 'N/A');
             $this->liveOutput[] = "";
-            $this->liveOutput[] = "Running 9 test suites...";
+            $this->liveOutput[] = "Running $testCount test suites...";
             $this->liveOutput[] = "";
 
-            $results = $this->testRunner->runAllTests($this->companyConfig ?? []);
+            $results = $this->getTestRunner()->runAllTests($this->companyConfig ?? []);
 
             foreach ($results as $result) {
                 $succeeded = $result['succeeded'] ?? false;

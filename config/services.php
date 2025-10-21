@@ -62,6 +62,7 @@ return [
     'retellai' => [
         'api_key' => env('RETELLAI_API_KEY', env('RETELL_TOKEN')),
         'base_url' => rtrim(env('RETELLAI_BASE_URL', env('RETELL_BASE_URL', env('RETELL_BASE', 'https://api.retell.ai'))), '/'),
+        'agent_id' => env('RETELL_AGENT_ID', 'agent_9a8202a740cd3120d96fcfda1e'),
         'webhook_secret' => env('RETELLAI_WEBHOOK_SECRET', env('RETELL_WEBHOOK_SECRET')),
         'log_webhooks' => env('RETELLAI_LOG_WEBHOOKS', true),
         'function_secret' => env('RETELLAI_FUNCTION_SECRET'),

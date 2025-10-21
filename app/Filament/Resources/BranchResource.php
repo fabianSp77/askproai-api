@@ -248,6 +248,105 @@ class BranchResource extends Resource
                                             ->dehydrated(false),
                                     ]),
                             ]),
+
+                        // Tab 5: Retell Agent Configuration
+                        Tabs\Tab::make('Retell Agent')
+                            ->icon('heroicon-m-microphone')
+                            ->visible(fn () => auth()->user()?->hasRole('admin'))
+                            ->schema([
+                                Section::make('Retell AI Agent Konfiguration')
+                                    ->description('Verwalten Sie das Prompt und die Funktionen für den Retell AI Agenten dieser Filiale')
+                                    ->schema([
+                                        Grid::make(1)->schema([
+                                            Forms\Components\Select::make('retell_template')
+                                                ->label('Template auswählen')
+                                                ->options([
+                                                    'dynamic-service-selection-v127' => '🎯 Dynamic Service Selection (V127)',
+                                                    'basic-appointment-booking' => '📅 Basic Appointment Booking',
+                                                    'information-only' => 'ℹ️ Information Only',
+                                                ])
+                                                ->placeholder('Wählen Sie ein Template...')
+                                                ->helperText('Das Template wird als Basis für die Konfiguration verwendet'),
+                                        ]),
+
+                                        Forms\Components\Placeholder::make('retell_info')
+                                            ->label('Agent Status')
+                                            ->content(function (?Branch $record) {
+                                                if (!$record) {
+                                                    return view('filament.components.retell-no-branch');
+                                                }
+
+                                                $activePrompt = $record->retellAgentPrompts()
+                                                    ->where('is_active', true)
+                                                    ->first();
+
+                                                if (!$activePrompt) {
+                                                    return view('filament.components.retell-no-config');
+                                                }
+
+                                                return view('filament.components.retell-agent-info', [
+                                                    'prompt' => $activePrompt,
+                                                ]);
+                                            }),
+
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('edit_prompt')
+                                                ->label('Prompt bearbeiten')
+                                                ->url(fn (?Branch $record) => $record
+                                                    ? route('filament.admin.resources.branches.retell-agent.edit', $record)
+                                                    : null)
+                                                ->openUrlInNewTab()
+                                                ->icon('heroicon-m-pencil-square'),
+
+                                            Forms\Components\Actions\Action::make('deploy_from_template')
+                                                ->label('Aus Template deployen')
+                                                ->action(function (Branch $record, Forms\Get $get) {
+                                                    $template = $get('retell_template');
+                                                    if (!$template) {
+                                                        Notification::make()
+                                                            ->title('Template erforderlich')
+                                                            ->body('Bitte wählen Sie ein Template aus')
+                                                            ->danger()
+                                                            ->send();
+                                                        return;
+                                                    }
+
+                                                    try {
+                                                        $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                        $templateService = new \App\Services\Retell\RetellPromptTemplateService();
+
+                                                        $promptVersion = $templateService->applyTemplateToBranch(
+                                                            $record->id,
+                                                            $template
+                                                        );
+
+                                                        $result = $service->deployPromptVersion($promptVersion, auth()->user());
+
+                                                        if ($result['success']) {
+                                                            Notification::make()
+                                                                ->title('Erfolgreich deployed')
+                                                                ->body('Agent-Version ' . $result['retell_version'] . ' ist jetzt aktiv')
+                                                                ->success()
+                                                                ->send();
+                                                        } else {
+                                                            Notification::make()
+                                                                ->title('Deployment fehlgeschlagen')
+                                                                ->body(implode(', ', $result['errors'] ?? []))
+                                                                ->danger()
+                                                                ->send();
+                                                        }
+                                                    } catch (\Exception $e) {
+                                                        Notification::make()
+                                                            ->title('Fehler')
+                                                            ->body($e->getMessage())
+                                                            ->danger()
+                                                            ->send();
+                                                    }
+                                                })
+                                                ->icon('heroicon-m-rocket-launch'),
+                                        ]),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);
