@@ -169,11 +169,17 @@ class RetellAgentManagementService
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$this->apiKey}",
                 'Content-Type' => 'application/json'
-            ])->get("{$this->baseUrl}/agent/{$agentId}");
+            ])->get("{$this->baseUrl}/get-agent/{$agentId}");
 
             if ($response->successful()) {
                 return $response->json();
             }
+
+            Log::warning('Failed to get agent from Retell API', [
+                'agent_id' => $agentId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to get agent status', ['error' => $e->getMessage()]);
         }
@@ -454,32 +460,36 @@ class RetellAgentManagementService
 
     /**
      * Get the currently live/published agent from Retell API
+     * Uses the agent_id from config as the source of truth
      *
-     * @return array|null Agent data or null if no published agent found
+     * @return array|null Agent data or null if agent not found
      */
     public function getLiveAgent(): ?array
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => "Bearer {$this->apiKey}",
-                'Content-Type' => 'application/json'
-            ])->get("{$this->baseUrl}/list-agents");
+            // Use configured agent ID as source of truth
+            $configuredAgentId = config('services.retellai.agent_id');
 
-            if ($response->successful()) {
-                $agents = $response->json();
-
-                // Find the published agent
-                foreach ($agents as $agent) {
-                    if ($agent['is_published'] ?? false) {
-                        // Get full agent details
-                        return $this->getAgentStatus($agent['agent_id']);
-                    }
-                }
-
-                Log::warning('No published agent found on Retell API', [
-                    'total_agents' => count($agents)
-                ]);
+            if (!$configuredAgentId) {
+                Log::warning('No agent_id configured in services.retellai.agent_id');
+                return null;
             }
+
+            // Get full agent details directly
+            $agentData = $this->getAgentStatus($configuredAgentId);
+
+            if ($agentData) {
+                Log::info('Successfully fetched live agent from Retell API', [
+                    'agent_id' => $configuredAgentId,
+                    'agent_name' => $agentData['agent_name'] ?? 'Unknown'
+                ]);
+                return $agentData;
+            }
+
+            Log::warning('Could not fetch agent from Retell API', [
+                'agent_id' => $configuredAgentId
+            ]);
+
         } catch (\Exception $e) {
             Log::error('Failed to get live agent from Retell API', [
                 'error' => $e->getMessage()
