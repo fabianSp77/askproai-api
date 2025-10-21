@@ -291,14 +291,6 @@ class BranchResource extends Resource
                                             }),
 
                                         Forms\Components\Actions::make([
-                                            Forms\Components\Actions\Action::make('edit_prompt')
-                                                ->label('Prompt bearbeiten')
-                                                ->url(fn (?Branch $record) => $record
-                                                    ? route('filament.admin.resources.branches.retell-agent.edit', $record)
-                                                    : null)
-                                                ->openUrlInNewTab()
-                                                ->icon('heroicon-m-pencil-square'),
-
                                             Forms\Components\Actions\Action::make('deploy_from_template')
                                                 ->label('Aus Template deployen')
                                                 ->action(function (Branch $record, Forms\Get $get) {
