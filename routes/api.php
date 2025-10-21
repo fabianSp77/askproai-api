@@ -80,6 +80,12 @@ Route::prefix('webhooks')->group(function () {
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
+    // Retell datetime interpretation endpoint (for German time expressions)
+    Route::post('/retell/datetime', [\App\Http\Controllers\Api\Retell\DateTimeInfoController::class, 'handle'])
+        ->name('webhooks.retell.datetime')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
     // Retell Diagnostic Endpoint (requires authentication)
     Route::get('/retell/diagnostic', [RetellWebhookController::class, 'diagnostic'])
         ->name('webhooks.retell.diagnostic')
