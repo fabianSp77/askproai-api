@@ -266,7 +266,8 @@ class BranchResource extends Resource
                                                     'information-only' => 'ℹ️ Information Only',
                                                 ])
                                                 ->placeholder('Wählen Sie ein Template...')
-                                                ->helperText('Das Template wird als Basis für die Konfiguration verwendet'),
+                                                ->helperText('Das Template wird als Basis für die Konfiguration verwendet')
+                                                ->dehydrated(false),
                                         ]),
 
                                         Forms\Components\Placeholder::make('retell_info')
