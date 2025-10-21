@@ -106,13 +106,14 @@ class SystemTestingDashboard extends Page
 
         try {
             $this->liveOutput[] = "Starting test: " . $this->getTestLabel($testType);
-            $this->liveOutput[] = "Company: " . $this->companyConfig['name'];
-            $this->liveOutput[] = "Team ID: " . $this->companyConfig['team_id'];
-            $this->liveOutput[] = "Event IDs: " . implode(', ', $this->companyConfig['event_ids']);
+            $this->liveOutput[] = "Company: " . ($this->companyConfig['name'] ?? 'Unknown');
+            $this->liveOutput[] = "Team ID: " . ($this->companyConfig['team_id'] ?? 'N/A');
+            $eventIds = $this->companyConfig['event_ids'] ?? [];
+            $this->liveOutput[] = "Event IDs: " . (is_array($eventIds) ? implode(', ', $eventIds) : 'N/A');
             $this->liveOutput[] = "";
             $this->liveOutput[] = "Executing...";
 
-            $this->currentTestRun = $this->testRunner->runTest($testType, $this->companyConfig);
+            $this->currentTestRun = $this->testRunner->runTest($testType, $this->companyConfig ?? []);
             $this->liveOutput = array_merge($this->liveOutput, (array)($this->currentTestRun->output ?? []));
 
             $this->dispatch('test-completed', [
@@ -142,27 +143,33 @@ class SystemTestingDashboard extends Page
         $this->liveOutput = [];
 
         try {
-            $this->liveOutput[] = "Starting all tests for: " . $this->companyConfig['name'];
-            $this->liveOutput[] = "Team ID: " . $this->companyConfig['team_id'];
-            $this->liveOutput[] = "Event IDs: " . implode(', ', $this->companyConfig['event_ids']);
+            $this->liveOutput[] = "Starting all tests for: " . ($this->companyConfig['name'] ?? 'Unknown');
+            $this->liveOutput[] = "Team ID: " . ($this->companyConfig['team_id'] ?? 'N/A');
+            $eventIds = $this->companyConfig['event_ids'] ?? [];
+            $this->liveOutput[] = "Event IDs: " . (is_array($eventIds) ? implode(', ', $eventIds) : 'N/A');
             $this->liveOutput[] = "";
             $this->liveOutput[] = "Running 9 test suites...";
             $this->liveOutput[] = "";
 
-            $results = $this->testRunner->runAllTests($this->companyConfig);
+            $results = $this->testRunner->runAllTests($this->companyConfig ?? []);
 
             foreach ($results as $result) {
-                $this->liveOutput[] = "[" . ($result['succeeded'] ? "✓ PASS" : "✗ FAIL") . "] " . $result['label'];
-                $this->liveOutput[] = "Duration: " . $result['duration'] . "s";
-                if ($result['error']) {
-                    $this->liveOutput[] = "Error: " . $result['error'];
+                $succeeded = $result['succeeded'] ?? false;
+                $label = $result['label'] ?? 'Unknown Test';
+                $duration = $result['duration'] ?? '?';
+                $error = $result['error'] ?? null;
+
+                $this->liveOutput[] = "[" . ($succeeded ? "✓ PASS" : "✗ FAIL") . "] " . $label;
+                $this->liveOutput[] = "Duration: " . $duration . "s";
+                if ($error) {
+                    $this->liveOutput[] = "Error: " . $error;
                 }
                 $this->liveOutput[] = "";
             }
 
             $this->dispatch('all-tests-completed', [
                 'total' => count($results),
-                'success' => count(array_filter($results, fn($r) => $r['succeeded']))
+                'success' => count(array_filter($results, fn($r) => $r['succeeded'] ?? false))
             ]);
         } catch (\Exception $e) {
             $this->addError('Test execution failed: ' . $e->getMessage());
