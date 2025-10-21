@@ -193,12 +193,7 @@ class BranchResource extends Resource
                             ->schema([
                                 Section::make('Integration & Einstellungen')
                                     ->schema([
-                                        Grid::make(2)->schema([
-                                            Forms\Components\TextInput::make('calcom_event_type_id')
-                                                ->label('Cal.com Event Type ID')
-                                                ->maxLength(255)
-                                                ->helperText('Event Type ID von Cal.com (von Company-Einstellungen)'),
-
+                                        Grid::make(1)->schema([
                                             Forms\Components\Select::make('calendar_mode')
                                                 ->label('Kalender-Vererbung')
                                                 ->options([
@@ -223,13 +218,45 @@ class BranchResource extends Resource
                                                 if ($company?->calcom_api_key) {
                                                     $info[] = '✅ Cal.com API (über Unternehmen)';
                                                 }
-                                                if ($record->calcom_event_type_id) {
-                                                    $info[] = '✅ Cal.com Event Type konfiguriert';
-                                                }
 
                                                 return empty($info)
                                                     ? '⚠️ Keine Integrationen konfiguriert'
                                                     : implode(' • ', $info);
+                                            }),
+
+                                        Forms\Components\Placeholder::make('calcom_architecture_info')
+                                            ->label('Cal.com Architektur')
+                                            ->helperText('Team ID auf Company-Level. Services mit Event Type IDs pro Filiale.')
+                                            ->content(function (?Branch $record) {
+                                                if (!$record) return 'Neue Filiale - Team ID wird von Company übernommen';
+
+                                                $company = $record->company;
+                                                $info = [];
+
+                                                // Company Team ID
+                                                if ($company?->calcom_team_id) {
+                                                    $info[] = "🏢 Company Team ID: " . $company->calcom_team_id;
+                                                } else {
+                                                    $info[] = "⚠️ Company hat keine Team ID konfiguriert";
+                                                }
+
+                                                // Aktive Services mit Event Type IDs
+                                                $activeServices = $record->activeServices()
+                                                    ->whereNotNull('calcom_event_type_id')
+                                                    ->get();
+
+                                                if ($activeServices->count() > 0) {
+                                                    $info[] = "\n📋 Aktive Services mit Event Type IDs:";
+                                                    foreach ($activeServices as $service) {
+                                                        $info[] = "  • {$service->name} → Event Type: {$service->calcom_event_type_id}";
+                                                    }
+                                                } else {
+                                                    $info[] = "\n⚠️ Keine Services mit Event Type IDs aktiv";
+                                                }
+
+                                                $info[] = "\n💡 Services verwalten Sie unter dem 'Services' Tab";
+
+                                                return implode("\n", $info);
                                             }),
 
                                         Grid::make(2)->schema([
