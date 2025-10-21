@@ -45,35 +45,45 @@ class RetellAgentManagementService
             $agentId = config('services.retellai.agent_id');
             $branch = $promptVersion->branch;
 
-            // Prepare payload
-            $payload = $this->buildAgentPayload($promptVersion);
+            // Get current live agent to extract LLM ID
+            $liveAgent = $this->getLiveAgent();
 
-            Log::info('Deploying Retell agent', [
+            if (!$liveAgent) {
+                throw new \Exception('Could not fetch live agent configuration');
+            }
+
+            $llmId = $liveAgent['response_engine']['llm_id'] ?? null;
+
+            if (!$llmId) {
+                throw new \Exception('No LLM ID found in agent configuration');
+            }
+
+            Log::info('Deploying Retell agent prompt', [
                 'agent_id' => $agentId,
+                'llm_id' => $llmId,
                 'branch_id' => $branch->id,
                 'version' => $promptVersion->version,
             ]);
 
-            // Call Retell API to create new agent version
-            $response = Http::withHeaders([
-                'Authorization' => "Bearer {$this->apiKey}",
-                'Content-Type' => 'application/json'
-            ])->post("{$this->baseUrl}/create-agent", $payload);
+            // Update LLM with new prompt and functions
+            $llmUpdateResult = $this->updateLlmData(
+                $llmId,
+                $promptVersion->prompt_content,
+                $promptVersion->functions_config,
+                $liveAgent['begin_message'] ?? null
+            );
 
-            if (!$response->successful()) {
-                $errorMessage = $response->json()['error_message'] ?? $response->body();
-                throw new \Exception("Retell API error: $errorMessage");
+            if (!$llmUpdateResult['success']) {
+                throw new \Exception($llmUpdateResult['message']);
             }
-
-            $agentData = $response->json();
 
             // Update prompt version with deployment info
             $promptVersion->update([
                 'is_active' => true,
                 'deployed_at' => now(),
                 'deployed_by' => $deployedBy?->id,
-                'retell_agent_id' => $agentData['agent_id'] ?? $agentId,
-                'retell_version' => $agentData['version'] ?? 0,
+                'retell_agent_id' => $agentId,
+                'retell_version' => $llmUpdateResult['llm_version'] ?? 0,
                 'validation_status' => 'valid',
             ]);
 
@@ -82,11 +92,18 @@ class RetellAgentManagementService
                 ->where('id', '!=', $promptVersion->id)
                 ->update(['is_active' => false]);
 
+            Log::info('Successfully deployed prompt to Retell LLM', [
+                'llm_id' => $llmId,
+                'llm_version' => $llmUpdateResult['llm_version'],
+                'prompt_version_id' => $promptVersion->id
+            ]);
+
             return [
                 'success' => true,
-                'message' => 'Agent version deployed successfully',
-                'retell_version' => $agentData['version'] ?? 0,
+                'message' => 'Prompt deployed successfully to Retell LLM',
+                'retell_version' => $llmUpdateResult['llm_version'] ?? 0,
                 'deployed_at' => $promptVersion->deployed_at,
+                'llm_id' => $llmId,
             ];
 
         } catch (\Exception $e) {
@@ -486,6 +503,107 @@ class RetellAgentManagementService
         }
 
         return null;
+    }
+
+    /**
+     * Normalize function array fields to objects for Retell API
+     * Retell API expects objects {} not arrays [] for certain fields
+     */
+    private function normalizeFunctionsForApi(array $functions): array
+    {
+        return array_map(function ($function) {
+            // Convert empty arrays to empty objects
+            if (isset($function['headers']) && is_array($function['headers']) && empty($function['headers'])) {
+                $function['headers'] = (object)[];
+            }
+            if (isset($function['query_params']) && is_array($function['query_params']) && empty($function['query_params'])) {
+                $function['query_params'] = (object)[];
+            }
+            if (isset($function['response_variables']) && is_array($function['response_variables']) && empty($function['response_variables'])) {
+                $function['response_variables'] = (object)[];
+            }
+
+            return $function;
+        }, $functions);
+    }
+
+    /**
+     * Update LLM data (prompt + functions) in Retell API
+     *
+     * @param string $llmId The LLM ID
+     * @param string $prompt The new prompt content
+     * @param array $functions The functions configuration
+     * @param string|null $beginMessage Optional begin message
+     * @return array Result with success status
+     */
+    public function updateLlmData(string $llmId, string $prompt, array $functions, ?string $beginMessage = null): array
+    {
+        try {
+            // Get current LLM data to preserve other settings
+            $currentLlm = $this->getLlmData($llmId);
+
+            if (!$currentLlm) {
+                throw new \Exception("LLM not found: $llmId");
+            }
+
+            // Normalize functions for API (empty arrays -> empty objects)
+            $normalizedFunctions = $this->normalizeFunctionsForApi($functions);
+
+            // Build payload preserving existing config
+            $payload = [
+                'general_prompt' => $prompt,
+                'general_tools' => $normalizedFunctions,
+                'begin_message' => $beginMessage ?? $currentLlm['begin_message'] ?? '',
+                // Preserve existing config
+                'model' => $currentLlm['model'] ?? 'gemini-2.5-flash',
+                'model_temperature' => $currentLlm['model_temperature'] ?? 0.04,
+                'model_high_priority' => $currentLlm['model_high_priority'] ?? false,
+                'tool_call_strict_mode' => $currentLlm['tool_call_strict_mode'] ?? false,
+                'start_speaker' => $currentLlm['start_speaker'] ?? 'agent',
+            ];
+
+            Log::info('Updating LLM in Retell API', [
+                'llm_id' => $llmId,
+                'prompt_length' => strlen($prompt),
+                'functions_count' => count($functions)
+            ]);
+
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json'
+            ])->patch("{$this->baseUrl}/update-retell-llm/{$llmId}", $payload);
+
+            if (!$response->successful()) {
+                $errorMessage = $response->json()['error'] ?? $response->json()['message'] ?? $response->body();
+                throw new \Exception("Retell API error: $errorMessage");
+            }
+
+            $llmData = $response->json();
+
+            Log::info('Successfully updated LLM in Retell API', [
+                'llm_id' => $llmId,
+                'version' => $llmData['version'] ?? 'unknown'
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'LLM updated successfully',
+                'llm_version' => $llmData['version'] ?? 0,
+                'llm_data' => $llmData
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update LLM', [
+                'llm_id' => $llmId,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'LLM update failed: ' . $e->getMessage(),
+                'errors' => [$e->getMessage()]
+            ];
+        }
     }
 
     /**

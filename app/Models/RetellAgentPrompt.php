@@ -121,8 +121,13 @@ class RetellAgentPrompt extends Model
                 if (empty($function['name'])) {
                     $errors[] = 'Each function must have a name';
                 }
-                if (empty($function['parameters'])) {
-                    $errors[] = 'Each function must have parameters definition';
+                if (empty($function['type'])) {
+                    $errors[] = 'Each function must have a type';
+                }
+                // Only custom functions require parameters
+                // Built-in functions like end_call, transfer_call don't have parameters
+                if ($function['type'] === 'custom' && empty($function['parameters'])) {
+                    $errors[] = "Function '{$function['name']}' (type: custom) must have parameters definition";
                 }
             }
         }
