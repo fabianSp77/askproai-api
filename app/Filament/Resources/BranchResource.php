@@ -366,6 +366,144 @@ class BranchResource extends Resource
                                                 ->icon('heroicon-m-rocket-launch'),
                                         ]),
 
+                                        // LIVE AGENT STATUS SECTION
+                                        Section::make('📡 Live Agent Status')
+                                            ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())
+                                            ->description('Echtzeit-Daten vom Retell API Server')
+                                            ->collapsible()
+                                            ->schema([
+                                                Forms\Components\Placeholder::make('live_agent_sync_status')
+                                                    ->label('Sync Status')
+                                                    ->content(function (?Branch $record) {
+                                                        if (!$record) return 'Keine Daten';
+
+                                                        try {
+                                                            $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                            $syncStatus = $service->checkSync($record);
+
+                                                            $html = '<div style="padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb;">';
+
+                                                            // Sync Status Badge
+                                                            if ($syncStatus['in_sync']) {
+                                                                $html .= '<div style="margin-bottom: 1rem;"><span style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: #10b981; color: white; border-radius: 0.5rem; font-weight: 600;">✅ Synchronisiert</span></div>';
+                                                            } else {
+                                                                $statusColor = $syncStatus['status'] === 'error' ? '#ef4444' : '#f59e0b';
+                                                                $statusEmoji = $syncStatus['status'] === 'error' ? '🚨' : '⚠️';
+                                                                $html .= '<div style="margin-bottom: 1rem;"><span style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: ' . $statusColor . '; color: white; border-radius: 0.5rem; font-weight: 600;">' . $statusEmoji . ' Nicht synchronisiert</span></div>';
+                                                            }
+
+                                                            // Message
+                                                            $html .= '<p style="margin-bottom: 1rem; color: #6b7280;">' . $syncStatus['message'] . '</p>';
+
+                                                            // Comparison Table
+                                                            if ($syncStatus['local'] || $syncStatus['live']) {
+                                                                $html .= '<table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">';
+                                                                $html .= '<thead><tr style="background-color: #e5e7eb;">';
+                                                                $html .= '<th style="padding: 0.5rem; text-align: left; font-weight: 600;">Eigenschaft</th>';
+                                                                $html .= '<th style="padding: 0.5rem; text-align: left; font-weight: 600;">Lokal (DB)</th>';
+                                                                $html .= '<th style="padding: 0.5rem; text-align: left; font-weight: 600;">Live (Retell API)</th>';
+                                                                $html .= '</tr></thead><tbody>';
+
+                                                                // Agent ID
+                                                                $html .= '<tr style="border-bottom: 1px solid #e5e7eb;">';
+                                                                $html .= '<td style="padding: 0.5rem; font-weight: 500;">Agent ID</td>';
+                                                                $html .= '<td style="padding: 0.5rem; font-family: monospace; font-size: 0.875rem;">' . ($syncStatus['local']['agent_id'] ?? 'N/A') . '</td>';
+                                                                $html .= '<td style="padding: 0.5rem; font-family: monospace; font-size: 0.875rem;">' . ($syncStatus['live']['agent_id'] ?? 'N/A') . '</td>';
+                                                                $html .= '</tr>';
+
+                                                                // Agent Name
+                                                                $html .= '<tr style="border-bottom: 1px solid #e5e7eb;">';
+                                                                $html .= '<td style="padding: 0.5rem; font-weight: 500;">Agent Name</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['local']['agent_name'] ?? 'N/A') . '</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['live']['agent_name'] ?? 'N/A') . '</td>';
+                                                                $html .= '</tr>';
+
+                                                                // Prompt Length
+                                                                $html .= '<tr style="border-bottom: 1px solid #e5e7eb;">';
+                                                                $html .= '<td style="padding: 0.5rem; font-weight: 500;">Prompt Länge</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['local']['prompt_length'] ?? 'N/A') . ' Zeichen</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['live']['prompt_length'] ?? 'N/A') . ' Zeichen</td>';
+                                                                $html .= '</tr>';
+
+                                                                // Functions Count
+                                                                $html .= '<tr style="border-bottom: 1px solid #e5e7eb;">';
+                                                                $html .= '<td style="padding: 0.5rem; font-weight: 500;">Functions Anzahl</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['local']['functions_count'] ?? 'N/A') . '</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . ($syncStatus['live']['functions_count'] ?? 'N/A') . '</td>';
+                                                                $html .= '</tr>';
+
+                                                                // Published Status
+                                                                $html .= '<tr>';
+                                                                $html .= '<td style="padding: 0.5rem; font-weight: 500;">Veröffentlicht</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . (($syncStatus['local']['is_published'] ?? false) ? '✅ Ja' : '❌ Nein') . '</td>';
+                                                                $html .= '<td style="padding: 0.5rem;">' . (($syncStatus['live']['is_published'] ?? false) ? '✅ Ja' : '❌ Nein') . '</td>';
+                                                                $html .= '</tr>';
+
+                                                                $html .= '</tbody></table>';
+                                                            }
+
+                                                            $html .= '</div>';
+
+                                                            return new \Illuminate\Support\HtmlString($html);
+
+                                                        } catch (\Exception $e) {
+                                                            return '🚨 Fehler beim Abrufen des Live-Status: ' . $e->getMessage();
+                                                        }
+                                                    })
+                                                    ->extraAttributes(['class' => 'live-agent-status']),
+
+                                                Forms\Components\Actions::make([
+                                                    Forms\Components\Actions\Action::make('refresh_live_status')
+                                                        ->label('Live-Daten von Retell laden')
+                                                        ->action(function () {
+                                                            // This will trigger a page refresh to reload the live data
+                                                            Notification::make()
+                                                                ->title('Live-Daten aktualisiert')
+                                                                ->body('Die Echtzeit-Daten vom Retell API wurden neu geladen')
+                                                                ->success()
+                                                                ->send();
+                                                        })
+                                                        ->icon('heroicon-m-arrow-path')
+                                                        ->color('primary'),
+
+                                                    Forms\Components\Actions\Action::make('load_live_to_editor')
+                                                        ->label('Live-Daten in Editor laden')
+                                                        ->action(function (Branch $record, Forms\Set $set) {
+                                                            if (!$record) return;
+
+                                                            try {
+                                                                $service = new \App\Services\Retell\RetellAgentManagementService();
+                                                                $liveAgent = $service->getLiveAgent();
+
+                                                                if ($liveAgent) {
+                                                                    // Load live prompt into editor
+                                                                    $set('retell_prompt_content', $liveAgent['agent_prompt'] ?? '');
+
+                                                                    Notification::make()
+                                                                        ->title('Live-Prompt geladen')
+                                                                        ->body('Das Prompt vom veröffentlichten Agent wurde in den Editor geladen')
+                                                                        ->success()
+                                                                        ->send();
+                                                                } else {
+                                                                    Notification::make()
+                                                                        ->title('Kein veröffentlichter Agent')
+                                                                        ->body('Es konnte kein veröffentlichter Agent auf Retell API gefunden werden')
+                                                                        ->warning()
+                                                                        ->send();
+                                                                }
+                                                            } catch (\Exception $e) {
+                                                                Notification::make()
+                                                                    ->title('Fehler')
+                                                                    ->body($e->getMessage())
+                                                                    ->danger()
+                                                                    ->send();
+                                                            }
+                                                        })
+                                                        ->icon('heroicon-m-arrow-down-tray')
+                                                        ->color('success'),
+                                                ]),
+                                            ]),
+
                                         // PROMPT EDITOR SECTION (nur wenn Agent aktiv)
                                         Section::make('🎤 Prompt Editor')
                                             ->visible(fn (?Branch $record) => $record && $record->retellAgentPrompts()->where('is_active', true)->exists())

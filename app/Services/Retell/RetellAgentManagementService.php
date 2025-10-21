@@ -451,4 +451,165 @@ class RetellAgentManagementService
             ];
         }
     }
+
+    /**
+     * Get the currently live/published agent from Retell API
+     *
+     * @return array|null Agent data or null if no published agent found
+     */
+    public function getLiveAgent(): ?array
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json'
+            ])->get("{$this->baseUrl}/list-agents");
+
+            if ($response->successful()) {
+                $agents = $response->json();
+
+                // Find the published agent
+                foreach ($agents as $agent) {
+                    if ($agent['is_published'] ?? false) {
+                        // Get full agent details
+                        return $this->getAgentStatus($agent['agent_id']);
+                    }
+                }
+
+                Log::warning('No published agent found on Retell API', [
+                    'total_agents' => count($agents)
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to get live agent from Retell API', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * List all agents from Retell API
+     *
+     * @return array Array of agents or empty array on failure
+     */
+    public function listAgents(): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json'
+            ])->get("{$this->baseUrl}/list-agents");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('Failed to list agents from Retell API', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Exception while listing agents from Retell API', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return [];
+    }
+
+    /**
+     * Check sync status between local DB and Retell API
+     *
+     * @param Branch $branch
+     * @return array Sync status with details
+     */
+    public function checkSync(Branch $branch): array
+    {
+        try {
+            // Get active prompt from local DB
+            $activePrompt = $branch->retellAgentPrompts()
+                ->where('is_active', true)
+                ->first();
+
+            if (!$activePrompt) {
+                return [
+                    'in_sync' => false,
+                    'status' => 'no_local_agent',
+                    'message' => 'Kein aktiver Agent in der Datenbank gefunden',
+                    'local' => null,
+                    'live' => null,
+                ];
+            }
+
+            // Get live agent from Retell API
+            $liveAgent = $this->getLiveAgent();
+
+            if (!$liveAgent) {
+                return [
+                    'in_sync' => false,
+                    'status' => 'no_live_agent',
+                    'message' => 'Kein veröffentlichter Agent auf Retell API gefunden',
+                    'local' => [
+                        'agent_id' => $activePrompt->retell_agent_id,
+                        'version' => $activePrompt->version,
+                        'deployed_at' => $activePrompt->deployed_at?->format('Y-m-d H:i:s'),
+                    ],
+                    'live' => null,
+                ];
+            }
+
+            // Compare agent IDs
+            $localAgentId = $activePrompt->retell_agent_id;
+            $liveAgentId = $liveAgent['agent_id'];
+
+            $inSync = ($localAgentId === $liveAgentId);
+
+            // Get full details of local agent from Retell API if different
+            $localAgentDetails = null;
+            if (!$inSync && $localAgentId) {
+                $localAgentDetails = $this->getAgentStatus($localAgentId);
+            }
+
+            return [
+                'in_sync' => $inSync,
+                'status' => $inSync ? 'synced' : 'out_of_sync',
+                'message' => $inSync
+                    ? 'Lokaler Agent ist mit Retell API synchronisiert'
+                    : 'Lokaler Agent unterscheidet sich vom veröffentlichten Agent auf Retell API',
+                'local' => [
+                    'agent_id' => $localAgentId,
+                    'agent_name' => $localAgentDetails['agent_name'] ?? $activePrompt->branch->name . ' - Retell Agent',
+                    'version' => $activePrompt->version,
+                    'deployed_at' => $activePrompt->deployed_at?->format('Y-m-d H:i:s'),
+                    'prompt_length' => strlen($activePrompt->prompt_content ?? ''),
+                    'functions_count' => count($activePrompt->functions_config ?? []),
+                    'is_published' => $localAgentDetails['is_published'] ?? false,
+                ],
+                'live' => [
+                    'agent_id' => $liveAgentId,
+                    'agent_name' => $liveAgent['agent_name'] ?? 'Unknown',
+                    'prompt_length' => strlen($liveAgent['agent_prompt'] ?? ''),
+                    'functions_count' => count($liveAgent['functions'] ?? []),
+                    'is_published' => true,
+                    'last_modification_timestamp' => $liveAgent['last_modification_timestamp'] ?? null,
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to check sync status', [
+                'branch_id' => $branch->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'in_sync' => false,
+                'status' => 'error',
+                'message' => 'Fehler beim Überprüfen des Sync-Status: ' . $e->getMessage(),
+                'local' => null,
+                'live' => null,
+            ];
+        }
+    }
 }
