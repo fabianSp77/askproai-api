@@ -38,7 +38,7 @@ class ViewPhoneNumber extends ViewRecord
         return $branch ? "{$company} - {$branch}" : $company;
     }
 
-    protected function resolveRecord($key): Model
+    protected function resolveRecord($key): \Illuminate\Database\Eloquent\Model
     {
         return static::getResource()::resolveRecordRouteBinding($key)
             ->load(['company', 'branch', 'calls']);

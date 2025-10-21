@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BranchResource\Pages;
 use App\Filament\Resources\BranchResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Filament\Notifications\Notification;
 

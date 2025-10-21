@@ -22,7 +22,7 @@ class ViewCall extends ViewRecord
     /**
      * Eager load all relationships to prevent N+1 queries
      */
-    protected function resolveRecord($key): Model
+    protected function resolveRecord($key): \Illuminate\Database\Eloquent\Model
     {
         return parent::resolveRecord($key)->load([
             'customer',
