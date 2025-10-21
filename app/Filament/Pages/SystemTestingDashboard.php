@@ -41,10 +41,35 @@ class SystemTestingDashboard extends Page
     public string $currentTest = '';
     public array $liveOutput = [];
     public bool $isRunning = false;
+    public string $selectedCompany = '';  // 'askproai' or 'friseur'
+    public array $companyConfig = [];     // Team ID and Event IDs
 
     public function mount(): void
     {
         $this->testRunner = new CalcomTestRunner();
+        $this->loadTestHistory();
+    }
+
+    /**
+     * Set test context for selected company/branch
+     */
+    public function setTestContext(string $company): void
+    {
+        $this->selectedCompany = $company;
+        $this->companyConfig = match($company) {
+            'askproai' => [
+                'name' => 'AskProAI',
+                'team_id' => 39203,
+                'event_ids' => [3664712, 2563193]
+            ],
+            'friseur' => [
+                'name' => 'Friseur 1',
+                'team_id' => 34209,
+                'event_ids' => [2942413, 3672814]
+            ],
+            default => []
+        };
+        $this->liveOutput = [];
         $this->loadTestHistory();
     }
 
@@ -65,6 +90,11 @@ class SystemTestingDashboard extends Page
      */
     public function runTest(string $testType): void
     {
+        if (empty($this->selectedCompany)) {
+            $this->addError('Please select a company/branch first');
+            return;
+        }
+
         if (!array_key_exists($testType, SystemTestRun::testTypes())) {
             $this->addError('Invalid test type');
             return;
@@ -75,8 +105,15 @@ class SystemTestingDashboard extends Page
         $this->liveOutput = [];
 
         try {
-            $this->currentTestRun = $this->testRunner->runTest($testType);
-            $this->liveOutput = $this->currentTestRun->output ?? [];
+            $this->liveOutput[] = "Starting test: " . $this->getTestLabel($testType);
+            $this->liveOutput[] = "Company: " . $this->companyConfig['name'];
+            $this->liveOutput[] = "Team ID: " . $this->companyConfig['team_id'];
+            $this->liveOutput[] = "Event IDs: " . implode(', ', $this->companyConfig['event_ids']);
+            $this->liveOutput[] = "";
+            $this->liveOutput[] = "Executing...";
+
+            $this->currentTestRun = $this->testRunner->runTest($testType, $this->companyConfig);
+            $this->liveOutput = array_merge($this->liveOutput, (array)($this->currentTestRun->output ?? []));
 
             $this->dispatch('test-completed', [
                 'testType' => $testType,
@@ -96,12 +133,32 @@ class SystemTestingDashboard extends Page
      */
     public function runAllTests(): void
     {
+        if (empty($this->selectedCompany)) {
+            $this->addError('Please select a company/branch first');
+            return;
+        }
+
         $this->isRunning = true;
         $this->liveOutput = [];
 
         try {
-            $results = $this->testRunner->runAllTests();
-            $this->liveOutput = $results;
+            $this->liveOutput[] = "Starting all tests for: " . $this->companyConfig['name'];
+            $this->liveOutput[] = "Team ID: " . $this->companyConfig['team_id'];
+            $this->liveOutput[] = "Event IDs: " . implode(', ', $this->companyConfig['event_ids']);
+            $this->liveOutput[] = "";
+            $this->liveOutput[] = "Running 9 test suites...";
+            $this->liveOutput[] = "";
+
+            $results = $this->testRunner->runAllTests($this->companyConfig);
+
+            foreach ($results as $result) {
+                $this->liveOutput[] = "[" . ($result['succeeded'] ? "✓ PASS" : "✗ FAIL") . "] " . $result['label'];
+                $this->liveOutput[] = "Duration: " . $result['duration'] . "s";
+                if ($result['error']) {
+                    $this->liveOutput[] = "Error: " . $result['error'];
+                }
+                $this->liveOutput[] = "";
+            }
 
             $this->dispatch('all-tests-completed', [
                 'total' => count($results),
@@ -109,6 +166,7 @@ class SystemTestingDashboard extends Page
             ]);
         } catch (\Exception $e) {
             $this->addError('Test execution failed: ' . $e->getMessage());
+            $this->liveOutput[] = $e->getMessage();
         } finally {
             $this->isRunning = false;
             $this->loadTestHistory();

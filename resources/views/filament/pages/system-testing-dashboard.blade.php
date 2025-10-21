@@ -7,11 +7,41 @@
             <p class="text-sm opacity-75 mt-2">⚠️ Restricted access: admin@askproai.de only</p>
         </div>
 
+        <!-- Company/Branch Selector -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <p class="text-sm font-medium text-gray-700 mb-3">Select Company/Branch for Testing:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <button
+                    wire:click="setTestContext('askproai')"
+                    @class([
+                        'p-3 rounded-lg border-2 transition-all',
+                        'border-blue-500 bg-blue-50' => $this->selectedCompany === 'askproai',
+                        'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'askproai'
+                    ])
+                >
+                    <span class="font-semibold text-gray-900">AskProAI</span>
+                    <span class="text-xs text-gray-600 block">Team 39203 | Events: 3664712, 2563193</span>
+                </button>
+
+                <button
+                    wire:click="setTestContext('friseur')"
+                    @class([
+                        'p-3 rounded-lg border-2 transition-all',
+                        'border-blue-500 bg-blue-50' => $this->selectedCompany === 'friseur',
+                        'border-gray-200 bg-white hover:border-gray-300' => $this->selectedCompany !== 'friseur'
+                    ])
+                >
+                    <span class="font-semibold text-gray-900">Friseur 1</span>
+                    <span class="text-xs text-gray-600 block">Team 34209 | Events: 2942413, 3672814</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <x-filament::button
                 wire:click="runAllTests"
-                :disabled="$this->isRunning"
+                :disabled="$this->isRunning || empty($this->selectedCompany)"
                 icon="heroicon-o-play"
                 color="success"
                 size="lg"
