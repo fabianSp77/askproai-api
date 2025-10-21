@@ -49,7 +49,7 @@ class EditPhoneNumber extends EditRecord
             ->body('The phone number has been successfully updated.');
     }
 
-    protected function resolveRecord($key): Model
+    protected function resolveRecord($key): \Illuminate\Database\Eloquent\Model
     {
         return static::getResource()::resolveRecordRouteBinding($key)
             ->load(['company', 'branch']);
