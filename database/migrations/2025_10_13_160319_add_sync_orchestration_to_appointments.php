@@ -48,6 +48,7 @@ return new class extends Migration
                   ->nullOnDelete()
                   ->after('sync_initiated_at')
                   ->comment('User who initiated sync (NULL for system/phone)');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // SYNC QUEUE TRACKING (Monitoring & Debugging)

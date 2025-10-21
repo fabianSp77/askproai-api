@@ -144,4 +144,12 @@ class Branch extends Model
     //         'id'              // Local key on staff table
     //     );
     // }
+
+    /**
+     * Get all Retell agent prompts for this branch
+     */
+    public function retellAgentPrompts(): HasMany
+    {
+        return $this->hasMany(RetellAgentPrompt::class);
+    }
 }

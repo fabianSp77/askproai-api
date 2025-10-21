@@ -424,8 +424,19 @@ class ServiceResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                Forms\Components\Section::make('Mitarbeiterzuweisung')
-                    ->description(__('services.staff_description'))
+                Forms\Components\Section::make('📅 Cal.com Mitarbeiter (Automatisch)')
+                    ->description('Mitarbeiter aus Cal.com - Automatisch abgerufen und mit lokalen Mitarbeitern verbunden')
+                    ->schema([
+                        Forms\Components\ViewField::make('calcom_hosts_info')
+                            ->view('components.calcom-hosts-display-form')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                // Legacy staff section (hidden but kept for backward compatibility)
+                Forms\Components\Section::make('Mitarbeiterzuweisung (Legacy)')
+                    ->description('⚠️ Diese Funktion ist veraltet. Bitte verwenden Sie stattdessen die Cal.com Mitarbeiter-Section oben.')
                     ->schema([
                         Forms\Components\Repeater::make('staff')
                             ->relationship()
@@ -433,6 +444,9 @@ class ServiceResource extends Resource
                                 Forms\Components\Select::make('id')
                                     ->label(__('services.staff_member'))
                                     ->options(function () {
+                                        // NOTE: Temporarily allowing cross-company staff assignment
+                                        // because staff can work for multiple companies/branches
+                                        // TODO: Implement many-to-many staff_company table for proper multi-tenant staff
                                         return \App\Models\Staff::query()
                                             ->where('is_active', true)
                                             ->orderBy('name')
@@ -548,20 +562,18 @@ class ServiceResource extends Resource
                             ->reorderable()
                             ->collapsible()
                             ->itemLabel(function (array $state): ?string {
-                                try {
-                                    if (!isset($state['id'])) {
-                                        return null;
-                                    }
-
-                                    $staff = \App\Models\Staff::find($state['id']);
-                                    return $staff?->name ?? 'Unknown Staff';
-                                } catch (\Exception $e) {
-                                    return 'Error loading staff';
+                                // Safe itemLabel that doesn't cause 500 errors
+                                if (empty($state['id']) || !isset($state['id'])) {
+                                    return 'Neuer Mitarbeiter';
                                 }
+
+                                // Return just the ID with safe string
+                                return "Staff ID: {$state['id']}";
                             }),
                     ])
                     ->collapsible()
-                    ->collapsed(),
+                    ->collapsed()
+                    ->visible(true), // Show because Cal.com sync may not be configured yet
 
                 Forms\Components\Section::make('Cal.com Integration')
                     ->schema([
@@ -1002,6 +1014,79 @@ class ServiceResource extends Resource
                             ->send();
                     })
                     ->visible(fn ($record) => !$record->calcom_event_type_id),
+
+                Action::make('refresh_from_calcom')
+                    ->label('Von Cal.com aktualisieren')
+                    ->icon('heroicon-o-arrow-path-rounded-square')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Service von Cal.com aktualisieren')
+                    ->modalDescription('Dies wird die Dienstleistungsdaten von Cal.com abrufen und aktualisieren.')
+                    ->action(function ($record) {
+                        try {
+                            if (!$record->calcom_event_type_id) {
+                                Notification::make()
+                                    ->title('Fehler: Keine Cal.com Event Type ID')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            $apiKey = config('services.calcom.api_key');
+                            $response = \Illuminate\Support\Facades\Http::get(
+                                "https://api.cal.com/v1/event-types/{$record->calcom_event_type_id}",
+                                ['apiKey' => $apiKey]
+                            );
+
+                            if (!$response->successful()) {
+                                throw new \Exception("Cal.com API returned {$response->status()}: {$response->body()}");
+                            }
+
+                            $data = $response->json();
+                            $eventType = $data['event_type'] ?? [];
+
+                            if (empty($eventType)) {
+                                throw new \Exception('Invalid response from Cal.com');
+                            }
+
+                            // Update service with Cal.com data
+                            $record->update([
+                                'name' => $eventType['title'] ?? $record->name,
+                                'calcom_name' => $eventType['title'] ?? $record->calcom_name,
+                                'duration_minutes' => $eventType['length'] ?? $record->duration_minutes,
+                                'description' => $eventType['description'] ?? $record->description,
+                                'slug' => $eventType['slug'] ?? $record->slug,
+                                'schedule_id' => $eventType['scheduleId'] ?? $record->schedule_id,
+                                'requires_confirmation' => $eventType['requiresConfirmation'] ?? false,
+                                'booking_link' => $eventType['link'] ?? $record->booking_link,
+                                'booking_fields_json' => json_encode($eventType['bookingFields'] ?? []),
+                                'locations_json' => json_encode($eventType['locations'] ?? []),
+                                'metadata_json' => json_encode($eventType['metadata'] ?? []),
+                                'last_calcom_sync' => now(),
+                                'sync_status' => 'synced',
+                                'sync_error' => null,
+                            ]);
+
+                            Notification::make()
+                                ->title('Service erfolgreich aktualisiert')
+                                ->body("'{$eventType['title']}' - {$eventType['length']} Minuten")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Fehler beim Aktualisieren')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->persistent()
+                                ->send();
+
+                            $record->update([
+                                'sync_status' => 'error',
+                                'sync_error' => $e->getMessage(),
+                            ]);
+                        }
+                    })
+                    ->visible(fn ($record) => $record->calcom_event_type_id),
 
                 Action::make('unsync')
                     ->label('Synchronisierung aufheben')

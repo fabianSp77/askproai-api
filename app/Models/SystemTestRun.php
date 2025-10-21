@@ -24,6 +24,7 @@ class SystemTestRun extends Model
         'status',
         'output',
         'error_message',
+        'metadata',
         'started_at',
         'completed_at',
         'duration_ms'
@@ -31,6 +32,7 @@ class SystemTestRun extends Model
 
     protected $casts = [
         'output' => 'json',
+        'metadata' => 'json',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
@@ -44,7 +46,7 @@ class SystemTestRun extends Model
     public const STATUS_FAILED = 'failed';
 
     /**
-     * Test Types (9 Cal.com Integration Tests)
+     * Test Types: Cal.com Integration Tests (9)
      */
     public const TEST_EVENT_ID_VERIFICATION = 'event_id_verification';
     public const TEST_AVAILABILITY_CHECK = 'availability_check';
@@ -56,9 +58,36 @@ class SystemTestRun extends Model
     public const TEST_V2_API_COMPATIBILITY = 'v2_api_compatibility';
     public const TEST_MULTI_TENANT_ISOLATION = 'multi_tenant_isolation';
 
+    /**
+     * Test Types: Retell AI Tests (11)
+     */
+    // Webhooks (2)
+    public const TEST_RETELL_WEBHOOK_CALL_STARTED = 'retell_webhook_call_started';
+    public const TEST_RETELL_WEBHOOK_CALL_ENDED = 'retell_webhook_call_ended';
+
+    // Function Calls (6)
+    public const TEST_RETELL_FUNCTION_CHECK_CUSTOMER = 'retell_function_check_customer';
+    public const TEST_RETELL_FUNCTION_CHECK_AVAILABILITY = 'retell_function_check_availability';
+    public const TEST_RETELL_FUNCTION_COLLECT_APPOINTMENT = 'retell_function_collect_appointment';
+    public const TEST_RETELL_FUNCTION_BOOK_APPOINTMENT = 'retell_function_book_appointment';
+    public const TEST_RETELL_FUNCTION_CANCEL_APPOINTMENT = 'retell_function_cancel_appointment';
+    public const TEST_RETELL_FUNCTION_RESCHEDULE_APPOINTMENT = 'retell_function_reschedule_appointment';
+
+    // Policies (2)
+    public const TEST_RETELL_POLICY_CANCELLATION = 'retell_policy_cancellation';
+    public const TEST_RETELL_POLICY_RESCHEDULE = 'retell_policy_reschedule';
+
+    // Performance (1)
+    public const TEST_RETELL_PERFORMANCE_E2E = 'retell_performance_e2e';
+
+    // Hidden/Anonymous Numbers (2)
+    public const TEST_RETELL_HIDDEN_NUMBER_QUERY = 'retell_hidden_number_query';
+    public const TEST_RETELL_ANONYMOUS_CALL_HANDLING = 'retell_anonymous_call_handling';
+
     public static function testTypes(): array
     {
         return [
+            // Cal.com Tests
             self::TEST_EVENT_ID_VERIFICATION => '1. Event-ID Verification',
             self::TEST_AVAILABILITY_CHECK => '2. Availability Check',
             self::TEST_APPOINTMENT_BOOKING => '3. Appointment Booking',
@@ -68,6 +97,29 @@ class SystemTestRun extends Model
             self::TEST_BIDIRECTIONAL_SYNC => '7. Bidirectional Sync',
             self::TEST_V2_API_COMPATIBILITY => '8. V2 API Compatibility',
             self::TEST_MULTI_TENANT_ISOLATION => '9. Multi-Tenant Isolation',
+
+            // Retell Tests - Webhooks
+            self::TEST_RETELL_WEBHOOK_CALL_STARTED => '📞 Webhook: call.started',
+            self::TEST_RETELL_WEBHOOK_CALL_ENDED => '📞 Webhook: call.ended',
+
+            // Retell Tests - Function Calls
+            self::TEST_RETELL_FUNCTION_CHECK_CUSTOMER => '⚡ Function: check_customer',
+            self::TEST_RETELL_FUNCTION_CHECK_AVAILABILITY => '⚡ Function: check_availability',
+            self::TEST_RETELL_FUNCTION_COLLECT_APPOINTMENT => '⚡ Function: collect_appointment',
+            self::TEST_RETELL_FUNCTION_BOOK_APPOINTMENT => '⚡ Function: book_appointment',
+            self::TEST_RETELL_FUNCTION_CANCEL_APPOINTMENT => '⚡ Function: cancel_appointment',
+            self::TEST_RETELL_FUNCTION_RESCHEDULE_APPOINTMENT => '⚡ Function: reschedule_appointment',
+
+            // Retell Tests - Policies
+            self::TEST_RETELL_POLICY_CANCELLATION => '📋 Policy: Cancellation Rules',
+            self::TEST_RETELL_POLICY_RESCHEDULE => '📋 Policy: Reschedule Rules',
+
+            // Retell Tests - Performance
+            self::TEST_RETELL_PERFORMANCE_E2E => '🚀 Performance: E2E Latency (<900ms)',
+
+            // Retell Tests - Hidden/Anonymous Numbers
+            self::TEST_RETELL_HIDDEN_NUMBER_QUERY => '🔒 Hidden Number: Query Appointment',
+            self::TEST_RETELL_ANONYMOUS_CALL_HANDLING => '🔒 Anonymous: Complete Call Flow',
         ];
     }
 
@@ -116,12 +168,13 @@ class SystemTestRun extends Model
      */
     public function markCompleted(array $output = [], ?string $error = null): void
     {
+        $completedAt = now();
         $this->update([
             'status' => $error ? self::STATUS_FAILED : self::STATUS_COMPLETED,
             'output' => $output,
             'error_message' => $error,
-            'completed_at' => now(),
-            'duration_ms' => now()->diffInMilliseconds($this->started_at)
+            'completed_at' => $completedAt,
+            'duration_ms' => $this->started_at->diffInMilliseconds($completedAt)
         ]);
     }
 }

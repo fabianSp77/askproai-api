@@ -181,6 +181,8 @@ class RetellFunctionCallHandler extends Controller
             'check_availability' => $this->checkAvailability($parameters, $callId),
             'book_appointment' => $this->bookAppointment($parameters, $callId),
             'query_appointment' => $this->queryAppointment($parameters, $callId),
+            // 🔒 NEW V85: Query appointment by customer name (for anonymous/hidden number calls)
+            'query_appointment_by_name' => $this->queryAppointmentByName($parameters, $callId),
             'get_alternatives' => $this->getAlternatives($parameters, $callId),
             'list_services' => $this->listServices($parameters, $callId),
             'cancel_appointment' => $this->handleCancellationAttempt($parameters, $callId),
@@ -3500,6 +3502,144 @@ class RetellFunctionCallHandler extends Controller
                 'success' => false,
                 'error' => 'query_error',
                 'message' => 'Entschuldigung, ich konnte Ihren Termin nicht finden. Bitte versuchen Sie es erneut.'
+            ], 200);
+        }
+    }
+
+    /**
+     * 🔒 NEW V85: Query appointment by customer name (for anonymous callers with hidden numbers)
+     *
+     * When a customer has a hidden/suppressed phone number (00000000), they cannot be
+     * looked up via phone-based query_appointment(). Instead, they provide their name
+     * and we look up appointments by name.
+     *
+     * This is the fallback function for anonymous callers.
+     *
+     * @param array $params ['customer_name', 'appointment_date' (optional), 'call_id']
+     * @param string|null $callId Retell call ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function queryAppointmentByName(array $params, ?string $callId)
+    {
+        try {
+            Log::info('🔍 Query appointment by name function called (ANONYMOUS)', [
+                'call_id' => $callId,
+                'customer_name' => $params['customer_name'] ?? 'missing',
+                'appointment_date' => $params['appointment_date'] ?? 'not specified'
+            ]);
+
+            // Get call context
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+
+            if (!$call) {
+                Log::error('❌ Call not found for query_appointment_by_name', [
+                    'retell_call_id' => $callId
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'call_not_found',
+                    'message' => 'Anruf konnte nicht gefunden werden.'
+                ], 200);
+            }
+
+            // Validate customer_name parameter
+            $customerName = $params['customer_name'] ?? $params['name'] ?? null;
+            if (empty($customerName)) {
+                Log::warning('⚠️ customer_name not provided to query_appointment_by_name', [
+                    'call_id' => $callId,
+                    'params' => array_keys($params)
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'invalid_params',
+                    'message' => 'Der Name des Kunden ist erforderlich.'
+                ], 200);
+            }
+
+            // Query appointments by customer name
+            $query = Appointment::where('company_id', $call->company_id);
+
+            // Add branch filter if available
+            if ($call->branch_id) {
+                $query->where('branch_id', $call->branch_id);
+            }
+
+            // Filter by customer name (case-insensitive)
+            $query->whereRaw('LOWER(customer_name) = ?', [strtolower($customerName)])
+                  ->where('status', '!=', 'cancelled')
+                  ->orderBy('appointment_date', 'desc')
+                  ->orderBy('appointment_time', 'desc');
+
+            // Optional: filter by date
+            if (!empty($params['appointment_date'])) {
+                $date = $this->parseDateString($params['appointment_date']);
+                if ($date) {
+                    $query->whereDate('appointment_date', $date);
+                }
+            }
+
+            $appointments = $query->get();
+
+            // No appointments found
+            if ($appointments->isEmpty()) {
+                Log::info('ℹ️ No appointments found for anonymous caller', [
+                    'call_id' => $callId,
+                    'customer_name' => $customerName,
+                    'company_id' => $call->company_id
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'appointments' => [],
+                    'message' => "Unter dem Namen {$customerName} wurde kein Termin gefunden."
+                ], 200);
+            }
+
+            // Format appointments for response
+            $formattedAppointments = $appointments->map(function ($appt) {
+                return [
+                    'id' => $appt->id,
+                    'customer_name' => $appt->customer_name,
+                    'appointment_date' => $appt->appointment_date->format('Y-m-d'),
+                    'appointment_date_display' => $appt->appointment_date->format('d.m.Y'),
+                    'appointment_date_day' => $appt->appointment_date->translatedFormat('l'), // Day name (Montag, etc)
+                    'appointment_time' => $appt->appointment_time,
+                    'service_name' => $appt->service?->name ?? 'Unbekannt',
+                    'status' => $appt->status,
+                    'duration_minutes' => $appt->duration_minutes ?? 60,
+                    'notes' => $appt->notes ?? ''
+                ];
+            })->toArray();
+
+            Log::info('✅ Query appointment by name completed', [
+                'call_id' => $callId,
+                'customer_name' => $customerName,
+                'appointment_count' => count($formattedAppointments)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'appointments' => $formattedAppointments,
+                'appointment_count' => count($formattedAppointments),
+                'message' => count($formattedAppointments) === 1
+                    ? "Ich habe einen Termin für {$customerName} gefunden."
+                    : "Ich habe " . count($formattedAppointments) . " Termine für {$customerName} gefunden."
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Query appointment by name failed', [
+                'call_id' => $callId,
+                'customer_name' => $params['customer_name'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'query_error',
+                'message' => 'Entschuldigung, ich konnte die Termine nicht finden. Bitte versuchen Sie es erneut.'
             ], 200);
         }
     }

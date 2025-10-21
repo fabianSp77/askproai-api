@@ -181,12 +181,8 @@ class CalcomTestRunner
     {
         try {
             $process = new SymfonyProcess([
-                'php',
-                'artisan',
-                'pest',
-                $testPath,
-                '--json',
-                '--no-interaction'
+                'vendor/bin/pest',
+                $testPath
             ], base_path());
 
             $process->setTimeout(300); // 5 minutes timeout
@@ -195,12 +191,13 @@ class CalcomTestRunner
             $output = $process->getOutput();
             $errors = $process->getErrorOutput();
 
-            // Try to parse JSON output
-            $result = json_decode($output, true);
+            // Parse Pest output to extract test results
+            $results = $this->parsePestOutput($output);
 
             return [
                 'success' => $process->isSuccessful(),
-                'output' => $result ?? $output,
+                'output' => $results,
+                'raw_output' => $output,
                 'error' => $errors,
                 'exit_code' => $process->getExitCode()
             ];
@@ -211,6 +208,26 @@ class CalcomTestRunner
                 'exit_code' => -1
             ];
         }
+    }
+
+    /**
+     * Parse Pest test output and extract summary
+     */
+    private function parsePestOutput(string $output): array
+    {
+        // Extract test summary line like "Tests:    2 failed, 3 passed (9 assertions)"
+        $summaryPattern = '/Tests:\s*(.+)/i';
+        if (preg_match($summaryPattern, $output, $matches)) {
+            return [
+                'summary' => trim($matches[1]),
+                'test_output' => $output
+            ];
+        }
+
+        return [
+            'summary' => 'Test output captured',
+            'test_output' => $output
+        ];
     }
 
     /**

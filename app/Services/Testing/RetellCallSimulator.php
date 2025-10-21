@@ -99,7 +99,7 @@ class RetellCallSimulator
                 'to_number' => $toNumber,
                 'direction' => 'inbound',
                 'call_type' => 'phone_call',
-                'agent_id' => 'agent_b36ecd3927a81834b6d56ab07b',
+                'agent_id' => config('services.retellai.agent_id') ?? 'agent_9a8202a740cd3120d96fcfda1e',
                 'start_timestamp' => Carbon::now()->timestamp * 1000
             ]
         ];

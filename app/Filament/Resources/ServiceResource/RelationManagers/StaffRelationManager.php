@@ -64,13 +64,13 @@ class StaffRelationManager extends RelationManager
                                         ->prefix('€')
                                         ->numeric()
                                         ->step(0.01)
-                                        ->placeholder('Standard: €' . $this->ownerRecord->price ?? '0'),
+                                        ->placeholder('Standard: €' . (($this->ownerRecord?->price) ?? '0')),
 
                                     Forms\Components\TextInput::make('custom_duration_minutes')
                                         ->label('Spezielle Dauer')
                                         ->suffix('min')
                                         ->numeric()
-                                        ->placeholder('Standard: ' . ($this->ownerRecord->duration_minutes ?? '30') . ' min'),
+                                        ->placeholder('Standard: ' . (($this->ownerRecord?->duration_minutes) ?? '30') . ' min'),
 
                                     Forms\Components\TextInput::make('commission_rate')
                                         ->label('Provision')
@@ -115,7 +115,7 @@ class StaffRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-m-user')
-                    ->description(fn ($record) => $record->email)
+                    ->description(fn ($record) => $record->email ?? 'Keine Email')
                     ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('position')
@@ -143,14 +143,14 @@ class StaffRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('pivot.custom_price')
                     ->label('Spezieller Preis')
                     ->money('EUR')
-                    ->placeholder(fn () => '€' . number_format($this->ownerRecord->price ?? 0, 2))
+                    ->placeholder(fn () => '€' . number_format(($this->ownerRecord?->price) ?? 0, 2))
                     ->description('Standard wenn leer')
                     ->alignEnd(),
 
                 Tables\Columns\TextColumn::make('pivot.custom_duration_minutes')
                     ->label('Spezielle Dauer')
                     ->suffix(' min')
-                    ->placeholder(fn () => ($this->ownerRecord->duration_minutes ?? 30) . ' min')
+                    ->placeholder(fn () => (($this->ownerRecord?->duration_minutes) ?? 30) . ' min')
                     ->description('Standard wenn leer')
                     ->badge()
                     ->color('gray'),
@@ -230,53 +230,76 @@ class StaffRelationManager extends RelationManager
                         ->modalHeading('Service-Einstellungen für Mitarbeiter bearbeiten'),
 
                     Tables\Actions\Action::make('togglePrimary')
-                        ->label(fn ($record) => $record->pivot->is_primary ? 'Als sekundär markieren' : 'Als primär markieren')
+                        ->label(fn ($record) => ($record?->pivot?->is_primary ?? false) ? 'Als sekundär markieren' : 'Als primär markieren')
                         ->icon('heroicon-m-star')
-                        ->color(fn ($record) => $record->pivot->is_primary ? 'warning' : 'gray')
+                        ->color(fn ($record) => ($record?->pivot?->is_primary ?? false) ? 'warning' : 'gray')
                         ->action(function ($record) {
-                            // If making primary, remove primary status from others
-                            if (!$record->pivot->is_primary) {
-                                $this->ownerRecord->staff()->updateExistingPivot(
-                                    $this->ownerRecord->staff()->wherePivot('is_primary', true)->pluck('staff.id'),
-                                    ['is_primary' => false]
-                                );
+                            try {
+                                // If making primary, remove primary status from others
+                                if (!($record->pivot->is_primary ?? false)) {
+                                    $primaryIds = $this->ownerRecord->staff()
+                                        ->wherePivot('is_primary', true)
+                                        ->pluck('staff.id')
+                                        ->toArray();
+
+                                    if (!empty($primaryIds)) {
+                                        $this->ownerRecord->staff()->updateExistingPivot(
+                                            $primaryIds,
+                                            ['is_primary' => false]
+                                        );
+                                    }
+                                }
+
+                                $this->ownerRecord->staff()->updateExistingPivot($record->id, [
+                                    'is_primary' => !($record->pivot->is_primary ?? false)
+                                ]);
+
+                                Notification::make()
+                                    ->title('Status geändert')
+                                    ->body(($record->name ?? 'Mitarbeiter') . ' wurde als ' . (!($record->pivot->is_primary ?? false) ? 'primärer' : 'sekundärer') . ' Mitarbeiter markiert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Fehler')
+                                    ->body('Status konnte nicht geändert werden: ' . $e->getMessage())
+                                    ->danger()
+                                    ->send();
                             }
-
-                            $this->ownerRecord->staff()->updateExistingPivot($record->id, [
-                                'is_primary' => !$record->pivot->is_primary
-                            ]);
-
-                            Notification::make()
-                                ->title('Status geändert')
-                                ->body($record->name . ' wurde als ' . (!$record->pivot->is_primary ? 'primärer' : 'sekundärer') . ' Mitarbeiter markiert.')
-                                ->success()
-                                ->send();
                         }),
 
                     Tables\Actions\Action::make('toggleBooking')
-                        ->label(fn ($record) => $record->pivot->can_book ? 'Buchung deaktivieren' : 'Buchung aktivieren')
+                        ->label(fn ($record) => ($record?->pivot?->can_book ?? false) ? 'Buchung deaktivieren' : 'Buchung aktivieren')
                         ->icon('heroicon-m-calendar-days')
-                        ->color(fn ($record) => $record->pivot->can_book ? 'success' : 'danger')
+                        ->color(fn ($record) => ($record?->pivot?->can_book ?? false) ? 'success' : 'danger')
                         ->action(function ($record) {
-                            $this->ownerRecord->staff()->updateExistingPivot($record->id, [
-                                'can_book' => !$record->pivot->can_book
-                            ]);
+                            try {
+                                $this->ownerRecord->staff()->updateExistingPivot($record->id, [
+                                    'can_book' => !($record->pivot->can_book ?? false)
+                                ]);
 
-                            Notification::make()
-                                ->title('Buchungsstatus geändert')
-                                ->body($record->name . ' kann ' . (!$record->pivot->can_book ? 'jetzt' : 'nicht mehr') . ' Termine für diesen Service buchen.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Buchungsstatus geändert')
+                                    ->body(($record->name ?? 'Mitarbeiter') . ' kann ' . (!($record->pivot->can_book ?? false) ? 'jetzt' : 'nicht mehr') . ' Termine für diesen Service buchen.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Fehler')
+                                    ->body('Buchungsstatus konnte nicht geändert werden: ' . $e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     Tables\Actions\Action::make('viewAppointments')
                         ->label('Termine anzeigen')
                         ->icon('heroicon-m-calendar')
                         ->color('info')
-                        ->url(fn ($record) => route('filament.admin.resources.appointments.index', [
+                        ->url(fn ($record) => $record?->id && $this->ownerRecord?->id ? route('filament.admin.resources.appointments.index', [
                             'tableFilters[staff_id][value]' => $record->id,
                             'tableFilters[service_id][value]' => $this->ownerRecord->id,
-                        ]))
+                        ]) : '#')
                         ->openUrlInNewTab(),
 
                     Tables\Actions\DetachAction::make()
@@ -293,17 +316,25 @@ class StaffRelationManager extends RelationManager
                         ->icon('heroicon-o-calendar-days')
                         ->color('info')
                         ->action(function ($records) {
-                            foreach ($records as $record) {
-                                $this->ownerRecord->staff()->updateExistingPivot($record->id, [
-                                    'can_book' => !$record->pivot->can_book
-                                ]);
-                            }
+                            try {
+                                foreach ($records as $record) {
+                                    $this->ownerRecord->staff()->updateExistingPivot($record->id, [
+                                        'can_book' => !($record->pivot->can_book ?? false)
+                                    ]);
+                                }
 
-                            Notification::make()
-                                ->title('Buchungsstatus geändert')
-                                ->body('Der Buchungsstatus für ' . count($records) . ' Mitarbeiter wurde geändert.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Buchungsstatus geändert')
+                                    ->body('Der Buchungsstatus für ' . count($records) . ' Mitarbeiter wurde geändert.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Fehler')
+                                    ->body('Buchungsstatus konnte nicht aktualisiert werden: ' . $e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         })
                         ->requiresConfirmation(),
 
@@ -322,17 +353,25 @@ class StaffRelationManager extends RelationManager
                                 ->suffix('%'),
                         ])
                         ->action(function ($records, array $data) {
-                            foreach ($records as $record) {
-                                $this->ownerRecord->staff()->updateExistingPivot($record->id, [
-                                    'commission_rate' => $data['commission_rate']
-                                ]);
-                            }
+                            try {
+                                foreach ($records as $record) {
+                                    $this->ownerRecord->staff()->updateExistingPivot($record->id, [
+                                        'commission_rate' => $data['commission_rate']
+                                    ]);
+                                }
 
-                            Notification::make()
-                                ->title('Provision gesetzt')
-                                ->body('Die Provision wurde für ' . count($records) . ' Mitarbeiter auf ' . $data['commission_rate'] . '% gesetzt.')
-                                ->success()
-                                ->send();
+                                Notification::make()
+                                    ->title('Provision gesetzt')
+                                    ->body('Die Provision wurde für ' . count($records) . ' Mitarbeiter auf ' . $data['commission_rate'] . '% gesetzt.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Fehler')
+                                    ->body('Provision konnte nicht gesetzt werden: ' . $e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     Tables\Actions\DetachBulkAction::make()
