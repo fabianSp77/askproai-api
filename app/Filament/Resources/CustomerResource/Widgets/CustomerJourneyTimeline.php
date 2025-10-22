@@ -182,10 +182,11 @@ class CustomerJourneyTimeline extends Widget
         }
 
         // Fallback: Create basic history from current state
+        $changedAt = $customer->journey_status_updated_at ?? $customer->created_at;
         return [[
             'from' => null,
             'to' => $customer->journey_status,
-            'changed_at' => $customer->journey_status_updated_at ?? $customer->created_at,
+            'changed_at' => $changedAt ? $changedAt->toIso8601String() : null,
             'note' => 'Aktueller Status',
         ]];
     }
