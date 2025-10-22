@@ -81,8 +81,7 @@ class CustomerDetailStats extends BaseWidget
                     : 'Gesamt eingehende/ausgehende Anrufe'
                 )
                 ->descriptionIcon($failedBookings > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-phone')
-                ->color($failedBookings > 0 ? 'warning' : 'primary')
-                ->chart($this->getCallsChart($customer)),
+                ->color($failedBookings > 0 ? 'warning' : 'primary'),
 
             Stat::make('Termine', $appointmentCount)
                 ->description($appointmentCount === 0 && $callCount > 0
@@ -90,8 +89,7 @@ class CustomerDetailStats extends BaseWidget
                     : "{$appointmentCount} von {$callCount} Anrufen konvertiert"
                 )
                 ->descriptionIcon($appointmentCount === 0 ? 'heroicon-m-calendar-x-mark' : 'heroicon-m-calendar')
-                ->color($appointmentCount === 0 && $callCount > 0 ? 'danger' : 'success')
-                ->chart($this->getAppointmentsChart($customer)),
+                ->color($appointmentCount === 0 && $callCount > 0 ? 'danger' : 'success'),
 
             Stat::make('Conversion', $conversionRate . '%')
                 ->description('Calls → Termine')
@@ -104,7 +102,7 @@ class CustomerDetailStats extends BaseWidget
                 ->color($totalRevenue > 0 ? 'success' : 'gray'),
 
             Stat::make('Letzter Kontakt', $this->formatLastContact($daysSinceContact, $hoursSinceContact))
-                ->description($lastContactAt->format('d.m.Y H:i') . ' (' . $this->getContactSourceLabel($contactSource) . ')')
+                ->description(($lastContactAt ? $lastContactAt->format('d.m.Y H:i') : 'N/A') . ' (' . $this->getContactSourceLabel($contactSource) . ')')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($daysSinceContact > 90 ? 'danger' : ($daysSinceContact > 30 ? 'warning' : 'success')),
 
