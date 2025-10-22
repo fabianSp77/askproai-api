@@ -1058,6 +1058,7 @@ class RetellFunctionCallHandler extends Controller
             $uhrzeit = $validatedData['uhrzeit'];
             $name = $validatedData['name'];
             $dienstleistung = $validatedData['dienstleistung'];
+            $serviceIdFromRequest = $validatedData['service_id'] ?? null;
             $email = $validatedData['email'];
 
             // 🔧 BUG FIX (Call 776): Auto-fill customer name if "Unbekannt" or empty
@@ -1100,6 +1101,7 @@ class RetellFunctionCallHandler extends Controller
                 'uhrzeit' => $uhrzeit,
                 'name' => $name,
                 'dienstleistung' => $dienstleistung,
+                'service_id_from_request' => $serviceIdFromRequest,
                 'call_id' => $callId,
                 'bestaetigung' => $confirmBooking
             ]);
@@ -1384,55 +1386,86 @@ class RetellFunctionCallHandler extends Controller
                 }
             }
 
-            // 🔧 FIX 2025-10-22: INTELLIGENT SERVICE SELECTION based on customer's choice
-            // Problem: System always used default service (30 min) even when customer wanted 15 min
-            // Solution: Parse dienstleistung to detect duration preference
+            // 🔧 FIX 2025-10-22: 3-TIER SERVICE SELECTION STRATEGY
+            // Problem: service_id from agent was ignored, always used default
+            // Solution: Priority-based selection
+            //   1. HIGHEST: service_id from request (agent explicitly selected)
+            //   2. MEDIUM: Keyword detection from dienstleistung
+            //   3. LOWEST: Default service fallback
             $service = null;
+            $selectionMethod = 'unknown';
 
             if ($companyId) {
-                // Check if customer mentioned "15 Minuten" or "Schnell" → use 15-minute service
-                // Otherwise use default 30-minute service
-                $dienstleistungLower = strtolower($dienstleistung ?? '');
-                $wants15Minutes = (
-                    strpos($dienstleistungLower, '15') !== false ||
-                    strpos($dienstleistungLower, 'schnell') !== false ||
-                    strpos($dienstleistungLower, 'kurz') !== false
-                );
-
-                if ($wants15Minutes) {
-                    // Try to find 15-minute service by keywords
-                    $service = Service::where('company_id', $companyId)
+                // TIER 1: Check if agent sent service_id explicitly (from list_services)
+                if ($serviceIdFromRequest) {
+                    $service = Service::where('id', $serviceIdFromRequest)
+                        ->where('company_id', $companyId)
                         ->where('is_active', 1)
                         ->whereNotNull('calcom_event_type_id')
-                        ->where(function($query) {
-                            $query->where('name', 'LIKE', '%15%')
-                                  ->orWhere('name', 'LIKE', '%schnell%')
-                                  ->orWhere('name', 'LIKE', '%kurz%')
-                                  ->orWhere('duration', 15);
-                        })
                         ->first();
 
-                    Log::info('🎯 Customer wants 15-minute consultation', [
-                        'company_id' => $companyId,
-                        'dienstleistung' => $dienstleistung,
-                        'detected_keywords' => ['15 min', 'schnell', 'kurz'],
-                        'service_found' => $service ? $service->id : null,
-                        'service_name' => $service ? $service->name : null
-                    ]);
+                    if ($service) {
+                        $selectionMethod = 'explicit_service_id';
+                        Log::info('✅ TIER 1: Using service_id from request', [
+                            'service_id' => $service->id,
+                            'service_name' => $service->name,
+                            'source' => 'agent_request',
+                            'priority' => 'highest'
+                        ]);
+                    } else {
+                        Log::warning('⚠️ service_id from request not found or inactive', [
+                            'requested_service_id' => $serviceIdFromRequest,
+                            'company_id' => $companyId,
+                            'falling_back_to' => 'keyword_detection'
+                        ]);
+                    }
                 }
 
-                // Fallback to default service if no specific match
+                // TIER 2: Keyword detection from dienstleistung if no explicit service_id
+                if (!$service && $dienstleistung) {
+                    $dienstleistungLower = strtolower($dienstleistung);
+                    $wants15Minutes = (
+                        strpos($dienstleistungLower, '15') !== false ||
+                        strpos($dienstleistungLower, 'schnell') !== false ||
+                        strpos($dienstleistungLower, 'kurz') !== false
+                    );
+
+                    if ($wants15Minutes) {
+                        $service = Service::where('company_id', $companyId)
+                            ->where('is_active', 1)
+                            ->whereNotNull('calcom_event_type_id')
+                            ->where(function($query) {
+                                $query->where('name', 'LIKE', '%15%')
+                                      ->orWhere('name', 'LIKE', '%schnell%')
+                                      ->orWhere('name', 'LIKE', '%kurz%')
+                                      ->orWhere('duration', 15);
+                            })
+                            ->first();
+
+                        if ($service) {
+                            $selectionMethod = 'keyword_detection';
+                            Log::info('✅ TIER 2: Detected 15-min service from keywords', [
+                                'service_id' => $service->id,
+                                'service_name' => $service->name,
+                                'detected_keywords' => ['15', 'schnell', 'kurz'],
+                                'dienstleistung' => $dienstleistung,
+                                'priority' => 'medium'
+                            ]);
+                        }
+                    }
+                }
+
+                // TIER 3: Fallback to default service
                 if (!$service) {
                     $service = $this->serviceSelector->getDefaultService($companyId);
+                    $selectionMethod = 'default_fallback';
 
-                    Log::info('📋 Using default service for company', [
+                    Log::info('ℹ️ TIER 3: Using default service (fallback)', [
                         'company_id' => $companyId,
-                        'dienstleistung' => $dienstleistung,
                         'service_id' => $service ? $service->id : null,
                         'service_name' => $service ? $service->name : null,
-                        'event_type_id' => $service ? $service->calcom_event_type_id : null,
-                        'is_default' => $service ? $service->is_default : false,
-                        'priority' => $service ? $service->priority : null
+                        'reason' => 'no_explicit_service_id_and_no_keyword_match',
+                        'priority' => 'lowest'
                     ]);
                 }
             }
@@ -1448,6 +1481,21 @@ class RetellFunctionCallHandler extends Controller
                     'fallback_company_id' => $fallbackCompanyId,
                     'service_id' => $service ? $service->id : null,
                     'service_name' => $service ? $service->name : null
+                ]);
+                $selectionMethod = 'company_fallback';
+            }
+
+            // Final service selection summary
+            if ($service) {
+                Log::info('🎯 FINAL SERVICE SELECTED', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'duration' => $service->duration,
+                    'calcom_event_type_id' => $service->calcom_event_type_id,
+                    'selection_method' => $selectionMethod,
+                    'service_id_in_request' => $serviceIdFromRequest !== null,
+                    'dienstleistung' => $dienstleistung,
+                    'company_id' => $companyId
                 ]);
             }
 
