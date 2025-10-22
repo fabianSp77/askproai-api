@@ -53,7 +53,10 @@ class CustomerActivityTimeline extends Widget
             $timeline[] = [
                 'type' => 'call',
                 'timestamp' => $call->created_at,
-                'data' => $call,
+                'data' => (object)[
+                    'id' => $call->id,
+                    'recording_url' => $call->recording_url,
+                ],
                 'icon' => $call->direction === 'inbound' ? '📞' : '📱',
                 'color' => $call->status === 'answered' ? 'success' : 'warning',
                 'title' => $call->direction === 'inbound' ? 'Eingehender Anruf' : 'Ausgehender Anruf',
@@ -70,7 +73,9 @@ class CustomerActivityTimeline extends Widget
             $timeline[] = [
                 'type' => 'appointment',
                 'timestamp' => $appointment->starts_at,
-                'data' => $appointment,
+                'data' => (object)[
+                    'id' => $appointment->id,
+                ],
                 'icon' => '📅',
                 'color' => match($appointment->status) {
                     'confirmed' => 'success',
@@ -91,7 +96,9 @@ class CustomerActivityTimeline extends Widget
                 $timeline[] = [
                     'type' => 'note',
                     'timestamp' => $note->created_at,
-                    'data' => $note,
+                    'data' => (object)[
+                        'id' => $note->id,
+                    ],
                     'icon' => '📝',
                     'color' => 'gray',
                     'title' => 'Notiz: ' . $note->subject,
