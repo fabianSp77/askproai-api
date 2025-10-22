@@ -236,7 +236,9 @@ class CustomerActivityTimeline extends Widget
                 $stats['notes']++;
             }
 
-            $daysDiff = $now->diffInDays($activity['timestamp']);
+            // Convert ISO8601 string timestamp back to Carbon for comparison
+            $timestamp = \Carbon\Carbon::parse($activity['timestamp']);
+            $daysDiff = $now->diffInDays($timestamp);
             if ($daysDiff <= 7) {
                 $stats['last_7_days']++;
             }
