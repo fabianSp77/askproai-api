@@ -47,6 +47,7 @@ class CustomerDetailStats extends BaseWidget
 
         $lastContactAt = null;
         $contactSource = 'created';
+        $lastContactFormatted = null;
 
         if ($lastCall && $lastAppointment) {
             // Use whichever is more recent
@@ -65,6 +66,8 @@ class CustomerDetailStats extends BaseWidget
             $contactSource = 'created';
         }
 
+        // Store formatted strings instead of Carbon objects for serialization
+        $lastContactFormatted = $lastContactAt ? $lastContactAt->format('d.m.Y H:i') : 'N/A';
         $daysSinceContact = now()->diffInDays($lastContactAt);
         $hoursSinceContact = now()->diffInHours($lastContactAt);
 
@@ -102,7 +105,7 @@ class CustomerDetailStats extends BaseWidget
                 ->color($totalRevenue > 0 ? 'success' : 'gray'),
 
             Stat::make('Letzter Kontakt', $this->formatLastContact($daysSinceContact, $hoursSinceContact))
-                ->description(($lastContactAt ? $lastContactAt->format('d.m.Y H:i') : 'N/A') . ' (' . $this->getContactSourceLabel($contactSource) . ')')
+                ->description($lastContactFormatted . ' (' . $this->getContactSourceLabel($contactSource) . ')')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($daysSinceContact > 90 ? 'danger' : ($daysSinceContact > 30 ? 'warning' : 'success')),
 

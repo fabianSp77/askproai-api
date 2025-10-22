@@ -49,17 +49,22 @@ class CustomerCriticalAlerts extends Widget
         $alerts = [];
 
         // CRITICAL: Failed Bookings
-        $failedBookings = $customer->calls()
+        $failedCalls = $customer->calls()
             ->where('appointment_made', 1)
             ->whereNull('converted_appointment_id')
-            ->count();
+            ->latest('created_at')
+            ->get();
+
+        $failedBookings = $failedCalls->count();
 
         if ($failedBookings > 0) {
-            $failedCalls = $customer->calls()
-                ->where('appointment_made', 1)
-                ->whereNull('converted_appointment_id')
-                ->latest('created_at')
-                ->get();
+            // Convert Eloquent collection to plain array for serialization
+            $failedCallsArray = $failedCalls->map(fn($call) => [
+                'text' => 'Call #' . $call->id . ' am ' . $call->created_at->format('d.m.Y H:i'),
+                'url' => route('filament.admin.resources.calls.edit', $call->id),
+            ])->toArray();
+
+            $firstCallId = $failedCalls->first()?->id;
 
             $alerts[] = [
                 'type' => 'critical',
@@ -72,15 +77,12 @@ class CustomerCriticalAlerts extends Widget
                         'label' => 'Jetzt nachbuchen',
                         'url' => route('filament.admin.resources.appointments.create', [
                             'customer_id' => $customer->id,
-                            'call_id' => $failedCalls->first()->id ?? null,
+                            'call_id' => $firstCallId,
                         ]),
                         'color' => 'danger',
                     ],
                 ],
-                'details' => $failedCalls->map(fn($call) => [
-                    'text' => 'Call #' . $call->id . ' am ' . $call->created_at->format('d.m.Y H:i'),
-                    'url' => route('filament.admin.resources.calls.edit', $call->id),
-                ])->toArray(),
+                'details' => $failedCallsArray,
             ];
         }
 
@@ -139,9 +141,16 @@ class CustomerCriticalAlerts extends Widget
             })
             ->where('id', '!=', $customer->id)
             ->where('company_id', $customer->company_id)
+            ->withCount(['calls', 'appointments'])
             ->get();
 
         if ($duplicates->isNotEmpty()) {
+            // Convert Eloquent collection to plain array for serialization
+            $duplicatesArray = $duplicates->map(fn($dup) => [
+                'text' => 'Kunde #' . $dup->id . ': ' . $dup->name . ' (' . $dup->calls_count . ' Calls, ' . $dup->appointments_count . ' Termine)',
+                'url' => route('filament.admin.resources.customers.view', $dup->id),
+            ])->toArray();
+
             $alerts[] = [
                 'type' => 'medium',
                 'priority' => 4,
@@ -149,10 +158,7 @@ class CustomerCriticalAlerts extends Widget
                 'title' => $duplicates->count() . ' Duplikat' . ($duplicates->count() > 1 ? 'e' : '') . ' gefunden',
                 'message' => 'Es wurden ' . $duplicates->count() . ' weitere Kunden mit gleicher Telefonnummer' . ($customer->email ? ' oder E-Mail' : '') . ' gefunden. Nutzen Sie die "Duplikate" und "Duplikat #X zusammenführen" Buttons im Seiten-Header.',
                 'actions' => [],
-                'details' => $duplicates->map(fn($dup) => [
-                    'text' => 'Kunde #' . $dup->id . ': ' . $dup->name . ' (' . $dup->calls()->count() . ' Calls, ' . $dup->appointments()->count() . ' Termine)',
-                    'url' => route('filament.admin.resources.customers.view', $dup->id),
-                ])->toArray(),
+                'details' => $duplicatesArray,
             ];
         }
 
