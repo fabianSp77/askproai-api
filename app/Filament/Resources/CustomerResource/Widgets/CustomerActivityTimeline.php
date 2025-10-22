@@ -52,7 +52,7 @@ class CustomerActivityTimeline extends Widget
         foreach ($customer->calls()->orderBy('created_at', 'desc')->get() as $call) {
             $timeline[] = [
                 'type' => 'call',
-                'timestamp' => $call->created_at,
+                'timestamp' => $call->created_at->toIso8601String(),
                 'data' => (object)[
                     'id' => $call->id,
                     'recording_url' => $call->recording_url,
@@ -72,7 +72,7 @@ class CustomerActivityTimeline extends Widget
             $isPast = $appointment->starts_at < now();
             $timeline[] = [
                 'type' => 'appointment',
-                'timestamp' => $appointment->starts_at,
+                'timestamp' => $appointment->starts_at->toIso8601String(),
                 'data' => (object)[
                     'id' => $appointment->id,
                 ],
@@ -95,7 +95,7 @@ class CustomerActivityTimeline extends Widget
             foreach ($customer->notes()->orderBy('created_at', 'desc')->get() as $note) {
                 $timeline[] = [
                     'type' => 'note',
-                    'timestamp' => $note->created_at,
+                    'timestamp' => $note->created_at->toIso8601String(),
                     'data' => (object)[
                         'id' => $note->id,
                     ],
@@ -110,7 +110,7 @@ class CustomerActivityTimeline extends Widget
         // Add customer creation event
         $timeline[] = [
             'type' => 'system',
-            'timestamp' => $customer->created_at,
+            'timestamp' => $customer->created_at->toIso8601String(),
             'icon' => '👤',
             'color' => 'info',
             'title' => 'Kunde angelegt',
@@ -126,7 +126,7 @@ class CustomerActivityTimeline extends Widget
                         if (isset($change['changed_at'])) {
                             $timeline[] = [
                                 'type' => 'journey',
-                                'timestamp' => \Carbon\Carbon::parse($change['changed_at']),
+                                'timestamp' => $change['changed_at'],
                                 'icon' => '🎯',
                                 'color' => 'warning',
                                 'title' => 'Status-Änderung',
