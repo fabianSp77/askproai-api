@@ -54,7 +54,8 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/conversion-detection.log'));
 
         // Clean up stuck calls - runs every 10 minutes
-        $schedule->command('calls:cleanup-stuck')
+        // Uses 4 hour threshold to avoid cleaning up very long legitimate calls
+        $schedule->command('calls:cleanup-stuck --hours=4')
             ->everyTenMinutes()
             ->withoutOverlapping()
             ->runInBackground()

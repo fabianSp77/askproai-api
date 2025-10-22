@@ -213,8 +213,64 @@ class AppointmentsRelationManager extends RelationManager
                         ->label('Löschen'),
                 ]),
             ])
-            ->emptyStateHeading('Keine Termine vorhanden')
-            ->emptyStateDescription('Erstellen Sie einen neuen Termin für diesen Kunden.')
-            ->emptyStateIcon('heroicon-o-calendar');
+            ->emptyStateHeading(function () {
+                $callCount = $this->ownerRecord->calls()->count();
+                $failedBookings = $this->ownerRecord->calls()
+                    ->where('appointment_made', 1)
+                    ->whereNull('converted_appointment_id')
+                    ->count();
+
+                if ($failedBookings > 0) {
+                    return "⚠️ {$failedBookings} fehlgeschlagene Buchung(en) gefunden!";
+                }
+                if ($callCount > 0) {
+                    return "Noch keine Termine trotz {$callCount} Anruf" . ($callCount === 1 ? '' : 'en');
+                }
+                return 'Noch keine Termine vorhanden';
+            })
+            ->emptyStateDescription(function () {
+                $callCount = $this->ownerRecord->calls()->count();
+                $failedBookings = $this->ownerRecord->calls()
+                    ->where('appointment_made', 1)
+                    ->whereNull('converted_appointment_id')
+                    ->count();
+
+                if ($failedBookings > 0) {
+                    return 'Der AI-Agent versuchte Termine zu buchen, aber die Buchungen schlugen fehl. Bitte manuell nachbuchen.';
+                }
+                if ($callCount > 0) {
+                    return 'Dieser Kunde hat bereits Anrufe, aber noch keine Termine. Jetzt ersten Termin buchen!';
+                }
+                return 'Erstellen Sie den ersten Termin für diesen Kunden.';
+            })
+            ->emptyStateIcon(function () {
+                $failedBookings = $this->ownerRecord->calls()
+                    ->where('appointment_made', 1)
+                    ->whereNull('converted_appointment_id')
+                    ->count();
+
+                return $failedBookings > 0 ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-calendar';
+            })
+            ->emptyStateActions([
+                Tables\Actions\Action::make('create')
+                    ->label('Ersten Termin buchen')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('primary')
+                    ->url(fn () => route('filament.admin.resources.appointments.create', [
+                        'customer_id' => $this->ownerRecord->id
+                    ])),
+                Tables\Actions\Action::make('viewFailedCalls')
+                    ->label('Fehlgeschlagene Anrufe anzeigen')
+                    ->icon('heroicon-o-phone-x-mark')
+                    ->color('warning')
+                    ->visible(fn () => $this->ownerRecord->calls()
+                        ->where('appointment_made', 1)
+                        ->whereNull('converted_appointment_id')
+                        ->count() > 0)
+                    ->action(function () {
+                        // Scroll to calls relation manager
+                        $this->dispatch('scrollToRelation', relation: 'calls');
+                    }),
+            ]);
     }
 }

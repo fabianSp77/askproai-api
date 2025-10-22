@@ -285,4 +285,3 @@ Route::middleware(['auth:sanctum'])->prefix('user-preferences')->group(function 
     Route::post('/columns/{resource}/reset', [UserPreferenceController::class, 'resetColumnPreferences'])
         ->name('api.preferences.columns.reset');
 });
-

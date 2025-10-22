@@ -1,0 +1,135 @@
+LIVEWIRE SNAPSHOT MISSING ERROR - DIAGNOSTIC SUMMARY
+====================================================
+
+ERROR DETAILS:
+- Message: "Snapshot missing on Livewire component with id: vk1eLOe8WXGbyxeKVTZQ"
+- URL: https://api.askproai.de/admin/customers/338
+- Response: 500 Internal Server Error
+- Timestamp: 2025-10-22
+
+ROOT CAUSE:
+Multiple customer widgets are passing non-JSON-serializable Eloquent model objects
+through Livewire's reactive properties. Livewire 3 cannot serialize these models,
+causing the snapshot creation to fail.
+
+AFFECTED COMPONENTS:
+1. CustomerActivityTimeline (app/Filament/Resources/CustomerResource/Widgets/)
+   - Passes raw Call, Appointment, CustomerNote models
+   - Line 56: 'data' => $call (NOT SERIALIZABLE)
+   - Line 73: 'data' => $appointment (NOT SERIALIZABLE)
+   - Line 94: 'data' => $note (NOT SERIALIZABLE)
+
+2. CustomerIntelligencePanel (app/Filament/Resources/CustomerResource/Widgets/)
+   - Complex data structures may contain unserializable objects
+
+3. CustomerJourneyTimeline (app/Filament/Resources/CustomerResource/Widgets/)
+   - Passes Customer model data in arrays
+
+4. ViewCustomer Page (app/Filament/Resources/CustomerResource/Pages/)
+   - Registers 3 widgets in getHeaderWidgets() (line 163-169)
+   - These widgets have #[Reactive] property that cannot serialize models
+
+SERIALIZATION ISSUES DETECTED:
+
+File: CustomerActivityTimeline.php
+  Problem 1 (Line ~56): $call model passed as array value
+  Problem 2 (Line ~73): $appointment model passed as array value
+  Problem 3 (Line ~94): $note model passed as array value
+  Problem 4 (Line ~24): #[Reactive] public ?Model $record attribute
+
+Fix: Convert all models to plain arrays using ->only() or map to DTOs
+
+File: CustomerActivityTimeline view
+  Problem: Blade template expects $activity['data']->property access
+  View Path: resources/views/filament/widgets/customer-activity-timeline.blade.php
+  Issue: View assumes $data is model object, not array
+
+Fix: Ensure view uses $data['property'] array syntax, not $data->property
+
+DATABASE QUERY ANALYSIS:
+From production logs (2025-10-22 08:43:03):
+- Customer ID 338 loads successfully
+- All relations (calls, appointments) query correctly
+- Data retrieval is NOT the issue
+- Problem is serialization AFTER data retrieval
+
+Timeline of Issue:
+1. ViewCustomer page loads
+2. Widget receives $record (Customer model) as #[Reactive] property
+3. Widget.getViewData() returns array with Eloquent models inside
+4. Livewire attempts to serialize for snapshot
+5. json_encode() fails on Eloquent model objects
+6. Snapshot creation fails
+7. Component renders but snapshot missing
+8. Next user interaction = 500 error (hydration fails)
+
+VERIFICATION REGEX PATTERNS:
+Search for model passing issues:
+  'data' => \$\w+ \(where $ = model variable\)
+
+Search for reactive model properties:
+  #\[Reactive\].*?public \?Model
+
+QUICK FIXES (in priority order):
+1. Convert Eloquent models to arrays in getViewData()
+   Use: $call->only(['id', 'status', 'created_at', ...])
+   Or: ['id' => $call->id, 'status' => $call->status, ...]
+
+2. Convert all Carbon timestamps to ISO8601 strings
+   Use: ->toIso8601String() instead of passing Carbon objects
+
+3. Update Blade views to use array syntax
+   Change: $data->property
+   To: $data['property']
+
+4. Add json_encode() validation to widget test
+   Ensure all getViewData() returns are JSON-serializable
+
+AFFECTED USER WORKFLOWS:
+- View Customer Detail: BROKEN (500 error)
+- Edit Customer: Unknown (may work, uses different page)
+- List Customers: WORKS (different widgets)
+- Customer Reports: Unknown (check if affected)
+
+MONITORING RECOMMENDATIONS:
+1. Alert on "Snapshot missing" errors in logs
+2. Track customer view page 500 error rate
+3. Monitor Livewire serialization exceptions
+4. Test customer detail page in QA before deployment
+
+TEST PLAN AFTER FIX:
+1. Load /admin/customers/338
+2. Verify no 500 error
+3. Verify no console JS errors
+4. Click timeline filters (test Livewire reactivity)
+5. Scroll activity timeline (test loading)
+6. Test on 5+ different customer IDs
+7. Test with customers having 0, 10, 100+ activities
+
+FILES THAT NEED MODIFICATION:
+PRIMARY (Must fix):
+  - app/Filament/Resources/CustomerResource/Widgets/CustomerActivityTimeline.php
+  - resources/views/filament/widgets/customer-activity-timeline.blade.php
+
+SECONDARY (Should review):
+  - app/Filament/Resources/CustomerResource/Widgets/CustomerIntelligencePanel.php
+  - app/Filament/Resources/CustomerResource/Widgets/CustomerJourneyTimeline.php
+  - app/Filament/Resources/CustomerResource/Pages/ViewCustomer.php
+
+CONFIGURATION CHECK:
+- Livewire Version: 3.x (inferred from serialization requirements)
+- Filament Version: 3.x
+- PHP Version: 8.2
+- Database: PostgreSQL
+- Environment: Production + Testing
+
+ESTIMATED COMPLEXITY: MEDIUM
+- 3 widget files to modify
+- 3 view templates to update
+- Pattern is consistent across all widgets
+- Fix is straightforward (model → array conversion)
+
+---
+Generated: 2025-10-22
+Status: ROOT CAUSE CONFIRMED
+Confidence Level: 95%

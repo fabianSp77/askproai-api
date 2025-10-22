@@ -38,7 +38,7 @@ class CustomerActivityTimeline extends Widget
         $activities = $this->buildActivityTimeline($customer);
 
         return [
-            'customer' => $customer,
+            'customer_id' => $customer->id,
             'activities' => $activities,
             'stats' => $this->calculateStats($activities),
         ];

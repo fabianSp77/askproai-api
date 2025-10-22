@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Services\AppointmentAlternativeFinder;
 use App\Services\CalcomService;
 use App\Services\Retell\ServiceSelectionService;
@@ -176,6 +177,8 @@ class RetellFunctionCallHandler extends Controller
 
         // Route to appropriate function handler
         return match($functionName) {
+            // 🔧 FIX 2025-10-22 V133: Add check_customer to enable customer recognition
+            'check_customer' => $this->checkCustomer($parameters, $callId),
             // 🔧 FIX 2025-10-18: Add parse_date handler to prevent agent from calculating dates incorrectly
             'parse_date' => $this->handleParseDate($parameters, $callId),
             'check_availability' => $this->checkAvailability($parameters, $callId),
@@ -191,6 +194,102 @@ class RetellFunctionCallHandler extends Controller
             'find_next_available' => $this->handleFindNextAvailable($parameters, $callId),
             default => $this->handleUnknownFunction($functionName, $parameters, $callId)
         };
+    }
+
+    /**
+     * Check if customer exists in database by phone number
+     * 🔧 FIX 2025-10-22 V133: Implement check_customer in main function handler
+     * Called at start of every call to recognize returning customers
+     */
+    private function checkCustomer(array $params, ?string $callId)
+    {
+        try {
+            Log::warning('📞 check_customer START', [
+                'call_id' => $callId,
+                'params' => $params,
+                'timestamp' => now()->toIso8601String()
+            ]);
+
+            // Get call record to extract phone number and company context
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+
+            if (!$call) {
+                Log::error('❌ check_customer failed: Call not found', [
+                    'call_id' => $callId
+                ]);
+                return $this->responseFormatter->error('Call context not available');
+            }
+
+            $phoneNumber = $call->from_number;
+            $companyId = $call->company_id;
+
+            if (!$phoneNumber || $phoneNumber === 'anonymous') {
+                Log::info('🔍 check_customer: Anonymous call, no phone number', [
+                    'call_id' => $callId
+                ]);
+                return $this->responseFormatter->success([
+                    'customer_id' => null,
+                    'name' => null,
+                    'found' => false,
+                    'status' => 'new_customer'
+                ], 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.');
+            }
+
+            // Normalize phone number
+            $normalizedPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
+
+            // Search for customer with company isolation
+            $customer = Customer::where(function($q) use ($normalizedPhone) {
+                $q->where('phone', $normalizedPhone)
+                  ->orWhere('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%');
+            })
+            ->where('company_id', $companyId)
+            ->first();
+
+            if ($customer) {
+                // Update call with customer_id
+                $call->update(['customer_id' => $customer->id]);
+
+                Log::info('✅ check_customer: Customer found', [
+                    'call_id' => $callId,
+                    'customer_id' => $customer->id,
+                    'customer_name' => $customer->name
+                ]);
+
+                return $this->responseFormatter->success([
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'first_name' => explode(' ', $customer->name)[0] ?? $customer->name,
+                    'last_name' => explode(' ', $customer->name, 2)[1] ?? '',
+                    'phone' => $customer->phone,
+                    'email' => $customer->email,
+                    'found' => true,
+                    'status' => 'existing_customer',
+                    'last_visit' => $customer->last_appointment_at?->format('d.m.Y'),
+                    'total_appointments' => $customer->appointments()->count()
+                ], "Willkommen zurück, {$customer->name}!");
+            }
+
+            Log::info('🆕 check_customer: New customer', [
+                'call_id' => $callId,
+                'phone' => substr($normalizedPhone, -4)
+            ]);
+
+            return $this->responseFormatter->success([
+                'customer_id' => null,
+                'name' => null,
+                'found' => false,
+                'status' => 'new_customer'
+            ], 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.');
+
+        } catch (\Exception $e) {
+            Log::error('❌ check_customer exception', [
+                'call_id' => $callId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->responseFormatter->error('Customer check failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -216,7 +315,41 @@ class RetellFunctionCallHandler extends Controller
             $companyId = $callContext['company_id'];
             $branchId = $callContext['branch_id'];
 
-            // Parse parameters
+            // 🔧 FIX 2025-10-22: Option 4 - Merge parse_date into check_availability
+            // PROBLEM: Agent goes silent after parse_date success (V127, V128, V129 all failed)
+            // SOLUTION: Parse date_string directly in check_availability, eliminate chaining
+
+            // Check if date_string parameter exists (new unified approach)
+            if (isset($params['date_string']) && !isset($params['datum'])) {
+                Log::info('🔄 Parsing date_string in check_availability (Option 4)', [
+                    'call_id' => $callId,
+                    'date_string' => $params['date_string']
+                ]);
+
+                // Use DateTimeParser to parse the date string
+                $parsedDate = (new \App\Services\Retell\DateTimeParser())->parseDateString($params['date_string']);
+
+                if (!$parsedDate) {
+                    Log::error('❌ Failed to parse date_string in check_availability', [
+                        'call_id' => $callId,
+                        'date_string' => $params['date_string']
+                    ]);
+                    return $this->responseFormatter->error(
+                        'Das Datum konnte nicht verstanden werden. Bitte nennen Sie es im Format: "Montag", "heute", "morgen", oder "20.10.2025".'
+                    );
+                }
+
+                // Convert parsed date (Y-m-d) to 'datum' parameter for parseDateTime
+                $params['datum'] = $parsedDate;
+
+                Log::info('✅ Successfully parsed date_string', [
+                    'call_id' => $callId,
+                    'date_string' => $params['date_string'],
+                    'parsed_datum' => $parsedDate
+                ]);
+            }
+
+            // Parse parameters (now with datum set from date_string if applicable)
             $requestedDate = $this->dateTimeParser->parseDateTime($params);
 
             // 🔧 FIX 2025-10-18: Validate that parseDateTime returned a valid Carbon instance
@@ -261,6 +394,23 @@ class RetellFunctionCallHandler extends Controller
                 'event_type_id' => $service->calcom_event_type_id,
                 'call_id' => $callId
             ]);
+
+            // 🔧 FIX 2025-10-22: Pin selected service to call session
+            // PROBLEM: collectAppointment was using different service, causing Event Type mismatch
+            // SOLUTION: Cache service_id for entire call session (30 min TTL)
+            if ($callId) {
+                Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
+                Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
+                Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+
+                Log::info('📌 Service pinned to call session', [
+                    'call_id' => $callId,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'cache_key' => "call:{$callId}:service_id",
+                    'ttl_minutes' => 30
+                ]);
+            }
 
             // Check exact availability
             $slotStartTime = $requestedDate->copy()->startOfHour();
@@ -532,7 +682,8 @@ class RetellFunctionCallHandler extends Controller
                 'original_request' => $requestedDate->format('Y-m-d H:i')
             ];
 
-            return $this->successResponse($responseData);
+            // 🐛 FIX 2025-10-22: Corrected method name (was successResponse, should be responseFormatter->success)
+            return $this->responseFormatter->success($responseData);
 
         } catch (\Exception $e) {
             Log::error('Error getting alternatives', [
@@ -549,6 +700,13 @@ class RetellFunctionCallHandler extends Controller
      */
     private function bookAppointment(array $params, ?string $callId)
     {
+        // 🔍 DEBUG 2025-10-22: Enhanced logging to diagnose Call #634 issues
+        Log::warning('🔷 bookAppointment START', [
+            'call_id' => $callId,
+            'params' => $params,
+            'timestamp' => now()->toIso8601String()
+        ]);
+
         try {
             // FEATURE: Branch-aware booking with strict validation
             // Get call context to ensure branch isolation
@@ -572,11 +730,46 @@ class RetellFunctionCallHandler extends Controller
             $serviceId = $params['service_id'] ?? null;
             $notes = $params['notes'] ?? '';
 
-            // Get service with branch validation - SECURITY: No cross-branch bookings allowed
-            if ($serviceId) {
+            // 🔧 FIX 2025-10-22 V131: Service Selection with Session Persistence
+            // PROBLEM: bookAppointment was selecting service independently from check_availability
+            // SOLUTION: Check cache first for pinned service_id, guarantees consistency
+            // This ensures check_availability and book_appointment use the SAME service/event_type
+            $service = null;
+            $pinnedServiceId = $callId ? Cache::get("call:{$callId}:service_id") : null;
+
+            if ($pinnedServiceId) {
+                // Use pinned service from check_availability
+                $service = $this->serviceSelector->findServiceById($pinnedServiceId, $companyId, $branchId);
+
+                Log::info('📌 Using pinned service from call session', [
+                    'call_id' => $callId,
+                    'pinned_service_id' => $pinnedServiceId,
+                    'service_id' => $service->id ?? null,
+                    'service_name' => $service->name ?? null,
+                    'event_type_id' => $service->calcom_event_type_id ?? null,
+                    'source' => 'cache'
+                ]);
+            } else if ($serviceId) {
+                // Explicit service_id provided in params (rare)
                 $service = $this->serviceSelector->findServiceById($serviceId, $companyId, $branchId);
             } else {
+                // Fallback to default service selection with branch validation
+                // SECURITY: No cross-branch bookings allowed
                 $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+
+                // Pin this service for subsequent calls in this session
+                if ($service && $callId) {
+                    Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
+                    Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
+                    Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+
+                    Log::info('📌 Service pinned to call session from bookAppointment', [
+                        'call_id' => $callId,
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'cache_key' => "call:{$callId}:service_id"
+                    ]);
+                }
             }
 
             if (!$service || !$service->calcom_event_type_id) {
@@ -707,7 +900,77 @@ class RetellFunctionCallHandler extends Controller
                 }
             }
 
-            return $this->responseFormatter->error('Buchung konnte nicht durchgeführt werden');
+            // 🔧 FIX 2025-10-22 V132: Automatic alternatives on booking failure (Backend Fallback)
+            // PROBLEM: Agent verbalizes "Ich schaue nach Alternativen" but doesn't execute tool call (Call #634)
+            // SOLUTION: Backend automatically provides alternatives when booking fails
+            // This guarantees users ALWAYS get alternatives, even if agent forgets to call get_alternatives
+            Log::warning('❌ Booking failed, automatically getting alternatives', [
+                'call_id' => $callId,
+                'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                'service_id' => $service->id ?? null,
+                'service_name' => $service->name ?? null
+            ]);
+
+            try {
+                // Automatically get alternatives (same parameters as agent would use)
+                $alternativesParams = [
+                    'date' => $params['date'] ?? null,
+                    'time' => $params['time'] ?? null,
+                    'duration' => $duration,
+                    'service_id' => $service->id ?? null,
+                    'max_alternatives' => 3
+                ];
+
+                $alternativesResult = $this->getAlternatives($alternativesParams, $callId);
+
+                // getAlternatives returns WebhookResponseService response
+                $resultData = $alternativesResult->getData(true);
+
+                if (isset($resultData['success']) && $resultData['success'] === true) {
+                    $alternativesData = $resultData['data'] ?? [];
+
+                    if (!empty($alternativesData['found']) && !empty($alternativesData['alternatives'])) {
+                        // Build natural language alternatives list
+                        $alternativesList = array_map(function($alt) {
+                            return $alt['description'] ?? $alt['readable_time'] ?? 'Termin';
+                        }, $alternativesData['alternatives']);
+
+                        Log::info('✅ Alternatives automatically provided', [
+                            'call_id' => $callId,
+                            'alternatives_count' => count($alternativesList),
+                            'auto_fallback' => true
+                        ]);
+
+                        // Return error with embedded alternatives
+                        return $this->responseFormatter->error(
+                            'Der gewünschte Termin ist leider nicht verfügbar. ' .
+                            'Ich habe folgende Alternativen gefunden: ' .
+                            implode(', ', array_slice($alternativesList, 0, 3)) . '. ' .
+                            'Welcher Termin passt Ihnen?'
+                        );
+                    }
+                }
+
+                // No alternatives found
+                Log::warning('⚠️ No alternatives found for failed booking', [
+                    'call_id' => $callId,
+                    'requested_time' => $appointmentTime->format('Y-m-d H:i')
+                ]);
+
+                return $this->responseFormatter->error(
+                    'Der gewünschte Termin ist nicht verfügbar und es wurden leider keine alternativen Zeiten gefunden. ' .
+                    'Können Sie einen anderen Tag oder eine andere Uhrzeit versuchen?'
+                );
+
+            } catch (\Exception $altException) {
+                // Even alternatives failed - return basic error
+                Log::error('❌ Failed to get automatic alternatives', [
+                    'call_id' => $callId,
+                    'error' => $altException->getMessage()
+                ]);
+
+                return $this->responseFormatter->error('Buchung konnte nicht durchgeführt werden');
+            }
 
         } catch (\Exception $e) {
             Log::error('Error booking appointment', [
@@ -1361,53 +1624,106 @@ class RetellFunctionCallHandler extends Controller
                 ], 200);
             }
 
-            // Get company ID from call or phone number - now properly linked!
-            // OPTIMIZATION: Reuse $call from earlier instead of fetching again
+            // Get company ID and branch ID from call - CRITICAL for consistent service selection
+            // 🔧 FIX 2025-10-22: Extract BOTH company_id AND branch_id (was missing branch_id!)
+            // PROBLEM: collectAppointment wasn't using branch filter, caused service mismatch
             $companyId = null;
+            $branchId = null;
+
             if ($callId && $call) {
                 // First try to get company_id directly from call (should now be set)
                 if ($call && $call->company_id) {
                     $companyId = $call->company_id;
-                    Log::info('🎯 Got company from call record', [
+                    $branchId = $call->branch_id;  // ← FIX: Extract branch_id too!
+
+                    Log::info('🎯 Got company and branch from call record', [
                         'call_id' => $call->id,
-                        'company_id' => $companyId
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId  // ← FIX: Log branch_id
                     ]);
                 }
                 // Fallback to phone_number lookup if needed
                 elseif ($call && $call->phone_number_id) {
                     $phoneNumber = \App\Models\PhoneNumber::find($call->phone_number_id);
-                    $companyId = $phoneNumber ? $phoneNumber->company_id : null;
-                    Log::info('🔍 Got company from phone number', [
+                    if ($phoneNumber) {
+                        $companyId = $phoneNumber->company_id;
+                        $branchId = $phoneNumber->branch_id;  // ← FIX: Also get branch from phone
+                    }
+
+                    Log::info('🔍 Got company and branch from phone number', [
                         'phone_number_id' => $call->phone_number_id,
-                        'company_id' => $companyId
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId  // ← FIX: Log branch_id
                     ]);
                 }
             }
 
-            // Dynamic service selection using ServiceSelectionService
+            // 🔧 FIX 2025-10-22: Service Selection with Session Persistence
+            // STRATEGY: Check cache first, then fall back to default selection
+            // This guarantees consistency: check_availability → collectAppointment use SAME service
             $service = null;
+            $pinnedServiceId = $callId ? Cache::get("call:{$callId}:service_id") : null;
 
-            if ($companyId) {
-                $service = $this->serviceSelector->getDefaultService($companyId);
+            if ($pinnedServiceId) {
+                // Use pinned service from check_availability
+                $service = $this->serviceSelector->findServiceById($pinnedServiceId, $companyId, $branchId);
+
+                if ($service) {
+                    Log::info('📌 Using pinned service from call session', [
+                        'call_id' => $callId,
+                        'pinned_service_id' => $pinnedServiceId,
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'event_type_id' => $service->calcom_event_type_id,
+                        'source' => 'cache'
+                    ]);
+                } else {
+                    Log::warning('⚠️ Pinned service not accessible, using default', [
+                        'call_id' => $callId,
+                        'pinned_service_id' => $pinnedServiceId,
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId
+                    ]);
+                }
+            }
+
+            // Fallback to default service selection if no pinned service
+            if (!$service && $companyId) {
+                $service = $this->serviceSelector->getDefaultService($companyId, $branchId);  // ← FIX: Pass branchId!
 
                 Log::info('📋 Dynamic service selection for company', [
                     'company_id' => $companyId,
+                    'branch_id' => $branchId,  // ← FIX: Log branch_id
                     'service_id' => $service ? $service->id : null,
                     'service_name' => $service ? $service->name : null,
                     'event_type_id' => $service ? $service->calcom_event_type_id : null,
                     'is_default' => $service ? $service->is_default : false,
-                    'priority' => $service ? $service->priority : null
+                    'priority' => $service ? $service->priority : null,
+                    'source' => 'default_selection'
                 ]);
+
+                // Pin this service for subsequent calls in this session
+                if ($service && $callId) {
+                    Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
+                    Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
+                    Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+
+                    Log::info('📌 Service pinned for future calls in session', [
+                        'call_id' => $callId,
+                        'service_id' => $service->id
+                    ]);
+                }
             }
 
             // If no service found for company, use fallback logic
             if (!$service) {
                 // Default to company 15 (AskProAI) if no company detected
                 $fallbackCompanyId = $companyId ?: 15;
-                $service = $this->serviceSelector->getDefaultService($fallbackCompanyId);
+                $service = $this->serviceSelector->getDefaultService($fallbackCompanyId, null);
 
                 Log::warning('⚠️ Using fallback service selection', [
                     'original_company_id' => $companyId,
+                    'original_branch_id' => $branchId,
                     'fallback_company_id' => $fallbackCompanyId,
                     'service_id' => $service ? $service->id : null,
                     'service_name' => $service ? $service->name : null
@@ -3699,11 +4015,16 @@ class RetellFunctionCallHandler extends Controller
                 'call_id' => $callId
             ]);
 
+            // 🔧 FIX 2025-10-21: Add explicit instruction to trigger check_availability
+            // PROBLEM: After parse_date success, agent goes silent instead of checking availability
+            // SOLUTION: Include next_action instruction in response to guide LLM workflow
             return response()->json([
                 'success' => true,
                 'date' => $parsedDate,  // Y-m-d format for backend use
                 'display_date' => $displayDate,  // For user confirmation
-                'day_name' => $dayName  // Day of week
+                'day_name' => $dayName,  // Day of week
+                'next_action' => 'check_availability',  // Guide LLM to next step
+                'instruction' => 'Sagen Sie dem Kunden: "Einen Moment, ich prüfe die Verfügbarkeit..." und rufen Sie SOFORT check_availability() auf mit dem Datum ' . $displayDate . ' und der genannten Uhrzeit.'
             ], 200);
 
         } catch (\Exception $e) {
