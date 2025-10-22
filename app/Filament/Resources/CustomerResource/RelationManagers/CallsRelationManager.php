@@ -160,6 +160,53 @@ class CallsRelationManager extends RelationManager
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
+                    ->toggleable()
+                    ->tooltip(function ($record) {
+                        if ($record->appointment_made && !$record->converted_appointment_id) {
+                            return '⚠️ Buchung fehlgeschlagen - Termin wurde nicht erstellt';
+                        }
+                        if ($record->appointment_made && $record->converted_appointment_id) {
+                            return '✅ Termin erfolgreich gebucht (ID: ' . $record->converted_appointment_id . ')';
+                        }
+                        return 'Kein Termin gebucht';
+                    })
+                    ->color(function ($record) {
+                        if ($record->appointment_made && !$record->converted_appointment_id) {
+                            return 'warning'; // Failed booking
+                        }
+                        if ($record->appointment_made) {
+                            return 'success'; // Successful booking
+                        }
+                        return 'gray'; // No booking
+                    }),
+
+                // NEW: Failed Booking Warning Column
+                Tables\Columns\TextColumn::make('booking_status')
+                    ->label('Buchungsstatus')
+                    ->badge()
+                    ->getStateUsing(function ($record) {
+                        if ($record->appointment_made && !$record->converted_appointment_id) {
+                            return 'Fehlgeschlagen';
+                        }
+                        if ($record->appointment_made && $record->converted_appointment_id) {
+                            return 'Erfolgreich';
+                        }
+                        if ($record->appointment_made === 0) {
+                            return 'Nicht versucht';
+                        }
+                        return '-';
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'Fehlgeschlagen' => 'danger',
+                        'Erfolgreich' => 'success',
+                        'Nicht versucht' => 'gray',
+                        default => 'gray',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'Fehlgeschlagen' => 'heroicon-o-exclamation-triangle',
+                        'Erfolgreich' => 'heroicon-o-check-circle',
+                        default => 'heroicon-o-minus-circle',
+                    })
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('from_number')
                     ->label('Von')
@@ -222,8 +269,37 @@ class CallsRelationManager extends RelationManager
                     }),
             ])
             ->actions([
+                // NEW: View Transcript
+                Tables\Actions\Action::make('viewTranscript')
+                    ->label('Transcript')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->visible(fn ($record) => !empty($record->transcript))
+                    ->modalHeading(fn ($record) => 'Gesprächsverlauf - ' . $record->created_at->format('d.m.Y H:i'))
+                    ->modalContent(fn ($record) => view('filament.modals.call-transcript', [
+                        'call' => $record,
+                        'transcript' => $record->transcript,
+                        'transcript_object' => json_decode($record->raw ?? '{}', true)['transcript_object'] ?? null,
+                    ]))
+                    ->modalWidth('4xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Schließen'),
+
+                // Book appointment for failed bookings
+                Tables\Actions\Action::make('bookAppointment')
+                    ->label('Termin nachbuchen')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('warning')
+                    ->visible(fn ($record) => $record->appointment_made && !$record->converted_appointment_id)
+                    ->url(fn ($record) => route('filament.admin.resources.appointments.create', [
+                        'customer_id' => $record->customer_id,
+                        'call_id' => $record->id,
+                    ]))
+                    ->tooltip('Dieser Call versuchte einen Termin zu buchen, aber es schlug fehl. Hier manuell nachbuchen.'),
+
                 Tables\Actions\EditAction::make()
                     ->label('Bearbeiten'),
+
                 Tables\Actions\Action::make('playRecording')
                     ->label('Aufnahme abspielen')
                     ->icon('heroicon-o-play')
@@ -231,6 +307,7 @@ class CallsRelationManager extends RelationManager
                     ->visible(fn ($record) => !empty($record->recording_url))
                     ->url(fn ($record) => $record->recording_url)
                     ->openUrlInNewTab(),
+
                 Tables\Actions\DeleteAction::make()
                     ->label('Löschen'),
             ])

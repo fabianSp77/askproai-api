@@ -282,10 +282,13 @@ class Call extends Model
 
     /**
      * Scope: Stuck calls (active for >2 hours)
+     *
+     * Finds calls that are still marked as active/ongoing but haven't been
+     * updated in X hours, indicating the call_ended webhook was missed.
      */
     public function scopeStuck($query, int $hours = 2)
     {
-        return $query->whereIn('status', ['ongoing', 'in-progress', 'active'])
+        return $query->whereIn('status', ['ongoing', 'in_progress', 'in-progress', 'active'])
             ->where('created_at', '<', now()->subHours($hours));
     }
 

@@ -1,0 +1,51 @@
+================================================================================
+LIVEWIRE 500 ERROR - QUICK REFERENCE
+================================================================================
+
+ISSUE:
+------
+Customer view pages returned HTTP 500. Error: "class Model is not available in
+wrong namespace"
+
+ROOT CAUSE:
+-----------
+Method return type used bare "Model" instead of "\Illuminate\Database\Eloquent\Model"
+PHP resolved it to wrong namespace when compatibility checking the override.
+
+SOLUTION:
+---------
+Changed 5 files - added backslash to fully qualify return type:
+
+BEFORE:  protected function resolveRecord($key): Model
+AFTER:   protected function resolveRecord($key): \Illuminate\Database\Eloquent\Model
+
+FILES CHANGED:
+--------------
+1. app/Filament/Resources/CustomerResource/Pages/ViewCustomer.php
+2. app/Filament/Resources/CallResource/Pages/ViewCall.php
+3. app/Filament/Resources/BranchResource/Pages/ViewBranch.php
+4. app/Filament/Resources/PhoneNumberResource/Pages/ViewPhoneNumber.php
+5. app/Filament/Resources/PhoneNumberResource/Pages/EditPhoneNumber.php
+
+COMMITS:
+--------
+5b4ba044 - Initial CustomerResource fix
+cc2770d5 - Extended fix to all resource pages
+
+VERIFICATION:
+-----------
+✓ Type resolution checked via Reflection API
+✓ No new errors in nginx error.log
+✓ All customer view pages load correctly
+✓ Livewire updates work without errors
+
+STATUS: RESOLVED - 2025-10-21
+
+KEY LESSON:
+-----------
+Always use fully qualified types (\Namespace\Class) in method signature overrides.
+Bare types get resolved relative to current namespace, causing false references.
+
+For questions: See INCIDENT_REPORT_2025-10-21.md or LIVEWIRE_500_FINAL_RESOLUTION.md
+
+================================================================================

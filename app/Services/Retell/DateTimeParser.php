@@ -187,6 +187,114 @@ class DateTimeParser
             return Carbon::parse(self::GERMAN_DATE_MAP[$normalizedDate])->format('Y-m-d');
         }
 
+        // 🔧 FIX 2025-10-21: Handle "dieser/diese/dieses [WEEKDAY]" pattern
+        // Pattern: "dieser Donnerstag", "diese Woche Donnerstag" → Thursday this week
+        // User said: "Ich hätte gern für einen Donnerstag dreizehn Uhr"
+        // Agent asked: "Für welchen Donnerstag?"
+        // User said: "Diese Woche" or "Dieser Donnerstag"
+        // Expected: If Thursday hasn't passed yet this week → this Thursday
+        //          If Thursday already passed → next Thursday
+        // IMPORTANT: Must NOT match "nächster" - only "dieser/diese/dieses/am"
+        if (preg_match('/^(?:diese(?:r|s|n)?|am)\s+(?:woche\s+)?(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+
+            $weekdayMap = [
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
+            ];
+
+            if (isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $targetDayOfWeek = $weekdayMap[$weekdayName];
+
+                    // Get the target weekday in this calendar week
+                    $targetDate = $now->copy()->startOfWeek()->addDays($targetDayOfWeek - 1);
+
+                    // If the target day is before today (not today or future) → move to next week
+                    // Special case: If it's today but late (after 18:00) → also move to next week
+                    if ($targetDate->isBefore($now->copy()->startOfDay())) {
+                        // Day already passed this week
+                        $targetDate->addWeek();
+                    } elseif ($targetDate->isToday() && $now->hour >= 18) {
+                        // It's today but late in the day - might mean next occurrence
+                        // For now, keep it as today (user can be more explicit if they want next week)
+                    }
+
+                    Log::info('📅 Parsed "dieser [WEEKDAY]" pattern', [
+                        'input' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'today' => $now->format('Y-m-d (l)'),
+                        'target_date' => $targetDate->format('Y-m-d (l)'),
+                        'days_away' => $targetDate->diffInDays($now),
+                        'is_today' => $targetDate->isToday(),
+                        'logic' => $targetDate->isBefore($now->copy()->startOfDay()) ? 'moved_to_next_week' : 'this_week'
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse "dieser [WEEKDAY]"', [
+                        'input' => $normalizedDate,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        // 🔧 FIX 2025-10-21: Handle "nächster/nächste/nächstes [WEEKDAY]" pattern (without "Woche")
+        // Pattern: "nächsten Donnerstag", "kommenden Freitag" → next occurrence
+        // More natural than "nächste Woche Donnerstag"
+        if (preg_match('/^(?:nächste(?:r|n|s)?|kommende(?:r|n|s)?)\s+(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+
+            $weekdayMap = [
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
+            ];
+
+            if (isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $targetDayOfWeek = $weekdayMap[$weekdayName];
+
+                    // "nächster [WEEKDAY]" means NEXT week, not this week
+                    // Calculate next week's target weekday
+                    $targetDate = $now->copy()->next($targetDayOfWeek);
+
+                    // If the target is still this week, move it to next week
+                    if ($targetDate->weekOfYear === $now->weekOfYear) {
+                        $targetDate->addWeek();
+                    }
+
+                    Log::info('📅 Parsed "nächster [WEEKDAY]" pattern', [
+                        'input' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'today' => $now->format('Y-m-d (l) W') . ' Woche',
+                        'target_date' => $targetDate->format('Y-m-d (l) W') . ' Woche',
+                        'days_away' => $targetDate->diffInDays($now),
+                        'logic' => 'always_next_week'
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse "nächster [WEEKDAY]"', [
+                        'input' => $normalizedDate,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
         // 🔧 FIX 2025-10-18: Handle "nächste Woche [WEEKDAY]" pattern
         // Pattern: "nächste Woche Mittwoch" → Wednesday of next week
         // User said: "nächste Woche Mittwoch um 14:15"
@@ -195,32 +303,33 @@ class DateTimeParser
             $weekdayName = strtolower($matches[1]);
 
             $weekdayMap = [
-                'montag' => 1,
-                'dienstag' => 2,
-                'mittwoch' => 3,
-                'donnerstag' => 4,
-                'freitag' => 5,
-                'samstag' => 6,
-                'sonntag' => 0
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
             ];
 
             if (isset($weekdayMap[$weekdayName])) {
                 try {
                     $now = Carbon::now('Europe/Berlin');
-                    $dayOfWeek = $weekdayMap[$weekdayName];
+                    $targetDayOfWeek = $weekdayMap[$weekdayName];
 
-                    // Carbon::next() returns the next occurrence of the given weekday
-                    $nextDate = $now->copy()->next($dayOfWeek);
+                    // Get next week's start and then add days to target weekday
+                    $nextWeekStart = $now->copy()->startOfWeek()->addWeek();
+                    $targetDate = $nextWeekStart->addDays($targetDayOfWeek - 1);
 
                     Log::info('📅 Parsed "nächste Woche [WEEKDAY]" pattern', [
                         'input' => $normalizedDate,
                         'weekday' => $weekdayName,
                         'today' => $now->format('Y-m-d (l)'),
-                        'next_occurrence' => $nextDate->format('Y-m-d (l)'),
-                        'days_away' => $nextDate->diffInDays($now)
+                        'next_week_target' => $targetDate->format('Y-m-d (l)'),
+                        'days_away' => $targetDate->diffInDays($now)
                     ]);
 
-                    return $nextDate->format('Y-m-d');
+                    return $targetDate->format('Y-m-d');
                 } catch (\Exception $e) {
                     Log::error('❌ Failed to parse "nächste Woche [WEEKDAY]"', [
                         'input' => $normalizedDate,
