@@ -52,15 +52,16 @@
 
                 @forelse($activities as $activity)
                     @php
-                        $currentDate = $activity['timestamp']->format('Y-m-d');
+                        $timestamp = \Carbon\Carbon::parse($activity['timestamp']);
+                        $currentDate = $timestamp->format('Y-m-d');
                         $showDateDivider = $lastDate !== $currentDate;
                         $lastDate = $currentDate;
 
                         $dateLabel = match(true) {
-                            $activity['timestamp']->isToday() => 'Heute',
-                            $activity['timestamp']->isYesterday() => 'Gestern',
-                            $activity['timestamp']->diffInDays(now()) < 7 => $activity['timestamp']->diffForHumans(),
-                            default => $activity['timestamp']->format('d.m.Y'),
+                            $timestamp->isToday() => 'Heute',
+                            $timestamp->isYesterday() => 'Gestern',
+                            $timestamp->diffInDays(now()) < 7 => $timestamp->diffForHumans(),
+                            default => $timestamp->format('d.m.Y'),
                         };
                     @endphp
 
@@ -107,7 +108,7 @@
                                         </div>
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                        {{ $activity['timestamp']->format('H:i') }}
+                                        {{ $timestamp->format('H:i') }}
                                     </div>
                                 </div>
 
@@ -160,7 +161,7 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
-                                                {{ $activity['timestamp']->diffForHumans() }}
+                                                {{ $timestamp->diffForHumans() }}
                                             </span>
                                         @endif
 
