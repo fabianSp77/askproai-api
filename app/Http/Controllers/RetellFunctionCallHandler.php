@@ -1384,20 +1384,57 @@ class RetellFunctionCallHandler extends Controller
                 }
             }
 
-            // Dynamic service selection using ServiceSelectionService
+            // 🔧 FIX 2025-10-22: INTELLIGENT SERVICE SELECTION based on customer's choice
+            // Problem: System always used default service (30 min) even when customer wanted 15 min
+            // Solution: Parse dienstleistung to detect duration preference
             $service = null;
 
             if ($companyId) {
-                $service = $this->serviceSelector->getDefaultService($companyId);
+                // Check if customer mentioned "15 Minuten" or "Schnell" → use 15-minute service
+                // Otherwise use default 30-minute service
+                $dienstleistungLower = strtolower($dienstleistung ?? '');
+                $wants15Minutes = (
+                    strpos($dienstleistungLower, '15') !== false ||
+                    strpos($dienstleistungLower, 'schnell') !== false ||
+                    strpos($dienstleistungLower, 'kurz') !== false
+                );
 
-                Log::info('📋 Dynamic service selection for company', [
-                    'company_id' => $companyId,
-                    'service_id' => $service ? $service->id : null,
-                    'service_name' => $service ? $service->name : null,
-                    'event_type_id' => $service ? $service->calcom_event_type_id : null,
-                    'is_default' => $service ? $service->is_default : false,
-                    'priority' => $service ? $service->priority : null
-                ]);
+                if ($wants15Minutes) {
+                    // Try to find 15-minute service by keywords
+                    $service = Service::where('company_id', $companyId)
+                        ->where('is_active', 1)
+                        ->whereNotNull('calcom_event_type_id')
+                        ->where(function($query) {
+                            $query->where('name', 'LIKE', '%15%')
+                                  ->orWhere('name', 'LIKE', '%schnell%')
+                                  ->orWhere('name', 'LIKE', '%kurz%')
+                                  ->orWhere('duration', 15);
+                        })
+                        ->first();
+
+                    Log::info('🎯 Customer wants 15-minute consultation', [
+                        'company_id' => $companyId,
+                        'dienstleistung' => $dienstleistung,
+                        'detected_keywords' => ['15 min', 'schnell', 'kurz'],
+                        'service_found' => $service ? $service->id : null,
+                        'service_name' => $service ? $service->name : null
+                    ]);
+                }
+
+                // Fallback to default service if no specific match
+                if (!$service) {
+                    $service = $this->serviceSelector->getDefaultService($companyId);
+
+                    Log::info('📋 Using default service for company', [
+                        'company_id' => $companyId,
+                        'dienstleistung' => $dienstleistung,
+                        'service_id' => $service ? $service->id : null,
+                        'service_name' => $service ? $service->name : null,
+                        'event_type_id' => $service ? $service->calcom_event_type_id : null,
+                        'is_default' => $service ? $service->is_default : false,
+                        'priority' => $service ? $service->priority : null
+                    ]);
+                }
             }
 
             // If no service found for company, use fallback logic
