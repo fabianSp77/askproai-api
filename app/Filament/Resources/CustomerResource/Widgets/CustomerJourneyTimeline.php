@@ -95,7 +95,6 @@ class CustomerJourneyTimeline extends Widget
         $journeyHistory = $this->getJourneyHistory($customer);
 
         return [
-            'customer' => $customer,
             'journeyStages' => $journeyStages,
             'negativeStages' => $negativeStages,
             'currentStage' => $currentStage,

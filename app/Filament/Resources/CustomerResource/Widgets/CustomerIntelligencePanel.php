@@ -36,7 +36,6 @@ class CustomerIntelligencePanel extends Widget
         $customer = $this->record;
 
         return [
-            'customer' => $customer,
             'healthScore' => $this->calculateHealthScore($customer),
             'churnRisk' => $this->assessChurnRisk($customer),
             'valueScore' => $this->calculateValueScore($customer),
