@@ -1,0 +1,33 @@
+{
+  "name": "list_services",
+  "type": "custom",
+  "url": "https://api.askproai.de/api/retell/function-call",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "parameter_type": "json",
+  "query_params": {},
+  "description": "Ruft die Liste aller verfügbaren Services ab. IMMER am Anfang des Gesprächs aufrufen bevor Termin gebucht wird!",
+  "execution_message_description": "Einen Moment, ich schaue welche Services wir anbieten",
+  "timeout_ms": 10000,
+  "speak_during_execution": false,
+  "speak_after_execution": false,
+  "response_variables": {
+    "services": "$.services",
+    "message": "$.message",
+    "count": "$.count"
+  },
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "call_id": {
+        "type": "string",
+        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+      }
+    },
+    "required": [
+      "call_id"
+    ]
+  }
+}

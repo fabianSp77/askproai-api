@@ -45,6 +45,10 @@
         "type": "string",
         "description": "Gewünschte Dienstleistung oder Behandlung"
       },
+      "service_id": {
+        "type": "integer",
+        "description": "Numeric ID des gewählten Services aus list_services (z.B. 32 für 15min, 47 für 30min). WICHTIG: Immer mitgeben!"
+      },
       "email": {
         "type": "string",
         "description": "E-Mail-Adresse für Terminbestätigung (optional, nur wenn Kunde es wünscht)"
