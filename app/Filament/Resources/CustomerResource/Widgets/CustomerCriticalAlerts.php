@@ -161,7 +161,6 @@ class CustomerCriticalAlerts extends Widget
 
         return [
             'alerts' => $alerts,
-            'customer' => $customer,
         ];
     }
 }
