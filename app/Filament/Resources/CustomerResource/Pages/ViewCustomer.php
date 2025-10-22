@@ -17,46 +17,54 @@ class ViewCustomer extends ViewRecord
     {
         $actions = [];
 
-        // Quick Actions (Prominent)
-        $actions[] = Actions\Action::make('call')
-            ->label('Anrufen')
-            ->icon('heroicon-o-phone')
-            ->color('success')
-            ->visible(fn () => !empty($this->record->phone))
-            ->url(fn () => 'tel:' . $this->record->phone)
-            ->openUrlInNewTab(false);
+        // PRIMARY ACTIONS GROUP (Always visible)
+        $actions[] = Actions\ActionGroup::make([
+            Actions\Action::make('call')
+                ->label('Anrufen')
+                ->icon('heroicon-o-phone')
+                ->color('success')
+                ->visible(fn () => !empty($this->record->phone))
+                ->url(fn () => 'tel:' . $this->record->phone)
+                ->openUrlInNewTab(false),
 
-        $actions[] = Actions\Action::make('bookAppointment')
-            ->label('Termin buchen')
-            ->icon('heroicon-o-calendar-days')
+            Actions\Action::make('bookAppointment')
+                ->label('Termin buchen')
+                ->icon('heroicon-o-calendar-days')
+                ->color('primary')
+                ->url(fn () => route('filament.admin.resources.appointments.create', [
+                    'customer_id' => $this->record->id
+                ])),
+        ])
+            ->label('Schnellaktionen')
+            ->icon('heroicon-o-bolt')
             ->color('primary')
-            ->url(fn () => route('filament.admin.resources.appointments.create', [
-                'customer_id' => $this->record->id
-            ]));
+            ->button();
 
-        $actions[] = Actions\Action::make('addEmail')
-            ->label('E-Mail hinzufügen')
-            ->icon('heroicon-o-envelope')
-            ->color('info')
-            ->visible(fn () => empty($this->record->email))
-            ->form([
-                \Filament\Forms\Components\TextInput::make('email')
-                    ->label('E-Mail-Adresse')
-                    ->email()
-                    ->required(),
-            ])
-            ->action(function (array $data) {
-                $this->record->update(['email' => $data['email']]);
-                Notification::success()
-                    ->title('E-Mail hinzugefügt')
-                    ->body('E-Mail-Adresse wurde erfolgreich gespeichert.')
-                    ->send();
-            });
+        // CUSTOMER MANAGEMENT GROUP
+        $customerActions = [];
 
-        $actions[] = Actions\Action::make('addNote')
-            ->label('Notiz')
+        if (empty($this->record->email)) {
+            $customerActions[] = Actions\Action::make('addEmail')
+                ->label('E-Mail hinzufügen')
+                ->icon('heroicon-o-envelope')
+                ->form([
+                    \Filament\Forms\Components\TextInput::make('email')
+                        ->label('E-Mail-Adresse')
+                        ->email()
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $this->record->update(['email' => $data['email']]);
+                    Notification::success()
+                        ->title('E-Mail hinzugefügt')
+                        ->body('E-Mail-Adresse wurde erfolgreich gespeichert.')
+                        ->send();
+                });
+        }
+
+        $customerActions[] = Actions\Action::make('addNote')
+            ->label('Notiz hinzufügen')
             ->icon('heroicon-o-pencil-square')
-            ->color('gray')
             ->form([
                 \Filament\Forms\Components\TextInput::make('subject')
                     ->label('Betreff')
@@ -79,16 +87,20 @@ class ViewCustomer extends ViewRecord
                     ->send();
             });
 
-        // Standard Actions
-        $actions[] = Actions\EditAction::make();
+        $actions[] = Actions\ActionGroup::make($customerActions)
+            ->label('Kunde')
+            ->icon('heroicon-o-user')
+            ->button();
 
-        // Duplicate Warning (if found)
+        // DUPLICATE MANAGEMENT GROUP (Single grouped action)
         $duplicates = $this->findDuplicates();
         if ($duplicates->isNotEmpty()) {
-            $actions[] = Actions\Action::make('viewDuplicates')
-                ->label('Duplikate (' . $duplicates->count() . ')')
-                ->icon('heroicon-o-exclamation-triangle')
-                ->color('warning')
+            $duplicateActions = [];
+
+            $duplicateActions[] = Actions\Action::make('viewAllDuplicates')
+                ->label('Alle anzeigen (' . $duplicates->count() . ')')
+                ->icon('heroicon-o-eye')
+                ->color('info')
                 ->modalHeading('Duplikate gefunden')
                 ->modalDescription('Folgende Kunden teilen sich die gleiche Telefonnummer oder E-Mail:')
                 ->modalContent(view('filament.pages.customer-duplicates', [
@@ -98,12 +110,11 @@ class ViewCustomer extends ViewRecord
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Schließen');
 
-            // Add individual merge actions for each duplicate
-            foreach ($duplicates->take(3) as $index => $duplicate) {
-                $actions[] = Actions\Action::make('mergeDuplicate_' . $duplicate->id)
-                    ->label('Duplikat #' . $duplicate->id . ' zusammenführen')
+            // Add merge actions for each duplicate
+            foreach ($duplicates->take(3) as $duplicate) {
+                $duplicateActions[] = Actions\Action::make('merge_' . $duplicate->id)
+                    ->label('Mit #' . $duplicate->id . ' zusammenführen')
                     ->icon('heroicon-o-arrow-path')
-                    ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading('Kunden zusammenführen?')
                     ->modalDescription(function () use ($duplicate) {
@@ -127,12 +138,19 @@ class ViewCustomer extends ViewRecord
                             ->body("Übertragen: {$stats['calls_transferred']} Anrufe, {$stats['appointments_transferred']} Termine")
                             ->send();
 
-                        // Refresh the page
                         redirect()->to(route('filament.admin.resources.customers.view', ['record' => $this->record->id]));
                     });
             }
+
+            $actions[] = Actions\ActionGroup::make($duplicateActions)
+                ->label('Duplikate (' . $duplicates->count() . ')')
+                ->icon('heroicon-o-exclamation-triangle')
+                ->color('warning')
+                ->button();
         }
 
+        // STANDARD ACTIONS
+        $actions[] = Actions\EditAction::make();
         $actions[] = Actions\DeleteAction::make();
 
         return $actions;
@@ -193,7 +211,15 @@ class ViewCustomer extends ViewRecord
 
     public function getTitle(): string
     {
-        return $this->record->name ?? 'Kunde anzeigen';
+        $name = $this->record->name ?? 'Kunde anzeigen';
+
+        // Truncate long names to prevent line breaks in breadcrumb/header
+        // Max 40 chars for comfortable reading, add ellipsis if truncated
+        if (mb_strlen($name) > 40) {
+            return mb_substr($name, 0, 37) . '...';
+        }
+
+        return $name;
     }
 
     /**
