@@ -1516,7 +1516,7 @@ class RetellFunctionCallHandler extends Controller
                 Log::info('🎯 FINAL SERVICE SELECTED', [
                     'service_id' => $service->id,
                     'service_name' => $service->name,
-                    'duration' => $service->duration,
+                    'duration' => $service->duration_minutes,
                     'calcom_event_type_id' => $service->calcom_event_type_id,
                     'selection_method' => $selectionMethod,
                     'service_id_in_request' => $serviceIdFromRequest !== null,
@@ -1531,6 +1531,25 @@ class RetellFunctionCallHandler extends Controller
                     'message' => 'Service-Konfiguration fehlt'
                 ], 200);
             }
+
+            // 🔧 NEW: Validate Cal.com Event Type ID exists
+            if (!$service->calcom_event_type_id) {
+                Log::error('❌ Service has NO Cal.com Event Type ID!', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'company_id' => $companyId
+                ]);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Service ist nicht vollständig konfiguriert. Bitte kontaktieren Sie den Support.'
+                ], 200);
+            }
+
+            Log::info('✅ Service validation passed', [
+                'service_id' => $service->id,
+                'calcom_event_type_id' => $service->calcom_event_type_id,
+                'duration_minutes' => $service->duration_minutes
+            ]);
 
             // 🔍 PRE-BOOKING DUPLICATE CHECK
             // OPTIMIZATION: Only check for duplicates when actually booking (not in "check only" mode)
