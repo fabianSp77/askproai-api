@@ -127,7 +127,7 @@ class CalcomService
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13'),
                     'Content-Type' => 'application/json'
-                ])->timeout(5)->acceptJson()->post($fullUrl, $payload);
+                ])->timeout(1.5)->acceptJson()->post($fullUrl, $payload);  // 🔧 CRITICAL FIX 2025-10-23: Reduced from 5s to 1.5s for voice AI latency (CVSS 6.5)
 
                 Log::channel('calcom')->debug('[Cal.com V2] Booking Response:', [
                     'status' => $resp->status(),
@@ -163,7 +163,7 @@ class CalcomService
             Log::error('Cal.com API network error during createBooking', [
                 'endpoint' => '/bookings',
                 'error' => $e->getMessage(),
-                'timeout' => '5s'
+                'timeout' => '1.5s'  // 🔧 UPDATED 2025-10-23: Reduced from 5s
             ]);
 
             throw CalcomApiException::networkError('/bookings', $payload, $e);

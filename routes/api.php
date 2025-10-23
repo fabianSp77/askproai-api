@@ -242,6 +242,12 @@ Route::prefix('retell')->group(function () {
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
+    // 🚀 V16: Combined initialization endpoint (customer + time + policies)
+    Route::post('/initialize-call', [\App\Http\Controllers\Api\RetellApiController::class, 'initializeCall'])
+        ->name('api.retell.initialize-call')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
     Route::post('/check-availability', [\App\Http\Controllers\Api\RetellApiController::class, 'checkAvailability'])
         ->name('api.retell.check-availability')
         ->middleware(['throttle:100,1'])
@@ -265,6 +271,42 @@ Route::prefix('retell')->group(function () {
     Route::post('/reschedule-appointment', [\App\Http\Controllers\Api\RetellApiController::class, 'rescheduleAppointment'])
         ->name('api.retell.reschedule-appointment')
         ->middleware(['throttle:30,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/get-customer-appointments', [\App\Http\Controllers\Api\RetellGetAppointmentsController::class, 'getAppointments'])
+        ->name('api.retell.get-customer-appointments')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    // 🚀 V17: Explicit Function Node Endpoints
+    Route::post('/v17/check-availability', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'checkAvailabilityV17'])
+        ->name('api.retell.v17.check-availability')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/v17/book-appointment', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'bookAppointmentV17'])
+        ->name('api.retell.v17.book-appointment')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    // 🎯 Get Available Services
+    Route::post('/get-available-services', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'getAvailableServices'])
+        ->name('api.retell.get-available-services')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/current-time-berlin', function() {
+        return response()->json([
+            'success' => true,
+            'current_time' => \Carbon\Carbon::now('Europe/Berlin')->toIso8601String(),
+            'date' => \Carbon\Carbon::now('Europe/Berlin')->format('Y-m-d'),
+            'time' => \Carbon\Carbon::now('Europe/Berlin')->format('H:i'),
+            'weekday' => \Carbon\Carbon::now('Europe/Berlin')->locale('de')->dayName,
+            'timezone' => 'Europe/Berlin'
+        ]);
+    })
+        ->name('api.retell.current-time-berlin')
+        ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
     // Fallback route for query_appointment function (legacy Retell agent config)

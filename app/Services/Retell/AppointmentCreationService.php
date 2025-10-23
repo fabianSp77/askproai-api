@@ -440,7 +440,10 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'calcom_sync_status' => $calcomBookingId ? 'synced' : 'pending',  // If has Cal.com ID, already synced
         ]);
 
-        // 🔧 PHASE 5.5: Enhanced error handling for appointment save
+        // 🔧 SAGA PATTERN: Enhanced error handling with Cal.com rollback
+        // 🚨 CRITICAL FIX 2025-10-23: Implement SAGA compensation pattern
+        // If local DB save fails after successful Cal.com booking, we MUST cancel the Cal.com booking
+        // to prevent orphaned bookings (CVSS 8.5 vulnerability)
         try {
             $appointment->save();
         } catch (\Exception $e) {
@@ -455,7 +458,56 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 'call_id' => $call?->id,
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;  // Re-throw to be caught by caller
+
+            // 🔄 COMPENSATION LOGIC: Rollback Cal.com booking if it was already created
+            if ($calcomBookingId) {
+                Log::warning('🔄 SAGA Compensation: Attempting to cancel Cal.com booking due to DB failure', [
+                    'calcom_booking_id' => $calcomBookingId,
+                    'customer_id' => $customer->id,
+                    'starts_at' => $bookingDetails['starts_at']
+                ]);
+
+                try {
+                    $cancellationReason = sprintf(
+                        'Automatic rollback: Database save failed (%s)',
+                        substr($e->getMessage(), 0, 100)
+                    );
+
+                    $cancelResponse = $this->calcomService->cancelBooking(
+                        $calcomBookingId,
+                        $cancellationReason
+                    );
+
+                    if ($cancelResponse->successful()) {
+                        Log::info('✅ SAGA Compensation successful: Cal.com booking cancelled', [
+                            'calcom_booking_id' => $calcomBookingId,
+                            'reason' => 'db_save_failed'
+                        ]);
+                    } else {
+                        Log::error('❌ SAGA Compensation FAILED: Could not cancel Cal.com booking', [
+                            'calcom_booking_id' => $calcomBookingId,
+                            'cancel_status' => $cancelResponse->status(),
+                            'cancel_response' => $cancelResponse->json(),
+                            'impact' => 'ORPHANED BOOKING - Manual intervention required'
+                        ]);
+
+                        // TODO: Queue manual cleanup job
+                        // OrphanedBookingCleanupJob::dispatch($calcomBookingId);
+                    }
+                } catch (\Exception $cancelException) {
+                    Log::error('❌ SAGA Compensation exception: Cal.com cancellation failed', [
+                        'calcom_booking_id' => $calcomBookingId,
+                        'cancel_error' => $cancelException->getMessage(),
+                        'original_error' => $e->getMessage(),
+                        'impact' => 'ORPHANED BOOKING - Manual intervention required'
+                    ]);
+
+                    // TODO: Queue manual cleanup job
+                    // OrphanedBookingCleanupJob::dispatch($calcomBookingId);
+                }
+            }
+
+            throw $e;  // Re-throw original exception after compensation attempt
         }
 
         // 🛡️ POST-BOOKING VALIDATION (2025-10-20): Verify appointment was actually created
@@ -679,41 +731,84 @@ class AppointmentCreationService implements AppointmentCreationInterface
         int $durationMinutes,
         ?Call $call = null
     ): ?array {
-        // SECURITY: Sanitize and validate customer data before sending to external API
-        $sanitizedName = strip_tags(trim($customer->name ?? 'Unknown'));
+        // 🔒 CRITICAL FIX 2025-10-23: Distributed lock BEFORE Cal.com API call
+        // This prevents race condition where multiple concurrent requests book the same slot
+        // Lock key: company_id + service_id + start_time ensures slot-level exclusivity
+        // See: CVSS 7.8 Race Condition vulnerability
 
-        // Validate email format
-        $sanitizedEmail = filter_var($customer->email, FILTER_VALIDATE_EMAIL);
-        if (!$sanitizedEmail) {
-            Log::warning('Invalid customer email, using fallback', [
-                'customer_id' => $customer->id,
-                'email' => $customer->email
-            ]);
-            $sanitizedEmail = 'noreply@placeholder.local';
-        }
+        $companyId = $customer->company_id ?? $service->company_id ?? 15;
+        $lockKey = sprintf(
+            'booking_lock:%d:%d:%s',
+            $companyId,
+            $service->id,
+            $startTime->format('Y-m-d_H:i')
+        );
 
-        // Sanitize phone number (allow only digits, +, spaces, hyphens, parentheses)
-        $rawPhone = $customer->phone ?? ($call ? $call->from_number : self::FALLBACK_PHONE);
-        $sanitizedPhone = preg_replace('/[^\d\+\s\-\(\)]/', '', $rawPhone);
-
-        $bookingData = [
-            'eventTypeId' => $service->calcom_event_type_id,
-            'startTime' => $startTime->toIso8601String(),
-            'endTime' => $startTime->copy()->addMinutes($durationMinutes)->toIso8601String(),
-            'name' => $sanitizedName,
-            'email' => $sanitizedEmail,
-            'phone' => $sanitizedPhone,
-            'timeZone' => self::DEFAULT_TIMEZONE,
-            'language' => self::DEFAULT_LANGUAGE
-        ];
-
-        Log::info('📞 Attempting Cal.com booking', [
-            'customer' => $customer->name,
-            'service' => $service->name,
+        Log::debug('🔒 Acquiring distributed lock for booking', [
+            'lock_key' => $lockKey,
+            'customer_id' => $customer->id,
+            'service_id' => $service->id,
             'start_time' => $startTime->format('Y-m-d H:i')
         ]);
 
-        $response = $this->calcomService->createBooking($bookingData);
+        // Acquire lock for 30 seconds (enough time for booking + DB save)
+        // If another thread holds the lock, wait up to 10 seconds
+        $lock = Cache::lock($lockKey, 30);
+
+        try {
+            // Block for up to 10 seconds trying to acquire lock
+            if (!$lock->block(10)) {
+                Log::warning('⚠️ Could not acquire booking lock - concurrent booking in progress', [
+                    'lock_key' => $lockKey,
+                    'customer_id' => $customer->id,
+                    'service_id' => $service->id,
+                    'start_time' => $startTime->format('Y-m-d H:i'),
+                    'reason' => 'Another thread is currently booking this slot'
+                ]);
+                return null;  // Slot likely being booked by another thread
+            }
+
+            Log::info('✅ Distributed lock acquired', [
+                'lock_key' => $lockKey,
+                'customer_id' => $customer->id
+            ]);
+
+            // SECURITY: Sanitize and validate customer data before sending to external API
+            $sanitizedName = strip_tags(trim($customer->name ?? 'Unknown'));
+
+            // Validate email format
+            $sanitizedEmail = filter_var($customer->email, FILTER_VALIDATE_EMAIL);
+            if (!$sanitizedEmail) {
+                Log::warning('Invalid customer email, using fallback', [
+                    'customer_id' => $customer->id,
+                    'email' => $customer->email
+                ]);
+                $sanitizedEmail = 'noreply@placeholder.local';
+            }
+
+            // Sanitize phone number (allow only digits, +, spaces, hyphens, parentheses)
+            $rawPhone = $customer->phone ?? ($call ? $call->from_number : self::FALLBACK_PHONE);
+            $sanitizedPhone = preg_replace('/[^\d\+\s\-\(\)]/', '', $rawPhone);
+
+            $bookingData = [
+                'eventTypeId' => $service->calcom_event_type_id,
+                'startTime' => $startTime->toIso8601String(),
+                'endTime' => $startTime->copy()->addMinutes($durationMinutes)->toIso8601String(),
+                'name' => $sanitizedName,
+                'email' => $sanitizedEmail,
+                'phone' => $sanitizedPhone,
+                'timeZone' => self::DEFAULT_TIMEZONE,
+                'language' => self::DEFAULT_LANGUAGE
+            ];
+
+            Log::info('📞 Attempting Cal.com booking (lock acquired)', [
+                'customer' => $customer->name,
+                'service' => $service->name,
+                'start_time' => $startTime->format('Y-m-d H:i'),
+                'lock_key' => $lockKey
+            ]);
+
+            $response = $this->calcomService->createBooking($bookingData);
 
         if ($response->successful()) {
             $appointmentData = $response->json();
@@ -813,6 +908,17 @@ class AppointmentCreationService implements AppointmentCreationInterface
         ]);
 
         return null;
+
+        } finally {
+            // 🔓 ALWAYS release distributed lock, even if booking fails
+            if (isset($lock) && $lock->owner()) {
+                $lock->release();
+                Log::debug('🔓 Distributed lock released', [
+                    'lock_key' => $lockKey ?? 'unknown',
+                    'customer_id' => $customer->id ?? null
+                ]);
+            }
+        }
     }
 
     /**

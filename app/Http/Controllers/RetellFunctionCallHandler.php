@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Services\AppointmentAlternativeFinder;
 use App\Services\CalcomService;
 use App\Services\Retell\ServiceSelectionService;
+use App\Services\Retell\ServiceNameExtractor;
 use App\Services\Retell\WebhookResponseService;
 use App\Services\Retell\CallLifecycleService;
 use App\Services\Retell\AppointmentCreationService;
@@ -31,6 +32,7 @@ class RetellFunctionCallHandler extends Controller
     private AppointmentAlternativeFinder $alternativeFinder;
     private CalcomService $calcomService;
     private ServiceSelectionService $serviceSelector;
+    private ServiceNameExtractor $serviceExtractor;
     private WebhookResponseService $responseFormatter;
     private CallLifecycleService $callLifecycle;
     private CustomerDataValidator $dataValidator;
@@ -40,6 +42,7 @@ class RetellFunctionCallHandler extends Controller
 
     public function __construct(
         ServiceSelectionService $serviceSelector,
+        ServiceNameExtractor $serviceExtractor,
         WebhookResponseService $responseFormatter,
         CallLifecycleService $callLifecycle,
         CustomerDataValidator $dataValidator,
@@ -47,6 +50,7 @@ class RetellFunctionCallHandler extends Controller
         DateTimeParser $dateTimeParser
     ) {
         $this->serviceSelector = $serviceSelector;
+        $this->serviceExtractor = $serviceExtractor;
         $this->responseFormatter = $responseFormatter;
         $this->callLifecycle = $callLifecycle;
         $this->dataValidator = $dataValidator;
@@ -4040,5 +4044,156 @@ class RetellFunctionCallHandler extends Controller
                 'message' => 'Entschuldigung, es gab einen Fehler beim Parsen des Datums.'
             ], 200);
         }
+    }
+
+    /**
+     * 🚀 V17: Check Availability Wrapper (bestaetigung=false)
+     *
+     * Wrapper for collectAppointment that forces bestaetigung=false
+     * Used by explicit function nodes to ensure reliable tool calling
+     *
+     * POST /api/retell/v17/check-availability
+     */
+    public function checkAvailabilityV17(CollectAppointmentRequest $request)
+    {
+        Log::info('🔍 V17: Check Availability (bestaetigung=false)', [
+            'call_id' => $request->input('call.call_id'),
+            'params' => $request->except(['call'])
+        ]);
+
+        // Force bestaetigung=false
+        $request->merge(['bestaetigung' => false]);
+
+        // Call the main collectAppointment method
+        return $this->collectAppointment($request);
+    }
+
+    /**
+     * 🚀 V17: Book Appointment Wrapper (bestaetigung=true)
+     *
+     * Wrapper for collectAppointment that forces bestaetigung=true
+     * Used by explicit function nodes to ensure reliable tool calling
+     *
+     * POST /api/retell/v17/book-appointment
+     */
+    public function bookAppointmentV17(CollectAppointmentRequest $request)
+    {
+        Log::info('✅ V17: Book Appointment (bestaetigung=true)', [
+            'call_id' => $request->input('call.call_id'),
+            'params' => $request->except(['call'])
+        ]);
+
+        // Force bestaetigung=true
+        $request->merge(['bestaetigung' => true]);
+
+        // Call the main collectAppointment method
+        return $this->collectAppointment($request);
+    }
+
+    /**
+     * 🎯 Get Available Services (Public Endpoint)
+     *
+     * Returns all active services for the company/branch
+     * Used by Retell AI to present service options to user
+     *
+     * POST /api/retell/get-available-services
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAvailableServices(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+
+        Log::info('📋 List Services Request', [
+            'call_id' => $callId,
+            'raw_request' => $request->all()
+        ]);
+
+        try {
+            // Get call context (company_id, branch_id)
+            $context = $this->getCallContext($callId);
+
+            if (!$context) {
+                Log::error('❌ Failed to get call context', [
+                    'call_id' => $callId
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'context_not_found',
+                    'message' => 'Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es erneut.'
+                ], 200);
+            }
+
+            // Get service list
+            $services = $this->serviceExtractor->getServiceList(
+                $context['company_id'],
+                $context['branch_id']
+            );
+
+            if (empty($services)) {
+                Log::warning('⚠️ No services found for company', [
+                    'company_id' => $context['company_id'],
+                    'branch_id' => $context['branch_id']
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'no_services',
+                    'message' => 'Entschuldigung, derzeit sind keine Dienstleistungen verfügbar.'
+                ], 200);
+            }
+
+            Log::info('✅ Services retrieved successfully', [
+                'call_id' => $callId,
+                'service_count' => count($services),
+                'services' => array_column($services, 'name')
+            ]);
+
+            // Format response for Retell
+            return response()->json([
+                'success' => true,
+                'services' => $services,
+                'count' => count($services),
+                'message' => $this->formatServiceListMessage($services)
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('❌ List services failed', [
+                'call_id' => $callId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'internal_error',
+                'message' => 'Entschuldigung, es gab einen technischen Fehler. Bitte versuchen Sie es erneut.'
+            ], 200);
+        }
+    }
+
+    /**
+     * Format service list into natural language message for AI
+     *
+     * @param array $services
+     * @return string
+     */
+    private function formatServiceListMessage(array $services): string
+    {
+        if (count($services) === 1) {
+            return "Wir bieten folgende Dienstleistung an: {$services[0]['name']}.";
+        }
+
+        $serviceNames = array_column($services, 'name');
+        $lastService = array_pop($serviceNames);
+
+        if (empty($serviceNames)) {
+            return "Wir bieten folgende Dienstleistungen an: {$lastService}.";
+        }
+
+        $serviceList = implode(', ', $serviceNames);
+        return "Wir bieten folgende Dienstleistungen an: {$serviceList} und {$lastService}.";
     }
 }
