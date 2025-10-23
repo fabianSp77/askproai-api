@@ -102,14 +102,7 @@ class CallsRelationManager extends RelationManager
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->icon('heroicon-m-phone')
-                    ->description(function ($record) {
-                        if ($record->duration_sec) {
-                            $minutes = floor($record->duration_sec / 60);
-                            $seconds = $record->duration_sec % 60;
-                            return $minutes > 0 ? "{$minutes}m {$seconds}s" : "{$seconds}s";
-                        }
-                        return null;
-                    }),
+                    ->description(fn ($record) => $record->duration_formatted),
                 Tables\Columns\BadgeColumn::make('direction')
                     ->label('Richtung')
                     ->colors([
@@ -161,41 +154,14 @@ class CallsRelationManager extends RelationManager
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->toggleable()
-                    ->tooltip(function ($record) {
-                        if ($record->appointment_made && !$record->converted_appointment_id) {
-                            return '⚠️ Buchung fehlgeschlagen - Termin wurde nicht erstellt';
-                        }
-                        if ($record->appointment_made && $record->converted_appointment_id) {
-                            return '✅ Termin erfolgreich gebucht (ID: ' . $record->converted_appointment_id . ')';
-                        }
-                        return 'Kein Termin gebucht';
-                    })
-                    ->color(function ($record) {
-                        if ($record->appointment_made && !$record->converted_appointment_id) {
-                            return 'warning'; // Failed booking
-                        }
-                        if ($record->appointment_made) {
-                            return 'success'; // Successful booking
-                        }
-                        return 'gray'; // No booking
-                    }),
+                    ->tooltip(fn ($record) => $record->appointment_status_info['tooltip'])
+                    ->color(fn ($record) => $record->appointment_status_info['color']),
 
                 // NEW: Failed Booking Warning Column
                 Tables\Columns\TextColumn::make('booking_status')
                     ->label('Buchungsstatus')
                     ->badge()
-                    ->getStateUsing(function ($record) {
-                        if ($record->appointment_made && !$record->converted_appointment_id) {
-                            return 'Fehlgeschlagen';
-                        }
-                        if ($record->appointment_made && $record->converted_appointment_id) {
-                            return 'Erfolgreich';
-                        }
-                        if ($record->appointment_made === 0) {
-                            return 'Nicht versucht';
-                        }
-                        return '-';
-                    })
+                    ->getStateUsing(fn ($record) => $record->booking_status)
                     ->color(fn (string $state): string => match ($state) {
                         'Fehlgeschlagen' => 'danger',
                         'Erfolgreich' => 'success',
@@ -220,7 +186,7 @@ class CallsRelationManager extends RelationManager
                     ->label('Aufnahme')
                     ->icon('heroicon-o-microphone')
                     ->boolean()
-                    ->getStateUsing(fn ($record) => !empty($record->recording_url))
+                    ->getStateUsing(fn ($record) => $record->has_recording)
                     ->action(fn ($record) => $record->recording_url ? redirect($record->recording_url) : null),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt')
@@ -258,15 +224,7 @@ class CallsRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->label('Anruf dokumentieren')
                     ->modalHeading('Anruf dokumentieren')
-                    ->mutateFormDataUsing(function (array $data): array {
-                        $data['customer_id'] = $this->ownerRecord->id;
-                        $data['company_id'] = $this->ownerRecord->company_id;
-                        $data['type'] = 'manual';
-                        $data['successful'] = 1;
-                        $data['retell_call_id'] = 'manual_' . uniqid();
-                        $data['call_id'] = 'manual_' . uniqid();
-                        return $data;
-                    }),
+                    ->mutateFormDataUsing(fn (array $data): array => $this->prepareCallData($data)),
             ])
             ->actions([
                 // NEW: View Transcript
@@ -325,5 +283,20 @@ class CallsRelationManager extends RelationManager
     public function isReadOnly(): bool
     {
         return false;
+    }
+
+    /**
+     * Prepare call data before creation
+     * Extracted from mutateFormDataUsing closure for Livewire serialization
+     */
+    protected function prepareCallData(array $data): array
+    {
+        $data['customer_id'] = $this->ownerRecord->id;
+        $data['company_id'] = $this->ownerRecord->company_id;
+        $data['type'] = 'manual';
+        $data['successful'] = 1;
+        $data['retell_call_id'] = 'manual_' . uniqid();
+        $data['call_id'] = 'manual_' . uniqid();
+        return $data;
     }
 }

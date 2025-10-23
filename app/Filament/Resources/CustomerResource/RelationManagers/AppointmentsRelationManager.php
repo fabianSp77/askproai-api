@@ -99,13 +99,7 @@ class AppointmentsRelationManager extends RelationManager
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->icon('heroicon-m-calendar')
-                    ->description(function ($record) {
-                        if ($record->starts_at && $record->ends_at) {
-                            $duration = \Carbon\Carbon::parse($record->starts_at)->diffInMinutes($record->ends_at);
-                            return "{$duration} Min.";
-                        }
-                        return null;
-                    }),
+                    ->description(fn ($record) => $record->duration_formatted),
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->searchable(),
@@ -173,13 +167,7 @@ class AppointmentsRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->label('Neuer Termin')
                     ->modalHeading('Neuen Termin anlegen')
-                    ->mutateFormDataUsing(function (array $data): array {
-                        $data['customer_id'] = $this->ownerRecord->id;
-                        $data['company_id'] = $this->ownerRecord->company_id;
-                        $data['source'] = 'admin';
-                        $data['booking_type'] = 'single';
-                        return $data;
-                    }),
+                    ->mutateFormDataUsing(fn (array $data): array => $this->prepareAppointmentData($data)),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
@@ -267,10 +255,29 @@ class AppointmentsRelationManager extends RelationManager
                         ->where('appointment_made', 1)
                         ->whereNull('converted_appointment_id')
                         ->count() > 0)
-                    ->action(function () {
-                        // Scroll to calls relation manager
-                        $this->dispatch('scrollToRelation', relation: 'calls');
-                    }),
+                    ->action(fn () => $this->scrollToCallsRelation()),
             ]);
+    }
+
+    /**
+     * Scroll to calls relation manager
+     * Extracted from closure for Livewire serialization
+     */
+    public function scrollToCallsRelation(): void
+    {
+        $this->dispatch('scrollToRelation', relation: 'calls');
+    }
+
+    /**
+     * Prepare appointment data before creation
+     * Extracted from mutateFormDataUsing closure for Livewire serialization
+     */
+    protected function prepareAppointmentData(array $data): array
+    {
+        $data['customer_id'] = $this->ownerRecord->id;
+        $data['company_id'] = $this->ownerRecord->company_id;
+        $data['source'] = 'admin';
+        $data['booking_type'] = 'single';
+        return $data;
     }
 }

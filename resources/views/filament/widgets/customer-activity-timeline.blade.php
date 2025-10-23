@@ -116,7 +116,7 @@
                                 @if($activity['type'] === 'call')
                                     <div class="flex flex-wrap gap-2 mt-3">
                                         @if($activity['is_failed_booking'])
-                                            <a href="{{ route('filament.admin.resources.appointments.create', ['customer_id' => $customer_id, 'call_id' => $activity['data']->id]) }}"
+                                            <a href="{{ route('filament.admin.resources.appointments.create', ['customer_id' => $customer_id, 'call_id' => $activity['data']['id']]) }}"
                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 hover:bg-warning-200 dark:hover:bg-warning-900/50 transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -126,7 +126,7 @@
                                         @endif
 
                                         @if($activity['has_transcript'])
-                                            <button onclick="openTranscriptModal({{ $activity['data']->id }})"
+                                            <button onclick="openTranscriptModal({{ $activity['data']['id'] }})"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-300 hover:bg-info-200 dark:hover:bg-info-900/50 transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -136,7 +136,7 @@
                                         @endif
 
                                         @if($activity['has_recording'])
-                                            <a href="{{ $activity['data']->recording_url }}" target="_blank"
+                                            <a href="{{ $activity['data']['recording_url'] }}" target="_blank"
                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
@@ -146,7 +146,7 @@
                                             </a>
                                         @endif
 
-                                        <a href="{{ route('filament.admin.resources.calls.edit', $activity['data']->id) }}"
+                                        <a href="{{ route('filament.admin.resources.calls.edit', $activity['data']['id']) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                             Details anzeigen
                                         </a>
@@ -165,7 +165,7 @@
                                             </span>
                                         @endif
 
-                                        <a href="{{ route('filament.admin.resources.appointments.edit', $activity['data']->id) }}"
+                                        <a href="{{ route('filament.admin.resources.appointments.edit', $activity['data']['id']) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                             Details anzeigen
                                         </a>
@@ -185,9 +185,10 @@
         </div>
     </x-filament::section>
 
-    @push('scripts')
     <script>
-        function filterTimeline(type) {
+        // Define functions in global scope for inline onclick handlers
+        // Use OR operator to allow redefinition if needed (fixes Livewire re-mount issues)
+        window.filterTimeline = window.filterTimeline || function(type) {
             // Update button states
             document.querySelectorAll('.timeline-filter').forEach(btn => {
                 btn.classList.remove('active', 'bg-primary-100', 'dark:bg-primary-900', 'text-primary-700', 'dark:text-primary-300');
@@ -205,15 +206,14 @@
                     item.style.display = 'none';
                 }
             });
-        }
+        };
 
-        function openTranscriptModal(callId) {
+        window.openTranscriptModal = window.openTranscriptModal || function(callId) {
             // This would trigger Filament's modal system
             // Implementation depends on how Filament handles modals
             console.log('Opening transcript for call:', callId);
             // Alternative: navigate to calls table and open that row's transcript action
             window.location.href = '#calls-relation';
-        }
+        };
     </script>
-    @endpush
 </x-filament-widgets::widget>

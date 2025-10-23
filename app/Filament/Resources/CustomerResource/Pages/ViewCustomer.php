@@ -53,13 +53,7 @@ class ViewCustomer extends ViewRecord
                         ->email()
                         ->required(),
                 ])
-                ->action(function (array $data) {
-                    $this->record->update(['email' => $data['email']]);
-                    Notification::success()
-                        ->title('E-Mail hinzugefügt')
-                        ->body('E-Mail-Adresse wurde erfolgreich gespeichert.')
-                        ->send();
-                });
+                ->action(fn (array $data) => $this->addEmailAddress($data));
         }
 
         $customerActions[] = Actions\Action::make('addNote')
@@ -74,18 +68,7 @@ class ViewCustomer extends ViewRecord
                     ->required()
                     ->rows(3),
             ])
-            ->action(function (array $data) {
-                $this->record->notes()->create([
-                    'subject' => $data['subject'],
-                    'content' => $data['content'],
-                    'type' => 'general',
-                    'created_by' => auth()->id(),
-                ]);
-
-                Notification::success()
-                    ->title('Notiz hinzugefügt')
-                    ->send();
-            });
+            ->action(fn (array $data) => $this->addCustomerNote($data));
 
         $actions[] = Actions\ActionGroup::make($customerActions)
             ->label('Kunde')
@@ -112,34 +95,17 @@ class ViewCustomer extends ViewRecord
 
             // Add merge actions for each duplicate
             foreach ($duplicates->take(3) as $duplicate) {
-                $duplicateActions[] = Actions\Action::make('merge_' . $duplicate->id)
-                    ->label('Mit #' . $duplicate->id . ' zusammenführen')
+                $duplicateId = $duplicate->id; // Capture only ID, not entire model
+                $duplicateName = $duplicate->name; // Capture only name
+
+                $duplicateActions[] = Actions\Action::make('merge_' . $duplicateId)
+                    ->label('Mit #' . $duplicateId . ' zusammenführen')
                     ->icon('heroicon-o-arrow-path')
                     ->requiresConfirmation()
                     ->modalHeading('Kunden zusammenführen?')
-                    ->modalDescription(function () use ($duplicate) {
-                        $service = new \App\Services\Customer\CustomerMergeService();
-                        $preview = $service->previewMerge($this->record, $duplicate);
-
-                        return "Kunde #{$duplicate->id} ({$duplicate->name}) wird mit diesem Kunden zusammengeführt.\n\n" .
-                               "Übertragen werden:\n" .
-                               "• {$preview['duplicate']['calls']} Anruf(e)\n" .
-                               "• {$preview['duplicate']['appointments']} Termin(e)\n" .
-                               "• €" . number_format($preview['duplicate']['revenue'], 2) . " Umsatz\n\n" .
-                               "Dieser Vorgang kann nicht rückgängig gemacht werden!";
-                    })
+                    ->modalDescription(fn () => $this->getMergeDescription($duplicateId, $duplicateName))
                     ->modalSubmitActionLabel('Jetzt zusammenführen')
-                    ->action(function () use ($duplicate) {
-                        $service = new \App\Services\Customer\CustomerMergeService();
-                        $stats = $service->merge($this->record, $duplicate);
-
-                        Notification::success()
-                            ->title('Kunden erfolgreich zusammengeführt')
-                            ->body("Übertragen: {$stats['calls_transferred']} Anrufe, {$stats['appointments_transferred']} Termine")
-                            ->send();
-
-                        redirect()->to(route('filament.admin.resources.customers.view', ['record' => $this->record->id]));
-                    });
+                    ->action(fn () => $this->mergeWithDuplicate($duplicateId));
             }
 
             $actions[] = Actions\ActionGroup::make($duplicateActions)
@@ -246,5 +212,81 @@ class ViewCustomer extends ViewRecord
         }
 
         return $duplicates->unique('id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Livewire Action Methods (2025-10-22)
+    |--------------------------------------------------------------------------
+    | These methods replace closures in getHeaderActions() to fix Livewire
+    | serialization issues. Closures cannot be serialized, especially those
+    | with use() clauses that capture model instances.
+    */
+
+    /**
+     * Add email address to customer
+     * Extracted from closure for Livewire serialization
+     */
+    public function addEmailAddress(array $data): void
+    {
+        $this->record->update(['email' => $data['email']]);
+        Notification::success()
+            ->title('E-Mail hinzugefügt')
+            ->body('E-Mail-Adresse wurde erfolgreich gespeichert.')
+            ->send();
+    }
+
+    /**
+     * Add customer note
+     * Extracted from closure for Livewire serialization
+     */
+    public function addCustomerNote(array $data): void
+    {
+        $this->record->notes()->create([
+            'subject' => $data['subject'],
+            'content' => $data['content'],
+            'type' => 'general',
+            'created_by' => auth()->id(),
+        ]);
+
+        Notification::success()
+            ->title('Notiz hinzugefügt')
+            ->send();
+    }
+
+    /**
+     * Get merge description for duplicate customer
+     * Extracted from closure for Livewire serialization
+     */
+    public function getMergeDescription(int $duplicateId, string $duplicateName): string
+    {
+        $duplicate = Customer::findOrFail($duplicateId);
+        $service = new \App\Services\Customer\CustomerMergeService();
+        $preview = $service->previewMerge($this->record, $duplicate);
+
+        return "Kunde #{$duplicateId} ({$duplicateName}) wird mit diesem Kunden zusammengeführt.\n\n" .
+               "Übertragen werden:\n" .
+               "• {$preview['duplicate']['calls']} Anruf(e)\n" .
+               "• {$preview['duplicate']['appointments']} Termin(e)\n" .
+               "• €" . number_format($preview['duplicate']['revenue'], 2) . " Umsatz\n\n" .
+               "Dieser Vorgang kann nicht rückgängig gemacht werden!";
+    }
+
+    /**
+     * Merge customer with duplicate
+     * Extracted from closure for Livewire serialization
+     */
+    public function mergeWithDuplicate(int $duplicateId): void
+    {
+        $duplicate = Customer::findOrFail($duplicateId);
+        $service = new \App\Services\Customer\CustomerMergeService();
+        $stats = $service->merge($this->record, $duplicate);
+
+        Notification::success()
+            ->title('Kunden erfolgreich zusammengeführt')
+            ->body("Übertragen: {$stats['calls_transferred']} Anrufe, {$stats['appointments_transferred']} Termine")
+            ->send();
+
+        redirect()->to(route('filament.admin.resources.customers.view', ['record' => $this->record->id]));
     }
 }
