@@ -53,7 +53,7 @@ class CustomerActivityTimeline extends Widget
             $timeline[] = [
                 'type' => 'call',
                 'timestamp' => $call->created_at->toIso8601String(),
-                'data' => (object)[
+                'data' => [ // Plain array instead of object for Livewire serialization
                     'id' => $call->id,
                     'recording_url' => $call->recording_url,
                 ],
@@ -73,7 +73,7 @@ class CustomerActivityTimeline extends Widget
             $timeline[] = [
                 'type' => 'appointment',
                 'timestamp' => $appointment->starts_at->toIso8601String(),
-                'data' => (object)[
+                'data' => [ // Plain array instead of object for Livewire serialization
                     'id' => $appointment->id,
                 ],
                 'icon' => '📅',
@@ -96,7 +96,7 @@ class CustomerActivityTimeline extends Widget
                 $timeline[] = [
                     'type' => 'note',
                     'timestamp' => $note->created_at->toIso8601String(),
-                    'data' => (object)[
+                    'data' => [ // Plain array instead of object for Livewire serialization
                         'id' => $note->id,
                     ],
                     'icon' => '📝',

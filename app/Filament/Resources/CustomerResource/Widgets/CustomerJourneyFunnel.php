@@ -109,10 +109,17 @@ class CustomerJourneyFunnel extends Widget
             \Filament\Actions\Action::make('refresh')
                 ->label('Aktualisieren')
                 ->icon('heroicon-o-arrow-path')
-                ->action(function () {
-                    Cache::forget('customer-journey-funnel-' . now()->format('Y-m-d'));
-                    $this->dispatch('$refresh');
-                }),
+                ->action(fn () => $this->refreshFunnel()),
         ];
+    }
+
+    /**
+     * Refresh funnel data
+     * Extracted from closure for Livewire serialization
+     */
+    private function refreshFunnel(): void
+    {
+        Cache::forget('customer-journey-funnel-' . now()->format('Y-m-d'));
+        $this->dispatch('$refresh');
     }
 }

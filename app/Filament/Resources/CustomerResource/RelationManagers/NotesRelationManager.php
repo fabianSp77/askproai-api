@@ -90,8 +90,8 @@ class NotesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('subject')
                     ->label('Betreff')
                     ->searchable()
-                    ->weight(fn ($record) => $record->is_important ? 'bold' : 'regular')
-                    ->description(fn ($record) => strip_tags(substr($record->content, 0, 100)) . '...')
+                    ->weight(fn ($record) => $record->text_weight)
+                    ->description(fn ($record) => $record->content_preview)
                     ->limit(50),
                 Tables\Columns\BadgeColumn::make('type')
                     ->label('Typ')
@@ -127,7 +127,7 @@ class NotesRelationManager extends RelationManager
                     }),
                 Tables\Columns\TextColumn::make('created_by')
                     ->label('Erstellt von')
-                    ->getStateUsing(fn ($record) => $record->creator?->name ?? 'System')
+                    ->getStateUsing(fn ($record) => $record->creator_name)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
@@ -169,11 +169,7 @@ class NotesRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->label('Neue Notiz')
                     ->modalHeading('Neue Notiz anlegen')
-                    ->mutateFormDataUsing(function (array $data): array {
-                        $data['customer_id'] = $this->ownerRecord->id;
-                        $data['created_by'] = auth()->id();
-                        return $data;
-                    }),
+                    ->mutateFormDataUsing(fn (array $data): array => $this->prepareNoteData($data)),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -197,5 +193,16 @@ class NotesRelationManager extends RelationManager
             ->emptyStateHeading('Keine Notizen vorhanden')
             ->emptyStateDescription('Fügen Sie Notizen hinzu, um wichtige Informationen über diesen Kunden zu dokumentieren.')
             ->emptyStateIcon('heroicon-o-document-text');
+    }
+
+    /**
+     * Prepare note data before creation
+     * Extracted from mutateFormDataUsing closure for Livewire serialization
+     */
+    protected function prepareNoteData(array $data): array
+    {
+        $data['customer_id'] = $this->ownerRecord->id;
+        $data['created_by'] = auth()->id();
+        return $data;
     }
 }

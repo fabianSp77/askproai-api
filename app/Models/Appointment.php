@@ -311,4 +311,39 @@ class Appointment extends Model
             ->whereIn('status', ['scheduled', 'confirmed', 'pending'])
             ->orderBy('created_at', 'desc');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors for Livewire Serialization (2025-10-22)
+    |--------------------------------------------------------------------------
+    | These accessors replace closures in RelationManagers to fix Livewire
+    | serialization issues. Closures are not JSON-serializable and cause
+    | "Snapshot missing on Livewire component" errors.
+    */
+
+    /**
+     * Get appointment duration in minutes
+     *
+     * @return int|null
+     */
+    public function getDurationMinutesAttribute(): ?int
+    {
+        if (!$this->starts_at || !$this->ends_at) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($this->starts_at)->diffInMinutes($this->ends_at);
+    }
+
+    /**
+     * Get formatted duration string
+     *
+     * @return string|null
+     */
+    public function getDurationFormattedAttribute(): ?string
+    {
+        $duration = $this->duration_minutes;
+
+        return $duration ? "{$duration} Min." : null;
+    }
 }

@@ -436,4 +436,89 @@ class Call extends Model
     {
         return $this->getCallProfit() > 0;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors for Livewire Serialization (2025-10-22)
+    |--------------------------------------------------------------------------
+    | These accessors replace closures in RelationManagers to fix Livewire
+    | serialization issues. Closures are not JSON-serializable and cause
+    | "Snapshot missing on Livewire component" errors.
+    */
+
+    /**
+     * Get formatted duration string
+     *
+     * @return string|null
+     */
+    public function getDurationFormattedAttribute(): ?string
+    {
+        if (!$this->duration_sec) {
+            return null;
+        }
+
+        $minutes = floor($this->duration_sec / 60);
+        $seconds = $this->duration_sec % 60;
+
+        return $minutes > 0 ? "{$minutes}m {$seconds}s" : "{$seconds}s";
+    }
+
+    /**
+     * Get appointment status information (tooltip, color, icon)
+     *
+     * @return array{tooltip: string, color: string, icon: string}
+     */
+    public function getAppointmentStatusInfoAttribute(): array
+    {
+        if ($this->appointment_made && !$this->converted_appointment_id) {
+            return [
+                'tooltip' => '⚠️ Buchung fehlgeschlagen - Termin wurde nicht erstellt',
+                'color' => 'warning',
+                'icon' => 'heroicon-o-exclamation-triangle',
+            ];
+        }
+
+        if ($this->appointment_made && $this->converted_appointment_id) {
+            return [
+                'tooltip' => '✅ Termin erfolgreich gebucht (ID: ' . $this->converted_appointment_id . ')',
+                'color' => 'success',
+                'icon' => 'heroicon-o-check-circle',
+            ];
+        }
+
+        return [
+            'tooltip' => 'Kein Termin gebucht',
+            'color' => 'gray',
+            'icon' => 'heroicon-o-calendar',
+        ];
+    }
+
+    /**
+     * Check if call has recording URL
+     *
+     * @return bool
+     */
+    public function getHasRecordingAttribute(): bool
+    {
+        return !empty($this->recording_url);
+    }
+
+    /**
+     * Get booking status text
+     *
+     * @return string
+     */
+    public function getBookingStatusAttribute(): string
+    {
+        if ($this->appointment_made && !$this->converted_appointment_id) {
+            return 'Fehlgeschlagen';
+        }
+        if ($this->appointment_made && $this->converted_appointment_id) {
+            return 'Erfolgreich';
+        }
+        if ($this->appointment_made === 0) {
+            return 'Nicht versucht';
+        }
+        return '-';
+    }
 }

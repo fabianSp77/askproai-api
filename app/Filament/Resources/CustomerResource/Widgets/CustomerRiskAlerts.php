@@ -52,20 +52,7 @@ class CustomerRiskAlerts extends BaseWidget
                 Tables\Columns\TextColumn::make('risk_level')
                     ->label('Risiko')
                     ->badge()
-                    ->getStateUsing(function ($record) {
-                        if ($record->journey_status === 'churned') return 'Verloren';
-                        if ($record->journey_status === 'at_risk') return 'Hoch';
-
-                        $daysSinceLastVisit = $record->last_appointment_at
-                            ? Carbon::parse($record->last_appointment_at)->diffInDays()
-                            : 999;
-
-                        if ($daysSinceLastVisit > 120) return 'Kritisch';
-                        if ($daysSinceLastVisit > 90) return 'Hoch';
-                        if ($daysSinceLastVisit > 60) return 'Mittel';
-
-                        return 'Niedrig';
-                    })
+                    ->getStateUsing(fn ($record) => $this->getRiskLevel($record))
                     ->color(fn (string $state): string => match ($state) {
                         'Kritisch' => 'danger',
                         'Hoch' => 'warning',
@@ -105,28 +92,7 @@ class CustomerRiskAlerts extends BaseWidget
 
                 Tables\Columns\TextColumn::make('risk_reasons')
                     ->label('Risikofaktoren')
-                    ->getStateUsing(function ($record) {
-                        $reasons = [];
-
-                        $daysSinceLastVisit = $record->last_appointment_at
-                            ? Carbon::parse($record->last_appointment_at)->diffInDays()
-                            : 999;
-
-                        if ($daysSinceLastVisit > 90) {
-                            $reasons[] = '⏰ Lange inaktiv';
-                        }
-                        if ($record->cancellation_count > 2) {
-                            $reasons[] = '❌ Häufige Absagen';
-                        }
-                        if ($record->engagement_score < 30) {
-                            $reasons[] = '📉 Niedriges Engagement';
-                        }
-                        if ($record->journey_status === 'at_risk') {
-                            $reasons[] = '⚠️ Als gefährdet markiert';
-                        }
-
-                        return implode(' | ', $reasons) ?: 'Keine';
-                    })
+                    ->getStateUsing(fn ($record) => $this->getRiskReasons($record))
                     ->wrap()
                     ->size('xs'),
             ])
@@ -149,36 +115,13 @@ class CustomerRiskAlerts extends BaseWidget
                             ->label('Notiz')
                             ->rows(2),
                     ])
-                    ->action(function ($record, array $data) {
-                        // Log contact attempt
-                        $record->update([
-                            'last_contact_at' => now(),
-                            'notes' => ($record->notes ?? '') . "\n[" . now()->format('d.m.Y') . "] Kontakt: " . $data['contact_type'] . " - " . ($data['notes'] ?? ''),
-                        ]);
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Kunde kontaktiert')
-                            ->body("Kontakt zu {$record->name} wurde dokumentiert.")
-                            ->success()
-                            ->send();
-                    }),
+                    ->action(fn ($record, array $data) => $this->logContactAttempt($record, $data)),
 
                 Tables\Actions\Action::make('win_back')
                     ->label('Rückgewinnung')
                     ->icon('heroicon-m-gift')
                     ->color('success')
-                    ->action(function ($record) {
-                        $record->update([
-                            'journey_status' => 'prospect',
-                            'engagement_score' => min(100, $record->engagement_score + 20),
-                        ]);
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Rückgewinnungskampagne gestartet')
-                            ->body("Kunde wurde für Rückgewinnung markiert.")
-                            ->success()
-                            ->send();
-                    }),
+                    ->action(fn ($record) => $this->startWinBackCampaign($record)),
             ])
             ->heading('Risiko-Kunden')
             ->description('Kunden mit hohem Abwanderungsrisiko')
@@ -186,5 +129,89 @@ class CustomerRiskAlerts extends BaseWidget
             ->emptyStateHeading('Keine Risiko-Kunden')
             ->emptyStateDescription('Alle Kunden sind aktiv und engagiert!')
             ->emptyStateIcon('heroicon-o-check-circle');
+    }
+
+    /**
+     * Calculate risk level for customer
+     * Extracted from closure for Livewire serialization
+     */
+    private function getRiskLevel($record): string
+    {
+        if ($record->journey_status === 'churned') return 'Verloren';
+        if ($record->journey_status === 'at_risk') return 'Hoch';
+
+        $daysSinceLastVisit = $record->last_appointment_at
+            ? Carbon::parse($record->last_appointment_at)->diffInDays()
+            : 999;
+
+        if ($daysSinceLastVisit > 120) return 'Kritisch';
+        if ($daysSinceLastVisit > 90) return 'Hoch';
+        if ($daysSinceLastVisit > 60) return 'Mittel';
+
+        return 'Niedrig';
+    }
+
+    /**
+     * Calculate risk reasons for customer
+     * Extracted from closure for Livewire serialization
+     */
+    private function getRiskReasons($record): string
+    {
+        $reasons = [];
+
+        $daysSinceLastVisit = $record->last_appointment_at
+            ? Carbon::parse($record->last_appointment_at)->diffInDays()
+            : 999;
+
+        if ($daysSinceLastVisit > 90) {
+            $reasons[] = '⏰ Lange inaktiv';
+        }
+        if ($record->cancellation_count > 2) {
+            $reasons[] = '❌ Häufige Absagen';
+        }
+        if ($record->engagement_score < 30) {
+            $reasons[] = '📉 Niedriges Engagement';
+        }
+        if ($record->journey_status === 'at_risk') {
+            $reasons[] = '⚠️ Als gefährdet markiert';
+        }
+
+        return implode(' | ', $reasons) ?: 'Keine';
+    }
+
+    /**
+     * Log contact attempt with customer
+     * Extracted from action closure for Livewire serialization
+     */
+    public function logContactAttempt($record, array $data): void
+    {
+        $record->update([
+            'last_contact_at' => now(),
+            'notes' => ($record->notes ?? '') . "\n[" . now()->format('d.m.Y') . "] Kontakt: " . $data['contact_type'] . " - " . ($data['notes'] ?? ''),
+        ]);
+
+        \Filament\Notifications\Notification::make()
+            ->title('Kunde kontaktiert')
+            ->body("Kontakt zu {$record->name} wurde dokumentiert.")
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Start win-back campaign for customer
+     * Extracted from action closure for Livewire serialization
+     */
+    public function startWinBackCampaign($record): void
+    {
+        $record->update([
+            'journey_status' => 'prospect',
+            'engagement_score' => min(100, $record->engagement_score + 20),
+        ]);
+
+        \Filament\Notifications\Notification::make()
+            ->title('Rückgewinnungskampagne gestartet')
+            ->body("Kunde wurde für Rückgewinnung markiert.")
+            ->success()
+            ->send();
     }
 }

@@ -63,4 +63,43 @@ class CustomerNote extends Model
     {
         return $query->where('created_at', '>=', now()->subDays($days));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors for Livewire Serialization (2025-10-22)
+    |--------------------------------------------------------------------------
+    | These accessors replace closures in RelationManagers to fix Livewire
+    | serialization issues. Closures are not JSON-serializable and cause
+    | "Snapshot missing on Livewire component" errors.
+    */
+
+    /**
+     * Get creator name or 'System' if no creator
+     *
+     * @return string
+     */
+    public function getCreatorNameAttribute(): string
+    {
+        return $this->creator?->name ?? 'System';
+    }
+
+    /**
+     * Get text weight based on importance
+     *
+     * @return string
+     */
+    public function getTextWeightAttribute(): string
+    {
+        return $this->is_important ? 'bold' : 'regular';
+    }
+
+    /**
+     * Get content preview (first 100 chars, stripped of HTML)
+     *
+     * @return string
+     */
+    public function getContentPreviewAttribute(): string
+    {
+        return strip_tags(substr($this->content, 0, 100)) . '...';
+    }
 }
