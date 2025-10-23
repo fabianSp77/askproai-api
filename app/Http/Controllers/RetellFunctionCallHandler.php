@@ -1059,6 +1059,7 @@ class RetellFunctionCallHandler extends Controller
             $name = $validatedData['name'];
             $dienstleistung = $validatedData['dienstleistung'];
             $serviceIdFromRequest = $validatedData['service_id'] ?? null;
+            $duration = $validatedData['duration'] ?? null; // 🔧 NEW: Duration in minutes (15, 30, 60, etc.)
             $email = $validatedData['email'];
 
             // 🔧 BUG FIX (Call 776): Auto-fill customer name if "Unbekannt" or empty
@@ -1421,10 +1422,33 @@ class RetellFunctionCallHandler extends Controller
                     }
                 }
 
-                // TIER 2: Keyword detection from dienstleistung if no explicit service_id
+                // TIER 2: Keyword detection + duration extraction from dienstleistung
                 if (!$service && $dienstleistung) {
                     $dienstleistungLower = strtolower($dienstleistung);
-                    $wants15Minutes = (
+
+                    // 🔧 NEW: Extract duration from text if not explicitly provided
+                    if (!$duration) {
+                        if (strpos($dienstleistungLower, '15') !== false ||
+                            strpos($dienstleistungLower, 'schnell') !== false ||
+                            strpos($dienstleistungLower, 'kurz') !== false) {
+                            $duration = 15;
+                        } elseif (strpos($dienstleistungLower, '30') !== false) {
+                            $duration = 30;
+                        } elseif (strpos($dienstleistungLower, '60') !== false ||
+                                  strpos($dienstleistungLower, 'stunde') !== false) {
+                            $duration = 60;
+                        }
+
+                        if ($duration) {
+                            Log::info('🔍 Extracted duration from dienstleistung text', [
+                                'dienstleistung' => $dienstleistung,
+                                'extracted_duration' => $duration
+                            ]);
+                        }
+                    }
+
+                    // Try to find service matching duration
+                    $wants15Minutes = $duration === 15 || (
                         strpos($dienstleistungLower, '15') !== false ||
                         strpos($dienstleistungLower, 'schnell') !== false ||
                         strpos($dienstleistungLower, 'kurz') !== false
@@ -1438,12 +1462,13 @@ class RetellFunctionCallHandler extends Controller
                                 $query->where('name', 'LIKE', '%15%')
                                       ->orWhere('name', 'LIKE', '%schnell%')
                                       ->orWhere('name', 'LIKE', '%kurz%')
-                                      ->orWhere('duration', 15);
+                                      ->orWhere('duration_minutes', 15);
                             })
                             ->first();
 
                         if ($service) {
                             $selectionMethod = 'keyword_detection';
+                            $duration = 15; // Set duration for later use
                             Log::info('✅ TIER 2: Detected 15-min service from keywords', [
                                 'service_id' => $service->id,
                                 'service_name' => $service->name,
@@ -1455,15 +1480,16 @@ class RetellFunctionCallHandler extends Controller
                     }
                 }
 
-                // TIER 3: Fallback to default service
+                // TIER 3: Fallback to default service (with duration-based selection)
                 if (!$service) {
-                    $service = $this->serviceSelector->getDefaultService($companyId);
-                    $selectionMethod = 'default_fallback';
+                    $service = $this->serviceSelector->getDefaultService($companyId, null, $duration);
+                    $selectionMethod = $duration ? 'default_with_duration' : 'default_fallback';
 
                     Log::info('ℹ️ TIER 3: Using default service (fallback)', [
                         'company_id' => $companyId,
                         'service_id' => $service ? $service->id : null,
                         'service_name' => $service ? $service->name : null,
+                        'requested_duration' => $duration,
                         'reason' => 'no_explicit_service_id_and_no_keyword_match',
                         'priority' => 'lowest'
                     ]);
@@ -1474,7 +1500,7 @@ class RetellFunctionCallHandler extends Controller
             if (!$service) {
                 // Default to company 15 (AskProAI) if no company detected
                 $fallbackCompanyId = $companyId ?: 15;
-                $service = $this->serviceSelector->getDefaultService($fallbackCompanyId);
+                $service = $this->serviceSelector->getDefaultService($fallbackCompanyId, null, $duration);
 
                 Log::warning('⚠️ Using fallback service selection', [
                     'original_company_id' => $companyId,

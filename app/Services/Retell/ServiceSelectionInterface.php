@@ -21,15 +21,17 @@ interface ServiceSelectionInterface
      * Get default service for company and branch
      *
      * Priority order:
-     * 1. Service marked as is_default=true
-     * 2. Highest priority service
-     * 3. First service matching name patterns (Beratung, 30 Minuten)
+     * 1. Service matching requested duration (if duration provided)
+     * 2. Service marked as is_default=true
+     * 3. Highest priority service
+     * 4. First service matching name patterns (Beratung, 30 Minuten)
      *
      * @param int $companyId Company ID
      * @param string|null $branchId Branch UUID (null = company-wide)
+     * @param int|null $duration Requested duration in minutes (null = use default)
      * @return Service|null Default service or null if none found
      */
-    public function getDefaultService(int $companyId, ?string $branchId = null): ?Service;
+    public function getDefaultService(int $companyId, ?string $branchId = null, ?int $duration = null): ?Service;
 
     /**
      * Get all available services for company and branch

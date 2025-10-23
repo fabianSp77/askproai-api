@@ -29,13 +29,16 @@ class ServiceSelectionService implements ServiceSelectionInterface
     /**
      * Get default service for company and branch
      *
+     * 🔧 FIX 2025-10-23: Added duration parameter for intelligent service selection
+     *
      * @param int $companyId Company ID
      * @param string|null $branchId Branch UUID (null = company-wide)
+     * @param int|null $duration Requested duration in minutes (null = use default)
      * @return Service|null Default service or null if none found
      */
-    public function getDefaultService(int $companyId, ?string $branchId = null): ?Service
+    public function getDefaultService(int $companyId, ?string $branchId = null, ?int $duration = null): ?Service
     {
-        $cacheKey = "default_service_{$companyId}_{$branchId}";
+        $cacheKey = "default_service_{$companyId}_{$branchId}_{$duration}";
         if (isset($this->requestCache[$cacheKey])) {
             Log::debug('Service selection cache hit', ['key' => $cacheKey]);
             return $this->requestCache[$cacheKey];
@@ -54,6 +57,30 @@ class ServiceSelectionService implements ServiceSelectionInterface
                   })
                   ->orWhereNull('branch_id'); // Company-wide services
             });
+        }
+
+        // 🔧 NEW: Try to find service matching requested duration first
+        if ($duration !== null) {
+            $service = (clone $query)->where('duration_minutes', $duration)->first();
+
+            if ($service) {
+                Log::info('✅ Service selected by duration match', [
+                    'company_id' => $companyId,
+                    'requested_duration' => $duration,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'selection_method' => 'duration_match'
+                ]);
+
+                $this->requestCache[$cacheKey] = $service;
+                return $service;
+            } else {
+                Log::info('ℹ️ No service found for duration, using default', [
+                    'company_id' => $companyId,
+                    'requested_duration' => $duration,
+                    'falling_back_to' => 'default_service'
+                ]);
+            }
         }
 
         // Try to find default service first
