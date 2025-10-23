@@ -179,8 +179,21 @@ class RetellFunctionCallHandler extends Controller
             }
         }
 
+        // 🔧 FIX 2025-10-23: Strip version suffix (_v17, _v18, etc.) to support versioned function names
+        // ROOT CAUSE: Retell sends "book_appointment_v17" but match only has "book_appointment"
+        // This caused ALL bookings to fail silently - agent said "booked" but nothing was created!
+        // Reference: TESTCALL_ROOT_CAUSE_ANALYSIS_2025-10-23.md
+        $baseFunctionName = preg_replace('/_v\d+$/', '', $functionName);
+
+        Log::info('🔧 Function routing', [
+            'original_name' => $functionName,
+            'base_name' => $baseFunctionName,
+            'version_stripped' => $functionName !== $baseFunctionName,
+            'call_id' => $callId
+        ]);
+
         // Route to appropriate function handler
-        return match($functionName) {
+        return match($baseFunctionName) {
             // 🔧 FIX 2025-10-22 V133: Add check_customer to enable customer recognition
             'check_customer' => $this->checkCustomer($parameters, $callId),
             // 🔧 FIX 2025-10-18: Add parse_date handler to prevent agent from calculating dates incorrectly
@@ -368,16 +381,28 @@ class RetellFunctionCallHandler extends Controller
 
             $duration = $params['duration'] ?? 60;
             $serviceId = $params['service_id'] ?? null;
+            $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
 
             Log::info('⏱️ checkAvailability START', [
                 'call_id' => $callId,
                 'requested_date' => $requestedDate->format('Y-m-d H:i'),
+                'service_id' => $serviceId,
+                'service_name' => $serviceName,
                 'timestamp_ms' => round((microtime(true) - $startTime) * 1000, 2)
             ]);
 
             // Get service with branch validation using ServiceSelectionService
+            // Priority: service_id > service_name > default
             if ($serviceId) {
                 $service = $this->serviceSelector->findServiceById($serviceId, $companyId, $branchId);
+            } elseif ($serviceName) {
+                $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
+                Log::info('🔍 Service selection by name', [
+                    'input_name' => $serviceName,
+                    'matched_service' => $service?->name,
+                    'service_id' => $service?->id,
+                    'call_id' => $callId
+                ]);
             } else {
                 $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
             }
@@ -624,6 +649,7 @@ class RetellFunctionCallHandler extends Controller
             $requestedDate = $this->dateTimeParser->parseDateTime($params);
             $duration = $params['duration'] ?? 60;
             $serviceId = $params['service_id'] ?? null;
+            $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
             $maxAlternatives = $params['max_alternatives'] ?? 3;
 
             // FEATURE: Branch-aware service selection for alternatives
@@ -640,8 +666,11 @@ class RetellFunctionCallHandler extends Controller
             $branchId = $callContext['branch_id'];
 
             // Get service with branch validation using ServiceSelectionService
+            // Priority: service_id > service_name > default
             if ($serviceId) {
                 $service = $this->serviceSelector->findServiceById($serviceId, $companyId, $branchId);
+            } elseif ($serviceName) {
+                $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
             } else {
                 $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
             }
@@ -732,6 +761,7 @@ class RetellFunctionCallHandler extends Controller
             $customerEmail = $params['customer_email'] ?? '';
             $customerPhone = $params['customer_phone'] ?? '';
             $serviceId = $params['service_id'] ?? null;
+            $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
             $notes = $params['notes'] ?? '';
 
             // 🔧 FIX 2025-10-22 V131: Service Selection with Session Persistence
@@ -756,6 +786,9 @@ class RetellFunctionCallHandler extends Controller
             } else if ($serviceId) {
                 // Explicit service_id provided in params (rare)
                 $service = $this->serviceSelector->findServiceById($serviceId, $companyId, $branchId);
+            } elseif ($serviceName) {
+                // Service name provided - use intelligent matching
+                $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
             } else {
                 // Fallback to default service selection with branch validation
                 // SECURITY: No cross-branch bookings allowed
@@ -1274,13 +1307,26 @@ class RetellFunctionCallHandler extends Controller
      */
     private function handleUnknownFunction(string $functionName, array $params, ?string $callId)
     {
-        Log::warning('Unknown function called', [
+        // 🔧 FIX 2025-10-23: Upgrade to CRITICAL logging - unknown functions = booking failures!
+        Log::critical('🚨 UNKNOWN FUNCTION CALLED - THIS WILL FAIL!', [
             'function' => $functionName,
             'params' => $params,
-            'call_id' => $callId
+            'call_id' => $callId,
+            'registered_functions' => [
+                'check_customer', 'parse_date', 'check_availability', 'book_appointment',
+                'query_appointment', 'get_alternatives', 'list_services',
+                'cancel_appointment', 'reschedule_appointment', 'request_callback', 'find_next_available'
+            ],
+            'hint' => 'Check if function name has version suffix (e.g., _v17) or typo',
+            'impact' => 'If this is book_appointment, the booking WILL NOT BE CREATED!',
+            'reference' => 'TESTCALL_ROOT_CAUSE_ANALYSIS_2025-10-23.md'
         ]);
 
-        return $this->responseFormatter->error("Function '$functionName' is not supported");
+        return $this->responseFormatter->error(
+            "Function '$functionName' is not supported. " .
+            "Supported functions: check_availability, book_appointment, query_appointment, etc. " .
+            "Note: Version suffixes (e.g., _v17) are automatically stripped."
+        );
     }
 
     // NOTE: Old helper methods removed - now using WebhookResponseService
@@ -1326,6 +1372,7 @@ class RetellFunctionCallHandler extends Controller
             $name = $validatedData['name'];
             $dienstleistung = $validatedData['dienstleistung'];
             $email = $validatedData['email'];
+            $mitarbeiter = $validatedData['mitarbeiter'] ?? null; // PHASE 2: Staff preference
 
             // 🔧 BUG FIX (Call 776): Auto-fill customer name if "Unbekannt" or empty
             // If agent didn't provide name but customer exists, use database name
@@ -1362,11 +1409,32 @@ class RetellFunctionCallHandler extends Controller
             $callId = $args['call_id'] ?? null;
             $confirmBooking = $args['bestaetigung'] ?? $args['confirm_booking'] ?? null;
 
+            // PHASE 2: Map mitarbeiter name to staff_id
+            $preferredStaffId = null;
+            if ($mitarbeiter) {
+                $preferredStaffId = $this->mapStaffNameToId($mitarbeiter, $callId);
+
+                if ($preferredStaffId) {
+                    Log::info('📌 Staff preference detected and mapped', [
+                        'mitarbeiter_name' => $mitarbeiter,
+                        'staff_id' => $preferredStaffId,
+                        'call_id' => $callId
+                    ]);
+                } else {
+                    Log::warning('⚠️ Staff name provided but could not be mapped', [
+                        'mitarbeiter_name' => $mitarbeiter,
+                        'call_id' => $callId
+                    ]);
+                }
+            }
+
             Log::info('📅 Collect appointment data extracted', [
                 'datum' => $datum,
                 'uhrzeit' => $uhrzeit,
                 'name' => $name,
                 'dienstleistung' => $dienstleistung,
+                'mitarbeiter' => $mitarbeiter,
+                'preferred_staff_id' => $preferredStaffId,
                 'call_id' => $callId,
                 'bestaetigung' => $confirmBooking
             ]);
@@ -2105,7 +2173,9 @@ class RetellFunctionCallHandler extends Controller
                                                 'customer_name' => $name,
                                                 'date' => $datum,
                                                 'time' => $uhrzeit,
-                                                'duration_minutes' => $service->duration ?? 60
+                                                'duration_minutes' => $service->duration ?? 60,
+                                                // PHASE 2: Staff preference for composite services
+                                                'preferred_staff_id' => $preferredStaffId
                                             ],
                                             calcomBookingId: $booking['uid'] ?? null,
                                             call: $call,
@@ -2505,20 +2575,29 @@ class RetellFunctionCallHandler extends Controller
 
             // Get company/service info
             $companyId = 15; // Default AskProAI
+            $branchId = null;
             if ($callId) {
                 $call = $this->callLifecycle->findCallByRetellId($callId);
                 if ($call) {
                     if ($call->company_id) {
                         $companyId = $call->company_id;
+                        $branchId = $call->branch_id;
                     } elseif ($call->phone_number_id) {
                         $phoneNumber = \App\Models\PhoneNumber::find($call->phone_number_id);
                         $companyId = $phoneNumber ? $phoneNumber->company_id : $companyId;
+                        $branchId = $phoneNumber ? $phoneNumber->branch_id : null;
                     }
                 }
             }
 
             // Get appropriate service using ServiceSelectionService
-            $service = $this->serviceSelector->getDefaultService($companyId);
+            // Check if service name was provided in args
+            $serviceName = $args['service'] ?? $args['dienstleistung'] ?? null;
+            if ($serviceName) {
+                $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
+            } else {
+                $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+            }
 
             if (!$service) {
                 return response()->json([
@@ -2695,6 +2774,78 @@ class RetellFunctionCallHandler extends Controller
     private function ensureCustomerFromCall(Call $call, string $name, ?string $email): Customer
     {
         return $this->customerResolver->ensureCustomerFromCall($call, $name, $email);
+    }
+
+    /**
+     * PHASE 2: Map staff name (from voice) to staff_id
+     *
+     * Maps natural language staff names to database staff IDs for Friseur 1 Agent
+     * Supports partial matching and common variations (e.g., "Fabian" → "Fabian Spitzer")
+     *
+     * @param string $staffName The staff member name from voice (e.g., "Fabian", "bei Emma")
+     * @param string|null $callId Optional call ID for logging context
+     * @return string|null The staff_id if found, null otherwise
+     */
+    private function mapStaffNameToId(string $staffName, ?string $callId = null): ?string
+    {
+        // Clean the input - remove common prefixes from natural speech
+        $cleaned = trim($staffName);
+        $cleaned = preg_replace('/^(bei|mit|von|bei der|beim)\s+/i', '', $cleaned);
+        $cleaned = strtolower(trim($cleaned));
+
+        // Friseur 1 (Agent: agent_f1ce85d06a84afb989dfbb16a9) staff mapping
+        $staffMapping = [
+            'emma' => '010be4a7-3468-4243-bb0a-2223b8e5878c',
+            'emma williams' => '010be4a7-3468-4243-bb0a-2223b8e5878c',
+
+            'fabian' => '9f47fda1-977c-47aa-a87a-0e8cbeaeb119',
+            'fabian spitzer' => '9f47fda1-977c-47aa-a87a-0e8cbeaeb119',
+
+            'david' => 'c4a19739-4824-46b2-8a50-72b9ca23e013',
+            'david martinez' => 'c4a19739-4824-46b2-8a50-72b9ca23e013',
+
+            'michael' => 'ce3d932c-52d1-4c15-a7b9-686a29babf0a',
+            'michael chen' => 'ce3d932c-52d1-4c15-a7b9-686a29babf0a',
+
+            'sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
+            'sarah johnson' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
+            'dr. sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
+            'dr sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
+        ];
+
+        // Try exact match first
+        if (isset($staffMapping[$cleaned])) {
+            Log::info('✅ Staff name matched exactly', [
+                'input' => $staffName,
+                'cleaned' => $cleaned,
+                'staff_id' => $staffMapping[$cleaned],
+                'call_id' => $callId
+            ]);
+            return $staffMapping[$cleaned];
+        }
+
+        // Try partial match (for cases like "Fabian" when full name is "Fabian Spitzer")
+        foreach ($staffMapping as $key => $staffId) {
+            if (str_contains($key, $cleaned) || str_contains($cleaned, $key)) {
+                Log::info('✅ Staff name matched partially', [
+                    'input' => $staffName,
+                    'cleaned' => $cleaned,
+                    'matched_key' => $key,
+                    'staff_id' => $staffId,
+                    'call_id' => $callId
+                ]);
+                return $staffId;
+            }
+        }
+
+        Log::warning('❌ Staff name could not be mapped', [
+            'input' => $staffName,
+            'cleaned' => $cleaned,
+            'call_id' => $callId,
+            'available_names' => array_keys($staffMapping)
+        ]);
+
+        return null;
     }
 
     /**
@@ -2972,7 +3123,14 @@ class RetellFunctionCallHandler extends Controller
             // 6. Check availability for new slot
             $companyId = $callContext['company_id'];
             $branchId = $callContext['branch_id'];
-            $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+
+            // Try to use service name if provided, otherwise use default
+            $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
+            if ($serviceName) {
+                $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
+            } else {
+                $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+            }
 
             if (!$service || !$service->calcom_event_type_id) {
                 return response()->json([
