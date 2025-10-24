@@ -11,6 +11,7 @@ use App\Services\Retell\ServiceSelectionService;
 use App\Services\Retell\ServiceNameExtractor;
 use App\Services\Retell\WebhookResponseService;
 use App\Services\Retell\CallLifecycleService;
+use App\Services\Retell\CallTrackingService;
 use App\Services\Retell\AppointmentCreationService;
 use App\Services\Retell\CustomerDataValidator;
 use App\Services\Retell\AppointmentCustomerResolver;
@@ -35,6 +36,7 @@ class RetellFunctionCallHandler extends Controller
     private ServiceNameExtractor $serviceExtractor;
     private WebhookResponseService $responseFormatter;
     private CallLifecycleService $callLifecycle;
+    private CallTrackingService $callTracking;
     private CustomerDataValidator $dataValidator;
     private AppointmentCustomerResolver $customerResolver;
     private DateTimeParser $dateTimeParser;
@@ -45,6 +47,7 @@ class RetellFunctionCallHandler extends Controller
         ServiceNameExtractor $serviceExtractor,
         WebhookResponseService $responseFormatter,
         CallLifecycleService $callLifecycle,
+        CallTrackingService $callTracking,
         CustomerDataValidator $dataValidator,
         AppointmentCustomerResolver $customerResolver,
         DateTimeParser $dateTimeParser
@@ -53,6 +56,7 @@ class RetellFunctionCallHandler extends Controller
         $this->serviceExtractor = $serviceExtractor;
         $this->responseFormatter = $responseFormatter;
         $this->callLifecycle = $callLifecycle;
+        $this->callTracking = $callTracking;
         $this->dataValidator = $dataValidator;
         $this->customerResolver = $customerResolver;
         $this->dateTimeParser = $dateTimeParser;
@@ -100,16 +104,129 @@ class RetellFunctionCallHandler extends Controller
             }
         }
 
-        $call = $this->callLifecycle->getCallContext($callId);
+        // 🔧 FIX: Race Condition - Retry with exponential backoff
+        // The call session might not be committed yet when function is called
+        $maxAttempts = 5;
+        $call = null;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $call = $this->callLifecycle->getCallContext($callId);
+
+            if ($call) {
+                if ($attempt > 1) {
+                    Log::info('✅ getCallContext succeeded on attempt ' . $attempt, [
+                        'call_id' => $callId,
+                        'total_attempts' => $attempt
+                    ]);
+                }
+                break;
+            }
+
+            // Not found, wait and retry
+            if ($attempt < $maxAttempts) {
+                $delayMs = 50 * $attempt; // 50ms, 100ms, 150ms, 200ms, 250ms
+                Log::info('⏳ getCallContext retry ' . $attempt . '/' . $maxAttempts, [
+                    'call_id' => $callId,
+                    'delay_ms' => $delayMs
+                ]);
+                usleep($delayMs * 1000); // Convert to microseconds
+            }
+        }
 
         if (!$call) {
+            Log::error('❌ getCallContext failed after ' . $maxAttempts . ' attempts', [
+                'call_id' => $callId
+            ]);
+            return null;
+        }
+
+        // 🔧 RACE CONDITION FIX (2025-10-24): Wait for company_id/branch_id enrichment
+        // The Call record exists but may not yet have company_id/branch_id set
+        // This happens when Retell webhook fires before enrichment completes
+        if (!$call->company_id || !$call->branch_id) {
+            Log::warning('⚠️ getCallContext: company_id/branch_id not set, waiting for enrichment...', [
+                'call_id' => $call->id,
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'from_number' => $call->from_number
+            ]);
+
+            // Wait up to 1.5 seconds for enrichment to complete
+            for ($waitAttempt = 1; $waitAttempt <= 3; $waitAttempt++) {
+                usleep(500000); // 500ms between checks
+
+                $call = $call->fresh(); // Reload from database
+
+                if ($call->company_id && $call->branch_id) {
+                    Log::info('✅ getCallContext: Enrichment completed after wait', [
+                        'call_id' => $call->id,
+                        'wait_attempt' => $waitAttempt,
+                        'company_id' => $call->company_id,
+                        'branch_id' => $call->branch_id
+                    ]);
+                    break;
+                }
+
+                Log::info('⏳ getCallContext enrichment wait ' . $waitAttempt . '/3', [
+                    'call_id' => $call->id
+                ]);
+            }
+
+            // If STILL NULL after waiting, we have a real problem
+            if (!$call->company_id || !$call->branch_id) {
+                Log::error('❌ getCallContext: Enrichment failed after waiting', [
+                    'call_id' => $call->id,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id,
+                    'from_number' => $call->from_number,
+                    'suggestion' => 'Check webhook processing order and database transactions'
+                ]);
+                return null;
+            }
+        }
+
+        // 🔧 CRITICAL FIX (2025-10-24): Handle NULL phoneNumber (anonymous callers)
+        // For anonymous callers or when phone not in database, use direct Call fields
+        // instead of accessing potentially NULL phoneNumber relationship
+        $phoneNumberId = null;
+        $companyId = $call->company_id;      // Use direct field as fallback
+        $branchId = $call->branch_id;        // Use direct field as fallback
+
+        // Only use phoneNumber relationship if it exists (non-anonymous callers)
+        if ($call->phoneNumber) {
+            $phoneNumberId = $call->phoneNumber->id;
+            $companyId = $call->phoneNumber->company_id;
+            $branchId = $call->phoneNumber->branch_id;
+
+            Log::debug('✅ getCallContext: Using phoneNumber relationship', [
+                'call_id' => $call->id,
+                'phone_number_id' => $phoneNumberId,
+                'from_number' => $call->from_number
+            ]);
+        } else {
+            Log::info('⚠️ getCallContext: Using direct Call fields (NULL phoneNumber - anonymous caller)', [
+                'call_id' => $call->id,
+                'from_number' => $call->from_number,
+                'to_number' => $call->to_number,
+                'company_id' => $companyId,
+                'branch_id' => $branchId
+            ]);
+        }
+
+        // Final validation: ensure we have valid company_id
+        if (!$companyId || !$branchId) {
+            Log::error('❌ getCallContext: Final validation failed - NULL company/branch', [
+                'call_id' => $call->id,
+                'company_id' => $companyId,
+                'branch_id' => $branchId
+            ]);
             return null;
         }
 
         return [
-            'company_id' => $call->phoneNumber->company_id,
-            'branch_id' => $call->phoneNumber->branch_id,
-            'phone_number_id' => $call->phoneNumber->id,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'phone_number_id' => $phoneNumberId,
             'call_id' => $call->id,
         ];
     }
@@ -192,8 +309,73 @@ class RetellFunctionCallHandler extends Controller
             'call_id' => $callId
         ]);
 
+        // 🎯 TRACK FUNCTION CALL (USER'S #1 PRIORITY FEATURE)
+        // Start tracking EVERY function call with input/output/duration/errors
+        $trace = null;
+        if ($callId && $callId !== 'None') {
+            try {
+                // Get or create call session (auto-creates on first function call)
+                $existingSession = \App\Models\RetellCallSession::where('call_id', $callId)->first();
+
+                if (!$existingSession) {
+                    // 🔧 FIX (2025-10-23): Robuste Auto-Creation
+                    // Problem: getCallContext() kann NULL zurückgeben wenn Call noch nicht in DB
+                    // Lösung: Fallback auf default company_id wenn Context nicht verfügbar
+
+                    $callContext = $this->getCallContext($callId);
+
+                    $companyId = $callContext['company_id'] ?? null;
+                    $customerId = $callContext['customer_id'] ?? null;
+
+                    // Fallback: Get company_id from agent_id if context unavailable
+                    if (!$companyId && isset($data['agent_id'])) {
+                        $agent = \App\Models\RetellAgent::where('agent_id', $data['agent_id'])->first();
+                        if ($agent) {
+                            $companyId = $agent->company_id;
+                            Log::info('📌 Using company_id from agent', [
+                                'agent_id' => $data['agent_id'],
+                                'company_id' => $companyId
+                            ]);
+                        }
+                    }
+
+                    // Auto-create session on first function call
+                    $existingSession = $this->callTracking->startCallSession([
+                        'call_id' => $callId,
+                        'company_id' => $companyId,
+                        'customer_id' => $customerId,
+                        'agent_id' => $data['agent_id'] ?? null,
+                    ]);
+
+                    Log::info('📞 Auto-created call session on first function call', [
+                        'call_id' => $callId,
+                        'session_id' => $existingSession->id,
+                        'first_function' => $functionName,
+                        'company_id' => $companyId,
+                        'context_available' => $callContext ? 'yes' : 'no (used fallback)'
+                    ]);
+                }
+
+                // Track the function call
+                $trace = $this->callTracking->trackFunctionCall(
+                    callId: $callId,
+                    functionName: $functionName, // Use original name with version
+                    arguments: $parameters
+                );
+            } catch (\Exception $e) {
+                // Don't fail the function call if tracking fails
+                Log::error('⚠️ Function tracking failed (non-blocking)', [
+                    'error' => $e->getMessage(),
+                    'call_id' => $callId,
+                    'function' => $functionName,
+                    'stack_trace' => $e->getTraceAsString()
+                ]);
+            }
+        }
+
         // Route to appropriate function handler
-        return match($baseFunctionName) {
+        try {
+            $result = match($baseFunctionName) {
             // 🔧 FIX 2025-10-22 V133: Add check_customer to enable customer recognition
             'check_customer' => $this->checkCustomer($parameters, $callId),
             // 🔧 FIX 2025-10-18: Add parse_date handler to prevent agent from calculating dates incorrectly
@@ -209,8 +391,65 @@ class RetellFunctionCallHandler extends Controller
             'reschedule_appointment' => $this->handleRescheduleAttempt($parameters, $callId),
             'request_callback' => $this->handleCallbackRequest($parameters, $callId),
             'find_next_available' => $this->handleFindNextAvailable($parameters, $callId),
+            // 🔧 FIX 2025-10-24: Add initialize_call to support V39 flow Function Node
+            'initialize_call' => $this->initializeCall($parameters, $callId),
             default => $this->handleUnknownFunction($functionName, $parameters, $callId)
-        };
+            };
+
+            // 🎯 RECORD FUNCTION SUCCESS
+            if ($trace) {
+                try {
+                    $responseData = $result instanceof \Illuminate\Http\JsonResponse
+                        ? $result->getData(true)
+                        : (is_array($result) ? $result : ['response' => $result]);
+
+                    $this->callTracking->recordFunctionResponse(
+                        traceId: $trace->id,
+                        response: $responseData,
+                        status: 'success'
+                    );
+                } catch (\Exception $e) {
+                    Log::error('⚠️ Failed to record function success (non-blocking)', [
+                        'error' => $e->getMessage(),
+                        'trace_id' => $trace->id
+                    ]);
+                }
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            // 🎯 RECORD FUNCTION ERROR
+            if ($trace) {
+                try {
+                    $this->callTracking->recordFunctionResponse(
+                        traceId: $trace->id,
+                        response: [],
+                        status: 'error',
+                        error: [
+                            'code' => 'function_execution_failed',
+                            'message' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                            'booking_failed' => $baseFunctionName === 'book_appointment',
+                        ]
+                    );
+                } catch (\Exception $trackingError) {
+                    Log::error('⚠️ Failed to record function error (non-blocking)', [
+                        'error' => $trackingError->getMessage(),
+                        'trace_id' => $trace->id
+                    ]);
+                }
+            }
+
+            // Log and re-throw the original exception
+            Log::error('❌ Function execution failed', [
+                'function' => $functionName,
+                'call_id' => $callId,
+                'error' => $e->getMessage()
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -2010,6 +2249,21 @@ class RetellFunctionCallHandler extends Controller
                 // - confirmBooking = false → CHECK-ONLY (explicit check only)
                 $shouldBook = $exactTimeAvailable && ($confirmBooking === true);
 
+                // 🐛 DEBUG: CRITICAL BUG INVESTIGATION (2025-10-23)
+                // Tracking why book_appointment_v17 enters CHECK-ONLY branch instead of BOOKING
+                Log::info('🎯 BOOKING DECISION DEBUG', [
+                    'shouldBook' => $shouldBook,
+                    'exactTimeAvailable' => $exactTimeAvailable,
+                    'confirmBooking' => $confirmBooking,
+                    'confirmBooking_type' => gettype($confirmBooking),
+                    'confirmBooking_strict_true' => $confirmBooking === true,
+                    'confirmBooking_loose_true' => $confirmBooking == true,
+                    'confirmBooking_value_dump' => var_export($confirmBooking, true),
+                    'call_id' => $callId,
+                    'args_bestaetigung' => $args['bestaetigung'] ?? 'NOT_SET',
+                    'request_bestaetigung' => $request->input('bestaetigung', 'NOT_SET'),
+                ]);
+
                 // Track prompt violations for monitoring
                 if ($confirmBooking === null && $exactTimeAvailable) {
                     Log::warning('⚠️ PROMPT-VIOLATION: Missing bestaetigung parameter - defaulting to CHECK-ONLY', [
@@ -2022,6 +2276,10 @@ class RetellFunctionCallHandler extends Controller
                 }
 
                 if ($shouldBook) {
+                    Log::info('✅ ENTERING BOOKING BLOCK - Will create appointment', [
+                        'call_id' => $callId,
+                        'requested_time' => $appointmentDate->format('Y-m-d H:i')
+                    ]);
                     // Book the exact requested time (V84: ONLY with explicit confirmation)
                     Log::info('📅 Booking exact requested time (V84: 2-step confirmation)', [
                         'requested' => $appointmentDate->format('H:i'),
@@ -2387,11 +2645,25 @@ class RetellFunctionCallHandler extends Controller
                 // 🔧 V84 FIX: Handle CHECK-ONLY mode (STEP 1 of 2-step process)
                 // If time IS available BUT no confirmation (STEP 1), ask user for confirmation
                 elseif ($exactTimeAvailable && ($confirmBooking === false || $confirmBooking === null)) {
-                    Log::info('✅ V84: STEP 1 - Time available, requesting user confirmation', [
-                        'requested_time' => $appointmentDate->format('Y-m-d H:i'),
-                        'bestaetigung' => $confirmBooking,
-                        'next_step' => 'Wait for user confirmation, then call with bestaetigung: true'
-                    ]);
+                    // 🐛 DEBUG: Detect if we're incorrectly entering CHECK-ONLY from book_appointment_v17
+                    if ($confirmBooking === null) {
+                        Log::error('⚠️ CRITICAL: ENTERING CHECK-ONLY BLOCK WITH confirmBooking=NULL', [
+                            'call_id' => $callId,
+                            'exactTimeAvailable' => $exactTimeAvailable,
+                            'confirmBooking' => $confirmBooking,
+                            'confirmBooking_type' => gettype($confirmBooking),
+                            'reason' => 'This should NOT happen when book_appointment_v17 is called!',
+                            'expected_bestaetigung' => 'true (boolean)',
+                            'args_bestaetigung' => $args['bestaetigung'] ?? 'NOT_SET',
+                            'request_bestaetigung' => $request->input('bestaetigung', 'NOT_SET'),
+                        ]);
+                    } else {
+                        Log::info('✅ V84: STEP 1 - Time available, requesting user confirmation', [
+                            'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                            'bestaetigung' => $confirmBooking,
+                            'next_step' => 'Wait for user confirmation, then call with bestaetigung: true'
+                        ]);
+                    }
 
                     // Format German date/time for natural language
                     $germanDate = $appointmentDate->locale('de')->translatedFormat('l, d. F');
@@ -4211,16 +4483,32 @@ class RetellFunctionCallHandler extends Controller
      * Used by explicit function nodes to ensure reliable tool calling
      *
      * POST /api/retell/v17/check-availability
+     *
+     * 🐛 FIX (2025-10-23): Properly inject bestaetigung into args array
+     * Matching fix for bookAppointmentV17 - ensures consistency
      */
     public function checkAvailabilityV17(CollectAppointmentRequest $request)
     {
         Log::info('🔍 V17: Check Availability (bestaetigung=false)', [
             'call_id' => $request->input('call.call_id'),
-            'params' => $request->except(['call'])
+            'params' => $request->except(['call']),
+            'original_args_bestaetigung' => $request->input('args.bestaetigung', 'NOT_SET')
         ]);
 
-        // Force bestaetigung=false
-        $request->merge(['bestaetigung' => false]);
+        // 🔧 FIX: Inject bestaetigung into args array (not just top-level)
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['bestaetigung'] = false;  // Type-safe boolean false
+        $data['args'] = $args;
+
+        // Replace request data with modified args
+        $request->replace($data);
+
+        Log::info('🔧 V17: Injected bestaetigung=false into args', [
+            'args_bestaetigung' => $request->input('args.bestaetigung'),
+            'args_bestaetigung_type' => gettype($request->input('args.bestaetigung')),
+            'verification' => $request->input('args.bestaetigung') === false ? 'CORRECT' : 'FAILED'
+        ]);
 
         // Call the main collectAppointment method
         return $this->collectAppointment($request);
@@ -4233,16 +4521,34 @@ class RetellFunctionCallHandler extends Controller
      * Used by explicit function nodes to ensure reliable tool calling
      *
      * POST /api/retell/v17/book-appointment
+     *
+     * 🐛 FIX (2025-10-23): Properly inject bestaetigung into args array
+     * Previous bug: merge(['bestaetigung' => true]) only set top-level, but
+     * collectAppointment extracts from $args['bestaetigung'], causing NULL value
      */
     public function bookAppointmentV17(CollectAppointmentRequest $request)
     {
         Log::info('✅ V17: Book Appointment (bestaetigung=true)', [
             'call_id' => $request->input('call.call_id'),
-            'params' => $request->except(['call'])
+            'params' => $request->except(['call']),
+            'original_args_bestaetigung' => $request->input('args.bestaetigung', 'NOT_SET')
         ]);
 
-        // Force bestaetigung=true
-        $request->merge(['bestaetigung' => true]);
+        // 🔧 FIX: Inject bestaetigung into args array (not just top-level)
+        // collectAppointment extracts: $confirmBooking = $args['bestaetigung'] ?? null;
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['bestaetigung'] = true;  // Type-safe boolean true
+        $data['args'] = $args;
+
+        // Replace request data with modified args
+        $request->replace($data);
+
+        Log::info('🔧 V17: Injected bestaetigung=true into args', [
+            'args_bestaetigung' => $request->input('args.bestaetigung'),
+            'args_bestaetigung_type' => gettype($request->input('args.bestaetigung')),
+            'verification' => $request->input('args.bestaetigung') === true ? 'CORRECT' : 'FAILED'
+        ]);
 
         // Call the main collectAppointment method
         return $this->collectAppointment($request);
@@ -4353,5 +4659,124 @@ class RetellFunctionCallHandler extends Controller
 
         $serviceList = implode(', ', $serviceNames);
         return "Wir bieten folgende Dienstleistungen an: {$serviceList} und {$lastService}.";
+    }
+
+    /**
+     * Initialize call - Get customer info + current time + policies
+     *
+     * 🔧 FIX 2025-10-24: Added to support V39 flow Function Node
+     * Previously this was NOT a callable function, but V39 has it as Function Node
+     *
+     * This function is called at the very start of each call to:
+     * - Recognize returning customers by phone number
+     * - Provide current date/time in Berlin timezone
+     * - Load company-specific policies
+     * - Set up initial greeting message
+     *
+     * @param array $parameters Empty array (no parameters needed)
+     * @param string|null $callId Retell call ID (nullable like all other function handlers)
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function initializeCall(array $parameters, ?string $callId): \Illuminate\Http\JsonResponse
+    {
+        try {
+            Log::info('🚀 initialize_call called', [
+                'call_id' => $callId,
+                'parameters' => $parameters
+            ]);
+
+            // Get call context (company_id, branch_id)
+            $context = $this->getCallContext($callId);
+
+            // 🔧 FIX 2025-10-24: STRICT validation - ensure company_id exists (not just array exists)
+            // Race condition: Call created with NULL company_id, then enriched asynchronously
+            // Array exists but contains NULL values - must check company_id explicitly
+            if (!$context || !$context['company_id']) {
+                Log::error('❌ initialize_call: Company ID missing or NULL', [
+                    'call_id' => $callId,
+                    'context' => $context,
+                    'issue' => 'Call not yet enriched with company_id (race condition)',
+                    'suggestion' => 'Retell calling too early, before company enrichment'
+                ]);
+
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'Call context incomplete - company not resolved',
+                    'message' => 'Guten Tag! Wie kann ich Ihnen helfen?'
+                ]);
+            }
+
+            // Get customer info (if phone number available)
+            $customerData = null;
+            $call = \App\Models\Call::where('retell_call_id', $callId)->first();
+
+            if ($call && $call->from_number && $call->from_number !== 'anonymous') {
+                $customer = \App\Models\Customer::where('company_id', $context['company_id'])
+                    ->where('phone', $call->from_number)
+                    ->first();
+
+                if ($customer) {
+                    $customerData = [
+                        'customer_id' => $customer->id,
+                        'name' => $customer->name,
+                        'phone' => $customer->phone,
+                        'is_known' => true,
+                        'message' => "Willkommen zurück, " . $customer->name . "!"
+                    ];
+
+                    Log::info('✅ initialize_call: Customer recognized', [
+                        'call_id' => $callId,
+                        'customer_id' => $customer->id,
+                        'customer_name' => $customer->name
+                    ]);
+                }
+            }
+
+            // Get current time in Berlin timezone
+            $berlinTime = \Carbon\Carbon::now('Europe/Berlin');
+
+            // Get policies (if any)
+            $policies = \App\Models\PolicyConfiguration::where('company_id', $context['company_id'])
+                ->where('branch_id', $context['branch_id'])
+                ->where('is_active', true)
+                ->get()
+                ->map(function($policy) {
+                    return [
+                        'type' => $policy->policy_type,
+                        'value' => $policy->policy_value,
+                        'description' => $policy->description
+                    ];
+                });
+
+            Log::info('✅ initialize_call: Success', [
+                'call_id' => $callId,
+                'customer_known' => $customerData !== null,
+                'policies_loaded' => $policies->count(),
+                'current_time' => $berlinTime->format('H:i')
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => true,
+                'current_time' => $berlinTime->toIso8601String(),
+                'current_date' => $berlinTime->format('d.m.Y'),
+                'current_weekday' => $berlinTime->locale('de')->dayName,
+                'customer' => $customerData,
+                'policies' => $policies->toArray(),
+                'message' => $customerData ? $customerData['message'] : 'Guten Tag! Wie kann ich Ihnen helfen?'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ initialize_call failed', [
+                'error' => $e->getMessage(),
+                'call_id' => $callId,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => false,
+                'error' => 'Initialization failed: ' . $e->getMessage(),
+                'message' => 'Guten Tag! Wie kann ich Ihnen helfen?'
+            ]);
+        }
     }
 }
