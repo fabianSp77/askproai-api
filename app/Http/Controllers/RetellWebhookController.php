@@ -26,6 +26,7 @@ use App\Services\Retell\PhoneNumberResolutionService;
 use App\Services\Retell\ServiceSelectionService;
 use App\Services\Retell\WebhookResponseService;
 use App\Services\Retell\CallLifecycleService;
+use App\Services\Retell\CallTrackingService;
 use App\Services\Retell\AppointmentCreationService;
 use App\Services\Retell\BookingDetailsExtractor;
 use App\Traits\LogsWebhookEvents;
@@ -39,6 +40,7 @@ class RetellWebhookController extends Controller
     private ServiceSelectionService $serviceSelector;
     private WebhookResponseService $responseFormatter;
     private CallLifecycleService $callLifecycle;
+    private CallTrackingService $callTracking;
     private AppointmentCreationService $appointmentCreator;
     private BookingDetailsExtractor $bookingExtractor;
 
@@ -47,6 +49,7 @@ class RetellWebhookController extends Controller
         ServiceSelectionService $serviceSelector,
         WebhookResponseService $responseFormatter,
         CallLifecycleService $callLifecycle,
+        CallTrackingService $callTracking,
         AppointmentCreationService $appointmentCreator,
         BookingDetailsExtractor $bookingExtractor
     ) {
@@ -54,6 +57,7 @@ class RetellWebhookController extends Controller
         $this->serviceSelector = $serviceSelector;
         $this->responseFormatter = $responseFormatter;
         $this->callLifecycle = $callLifecycle;
+        $this->callTracking = $callTracking;
         $this->appointmentCreator = $appointmentCreator;
         $this->bookingExtractor = $bookingExtractor;
     }
@@ -236,12 +240,40 @@ class RetellWebhookController extends Controller
 
         // Handle call_started event (call has begun)
         if ($event === 'call_started') {
-            return $this->handleCallStarted($data);
+            try {
+                $response = $this->handleCallStarted($data);
+
+                // ✅ Mark webhook as processed
+                if ($webhookEvent) {
+                    $this->markWebhookProcessed($webhookEvent, null, ['event' => 'call_started', 'call_id' => $callData['call_id'] ?? null]);
+                }
+
+                return $response;
+            } catch (\Exception $e) {
+                if ($webhookEvent) {
+                    $this->markWebhookFailed($webhookEvent, $e->getMessage());
+                }
+                throw $e;
+            }
         }
 
         // Handle call_ended event (call finished but not yet analyzed)
         if ($event === 'call_ended') {
-            return $this->handleCallEnded($data);
+            try {
+                $response = $this->handleCallEnded($data);
+
+                // ✅ Mark webhook as processed
+                if ($webhookEvent) {
+                    $this->markWebhookProcessed($webhookEvent, null, ['event' => 'call_ended', 'call_id' => $callData['call_id'] ?? null]);
+                }
+
+                return $response;
+            } catch (\Exception $e) {
+                if ($webhookEvent) {
+                    $this->markWebhookFailed($webhookEvent, $e->getMessage());
+                }
+                throw $e;
+            }
         }
 
         // Handle call_analyzed event (final analysis complete with transcript)
@@ -350,9 +382,23 @@ class RetellWebhookController extends Controller
                         'notes' => $call->notes,
                     ]);
 
+                    // ✅ Mark webhook as processed
+                    if ($webhookEvent) {
+                        $this->markWebhookProcessed($webhookEvent, $call, ['event' => 'call_analyzed']);
+                    }
+
                     return $this->responseFormatter->webhookSuccess('call_analyzed', ['call_id' => $call->id]);
                 }
+
+                // ✅ Mark webhook as processed even if no call found
+                if ($webhookEvent) {
+                    $this->markWebhookProcessed($webhookEvent, null, ['event' => 'call_analyzed', 'note' => 'no_call_found']);
+                }
+
             } catch (\Exception $e) {
+                if ($webhookEvent) {
+                    $this->markWebhookFailed($webhookEvent, $e->getMessage());
+                }
                 return $this->responseFormatter->serverError($e, ['call_id' => $callData['call_id'] ?? null]);
             }
         }
@@ -452,6 +498,32 @@ class RetellWebhookController extends Controller
                 } else {
                     $call = $existingCall;
                 }
+
+                // 🔥 FIX: Ensure RetellCallSession exists for admin panel visibility
+                try {
+                    $this->callTracking->startCallSession([
+                        'call_id' => $call->retell_call_id,
+                        'company_id' => $call->company_id,
+                        'customer_id' => $call->customer_id,
+                        'branch_id' => $call->branch_id,
+                        'phone_number' => $call->branch?->phone_number,
+                        'branch_name' => $call->branch?->name,
+                        'agent_id' => $callData['agent_id'] ?? null,
+                        'agent_version' => $callData['agent_version'] ?? null,
+                        'conversation_flow_id' => $callData['conversation_flow_id'] ?? null,
+                    ]);
+
+                    Log::info('✅ Created RetellCallSession for existing call', [
+                        'retell_call_id' => $call->retell_call_id,
+                        'branch_id' => $call->branch_id,
+                        'phone_number' => $call->branch?->phone_number,
+                    ]);
+                } catch (\Exception $e) {
+                    // Log but don't fail - might already exist
+                    Log::debug('RetellCallSession might already exist', [
+                        'retell_call_id' => $call->retell_call_id,
+                    ]);
+                }
             } else {
                 // Resolve phone number using PhoneNumberResolutionService
                 $phoneContext = null;
@@ -491,6 +563,33 @@ class RetellWebhookController extends Controller
                     'company_id' => $call->company_id,
                     'branch_id' => $call->branch_id,
                 ]);
+
+                // 🔥 FIX: Create RetellCallSession for admin panel visibility
+                try {
+                    $this->callTracking->startCallSession([
+                        'call_id' => $call->retell_call_id,
+                        'company_id' => $call->company_id,
+                        'customer_id' => $call->customer_id,
+                        'branch_id' => $call->branch_id,
+                        'phone_number' => $call->branch?->phone_number,
+                        'branch_name' => $call->branch?->name,
+                        'agent_id' => $callData['agent_id'] ?? null,
+                        'agent_version' => $callData['agent_version'] ?? null,
+                        'conversation_flow_id' => $callData['conversation_flow_id'] ?? null,
+                    ]);
+
+                    Log::info('✅ Created RetellCallSession for admin panel', [
+                        'retell_call_id' => $call->retell_call_id,
+                        'branch_id' => $call->branch_id,
+                        'phone_number' => $call->branch?->phone_number,
+                    ]);
+                } catch (\Exception $e) {
+                    // Log but don't fail the webhook
+                    Log::warning('⚠️ Failed to create RetellCallSession', [
+                        'error' => $e->getMessage(),
+                        'retell_call_id' => $call->retell_call_id,
+                    ]);
+                }
             }
 
             // Direkt Verfügbarkeiten mitgeben - KEIN Function Call nötig!

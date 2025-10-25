@@ -53,6 +53,9 @@ class CollectAppointmentRequest extends FormRequest
             'args.bestaetigung' => ['nullable', 'boolean'],
             'args.confirm_booking' => ['nullable', 'boolean'],
             'args.duration' => ['nullable', 'integer', 'min:15', 'max:480'],
+            // PHASE 2: Staff preference support
+            'args.mitarbeiter' => ['nullable', 'string', 'max:150'],
+            'args.staff' => ['nullable', 'string', 'max:150'],
         ];
     }
 
@@ -73,6 +76,8 @@ class CollectAppointmentRequest extends FormRequest
             'args.duration.integer' => 'Duration must be a number',
             'args.duration.min' => 'Duration must be at least 15 minutes',
             'args.duration.max' => 'Duration cannot exceed 8 hours',
+            'args.mitarbeiter.max' => 'Mitarbeiter-Name ist zu lang (max 150 Zeichen)',
+            'args.staff.max' => 'Staff name is too long (max 150 chars)',
         ];
     }
 
@@ -92,6 +97,8 @@ class CollectAppointmentRequest extends FormRequest
             'email' => $this->sanitizeEmail($args['email'] ?? null),
             'bestaetigung' => $args['bestaetigung'] ?? $args['confirm_booking'] ?? null,
             'duration' => $args['duration'] ?? 60,
+            // PHASE 2: Staff preference support
+            'mitarbeiter' => $this->sanitize($args['mitarbeiter'] ?? $args['staff'] ?? null),
         ];
     }
 
