@@ -675,9 +675,49 @@ class ServiceResource extends Resource
                     ->searchable()
                     ->weight('bold')
                     ->color(fn ($record) => $record->assignment_method ? 'primary' : 'danger')
-                    ->description(fn ($record) => $record->assignment_method
-                        ? "Method: {$record->assignment_method}"
-                        : 'Not assigned'),
+                    ->description(function ($record) {
+                        $parts = [];
+
+                        // Show assignment method
+                        if ($record->assignment_method) {
+                            $parts[] = "Method: {$record->assignment_method}";
+                        } else {
+                            $parts[] = 'Not assigned';
+                        }
+
+                        // Show Team ID if exists
+                        if ($record->company?->calcom_team_id) {
+                            $parts[] = "Team ID: {$record->company->calcom_team_id}";
+                        }
+
+                        return implode(' | ', $parts);
+                    })
+                    ->tooltip(function ($record) {
+                        if (!$record->company) return null;
+
+                        $parts = [
+                            "ID: {$record->company_id}",
+                        ];
+
+                        if ($record->company->calcom_team_id) {
+                            $parts[] = "Cal.com Team: {$record->company->calcom_team_id}";
+                        }
+
+                        // Check mapping consistency
+                        if ($record->calcom_event_type_id) {
+                            $mapping = \Illuminate\Support\Facades\DB::table('calcom_event_mappings')
+                                ->where('calcom_event_type_id', $record->calcom_event_type_id)
+                                ->first();
+
+                            if ($mapping && $mapping->calcom_team_id != $record->company->calcom_team_id) {
+                                $parts[] = "⚠️ WARNUNG: Team ID Mismatch!";
+                                $parts[] = "Service Event Type Team: {$mapping->calcom_team_id}";
+                                $parts[] = "Company Team: {$record->company->calcom_team_id}";
+                            }
+                        }
+
+                        return implode("\n", $parts);
+                    }),
 
                 Tables\Columns\TextColumn::make('display_name')
                     ->label('Dienstleistung')
@@ -708,19 +748,58 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('sync_status')
                     ->label('Synchronisierungsstatus')
                     ->badge()
-                    ->colors([
-                        'success' => 'synced',
-                        'warning' => 'pending',
-                        'danger' => 'error',
-                        'gray' => 'never',
-                    ])
+                    ->formatStateUsing(function (string $state, $record) {
+                        if ($state === 'synced' && $record->last_calcom_sync) {
+                            return "✓ Sync (" . $record->last_calcom_sync->diffForHumans() . ")";
+                        }
+                        return match($state) {
+                            'synced' => '✓ Synchronisiert',
+                            'pending' => 'Ausstehend',
+                            'error' => 'Fehler',
+                            'never' => 'Nie synchronisiert',
+                            default => $state,
+                        };
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'synced' => 'success',
+                        'pending' => 'warning',
+                        'error' => 'danger',
+                        'never' => 'gray',
+                        default => 'gray',
+                    })
                     ->icon(fn (string $state): ?string => match($state) {
                         'synced' => 'heroicon-o-check-circle',
                         'pending' => 'heroicon-o-clock',
                         'error' => 'heroicon-o-x-circle',
                         'never' => 'heroicon-o-minus-circle',
                         default => null,
-                    }),
+                    })
+                    ->tooltip(function ($record): ?string {
+                        $parts = [];
+
+                        if ($record->calcom_event_type_id) {
+                            $parts[] = "Event Type: {$record->calcom_event_type_id}";
+                        }
+
+                        if ($record->last_calcom_sync) {
+                            $parts[] = "Letzter Sync: " . $record->last_calcom_sync->format('d.m.Y H:i')
+                                     . " (" . $record->last_calcom_sync->diffForHumans() . ")";
+                        }
+
+                        if ($record->sync_error) {
+                            $parts[] = "Fehler: {$record->sync_error}";
+                        }
+
+                        if (empty($parts)) {
+                            $parts[] = "Keine Synchronisation";
+                        }
+
+                        return implode("\n", $parts);
+                    })
+                    ->searchable(query: function ($query, $search) {
+                        return $query->where('calcom_event_type_id', 'like', "%{$search}%");
+                    })
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('formatted_sync_status')
                     ->label('Letzte Synchronisation')
@@ -768,11 +847,46 @@ class ServiceResource extends Resource
                     ->trueColor('info')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('price')
-                    ->label(__('services.price'))
-                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.') . ' €')
-                    ->sortable()
-                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('pricing')
+                    ->label('Preis')
+                    ->getStateUsing(function ($record) {
+                        $price = number_format($record->price, 2) . ' €';
+
+                        if ($record->duration_minutes > 0) {
+                            $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2);
+                            $price .= " ({$hourlyRate} €/h)";
+                        }
+
+                        if ($record->deposit_required) {
+                            $price .= " 💰";
+                        }
+
+                        return $price;
+                    })
+                    ->description(fn ($record) =>
+                        $record->deposit_required
+                            ? "Anzahlung: " . number_format($record->deposit_amount, 2) . " €"
+                            : null
+                    )
+                    ->tooltip(function ($record) {
+                        $parts = [
+                            "Grundpreis: " . number_format($record->price, 2) . " €",
+                        ];
+
+                        if ($record->duration_minutes > 0) {
+                            $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2);
+                            $parts[] = "Stundensatz: {$hourlyRate} €/h";
+                        }
+
+                        if ($record->deposit_required) {
+                            $parts[] = "Anzahlung erforderlich: " . number_format($record->deposit_amount, 2) . " €";
+                        }
+
+                        return implode("\n", $parts);
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        $query->orderBy('price', $direction);
+                    }),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
@@ -783,17 +897,101 @@ class ServiceResource extends Resource
                     ->boolean()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('upcoming_appointments')
-                    ->label('Anstehend')
-                    ->alignCenter()
-                    ->badge()
-                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),
+                Tables\Columns\TextColumn::make('appointment_stats')
+                    ->label('Termine & Umsatz')
+                    ->getStateUsing(function ($record) {
+                        $count = $record->appointments()->count();
+                        $revenue = $record->appointments()
+                            ->where('status', 'completed')
+                            ->sum('price');
 
-                Tables\Columns\TextColumn::make('total_appointments')
-                    ->label('Gesamt')
-                    ->alignCenter()
+                        return "{$count} Termine • " . number_format($revenue, 0) . " €";
+                    })
                     ->badge()
-                    ->color('gray'),
+                    ->color(function ($record) {
+                        $count = $record->appointments()->count();
+                        return $count > 10 ? 'success' : ($count > 0 ? 'info' : 'gray');
+                    })
+                    ->description(function ($record) {
+                        $recent = $record->appointments()
+                            ->where('created_at', '>=', now()->subDays(30))
+                            ->count();
+
+                        return $recent > 0 ? "📈 {$recent} neue (30 Tage)" : null;
+                    })
+                    ->tooltip(function ($record) {
+                        $total = $record->appointments()->count();
+                        $completed = $record->appointments()->where('status', 'completed')->count();
+                        $cancelled = $record->appointments()->where('status', 'cancelled')->count();
+                        $revenue = $record->appointments()->where('status', 'completed')->sum('price');
+
+                        return implode("\n", [
+                            "Gesamt: {$total}",
+                            "Abgeschlossen: {$completed}",
+                            "Storniert: {$cancelled}",
+                            "Umsatz: " . number_format($revenue, 2) . " €",
+                        ]);
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        $query->withCount('appointments')
+                            ->orderBy('appointments_count', $direction);
+                    })
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('staff_assignment')
+                    ->label('Mitarbeiter')
+                    ->getStateUsing(function ($record) {
+                        $config = $record->policyConfiguration;
+                        $method = $config?->staff_assignment_method ?? 'any';
+
+                        if ($method === 'any') {
+                            return '👥 Alle verfügbaren';
+                        }
+
+                        $count = $record->allowedStaff()->count();
+
+                        if ($method === 'preferred' && $config?->preferred_staff_id) {
+                            $staff = \App\Models\Staff::find($config->preferred_staff_id);
+                            return $staff ? "⭐ {$staff->name} (+{$count})" : "👤 {$count} zugewiesen";
+                        }
+
+                        return "👤 {$count} zugewiesen";
+                    })
+                    ->badge()
+                    ->color(fn ($record) =>
+                        ($record->policyConfiguration?->staff_assignment_method ?? 'any') === 'any'
+                            ? 'gray'
+                            : 'info'
+                    )
+                    ->tooltip(function ($record) {
+                        $config = $record->policyConfiguration;
+                        if (!$config) return 'Keine Konfiguration';
+
+                        $method = $config->staff_assignment_method ?? 'any';
+                        $parts = ["Methode: " . match($method) {
+                            'any' => 'Alle verfügbaren',
+                            'specific' => 'Spezifische Auswahl',
+                            'preferred' => 'Bevorzugt',
+                            default => $method,
+                        }];
+
+                        if ($method !== 'any') {
+                            $staff = $record->allowedStaff()->pluck('name')->take(5);
+                            if ($staff->count() > 0) {
+                                $parts[] = "Mitarbeiter: " . $staff->join(', ');
+                                if ($record->allowedStaff()->count() > 5) {
+                                    $remaining = $record->allowedStaff()->count() - 5;
+                                    $parts[] = "... und {$remaining} weitere";
+                                }
+                            }
+                        }
+
+                        return implode("\n", $parts);
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        $query->withCount('allowedStaff')
+                            ->orderBy('allowed_staff_count', $direction);
+                    }),
             ])
             ->defaultSort('company.name')
             ->filters([

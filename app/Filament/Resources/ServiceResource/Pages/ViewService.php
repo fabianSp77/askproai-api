@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServiceResource\Pages;
 
 use App\Filament\Resources\ServiceResource;
+use App\Jobs\UpdateCalcomEventTypeJob;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists\Infolist;
@@ -12,8 +13,10 @@ use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Split;
 use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\Actions\Action;
 use Filament\Support\Enums\FontWeight;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 
 class ViewService extends ViewRecord
 {
@@ -30,17 +33,84 @@ class ViewService extends ViewRecord
                 ->label('Cal.com Sync')
                 ->icon('heroicon-m-arrow-path')
                 ->color('primary')
-                ->action(function () {
-                    // TODO: Implement actual Cal.com sync
-                    $this->record->touch(); // Update timestamp for now
+                ->requiresConfirmation()
+                ->modalHeading('Service mit Cal.com synchronisieren')
+                ->modalDescription(function () {
+                    $bufferTime = $this->record->buffer_time_minutes ?? 0;
+                    $price = number_format($this->record->price, 2);
 
-                    Notification::make()
-                        ->title('Cal.com Synchronisation')
-                        ->body('Service wurde mit Cal.com synchronisiert.')
-                        ->success()
-                        ->send();
+                    return "Dies synchronisiert den Service \"{$this->record->name}\" mit dem Cal.com Event Type (ID: {$this->record->calcom_event_type_id}).\n\n" .
+                        "Folgende Daten werden übertragen:\n" .
+                        "• Name und Beschreibung\n" .
+                        "• Dauer ({$this->record->duration_minutes} Min.)\n" .
+                        "• Pufferzeit ({$bufferTime} Min.)\n" .
+                        "• Preis (€{$price})\n\n" .
+                        "Die Synchronisation erfolgt asynchron im Hintergrund.";
                 })
-                ->visible(fn () => $this->record->calcom_event_type_id),
+                ->modalSubmitActionLabel('Jetzt synchronisieren')
+                ->modalIcon('heroicon-o-arrow-path')
+                ->action(function () {
+                    try {
+                        // Check if service has Cal.com Event Type ID
+                        if (!$this->record->calcom_event_type_id) {
+                            Notification::make()
+                                ->title('Synchronisation fehlgeschlagen')
+                                ->body('Dieser Service hat keine Cal.com Event Type ID.')
+                                ->warning()
+                                ->duration(5000)
+                                ->send();
+                            return;
+                        }
+
+                        // Check if sync is already pending
+                        if ($this->record->sync_status === 'pending') {
+                            Notification::make()
+                                ->title('Synchronisation läuft bereits')
+                                ->body('Eine Synchronisation für diesen Service ist bereits in Bearbeitung. Bitte warten Sie einen Moment.')
+                                ->info()
+                                ->duration(5000)
+                                ->send();
+                            return;
+                        }
+
+                        // Mark sync as pending
+                        $this->record->update([
+                            'sync_status' => 'pending',
+                            'sync_error' => null
+                        ]);
+
+                        // Dispatch the sync job
+                        UpdateCalcomEventTypeJob::dispatch($this->record);
+
+                        Notification::make()
+                            ->title('Synchronisation gestartet')
+                            ->body('Die Synchronisation wurde in die Warteschlange gestellt und wird in Kürze durchgeführt.')
+                            ->success()
+                            ->duration(5000)
+                            ->send();
+
+                    } catch (\Exception $e) {
+                        // Handle job dispatch failure
+                        $this->record->update([
+                            'sync_status' => 'error',
+                            'sync_error' => 'Job dispatch failed: ' . $e->getMessage()
+                        ]);
+
+                        Notification::make()
+                            ->title('Synchronisation fehlgeschlagen')
+                            ->body('Fehler beim Starten der Synchronisation: ' . $e->getMessage())
+                            ->danger()
+                            ->duration(8000)
+                            ->send();
+
+                        \Illuminate\Support\Facades\Log::error('[Filament] Failed to dispatch Cal.com sync job', [
+                            'service_id' => $this->record->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                    }
+                })
+                ->visible(fn () => (bool) $this->record->calcom_event_type_id),
 
             Actions\Action::make('duplicate')
                 ->label('Duplizieren')
@@ -254,30 +324,298 @@ class ViewService extends ViewRecord
                         ]),
                     ]),
 
-                Section::make('Cal.com Integration')
-                    ->description('Synchronisationsstatus mit Cal.com')
-                    ->icon('heroicon-o-link')
-                    ->collapsed()
+                Section::make('Mitarbeiter & Zuweisungen')
+                    ->description('Welche Mitarbeiter können diesen Service ausführen')
+                    ->icon('heroicon-o-user-group')
                     ->schema([
                         Grid::make(2)->schema([
+                            TextEntry::make('assignment_method')
+                                ->label('Zuweisungsmethode')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->policyConfiguration?->staff_assignment_method ?? 'any'
+                                )
+                                ->formatStateUsing(fn ($state) => match($state) {
+                                    'any' => '👥 Alle verfügbaren Mitarbeiter',
+                                    'specific' => '👤 Spezifische Mitarbeiter',
+                                    'preferred' => '⭐ Bevorzugter Mitarbeiter',
+                                    default => $state,
+                                })
+                                ->badge()
+                                ->color(fn ($state) => $state === 'any' ? 'gray' : 'info'),
+
+                            TextEntry::make('preferred_staff')
+                                ->label('Bevorzugter Mitarbeiter')
+                                ->getStateUsing(function ($record) {
+                                    $preferredId = $record->policyConfiguration?->preferred_staff_id;
+                                    if (!$preferredId) return null;
+
+                                    $staff = \App\Models\Staff::find($preferredId);
+                                    return $staff ? $staff->name : 'Nicht gefunden';
+                                })
+                                ->placeholder('Kein bevorzugter Mitarbeiter')
+                                ->visible(fn ($record) =>
+                                    ($record->policyConfiguration?->staff_assignment_method ?? 'any') === 'preferred'
+                                )
+                                ->icon('heroicon-m-star'),
+                        ]),
+
+                        TextEntry::make('allowed_staff')
+                            ->label('Zugelassene Mitarbeiter')
+                            ->getStateUsing(function ($record) {
+                                $method = $record->policyConfiguration?->staff_assignment_method ?? 'any';
+
+                                if ($method === 'any') {
+                                    $count = \App\Models\Staff::where('company_id', $record->company_id)
+                                        ->where('is_active', true)
+                                        ->count();
+                                    return "Alle aktiven Mitarbeiter ({$count})";
+                                }
+
+                                $staff = $record->allowedStaff;
+                                if ($staff->isEmpty()) {
+                                    return 'Keine Mitarbeiter zugewiesen';
+                                }
+
+                                return $staff->pluck('name')->join(', ');
+                            })
+                            ->badge()
+                            ->color('info')
+                            ->columnSpanFull(),
+
+                        Grid::make(3)->schema([
+                            IconEntry::make('policyConfiguration.auto_assign_staff')
+                                ->label('Auto-Zuweisung')
+                                ->boolean()
+                                ->trueIcon('heroicon-o-check-circle')
+                                ->falseIcon('heroicon-o-x-circle')
+                                ->trueColor('success')
+                                ->falseColor('gray'),
+
+                            IconEntry::make('policyConfiguration.allow_double_booking')
+                                ->label('Doppelbuchung erlaubt')
+                                ->boolean()
+                                ->trueIcon('heroicon-o-check-circle')
+                                ->falseIcon('heroicon-o-x-circle')
+                                ->trueColor('success')
+                                ->falseColor('gray'),
+
+                            IconEntry::make('policyConfiguration.respect_staff_breaks')
+                                ->label('Pausen respektieren')
+                                ->boolean()
+                                ->trueIcon('heroicon-o-check-circle')
+                                ->falseIcon('heroicon-o-x-circle')
+                                ->trueColor('success')
+                                ->falseColor('gray'),
+                        ]),
+                    ]),
+
+                Section::make('Buchungsstatistiken')
+                    ->description('Übersicht über Terminhistorie und Performance')
+                    ->icon('heroicon-o-chart-bar')
+                    ->collapsed()
+                    ->schema([
+                        Grid::make(4)->schema([
+                            TextEntry::make('stats.total')
+                                ->label('Gesamt')
+                                ->getStateUsing(fn ($record) => $record->appointments()->count())
+                                ->badge()
+                                ->color('gray')
+                                ->suffix(' Termine'),
+
+                            TextEntry::make('stats.completed')
+                                ->label('Abgeschlossen')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->appointments()->where('status', 'completed')->count()
+                                )
+                                ->badge()
+                                ->color('success')
+                                ->suffix(' Termine'),
+
+                            TextEntry::make('stats.cancelled')
+                                ->label('Storniert')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->appointments()->where('status', 'cancelled')->count()
+                                )
+                                ->badge()
+                                ->color('danger')
+                                ->suffix(' Termine'),
+
+                            TextEntry::make('stats.revenue')
+                                ->label('Umsatz')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->appointments()
+                                        ->where('status', 'completed')
+                                        ->sum('price')
+                                )
+                                ->money('EUR')
+                                ->badge()
+                                ->color('success'),
+                        ]),
+
+                        Grid::make(3)->schema([
+                            TextEntry::make('stats.this_month')
+                                ->label('Diesen Monat')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->appointments()
+                                        ->whereMonth('starts_at', now()->month)
+                                        ->whereYear('starts_at', now()->year)
+                                        ->count()
+                                )
+                                ->badge()
+                                ->color('info')
+                                ->suffix(' Termine'),
+
+                            TextEntry::make('stats.last_month')
+                                ->label('Letzter Monat')
+                                ->getStateUsing(fn ($record) =>
+                                    $record->appointments()
+                                        ->whereMonth('starts_at', now()->subMonth()->month)
+                                        ->whereYear('starts_at', now()->subMonth()->year)
+                                        ->count()
+                                )
+                                ->badge()
+                                ->color('gray')
+                                ->suffix(' Termine'),
+
+                            TextEntry::make('stats.last_booking')
+                                ->label('Letzte Buchung')
+                                ->getStateUsing(function ($record) {
+                                    $last = $record->appointments()
+                                        ->latest('created_at')
+                                        ->first();
+
+                                    return $last ? $last->created_at->diffForHumans() : 'Keine Buchungen';
+                                })
+                                ->badge()
+                                ->color('info'),
+                        ]),
+                    ]),
+
+                Section::make('Cal.com Integration')
+                    ->description(fn ($record) =>
+                        $record->calcom_event_type_id
+                            ? '✅ Service ist mit Cal.com synchronisiert'
+                            : '⚠️ Service ist NICHT mit Cal.com verknüpft'
+                    )
+                    ->icon('heroicon-o-link')
+                    ->collapsed(fn ($record) => !$record->calcom_event_type_id)
+                    ->headerActions([
+                        Action::make('verify_integration')
+                            ->label('Integration prüfen')
+                            ->icon('heroicon-m-shield-check')
+                            ->color('info')
+                            ->action(function ($record) {
+                                $issues = [];
+
+                                if (!$record->calcom_event_type_id) {
+                                    $issues[] = 'Keine Event Type ID';
+                                }
+
+                                if (!$record->company?->calcom_team_id) {
+                                    $issues[] = 'Company hat keine Team ID';
+                                }
+
+                                if ($record->calcom_event_type_id) {
+                                    $mapping = DB::table('calcom_event_mappings')
+                                        ->where('calcom_event_type_id', $record->calcom_event_type_id)
+                                        ->first();
+
+                                    if (!$mapping) {
+                                        $issues[] = 'Event Mapping fehlt';
+                                    } elseif ($record->company && $mapping->calcom_team_id != $record->company->calcom_team_id) {
+                                        $issues[] = "Team ID Mismatch: {$mapping->calcom_team_id} ≠ {$record->company->calcom_team_id}";
+                                    }
+                                }
+
+                                if (empty($issues)) {
+                                    Notification::make()
+                                        ->title('✅ Integration OK')
+                                        ->body('Cal.com Integration ist korrekt konfiguriert.')
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('⚠️ Integration Probleme')
+                                        ->body(implode("\n", $issues))
+                                        ->warning()
+                                        ->send();
+                                }
+                            })
+                    ])
+                    ->schema([
+                        Grid::make(3)->schema([
                             TextEntry::make('calcom_event_type_id')
                                 ->label('Event Type ID')
                                 ->placeholder('Nicht verknüpft')
-                                
                                 ->badge()
-                                ->color(fn ($state) => $state ? 'success' : 'warning'),
+                                ->color(fn ($state) => $state ? 'success' : 'warning')
+                                ->url(function ($record) {
+                                    if (!$record->calcom_event_type_id || !$record->company?->calcom_team_id) {
+                                        return null;
+                                    }
+                                    return "https://app.cal.com/event-types/{$record->calcom_event_type_id}";
+                                }, shouldOpenInNewTab: true)
+                                ->icon(fn ($state) => $state ? 'heroicon-m-link' : null),
 
-                            TextEntry::make('sync_status')
-                                ->label('Sync Status')
-                                ->getStateUsing(fn ($record) =>
-                                    $record->calcom_event_type_id
-                                        ? 'Verknüpft'
-                                        : 'Nicht synchronisiert'
-                                )
+                            TextEntry::make('company.calcom_team_id')
+                                ->label('Cal.com Team ID')
+                                ->placeholder('Nicht konfiguriert')
                                 ->badge()
-                                ->color(fn ($record) =>
-                                    $record->calcom_event_type_id ? 'success' : 'gray'
-                                ),
+                                ->color(fn ($state) => $state ? 'primary' : 'danger')
+                                ->helperText('Multi-Tenant Isolation'),
+
+                            TextEntry::make('mapping_status')
+                                ->label('Event Mapping')
+                                ->getStateUsing(function ($record) {
+                                    if (!$record->calcom_event_type_id) {
+                                        return 'Keine Verknüpfung';
+                                    }
+
+                                    $mapping = DB::table('calcom_event_mappings')
+                                        ->where('calcom_event_type_id', $record->calcom_event_type_id)
+                                        ->first();
+
+                                    if (!$mapping) {
+                                        return '❌ Mapping fehlt!';
+                                    }
+
+                                    if ($record->company && $mapping->calcom_team_id != $record->company->calcom_team_id) {
+                                        return "⚠️ Team Mismatch! ({$mapping->calcom_team_id})";
+                                    }
+
+                                    return '✅ Korrekt';
+                                })
+                                ->badge()
+                                ->color(function ($record) {
+                                    if (!$record->calcom_event_type_id) return 'gray';
+
+                                    $mapping = DB::table('calcom_event_mappings')
+                                        ->where('calcom_event_type_id', $record->calcom_event_type_id)
+                                        ->first();
+
+                                    if (!$mapping) return 'danger';
+                                    if ($record->company && $mapping->calcom_team_id != $record->company->calcom_team_id) return 'warning';
+                                    return 'success';
+                                }),
+                        ]),
+
+                        Grid::make(2)->schema([
+                            TextEntry::make('last_calcom_sync')
+                                ->label('Letzter Sync')
+                                ->dateTime('d.m.Y H:i:s')
+                                ->placeholder('Noch nie synchronisiert')
+                                ->helperText(fn ($record) =>
+                                    $record->last_calcom_sync
+                                        ? $record->last_calcom_sync->diffForHumans()
+                                        : null
+                                )
+                                ->icon('heroicon-m-clock'),
+
+                            TextEntry::make('sync_error')
+                                ->label('Sync Fehler')
+                                ->placeholder('Keine Fehler')
+                                ->color('danger')
+                                ->visible(fn ($record) => !empty($record->sync_error)),
                         ]),
 
                         TextEntry::make('metadata')
