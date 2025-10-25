@@ -63,7 +63,6 @@ class ServiceSelectionService implements ServiceSelectionInterface
         if (!$service) {
             $service = $query
                 ->orderBy('priority', 'asc')
-                ->orderByRaw('CASE WHEN name LIKE "%Beratung%" THEN 0 WHEN name LIKE "%30 Minuten%" THEN 1 ELSE 2 END')
                 ->first();
         }
 
@@ -222,6 +221,151 @@ class ServiceSelectionService implements ServiceSelectionInterface
         return Service::where('id', $serviceId)
             ->where('company_id', $companyId)
             ->first();
+    }
+
+    /**
+     * Find service by name with fuzzy matching and synonym support
+     *
+     * Implements multi-strategy matching:
+     * 1. Exact match (case-insensitive)
+     * 2. Synonym match (from service_synonyms table)
+     * 3. Fuzzy match (Levenshtein distance)
+     *
+     * @param string $serviceName Service name from user input (e.g., "Herrenhaarschnitt")
+     * @param int $companyId Company ID
+     * @param string|null $branchId Branch UUID (null = skip branch check)
+     * @return Service|null Matched service or null if no match found
+     */
+    public function findServiceByName(string $serviceName, int $companyId, ?string $branchId = null): ?Service
+    {
+        $cacheKey = "service_by_name_{$companyId}_{$branchId}_" . md5($serviceName);
+        if (isset($this->requestCache[$cacheKey])) {
+            return $this->requestCache[$cacheKey];
+        }
+
+        // Strategy 1: Exact match (case-insensitive)
+        $query = Service::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->whereNotNull('calcom_event_type_id')
+            ->where(function($q) use ($serviceName) {
+                // FIX 2025-10-25: Use LIKE instead of ILIKE for MySQL/MariaDB compatibility
+                // PostgreSQL: ILIKE is case-insensitive
+                // MySQL/MariaDB: LIKE is case-insensitive by default (utf8mb4_unicode_ci collation)
+                $q->where('name', 'LIKE', $serviceName)
+                  ->orWhere('name', 'LIKE', '%' . $serviceName . '%')
+                  ->orWhere('slug', '=', \Illuminate\Support\Str::slug($serviceName));
+            });
+
+        if ($branchId) {
+            $query->where(function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                  ->orWhereHas('branches', fn($q2) => $q2->where('branches.id', $branchId))
+                  ->orWhereNull('branch_id');
+            });
+        }
+
+        $service = $query->first();
+
+        if ($service) {
+            Log::info('✅ Service matched by exact name', [
+                'input_name' => $serviceName,
+                'matched_service' => $service->name,
+                'service_id' => $service->id,
+                'strategy' => 'exact'
+            ]);
+            $this->requestCache[$cacheKey] = $service;
+            return $service;
+        }
+
+        // Strategy 2: Synonym match
+        if (\Illuminate\Support\Facades\Schema::hasTable('service_synonyms')) {
+            $synonymMatch = \Illuminate\Support\Facades\DB::table('service_synonyms')
+                ->join('services', 'service_synonyms.service_id', '=', 'services.id')
+                ->where('services.company_id', $companyId)
+                ->where('services.is_active', true)
+                ->whereNotNull('services.calcom_event_type_id')
+                ->where('service_synonyms.synonym', 'ILIKE', $serviceName)
+                ->select('services.*', 'service_synonyms.confidence')
+                ->orderBy('service_synonyms.confidence', 'desc')
+                ->first();
+
+            if ($synonymMatch) {
+                $service = Service::find($synonymMatch->id);
+                if ($service) {
+                    Log::info('✅ Service matched by synonym', [
+                        'input_name' => $serviceName,
+                        'matched_service' => $service->name,
+                        'service_id' => $service->id,
+                        'confidence' => $synonymMatch->confidence,
+                        'strategy' => 'synonym'
+                    ]);
+                    $this->requestCache[$cacheKey] = $service;
+                    return $service;
+                }
+            }
+        }
+
+        // Strategy 3: Fuzzy matching (Levenshtein distance)
+        $allServices = $this->getAvailableServices($companyId, $branchId);
+        $bestMatch = null;
+        $bestScore = 0;
+        $minSimilarity = 0.75; // 75% similarity required
+
+        foreach ($allServices as $candidate) {
+            $similarity = $this->calculateSimilarity($serviceName, $candidate->name);
+
+            if ($similarity > $minSimilarity && $similarity > $bestScore) {
+                $bestMatch = $candidate;
+                $bestScore = $similarity;
+            }
+        }
+
+        if ($bestMatch) {
+            Log::info('✅ Service matched by fuzzy matching', [
+                'input_name' => $serviceName,
+                'matched_service' => $bestMatch->name,
+                'service_id' => $bestMatch->id,
+                'similarity_score' => round($bestScore, 3),
+                'strategy' => 'fuzzy'
+            ]);
+            $this->requestCache[$cacheKey] = $bestMatch;
+            return $bestMatch;
+        }
+
+        // No match found
+        Log::warning('❌ No service matched by name', [
+            'input_name' => $serviceName,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'available_services' => $allServices->pluck('name')->toArray()
+        ]);
+
+        $this->requestCache[$cacheKey] = null;
+        return null;
+    }
+
+    /**
+     * Calculate similarity between two strings using Levenshtein distance
+     *
+     * @param string $str1 First string
+     * @param string $str2 Second string
+     * @return float Similarity score (0.0 to 1.0)
+     */
+    private function calculateSimilarity(string $str1, string $str2): float
+    {
+        $str1 = mb_strtolower($str1);
+        $str2 = mb_strtolower($str2);
+
+        $maxLen = max(mb_strlen($str1), mb_strlen($str2));
+
+        if ($maxLen === 0) {
+            return 1.0;
+        }
+
+        $distance = levenshtein($str1, $str2);
+        $similarity = 1 - ($distance / $maxLen);
+
+        return max(0.0, $similarity);
     }
 
     /**

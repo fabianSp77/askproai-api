@@ -145,6 +145,23 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 );
             }
 
+            // PHASE 2: Check if service is composite (multi-segment)
+            if ($service->isComposite()) {
+                Log::info('🎨 Composite service detected, using CompositeBookingService', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'segments' => count($service->segments ?? []),
+                    'call_id' => $call->id
+                ]);
+
+                return $this->createCompositeAppointment(
+                    $service,
+                    $customer,
+                    $bookingDetails,
+                    $call
+                );
+            }
+
             // Try to book at desired time first
             $bookingResult = $this->bookInCalcom($customer, $service, $desiredTime, $duration, $call);
 
@@ -557,6 +574,60 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'calcom_id' => $calcomBookingId
         ]);
 
+        // 📧 FEATURE: Send confirmation email with ICS attachment
+        // Send email asynchronously (queued) to not block booking response
+        // Email failure MUST NOT prevent booking success
+        if ($customer->email && filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $notificationService = app(\App\Services\Communication\NotificationService::class);
+
+                Log::info('📧 Sending appointment confirmation email', [
+                    'appointment_id' => $appointment->id,
+                    'customer_email' => $customer->email,
+                    'customer_name' => $customer->name,
+                    'service' => $service->name,
+                    'starts_at' => $appointment->starts_at->format('d.m.Y H:i'),
+                    'is_composite' => $appointment->is_composite ?? false
+                ]);
+
+                // Use appropriate method based on appointment type
+                if ($appointment->is_composite) {
+                    $emailSent = $notificationService->sendCompositeConfirmation($appointment);
+                } else {
+                    $emailSent = $notificationService->sendSimpleConfirmation($appointment);
+                }
+
+                if ($emailSent) {
+                    Log::info('✅ Confirmation email queued successfully', [
+                        'appointment_id' => $appointment->id,
+                        'customer_email' => $customer->email
+                    ]);
+                } else {
+                    Log::warning('⚠️ Failed to queue confirmation email', [
+                        'appointment_id' => $appointment->id,
+                        'customer_email' => $customer->email,
+                        'note' => 'Appointment was still created successfully'
+                    ]);
+                }
+            } catch (\Exception $emailException) {
+                // 🛡️ CRITICAL: Email failure must NOT break booking flow
+                Log::error('❌ Exception while sending confirmation email', [
+                    'appointment_id' => $appointment->id,
+                    'customer_email' => $customer->email,
+                    'error' => $emailException->getMessage(),
+                    'note' => 'Appointment was still created successfully - email can be resent manually'
+                ]);
+                // Don't throw - appointment creation succeeded
+            }
+        } else {
+            Log::warning('⚠️ No valid email address for customer, skipping confirmation email', [
+                'appointment_id' => $appointment->id,
+                'customer_id' => $customer->id,
+                'customer_email' => $customer->email ?? 'null',
+                'note' => 'Consider collecting email during booking flow'
+            ]);
+        }
+
         return $appointment;
     }
 
@@ -716,8 +787,32 @@ class AppointmentCreationService implements AppointmentCreationInterface
         $cacheKey = sprintf('service.%s.%d.%s', md5($serviceName), $companyId, $branchId ?? 'null');
 
         return Cache::remember($cacheKey, 3600, function () use ($serviceName, $companyId, $branchId) {
-            // ServiceSelectionService doesn't have findService(), use getDefaultService()
-            return $this->serviceSelector->getDefaultService($companyId, $branchId);
+            // FIX 2025-10-25: Use findServiceByName() for accurate service matching
+            // This fixes Bug #9 where all bookings were getting the wrong service
+            // findServiceByName() uses 3-strategy matching: exact, synonym, fuzzy (75% similarity)
+            Log::info('🔍 Finding service by name', [
+                'service_name' => $serviceName,
+                'company_id' => $companyId,
+                'branch_id' => $branchId
+            ]);
+
+            $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
+
+            if ($service) {
+                Log::info('✅ Service matched successfully', [
+                    'requested_name' => $serviceName,
+                    'matched_service_id' => $service->id,
+                    'matched_service_name' => $service->name
+                ]);
+            } else {
+                Log::warning('⚠️ No service match found, falling back to default', [
+                    'requested_name' => $serviceName,
+                    'company_id' => $companyId
+                ]);
+                $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+            }
+
+            return $service;
         });
     }
 
@@ -1078,5 +1173,163 @@ class AppointmentCreationService implements AppointmentCreationInterface
         // Placeholder for future notification implementation
         // e.g., dispatch notification job
         // NotifyCustomerAboutAlternative::dispatch($customer, $requestedTime, $bookedTime, $alternative);
+    }
+
+    /**
+     * Create composite appointment with multiple segments
+     *
+     * PHASE 2: Voice AI Composite Services Support
+     *
+     * @param Service $service
+     * @param Customer $customer
+     * @param array $bookingDetails
+     * @param Call $call
+     * @return Appointment|null
+     */
+    private function createCompositeAppointment(
+        Service $service,
+        Customer $customer,
+        array $bookingDetails,
+        Call $call
+    ): ?Appointment {
+        try {
+            $compositeService = app(\App\Services\Booking\CompositeBookingService::class);
+
+            // Parse desired time
+            $startTime = Carbon::parse($bookingDetails['starts_at']);
+
+            // Build segments from service definition
+            $segments = $this->buildSegmentsFromBookingDetails($service, $startTime);
+
+            if (empty($segments)) {
+                Log::error('❌ Failed to build segments for composite service', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'booking_details' => $bookingDetails
+                ]);
+                return null;
+            }
+
+            // Extract staff preference if exists
+            $preferredStaffId = $bookingDetails['preferred_staff_id'] ?? null;
+
+            Log::info('🎨 Booking composite service', [
+                'service' => $service->name,
+                'segments_count' => count($segments),
+                'start_time' => $startTime->format('Y-m-d H:i'),
+                'preferred_staff' => $preferredStaffId ?? 'none',
+                'customer' => $customer->name
+            ]);
+
+            // Book composite using CompositeBookingService
+            $appointment = $compositeService->bookComposite([
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'service_id' => $service->id,
+                'customer_id' => $customer->id,
+                'customer' => [
+                    'name' => $customer->name,
+                    'email' => $customer->email
+                ],
+                'segments' => $segments,
+                'preferred_staff_id' => $preferredStaffId,
+                'timeZone' => 'Europe/Berlin',
+                'source' => 'retell_ai'
+            ]);
+
+            // Track successful booking
+            $this->callLifecycle->trackBooking(
+                $call,
+                $bookingDetails,
+                true,
+                $appointment->composite_group_uid
+            );
+
+            Log::info('✅ Composite appointment created successfully', [
+                'appointment_id' => $appointment->id,
+                'composite_uid' => $appointment->composite_group_uid,
+                'segments_booked' => count($appointment->segments ?? []),
+                'customer' => $customer->name,
+                'service' => $service->name
+            ]);
+
+            return $appointment;
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to create composite appointment', [
+                'error' => $e->getMessage(),
+                'service_id' => $service->id,
+                'customer_id' => $customer->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Track failed booking for monitoring
+            $this->callLifecycle->trackFailedBooking(
+                $call,
+                $bookingDetails,
+                'composite_booking_failed: ' . $e->getMessage()
+            );
+
+            return null;
+        }
+    }
+
+    /**
+     * Build segments array from service definition and start time
+     *
+     * PHASE 2: Converts service segments to booking segments with timestamps
+     *
+     * @param Service $service
+     * @param Carbon $startTime
+     * @return array
+     */
+    private function buildSegmentsFromBookingDetails(Service $service, Carbon $startTime): array
+    {
+        $segments = [];
+        $serviceSegments = $service->segments;
+
+        if (empty($serviceSegments)) {
+            Log::warning('⚠️ Service has no segments defined', [
+                'service_id' => $service->id,
+                'service_name' => $service->name
+            ]);
+            return [];
+        }
+
+        $currentTime = $startTime->copy();
+
+        Log::info('🔧 Building segments from service definition', [
+            'service' => $service->name,
+            'segment_count' => count($serviceSegments),
+            'start_time' => $startTime->format('Y-m-d H:i')
+        ]);
+
+        foreach ($serviceSegments as $index => $segment) {
+            $duration = $segment['duration'] ?? 60;
+            $endTime = $currentTime->copy()->addMinutes($duration);
+
+            $segments[] = [
+                'key' => $segment['key'],
+                'name' => $segment['name'] ?? "Segment {$segment['key']}",
+                'starts_at' => $currentTime->toIso8601String(),
+                'ends_at' => $endTime->toIso8601String(),
+                'staff_id' => null  // Will be assigned by CompositeBookingService
+            ];
+
+            Log::debug("  Segment {$segment['key']}: {$currentTime->format('H:i')} - {$endTime->format('H:i')} ({$duration} min)", [
+                'gap_after' => $segment['gap_after'] ?? 0
+            ]);
+
+            // Add gap after segment (except for last)
+            if ($index < count($serviceSegments) - 1) {
+                $gap = $segment['gap_after'] ?? 0;
+                if ($gap > 0) {
+                    Log::debug("  → Pause: {$gap} min (Staff verfügbar)");
+                }
+                $currentTime = $endTime->copy()->addMinutes($gap);
+            }
+        }
+
+        return $segments;
     }
 }
