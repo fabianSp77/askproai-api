@@ -140,6 +140,22 @@ class CompositeBookingService
             throw new Exception('At least 2 segments required for composite booking');
         }
 
+        // PHASE 2: Apply staff preference if specified
+        if (isset($data['preferred_staff_id']) && !empty($data['preferred_staff_id'])) {
+            Log::info('📌 Applying staff preference to all segments', [
+                'staff_id' => $data['preferred_staff_id'],
+                'segments' => count($data['segments'])
+            ]);
+
+            foreach ($data['segments'] as &$segment) {
+                // Only set staff_id if not already set
+                if (!isset($segment['staff_id']) || empty($segment['staff_id'])) {
+                    $segment['staff_id'] = $data['preferred_staff_id'];
+                }
+            }
+            unset($segment); // Break reference
+        }
+
         return DB::transaction(function() use ($data, $compositeUid) {
             $bookings = [];
 

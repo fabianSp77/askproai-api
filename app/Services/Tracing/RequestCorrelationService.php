@@ -67,9 +67,13 @@ class RequestCorrelationService
             return $correlationId;
         }
 
-        // Check session (for user sessions)
-        if (session()->has('correlation_id')) {
-            return session()->get('correlation_id');
+        // Check session (for user sessions) - Laravel 11 compatible
+        try {
+            if (session() && session()->isStarted() && session()->has('correlation_id')) {
+                return session()->get('correlation_id');
+            }
+        } catch (\Exception $e) {
+            // Session not available - continue
         }
 
         // Check queue job (for queued operations)
@@ -81,9 +85,13 @@ class RequestCorrelationService
         $newId = Uuid::uuid4()->toString();
         Log::debug('Created new correlation ID', ['correlation_id' => $newId]);
 
-        // Store in session if available
-        if (session()->started()) {
-            session()->put('correlation_id', $newId);
+        // Store in session if available (Laravel 11 compatible)
+        try {
+            if (session() && session()->isStarted()) {
+                session()->put('correlation_id', $newId);
+            }
+        } catch (\Exception $e) {
+            // Session not available (CLI, queue, etc.) - ignore
         }
 
         return $newId;

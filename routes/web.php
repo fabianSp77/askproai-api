@@ -47,6 +47,21 @@ Route::middleware(['auth'])->prefix('docs')->group(function () {
         ->where('path', '.*');
 });
 
+// Conversation Flow Routes
+Route::prefix('conversation-flow')->group(function () {
+    // Public download - no auth required
+    Route::get('/download-json', [\App\Http\Controllers\ConversationFlowController::class, 'downloadJson'])
+        ->name('conversation-flow.download-json');
+    Route::get('/download-guide', [\App\Http\Controllers\ConversationFlowController::class, 'downloadGuide'])
+        ->name('conversation-flow.download-guide');
+
+    // Protected routes
+    Route::middleware(['auth:web'])->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\ConversationFlowController::class, 'viewReports'])
+            ->name('conversation-flow.reports');
+    });
+});
+
 
 require __DIR__.'/auth.php';
 require __DIR__.'/web-test.php';

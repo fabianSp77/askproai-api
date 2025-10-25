@@ -99,15 +99,53 @@ class CalcomService
             $metadata = array_merge($metadata, $bookingDetails['metadata']);
         }
 
-        // Cal.com V2 API expects metadata as object (not JSON string)
-        // Ensure all values meet Cal.com limits: max 500 characters per value
+        // Cal.com V2 API metadata limits:
+        // - Max 50 keys
+        // - Each key max 40 characters
+        // - Each string value max 500 characters
         $sanitizedMetadata = [];
+        $keyCount = 0;
+
         foreach ($metadata as $key => $value) {
+            // Skip null values - Cal.com may not accept them
+            if ($value === null) {
+                Log::debug('Cal.com metadata: Skipping null value', ['key' => $key]);
+                continue;
+            }
+
+            // Limit: Max 50 keys
+            if ($keyCount >= 50) {
+                Log::warning('Cal.com metadata limit: Dropping extra keys beyond 50', [
+                    'dropped_key' => $key,
+                    'total_keys' => count($metadata)
+                ]);
+                break;
+            }
+
+            // Limit: Key max 40 characters
+            if (mb_strlen($key) > 40) {
+                $originalKey = $key;
+                $key = mb_substr($key, 0, 40);
+                Log::warning('Cal.com metadata limit: Truncated key to 40 chars', [
+                    'original' => $originalKey,
+                    'truncated' => $key
+                ]);
+            }
+
+            // Limit: String value max 500 characters
             if (is_string($value) && mb_strlen($value) > 500) {
+                $originalLength = mb_strlen($value);
                 $sanitizedMetadata[$key] = mb_substr($value, 0, 497) . '...';
+                Log::warning('Cal.com metadata limit: Truncated value to 500 chars', [
+                    'key' => $key,
+                    'original_length' => $originalLength,
+                    'truncated_length' => 500
+                ]);
             } else {
                 $sanitizedMetadata[$key] = $value;
             }
+
+            $keyCount++;
         }
 
         $payload['metadata'] = $sanitizedMetadata;
@@ -127,7 +165,7 @@ class CalcomService
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13'),
                     'Content-Type' => 'application/json'
-                ])->timeout(1.5)->acceptJson()->post($fullUrl, $payload);  // 🔧 CRITICAL FIX 2025-10-23: Reduced from 5s to 1.5s for voice AI latency (CVSS 6.5)
+                ])->timeout(5.0)->acceptJson()->post($fullUrl, $payload);  // 🔧 FIX 2025-10-25: Increased back to 5s - 1.5s was causing timeouts for booking creation
 
                 Log::channel('calcom')->debug('[Cal.com V2] Booking Response:', [
                     'status' => $resp->status(),
@@ -163,7 +201,7 @@ class CalcomService
             Log::error('Cal.com API network error during createBooking', [
                 'endpoint' => '/bookings',
                 'error' => $e->getMessage(),
-                'timeout' => '1.5s'  // 🔧 UPDATED 2025-10-23: Reduced from 5s
+                'timeout' => '5.0s'  // 🔧 UPDATED 2025-10-25: Increased back to 5s for booking reliability
             ]);
 
             throw CalcomApiException::networkError('/bookings', $payload, $e);
