@@ -31,6 +31,51 @@ class AppointmentAlternativeFinder
     }
 
     /**
+     * 🔧 FIX 2025-10-25: Bug #2 - Generate dynamic date description
+     * PROBLEM: Hardcoded "am gleichen Tag" shown for next day alternatives
+     * SOLUTION: Compare actual dates and return correct German description
+     *
+     * @param Carbon $alternativeDate The alternative appointment date
+     * @param Carbon $requestedDate The originally requested date
+     * @return string German date description
+     */
+    private function generateDateDescription(Carbon $alternativeDate, Carbon $requestedDate): string
+    {
+        $altDateOnly = $alternativeDate->copy()->startOfDay();
+        $reqDateOnly = $requestedDate->copy()->startOfDay();
+        $today = Carbon::today('Europe/Berlin');
+
+        // Same day as requested
+        if ($altDateOnly->equalTo($reqDateOnly)) {
+            return 'am gleichen Tag';
+        }
+
+        // Tomorrow from today (absolute)
+        if ($altDateOnly->equalTo($today->copy()->addDay())) {
+            return 'morgen';
+        }
+
+        // Day after tomorrow from today (absolute)
+        if ($altDateOnly->equalTo($today->copy()->addDays(2))) {
+            return 'übermorgen';
+        }
+
+        // Within next 6 days - use day name
+        $daysDiff = $today->diffInDays($altDateOnly, false);
+        if ($daysDiff > 0 && $daysDiff <= 6) {
+            return 'am ' . $alternativeDate->locale('de')->dayName;
+        }
+
+        // Next week (7-13 days)
+        if ($daysDiff >= 7 && $daysDiff <= 13) {
+            return 'nächste Woche ' . $alternativeDate->locale('de')->dayName;
+        }
+
+        // Fallback: full date
+        return 'am ' . $alternativeDate->locale('de')->isoFormat('DD.MM.YYYY');
+    }
+
+    /**
      * Set tenant context for cache isolation
      * SECURITY: Prevents cross-tenant cache key collisions
      *
@@ -224,7 +269,7 @@ class AppointmentAlternativeFinder
                 $alternatives->push([
                     'datetime' => $slotTime,
                     'type' => 'same_day_earlier',
-                    'description' => 'am gleichen Tag, ' . $slotTime->format('H:i') . ' Uhr',
+                    'description' => $this->generateDateDescription($slotTime, $desiredDateTime) . ', ' . $slotTime->format('H:i') . ' Uhr',
                     'source' => 'calcom'
                 ]);
             }
@@ -239,7 +284,7 @@ class AppointmentAlternativeFinder
                 $alternatives->push([
                     'datetime' => $slotTime,
                     'type' => 'same_day_later',
-                    'description' => 'am gleichen Tag, ' . $slotTime->format('H:i') . ' Uhr',
+                    'description' => $this->generateDateDescription($slotTime, $desiredDateTime) . ', ' . $slotTime->format('H:i') . ' Uhr',
                     'source' => 'calcom'
                 ]);
             }
@@ -250,6 +295,10 @@ class AppointmentAlternativeFinder
 
     /**
      * Find alternatives on next workday at same time
+     *
+     * 🔧 FIX 2025-10-25: Skip if desired date is already a weekend
+     * Bug: When user requests Saturday, getNextWorkday(Sat) returned Monday (+2 days)
+     * Fix: Only search next workday if desired date IS a workday
      */
     private function findNextWorkdayAlternatives(
         Carbon $desiredDateTime,
@@ -257,6 +306,19 @@ class AppointmentAlternativeFinder
         int $eventTypeId
     ): Collection {
         $alternatives = collect();
+
+        // 🔧 FIX 2025-10-25: If desired date is NOT a workday (weekend), skip this strategy
+        // Rationale: If user requests Sat 15:00, getNextWorkday(Sat) would return Mon 15:00 (+2 days)
+        // But that creates a 2-day jump that confuses users
+        // Instead, let other strategies (SAME_DAY info + NEXT_AVAILABLE) handle weekends
+        if (!$this->isWorkday($desiredDateTime)) {
+            Log::info('⏭️  Skipping NEXT_WORKDAY strategy for weekend date', [
+                'desired_date' => $desiredDateTime->format('Y-m-d (l)'),
+                'reason' => 'desired_date_is_not_workday'
+            ]);
+            return collect(); // Return empty - let next strategies handle it
+        }
+
         $nextWorkday = $this->getNextWorkday($desiredDateTime);
 
         // Check same time on next workday
@@ -693,7 +755,7 @@ class AppointmentAlternativeFinder
                 $candidates->push([
                     'datetime' => $earlier,
                     'type' => 'same_day_earlier',
-                    'description' => 'am gleichen Tag, ' . $earlier->format('H:i') . ' Uhr',
+                    'description' => $this->generateDateDescription($earlier, $desiredDateTime) . ', ' . $earlier->format('H:i') . ' Uhr',
                     'rank' => 90
                 ]);
             }
@@ -707,7 +769,7 @@ class AppointmentAlternativeFinder
                 $candidates->push([
                     'datetime' => $later,
                     'type' => 'same_day_later',
-                    'description' => 'am gleichen Tag, ' . $later->format('H:i') . ' Uhr',
+                    'description' => $this->generateDateDescription($later, $desiredDateTime) . ', ' . $later->format('H:i') . ' Uhr',
                     'rank' => 85
                 ]);
             }

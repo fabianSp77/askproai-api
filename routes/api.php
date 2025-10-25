@@ -289,6 +289,32 @@ Route::prefix('retell')->group(function () {
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
+    // 🚀 V4: Conversation Flow V4 Endpoints (Complex Features)
+    Route::post('/initialize-call-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'initializeCallV4'])
+        ->name('api.retell.v4.initialize-call')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/get-appointments-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'getCustomerAppointmentsV4'])
+        ->name('api.retell.v4.get-appointments')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/cancel-appointment-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'cancelAppointmentV4'])
+        ->name('api.retell.v4.cancel-appointment')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/reschedule-appointment-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'rescheduleAppointmentV4'])
+        ->name('api.retell.v4.reschedule-appointment')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    Route::post('/get-services-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'getAvailableServicesV4'])
+        ->name('api.retell.v4.get-services')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
     // 🎯 Get Available Services
     Route::post('/get-available-services', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'getAvailableServices'])
         ->name('api.retell.get-available-services')
