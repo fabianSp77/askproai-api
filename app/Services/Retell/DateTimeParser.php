@@ -71,6 +71,7 @@ class DateTimeParser
      * Parse date/time from various parameter formats
      *
      * Priority:
+     * 0. Smart date inference for time-only input
      * 1. date + time parameters
      * 2. relative_day parameter (German)
      * 3. datetime parameter (ISO)
@@ -81,6 +82,26 @@ class DateTimeParser
      */
     public function parseDateTime(array $params): Carbon
     {
+        // 🔧 NEW 2025-10-23: Smart date inference for time-only input
+        // When user says "14 Uhr" without date → infer today vs tomorrow
+        $time = $params['time'] ?? $params['uhrzeit'] ?? null;
+        $date = $params['date'] ?? $params['datum'] ?? null;
+
+        if ($time && !$date && !isset($params['relative_day']) && !isset($params['datetime'])) {
+            $inference = $this->inferDateFromTime($time);
+
+            if ($inference['date']) {
+                // Use inferred date
+                $params['date'] = $inference['date'];
+                Log::info('📅 Smart date inference applied', [
+                    'time' => $time,
+                    'inferred_date' => $inference['date'],
+                    'confidence' => $inference['confidence'],
+                    'reason' => $inference['reason']
+                ]);
+            }
+        }
+
         // Handle specific date if provided
         if (isset($params['date']) && isset($params['time'])) {
             $parsed = Carbon::parse($params['date'] . ' ' . $params['time']);
@@ -160,6 +181,114 @@ class DateTimeParser
         }
 
         return $baseDate;
+    }
+
+    /**
+     * Smart date inference for time-only input
+     *
+     * When user provides only a time (e.g., "14 Uhr") without a date:
+     * - If time already passed today → infer tomorrow
+     * - If time is still future today → return null (needs clarification)
+     *
+     * @param string $time Time string (e.g., "14:00", "14 Uhr", "14")
+     * @param string|null $callId Optional call ID for cached time
+     * @return array ['date' => string|null, 'confidence' => string, 'reason' => string, 'suggestion' => string|null]
+     */
+    public function inferDateFromTime(string $time, ?string $callId = null): array
+    {
+        $now = $this->getCachedBerlinTime($callId);
+        $parsedTime = $this->extractTimeComponents($time);
+
+        if (!$parsedTime) {
+            return [
+                'date' => null,
+                'confidence' => 'none',
+                'reason' => 'invalid_time_format',
+                'suggestion' => null
+            ];
+        }
+
+        // Create datetime for today at the specified time
+        $todayAtTime = $now->copy()->setTime($parsedTime['hour'], $parsedTime['minute']);
+
+        // Check if time already passed today
+        if ($todayAtTime->isPast()) {
+            Log::info('⏰ Time already passed today, inferring tomorrow', [
+                'time' => $time,
+                'parsed_hour' => $parsedTime['hour'],
+                'parsed_minute' => $parsedTime['minute'],
+                'now' => $now->format('Y-m-d H:i'),
+                'today_at_time' => $todayAtTime->format('Y-m-d H:i')
+            ]);
+
+            return [
+                'date' => 'morgen',
+                'confidence' => 'high',
+                'reason' => 'time_passed_today',
+                'suggestion' => null
+            ];
+        }
+
+        // Time is still in the future today - ambiguous, needs clarification
+        // Default to 'heute' but flag as low confidence so prompt can enforce asking
+        Log::info('🤔 Time is ambiguous (could be today or tomorrow), defaulting to heute', [
+            'time' => $time,
+            'parsed_hour' => $parsedTime['hour'],
+            'parsed_minute' => $parsedTime['minute'],
+            'now' => $now->format('Y-m-d H:i'),
+            'today_at_time' => $todayAtTime->format('Y-m-d H:i'),
+            'default' => 'heute',
+            'requires_confirmation' => true
+        ]);
+
+        return [
+            'date' => 'heute',
+            'confidence' => 'low',
+            'reason' => 'ambiguous',
+            'suggestion' => 'Meinen Sie heute um ' . sprintf('%02d:%02d', $parsedTime['hour'], $parsedTime['minute']) . ' Uhr oder morgen?'
+        ];
+    }
+
+    /**
+     * Extract time components from time string
+     *
+     * Handles formats:
+     * - "14:00"
+     * - "14 Uhr"
+     * - "14"
+     * - "14:30 Uhr"
+     *
+     * @param string $time Time string
+     * @return array|null ['hour' => int, 'minute' => int] or null if invalid
+     */
+    private function extractTimeComponents(string $time): ?array
+    {
+        $time = trim(strtolower($time));
+
+        // Remove "Uhr" suffix
+        $time = preg_replace('/\s*uhr\s*$/i', '', $time);
+        $time = trim($time);
+
+        // Handle HH:MM format
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $time, $matches)) {
+            $hour = (int)$matches[1];
+            $minute = (int)$matches[2];
+
+            if ($hour >= 0 && $hour < 24 && $minute >= 0 && $minute < 60) {
+                return ['hour' => $hour, 'minute' => $minute];
+            }
+        }
+
+        // Handle hour-only format (e.g., "14")
+        if (preg_match('/^\d{1,2}$/', $time)) {
+            $hour = (int)$time;
+
+            if ($hour >= 0 && $hour < 24) {
+                return ['hour' => $hour, 'minute' => 0];
+            }
+        }
+
+        return null;
     }
 
     /**

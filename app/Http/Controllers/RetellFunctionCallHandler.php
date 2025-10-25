@@ -204,13 +204,42 @@ class RetellFunctionCallHandler extends Controller
                 'from_number' => $call->from_number
             ]);
         } else {
-            Log::info('⚠️ getCallContext: Using direct Call fields (NULL phoneNumber - anonymous caller)', [
+            Log::info('⚠️ getCallContext: NULL phoneNumber (anonymous caller) - trying to_number lookup', [
                 'call_id' => $call->id,
                 'from_number' => $call->from_number,
                 'to_number' => $call->to_number,
-                'company_id' => $companyId,
-                'branch_id' => $branchId
+                'direct_company_id' => $companyId,
+                'direct_branch_id' => $branchId
             ]);
+        }
+
+        // 🔧 CRITICAL FIX (2025-10-24): Anonymous caller fallback
+        // If company_id still NULL, lookup from to_number (the number that was called)
+        if (!$companyId || !$branchId) {
+            if ($call->to_number) {
+                $toPhoneNumber = \App\Models\PhoneNumber::where('number', $call->to_number)->first();
+
+                if ($toPhoneNumber) {
+                    $companyId = $toPhoneNumber->company_id;
+                    $branchId = $toPhoneNumber->branch_id;
+
+                    Log::info('✅ getCallContext: Resolved company from to_number', [
+                        'call_id' => $call->id,
+                        'to_number' => $call->to_number,
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId
+                    ]);
+                } else {
+                    Log::error('❌ getCallContext: to_number not found in database', [
+                        'call_id' => $call->id,
+                        'to_number' => $call->to_number
+                    ]);
+                }
+            } else {
+                Log::error('❌ getCallContext: No to_number available', [
+                    'call_id' => $call->id
+                ]);
+            }
         }
 
         // Final validation: ensure we have valid company_id
@@ -218,7 +247,9 @@ class RetellFunctionCallHandler extends Controller
             Log::error('❌ getCallContext: Final validation failed - NULL company/branch', [
                 'call_id' => $call->id,
                 'company_id' => $companyId,
-                'branch_id' => $branchId
+                'branch_id' => $branchId,
+                'from_number' => $call->from_number,
+                'to_number' => $call->to_number
             ]);
             return null;
         }
@@ -275,6 +306,20 @@ class RetellFunctionCallHandler extends Controller
         $parameters = $data['args'] ?? $data['parameters'] ?? [];
         // Bug #6 Fix (Call 778): call_id is inside parameters/args, not at top level - CHECK PARAMETERS FIRST!
         $callId = $parameters['call_id'] ?? $data['call_id'] ?? null;
+
+        // 🔧 FIX 2025-10-24 15:35: Fallback if initialize_call doesn't have call_id parameter
+        // Problem: Retell Agent Config may not pass call_id in function arguments
+        // Evidence: Call 721 transcript shows initialize_call with "arguments": "{}"
+        // Solution: For initialize_call specifically, always use top-level call_id from webhook
+        if (str_contains($functionName, 'initialize_call') && (!$callId || $callId === 'None')) {
+            $callId = $data['call_id'] ?? null;
+            if ($callId && $callId !== 'None') {
+                Log::info('⚠️ initialize_call: Using top-level call_id (not in function parameters)', [
+                    'call_id' => $callId,
+                    'function' => $functionName
+                ]);
+            }
+        }
 
         // 🔧 FIX 2025-10-19: Agent sometimes sends "None" as string when call_id variable not injected
         // Fallback: Extract from root level webhook data
@@ -663,6 +708,49 @@ class RetellFunctionCallHandler extends Controller
                 'call_id' => $callId
             ]);
 
+            // 🔧 FIX 2025-10-25: Bug #11 - Validate minimum booking notice
+            // PROBLEM: System says "available" for times < 15 min in advance, then Cal.com rejects with 400
+            // SOLUTION: Validate booking notice upfront, provide helpful error with alternatives
+            $bookingValidator = app(\App\Services\Booking\BookingNoticeValidator::class);
+            $noticeValidation = $bookingValidator->validateBookingNotice($requestedDate, $service, $branchId);
+
+            if (!$noticeValidation['valid']) {
+                // Booking notice violation - suggest alternatives
+                $alternatives = $bookingValidator->suggestAlternatives($requestedDate, $service, $branchId, 2);
+                $errorMessage = $bookingValidator->formatErrorMessage($noticeValidation, $alternatives);
+
+                Log::warning('⏰ Booking notice validation failed', [
+                    'call_id' => $callId,
+                    'requested_time' => $requestedDate->toDateTimeString(),
+                    'minimum_notice_minutes' => $noticeValidation['minimum_notice_minutes'],
+                    'earliest_bookable' => $noticeValidation['earliest_bookable']->toDateTimeString(),
+                    'alternatives_count' => count($alternatives),
+                ]);
+
+                return [
+                    'success' => false,
+                    'available' => false,
+                    'reason' => 'booking_notice_violation',
+                    'message' => $errorMessage,
+                    'minimum_notice_minutes' => $noticeValidation['minimum_notice_minutes'],
+                    'earliest_bookable' => $noticeValidation['earliest_bookable']->format('Y-m-d H:i'),
+                    'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                    'alternatives' => array_map(function($alt) {
+                        return [
+                            'date' => $alt['date'],
+                            'time' => $alt['time'],
+                            'formatted' => $alt['formatted_de'],
+                        ];
+                    }, $alternatives),
+                ];
+            }
+
+            Log::info('✅ Booking notice validation passed', [
+                'call_id' => $callId,
+                'requested_time' => $requestedDate->toDateTimeString(),
+                'minimum_notice_minutes' => $noticeValidation['minimum_notice_minutes'],
+            ]);
+
             // 🔧 FIX 2025-10-22: Pin selected service to call session
             // PROBLEM: collectAppointment was using different service, causing Event Type mismatch
             // SOLUTION: Cache service_id for entire call session (30 min TTL)
@@ -855,6 +943,30 @@ class RetellFunctionCallHandler extends Controller
                     $service->calcom_event_type_id,
                     $customerId  // Pass customer ID to prevent offering conflicting times
                 );
+
+            // 🔧 FIX 2025-10-25: Bug #1 - Cache alternative dates for persistence across function calls
+            // PROBLEM: Agent offers "08:30 am gleichen Tag" (actually 27.10), user says "ja", but
+            //          book_appointment receives "morgen" → parsed as 26.10 (wrong!) → Cal.com rejects
+            // SOLUTION: Cache each alternative's ACTUAL date with call_id + time as key
+            if ($callId && isset($alternatives['alternatives'])) {
+                foreach ($alternatives['alternatives'] as $alt) {
+                    if (isset($alt['datetime']) && $alt['datetime'] instanceof \Carbon\Carbon) {
+                        $altTime = $alt['datetime']->format('H:i');
+                        $altDate = $alt['datetime']->format('Y-m-d');
+
+                        $cacheKey = "call:{$callId}:alternative_date:{$altTime}";
+                        Cache::put($cacheKey, $altDate, now()->addMinutes(30));
+
+                        Log::info('📅 Alternative date cached for future booking', [
+                            'call_id' => $callId,
+                            'time' => $altTime,
+                            'actual_date' => $altDate,
+                            'cache_key' => $cacheKey,
+                            'ttl_minutes' => 30
+                        ]);
+                    }
+                }
+            }
 
             return $this->responseFormatter->success([
                 'available' => false,
@@ -1873,8 +1985,31 @@ class RetellFunctionCallHandler extends Controller
             // Parse the date and time using existing helper methods
             $appointmentDate = null;
             if ($datum && $uhrzeit) {
-                // Use parseDateString() which handles relative dates (heute, morgen) AND German format
-                $parsedDateStr = $this->parseDateString($datum);
+                // 🔧 FIX 2025-10-25: Bug #1 - Retrieve cached alternative date if available
+                // PROBLEM: User selects alternative "08:30" from check_availability (actual date: 27.10)
+                //          but datum is still "morgen" → parseDateString returns 26.10 (WRONG!)
+                // SOLUTION: Check cache first for alternative dates from check_availability
+                $cachedAlternativeDate = null;
+                if ($callId) {
+                    // Extract just the time (HH:MM format)
+                    $timeOnly = strpos($uhrzeit, ':') !== false ? $uhrzeit : sprintf('%02d:00', intval($uhrzeit));
+                    $cacheKey = "call:{$callId}:alternative_date:{$timeOnly}";
+                    $cachedAlternativeDate = Cache::get($cacheKey);
+
+                    if ($cachedAlternativeDate) {
+                        Log::info('✅ Using cached alternative date instead of parsing datum', [
+                            'call_id' => $callId,
+                            'datum_input' => $datum,
+                            'uhrzeit_input' => $uhrzeit,
+                            'cached_date' => $cachedAlternativeDate,
+                            'cache_key' => $cacheKey,
+                            'reason' => 'Alternative date from check_availability preserved'
+                        ]);
+                    }
+                }
+
+                // Use cached alternative date OR fallback to parseDateString
+                $parsedDateStr = $cachedAlternativeDate ?? $this->parseDateString($datum);
 
                 if ($parsedDateStr) {
                     $appointmentDate = Carbon::parse($parsedDateStr);
@@ -1888,11 +2023,12 @@ class RetellFunctionCallHandler extends Controller
                     }
                     $appointmentDate->setTime($hour, $minute);
 
-                    Log::info('✅ Date parsed successfully using parseDateString()', [
+                    Log::info('✅ Date parsed successfully', [
                         'input_datum' => $datum,
                         'input_uhrzeit' => $uhrzeit,
                         'parsed_date' => $parsedDateStr,
-                        'final_datetime' => $appointmentDate->format('Y-m-d H:i')
+                        'final_datetime' => $appointmentDate->format('Y-m-d H:i'),
+                        'used_cached_alternative' => $cachedAlternativeDate !== null
                     ]);
 
                     // 🔧 FIX (Call 863): Past-Time-Validation
@@ -2000,18 +2136,39 @@ class RetellFunctionCallHandler extends Controller
 
             // Fallback to default service selection if no pinned service
             if (!$service && $companyId) {
-                $service = $this->serviceSelector->getDefaultService($companyId, $branchId);  // ← FIX: Pass branchId!
+                // 🔧 BUG FIX #10 (2025-10-25): Use intelligent service matching when user provides service name
+                // PROBLEM: getDefaultService() returned ID 41 (Damenhaarschnitt) alphabetically
+                //          Even when user said "Herrenhaarschnitt" (ID 42)
+                // SOLUTION: Use findServiceByName() with fuzzy matching when dienstleistung provided
+                if ($dienstleistung) {
+                    $service = $this->serviceSelector->findServiceByName($dienstleistung, $companyId, $branchId);
 
-                Log::info('📋 Dynamic service selection for company', [
-                    'company_id' => $companyId,
-                    'branch_id' => $branchId,  // ← FIX: Log branch_id
-                    'service_id' => $service ? $service->id : null,
-                    'service_name' => $service ? $service->name : null,
-                    'event_type_id' => $service ? $service->calcom_event_type_id : null,
-                    'is_default' => $service ? $service->is_default : false,
-                    'priority' => $service ? $service->priority : null,
-                    'source' => 'default_selection'
-                ]);
+                    Log::info('🔍 Service matched by name (Bug #10 fix)', [
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId,
+                        'requested_service' => $dienstleistung,
+                        'matched_service_id' => $service?->id,
+                        'matched_service_name' => $service?->name,
+                        'event_type_id' => $service?->calcom_event_type_id,
+                        'source' => 'intelligent_matching'
+                    ]);
+                }
+
+                // Fallback to default only if no service name provided OR matching failed
+                if (!$service) {
+                    $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+
+                    Log::info('📋 Dynamic service selection for company (fallback)', [
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId,
+                        'service_id' => $service ? $service->id : null,
+                        'service_name' => $service ? $service->name : null,
+                        'event_type_id' => $service ? $service->calcom_event_type_id : null,
+                        'is_default' => $service ? $service->is_default : false,
+                        'priority' => $service ? $service->priority : null,
+                        'source' => 'default_selection'
+                    ]);
+                }
 
                 // Pin this service for subsequent calls in this session
                 if ($service && $callId) {
@@ -2021,7 +2178,9 @@ class RetellFunctionCallHandler extends Controller
 
                     Log::info('📌 Service pinned for future calls in session', [
                         'call_id' => $callId,
-                        'service_id' => $service->id
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'pinned_from' => $dienstleistung ? 'name_match' : 'default'
                     ]);
                 }
             }
@@ -2512,11 +2671,22 @@ class RetellFunctionCallHandler extends Controller
                                     }
                                 }
 
+                                // 📧 Get customer email for confirmation message
+                                $customerEmail = $this->dataValidator->getValidEmail($args, $currentCall);
+                                $emailConfirmationText = '';
+
+                                if ($customerEmail && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+                                    $emailConfirmationText = " Sie erhalten eine Bestätigungs-E-Mail an {$customerEmail}.";
+                                } else {
+                                    $emailConfirmationText = " Bitte beachten Sie, dass keine E-Mail-Bestätigung gesendet werden konnte.";
+                                }
+
                                 return response()->json([
                                     'success' => true,
                                     'status' => 'booked',
-                                    'message' => "Perfekt! Ihr Termin am {$datum} um {$uhrzeit} wurde erfolgreich gebucht. Sie erhalten eine Bestätigung.",
-                                    'appointment_id' => $booking['uid'] ?? $booking['id'] ?? 'confirmed'
+                                    'message' => "Perfekt! Ihr Termin am {$datum} um {$uhrzeit} wurde erfolgreich gebucht.{$emailConfirmationText}",
+                                    'appointment_id' => $booking['uid'] ?? $booking['id'] ?? 'confirmed',
+                                    'confirmation_email_sent' => !empty($customerEmail)
                                 ], 200);
                             } else {
                                 // Cal.com API returned an error - treat as unavailable and offer alternatives
@@ -4495,18 +4665,21 @@ class RetellFunctionCallHandler extends Controller
             'original_args_bestaetigung' => $request->input('args.bestaetigung', 'NOT_SET')
         ]);
 
-        // 🔧 FIX: Inject bestaetigung into args array (not just top-level)
+        // 🔧 FIX 2025-10-25: Inject both call_id AND bestaetigung into args
+        // Retell doesn't provide call_id as dynamic variable, so we extract from call.call_id
         $data = $request->all();
         $args = $data['args'] ?? [];
         $args['bestaetigung'] = false;  // Type-safe boolean false
+        $args['call_id'] = $request->input('call.call_id');  // Extract from call object
         $data['args'] = $args;
 
         // Replace request data with modified args
         $request->replace($data);
 
-        Log::info('🔧 V17: Injected bestaetigung=false into args', [
+        Log::info('🔧 V17: Injected bestaetigung=false and call_id into args', [
             'args_bestaetigung' => $request->input('args.bestaetigung'),
             'args_bestaetigung_type' => gettype($request->input('args.bestaetigung')),
+            'args_call_id' => $request->input('args.call_id'),
             'verification' => $request->input('args.bestaetigung') === false ? 'CORRECT' : 'FAILED'
         ]);
 
@@ -4534,24 +4707,510 @@ class RetellFunctionCallHandler extends Controller
             'original_args_bestaetigung' => $request->input('args.bestaetigung', 'NOT_SET')
         ]);
 
-        // 🔧 FIX: Inject bestaetigung into args array (not just top-level)
+        // 🔧 FIX 2025-10-25: Inject both call_id AND bestaetigung into args
+        // Retell doesn't provide call_id as dynamic variable, so we extract from call.call_id
         // collectAppointment extracts: $confirmBooking = $args['bestaetigung'] ?? null;
         $data = $request->all();
         $args = $data['args'] ?? [];
         $args['bestaetigung'] = true;  // Type-safe boolean true
+        $args['call_id'] = $request->input('call.call_id');  // Extract from call object
         $data['args'] = $args;
 
         // Replace request data with modified args
         $request->replace($data);
 
-        Log::info('🔧 V17: Injected bestaetigung=true into args', [
+        Log::info('🔧 V17: Injected bestaetigung=true and call_id into args', [
             'args_bestaetigung' => $request->input('args.bestaetigung'),
             'args_bestaetigung_type' => gettype($request->input('args.bestaetigung')),
+            'args_call_id' => $request->input('args.call_id'),
             'verification' => $request->input('args.bestaetigung') === true ? 'CORRECT' : 'FAILED'
         ]);
 
         // Call the main collectAppointment method
         return $this->collectAppointment($request);
+    }
+
+    /**
+     * 🚀 V4: Initialize Call Wrapper
+     *
+     * Wrapper that injects call_id for initialize_call function
+     * Used by Conversation Flow V4 for customer identification
+     *
+     * POST /api/retell/initialize-call-v4
+     */
+    public function initializeCallV4(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+
+        Log::info('🔍 V4: Initialize Call', [
+            'call_id' => $callId,
+            'params' => $request->except(['call'])
+        ]);
+
+        // 🔧 V4: Inject call_id into args
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['call_id'] = $callId;
+        $data['args'] = $args;
+        $request->replace($data);
+
+        Log::info('🔧 V4: Injected call_id into args', [
+            'args_call_id' => $request->input('args.call_id')
+        ]);
+
+        // Call private initializeCall method
+        return $this->initializeCall($args, $callId);
+    }
+
+    /**
+     * 🚀 V4: Get Customer Appointments Wrapper
+     *
+     * Wrapper that injects call_id for get_customer_appointments function
+     * Used by Conversation Flow V4 for listing customer appointments
+     *
+     * POST /api/retell/get-appointments-v4
+     */
+    public function getCustomerAppointmentsV4(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+        $customerName = $request->input('args.customer_name');
+
+        Log::info('📋 V4: Get Customer Appointments', [
+            'call_id' => $callId,
+            'customer_name' => $customerName,
+            'params' => $request->except(['call'])
+        ]);
+
+        // 🔧 V4: Inject call_id into args
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['call_id'] = $callId;
+        $data['args'] = $args;
+        $request->replace($data);
+
+        Log::info('🔧 V4: Injected call_id into args', [
+            'args_call_id' => $request->input('args.call_id')
+        ]);
+
+        try {
+            // Get call context
+            $context = $this->getCallContext($callId);
+
+            if (!$context) {
+                Log::error('❌ Failed to get call context', ['call_id' => $callId]);
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'context_not_found',
+                    'message' => 'Ich konnte Ihre Daten nicht laden. Bitte versuchen Sie es erneut.'
+                ]);
+            }
+
+            // Get customer appointments
+            $customerId = $context['customer_id'] ?? null;
+            $companyId = $context['company_id'];
+
+            if (!$customerId) {
+                return $this->responseFormatter->success([
+                    'success' => true,
+                    'appointments' => [],
+                    'message' => 'Sie haben noch keine Termine.'
+                ]);
+            }
+
+            $appointments = \App\Models\Appointment::where('customer_id', $customerId)
+                ->where('company_id', $companyId)
+                ->where('starts_at', '>=', now())
+                ->orderBy('starts_at', 'asc')
+                ->get();
+
+            $formatted = $appointments->map(function ($apt) {
+                return [
+                    'id' => $apt->id,
+                    'date' => $apt->starts_at->format('d.m.Y'),
+                    'time' => $apt->starts_at->format('H:i'),
+                    'service' => $apt->service->name ?? 'Unbekannt',
+                    'staff' => $apt->staff->name ?? 'Unbekannt'
+                ];
+            });
+
+            Log::info('✅ V4: Retrieved customer appointments', [
+                'call_id' => $callId,
+                'customer_id' => $customerId,
+                'count' => $formatted->count()
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => true,
+                'appointments' => $formatted->toArray(),
+                'message' => $formatted->isEmpty()
+                    ? 'Sie haben keine bevorstehenden Termine.'
+                    : "Sie haben {$formatted->count()} Termin(e)."
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ V4: Get appointments failed', [
+                'error' => $e->getMessage(),
+                'call_id' => $callId
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Es gab ein Problem beim Laden Ihrer Termine.'
+            ]);
+        }
+    }
+
+    /**
+     * 🚀 V4: Cancel Appointment Wrapper
+     *
+     * Wrapper that injects call_id for cancel_appointment function
+     * Used by Conversation Flow V4 for cancelling appointments
+     *
+     * POST /api/retell/cancel-appointment-v4
+     */
+    public function cancelAppointmentV4(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+        $appointmentId = $request->input('args.appointment_id');
+        $datum = $request->input('args.datum');
+        $uhrzeit = $request->input('args.uhrzeit');
+
+        Log::info('❌ V4: Cancel Appointment', [
+            'call_id' => $callId,
+            'appointment_id' => $appointmentId,
+            'datum' => $datum,
+            'uhrzeit' => $uhrzeit,
+            'params' => $request->except(['call'])
+        ]);
+
+        // 🔧 V4: Inject call_id into args
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['call_id'] = $callId;
+        $data['args'] = $args;
+        $request->replace($data);
+
+        Log::info('🔧 V4: Injected call_id into args', [
+            'args_call_id' => $request->input('args.call_id')
+        ]);
+
+        try {
+            // Get call context
+            $context = $this->getCallContext($callId);
+
+            if (!$context) {
+                Log::error('❌ Failed to get call context', ['call_id' => $callId]);
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'context_not_found',
+                    'message' => 'Ich konnte Ihre Daten nicht laden.'
+                ]);
+            }
+
+            $customerId = $context['customer_id'] ?? null;
+            $companyId = $context['company_id'];
+
+            // Find appointment
+            $query = \App\Models\Appointment::where('company_id', $companyId);
+
+            if ($appointmentId) {
+                $query->where('id', $appointmentId);
+            } else if ($datum && $uhrzeit) {
+                // Parse date/time
+                $startDateTime = \Carbon\Carbon::createFromFormat('d.m.Y H:i', "$datum $uhrzeit");
+                $query->where('starts_at', $startDateTime);
+            }
+
+            if ($customerId) {
+                $query->where('customer_id', $customerId);
+            }
+
+            $appointment = $query->first();
+
+            if (!$appointment) {
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'appointment_not_found',
+                    'message' => 'Ich konnte den Termin nicht finden.'
+                ]);
+            }
+
+            // Cancel in Cal.com
+            $calcomService = app(\App\Services\CalcomService::class);
+            $calcomService->cancelBooking($appointment->calcom_booking_id);
+
+            // Update local record
+            $appointment->status = 'cancelled';
+            $appointment->save();
+
+            Log::info('✅ V4: Appointment cancelled successfully', [
+                'call_id' => $callId,
+                'appointment_id' => $appointment->id,
+                'calcom_booking_id' => $appointment->calcom_booking_id
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => true,
+                'appointment_id' => $appointment->id,
+                'message' => "Ihr Termin am {$appointment->starts_at->format('d.m.Y')} um {$appointment->starts_at->format('H:i')} Uhr wurde storniert."
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ V4: Cancel appointment failed', [
+                'error' => $e->getMessage(),
+                'call_id' => $callId,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Die Stornierung konnte nicht durchgeführt werden.'
+            ]);
+        }
+    }
+
+    /**
+     * 🚀 V4: Reschedule Appointment Wrapper
+     *
+     * Wrapper that injects call_id for reschedule_appointment function
+     * Used by Conversation Flow V4 for rescheduling appointments
+     *
+     * POST /api/retell/reschedule-appointment-v4
+     */
+    public function rescheduleAppointmentV4(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+        $appointmentId = $request->input('args.appointment_id');
+        $oldDatum = $request->input('args.old_datum');
+        $oldUhrzeit = $request->input('args.old_uhrzeit');
+        $newDatum = $request->input('args.new_datum');
+        $newUhrzeit = $request->input('args.new_uhrzeit');
+
+        Log::info('🔄 V4: Reschedule Appointment', [
+            'call_id' => $callId,
+            'appointment_id' => $appointmentId,
+            'old_datum' => $oldDatum,
+            'old_uhrzeit' => $oldUhrzeit,
+            'new_datum' => $newDatum,
+            'new_uhrzeit' => $newUhrzeit,
+            'params' => $request->except(['call'])
+        ]);
+
+        // 🔧 V4: Inject call_id into args
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['call_id'] = $callId;
+        $data['args'] = $args;
+        $request->replace($data);
+
+        Log::info('🔧 V4: Injected call_id into args', [
+            'args_call_id' => $request->input('args.call_id')
+        ]);
+
+        try {
+            // Get call context
+            $context = $this->getCallContext($callId);
+
+            if (!$context) {
+                Log::error('❌ Failed to get call context', ['call_id' => $callId]);
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'context_not_found',
+                    'message' => 'Ich konnte Ihre Daten nicht laden.'
+                ]);
+            }
+
+            $customerId = $context['customer_id'] ?? null;
+            $companyId = $context['company_id'];
+
+            // Find appointment
+            $query = \App\Models\Appointment::where('company_id', $companyId);
+
+            if ($appointmentId) {
+                $query->where('id', $appointmentId);
+            } else if ($oldDatum && $oldUhrzeit) {
+                // 🔧 FIX 2025-10-25: Bug #2 - Parse date using DateTimeParser to support German weekdays
+                // Old: Carbon::createFromFormat('d.m.Y H:i', "$oldDatum $oldUhrzeit") - fails for "Montag 08:30"
+                // New: Use DateTimeParser service to handle "Montag", "Dienstag", etc.
+                $parsedDate = $this->dateTimeParser->parseDateString($oldDatum);
+
+                if (!$parsedDate) {
+                    Log::error('❌ V10: Failed to parse old appointment date', [
+                        'call_id' => $callId,
+                        'old_datum' => $oldDatum,
+                        'old_uhrzeit' => $oldUhrzeit,
+                    ]);
+
+                    return $this->responseFormatter->success([
+                        'success' => false,
+                        'error' => 'invalid_date_format',
+                        'message' => 'Ich konnte das Datum nicht verstehen. Bitte nennen Sie mir das Datum im Format "01.10.2025" oder als Wochentag wie "Montag".'
+                    ]);
+                }
+
+                // Parse time: Remove "Uhr" and extract HH:MM
+                $cleanTime = trim(preg_replace('/\s*uhr\s*$/i', '', $oldUhrzeit));
+                if (!str_contains($cleanTime, ':')) {
+                    $cleanTime .= ':00'; // Add :00 if only hour provided
+                }
+
+                $oldDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', "$parsedDate $cleanTime", 'Europe/Berlin');
+
+                Log::info('✅ V10: Parsed old appointment datetime using DateTimeParser', [
+                    'call_id' => $callId,
+                    'input_datum' => $oldDatum,
+                    'input_uhrzeit' => $oldUhrzeit,
+                    'parsed_date' => $parsedDate,
+                    'clean_time' => $cleanTime,
+                    'final_datetime' => $oldDateTime->toDateTimeString(),
+                ]);
+
+                $query->where('starts_at', $oldDateTime);
+            }
+
+            if ($customerId) {
+                $query->where('customer_id', $customerId);
+            }
+
+            $appointment = $query->first();
+
+            if (!$appointment) {
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'appointment_not_found',
+                    'message' => 'Ich konnte den Termin nicht finden.'
+                ]);
+            }
+
+            // 🔧 FIX 2025-10-25: Bug #2 - Parse new date using DateTimeParser to support German weekdays
+            $parsedNewDate = $this->dateTimeParser->parseDateString($newDatum);
+
+            if (!$parsedNewDate) {
+                Log::error('❌ V10: Failed to parse new appointment date', [
+                    'call_id' => $callId,
+                    'new_datum' => $newDatum,
+                    'new_uhrzeit' => $newUhrzeit,
+                ]);
+
+                return $this->responseFormatter->success([
+                    'success' => false,
+                    'error' => 'invalid_date_format',
+                    'message' => 'Ich konnte das neue Datum nicht verstehen. Bitte nennen Sie mir das Datum im Format "01.10.2025" oder als Wochentag wie "Montag".'
+                ]);
+            }
+
+            // Parse time: Remove "Uhr" and extract HH:MM
+            $cleanNewTime = trim(preg_replace('/\s*uhr\s*$/i', '', $newUhrzeit));
+            if (!str_contains($cleanNewTime, ':')) {
+                $cleanNewTime .= ':00'; // Add :00 if only hour provided
+            }
+
+            $newDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', "$parsedNewDate $cleanNewTime", 'Europe/Berlin');
+
+            Log::info('✅ V10: Parsed new appointment datetime using DateTimeParser', [
+                'call_id' => $callId,
+                'input_datum' => $newDatum,
+                'input_uhrzeit' => $newUhrzeit,
+                'parsed_date' => $parsedNewDate,
+                'clean_time' => $cleanNewTime,
+                'final_datetime' => $newDateTime->toDateTimeString(),
+            ]);
+
+            // Transaction-safe: Cancel old + Book new
+            \DB::beginTransaction();
+            try {
+                $calcomService = app(\App\Services\CalcomService::class);
+
+                // Cancel old booking
+                $calcomService->cancelBooking($appointment->calcom_booking_id);
+
+                // Create new booking
+                $newBooking = $calcomService->createBooking([
+                    'event_type_id' => $appointment->calcom_event_type_id,
+                    'start_time' => $newDateTime->toIso8601String(),
+                    'attendee' => [
+                        'name' => $appointment->customer->name,
+                        'email' => $appointment->customer->email ?? 'noreply@askproai.de',
+                        'phone' => $appointment->customer->phone
+                    ],
+                    'metadata' => [
+                        'service' => $appointment->service->name,
+                        'reschedule_from' => $appointment->starts_at->toIso8601String()
+                    ]
+                ]);
+
+                // Update appointment
+                $appointment->starts_at = $newDateTime;
+                $appointment->calcom_booking_id = $newBooking['id'];
+                $appointment->save();
+
+                \DB::commit();
+
+                Log::info('✅ V4: Appointment rescheduled successfully', [
+                    'call_id' => $callId,
+                    'appointment_id' => $appointment->id,
+                    'old_time' => $oldDatum . ' ' . $oldUhrzeit,
+                    'new_time' => $newDatum . ' ' . $newUhrzeit
+                ]);
+
+                return $this->responseFormatter->success([
+                    'success' => true,
+                    'appointment_id' => $appointment->id,
+                    'message' => "Ihr Termin wurde erfolgreich verschoben auf {$newDatum} um {$newUhrzeit} Uhr."
+                ]);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ V4: Reschedule appointment failed', [
+                'error' => $e->getMessage(),
+                'call_id' => $callId,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->responseFormatter->success([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Die Verschiebung konnte nicht durchgeführt werden.'
+            ]);
+        }
+    }
+
+    /**
+     * 🚀 V4: Get Available Services Wrapper
+     *
+     * Wrapper that injects call_id for get_available_services function
+     * Used by Conversation Flow V4 for listing services
+     *
+     * POST /api/retell/get-services-v4
+     */
+    public function getAvailableServicesV4(Request $request)
+    {
+        $callId = $request->input('call.call_id');
+
+        Log::info('📋 V4: Get Available Services', [
+            'call_id' => $callId,
+            'params' => $request->except(['call'])
+        ]);
+
+        // 🔧 V4: Inject call_id into args
+        $data = $request->all();
+        $args = $data['args'] ?? [];
+        $args['call_id'] = $callId;
+        $data['args'] = $args;
+        $request->replace($data);
+
+        Log::info('🔧 V4: Injected call_id into args', [
+            'args_call_id' => $request->input('args.call_id')
+        ]);
+
+        // Call existing getAvailableServices method
+        return $this->getAvailableServices($request);
     }
 
     /**
@@ -4685,24 +5344,54 @@ class RetellFunctionCallHandler extends Controller
                 'parameters' => $parameters
             ]);
 
+            // 🔧 RACE CONDITION FIX 2025-10-24: Create Call record if it doesn't exist
+            // ROOT CAUSE: Retell calls initialize_call BEFORE webhook creates Call record
+            // Evidence: Call 720 created 33 seconds AFTER initialize_call ran
+            // Solution: Use firstOrCreate to ensure Call exists before getCallContext()
+            // This guarantees to_number lookup in CallLifecycleService can execute
+
+            if ($callId && $callId !== 'None') {
+                $call = \App\Models\Call::firstOrCreate(
+                    ['retell_call_id' => $callId],
+                    [
+                        'from_number' => $parameters['from_number'] ?? $parameters['caller_number'] ?? null,
+                        'to_number' => $parameters['to_number'] ?? $parameters['called_number'] ?? null,
+                        'call_status' => 'ongoing',
+                        'start_timestamp' => now(),
+                        'direction' => 'inbound'
+                    ]
+                );
+
+                Log::info('✅ initialize_call: Call record ensured', [
+                    'call_id' => $callId,
+                    'call_db_id' => $call->id,
+                    'was_created' => $call->wasRecentlyCreated,
+                    'from_number' => $call->from_number,
+                    'to_number' => $call->to_number
+                ]);
+            }
+
             // Get call context (company_id, branch_id)
             $context = $this->getCallContext($callId);
 
-            // 🔧 FIX 2025-10-24: STRICT validation - ensure company_id exists (not just array exists)
-            // Race condition: Call created with NULL company_id, then enriched asynchronously
-            // Array exists but contains NULL values - must check company_id explicitly
+            // 🔧 FINAL FIX 2025-10-24 16:50: ALLOW call to proceed even without company_id
+            // ROOT CAUSE: initialize_call runs BEFORE call_started webhook can create Call record
+            // SOLUTION: Return success and let webhook set company_id asynchronously
+            // Subsequent functions will work because Call record will exist by then
             if (!$context || !$context['company_id']) {
-                Log::error('❌ initialize_call: Company ID missing or NULL', [
+                Log::warning('⚠️ initialize_call: Company not yet resolved, proceeding anyway', [
                     'call_id' => $callId,
                     'context' => $context,
-                    'issue' => 'Call not yet enriched with company_id (race condition)',
-                    'suggestion' => 'Retell calling too early, before company enrichment'
+                    'race_condition' => 'initialize_call runs before call_started webhook',
+                    'resolution' => 'call_started webhook will set company_id within milliseconds',
+                    'next_functions_will_work' => true
                 ]);
 
+                // 🎯 ALLOW THE CALL TO PROCEED - AI speaks immediately!
                 return $this->responseFormatter->success([
-                    'success' => false,
-                    'error' => 'Call context incomplete - company not resolved',
-                    'message' => 'Guten Tag! Wie kann ich Ihnen helfen?'
+                    'success' => true,
+                    'message' => 'Guten Tag! Wie kann ich Ihnen helfen?',
+                    'note' => 'Company context will be resolved by webhook momentarily'
                 ]);
             }
 
