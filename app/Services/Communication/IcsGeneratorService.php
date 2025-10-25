@@ -21,20 +21,9 @@ class IcsGeneratorService
      */
     public function generateCompositeIcs(Appointment $appointment): string
     {
-        // Create timezone component for Europe/Berlin with DST rules
-        $timezone = Timezone::create('Europe/Berlin')
-            ->withStandardTransition(
-                offsetFrom: '+02:00',
-                offsetTo: '+01:00',
-                starts: DateTime::createFromFormat('Ymd\THis', '19701025T030000'),
-                recurringRule: 'FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU'
-            )
-            ->withDaylightTransition(
-                offsetFrom: '+01:00',
-                offsetTo: '+02:00',
-                starts: DateTime::createFromFormat('Ymd\THis', '19700329T020000'),
-                recurringRule: 'FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU'
-            );
+        // 🔧 FIX 2025-10-25: Bug #3 - Simplified timezone handling for Spatie v3
+        // Old: Manual timezone transitions with withStandardTransition/withDaylightTransition (v2 API - doesn't exist in v3)
+        // New: Let Spatie auto-generate timezone components (simpler and handles DST correctly)
 
         // Create main event for total timespan
         $event = Event::create()
@@ -59,11 +48,9 @@ class IcsGeneratorService
                 ->triggerBeforeStart(new \DateInterval('PT1H')) // 1 hour before
         );
 
-        // Build calendar
+        // Build calendar - Spatie v3 auto-generates timezone components from event datetimes
         $calendar = Calendar::create()
             ->productIdentifier('-//AskProAI//Appointment//DE')
-            ->withoutAutoTimezoneComponents()
-            ->timezone($timezone)
             ->event($event)
             ->refreshInterval(new \DateInterval('PT1H'));
 
@@ -75,19 +62,7 @@ class IcsGeneratorService
      */
     public function generateSimpleIcs(Appointment $appointment): string
     {
-        $timezone = Timezone::create('Europe/Berlin')
-            ->withStandardTransition(
-                offsetFrom: '+02:00',
-                offsetTo: '+01:00',
-                starts: DateTime::createFromFormat('Ymd\THis', '19701025T030000'),
-                recurringRule: 'FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU'
-            )
-            ->withDaylightTransition(
-                offsetFrom: '+01:00',
-                offsetTo: '+02:00',
-                starts: DateTime::createFromFormat('Ymd\THis', '19700329T020000'),
-                recurringRule: 'FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU'
-            );
+        // 🔧 FIX 2025-10-25: Bug #3 - Simplified timezone handling for Spatie v3 (same as composite)
 
         $event = Event::create()
             ->uniqueIdentifier($appointment->id . '@askpro.ai')
@@ -111,10 +86,9 @@ class IcsGeneratorService
                 ->triggerBeforeStart(new \DateInterval('PT1H'))
         );
 
+        // Spatie v3 auto-generates timezone components
         $calendar = Calendar::create()
             ->productIdentifier('-//AskProAI//Appointment//DE')
-            ->withoutAutoTimezoneComponents()
-            ->timezone($timezone)
             ->event($event)
             ->refreshInterval(new \DateInterval('PT1H'));
 
