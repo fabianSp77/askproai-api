@@ -7846,12 +7846,7 @@ function showHtmlModal(html) {
   document.body.prepend(modal);
   document.body.style.overflow = "hidden";
   iframe.contentWindow.document.open();
-  // iframe.contentWindow.document.write(page.outerHTML); // DISABLED
-  try {
-    iframe.contentWindow.document.body.innerHTML = page.querySelector('body') ? page.querySelector('body').innerHTML : page.outerHTML;
-  } catch(e) {
-    console.warn('[Livewire] Safe innerHTML fallback:', e);
-  }
+  iframe.contentWindow.document.write(page.outerHTML);
   iframe.contentWindow.document.close();
   modal.addEventListener("click", () => hideHtmlModal(modal));
   modal.setAttribute("tabindex", 0);

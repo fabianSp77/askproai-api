@@ -49,6 +49,21 @@
             "date": 1761110328985,
             "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-22.log",
             "hash": "1d3f69bfef2c941459e2c2eccc0d776d9fc4ab0e87046cb2bdc3f4cec71a48f4"
+        },
+        {
+            "date": 1761200963873,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-23.log",
+            "hash": "27b03a97b0037f86e49e16564a01923bbcf83ffca73920581d3330d2a88e04a3"
+        },
+        {
+            "date": 1761280046777,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-24.log",
+            "hash": "6c525b205ce13bdcb7d0ee4c40554dfaf15a4daf73663e17d2c49d237cdb2dc3"
+        },
+        {
+            "date": 1761371340425,
+            "name": "/var/www/api-gateway/logs/mcp-puppeteer-2025-10-25.log",
+            "hash": "4ac126aceaf43486f4d70d37f968cf0361282d2a4bbffc17e4c3a69e2bd93cfa"
         }
     ],
     "hashType": "sha256"

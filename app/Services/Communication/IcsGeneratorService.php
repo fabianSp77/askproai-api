@@ -33,26 +33,24 @@ class IcsGeneratorService
             ->name($appointment->service->name . ' (inkl. Einwirkzeit)')
             ->description($this->buildCompositeDescription($appointment))
             ->address($this->getFullAddress($appointment))
-            ->status(EventStatus::confirmed())
+            ->status(EventStatus::Confirmed)
             ->transparent(false) // OPAQUE - blocks calendar
             ->organizer($this->getOrganizerEmail($appointment))
             ->attendee($appointment->customer->email, $appointment->customer->name)
             ->createdAt(Carbon::parse($appointment->created_at));
 
-        // Add alarms (reminders)
+        // Add alarms (reminders) - Spatie v3 API
         $event = $event->alert(
-            Alert::display($appointment->service->name . ' - Termin morgen')
-                ->triggerBeforeStart(new \DateInterval('P1D')) // 24 hours before
+            Alert::minutesBeforeStart(1440, $appointment->service->name . ' - Termin morgen') // 24 hours = 1440 min
         )->alert(
-            Alert::display($appointment->service->name . ' - Termin in 1 Stunde')
-                ->triggerBeforeStart(new \DateInterval('PT1H')) // 1 hour before
+            Alert::minutesBeforeStart(60, $appointment->service->name . ' - Termin in 1 Stunde') // 1 hour = 60 min
         );
 
         // Build calendar - Spatie v3 auto-generates timezone components from event datetimes
         $calendar = Calendar::create()
             ->productIdentifier('-//AskProAI//Appointment//DE')
             ->event($event)
-            ->refreshInterval(new \DateInterval('PT1H'));
+            ->refreshInterval(60); // 1 hour = 60 minutes
 
         return $calendar->get();
     }
@@ -71,26 +69,24 @@ class IcsGeneratorService
             ->name($appointment->service->name)
             ->description($this->buildSimpleDescription($appointment))
             ->address($this->getFullAddress($appointment))
-            ->status(EventStatus::confirmed())
+            ->status(EventStatus::Confirmed)
             ->transparent(false)
             ->organizer($this->getOrganizerEmail($appointment))
             ->attendee($appointment->customer->email, $appointment->customer->name)
             ->createdAt(Carbon::parse($appointment->created_at));
 
-        // Add reminders
+        // Add reminders - Spatie v3 API
         $event = $event->alert(
-            Alert::display($appointment->service->name . ' - Termin morgen')
-                ->triggerBeforeStart(new \DateInterval('P1D'))
+            Alert::minutesBeforeStart(1440, $appointment->service->name . ' - Termin morgen') // 24 hours = 1440 min
         )->alert(
-            Alert::display($appointment->service->name . ' - Termin in 1 Stunde')
-                ->triggerBeforeStart(new \DateInterval('PT1H'))
+            Alert::minutesBeforeStart(60, $appointment->service->name . ' - Termin in 1 Stunde') // 1 hour = 60 min
         );
 
         // Spatie v3 auto-generates timezone components
         $calendar = Calendar::create()
             ->productIdentifier('-//AskProAI//Appointment//DE')
             ->event($event)
-            ->refreshInterval(new \DateInterval('PT1H'));
+            ->refreshInterval(60); // 1 hour = 60 minutes
 
         return $calendar->get();
     }
