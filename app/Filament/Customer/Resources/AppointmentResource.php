@@ -2,7 +2,11 @@
 
 namespace App\Filament\Customer\Resources;
 
+use App\Filament\Concerns\HasCachedNavigationBadge;
 use App\Filament\Customer\Resources\AppointmentResource\Pages;
+use App\Filament\Resources\CustomerResource;
+use App\Filament\Resources\ServiceResource;
+use App\Filament\Resources\StaffResource;
 use App\Models\Appointment;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -18,6 +22,8 @@ use Illuminate\Support\Carbon;
 
 class AppointmentResource extends Resource
 {
+    use HasCachedNavigationBadge;
+
     protected static ?string $model = Appointment::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationGroup = 'CRM';
@@ -28,23 +34,29 @@ class AppointmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('company_id', auth()->user()->company_id)
-            ->whereNotNull('starts_at')
-            ->count();
+        // ✅ With caching - Customer Portal scoped to company
+        return static::getCachedBadge(function() {
+            return static::getModel()::where('company_id', auth()->user()->company_id)
+                ->whereNotNull('starts_at')
+                ->count();
+        });
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = static::getModel()::where('company_id', auth()->user()->company_id)
-            ->whereNotNull('starts_at')
-            ->count();
-        return $count > 50 ? 'danger' : ($count > 20 ? 'warning' : 'info');
+        // ✅ With caching - Customer Portal
+        return static::getCachedBadgeColor(function() {
+            $count = static::getModel()::where('company_id', auth()->user()->company_id)
+                ->whereNotNull('starts_at')
+                ->count();
+            return $count > 50 ? 'danger' : ($count > 20 ? 'warning' : 'info');
+        });
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('starts_at', 'desc')
+            ->defaultSort('starts_at', 'asc')
             ->columns([
                 // Time slot column with smart formatting
                 Tables\Columns\TextColumn::make('starts_at')
@@ -66,7 +78,39 @@ class AppointmentResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-m-user')
-                    ->description(fn ($record) => $record->customer?->phone),
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        if (!$record->customer) {
+                            return '<span class="text-gray-400">Kein Kunde</span>';
+                        }
+
+                        // Determine verification status from appointment metadata
+                        $verified = null;
+                        $verificationSource = null;
+                        $additionalInfo = null;
+
+                        // Check if appointment has verification metadata
+                        if ($record->metadata && is_array($record->metadata)) {
+                            $verified = $record->metadata['customer_verified'] ?? null;
+                            $verificationSource = $record->metadata['verification_source'] ?? 'customer_linked';
+                            $additionalInfo = $record->metadata['verification_info'] ?? null;
+                        } else {
+                            // Default: Customer linked = verified
+                            $verified = true;
+                            $verificationSource = 'customer_linked';
+                        }
+
+                        // Render the mobile-friendly verification badge
+                        return view('components.mobile-verification-badge', [
+                            'name' => $record->customer->name,
+                            'verified' => $verified,
+                            'verificationSource' => $verificationSource,
+                            'additionalInfo' => $additionalInfo,
+                            'phone' => $record->customer->phone,
+                        ])->render();
+                    })
+                    ->description(fn ($record) => $record->customer?->phone)
+                    ->tooltip(fn ($record) => $record->customer?->email),
 
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Service')
@@ -133,6 +177,15 @@ class AppointmentResource extends Resource
                     ->sortable()
                     ->toggleable()
                     ->alignEnd(),
+
+                Tables\Columns\IconColumn::make('reminder_24h_sent_at')
+                    ->label('Erinnerung')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-bell')
+                    ->falseIcon('heroicon-o-bell-slash')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('source')
                     ->label('Quelle')
@@ -252,33 +305,38 @@ class AppointmentResource extends Resource
                                     ->label('Status')
                                     ->badge()
                                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        'scheduled' => '📅 Geplant',
                                         'pending' => '⏳ Ausstehend',
                                         'confirmed' => '✅ Bestätigt',
                                         'in_progress' => '🔄 In Bearbeitung',
-                                        'completed' => '✨ Abgeschlossen',
+                                        'completed' => '✔️ Abgeschlossen',
                                         'cancelled' => '❌ Storniert',
-                                        'no_show' => '👻 Nicht erschienen',
+                                        'no_show' => '🚫 Nicht erschienen',
                                         default => $state,
                                     })
                                     ->color(fn (string $state): string => match ($state) {
+                                        'scheduled' => 'info',
                                         'pending' => 'warning',
                                         'confirmed' => 'success',
                                         'in_progress' => 'primary',
-                                        'completed' => 'info',
+                                        'completed' => 'gray',
                                         'cancelled' => 'danger',
-                                        'no_show' => 'gray',
+                                        'no_show' => 'warning',
                                         default => 'gray',
                                     }),
 
-                                TextEntry::make('source')
+                                TextEntry::make('booking_type')
                                     ->label('Buchungsart')
                                     ->badge()
                                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                        'online' => '💻 Online',
+                                        'single' => 'Einzeltermin',
+                                        'series' => '🔄 Wiederkehrend',
+                                        'group' => 'Gruppe',
+                                        'package' => 'Paket',
+                                        'online' => '🌐 Online',
                                         'phone' => '📞 Telefon',
-                                        'walk_in' => '🚶 Walk-In',
-                                        'app' => '📱 App',
-                                        'ai_assistant' => '🤖 KI-Assistent',
+                                        'walk-in' => '🚶 Walk-In',
+                                        'recurring' => '🔄 Wiederkehrend',
                                         default => $state ?? 'Standard',
                                     }),
                             ]),
@@ -308,17 +366,29 @@ class AppointmentResource extends Resource
                                 TextEntry::make('customer.name')
                                     ->label('Kunde')
                                     ->icon('heroicon-o-user')
+                                    ->url(fn ($record) => $record->customer_id
+                                        ? CustomerResource::getUrl('view', ['record' => $record->customer_id])
+                                        : null)
+                                    ->openUrlInNewTab()
                                     ->placeholder('Kein Kunde zugeordnet'),
 
                                 TextEntry::make('staff.name')
                                     ->label('Mitarbeiter')
                                     ->icon('heroicon-o-user-circle')
+                                    ->url(fn ($record) => $record->staff_id
+                                        ? StaffResource::getUrl('view', ['record' => $record->staff_id])
+                                        : null)
+                                    ->openUrlInNewTab()
                                     ->placeholder('Kein Mitarbeiter zugeordnet'),
                             ]),
 
                         TextEntry::make('service.name')
                             ->label('Service')
                             ->icon('heroicon-o-briefcase')
+                            ->url(fn ($record) => $record->service_id
+                                ? ServiceResource::getUrl('view', ['record' => $record->service_id])
+                                : null)
+                            ->openUrlInNewTab()
                             ->placeholder('Kein Service zugeordnet'),
 
                         InfoGrid::make(2)
@@ -328,10 +398,10 @@ class AppointmentResource extends Resource
                                     ->icon('heroicon-o-building-storefront')
                                     ->placeholder('Keine Filiale'),
 
-                                TextEntry::make('customer.phone')
-                                    ->label('Telefon')
-                                    ->icon('heroicon-o-phone')
-                                    ->placeholder('Keine Telefonnummer'),
+                                TextEntry::make('company.name')
+                                    ->label('Unternehmen')
+                                    ->icon('heroicon-o-building-office')
+                                    ->placeholder('Kein Unternehmen'),
                             ]),
                     ])
                     ->icon('heroicon-o-user-group')
@@ -352,15 +422,10 @@ class AppointmentResource extends Resource
                                     ->money('EUR')
                                     ->icon('heroicon-o-currency-euro'),
 
-                                TextEntry::make('booking_type')
-                                    ->label('Buchungstyp')
-                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                        'single' => 'Einzeltermin',
-                                        'series' => 'Serie',
-                                        'group' => 'Gruppe',
-                                        'package' => 'Paket',
-                                        default => $state ?? 'Einzeltermin',
-                                    }),
+                                TextEntry::make('travel_time_minutes')
+                                    ->label('Anfahrtszeit')
+                                    ->formatStateUsing(fn ($state): string => $state ? "{$state} Min." : 'Keine')
+                                    ->icon('heroicon-o-truck'),
                             ]),
 
                         TextEntry::make('notes')
@@ -372,8 +437,98 @@ class AppointmentResource extends Resource
                     ->collapsible()
                     ->collapsed(true),
 
-                // Erinnerungen & Metadaten
-                InfoSection::make('Weitere Informationen')
+                // Cal.com Integration
+                InfoSection::make('Cal.com Integration')
+                    ->schema([
+                        InfoGrid::make(2)
+                            ->schema([
+                                TextEntry::make('calcom_booking_id')
+                                    ->label('Cal.com Booking ID')
+                                    ->badge()
+                                    ->color('info')
+                                    ->placeholder('Keine Cal.com ID'),
+
+                                TextEntry::make('calcom_event_type_id')
+                                    ->label('Event Type ID')
+                                    ->badge()
+                                    ->placeholder('Kein Event Type'),
+                            ]),
+
+                        TextEntry::make('source')
+                            ->label('Quelle')
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                'cal.com' => '📅 Cal.com',
+                                'api' => '🔌 API',
+                                'manual' => '✋ Manuell',
+                                'phone' => '📞 Telefon',
+                                'online' => '💻 Online',
+                                'walk_in' => '🚶 Walk-In',
+                                'app' => '📱 App',
+                                'ai_assistant' => '🤖 KI-Assistent',
+                                default => $state ?? 'Unbekannt',
+                            }),
+                    ])
+                    ->icon('heroicon-o-link')
+                    ->collapsible()
+                    ->collapsed(true)
+                    ->visible(fn ($record): bool =>
+                        !empty($record->calcom_booking_id) ||
+                        !empty($record->calcom_event_type_id) ||
+                        !empty($record->source)
+                    ),
+
+                // Serie & Pakete
+                InfoSection::make('Serie & Pakete')
+                    ->schema([
+                        InfoGrid::make(2)
+                            ->schema([
+                                TextEntry::make('series_id')
+                                    ->label('Serien-ID')
+                                    ->badge()
+                                    ->placeholder('Keine Serie'),
+
+                                TextEntry::make('group_booking_id')
+                                    ->label('Gruppenbuchung')
+                                    ->badge()
+                                    ->placeholder('Keine Gruppe'),
+                            ]),
+
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('package_sessions_total')
+                                    ->label('Paket Gesamt')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state): string => $state ? "{$state} Sitzungen" : 'Kein Paket'),
+
+                                TextEntry::make('package_sessions_used')
+                                    ->label('Verwendet')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state): string => $state ? "{$state} Sitzungen" : '0'),
+
+                                TextEntry::make('package_expires_at')
+                                    ->label('Paket läuft ab')
+                                    ->dateTime('d.m.Y')
+                                    ->placeholder('Kein Ablaufdatum'),
+                            ]),
+
+                        TextEntry::make('recurrence_rule')
+                            ->label('Wiederholungsregel')
+                            ->columnSpanFull()
+                            ->placeholder('Keine Wiederholung'),
+                    ])
+                    ->icon('heroicon-o-arrow-path')
+                    ->collapsible()
+                    ->collapsed(true)
+                    ->visible(fn ($record): bool =>
+                        !empty($record->series_id) ||
+                        !empty($record->group_booking_id) ||
+                        !empty($record->package_sessions_total) ||
+                        !empty($record->recurrence_rule)
+                    ),
+
+                // System & Metadaten
+                InfoSection::make('System')
                     ->schema([
                         InfoGrid::make(2)
                             ->schema([
@@ -388,10 +543,34 @@ class AppointmentResource extends Resource
                                     ->dateTime('d.m.Y H:i')
                                     ->icon('heroicon-o-calendar'),
                             ]),
+
+                        TextEntry::make('external_id')
+                            ->label('Externe ID')
+                            ->badge()
+                            ->placeholder('Keine externe ID'),
                     ])
                     ->icon('heroicon-o-information-circle')
                     ->collapsible()
                     ->collapsed(true),
+
+                // Metadaten Section
+                InfoSection::make('Metadata')
+                    ->schema([
+                        TextEntry::make('metadata')
+                            ->label('Metadaten')
+                            ->formatStateUsing(function ($state) {
+                                if (empty($state)) return 'Keine Metadaten';
+                                if (is_array($state)) {
+                                    return json_encode($state, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                                }
+                                return (string)$state;
+                            })
+                            ->columnSpanFull(),
+                    ])
+                    ->icon('heroicon-o-code-bracket')
+                    ->collapsible()
+                    ->collapsed(true)
+                    ->visible(fn ($record): bool => !empty($record->metadata)),
             ]);
     }
 
@@ -412,6 +591,7 @@ class AppointmentResource extends Resource
                 'service:id,name,price,duration_minutes',
                 'staff:id,name',
                 'branch:id,name',
+                'company:id,name'
             ])
             ->withCasts([
                 'starts_at' => 'datetime',

@@ -53,11 +53,7 @@ class CustomerPanelProvider extends PanelProvider
     public function boot(): void
     {
         // Skip panel registration if feature is disabled
-        if (!config('features.customer_portal')) {
-            return;
-        }
-
-        parent::boot();
+        // Note: Panel registration is handled by panel() method, not boot()
     }
 
     public function panel(Panel $panel): Panel
@@ -76,7 +72,8 @@ class CustomerPanelProvider extends PanelProvider
             // ============================================================
             ->login()
             ->passwordReset()
-            ->emailVerification()
+            // Email verification disabled for customer portal
+            // ->emailVerification()
 
             // ============================================================
             // Styling & Branding
@@ -132,8 +129,7 @@ class CustomerPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                // Feature flag check middleware
-                'feature:customer_portal',
+                // Feature flag check is handled in User::canAccessPanel()
             ])
             ->authMiddleware([
                 Authenticate::class,
@@ -143,12 +139,8 @@ class CustomerPanelProvider extends PanelProvider
             // Navigation Configuration
             // ============================================================
             ->navigationGroups([
-                'Dashboard',
-                'Kommunikation',
-                'Termine',
-                // Future Phase 2:
-                // 'CRM',
-                // 'Einstellungen',
+                'CRM',
+                'Abrechnung',
             ])
 
             // ============================================================
@@ -166,15 +158,11 @@ class CustomerPanelProvider extends PanelProvider
             ])
 
             // ============================================================
-            // Tenant Configuration (Company-based)
+            // Company Scoping (via Eloquent Queries)
+            // Note: We use query-level scoping instead of Filament tenancy
+            // to avoid tenant selection screens. All resources filter by
+            // auth()->user()->company_id in their getEloquentQuery() methods.
             // ============================================================
-            ->tenant(
-                \App\Models\Company::class,
-                ownershipRelationship: 'company',
-            )
-            ->tenantMiddleware([
-                // Company scope will be applied automatically via BelongsToCompany trait
-            ])
 
             // ============================================================
             // Global Search (Disabled for Phase 1)

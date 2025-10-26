@@ -2,8 +2,11 @@
 
 namespace App\Filament\Customer\Resources;
 
+use App\Filament\Concerns\HasCachedNavigationBadge;
 use App\Filament\Customer\Resources\CustomerResource\Pages;
+use App\Filament\Customer\Resources\CustomerResource\RelationManagers;
 use App\Models\Customer;
+use App\Models\Company;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,6 +21,8 @@ use Illuminate\Support\Carbon;
 
 class CustomerResource extends Resource
 {
+    use HasCachedNavigationBadge;
+
     protected static ?string $model = Customer::class;
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'CRM';
@@ -25,20 +30,25 @@ class CustomerResource extends Resource
     protected static ?string $modelLabel = 'Kunde';
     protected static ?string $pluralModelLabel = 'Kunden';
     protected static ?int $navigationSort = 2;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('company_id', auth()->user()->company_id)
-            ->where('status', 'active')
-            ->count();
+        return static::getCachedBadge(function() {
+            return static::getModel()::where('company_id', auth()->user()->company_id)
+                ->where('status', 'active')
+                ->count();
+        });
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = static::getModel()::where('company_id', auth()->user()->company_id)
-            ->where('status', 'active')
-            ->count();
-        return $count > 100 ? 'success' : ($count > 50 ? 'info' : 'warning');
+        return static::getCachedBadgeColor(function() {
+            $count = static::getModel()::where('company_id', auth()->user()->company_id)
+                ->where('status', 'active')
+                ->count();
+            return $count > 100 ? 'success' : ($count > 50 ? 'info' : 'warning');
+        });
     }
 
     public static function table(Table $table): Table
@@ -245,6 +255,7 @@ class CustomerResource extends Resource
     {
         return $infolist
             ->schema([
+                // Hauptinformationen
                 InfoSection::make('Kundeninformationen')
                     ->schema([
                         InfoGrid::make(3)
@@ -252,38 +263,35 @@ class CustomerResource extends Resource
                                 TextEntry::make('customer_number')
                                     ->label('Kundennummer')
                                     ->badge()
-                                    ->color('gray'),
+                                    ->color('gray')
+                                    ->icon('heroicon-o-hashtag'),
 
                                 TextEntry::make('status')
                                     ->label('Status')
                                     ->badge()
-                                    ->formatStateUsing(fn (string $state): string => match($state) {
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                                         'active' => '✅ Aktiv',
                                         'inactive' => '⏸️ Inaktiv',
                                         'blocked' => '🚫 Gesperrt',
-                                        'archived' => '📦 Archiviert',
-                                        default => $state,
+                                        'vip' => '⭐ VIP',
+                                        default => $state ?? 'Aktiv',
                                     })
-                                    ->color(fn (string $state): string => match($state) {
+                                    ->color(fn (?string $state): string => match ($state) {
                                         'active' => 'success',
-                                        'inactive' => 'warning',
+                                        'inactive' => 'gray',
                                         'blocked' => 'danger',
-                                        'archived' => 'gray',
+                                        'vip' => 'warning',
                                         default => 'gray',
                                     }),
 
-                                TextEntry::make('journey_status')
-                                    ->label('Journey Status')
+                                TextEntry::make('customer_type')
+                                    ->label('Kundentyp')
                                     ->badge()
-                                    ->formatStateUsing(fn (string $state): string => match($state) {
-                                        'lead' => '🌱 Lead',
-                                        'prospect' => '🔍 Interessent',
-                                        'customer' => '⭐ Kunde',
-                                        'regular' => '💎 Stammkunde',
-                                        'vip' => '👑 VIP',
-                                        'at_risk' => '⚠️ Gefährdet',
-                                        'churned' => '❌ Verloren',
-                                        default => $state,
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'private' => '👤 Privat',
+                                        'business' => '🏢 Geschäft',
+                                        'insurance' => '🏥 Krankenkasse',
+                                        default => $state ?? 'Privat',
                                     }),
                             ]),
 
@@ -291,85 +299,141 @@ class CustomerResource extends Resource
                             ->schema([
                                 TextEntry::make('name')
                                     ->label('Name')
-                                    ->icon('heroicon-o-user')
-                                    ->size('lg'),
+                                    ->size('lg')
+                                    ->weight('bold')
+                                    ->icon('heroicon-o-user'),
 
-                                TextEntry::make('salutation')
-                                    ->label('Anrede'),
+                                TextEntry::make('company.name')
+                                    ->label('Unternehmen')
+                                    ->icon('heroicon-o-building-office')
+                                    ->url(fn ($record) => $record->company_id
+                                        ? Company::class . '::getUrl(\'view\', [\'record\' => ' . $record->company_id . '])'
+                                        : null)
+                                    ->openUrlInNewTab()
+                                    ->placeholder('Kein Unternehmen'),
                             ]),
+                    ])
+                    ->icon('heroicon-o-user-circle')
+                    ->collapsible(),
 
+                // Kontaktdaten
+                InfoSection::make('Kontaktinformationen')
+                    ->schema([
                         InfoGrid::make(3)
                             ->schema([
                                 TextEntry::make('email')
                                     ->label('E-Mail')
                                     ->icon('heroicon-o-envelope')
+                                    ->copyable()
                                     ->placeholder('Keine E-Mail'),
 
                                 TextEntry::make('phone')
                                     ->label('Telefon')
                                     ->icon('heroicon-o-phone')
+                                    ->copyable()
                                     ->placeholder('Keine Telefonnummer'),
 
                                 TextEntry::make('mobile')
                                     ->label('Mobil')
                                     ->icon('heroicon-o-device-phone-mobile')
+                                    ->copyable()
                                     ->placeholder('Keine Mobilnummer'),
                             ]),
 
                         TextEntry::make('address')
                             ->label('Adresse')
-                            ->placeholder('Keine Adresse hinterlegt')
-                            ->columnSpanFull(),
+                            ->icon('heroicon-o-map-pin')
+                            ->columnSpanFull()
+                            ->placeholder('Keine Adresse'),
 
                         InfoGrid::make(3)
                             ->schema([
                                 TextEntry::make('postal_code')
-                                    ->label('PLZ'),
+                                    ->label('PLZ')
+                                    ->placeholder('-'),
 
                                 TextEntry::make('city')
-                                    ->label('Stadt'),
+                                    ->label('Stadt')
+                                    ->placeholder('-'),
 
                                 TextEntry::make('country')
                                     ->label('Land')
-                                    ->default('Deutschland'),
+                                    ->placeholder('Deutschland'),
                             ]),
                     ])
-                    ->icon('heroicon-o-user')
-                    ->collapsible(),
+                    ->icon('heroicon-o-map')
+                    ->collapsible()
+                    ->collapsed(true),
 
+                // Customer Journey
                 InfoSection::make('Customer Journey')
                     ->schema([
                         InfoGrid::make(3)
                             ->schema([
-                                TextEntry::make('acquisition_channel')
-                                    ->label('Akquisitionskanal')
-                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                        'website' => '🌐 Website',
-                                        'social_media' => '📱 Social Media',
-                                        'referral' => '👥 Empfehlung',
-                                        'walk_in' => '🚶 Walk-In',
-                                        'phone' => '📞 Telefon',
-                                        'email' => '✉️ E-Mail',
-                                        'event' => '📅 Event',
-                                        'advertising' => '📢 Werbung',
-                                        default => $state ?? 'Unbekannt',
-                                    }),
-
-                                TextEntry::make('engagement_score')
-                                    ->label('Engagement Score')
-                                    ->badge()
-                                    ->formatStateUsing(fn ($state) => $state . '%')
-                                    ->color(fn ($state) =>
-                                        $state >= 80 ? 'success' :
-                                        ($state >= 50 ? 'warning' : 'danger')
-                                    ),
+                                TextEntry::make('first_appointment_at')
+                                    ->label('Erster Termin')
+                                    ->dateTime('d.m.Y')
+                                    ->icon('heroicon-o-calendar')
+                                    ->placeholder('Noch kein Termin'),
 
                                 TextEntry::make('last_appointment_at')
                                     ->label('Letzter Termin')
-                                    ->dateTime('d.m.Y H:i')
-                                    ->placeholder('Kein Termin'),
+                                    ->dateTime('d.m.Y')
+                                    ->icon('heroicon-o-calendar-days')
+                                    ->placeholder('Noch kein Termin'),
+
+                                TextEntry::make('total_appointments')
+                                    ->label('Anzahl Termine')
+                                    ->badge()
+                                    ->color('info')
+                                    ->formatStateUsing(fn ($state): string => $state ?? '0'),
                             ]),
 
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('total_spent')
+                                    ->label('Gesamtumsatz')
+                                    ->money('EUR')
+                                    ->icon('heroicon-o-currency-euro'),
+
+                                TextEntry::make('lifetime_value')
+                                    ->label('Customer Lifetime Value')
+                                    ->money('EUR')
+                                    ->icon('heroicon-o-chart-bar'),
+
+                                TextEntry::make('loyalty_points')
+                                    ->label('Treuepunkte')
+                                    ->badge()
+                                    ->color('warning')
+                                    ->formatStateUsing(fn ($state): string => $state ? number_format($state) : '0'),
+                            ]),
+
+                        InfoGrid::make(2)
+                            ->schema([
+                                TextEntry::make('acquisition_channel')
+                                    ->label('Akquisitionskanal')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'online' => '🌐 Online',
+                                        'referral' => '👥 Empfehlung',
+                                        'advertising' => '📢 Werbung',
+                                        'walk-in' => '🚶 Walk-In',
+                                        'social_media' => '📱 Social Media',
+                                        default => $state ?? 'Unbekannt',
+                                    }),
+
+                                TextEntry::make('referral_source')
+                                    ->label('Empfohlen von')
+                                    ->placeholder('Keine Empfehlung'),
+                            ]),
+                    ])
+                    ->icon('heroicon-o-chart-pie')
+                    ->collapsible()
+                    ->collapsed(true),
+
+                // Präferenzen
+                InfoSection::make('Präferenzen')
+                    ->schema([
                         InfoGrid::make(2)
                             ->schema([
                                 TextEntry::make('preferredBranch.name')
@@ -383,102 +447,166 @@ class CustomerResource extends Resource
                                     ->placeholder('Keine Präferenz'),
                             ]),
 
-                        InfoGrid::make(2)
+                        InfoGrid::make(3)
                             ->schema([
-                                TextEntry::make('sms_opt_in')
-                                    ->label('SMS-Benachrichtigungen')
+                                TextEntry::make('preferred_contact_method')
+                                    ->label('Bevorzugte Kontaktart')
                                     ->badge()
-                                    ->formatStateUsing(fn ($state) => $state ? 'Erlaubt' : 'Nicht erlaubt')
-                                    ->color(fn ($state) => $state ? 'success' : 'gray'),
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'email' => '📧 E-Mail',
+                                        'phone' => '📞 Telefon',
+                                        'sms' => '💬 SMS',
+                                        'whatsapp' => '📱 WhatsApp',
+                                        default => $state ?? 'E-Mail',
+                                    }),
 
-                                TextEntry::make('email_opt_in')
-                                    ->label('E-Mail-Marketing')
+                                TextEntry::make('language')
+                                    ->label('Sprache')
                                     ->badge()
-                                    ->formatStateUsing(fn ($state) => $state ? 'Erlaubt' : 'Nicht erlaubt')
-                                    ->color(fn ($state) => $state ? 'success' : 'gray'),
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'de' => '🇩🇪 Deutsch',
+                                        'en' => '🇬🇧 Englisch',
+                                        'fr' => '🇫🇷 Französisch',
+                                        'it' => '🇮🇹 Italienisch',
+                                        'tr' => '🇹🇷 Türkisch',
+                                        default => $state ?? '🇩🇪 Deutsch',
+                                    }),
+
+                                TextEntry::make('timezone')
+                                    ->label('Zeitzone')
+                                    ->placeholder('Europe/Berlin'),
+                            ]),
+
+                        TextEntry::make('tags')
+                            ->label('Tags')
+                            ->badge()
+                            ->separator(',')
+                            ->columnSpanFull()
+                            ->placeholder('Keine Tags'),
+                    ])
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->collapsible()
+                    ->collapsed(true),
+
+                // Geburtstag & Notizen
+                InfoSection::make('Persönliche Informationen')
+                    ->schema([
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('date_of_birth')
+                                    ->label('Geburtsdatum')
+                                    ->date('d.m.Y')
+                                    ->icon('heroicon-o-cake')
+                                    ->placeholder('Nicht angegeben'),
+
+                                TextEntry::make('age')
+                                    ->label('Alter')
+                                    ->state(fn ($record): ?string =>
+                                        $record->date_of_birth
+                                            ? Carbon::parse($record->date_of_birth)->age . ' Jahre'
+                                            : null
+                                    )
+                                    ->placeholder('N/A'),
+
+                                TextEntry::make('gender')
+                                    ->label('Geschlecht')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'male' => '♂️ Männlich',
+                                        'female' => '♀️ Weiblich',
+                                        'diverse' => '⚧ Divers',
+                                        default => $state ?? 'Nicht angegeben',
+                                    }),
                             ]),
 
                         TextEntry::make('notes')
                             ->label('Notizen')
                             ->columnSpanFull()
-                            ->placeholder('Keine Notizen'),
+                            ->placeholder('Keine Notizen vorhanden'),
                     ])
-                    ->icon('heroicon-o-chart-bar')
-                    ->collapsible(),
-
-                InfoSection::make('Finanzen & Loyalität')
-                    ->schema([
-                        InfoGrid::make(4)
-                            ->schema([
-                                TextEntry::make('total_revenue')
-                                    ->label('Gesamtumsatz')
-                                    ->money('EUR')
-                                    ->icon('heroicon-o-currency-euro'),
-
-                                TextEntry::make('appointment_count')
-                                    ->label('Termine')
-                                    ->badge(),
-
-                                TextEntry::make('cancellation_count')
-                                    ->label('Stornierungen')
-                                    ->badge()
-                                    ->color('danger'),
-
-                                TextEntry::make('loyalty_points')
-                                    ->label('Treuepunkte')
-                                    ->badge()
-                                    ->color('success'),
-                            ]),
-
-                        InfoGrid::make(2)
-                            ->schema([
-                                TextEntry::make('is_vip')
-                                    ->label('VIP-Kunde')
-                                    ->badge()
-                                    ->formatStateUsing(fn ($state) => $state ? '👑 Ja' : 'Nein')
-                                    ->color(fn ($state) => $state ? 'warning' : 'gray'),
-
-                                TextEntry::make('discount_percentage')
-                                    ->label('Rabatt')
-                                    ->formatStateUsing(fn ($state) => $state ? $state . '%' : 'Kein Rabatt'),
-                            ]),
-                    ])
-                    ->icon('heroicon-o-currency-euro')
+                    ->icon('heroicon-o-identification')
                     ->collapsible()
                     ->collapsed(true),
 
-                InfoSection::make('Weitere Informationen')
+                // Marketing & Kommunikation
+                InfoSection::make('Marketing & Kommunikation')
                     ->schema([
-                        InfoGrid::make(2)
+                        InfoGrid::make(3)
                             ->schema([
-                                TextEntry::make('date_of_birth')
-                                    ->label('Geburtsdatum')
-                                    ->date('d.m.Y')
-                                    ->placeholder('Nicht angegeben'),
+                                TextEntry::make('accepts_marketing')
+                                    ->label('Marketing akzeptiert')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state): string => $state ? '✅ Ja' : '❌ Nein')
+                                    ->color(fn ($state): string => $state ? 'success' : 'danger'),
 
-                                TextEntry::make('created_at')
-                                    ->label('Kunde seit')
-                                    ->dateTime('d.m.Y H:i'),
+                                TextEntry::make('newsletter_subscribed')
+                                    ->label('Newsletter')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state): string => $state ? '📧 Abonniert' : '🚫 Nicht abonniert')
+                                    ->color(fn ($state): string => $state ? 'success' : 'gray'),
+
+                                TextEntry::make('sms_notifications')
+                                    ->label('SMS-Benachrichtigungen')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state): string => $state ? '💬 Aktiviert' : '🔕 Deaktiviert')
+                                    ->color(fn ($state): string => $state ? 'success' : 'gray'),
                             ]),
 
                         InfoGrid::make(2)
                             ->schema([
-                                TextEntry::make('gdpr_consent')
-                                    ->label('DSGVO-Einwilligung')
-                                    ->badge()
-                                    ->formatStateUsing(fn ($state) => $state ? 'Erteilt' : 'Nicht erteilt')
-                                    ->color(fn ($state) => $state ? 'success' : 'danger'),
-
-                                TextEntry::make('gdpr_consent_date')
-                                    ->label('DSGVO-Einwilligung Datum')
+                                TextEntry::make('last_contact_at')
+                                    ->label('Letzter Kontakt')
                                     ->dateTime('d.m.Y H:i')
-                                    ->placeholder('Nicht erteilt'),
+                                    ->placeholder('Noch kein Kontakt'),
+
+                                TextEntry::make('last_marketing_campaign')
+                                    ->label('Letzte Kampagne')
+                                    ->placeholder('Keine Kampagne'),
                             ]),
                     ])
-                    ->icon('heroicon-o-information-circle')
+                    ->icon('heroicon-o-megaphone')
+                    ->collapsible()
+                    ->collapsed(true),
+
+                // System-Informationen
+                InfoSection::make('System-Informationen')
+                    ->schema([
+                        InfoGrid::make(3)
+                            ->schema([
+                                TextEntry::make('created_at')
+                                    ->label('Erstellt am')
+                                    ->dateTime('d.m.Y H:i')
+                                    ->icon('heroicon-o-clock'),
+
+                                TextEntry::make('updated_at')
+                                    ->label('Aktualisiert am')
+                                    ->dateTime('d.m.Y H:i')
+                                    ->icon('heroicon-o-arrow-path'),
+
+                                TextEntry::make('external_id')
+                                    ->label('Externe ID')
+                                    ->badge()
+                                    ->placeholder('Keine externe ID'),
+                            ]),
+
+                        TextEntry::make('import_source')
+                            ->label('Import-Quelle')
+                            ->badge()
+                            ->placeholder('Manuell erstellt'),
+                    ])
+                    ->icon('heroicon-o-cog-6-tooth')
                     ->collapsible()
                     ->collapsed(true),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\AppointmentsRelationManager::class,
+            RelationManagers\CallsRelationManager::class,
+            RelationManagers\NotesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -518,6 +646,6 @@ class CustomerResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['name', 'email', 'phone', 'customer_number'];
+        return ['name', 'email', 'phone', 'customer_number', 'notes'];
     }
 }

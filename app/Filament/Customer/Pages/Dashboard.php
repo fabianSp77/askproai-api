@@ -3,22 +3,21 @@
 namespace App\Filament\Customer\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
+use Illuminate\Contracts\Support\Htmlable;
 
 /**
  * Customer Portal Dashboard
  *
- * Main dashboard for customer portal showing overview statistics
- * and quick access to key features.
+ * Main dashboard for customer portal showing comprehensive overview statistics,
+ * recent activity, and actionable insights.
  *
- * Phase 1 Widgets:
- * - Recent Calls (last 5 calls with transcripts)
- * - Upcoming Appointments (next 7 days)
- * - Quick Stats (total calls, total appointments this month)
- *
- * Phase 2 Widgets (Future):
- * - Customer Growth Chart
- * - Revenue Overview
- * - Popular Services
+ * Widgets:
+ * - CustomerPortalStatsWidget: 4 stat cards with trends (Appointments, Invoices, Balance, Calls)
+ * - RecentAppointmentsWidget: Next 5 upcoming appointments table
+ * - RecentCallsWidget: Last 5 calls from past 24h with transcripts
+ * - BalanceOverviewWidget: 30-day balance history line chart
+ * - OutstandingInvoicesWidget: Open/overdue invoices with payment alerts
+ * - CustomerJourneyWidget: Customer distribution by journey stage (pie chart)
  *
  * @see app/Filament/Customer/Widgets/
  */
@@ -41,52 +40,103 @@ class Dashboard extends BaseDashboard
      */
     public function getTitle(): string
     {
-        return 'Willkommen im Kundenportal';
+        return 'Dashboard';
     }
 
     /**
-     * Page heading
+     * Page heading with personalized greeting
      */
-    public function getHeading(): string
+    public function getHeading(): string|Htmlable
     {
         $user = auth()->user();
-        $companyName = $user->company->name ?? 'Kundenportal';
+        $greeting = $this->getGreeting();
+        $name = $user->name ?? 'User';
 
-        return "Willkommen, {$companyName}";
+        return "{$greeting}, {$name}! 👋";
     }
 
     /**
-     * Subheading with last login info
+     * Subheading with current date in German
      */
-    public function getSubheading(): ?string
+    public function getSubheading(): string|Htmlable|null
     {
-        $user = auth()->user();
-        $lastLogin = $user->last_login_at?->diffForHumans() ?? 'zum ersten Mal';
-
-        return "Letzte Anmeldung: {$lastLogin}";
+        $date = now()->locale('de')->isoFormat('dddd, D. MMMM YYYY');
+        return "Heute ist {$date}";
     }
 
     /**
-     * Dashboard widgets
-     *
-     * Widgets will be auto-discovered from app/Filament/Customer/Widgets/
-     * and can be arranged here or users can customize via dashboard
+     * Get time-based greeting in German
      */
-    public function getWidgets(): array
+    protected function getGreeting(): string
+    {
+        $hour = now()->hour;
+
+        if ($hour < 6) {
+            return 'Gute Nacht';
+        } elseif ($hour < 11) {
+            return 'Guten Morgen';
+        } elseif ($hour < 14) {
+            return 'Guten Tag';
+        } elseif ($hour < 18) {
+            return 'Guten Nachmittag';
+        } else {
+            return 'Guten Abend';
+        }
+    }
+
+    /**
+     * Responsive column layout
+     */
+    public function getColumns(): int | string | array
     {
         return [
-            // Widgets will be added in next phase
-            // \App\Filament\Customer\Widgets\StatsOverview::class,
-            // \App\Filament\Customer\Widgets\RecentCallsWidget::class,
-            // \App\Filament\Customer\Widgets\UpcomingAppointmentsWidget::class,
+            'sm' => 1,
+            'md' => 2,
+            'lg' => 3,
+            'xl' => 4,
+            '2xl' => 5,
         ];
     }
 
     /**
-     * Widget columns on dashboard
+     * Dashboard widgets in display order
+     *
+     * All widgets are company-scoped and include:
+     * - 5-minute caching where appropriate
+     * - German localization
+     * - Responsive layouts
+     * - Empty states with helpful messages
      */
-    public function getColumns(): int | string | array
+    public function getWidgets(): array
     {
-        return 2; // 2-column layout
+        return [
+            // Stats Overview Widget (4 cards with trends)
+            \App\Filament\Customer\Widgets\CustomerPortalStatsWidget::class,
+
+            // Recent Appointments Table (Next 5 appointments)
+            \App\Filament\Customer\Widgets\RecentAppointmentsWidget::class,
+
+            // Recent Calls Table (Last 5 calls from 24h)
+            \App\Filament\Customer\Widgets\RecentCallsWidget::class,
+
+            // Balance Overview Chart (30-day history)
+            \App\Filament\Customer\Widgets\BalanceOverviewWidget::class,
+
+            // Outstanding Invoices Table (Open/overdue with alerts)
+            \App\Filament\Customer\Widgets\OutstandingInvoicesWidget::class,
+
+            // Customer Journey Status Distribution Chart
+            \App\Filament\Customer\Widgets\CustomerJourneyWidget::class,
+        ];
+    }
+
+    /**
+     * View data
+     */
+    protected function getViewData(): array
+    {
+        return [
+            'hasFiltersLayout' => false,
+        ];
     }
 }
