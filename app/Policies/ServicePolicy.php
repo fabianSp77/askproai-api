@@ -12,7 +12,8 @@ class ServicePolicy
 
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole('super_admin')) {
+        // Allow all super admin role variations
+        if ($user->hasAnyRole(['super_admin', 'Super Admin', 'super-admin'])) {
             return true;
         }
         return null;
@@ -20,28 +21,65 @@ class ServicePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff', 'receptionist']);
+        return $user->hasAnyRole([
+            'admin', 'Admin',
+            'manager',
+            'staff',
+            'receptionist',
+            'company_owner',
+            'company_admin',
+            'company_manager',
+            'reseller_owner',
+            'reseller_admin'
+        ]);
     }
 
     public function view(User $user, Service $service): bool
     {
-        if ($user->hasRole('admin')) {
+        // Admins can view all
+        if ($user->hasAnyRole(['admin', 'Admin', 'reseller_owner', 'reseller_admin'])) {
             return true;
         }
+
+        // Company isolation (CRITICAL for multi-tenancy)
+        if ($user->company_id !== $service->company_id) {
+            return false;
+        }
+
+        // Branch isolation for company_manager
+        // Note: Services are company-wide, not branch-specific
+        // So company_manager can see all company services
+        if ($user->hasRole('company_manager') && $user->branch_id) {
+            // Allow viewing (services are company-wide resources)
+            return true;
+        }
+
+        // Company users can view their own company's services
         return $user->company_id === $service->company_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager']);
+        return $user->hasAnyRole([
+            'admin', 'Admin',
+            'manager',
+            'company_owner',
+            'company_admin',
+            'company_manager',
+            'reseller_owner',
+            'reseller_admin'
+        ]);
     }
 
     public function update(User $user, Service $service): bool
     {
-        if ($user->hasRole('admin')) {
+        // Admins can update all
+        if ($user->hasAnyRole(['admin', 'Admin', 'reseller_owner', 'reseller_admin'])) {
             return true;
         }
-        if ($user->hasRole('manager') && $user->company_id === $service->company_id) {
+        // Company managers/owners can update their own company's services
+        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin', 'company_manager'])
+            && $user->company_id === $service->company_id) {
             return true;
         }
         return false;
@@ -49,10 +87,13 @@ class ServicePolicy
 
     public function delete(User $user, Service $service): bool
     {
-        if ($user->hasRole('admin')) {
+        // Admins can delete all
+        if ($user->hasAnyRole(['admin', 'Admin', 'reseller_owner', 'reseller_admin'])) {
             return true;
         }
-        if ($user->hasRole('manager') && $user->company_id === $service->company_id) {
+        // Company managers/owners can delete their own company's services
+        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin', 'company_manager'])
+            && $user->company_id === $service->company_id) {
             return true;
         }
         return false;
