@@ -41,6 +41,9 @@ return Application::configure(basePath: dirname(__DIR__))
             /* 🔒 Admin panel security - internal network only */
             'restrict.internal' => \App\Http\Middleware\RestrictToInternalNetwork::class,
 
+            /* 🎯 Feature flags - Customer Portal Security */
+            'feature' => \App\Http\Middleware\CheckFeatureFlag::class,
+
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
             'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
