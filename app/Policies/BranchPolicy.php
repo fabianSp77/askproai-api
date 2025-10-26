@@ -24,36 +24,75 @@ class BranchPolicy
 
     /**
      * Determine whether the user can view any models.
+     *
+     * Dual-Role Support:
+     * - Admin Panel: admin, manager, staff, receptionist
+     * - Customer Portal: company_owner, company_admin, company_manager
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff', 'receptionist']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            'staff',
+            'receptionist',
+            // Customer Portal roles
+            'company_owner',
+            'company_admin',
+            'company_manager',
+        ]);
     }
 
     /**
      * Determine whether the user can view the model.
+     *
+     * Multi-Level Access Control:
+     * 1. Admin: See all branches
+     * 2. Company isolation: Must belong to same company
+     * 3. Branch isolation: company_manager sees only their branch
      */
     public function view(User $user, Branch $branch): bool
     {
-        // Admin can view all branches
+        // Level 1: Admin can view all branches
         if ($user->hasRole('admin')) {
             return true;
         }
 
-        // Users can view branches from their company
-        if ($user->company_id === $branch->company_id) {
+        // Level 2: Company isolation (CRITICAL for multi-tenancy)
+        if ($user->company_id !== $branch->company_id) {
+            return false;
+        }
+
+        // Level 3: Branch isolation for company_manager
+        // Managers can only view their assigned branch
+        if ($user->hasRole('company_manager') && $user->branch_id) {
+            return $user->branch_id === $branch->id;
+        }
+
+        // Company owners/admins can view all company branches
+        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin'])) {
             return true;
         }
 
-        return false;
+        // Other company users can view branches (backward compatibility)
+        return $user->company_id === $branch->company_id;
     }
 
     /**
      * Determine whether the user can create models.
+     *
+     * Customer Portal: Read-only in Phase 1 (no create)
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            // Customer Portal roles (Phase 2)
+            // 'company_owner',
+        ]);
     }
 
     /**
@@ -71,10 +110,16 @@ class BranchPolicy
             return true;
         }
 
-        // Branch managers can update their branch
+        // Branch managers can update their branch (old role)
         if ($user->hasRole('branch_manager') && $user->branch_id === $branch->id) {
             return true;
         }
+
+        // Customer Portal: company_manager can update their assigned branch (Phase 2)
+        // Currently read-only in Phase 1
+        // if ($user->hasRole('company_manager') && $user->branch_id === $branch->id) {
+        //     return true;
+        // }
 
         return false;
     }
