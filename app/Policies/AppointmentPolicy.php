@@ -24,29 +24,63 @@ class AppointmentPolicy
 
     /**
      * Determine whether the user can view any models.
+     *
+     * Dual-Role Support:
+     * - Admin Panel: admin, manager, staff, receptionist
+     * - Customer Portal: company_owner, company_admin, company_manager, company_staff
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff', 'receptionist']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            'staff',
+            'receptionist',
+            // Customer Portal roles
+            'company_owner',
+            'company_admin',
+            'company_manager',
+            'company_staff',
+        ]);
     }
 
     /**
      * Determine whether the user can view the model.
+     *
+     * Multi-Level Access Control:
+     * 1. Admin: See all appointments (no restrictions)
+     * 2. Company isolation: Must belong to same company
+     * 3. Branch isolation: company_manager sees only their branch
+     * 4. Staff isolation: company_staff sees only their appointments
      */
     public function view(User $user, Appointment $appointment): bool
     {
-        // Admin can view all appointments
+        // Level 1: Admin can view all appointments
         if ($user->hasRole('admin')) {
             return true;
         }
 
-        // Users can view appointments from their company
-        if ($user->company_id === $appointment->company_id) {
-            return true;
+        // Level 2: Company isolation (CRITICAL for multi-tenancy)
+        if ($user->company_id !== $appointment->company_id) {
+            return false;
         }
 
-        // Staff can view their own appointments
-        if ($user->id === $appointment->staff_id) {
+        // Level 3: Branch isolation for company_manager
+        // Managers can only see appointments in their assigned branch
+        if ($user->hasRole('company_manager') && $user->branch_id) {
+            return $user->branch_id === $appointment->branch_id;
+        }
+
+        // Level 4: Staff isolation for company_staff
+        // Staff can only see appointments they are assigned to
+        if ($user->hasAnyRole(['staff', 'company_staff']) && $user->staff_id) {
+            return $user->staff_id === $appointment->staff_id;
+        }
+
+        // Level 5: Company owners/admins/managers see all company appointments
+        // (managers without branch_id assignment see all - for backward compatibility)
+        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin'])) {
             return true;
         }
 
@@ -55,10 +89,22 @@ class AppointmentPolicy
 
     /**
      * Determine whether the user can create models.
+     *
+     * Dual-Role Support: Admin Panel + Customer Portal
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff', 'receptionist']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            'staff',
+            'receptionist',
+            // Customer Portal roles (Phase 2 - currently read-only)
+            // 'company_owner',
+            // 'company_admin',
+            // 'company_manager',
+        ]);
     }
 
     /**

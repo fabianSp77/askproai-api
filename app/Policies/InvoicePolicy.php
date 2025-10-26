@@ -20,7 +20,10 @@ class InvoicePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'billing_manager', 'accountant']);
+        return $user->hasAnyRole([
+            'admin', 'manager', 'billing_manager', 'accountant',
+            'company_owner', 'company_admin', 'company_manager', 'company_staff'
+        ]);
     }
 
     public function view(User $user, Invoice $invoice): bool
@@ -29,8 +32,9 @@ class InvoicePolicy
             return true;
         }
 
-        // Direct company match
-        if ($user->hasAnyRole(['billing_manager', 'accountant', 'manager']) &&
+        // Direct company match - includes customer portal roles
+        if ($user->hasAnyRole(['billing_manager', 'accountant', 'manager',
+                               'company_owner', 'company_admin', 'company_manager', 'company_staff']) &&
             $user->company_id === $invoice->company_id) {
             return true;
         }

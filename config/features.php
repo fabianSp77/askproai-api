@@ -125,4 +125,86 @@ return [
     | @since 2025-10-19 (Phase A: Fundamental Fixes)
     */
     'skip_alternatives_for_voice' => env('FEATURE_SKIP_ALTERNATIVES_FOR_VOICE', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Portal (Endkunden-Portal für Friseure)
+    |--------------------------------------------------------------------------
+    |
+    | Aktiviert das Customer Portal unter /portal für Endkunden
+    | (Friseure, deren Mitarbeiter, etc.)
+    |
+    | WICHTIG: Standardmäßig DEAKTIVIERT für sichere Deployments.
+    | Erst nach ausgiebigem Testing auf Staging aktivieren!
+    |
+    | Rollout Plan:
+    |   - Week 1-3: Development auf feature/customer-portal Branch
+    |   - Week 4: Deploy to production with flag OFF
+    |   - Week 5: Enable for 2-3 pilot customers
+    |   - Week 6: Gradual rollout based on feedback
+    |
+    | Related:
+    |   - Provider: App\Providers\Filament\CustomerPanelProvider
+    |   - Resources: App\Filament\Customer\Resources\*
+    |   - Policies: App\Policies\RetellCallSessionPolicy
+    |   - Docs: CUSTOMER_PORTAL_GAP_ANALYSIS_2025-10-26.md
+    |
+    | @default false
+    | @since 2025-10-26 (Phase 1: MVP)
+    */
+    'customer_portal' => env('FEATURE_CUSTOMER_PORTAL', false),
+
+    /**
+     * Customer Portal: Call History
+     *
+     * Erlaubt Kunden, ihre Anruf-Historie mit Transkripten anzusehen
+     *
+     * @default true (wenn Portal aktiviert)
+     */
+    'customer_portal_calls' => env('FEATURE_CUSTOMER_PORTAL_CALLS', true),
+
+    /**
+     * Customer Portal: Appointments
+     *
+     * Erlaubt Kunden, ihre Termine anzusehen (Kalender + Liste)
+     *
+     * @default true (wenn Portal aktiviert)
+     */
+    'customer_portal_appointments' => env('FEATURE_CUSTOMER_PORTAL_APPOINTMENTS', true),
+
+    /**
+     * Customer Portal: Customer Management (Phase 2)
+     *
+     * Erlaubt Kunden, ihre eigenen Kunden (Endkunden) zu verwalten
+     *
+     * @default false (Phase 2 Feature)
+     */
+    'customer_portal_crm' => env('FEATURE_CUSTOMER_PORTAL_CRM', false),
+
+    /**
+     * Customer Portal: Service Management (Phase 2)
+     *
+     * Erlaubt Kunden, ihre Dienstleistungen zu verwalten
+     *
+     * @default false (Phase 2 Feature)
+     */
+    'customer_portal_services' => env('FEATURE_CUSTOMER_PORTAL_SERVICES', false),
+
+    /**
+     * Customer Portal: Staff Management (Phase 2)
+     *
+     * Erlaubt Kunden, ihre Mitarbeiter zu verwalten
+     *
+     * @default false (Phase 2 Feature)
+     */
+    'customer_portal_staff' => env('FEATURE_CUSTOMER_PORTAL_STAFF', false),
+
+    /**
+     * Customer Portal: Analytics (Phase 3)
+     *
+     * Business Intelligence und Reporting
+     *
+     * @default false (Phase 3 Feature)
+     */
+    'customer_portal_analytics' => env('FEATURE_CUSTOMER_PORTAL_ANALYTICS', false),
 ];
