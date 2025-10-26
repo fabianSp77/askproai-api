@@ -70,17 +70,23 @@ class RetellCallSessionPolicy
 
         // Branch-level isolation for managers
         if ($user->hasRole('company_manager')) {
-            // TODO: Implement branch_id check when users.branch_id column exists
-            // For now, managers can see all company sessions
-            // Future: return $user->branch_id === $session->branch_id;
+            // ✅ IMPLEMENTED: Branch isolation (2025-10-26)
+            if ($user->branch_id) {
+                return $user->branch_id === $session->branch_id;
+            }
+            // If manager has no branch_id assignment, see all company sessions
             return true;
         }
 
         // Staff-level isolation
         if ($user->hasRole('company_staff')) {
             // Staff can only see sessions they handled
-            // TODO: Add staff_id to retell_call_sessions table
-            // For now, allow all sessions (will be restricted in Phase 2)
+            // Note: Requires retell_call_sessions.staff_id to be populated by webhook
+            // TODO Phase 2: Add staff_id population in RetellWebhookController
+            if ($user->staff_id && $session->staff_id) {
+                return $user->staff_id === $session->staff_id;
+            }
+            // If no staff_id on session yet, allow (backward compatibility)
             return true;
         }
 
