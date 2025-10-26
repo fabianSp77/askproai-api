@@ -153,22 +153,33 @@ class CalcomV2Client
      */
     public function createEventType(array $data): Response
     {
+        $payload = [
+            'title' => $data['name'], // e.g. "ACME-BER-FARBE-A-S123"
+            'slug' => Str::slug($data['name']),
+            'description' => $data['description'] ?? '',
+            'lengthInMinutes' => $data['duration'],
+            'schedulingType' => $data['schedulingType'] ?? 'MANAGED', // Default: MANAGED, configurable per service
+            'hidden' => true, // IMPORTANT: Hidden from public!
+            'disableGuests' => true,
+            'hideCalendarNotes' => true,
+            'requiresConfirmation' => false,
+            'locations' => [['type' => 'address', 'address' => 'Vor Ort', 'public' => false]]
+            // bookingFields omitted - Cal.com uses defaults (name, email)
+        ];
+
+        // Host assignment: Use specific hosts if provided, otherwise assign all team members
+        // Phase 1: Default to assignAllTeamMembers for simplicity
+        // Phase 2: Will support service-specific staff via service_staff table
+        if (isset($data['hosts']) && !empty($data['hosts'])) {
+            // Specific hosts provided (format: [{userId: 123, mandatory: true, priority: "high"}])
+            $payload['hosts'] = $data['hosts'];
+        } else {
+            // Default: Assign all team members automatically
+            $payload['assignAllTeamMembers'] = $data['assignAllTeamMembers'] ?? true;
+        }
+
         return Http::withHeaders($this->getHeaders())
-            ->post($this->getTeamUrl('event-types'), [
-                'title' => $data['name'], // e.g. "ACME-BER-FARBE-A-S123"
-                'slug' => Str::slug($data['name']),
-                'description' => $data['description'] ?? '',
-                'lengthInMinutes' => $data['duration'],
-                'hidden' => true, // IMPORTANT: Hidden from public!
-                'disableGuests' => true,
-                'hideCalendarNotes' => true,
-                'requiresConfirmation' => false,
-                'bookingFields' => [
-                    ['name' => 'name', 'type' => 'text', 'required' => true],
-                    ['name' => 'email', 'type' => 'email', 'required' => true]
-                ],
-                'locations' => [['type' => 'inPerson']]
-            ]);
+            ->post($this->getTeamUrl('event-types'), $payload);
     }
 
     /**
