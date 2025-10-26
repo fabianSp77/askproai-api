@@ -146,7 +146,7 @@ class ServiceResource extends Resource
                     ->schema([
                         Forms\Components\Toggle::make('composite')
                             ->label('Komposite Dienstleistung aktivieren')
-                            ->helperText('Ermöglicht dieser Dienstleistung mehrere Segmente mit Lücken dazwischen')
+                            ->helperText('Erstellt automatisch Cal.com Event Types für jedes Segment beim Speichern')
                             ->reactive()
                             ->afterStateUpdated(function (Set $set, $state) {
                                 if (!$state) {
@@ -154,6 +154,49 @@ class ServiceResource extends Resource
                                     $set('pause_bookable_policy', null);
                                 }
                             }),
+
+                        Forms\Components\Placeholder::make('calcom_sync_info')
+                            ->label('ℹ️ Cal.com Synchronisation (automatisch)')
+                            ->content(new \Illuminate\Support\HtmlString('
+                                <div class="text-sm space-y-3 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <p class="font-semibold text-blue-900 dark:text-blue-100">Was passiert beim Speichern?</p>
+
+                                    <div class="space-y-2">
+                                        <div class="flex gap-2">
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold">1.</span>
+                                            <div>
+                                                <p class="font-medium text-blue-900 dark:text-blue-100">Event Types erstellen</p>
+                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Für jedes Segment wird ein Cal.com Event Type erstellt</p>
+                                                <p class="text-blue-600 dark:text-blue-400 text-xs mt-1">Beispiel: "Herrenhaarschnitt: Waschen (1 von 3) - Friseur 1"</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold">2.</span>
+                                            <div>
+                                                <p class="font-medium text-blue-900 dark:text-blue-100">Hosts zuweisen</p>
+                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Alle Team-Mitarbeiter werden automatisch zugewiesen</p>
+                                                <p class="text-blue-600 dark:text-blue-400 text-xs mt-1">Event Types sind sofort buchbar</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold">3.</span>
+                                            <div>
+                                                <p class="font-medium text-blue-900 dark:text-blue-100">Daten synchronisieren</p>
+                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Service wird mit Cal.com Event Type IDs verknüpft</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-t border-blue-300 dark:border-blue-700">
+                                        <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">📍 Wo Sie die Event Types finden:</p>
+                                        <p class="text-xs text-blue-700 dark:text-blue-300">Cal.com Dashboard → Event Types → Filter: <span class="font-mono bg-blue-100 dark:bg-blue-900 px-1 rounded">Hidden</span></p>
+                                    </div>
+                                </div>
+                            '))
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('composite') === true),
 
                         Forms\Components\Select::make('composite_template')
                             ->label('Service-Template verwenden')
@@ -348,7 +391,10 @@ class ServiceResource extends Resource
                                     ? "{$state['key']}: {$state['name']}"
                                     : null
                             )
-                            ->helperText(__('services.segments_helper'))
+                            ->helperText(new \Illuminate\Support\HtmlString(
+                                __('services.segments_helper') .
+                                '<br><span class="text-primary-600 dark:text-primary-400 font-medium">→ Jedes Segment wird als eigener Cal.com Event Type erstellt (Hidden)</span>'
+                            ))
                             ->validationMessages([
                                 'min' => 'Composite services require at least 2 segments',
                                 'max' => 'Maximum 10 segments allowed per service',
