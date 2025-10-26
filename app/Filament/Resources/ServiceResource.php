@@ -158,45 +158,45 @@ class ServiceResource extends Resource
                         Forms\Components\Placeholder::make('calcom_sync_info')
                             ->label('ℹ️ Cal.com Synchronisation (automatisch)')
                             ->content(new \Illuminate\Support\HtmlString('
-                                <div class="text-sm space-y-3 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                                    <p class="font-semibold text-blue-900 dark:text-blue-100">Was passiert beim Speichern?</p>
+                                <div style="background-color: #eff6ff; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bfdbfe; margin-bottom: 1rem;">
+                                    <p style="font-weight: 600; color: #1e40af; margin-bottom: 0.75rem;">Was passiert beim Speichern?</p>
 
-                                    <div class="space-y-2">
-                                        <div class="flex gap-2">
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold">1.</span>
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <span style="color: #2563eb; font-weight: bold; flex-shrink: 0;">1.</span>
                                             <div>
-                                                <p class="font-medium text-blue-900 dark:text-blue-100">Event Types erstellen</p>
-                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Für jedes Segment wird ein Cal.com Event Type erstellt</p>
-                                                <p class="text-blue-600 dark:text-blue-400 text-xs mt-1">Beispiel: "Herrenhaarschnitt: Waschen (1 von 3) - Friseur 1"</p>
+                                                <p style="font-weight: 500; color: #1e40af; margin-bottom: 0.25rem;">Event Types erstellen</p>
+                                                <p style="color: #1e40af; font-size: 0.875rem; margin-bottom: 0.25rem;">Für jedes Segment wird ein Cal.com Event Type erstellt</p>
+                                                <p style="color: #3b82f6; font-size: 0.875rem;">Beispiel: "Herrenhaarschnitt: Waschen (1 von 3) - Friseur 1"</p>
                                             </div>
                                         </div>
 
-                                        <div class="flex gap-2">
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold">2.</span>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <span style="color: #2563eb; font-weight: bold; flex-shrink: 0;">2.</span>
                                             <div>
-                                                <p class="font-medium text-blue-900 dark:text-blue-100">Hosts zuweisen</p>
-                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Alle Team-Mitarbeiter werden automatisch zugewiesen</p>
-                                                <p class="text-blue-600 dark:text-blue-400 text-xs mt-1">Event Types sind sofort buchbar</p>
+                                                <p style="font-weight: 500; color: #1e40af; margin-bottom: 0.25rem;">Hosts zuweisen</p>
+                                                <p style="color: #1e40af; font-size: 0.875rem; margin-bottom: 0.25rem;">Alle Team-Mitarbeiter werden automatisch zugewiesen</p>
+                                                <p style="color: #3b82f6; font-size: 0.875rem;">Event Types sind sofort buchbar</p>
                                             </div>
                                         </div>
 
-                                        <div class="flex gap-2">
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold">3.</span>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <span style="color: #2563eb; font-weight: bold; flex-shrink: 0;">3.</span>
                                             <div>
-                                                <p class="font-medium text-blue-900 dark:text-blue-100">Daten synchronisieren</p>
-                                                <p class="text-blue-700 dark:text-blue-300 text-xs">Service wird mit Cal.com Event Type IDs verknüpft</p>
+                                                <p style="font-weight: 500; color: #1e40af; margin-bottom: 0.25rem;">Daten synchronisieren</p>
+                                                <p style="color: #1e40af; font-size: 0.875rem;">Service wird mit Cal.com Event Type IDs verknüpft</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="pt-2 border-t border-blue-300 dark:border-blue-700">
-                                        <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">📍 Wo Sie die Event Types finden:</p>
-                                        <p class="text-xs text-blue-700 dark:text-blue-300">Cal.com Dashboard → Event Types → Filter: <span class="font-mono bg-blue-100 dark:bg-blue-900 px-1 rounded">Hidden</span></p>
+                                    <div style="padding-top: 0.75rem; margin-top: 0.75rem; border-top: 1px solid #93c5fd;">
+                                        <p style="font-size: 0.875rem; color: #2563eb; font-weight: 500; margin-bottom: 0.25rem;">📍 Wo Sie die Event Types finden:</p>
+                                        <p style="font-size: 0.875rem; color: #1e40af;">Cal.com Dashboard → Event Types → Filter: <span style="font-family: monospace; background-color: #dbeafe; padding: 0.125rem 0.25rem; border-radius: 0.25rem;">Hidden</span></p>
                                     </div>
                                 </div>
                             '))
                             ->columnSpanFull()
-                            ->visible(fn (Get $get): bool => $get('composite') === true),
+                            ->visible(fn (Get $get): bool => (bool) $get('composite')),
 
                         Forms\Components\Select::make('composite_template')
                             ->label('Service-Template verwenden')
@@ -208,7 +208,7 @@ class ServiceResource extends Resource
                                 'medical_treatment' => '⚕️ Medizinische Behandlung (2h mit Nachsorge)',
                                 'beauty_complete' => '💅 Beauty Komplett (4h mit mehreren Pausen)',
                             ])
-                            ->visible(fn (Get $get): bool => $get('composite') === true)
+                            ->visible(fn (Get $get): bool => (bool) $get('composite'))
                             ->reactive()
                             ->afterStateUpdated(function (Set $set, $state) {
                                 if (!$state) return;
@@ -379,7 +379,7 @@ class ServiceResource extends Resource
                                     ->columnSpan(1),
                             ])
                             ->columns(5)
-                            ->visible(fn (Get $get): bool => $get('composite') === true)
+                            ->visible(fn (Get $get): bool => (bool) $get('composite'))
                             ->defaultItems(0)
                             ->minItems(2) // Composite services need at least 2 segments
                             ->maxItems(10) // Maximum 10 segments
@@ -407,12 +407,12 @@ class ServiceResource extends Resource
                                 'blocked' => 'Staff unavailable during gaps',
                                 'flexible' => 'Depends on availability',
                             ])
-                            ->visible(fn (Get $get): bool => $get('composite') === true)
+                            ->visible(fn (Get $get): bool => (bool) $get('composite'))
                             ->helperText(__('services.gap_policy_helper')),
 
                         Forms\Components\Placeholder::make('total_duration_info')
                             ->label(__('services.total_duration'))
-                            ->visible(fn (Get $get): bool => $get('composite') === true)
+                            ->visible(fn (Get $get): bool => (bool) $get('composite'))
                             ->content(function (Get $get): \Illuminate\Support\HtmlString {
                                 $segments = $get('segments') ?? [];
                                 if (empty($segments)) {
@@ -541,7 +541,7 @@ class ServiceResource extends Resource
                                     })
                                     ->visible(function (Get $get): bool {
                                         try {
-                                            return $get('../../composite') === true;
+                                            return (bool) $get('../../composite');
                                         } catch (\Exception $e) {
                                             return false;
                                         }

@@ -8,6 +8,42 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Debug route to check current user and permissions
+Route::get('/debug-user', function () {
+    if (!auth()->check()) {
+        return response()->json([
+            'authenticated' => false,
+            'message' => 'Not logged in. Please login at /admin/login first'
+        ]);
+    }
+
+    $user = auth()->user();
+    $roles = $user->roles->pluck('name')->toArray();
+
+    return response()->json([
+        'authenticated' => true,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'company_id' => $user->company_id,
+        ],
+        'roles' => $roles,
+        'permissions' => [
+            'can_view_services' => $user->can('viewAny', \App\Models\Service::class),
+            'can_create_services' => $user->can('create', \App\Models\Service::class),
+        ],
+        'policy_checks' => [
+            'hasAnyRole_admin' => $user->hasAnyRole(['admin', 'Admin']),
+            'hasAnyRole_manager' => $user->hasAnyRole(['manager']),
+            'hasAnyRole_company_owner' => $user->hasAnyRole(['company_owner']),
+            'hasAnyRole_reseller_owner' => $user->hasAnyRole(['reseller_owner']),
+            'hasRole_super_admin' => $user->hasRole('super_admin'),
+            'hasRole_Super_Admin' => $user->hasRole('Super Admin'),
+        ]
+    ], 200, [], JSON_PRETTY_PRINT);
+})->middleware('web');
+
 // Redirect old business routes to admin
 Route::redirect('/business', '/admin', 301);
 Route::redirect('/business/login', '/admin/login', 301);
