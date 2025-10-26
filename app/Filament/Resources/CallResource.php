@@ -445,7 +445,8 @@ class CallResource extends Resource
 
                                 if ($price && $price > 0) {
                                     // Price is stored as decimal(10,2) in EUR, not cents
-                                    $formattedPrice = number_format($price, 2, ',', '.');
+                                    // Display as full euros only (no cents)
+                                    $formattedPrice = number_format($price, 0, ',', '.');
                                     $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
                                               '<span class="text-xs text-green-600">💰 ' . $formattedPrice . '€</span>';
                                 } else {
@@ -488,7 +489,8 @@ class CallResource extends Resource
 
                                     if ($price && $price > 0) {
                                         // Price is stored as decimal(10,2) in EUR, not cents
-                                        $formattedPrice = number_format($price, 2, ',', '.');
+                                        // Display as full euros only (no cents)
+                                        $formattedPrice = number_format($price, 0, ',', '.');
                                         return "{$name} ({$duration} Min) - {$formattedPrice}€";
                                     }
                                     return "{$name} ({$duration} Min)";
