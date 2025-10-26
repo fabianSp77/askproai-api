@@ -72,6 +72,7 @@ class CustomerPanelProvider extends PanelProvider
             // ============================================================
             ->login()
             ->passwordReset()
+            ->authGuard('portal')
             // Email verification disabled for customer portal
             // ->emailVerification()
 
