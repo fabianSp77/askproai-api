@@ -27,7 +27,8 @@ class TransactionResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return static::getCachedBadge(function() {
-            return static::getModel()::where('tenant_id', auth()->user()->company_id)
+            return static::getModel()::withoutGlobalScopes()
+                ->where('tenant_id', auth()->user()->company_id)
                 ->where('created_at', '>=', now()->subDays(7))
                 ->count();
         });
@@ -216,6 +217,7 @@ class TransactionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
             ->where('tenant_id', auth()->user()->company_id);
     }
 
