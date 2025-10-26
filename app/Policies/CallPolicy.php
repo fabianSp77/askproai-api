@@ -30,38 +30,71 @@ class CallPolicy
 
     /**
      * Determine whether the user can view any models.
+     *
+     * Dual-Role Support:
+     * - Admin Panel: admin, manager, staff, receptionist
+     * - Customer Portal: company_owner, company_admin, company_manager, company_staff
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff', 'receptionist']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            'staff',
+            'receptionist',
+            // Customer Portal roles
+            'company_owner',
+            'company_admin',
+            'company_manager',
+            'company_staff',
+        ]);
     }
 
     /**
      * Determine whether the user can view the model.
+     *
+     * Multi-Level Access Control:
+     * 1. Admin: See all calls
+     * 2. Company isolation: Must belong to same company
+     * 3. Branch isolation: company_manager sees only their branch
+     * 4. Staff isolation: company_staff sees only their calls
+     * 5. Reseller access: See customer companies' calls
      */
     public function view(User $user, Call $call): bool
     {
-        // Admin can view all calls (including variations)
+        // Level 1: Admin can view all calls (including variations)
         if ($user->hasRole(['admin', 'Admin'])) {
             return true;
         }
 
-        // Users can view calls from their company (direct match)
+        // Level 2: Company isolation (CRITICAL for multi-tenancy)
         if ($user->company_id && $user->company_id === $call->company_id) {
-            return true;
+
+            // Level 3: Branch isolation for company_manager
+            if ($user->hasRole('company_manager') && $user->branch_id) {
+                return $user->branch_id === $call->branch_id;
+            }
+
+            // Level 4: Staff isolation for company_staff
+            // FIX: Now uses $user->staff_id (which exists after migration)
+            if ($user->hasAnyRole(['staff', 'company_staff']) && $user->staff_id) {
+                return $user->staff_id === $call->staff_id;
+            }
+
+            // Level 5: Company owners/admins see all company calls
+            if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin'])) {
+                return true;
+            }
+
+            return true; // Default: company users can see company calls
         }
 
-        // ✅ FIX VULN-002: Resellers can view their customers' calls (parent_company_id match)
+        // Reseller access: Can view their customers' calls (parent_company_id match)
         if ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
-            // Check if call belongs to a customer company where parent_company_id = reseller company_id
             if ($call->company && $call->company->parent_company_id === $user->company_id) {
                 return true;
             }
-        }
-
-        // Staff can view calls they participated in
-        if ($user->staff_id && $call->staff_id === $user->staff_id) {
-            return true;
         }
 
         // Allow viewing calls without company_id for admin users
@@ -104,8 +137,9 @@ class CallPolicy
         }
 
         // Staff can update their own calls (e.g., add notes)
-        if ($user->staff_id && $call->staff_id === $user->staff_id) {
-            return true;
+        // FIX: Now uses $user->staff_id (which exists after migration)
+        if ($user->hasAnyRole(['staff', 'company_staff']) && $user->staff_id) {
+            return $user->staff_id === $call->staff_id;
         }
 
         return false;
@@ -164,8 +198,9 @@ class CallPolicy
         }
 
         // Staff can play recordings of calls they participated in
-        if ($user->staff_id && $call->staff_id === $user->staff_id) {
-            return true;
+        // FIX: Now uses $user->staff_id (which exists after migration)
+        if ($user->hasAnyRole(['staff', 'company_staff']) && $user->staff_id) {
+            return $user->staff_id === $call->staff_id;
         }
 
         return false;
@@ -181,9 +216,19 @@ class CallPolicy
 
     /**
      * Determine whether the user can export call data.
+     *
+     * Dual-Role Support: Admin Panel + Customer Portal
      */
     public function export(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager']);
+        return $user->hasAnyRole([
+            // Admin Panel roles
+            'admin',
+            'manager',
+            // Customer Portal roles
+            'company_owner',
+            'company_admin',
+            'company_manager',
+        ]);
     }
 }

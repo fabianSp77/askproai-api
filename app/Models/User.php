@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use TypeError;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasTenants
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles {
@@ -55,6 +56,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'company_id',
+        'branch_id',      // For company_manager role (branch assignment)
+        'staff_id',       // For company_staff role (staff member they represent)
         'tenant_id',
         'kunde_id',
         'interface_language',
@@ -249,11 +252,81 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Get all tenants (companies) the user belongs to.
+     *
+     * Required for Filament multi-tenancy support.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<Company>
+     */
+    public function getTenants(\Filament\Panel $panel): \Illuminate\Database\Eloquent\Collection
+    {
+        // Customer Portal: User belongs to their company
+        if ($panel->getId() === 'portal' && $this->company_id) {
+            return \Illuminate\Database\Eloquent\Collection::make([$this->company]);
+        }
+
+        // Admin Panel: No tenant restriction (access all)
+        return \Illuminate\Database\Eloquent\Collection::make([]);
+    }
+
+    /**
+     * Check if user can access a specific tenant (company).
+     *
+     * Required for Filament multi-tenancy support.
+     *
+     * @param \Filament\Models\Contracts\Tenant $tenant
+     * @return bool
+     */
+    public function canAccessTenant(\Illuminate\Database\Eloquent\Model $tenant): bool
+    {
+        // Customer Portal: User can only access their own company
+        if ($tenant instanceof Company) {
+            return $this->company_id === $tenant->id;
+        }
+
+        // Admin Panel or other: Allow access
+        return true;
+    }
+
+    /**
      * Get the company that owns the user.
      */
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Get the branch assigned to the user (for company_manager role).
+     *
+     * Purpose: Branch-level access control
+     * - company_manager: Only see data for their assigned branch
+     * - company_owner/admin: NULL branch_id (see all branches)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Get the staff entry this user represents (for company_staff role).
+     *
+     * Purpose: Staff-level access control
+     * - company_staff: Know which staff entry in appointments/calls is theirs
+     * - Enables policies to check: $user->staff_id === $appointment->staff_id
+     *
+     * Architecture:
+     * - User (authentication) → Staff (resource for appointments)
+     * - One staff member can have one user account for portal access
+     * - Not all staff have user accounts (some only exist in Cal.com)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
     }
 
     /**
