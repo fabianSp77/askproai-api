@@ -444,7 +444,8 @@ class CallResource extends Resource
                                 $price = $appt->service->price;
 
                                 if ($price && $price > 0) {
-                                    $formattedPrice = number_format($price / 100, 2, ',', '.');
+                                    // Price is stored as decimal(10,2) in EUR, not cents
+                                    $formattedPrice = number_format($price, 2, ',', '.');
                                     $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
                                               '<span class="text-xs text-green-600">💰 ' . $formattedPrice . '€</span>';
                                 } else {
@@ -486,7 +487,8 @@ class CallResource extends Resource
                                     $price = $appt->service?->price ?? 0;
 
                                     if ($price && $price > 0) {
-                                        $formattedPrice = number_format($price / 100, 2, ',', '.');
+                                        // Price is stored as decimal(10,2) in EUR, not cents
+                                        $formattedPrice = number_format($price, 2, ',', '.');
                                         return "{$name} ({$duration} Min) - {$formattedPrice}€";
                                     }
                                     return "{$name} ({$duration} Min)";
