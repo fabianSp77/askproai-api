@@ -35,6 +35,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\AdminUpdate::class => \App\Policies\AdminUpdatePolicy::class,
         // System Testing Policy (admin@askproai.de only)
         \App\Models\SystemTestRun::class => \App\Policies\SystemTestingPolicy::class,
+        // Customer Portal Policies (Phase 1: Read-only access)
+        \App\Models\RetellCallSession::class => \App\Policies\RetellCallSessionPolicy::class,
     ];
 
     /**

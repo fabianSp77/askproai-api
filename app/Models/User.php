@@ -99,12 +99,80 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Determine if the user can access the Filament panel.
+     *
+     * Security: Panel-specific access control to prevent unauthorized access
+     * - Admin Panel (/admin): Only admins and resellers
+     * - Customer Portal (/portal): Only company users (NOT admins)
+     *
+     * @param Panel $panel The Filament panel being accessed
+     * @return bool True if user can access this specific panel
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // For now, allow all authenticated users
-        // Later we can add role/permission checks
-        return true;
+        // Panel-specific authorization
+        return match($panel->getId()) {
+            'admin' => $this->canAccessAdminPanel(),
+            'portal' => $this->canAccessCustomerPortal(),
+            default => false, // Deny access to unknown panels
+        };
+    }
+
+    /**
+     * Check if user can access Admin Panel (/admin)
+     *
+     * Allowed roles:
+     * - super_admin: System administrators
+     * - Admin: Platform administrators
+     * - reseller_admin: Reseller administrators
+     *
+     * @return bool
+     */
+    protected function canAccessAdminPanel(): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'Admin', 'reseller_admin']);
+    }
+
+    /**
+     * Check if user can access Customer Portal (/portal)
+     *
+     * Security requirements:
+     * 1. Feature flag must be enabled
+     * 2. User must belong to a company (company_id)
+     * 3. User must have appropriate company role
+     * 4. Admins are EXCLUDED (must use /admin instead)
+     *
+     * Allowed roles:
+     * - company_owner: Company owners
+     * - company_admin: Company administrators
+     * - company_manager: Branch managers
+     * - company_staff: Staff members
+     *
+     * @return bool
+     */
+    protected function canAccessCustomerPortal(): bool
+    {
+        // Feature flag check (kill switch)
+        if (!config('features.customer_portal')) {
+            return false;
+        }
+
+        // Exclude super_admins and platform admins (they should use /admin)
+        if ($this->hasAnyRole(['super_admin', 'Admin', 'reseller_admin'])) {
+            return false;
+        }
+
+        // Multi-tenancy check: User must belong to a company
+        if ($this->company_id === null) {
+            return false;
+        }
+
+        // Role-based access: Only company users allowed
+        return $this->hasAnyRole([
+            'company_owner',
+            'company_admin',
+            'company_manager',
+            'company_staff',
+        ]);
     }
 
     public function hasRole($roles, string $guard = null): bool
