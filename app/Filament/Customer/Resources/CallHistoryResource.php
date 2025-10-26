@@ -23,6 +23,7 @@ class CallHistoryResource extends Resource
     protected static ?string $modelLabel = 'Anruf';
     protected static ?string $pluralModelLabel = 'Anrufe';
     protected static ?int $navigationSort = 4;
+    protected static ?string $slug = 'call-histories';
 
     public static function getNavigationBadge(): ?string
     {
