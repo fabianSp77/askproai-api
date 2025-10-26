@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerNote extends Model
 {
-    use BelongsToCompany;
+    // Note: CustomerNote belongs to Company INDIRECTLY via Customer
+    // Do NOT use BelongsToCompany trait - customer_notes table has no company_id column
 
     protected $fillable = [
         'customer_id',
@@ -62,6 +62,20 @@ class CustomerNote extends Model
     public function scopeRecent($query, $days = 30)
     {
         return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Scope to filter notes by company through customer relationship
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $companyId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->whereHas('customer', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        });
     }
 
     /*
