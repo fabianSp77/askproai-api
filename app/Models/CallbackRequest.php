@@ -41,7 +41,9 @@ use Carbon\Carbon;
  */
 class CallbackRequest extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    // ⚠️ FIXED: SoftDeletes removed - deleted_at column doesn't exist in Sept 21 backup
+    // TODO: Re-enable SoftDeletes when database is fully restored
+    use HasFactory, BelongsToCompany;
 
     /**
      * Priority enumeration
@@ -113,7 +115,7 @@ class CallbackRequest extends Model
         'expires_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        // 'deleted_at' => 'datetime', // ❌ Removed - column doesn't exist
     ];
 
     /**
