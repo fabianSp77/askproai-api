@@ -28,6 +28,8 @@ class AppointmentStats extends BaseWidget
         $thisWeek = [now()->startOfWeek(), now()->endOfWeek()];
         $thisMonth = [now()->startOfMonth(), now()->endOfMonth()];
 
+        // ⚠️ FIXED: price column doesn't exist in Sept 21 database backup
+        // Revenue tracking disabled until database is fully restored
         // Optimized single query for all stats
         $stats = Appointment::selectRaw("
             COUNT(CASE WHEN DATE(starts_at) = ? THEN 1 END) as today_count,
@@ -38,15 +40,14 @@ class AppointmentStats extends BaseWidget
             COUNT(CASE WHEN status = 'cancelled' AND DATE(created_at) >= ? THEN 1 END) as cancelled_week,
             COUNT(CASE WHEN status = 'completed' AND starts_at BETWEEN ? AND ? THEN 1 END) as completed_month,
             COUNT(CASE WHEN status = 'no_show' AND starts_at BETWEEN ? AND ? THEN 1 END) as no_show_month,
-            SUM(CASE WHEN status = 'completed' AND starts_at BETWEEN ? AND ? THEN COALESCE(price, 0) ELSE 0 END) as total_revenue_month,
-            AVG(CASE WHEN status = 'completed' THEN price END) as avg_revenue
+            0 as total_revenue_month,
+            0 as avg_revenue
         ", [
             $today, $tomorrow,
             $thisWeek[0], $thisWeek[1],
             $thisMonth[0], $thisMonth[1],
             $today,
             now()->subWeek(),
-            $thisMonth[0], $thisMonth[1],
             $thisMonth[0], $thisMonth[1],
             $thisMonth[0], $thisMonth[1]
         ])->first();
@@ -122,23 +123,9 @@ class AppointmentStats extends BaseWidget
 
     private function getRevenueTrend(): array
     {
-        // Single optimized query instead of 7 individual queries
-        $rawData = Appointment::whereBetween('starts_at', [
-                today()->subDays(6)->startOfDay(),
-                today()->endOfDay()
-            ])
-            ->where('status', 'completed')
-            ->selectRaw('DATE(starts_at) as date, SUM(COALESCE(price, 0)) as revenue')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->pluck('revenue', 'date')
-            ->toArray();
-
-        $data = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = today()->subDays($i)->format('Y-m-d');
-            $data[] = $rawData[$date] ?? 0;
-        }
-        return $data;
+        // ⚠️ DISABLED: price column doesn't exist in Sept 21 backup
+        // Revenue tracking disabled until database is fully restored
+        // Return empty trend data (all zeros)
+        return array_fill(0, 7, 0);
     }
 }
