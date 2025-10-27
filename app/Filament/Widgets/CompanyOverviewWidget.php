@@ -29,7 +29,7 @@ class CompanyOverviewWidget extends BaseWidget
                 ->chart([3, 5, 7, 12, 15, 15, 12])
                 ->color('success'),
                 
-            Stat::make('Inaktive Unternehmen', Company::where('active', false)->count())
+            Stat::make('Inaktive Unternehmen', Company::where('is_active', false)->count())
                 ->description('Ohne kürzliche Aktivität')
                 ->chart([15, 12, 10, 8, 5, 4, 2])
                 ->color('danger'),
