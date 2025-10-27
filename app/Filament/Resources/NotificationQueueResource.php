@@ -367,22 +367,36 @@ class NotificationQueueResource extends Resource
             return null;
         }
 
-        // Count only pending/processing notifications for current company
-        return (string) static::getModel()::where('company_id', $user->company_id)
-            ->whereIn('status', ['pending', 'processing'])
-            ->count();
+        try {
+            // Count only pending/processing notifications for current company
+            $count = static::getModel()::where('company_id', $user->company_id)
+                ->whereIn('status', ['pending', 'processing'])
+                ->count();
+
+            return $count > 0 ? (string) $count : null;
+        } catch (\Exception $e) {
+            // Gracefully handle missing tables during database restoration
+            \Log::warning('Navigation badge error in NotificationQueueResource: ' . $e->getMessage());
+            return null;
+        }
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = (int) static::getNavigationBadge();
+        try {
+            $count = (int) static::getNavigationBadge();
 
-        // Color coding based on pending count
-        return match (true) {
-            $count === 0 => null,
-            $count < 10 => 'info',
-            $count < 50 => 'warning',
-            default => 'danger',
-        };
+            // Color coding based on pending count
+            return match (true) {
+                $count === 0 => null,
+                $count < 10 => 'info',
+                $count < 50 => 'warning',
+                default => 'danger',
+            };
+        } catch (\Exception $e) {
+            // Gracefully handle errors
+            \Log::warning('Navigation badge color error in NotificationQueueResource: ' . $e->getMessage());
+            return null;
+        }
     }
 }
