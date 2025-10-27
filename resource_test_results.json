@@ -1,0 +1,165 @@
+{
+    "ActivityLog": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\ActivityLog"
+    },
+    "AdminUpdate": {
+        "status": "missing_table",
+        "table": "admin_updates"
+    },
+    "AppointmentModification": {
+        "status": "missing_table",
+        "table": "appointment_modifications"
+    },
+    "Appointment": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\Appointment"
+    },
+    "BalanceBonusTier": {
+        "status": "missing_table",
+        "table": "balance_bonus_tiers"
+    },
+    "BalanceTopup": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\BalanceTopup"
+    },
+    "Branch": {
+        "status": "ok",
+        "records": 3,
+        "model": "App\\Models\\Branch"
+    },
+    "Call": {
+        "status": "ok",
+        "records": 10,
+        "model": "App\\Models\\Call"
+    },
+    "CallbackRequest": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\CallbackRequest"
+    },
+    "CompanyAssignmentConfig": {
+        "status": "missing_table",
+        "table": "company_assignment_configs"
+    },
+    "Company": {
+        "status": "ok",
+        "records": 1,
+        "model": "App\\Models\\Company"
+    },
+    "ConversationFlow": {
+        "status": "missing_table",
+        "table": "conversation_flows"
+    },
+    "CurrencyExchangeRate": {
+        "status": "missing_table",
+        "table": "currency_exchange_rates"
+    },
+    "CustomerNote": {
+        "status": "missing_table",
+        "table": "customer_notes"
+    },
+    "Customer": {
+        "status": "ok",
+        "records": 10,
+        "model": "App\\Models\\Customer"
+    },
+    "Integration": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\Integration"
+    },
+    "Invoice": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\Invoice"
+    },
+    "NotificationConfiguration": {
+        "status": "missing_table",
+        "table": "notification_configurations"
+    },
+    "NotificationQueue": {
+        "status": "missing_table",
+        "table": "notification_queue"
+    },
+    "NotificationTemplate": {
+        "status": "missing_table",
+        "table": "notification_templates"
+    },
+    "Permission": {
+        "status": "ok",
+        "records": 10,
+        "model": "Spatie\\Permission\\Models\\Permission"
+    },
+    "PhoneNumber": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\PhoneNumber"
+    },
+    "PlatformCost": {
+        "status": "missing_table",
+        "table": "platform_costs"
+    },
+    "PolicyConfiguration": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\PolicyConfiguration"
+    },
+    "PricingPlan": {
+        "status": "missing_table",
+        "table": "pricing_plans"
+    },
+    "RetellAgent": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\RetellAgent"
+    },
+    "RetellCallSession": {
+        "status": "missing_table",
+        "table": "retell_call_sessions"
+    },
+    "Role": {
+        "status": "ok",
+        "records": 10,
+        "model": "App\\Models\\Role"
+    },
+    "Service": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\Service"
+    },
+    "ServiceStaffAssignment": {
+        "status": "missing_table",
+        "table": "service_staff_assignments"
+    },
+    "Staff": {
+        "status": "ok",
+        "records": 0,
+        "model": "App\\Models\\Staff"
+    },
+    "SystemSettings": {
+        "status": "ok",
+        "records": 10,
+        "model": "App\\Models\\SystemSetting"
+    },
+    "Tenant": {
+        "status": "missing_table",
+        "table": "tenants"
+    },
+    "Transaction": {
+        "status": "missing_table",
+        "table": "transactions"
+    },
+    "User": {
+        "status": "ok",
+        "records": 4,
+        "model": "App\\Models\\User"
+    },
+    "WorkingHour": {
+        "status": "missing_table",
+        "table": "working_hours"
+    }
+}
