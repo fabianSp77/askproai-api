@@ -33,11 +33,17 @@ trait HasCachedNavigationBadge
             return null;
         }
 
-        $user = Auth::user();
-        $cacheKey = static::getBadgeCacheKey($user);
-        $result = Cache::remember($cacheKey, $ttl, $callback);
+        try {
+            $user = Auth::user();
+            $cacheKey = static::getBadgeCacheKey($user);
+            $result = Cache::remember($cacheKey, $ttl, $callback);
 
-        return $result > 0 ? (string) $result : null;
+            return $result > 0 ? (string) $result : null;
+        } catch (\Exception $e) {
+            // Gracefully handle missing tables/columns during database restoration
+            \Log::warning('Navigation badge error in ' . static::class . ': ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -49,9 +55,15 @@ trait HasCachedNavigationBadge
             return null;
         }
 
-        $user = Auth::user();
-        $cacheKey = static::getBadgeCacheKey($user, 'color');
-        return Cache::remember($cacheKey, $ttl, $callback);
+        try {
+            $user = Auth::user();
+            $cacheKey = static::getBadgeCacheKey($user, 'color');
+            return Cache::remember($cacheKey, $ttl, $callback);
+        } catch (\Exception $e) {
+            // Gracefully handle missing tables/columns during database restoration
+            \Log::warning('Navigation badge color error in ' . static::class . ': ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**

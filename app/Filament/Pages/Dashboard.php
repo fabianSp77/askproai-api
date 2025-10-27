@@ -58,17 +58,10 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        return [
-            // ✅ RESTORED POST-MEMORY-FIX (2025-10-03)
-            // Root cause fixed: User caching + NavigationBadgeCache implemented
-            // Memory bugs resolved: CompanyScope caching + Super admin bypass active
-
-            // Phase 1: Safe widgets with caching/optimization (restored 2025-10-03)
-            \App\Filament\Widgets\DashboardStats::class,        // ✅ Has 5-min caching
-            \App\Filament\Widgets\QuickActionsWidget::class,    // ✅ Lightweight counts
-            \App\Filament\Widgets\RecentAppointments::class,    // ✅ Eager loading optimized
-            \App\Filament\Widgets\RecentCalls::class,           // ✅ Column selection optimized
-        ];
+        // Widgets disabled until database is fully migrated
+        // Some widgets query tables that don't exist yet
+        // Will be re-enabled once all migrations are complete
+        return [];
     }
 
     protected function getViewData(): array
