@@ -19,14 +19,25 @@
             $displayText = 'Gebucht';
             $bgColor = '#dcfce7';  // green-100
             $textColor = '#15803d'; // green-800
-        } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
-            $displayText = 'Wunsch';
-            $bgColor = '#fef3c7';  // yellow-100
-            $textColor = '#b45309'; // yellow-800
         } else {
-            $displayText = 'Offen';
-            $bgColor = '#fee2e2';  // red-100
-            $textColor = '#991b1b'; // red-800
+            // ⚠️ DISABLED: appointment_wishes table doesn't exist in Sept 21 backup
+            // Check if there are pending wishes (wrapped in try-catch for missing table)
+            $hasPendingWish = false;
+            try {
+                $hasPendingWish = $record->appointmentWishes()->where('status', 'pending')->exists();
+            } catch (\Exception $e) {
+                // Silently ignore - appointment_wishes table doesn't exist in Sept 21 backup
+            }
+
+            if ($hasPendingWish) {
+                $displayText = 'Wunsch';
+                $bgColor = '#fef3c7';  // yellow-100
+                $textColor = '#b45309'; // yellow-800
+            } else {
+                $displayText = 'Offen';
+                $bgColor = '#fee2e2';  // red-100
+                $textColor = '#991b1b'; // red-800
+            }
         }
     }
 

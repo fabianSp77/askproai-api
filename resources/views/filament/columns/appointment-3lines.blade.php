@@ -2,11 +2,16 @@
     $record = $getRecord();
     $appointment = $record->appointment;
 
-    // Check for unfulfilled wishes
-    $unresolvedWishes = $record->appointmentWishes()
-        ->where('status', 'pending')
-        ->orderBy('created_at', 'desc')
-        ->first();
+    // Check for unfulfilled wishes (wrapped in try-catch for missing table)
+    $unresolvedWishes = null;
+    try {
+        $unresolvedWishes = $record->appointmentWishes()
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->first();
+    } catch (\Exception $e) {
+        // Silently ignore - appointment_wishes table doesn't exist in Sept 21 backup
+    }
 
     // Tooltip content
     $tooltipLines = [];
