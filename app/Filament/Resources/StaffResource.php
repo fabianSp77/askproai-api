@@ -391,39 +391,43 @@ class StaffResource extends Resource
 
                 Filter::make('available_now')
                     ->label('Aktuell verfügbar')
+                    // ✅ FIXED: is_bookable column doesn't exist in Sept 21 backup
                     ->query(fn (Builder $query): Builder =>
                         $query->where('is_active', true)
-                            ->where('is_bookable', true)
                     )
                     ->default(),
 
-                Filter::make('mobile_staff')
-                    ->label('Mobile Mitarbeiter')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->where('mobility_radius_km', '>', 0)
-                    ),
+                // ⚠️ DISABLED: mobility_radius_km column doesn't exist in Sept 21 backup
+                // Filter::make('mobile_staff')
+                //     ->label('Mobile Mitarbeiter')
+                //     ->query(fn (Builder $query): Builder =>
+                //         $query->where('mobility_radius_km', '>', 0)
+                //     ),
 
-                Filter::make('high_rated')
-                    ->label('Top Bewertung (≥4.0)')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->where('average_rating', '>=', 4.0)
-                    ),
+                // ⚠️ DISABLED: average_rating column doesn't exist in Sept 21 backup
+                // Filter::make('high_rated')
+                //     ->label('Top Bewertung (≥4.0)')
+                //     ->query(fn (Builder $query): Builder =>
+                //         $query->where('average_rating', '>=', 4.0)
+                //     ),
 
                 Filter::make('has_calendar')
                     ->label('Mit Kalender-Integration')
+                    // ✅ FIXED: Use actual calendar columns (google/outlook)
                     ->query(fn (Builder $query): Builder =>
                         $query->where(fn ($q) =>
-                            $q->whereNotNull('calcom_user_id')
-                              ->orWhereNotNull('external_calendar_id')
+                            $q->whereNotNull('google_calendar_id')
+                              ->orWhereNotNull('outlook_calendar_id')
                         )
                     ),
 
-                Filter::make('certified_staff')
-                    ->label('Zertifiziert')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->whereNotNull('certifications')
-                            ->where('certifications', '!=', '')
-                    ),
+                // ⚠️ DISABLED: certifications column doesn't exist in Sept 21 backup
+                // Filter::make('certified_staff')
+                //     ->label('Zertifiziert')
+                //     ->query(fn (Builder $query): Builder =>
+                //         $query->whereNotNull('certifications')
+                //             ->where('certifications', '!=', '')
+                //     ),
 
                 SelectFilter::make('company_id')
                     ->label('Unternehmen')

@@ -156,4 +156,21 @@ class Staff extends Model
             ->where('status', 'completed')
             ->orderBy('starts_at', 'desc');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backwards Compatibility Accessors (2025-10-27)
+    |--------------------------------------------------------------------------
+    | Maps old column names to actual database columns for Sept 21 backup
+    */
+
+    /**
+     * Accessor: is_bookable → default to true if staff is active
+     * Database doesn't have is_bookable column
+     */
+    public function getIsBookableAttribute(): bool
+    {
+        // Default to true if staff is active, can be overridden via metadata if needed
+        return $this->is_active ?? false;
+    }
 }
