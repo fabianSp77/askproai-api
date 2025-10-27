@@ -18,8 +18,18 @@ class CustomerJourneyChart extends ChartWidget
 
     protected static ?string $pollingInterval = '300s';
 
+    /**
+     * Widget disabled - journey_status column doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getData(): array
     {
+        // ⚠️ DISABLED: journey_status column doesn't exist
         // Get customer journey distribution
         $journeyData = Customer::select('journey_status', DB::raw('COUNT(*) as count'))
             ->groupBy('journey_status')
