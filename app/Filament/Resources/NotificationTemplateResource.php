@@ -18,6 +18,20 @@ class NotificationTemplateResource extends Resource
 {
     protected static ?string $model = NotificationTemplate::class;
 
+    /**
+     * Resource disabled - notification_templates table doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false; // Prevents all access to this resource
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
 
     protected static ?string $navigationGroup = 'Benachrichtigungen';

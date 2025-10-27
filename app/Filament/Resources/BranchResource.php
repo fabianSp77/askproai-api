@@ -953,10 +953,14 @@ class BranchResource extends Resource
                         $query->has('staff')
                     ),
 
-                SelectFilter::make('city')
-                    ->label('Stadt')
-                    ->options(fn () => Branch::distinct()->pluck('city', 'city')->filter())
-                    ->searchable(),
+                /**
+                 * DISABLED: city column doesn't exist in Sept 21 database backup
+                 * TODO: Re-enable when database is fully restored
+                 */
+                // SelectFilter::make('city')
+                //     ->label('Stadt')
+                //     ->options(fn () => Branch::distinct()->pluck('city', 'city')->filter())
+                //     ->searchable(),
             ])
             ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
             ->filtersFormColumns(3)

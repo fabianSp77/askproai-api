@@ -24,6 +24,21 @@ use Illuminate\Support\Facades\Log;
 class ServiceStaffAssignmentResource extends Resource
 {
     protected static ?string $model = ServiceStaffAssignment::class;
+
+    /**
+     * Resource disabled - service_staff_assignments table doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false; // Prevents all access to this resource
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
     protected static ?string $navigationGroup = 'Mitarbeiter-Verwaltung';
     protected static ?int $navigationSort = 2;

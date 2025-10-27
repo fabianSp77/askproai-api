@@ -22,6 +22,20 @@ class BalanceBonusTierResource extends Resource
 {
     protected static ?string $model = BalanceBonusTier::class;
 
+    /**
+     * Resource disabled - balance_bonus_tiers table doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false; // Prevents all access to this resource
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static ?string $navigationLabel = 'Bonus-Stufen';
