@@ -28,6 +28,23 @@ use Filament\Notifications\Notification;
 class BranchResource extends Resource
 {
     protected static ?string $model = Branch::class;
+
+    /**
+     * Resource disabled - branches table missing 30+ columns in Sept 21 database backup
+     * Only has: id, company_id, name, slug, is_active, created_at, updated_at, deleted_at
+     * Missing: phone_number, address, city, calendar_mode, active, accepts_walkins, etc.
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false; // Prevents all access to this resource
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationGroup = 'Stammdaten';
     protected static ?int $navigationSort = 5;
@@ -155,9 +172,13 @@ class BranchResource extends Resource
                                                 ->label('Parkplätze verfügbar')
                                                 ->default(false),
 
-                                            Forms\Components\Toggle::make('active')
-                                                ->label('Betriebsbereit')
-                                                ->default(true),
+                                            /**
+                                             * DISABLED: active column doesn't exist in Sept 21 database backup
+                                             * TODO: Re-enable when database is fully restored
+                                             */
+                                            // Forms\Components\Toggle::make('active')
+                                            //     ->label('Betriebsbereit')
+                                            //     ->default(true),
                                         ]),
 
                                         Forms\Components\Textarea::make('business_hours')
@@ -836,8 +857,7 @@ class BranchResource extends Resource
                     ->badge()
                     ->label('Betrieb')
                     ->getStateUsing(fn ($record) =>
-                        $record->is_active && $record->active ? 'operational' :
-                        ($record->is_active ? 'limited' : 'closed')
+                        $record->is_active ? 'operational' : 'closed' // active column doesn't exist in Sept 21 backup
                     )
                     ->colors([
                         'success' => 'operational',
@@ -923,7 +943,7 @@ class BranchResource extends Resource
                 Filter::make('operational')
                     ->label('Betriebsbereit')
                     ->query(fn (Builder $query): Builder =>
-                        $query->where('is_active', true)->where('active', true)
+                        $query->where('is_active', true) // active column doesn't exist in Sept 21 backup
                     )
                     ->default(),
 
