@@ -17,6 +17,15 @@ class PolicyEffectivenessWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
+    /**
+     * Widget disabled - company_id column doesn't exist in policy_configurations table (Sept 21 backup)
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getType(): string
     {
         return 'line';

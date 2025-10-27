@@ -20,6 +20,15 @@ class PolicyChartsWidget extends ChartWidget
     protected int | string | array $columnSpan = 'full';
 
     /**
+     * Widget disabled - metadata column doesn't exist in appointment_modification_stats table (Sept 21 backup)
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
+    /**
      * Get chart type
      */
     protected function getType(): string

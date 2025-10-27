@@ -16,6 +16,15 @@ class PolicyAnalyticsWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '30s';
 
+    /**
+     * Widget disabled - company_id column doesn't exist in policy_configurations table (Sept 21 backup)
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getStats(): array
     {
         // Get company_id from authenticated user
