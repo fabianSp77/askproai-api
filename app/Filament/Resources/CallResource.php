@@ -271,8 +271,11 @@ class CallResource extends Resource
                     ->view('filament.columns.anrufer-3lines')
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query
-                            ->where('customer_name', 'like', "%{$search}%")
-                            ->orWhereHas('customer', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
+                            // ✅ FIXED: customer_name is in metadata JSON, not a direct column
+                            ->where(function ($q) use ($search) {
+                                $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
+                                  ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
+                            });
                     })
                     ->sortable()
                     ->toggleable(),

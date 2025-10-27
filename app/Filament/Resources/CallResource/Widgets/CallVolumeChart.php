@@ -30,6 +30,7 @@ class CallVolumeChart extends ChartWidget
     private function calculateChartData(): array
     {
         // Single optimized query for all data
+        // ✅ FIXED: uses status and has_appointment (actual DB columns)
         $rawData = Call::whereBetween('created_at', [
                 Carbon::now()->subDays(29)->startOfDay(),
                 Carbon::now()->endOfDay()
@@ -37,9 +38,9 @@ class CallVolumeChart extends ChartWidget
             ->selectRaw('
                 DATE(created_at) as date,
                 COUNT(*) as total_count,
-                SUM(CASE WHEN call_successful = 1 THEN 1 ELSE 0 END) as successful_count,
-                SUM(CASE WHEN appointment_made = 1 THEN 1 ELSE 0 END) as appointment_count
-            ')
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as successful_count,
+                SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count
+            ', ['completed'])
             ->groupBy('date')
             ->orderBy('date')
             ->get()

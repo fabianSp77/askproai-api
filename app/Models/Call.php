@@ -66,14 +66,13 @@ class Call extends Model
         'consent_given' => 'boolean',
         'data_forwarded' => 'boolean',
         'data_validation_completed' => 'boolean',
-        'call_successful' => 'boolean',
-        'appointment_made' => 'boolean',
+        'has_appointment' => 'boolean',  // ✅ FIXED: was appointment_made
         'first_visit' => 'boolean',
         'customer_name_verified' => 'boolean',
         'verification_confidence' => 'decimal:2',
         'no_show_count' => 'integer',
         'reschedule_count' => 'integer',
-        'cost' => 'decimal:2',
+        'calculated_cost' => 'integer',  // ✅ FIXED: was cost - actual DB column
         'cost_cents' => 'integer',
         'base_cost' => 'integer',
         'reseller_cost' => 'integer',
@@ -93,6 +92,8 @@ class Call extends Model
         'customer_linked_at' => 'datetime',
         'appointment_linked_at' => 'datetime',
         'customer_link_confidence' => 'decimal:2',
+        'started_at' => 'datetime',  // ✅ Added - exists in DB
+        'ended_at' => 'datetime',    // ✅ Added - exists in DB
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -250,26 +251,29 @@ class Call extends Model
 
     /**
      * Scope: Calls with appointments made
+     * ✅ FIXED: uses has_appointment (actual DB column)
      */
     public function scopeWithAppointment($query)
     {
-        return $query->where('appointment_made', true);
+        return $query->where('has_appointment', true);
     }
 
     /**
      * Scope: Successful calls
+     * ✅ FIXED: uses status = 'completed' (actual DB column)
      */
     public function scopeSuccessful($query)
     {
-        return $query->where('call_successful', true);
+        return $query->where('status', 'completed');
     }
 
     /**
      * Scope: Failed calls
+     * ✅ FIXED: uses status = 'failed' (actual DB column)
      */
     public function scopeFailed($query)
     {
-        return $query->where('call_successful', false);
+        return $query->where('status', 'failed');
     }
 
     /**
@@ -350,13 +354,17 @@ class Call extends Model
 
     /**
      * Scope: Calls with session outcome
+     * ⚠️ WARNING: session_outcome stored in metadata JSON, not as column
+     * This scope cannot efficiently query JSON field - consider refactoring
      */
     public function scopeWithOutcome($query, ?string $outcome = null)
     {
-        $query = $query->whereNotNull('session_outcome');
-
+        // Note: session_outcome is in metadata JSON, not a direct column
+        // This query will be inefficient but maintains backwards compatibility
         if ($outcome) {
-            $query->where('session_outcome', $outcome);
+            $query->whereRaw("JSON_EXTRACT(metadata, '$.session_outcome') = ?", [$outcome]);
+        } else {
+            $query->whereRaw("JSON_EXTRACT(metadata, '$.session_outcome') IS NOT NULL");
         }
 
         return $query;
@@ -465,12 +473,13 @@ class Call extends Model
 
     /**
      * Get appointment status information (tooltip, color, icon)
+     * ✅ FIXED: uses has_appointment (actual DB column)
      *
      * @return array{tooltip: string, color: string, icon: string}
      */
     public function getAppointmentStatusInfoAttribute(): array
     {
-        if ($this->appointment_made && !$this->converted_appointment_id) {
+        if ($this->has_appointment && !$this->converted_appointment_id) {
             return [
                 'tooltip' => '⚠️ Buchung fehlgeschlagen - Termin wurde nicht erstellt',
                 'color' => 'warning',
@@ -478,7 +487,7 @@ class Call extends Model
             ];
         }
 
-        if ($this->appointment_made && $this->converted_appointment_id) {
+        if ($this->has_appointment && $this->converted_appointment_id) {
             return [
                 'tooltip' => '✅ Termin erfolgreich gebucht (ID: ' . $this->converted_appointment_id . ')',
                 'color' => 'success',
@@ -510,15 +519,94 @@ class Call extends Model
      */
     public function getBookingStatusAttribute(): string
     {
-        if ($this->appointment_made && !$this->converted_appointment_id) {
+        if ($this->has_appointment && !$this->converted_appointment_id) {
             return 'Fehlgeschlagen';
         }
-        if ($this->appointment_made && $this->converted_appointment_id) {
+        if ($this->has_appointment && $this->converted_appointment_id) {
             return 'Erfolgreich';
         }
-        if ($this->appointment_made === 0) {
+        if ($this->has_appointment === 0) {
             return 'Nicht versucht';
         }
         return '-';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backwards Compatibility Accessors (2025-10-27)
+    |--------------------------------------------------------------------------
+    | Maps old column names to actual database columns for Sept 21 backup
+    */
+
+    /**
+     * Accessor: call_successful → status mapping
+     * Database has 'status', code expects 'call_successful'
+     */
+    public function getCallSuccessfulAttribute(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    /**
+     * Accessor: appointment_made → has_appointment mapping
+     * Database has 'has_appointment', code expects 'appointment_made'
+     */
+    public function getAppointmentMadeAttribute(): bool
+    {
+        return $this->has_appointment ?? false;
+    }
+
+    /**
+     * Accessor: cost → calculated_cost mapping
+     * Database has 'calculated_cost', code expects 'cost'
+     */
+    public function getCostAttribute(): ?float
+    {
+        return $this->calculated_cost ? $this->calculated_cost / 100 : null;
+    }
+
+    /**
+     * Accessor: customer_name from metadata or relationship
+     * No database column, extracted from metadata JSON or customer relationship
+     */
+    public function getCustomerNameAttribute(): ?string
+    {
+        // Try metadata first
+        if ($this->metadata && isset($this->metadata['customer_name'])) {
+            return $this->metadata['customer_name'];
+        }
+
+        // Fallback to customer relationship
+        if ($this->relationLoaded('customer') && $this->customer) {
+            return $this->customer->name;
+        }
+
+        return null;
+    }
+
+    /**
+     * Accessor: sentiment from metadata
+     * No database column, extracted from metadata JSON
+     */
+    public function getSentimentAttribute(): ?string
+    {
+        if ($this->metadata && isset($this->metadata['sentiment'])) {
+            return $this->metadata['sentiment'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Accessor: session_outcome from metadata
+     * No database column, extracted from metadata JSON
+     */
+    public function getSessionOutcomeAttribute(): ?string
+    {
+        if ($this->metadata && isset($this->metadata['session_outcome'])) {
+            return $this->metadata['session_outcome'];
+        }
+
+        return null;
     }
 }

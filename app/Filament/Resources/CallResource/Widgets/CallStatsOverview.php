@@ -69,15 +69,16 @@ class CallStatsOverview extends BaseWidget
     private function calculateStats(): array
     {
         // 🔒 SECURITY: Single query for all today's stats with role filtering
+        // ✅ FIXED: uses status and has_appointment (actual DB columns)
         $todayStats = $this->applyRoleFilter(Call::whereDate('created_at', today()))
             ->selectRaw('
                 COUNT(*) as total_count,
-                SUM(CASE WHEN call_successful = 1 THEN 1 ELSE 0 END) as successful_count,
-                SUM(CASE WHEN appointment_made = 1 THEN 1 ELSE 0 END) as appointment_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as successful_count,
+                SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count,
                 AVG(CASE WHEN duration_sec > 0 THEN duration_sec ELSE NULL END) as avg_duration,
-                SUM(CASE WHEN sentiment = "positive" THEN 1 ELSE 0 END) as positive_count,
-                SUM(CASE WHEN sentiment = "negative" THEN 1 ELSE 0 END) as negative_count
-            ')
+                SUM(CASE WHEN JSON_EXTRACT(metadata, "$.sentiment") = "positive" THEN 1 ELSE 0 END) as positive_count,
+                SUM(CASE WHEN JSON_EXTRACT(metadata, "$.sentiment") = "negative" THEN 1 ELSE 0 END) as negative_count
+            ', ['completed'])
             ->first();
 
         $todayCount = $todayStats->total_count ?? 0;
@@ -88,11 +89,12 @@ class CallStatsOverview extends BaseWidget
         $negativeSentiment = $todayStats->negative_count ?? 0;
 
         // 🔒 SECURITY: Single query for week stats with role filtering
+        // ✅ FIXED: uses status (actual DB column)
         $weekStats = $this->applyRoleFilter(Call::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]))
             ->selectRaw('
                 COUNT(*) as total_count,
-                SUM(CASE WHEN call_successful = 1 THEN 1 ELSE 0 END) as successful_count
-            ')
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as successful_count
+            ', ['completed'])
             ->first();
 
         $weekCount = $weekStats->total_count ?? 0;
@@ -100,10 +102,11 @@ class CallStatsOverview extends BaseWidget
 
         // 🔒 SECURITY: Single query for month stats with role filtering (including profit and conversion calculations)
         // Using whereBetween instead of whereMonth/whereYear for better index usage
+        // ✅ FIXED: uses has_appointment (actual DB column)
         $monthStats = $this->applyRoleFilter(Call::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]))
             ->selectRaw('
                 COUNT(*) as total_count,
-                SUM(CASE WHEN appointment_made = 1 THEN 1 ELSE 0 END) as appointment_count,
+                SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count,
                 SUM(COALESCE(cost_cents, 0)) / 100.0 as total_cost,
                 SUM(COALESCE(platform_profit, 0)) / 100.0 as total_platform_profit,
                 SUM(COALESCE(total_profit, 0)) / 100.0 as total_profit,

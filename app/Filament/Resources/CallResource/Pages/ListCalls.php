@@ -51,27 +51,27 @@ class ListCalls extends ListRecords
         $counts = \Illuminate\Support\Facades\Cache::remember($cacheKey . '-' . $cacheSegment, 300, function () {
             return [
                 'all' => Call::count(),
-                'successful' => Call::where('call_successful', true)->count(),
-                'failed' => Call::where('call_successful', false)->count(),
+                'completed' => Call::where('status', 'completed')->count(),
+                'failed' => Call::where('status', 'failed')->count(),
                 'today' => Call::whereDate('created_at', today())->count(),
-                'with_appointments' => Call::where('appointment_made', true)->count(),
+                'with_appointments' => Call::where('has_appointment', true)->count(),
             ];
         });
 
         return [
             'all' => Tab::make('Alle Anrufe')
                 ->badge($counts['all']),
-            'successful' => Tab::make('Erfolgreich')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('call_successful', true))
-                ->badge($counts['successful']),
+            'completed' => Tab::make('Abgeschlossen')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'completed'))
+                ->badge($counts['completed']),
             'with_appointments' => Tab::make('Mit Termin')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('appointment_made', true))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('has_appointment', true))
                 ->badge($counts['with_appointments']),
             'today' => Tab::make('Heute')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('created_at', today()))
                 ->badge($counts['today']),
             'failed' => Tab::make('Probleme')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('call_successful', false))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'failed'))
                 ->badge($counts['failed']),
         ];
     }
