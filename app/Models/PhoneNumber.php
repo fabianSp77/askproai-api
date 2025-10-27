@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PhoneNumber extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, BelongsToCompany;  // ✅ FIXED: Removed SoftDeletes (deleted_at column doesn't exist in Sept 21 backup)
 
     /**
      * Mass Assignment Protection

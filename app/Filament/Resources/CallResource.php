@@ -197,12 +197,14 @@ class CallResource extends Resource
             // 🚀 PERFORMANCE: Eager load relationships to prevent N+1 queries
             ->modifyQueryUsing(function (Builder $query) {
                 return $query
-                    ->with('appointmentWishes', function ($q) {
-                        $q->where('status', 'pending')->latest();
-                    })
-                    ->with('appointments', function ($q) {
-                        $q->with('service');
-                    })
+                    // ❌ SKIPPED: appointmentWishes (table missing from DB backup)
+                    // ->with('appointmentWishes', function ($q) {
+                    //     $q->where('status', 'pending')->latest();
+                    // })
+                    // ❌ SKIPPED: appointments (call_id foreign key missing from appointments table)
+                    // ->with('appointments', function ($q) {
+                    //     $q->with('service');
+                    // })
                     ->with('customer')
                     ->with('company')
                     ->with('branch')
@@ -231,9 +233,11 @@ class CallResource extends Resource
                     ->getStateUsing(function (Call $record) {
                         if ($record->appointment && $record->appointment->starts_at) {
                             return '✅ Gebucht';
-                        } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
-                            return '⏰ Wunsch';
                         }
+                        // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
+                        // } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
+                        //     return '⏰ Wunsch';
+                        // }
                         return '❓ Offen';
                     })
                     ->badge()
@@ -288,19 +292,24 @@ class CallResource extends Resource
 
                         if (!$appointment || !$appointment->starts_at) {
                             // No appointment - check for pending wishes
-                            $unresolvedWish = $record->appointmentWishes()
-                                ->where('status', 'pending')
-                                ->latest()
-                                ->first();
-
-                            if ($unresolvedWish && $unresolvedWish->desired_date) {
-                                $wishDate = \Carbon\Carbon::parse($unresolvedWish->desired_date);
-                                return new HtmlString(
-                                    '<span class="text-xs text-orange-600">⏰ ' .
-                                    $wishDate->locale('de')->isoFormat('ddd DD.MM') .
-                                    '</span>'
-                                );
-                            }
+                            // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
+                            // try {
+                            //     $unresolvedWish = $record->appointmentWishes()
+                            //         ->where('status', 'pending')
+                            //         ->latest()
+                            //         ->first();
+                            //
+                            //     if ($unresolvedWish && $unresolvedWish->desired_date) {
+                            //         $wishDate = \Carbon\Carbon::parse($unresolvedWish->desired_date);
+                            //         return new HtmlString(
+                            //             '<span class="text-xs text-orange-600">⏰ ' .
+                            //             $wishDate->locale('de')->isoFormat('ddd DD.MM') .
+                            //             '</span>'
+                            //         );
+                            //     }
+                            // } catch (\Exception $e) {
+                            //     // silently ignore if table missing
+                            // }
 
                             return new HtmlString('<span class="text-xs text-gray-400">-</span>');
                         }
@@ -1737,7 +1746,7 @@ class CallResource extends Resource
         $query = parent::getEloquentQuery()
             ->with([
                 'customer:id,name,phone,email,company_id',
-                'company:id,name,parent_company_id',  // ✅ FIX: Added parent_company_id
+                'company:id,name',  // ✅ FIXED: Removed parent_company_id (doesn't exist in Sept 21 backup)
                 'appointment:id,customer_id,starts_at,status,price',  // ✅ FIX: Added price for N+1 prevention
                 'phoneNumber:id,number,label',
             ])
@@ -1747,18 +1756,15 @@ class CallResource extends Resource
                   ->orWhereNull('retell_call_id');
             });
 
-        // ✅ FIX: Custom company filtering for resellers to see their customers' calls
-        // VULN-001: Resellers need to see calls from their customer companies (parent_company_id match)
-        $user = auth()->user();
-        if ($user && $user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
-            $query->where(function($q) use ($user) {
-                // See calls from own company OR from customer companies
-                $q->where('calls.company_id', $user->company_id)
-                  ->orWhereHas('company', function($subQ) use ($user) {
-                      $subQ->where('parent_company_id', $user->company_id);
-                  });
-            });
-        }
+        // ⚠️ DISABLED: Reseller filtering requires parent_company_id column (missing in Sept 21 backup)
+        // TODO: Re-enable when database is fully restored
+        // $user = auth()->user();
+        // if ($user && $user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+        //     $query->where(function($q) use ($user) {
+        //         $q->where('calls.company_id', $user->company_id)
+        //           ->orWhereHas('company', fn($subQ) => $subQ->where('parent_company_id', $user->company_id));
+        //     });
+        // }
 
         return $query;
     }
