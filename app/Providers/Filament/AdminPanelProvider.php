@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->authGuard('admin')
+            ->authGuard('web')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -49,17 +49,12 @@ class AdminPanelProvider extends PanelProvider
             // Re-enabling Discovery after fixing root cause (User.php Line 17 - BelongsToCompany removed)
 
             // Re-enable all resources for discovery
+            // Memory fix applied, badge caching implemented - safe to discover
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
 
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            // Re-enabled after database restoration
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                // ALL WIDGETS DISABLED FOR DEBUGGING
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                // \App\Filament\Widgets\CalcomSyncStatusWidget::class,
-                // \App\Filament\Widgets\CalcomSyncActivityWidget::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
