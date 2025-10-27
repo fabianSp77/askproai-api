@@ -19,6 +19,15 @@ class TimeBasedAnalyticsWidget extends ChartWidget
 
     public ?string $filter = 'weekday';
 
+    /**
+     * Widget disabled - stat_type column doesn't exist in appointment_modification_stats table (Sept 21 backup)
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getType(): string
     {
         return 'bar';
