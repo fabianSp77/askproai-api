@@ -55,10 +55,11 @@ class CallStatsOverview extends BaseWidget
             }
             // Super-admin sees all calls
 
+            // ✅ FIXED: uses has_appointment (actual DB column) instead of appointment_made
             $stats = $query->selectRaw('
                     COUNT(*) as total_count,
                     SUM(duration_sec) as total_duration,
-                    SUM(CASE WHEN appointment_made = 1 THEN 1 ELSE 0 END) as appointment_count
+                    SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count
                 ')
                 ->first();
 
@@ -184,8 +185,10 @@ class CallStatsOverview extends BaseWidget
             if (!$user) return array_fill(0, 24, 0);
 
             // Get all calls for today with profit data
+            // ⚠️ DISABLED: total_profit column doesn't exist in Sept 21 backup
+            // TODO: Re-enable when database is fully restored
             $calls = Call::whereDate('created_at', today())
-                ->whereNotNull('total_profit')
+                // ->whereNotNull('total_profit')  // ❌ Column doesn't exist
                 ->get();
 
             $costCalculator = new CostCalculator();
