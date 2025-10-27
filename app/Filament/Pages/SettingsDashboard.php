@@ -49,7 +49,11 @@ class SettingsDashboard extends Page implements HasForms
      */
     public static function canAccess(): bool
     {
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user();
+
+        if (!$user) {
+            return false;
+        }
 
         // Super admin sees all companies
         if ($user->hasRole('super_admin')) {
@@ -65,12 +69,12 @@ class SettingsDashboard extends Page implements HasForms
      */
     public function mount(): void
     {
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user();
 
         // Set default company based on user role
-        if ($user->hasRole('super_admin')) {
+        if ($user && $user->hasRole('super_admin')) {
             $this->selectedCompanyId = Company::first()?->id;
-        } else {
+        } elseif ($user) {
             $this->selectedCompanyId = $user->company_id;
         }
 
@@ -1216,15 +1220,19 @@ class SettingsDashboard extends Page implements HasForms
      */
     public function getCompanyOptions(): array
     {
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user();
 
-        if ($user->hasRole('super_admin')) {
+        if ($user && $user->hasRole('super_admin')) {
             return Company::pluck('name', 'id')->toArray();
         }
 
-        return [
-            $user->company_id => Company::find($user->company_id)?->name ?? 'Unbekannt'
-        ];
+        if ($user && $user->company_id) {
+            return [
+                $user->company_id => Company::find($user->company_id)?->name ?? 'Unbekannt'
+            ];
+        }
+
+        return [];
     }
 
     /**

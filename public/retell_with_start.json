@@ -1,0 +1,20 @@
+{
+  "start_speaker": "agent",
+  "start_node_id": "start",
+  "model_choice": {
+    "type": "cascading",
+    "model": "gpt-4o-mini"
+  },
+  "model_temperature": 0.3,
+  "nodes": [
+    {
+      "id": "start",
+      "type": "conversation",
+      "instruction": {
+        "type": "prompt",
+        "text": "Willkommen bei AskPro AI. Wie kann ich Ihnen helfen?"
+      },
+      "edges": []
+    }
+  ]
+}

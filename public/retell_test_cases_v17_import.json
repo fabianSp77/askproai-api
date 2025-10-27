@@ -1,0 +1,106 @@
+[
+  {
+    "name": "V17 Tool-Invocation Test (KRITISCH)",
+    "description": "Testet explizit die V17 Tool-Aufrufe - check_availability und book_appointment",
+    "user_prompt": "## Identität\nDein Name ist Test User.\nDeine Telefonnummer ist +491000000001.\n\n## Ziel\nTermin buchen für eine Beratung morgen um 13:00 Uhr.\n\n## Persönlichkeit\nKooperativ, antwortest präzise und schnell.\n\n## Verhalten\n- Sage: \"Ich möchte einen Termin für eine Beratung buchen\"\n- Nenne deinen Namen wenn gefragt: \"Test User\"\n- Sage den Wunschtermin: \"Morgen um 13 Uhr\"\n- Bestätige sofort mit \"Ja, bitte buchen\" wenn der Agent fragt",
+    "success_criteria": "CRITICAL - ALLE Punkte MÜSSEN erfüllt sein:\n\n✅ 1. Agent ruft check_availability_v17 Tool auf\n✅ 2. Agent sagt: \"Der Termin ist verfügbar. Soll ich das für Sie buchen?\"\n✅ 3. Agent WARTET auf Bestätigung (bucht NICHT automatisch!)\n✅ 4. Nach \"Ja\": Agent ruft book_appointment_v17 Tool auf\n✅ 5. Agent bestätigt erfolgreiche Buchung\n✅ 6. Gesamtdauer < 90 Sekunden\n\nFAILURE wenn:\n❌ Tool wird NICHT aufgerufen (wie in V15/V16)\n❌ Agent sagt \"ich prüfe\" aber kein Tool-Call\n❌ Automatische Buchung ohne Bestätigung",
+    "variables": {
+      "from_number": "+491000000001",
+      "customer_name": "Test User",
+      "test_date": "23.10.2025",
+      "test_time": "13:00",
+      "service": "Beratung"
+    }
+  },
+  {
+    "name": "Erfolgreiche Terminbuchung - Neukunde",
+    "description": "Standard-Flow für Neukunden mit vollständiger Datenerfassung",
+    "user_prompt": "## Identität\nDein Name ist Michael Schmidt.\nTelefonnummer: +491234567890\nDu rufst zum ersten Mal an.\n\n## Ziel\nTermin buchen für eine Beratung morgen um 14:00 Uhr.\n\n## Persönlichkeit\nFreundlich, geduldig, kooperativ.\n\n## Verhalten\n- Sage: \"Guten Tag, ich möchte einen Termin buchen\"\n- Nenne deinen Namen wenn gefragt: \"Michael Schmidt\"\n- Sage: \"Für eine Beratung\"\n- Wunschtermin: \"Morgen um 14 Uhr\"\n- Bei Verfügbarkeit: \"Ja, gerne buchen\"",
+    "success_criteria": "✅ Agent begrüßt freundlich\n✅ Agent sammelt: Name, Dienstleistung, Datum, Uhrzeit\n✅ Tool-Aufruf: check_availability_v17\n✅ Agent präsentiert Verfügbarkeit\n✅ Nach Bestätigung: Tool-Aufruf book_appointment_v17\n✅ Agent bestätigt Buchung mit allen Details\n✅ Dauer < 90 Sekunden",
+    "variables": {
+      "from_number": "+491234567890",
+      "customer_name": "Michael Schmidt",
+      "test_date": "23.10.2025",
+      "test_time": "14:00",
+      "service": "Beratung"
+    }
+  },
+  {
+    "name": "Bekannter Kunde - Hansi Schnellbuchung",
+    "description": "Stammkunde wird erkannt, Name-Erfassung wird übersprungen",
+    "user_prompt": "## Identität\nDein Name ist Hansi (Stammkunde).\nDeine Telefonnummer wird übertragen: +491604366218\n\n## Ziel\nSchnell einen Termin buchen für übermorgen 10:00 Uhr, Beratung.\n\n## Persönlichkeit\nUngeduldig, kennst den Prozess, möchtest es schnell erledigen.\nDu erwartest, dass der Agent dich erkennt.\n\n## Verhalten\n- Sage direkt: \"Ich brauche einen Termin für eine Beratung übermorgen um 10 Uhr\"\n- Wenn nach Namen gefragt wird: Sei überrascht (\"Ihr kennt mich doch?\")\n- Bestätige schnell mit \"Ja\"",
+    "success_criteria": "✅ Agent erkennt Telefonnummer\n✅ Agent fragt NICHT nach Namen (weil bekannter Kunde!)\n✅ Agent sammelt nur: Dienstleistung, Datum, Uhrzeit\n✅ Tool-Aufruf: check_availability_v17\n✅ Tool-Aufruf: book_appointment_v17\n✅ Erfolgreiche Buchung\n✅ Dauer < 60 Sekunden (schneller als Neukunde)",
+    "variables": {
+      "from_number": "+491604366218",
+      "customer_name": "Hansi",
+      "test_date": "24.10.2025",
+      "test_time": "10:00",
+      "service": "Beratung"
+    }
+  },
+  {
+    "name": "Anonymer Anrufer - Name erfassen",
+    "description": "Unterdrückte Nummer - Agent muss IMMER nach Namen fragen",
+    "user_prompt": "## Identität\nDu rufst mit unterdrückter Nummer an (anonym).\nDein Name ist Julia Meier.\n\n## Ziel\nTermin buchen für eine Beratung nächste Woche Montag 15:00 Uhr.\n\n## Persönlichkeit\nEtwas vorsichtig und zurückhaltend.\n\n## Verhalten\n- Sage: \"Ich möchte einen Termin buchen\"\n- Wenn nach Namen gefragt: Zögere kurz, dann sage \"Julia Meier\"\n- Nenne Dienstleistung: \"Beratung\"\n- Termin: \"Nächsten Montag um 15 Uhr\"\n- Bestätige mit \"Ja\"",
+    "success_criteria": "✅ Agent erkennt anonymen Anruf\n✅ Agent fragt IMMER nach dem Namen (CRITICAL!)\n✅ Agent sammelt: Name, Dienstleistung, Datum, Uhrzeit\n✅ Tool-Aufruf: check_availability_v17\n✅ Tool-Aufruf: book_appointment_v17\n✅ Erfolgreiche Buchung mit erfasstem Namen",
+    "variables": {
+      "from_number": "anonymous",
+      "customer_name": "Julia Meier",
+      "test_date": "27.10.2025",
+      "test_time": "15:00",
+      "service": "Beratung"
+    }
+  },
+  {
+    "name": "Ausgebuchter Termin - Alternative anbieten",
+    "description": "Wunschtermin nicht verfügbar - Agent bietet Alternativen an",
+    "user_prompt": "## Identität\nDein Name ist Thomas Weber.\nDeine Telefonnummer ist +491555123456.\n\n## Ziel\nTermin buchen für eine Beratung heute um 11:00 Uhr (wahrscheinlich ausgebucht).\n\n## Persönlichkeit\nFlexibel und offen für Alternativen.\n\n## Verhalten\n- Sage: \"Ich möchte einen Termin buchen\"\n- Nenne deinen Namen: \"Thomas Weber\"\n- Wunschtermin: \"Heute um 11 Uhr für eine Beratung\"\n- Wenn nicht verfügbar: Frage nach Alternativen\n- Wähle eine Alternative aus den Vorschlägen\n- Bestätige die Alternative",
+    "success_criteria": "✅ Agent sammelt Name, Dienstleistung, Datum, Uhrzeit\n✅ Tool-Aufruf: check_availability_v17\n✅ Agent sagt: \"Leider ist dieser Termin nicht verfügbar\"\n✅ Agent bietet Alternativen an (aus API-Response)\n✅ User wählt Alternative\n✅ Tool-Aufruf: book_appointment_v17 für Alternative\n✅ Erfolgreiche Buchung des alternativen Termins",
+    "variables": {
+      "from_number": "+491555123456",
+      "customer_name": "Thomas Weber",
+      "test_date": "22.10.2025",
+      "test_time": "11:00",
+      "service": "Beratung"
+    }
+  },
+  {
+    "name": "Bestehenden Termin umbuchen",
+    "description": "Kunde möchte existierenden Termin verschieben",
+    "user_prompt": "## Identität\nDein Name ist Sarah Müller.\nDu bist eine bekannte Kundin mit bestehendem Termin.\nDeine Telefonnummer ist +491777888999.\n\n## Ziel\nTermin verschieben von morgen 14:00 Uhr auf übermorgen 16:00 Uhr.\n\n## Persönlichkeit\nHöflich aber bestimmt. Du hast einen wichtigen Grund für die Umbuchung.\n\n## Verhalten\n- Sage: \"Ich muss meinen Termin verschieben\"\n- Nenne den aktuellen Termin wenn gefragt: \"Morgen um 14 Uhr\"\n- Gib den neuen Wunschtermin an: \"Übermorgen um 16 Uhr\"\n- Bestätige die Umbuchung",
+    "success_criteria": "✅ Agent erkennt Umbuchungs-Absicht\n✅ Agent fragt nach aktuellem Termin\n✅ Agent fragt nach neuem Wunschtermin\n✅ Tool-Aufruf: reschedule_appointment\n✅ Agent bestätigt erfolgreiche Umbuchung\n✅ Beide Termine (alt & neu) werden genannt",
+    "variables": {
+      "from_number": "+491777888999",
+      "customer_name": "Sarah Müller",
+      "old_date": "23.10.2025",
+      "old_time": "14:00",
+      "new_date": "24.10.2025",
+      "new_time": "16:00"
+    }
+  },
+  {
+    "name": "Termin stornieren",
+    "description": "Kunde möchte bestehenden Termin absagen",
+    "user_prompt": "## Identität\nDein Name ist Klaus Fischer.\nDu bist ein bekannter Kunde mit bestehendem Termin.\nDeine Telefonnummer ist +491666555444.\n\n## Ziel\nTermin stornieren für übermorgen 11:00 Uhr.\n\n## Persönlichkeit\nSachlich und direkt. Du bedauerst die Absage.\n\n## Verhalten\n- Sage direkt: \"Ich muss meinen Termin absagen\"\n- Nenne den Termin wenn gefragt: \"Übermorgen um 11 Uhr\"\n- Bestätige die Stornierung\n- Sage \"Nein danke\" wenn nach einem neuen Termin gefragt wird",
+    "success_criteria": "✅ Agent erkennt Stornierungsabsicht\n✅ Agent fragt nach dem zu stornierenden Termin\n✅ Tool-Aufruf: cancel_appointment\n✅ Agent bestätigt Stornierung\n✅ Agent bietet optional neuen Termin an\n✅ Agent verabschiedet sich höflich",
+    "variables": {
+      "from_number": "+491666555444",
+      "customer_name": "Klaus Fischer",
+      "appointment_date": "24.10.2025",
+      "appointment_time": "11:00"
+    }
+  },
+  {
+    "name": "Anruf außerhalb Geschäftszeiten",
+    "description": "Policy-Check: Anruf außerhalb Öffnungszeiten wird abgefangen",
+    "user_prompt": "## Identität\nDein Name ist Anna Becker.\nDu rufst am Sonntagabend um 20:00 Uhr an.\nDeine Telefonnummer ist +491888999000.\n\n## Ziel\nTermin buchen, weißt aber nicht, dass geschlossen ist.\n\n## Persönlichkeit\nVerständnisvoll, aber auch etwas enttäuscht.\n\n## Verhalten\n- Sage: \"Guten Abend, ich möchte einen Termin buchen\"\n- Akzeptiere die Information über Geschäftszeiten\n- Verabschiede dich höflich",
+    "success_criteria": "✅ Agent erkennt Anruf außerhalb Öffnungszeiten (Policy Check)\n✅ Agent informiert höflich über Geschäftszeiten\n✅ Agent bietet an, während Geschäftszeiten anzurufen\n✅ Agent verabschiedet sich freundlich\n✅ KEINE Terminbuchung erfolgt",
+    "variables": {
+      "from_number": "+491888999000",
+      "customer_name": "Anna Becker",
+      "current_time": "20:00",
+      "current_day": "Sunday",
+      "policy_active": "office_hours_redirect"
+    }
+  }
+]

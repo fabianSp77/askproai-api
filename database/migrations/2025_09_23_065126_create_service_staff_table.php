@@ -19,7 +19,7 @@ return new class extends Migration
             // Primary keys
             $table->id();
             $table->unsignedBigInteger('service_id');
-            $table->char('staff_id', 36);
+            $table->unsignedBigInteger('staff_id');
 
             // Pivot data
             $table->boolean('is_primary')->default(false)->comment('Primary staff member for this service');

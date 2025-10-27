@@ -1,0 +1,228 @@
+{
+    "global_prompt": "# Friseur 1 - Einfacher Terminassistent\n\n## Deine Rolle\nDu bist der Terminassistent von **Friseur 1**.\nSprich freundlich und natürlich auf Deutsch.\n\n## WICHTIG: Function Nodes werden AUTOMATISCH aufgerufen!\n\n**Du musst KEINE Tools aufrufen** - der Flow macht das automatisch:\n\n1. **func_check_availability**: Wird AUTOMATISCH aufgerufen nachdem du alle Daten gesammelt hast\n   - Der Flow übergibt automatisch: name, datum, uhrzeit, dienstleistung\n   - WARTE auf das Ergebnis, RATE NIEMALS ob verfügbar!\n\n2. **func_book_appointment**: Wird AUTOMATISCH aufgerufen nach User-Bestätigung\n   - Bucht den Termin direkt\n\n## Deine Aufgabe\n1. Sammle: name, datum, uhrzeit, dienstleistung\n2. Warte auf check_availability Result\n3. Zeige Ergebnis dem Kunden\n4. Bei \"Ja\" → Flow bucht automatisch\n\n## Services\n- Herrenhaarschnitt (30 Min, 25€)\n- Damenhaarschnitt (45 Min, 35€)\n- Färben (90 Min, 65€)\n\n## NIEMALS\n- ❌ Verfügbarkeit raten oder erfinden\n- ❌ Termin ohne Bestätigung buchen\n- ❌ Tools manuell aufrufen (macht der Flow!)",
+    "start_node_id": "node_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-availability",
+            "name": "check_availability_v17",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit für einen Termin",
+            "url": "https://api.askproai.de/api/retell/v17/check-availability",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Kundenname"
+                    },
+                    "dienstleistung": {
+                        "type": "string",
+                        "description": "Service (z.B. Herrenhaarschnitt)"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "description": "Datum im Format DD.MM.YYYY"
+                    },
+                    "uhrzeit": {
+                        "type": "string",
+                        "description": "Uhrzeit im Format HH:MM"
+                    }
+                },
+                "required": ["name", "datum", "uhrzeit", "dienstleistung"]
+            }
+        },
+        {
+            "tool_id": "tool-book-appointment",
+            "name": "book_appointment_v17",
+            "type": "custom",
+            "description": "Bucht einen Termin",
+            "url": "https://api.askproai.de/api/retell/v17/book-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Kundenname"
+                    },
+                    "dienstleistung": {
+                        "type": "string",
+                        "description": "Service"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "description": "Datum im Format DD.MM.YYYY"
+                    },
+                    "uhrzeit": {
+                        "type": "string",
+                        "description": "Uhrzeit im Format HH:MM"
+                    }
+                },
+                "required": ["name", "datum", "uhrzeit", "dienstleistung"]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Begrüße den Kunden freundlich: 'Guten Tag bei Friseur 1! Wie kann ich Ihnen helfen?'"
+            },
+            "edges": [
+                {
+                    "id": "edge_greeting_to_collect",
+                    "destination_node_id": "node_collect_info",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer responded"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_collect_info",
+            "name": "Daten sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Sammle ALLE 4 Informationen vom Kunden:\n\n1. **Name**: Wie ist Ihr Name?\n2. **Service**: Welche Dienstleistung? (Herrenhaarschnitt / Damenhaarschnitt / Färben)\n3. **Datum**: Welches Datum? (Format: DD.MM.YYYY)\n4. **Uhrzeit**: Um wie viel Uhr? (Format: HH:MM)\n\n**WICHTIG:**\n- Sammle ALLE 4 Daten BEVOR du zur Verfügbarkeitsprüfung gehst\n- Sobald du ALLE 4 hast → Transition zu func_check_availability\n- ERFINDE KEINE Verfügbarkeit! Sage nur \"Ich prüfe das gleich\"\n\n**Transition Trigger:**\nGehe zu func_check_availability SOBALD du hast:\n✅ Name\n✅ Dienstleistung\n✅ Datum (eindeutig im Format DD.MM.YYYY)\n✅ Uhrzeit (EINE spezifische Zeit im Format HH:MM)"
+            },
+            "edges": [
+                {
+                    "id": "edge_collect_to_check",
+                    "destination_node_id": "func_check_availability",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All 4 required data collected: name, dienstleistung, datum (DD.MM.YYYY), uhrzeit (HH:MM)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_check_availability",
+            "name": "Verfügbarkeit prüfen (AUTO-CALL)",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich prüfe die Verfügbarkeit..."
+            },
+            "edges": [
+                {
+                    "id": "edge_check_to_present",
+                    "destination_node_id": "node_present_result",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Availability check completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-check-availability",
+            "wait_for_result": true,
+            "speak_during_execution": true,
+            "parameter_mapping": {
+                "call_id": "{{call_id}}",
+                "name": "{{user_name}}",
+                "datum": "{{user_datum}}",
+                "uhrzeit": "{{user_uhrzeit}}",
+                "dienstleistung": "{{user_dienstleistung}}"
+            }
+        },
+        {
+            "id": "node_present_result",
+            "name": "Ergebnis zeigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Zeige das Ergebnis der Verfügbarkeitsprüfung:\n\n**WENN VERFÜGBAR:**\n\"Der Termin am {{user_datum}} um {{user_uhrzeit}} für {{user_dienstleistung}} ist verfügbar. Soll ich den Termin für Sie buchen?\"\n\n**WENN NICHT VERFÜGBAR:**\n\"Leider ist {{user_datum}} um {{user_uhrzeit}} nicht verfügbar. Alternative Zeiten: [LISTE]. Welcher Termin passt Ihnen?\"\n\n**KRITISCH - Warte auf Bestätigung:**\n- \"Ja\" / \"Gerne\" / \"Buchen\" → Transition zu func_book_appointment\n- \"Nein\" / \"Andere Zeit\" → Zurück zu node_collect_info\n- NIEMALS ohne EXPLIZITE Bestätigung buchen!"
+            },
+            "edges": [
+                {
+                    "id": "edge_present_to_book",
+                    "destination_node_id": "func_book_appointment",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User explicitly confirmed booking (said Ja, Gerne, Buchen, Passt, etc.)"
+                    }
+                },
+                {
+                    "id": "edge_present_to_collect",
+                    "destination_node_id": "node_collect_info",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants different time or declined"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_book_appointment",
+            "name": "Termin buchen (AUTO-CALL)",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Einen Moment, ich buche den Termin..."
+            },
+            "edges": [
+                {
+                    "id": "edge_book_to_success",
+                    "destination_node_id": "node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Booking successful"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-book-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true,
+            "parameter_mapping": {
+                "call_id": "{{call_id}}",
+                "name": "{{user_name}}",
+                "datum": "{{user_datum}}",
+                "uhrzeit": "{{user_uhrzeit}}",
+                "dienstleistung": "{{user_dienstleistung}}"
+            }
+        },
+        {
+            "id": "node_success",
+            "name": "Erfolg",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Vielen Dank und einen schönen Tag!"
+            },
+            "edges": [
+                {
+                    "id": "edge_success_to_end",
+                    "destination_node_id": "node_end",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always end"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_end",
+            "name": "Ende",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": []
+        }
+    ]
+}

@@ -1,0 +1,189 @@
+{
+    "global_prompt": "# AskPro AI Smart Booking Agent\n\n## Deine Rolle\nDu bist der intelligente Terminbuchungs-Assistent von Ask Pro AI.\nSprich natürlich, freundlich und effizient auf Deutsch.\n\n## KRITISCHE Regel: Intent Recognition\nWenn der Kunde im ersten Satz bereits Informationen nennt (Name, Datum, Uhrzeit),\nERKENNE diese sofort und verwende sie. Frage NIEMALS nach Informationen die bereits genannt wurden!\n\nBeispiel:\n❌ FALSCH:\nUser: \"Hans Schubert, Donnerstag 13 Uhr\"\nDu: \"Darf ich Ihren Namen haben?\"\n\n✅ RICHTIG:\nUser: \"Hans Schubert, Donnerstag 13 Uhr\"\nDu: \"Gerne Herr Schubert! Für Donnerstag um 13 Uhr. Darf ich noch Ihre E-Mail?\"\n\n## Benötigte Informationen\nFür eine Terminbuchung brauchst du:\n1. Name (Vor- und Nachname)\n2. E-Mail-Adresse\n3. Wunschdatum (Wochentag oder konkretes Datum)\n4. Wunschuhrzeit\n\n## Datensammlung Strategie\n- Sammle fehlende Informationen in natürlichem Gespräch\n- Bestätige was der Kunde bereits gesagt hat\n- Fasse mehrere Fragen zusammen wenn möglich (z.B. \"Name und Email\")\n- Gehe direkt zur Verfügbarkeitsprüfung sobald du alle 4 Infos hast\n\n## Function Calls\n1. Verfügbarkeitsprüfung: Rufe collect_appointment_data mit bestaetigung=false auf\n2. Buchung: Rufe collect_appointment_data mit bestaetigung=true auf\n3. NIEMALS Verfügbarkeit erfinden - immer API-Result verwenden\n\n## Ehrlichkeit\n- Wenn API-Call failed: \"Es gab ein technisches Problem\"\n- Wenn nicht verfügbar: \"Dieser Termin ist leider nicht verfügbar\"\n- NIEMALS \"gebucht\" sagen bevor API-Call mit bestaetigung=true erfolgreich war",
+    "start_node_id": "node_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-collect-appointment",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Check availability or book appointment at Ask Pro AI",
+            "url": "https://api.askproai.de/api/retell/collect-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Full name of customer"
+                    },
+                    "customer_email": {
+                        "type": "string",
+                        "description": "Email address"
+                    },
+                    "customer_phone": {
+                        "type": "string",
+                        "description": "Phone number (optional)"
+                    },
+                    "preferred_date": {
+                        "type": "string",
+                        "description": "Preferred date (weekday or specific date)"
+                    },
+                    "preferred_time": {
+                        "type": "string",
+                        "description": "Preferred time"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "false = check availability only, true = confirm booking"
+                    }
+                },
+                "required": [
+                    "customer_name",
+                    "customer_email",
+                    "preferred_date",
+                    "preferred_time",
+                    "bestaetigung"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Guten Tag bei Ask Pro AI. Wie kann ich Ihnen helfen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_greeting",
+                    "destination_node_id": "node_collect_info",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to book appointment"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_collect_info",
+            "name": "Informationen sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Collect any missing information: customer name, email, preferred date, and preferred time. If customer already provided some information, acknowledge it and only ask for what is missing."
+            },
+            "edges": [
+                {
+                    "id": "edge_info_collected",
+                    "destination_node_id": "func_check_availability",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All required information collected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_check_availability",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich prüfe die Verfügbarkeit."
+            },
+            "edges": [
+                {
+                    "id": "edge_check_done",
+                    "destination_node_id": "node_confirm",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Availability check completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_confirm",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Based on availability check result, either confirm the appointment is available and ask if customer wants to book it, or inform that the time is not available and offer alternatives."
+            },
+            "edges": [
+                {
+                    "id": "edge_confirm_yes",
+                    "destination_node_id": "func_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer confirms booking"
+                    }
+                },
+                {
+                    "id": "edge_confirm_no",
+                    "destination_node_id": "node_cancel",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer declines or wants different time"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich buche den Termin."
+            },
+            "edges": [
+                {
+                    "id": "edge_book_done",
+                    "destination_node_id": "node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Booking completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_success",
+            "name": "Erfolg",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail."
+            },
+            "edges": []
+        },
+        {
+            "id": "node_cancel",
+            "name": "Abbruch",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie doch noch einen Termin möchten, rufen Sie gerne wieder an. Auf Wiederhören!"
+            },
+            "edges": []
+        }
+    ]
+}

@@ -1,0 +1,84 @@
+{
+    "ok": [
+        "ActivityLogWidget",
+        "AppointmentsWidget",
+        "BalanceBonusWidget",
+        "CalcomSyncActivityWidget",
+        "CalcomSyncStatusWidget",
+        "CallPerformanceDashboard",
+        "CallStatsOverview",
+        "CallbacksByBranchWidget",
+        "CompaniesChartWidget",
+        "CompanyGrowthChart",
+        "CompanyOverview",
+        "CompanyOverviewWidget",
+        "CustomerChartWidget",
+        "CustomerComplianceWidget",
+        "CustomerStatsOverview",
+        "DashboardStats",
+        "ExchangeRateStatusWidget",
+        "IntegrationHealthWidget",
+        "IntegrationMonitorWidget",
+        "KpiMetricsWidget",
+        "LatestCustomers",
+        "OngoingCallsWidget",
+        "OverdueCallbacksWidget",
+        "PolicyViolationsTableWidget",
+        "ProfitChartWidget",
+        "ProfitOverviewWidget",
+        "QuickActionsWidget",
+        "RecentAppointments",
+        "RecentAppointmentsWidget",
+        "RecentCalls",
+        "RecentCallsChart",
+        "RecentCustomerActivities",
+        "RecentFailedNotificationsWidget",
+        "ServiceAssignmentWidget",
+        "StaffPerformanceWidget",
+        "StatsOverview",
+        "StatsOverviewWidget",
+        "SystemStatus"
+    ],
+    "errors": [
+        {
+            "widget": "CustomerJourneyChart",
+            "type": "missing_column",
+            "column": "journey_status"
+        },
+        {
+            "widget": "NotificationAnalyticsWidget",
+            "type": "missing_table",
+            "table": "notification_queue"
+        },
+        {
+            "widget": "NotificationPerformanceChartWidget",
+            "type": "missing_table",
+            "table": "notification_queue"
+        },
+        {
+            "widget": "PolicyAnalyticsWidget",
+            "type": "missing_column",
+            "column": "company_id"
+        },
+        {
+            "widget": "PolicyChartsWidget",
+            "type": "missing_column",
+            "column": "metadata"
+        },
+        {
+            "widget": "PolicyEffectivenessWidget",
+            "type": "missing_column",
+            "column": "company_id"
+        },
+        {
+            "widget": "PolicyTrendWidget",
+            "type": "missing_column",
+            "column": "count"
+        },
+        {
+            "widget": "TimeBasedAnalyticsWidget",
+            "type": "missing_column",
+            "column": "stat_type"
+        }
+    ]
+}

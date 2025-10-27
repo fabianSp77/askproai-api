@@ -33,6 +33,11 @@ return new class extends Migration
         });
 
         // 2. Migrate existing Event Type ownership based on companies with API keys
+        // Check if column exists first
+        if (!Schema::hasColumn('companies', 'calcom_api_key')) {
+            return; // Skip data migration if column doesn't exist
+        }
+
         $companiesWithApiKeys = DB::table('companies')
             ->whereNotNull('calcom_api_key')
             ->get();

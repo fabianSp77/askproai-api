@@ -14,8 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('branch_service')) {
             Schema::create('branch_service', function (Blueprint $table) {
                 $table->id();
-                $table->char('branch_id', 36);
-                $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
+                $table->foreignId('branch_id')->constrained('branches')->cascadeOnDelete();
                 $table->foreignId('service_id')->constrained()->cascadeOnDelete();
 
                 // Override-Felder pro Filiale

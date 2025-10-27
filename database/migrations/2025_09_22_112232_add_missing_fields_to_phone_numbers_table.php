@@ -17,36 +17,52 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('phone_numbers', function (Blueprint $table) {
+        // Check columns existence before adding (must be outside Schema::table closure)
+        $hasPhoneNumber = Schema::hasColumn('phone_numbers', 'phone_number');
+        $hasFriendlyName = Schema::hasColumn('phone_numbers', 'friendly_name');
+        $hasProvider = Schema::hasColumn('phone_numbers', 'provider');
+        $hasProviderId = Schema::hasColumn('phone_numbers', 'provider_id');
+        $hasCountryCode = Schema::hasColumn('phone_numbers', 'country_code');
+        $hasMonthlyCost = Schema::hasColumn('phone_numbers', 'monthly_cost');
+        $hasUsageMinutes = Schema::hasColumn('phone_numbers', 'usage_minutes');
+        $hasLastUsedAt = Schema::hasColumn('phone_numbers', 'last_used_at');
+        $hasLabel = Schema::hasColumn('phone_numbers', 'label');
+        $hasNotes = Schema::hasColumn('phone_numbers', 'notes');
+
+        Schema::table('phone_numbers', function (Blueprint $table) use (
+            $hasPhoneNumber, $hasFriendlyName, $hasProvider, $hasProviderId,
+            $hasCountryCode, $hasMonthlyCost, $hasUsageMinutes, $hasLastUsedAt,
+            $hasLabel, $hasNotes
+        ) {
             // Add missing columns that Model expects
-            if (!Schema::hasColumn('phone_numbers', 'phone_number')) {
+            if (!$hasPhoneNumber) {
                 $table->string('phone_number')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'friendly_name')) {
+            if (!$hasFriendlyName) {
                 $table->string('friendly_name')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'provider')) {
+            if (!$hasProvider) {
                 $table->string('provider')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'provider_id')) {
+            if (!$hasProviderId) {
                 $table->string('provider_id')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'country_code')) {
+            if (!$hasCountryCode) {
                 $table->string('country_code', 10)->default('+49');
             }
-            if (!Schema::hasColumn('phone_numbers', 'monthly_cost')) {
+            if (!$hasMonthlyCost) {
                 $table->decimal('monthly_cost', 10, 2)->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'usage_minutes')) {
+            if (!$hasUsageMinutes) {
                 $table->integer('usage_minutes')->default(0);
             }
-            if (!Schema::hasColumn('phone_numbers', 'last_used_at')) {
+            if (!$hasLastUsedAt) {
                 $table->timestamp('last_used_at')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'label')) {
+            if (!$hasLabel) {
                 $table->string('label')->nullable();
             }
-            if (!Schema::hasColumn('phone_numbers', 'notes')) {
+            if (!$hasNotes) {
                 $table->text('notes')->nullable();
             }
 

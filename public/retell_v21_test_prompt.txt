@@ -1,0 +1,116 @@
+========================================
+V21 TEST PROMPT - Friseur 1
+Agent ID: agent_f1ce85d06a84afb989dfbb16a9
+========================================
+
+TEST 1: Einzelne Begrüßung (Bekannter Kunde)
+--------------------------------------------
+Customer Phone: +4917012345678
+Expected Customer: Hans Schuster (ID: 7)
+
+USER INPUT:
+Guten Tag, ich bin's Hans.
+
+EXPECTED AGENT BEHAVIOR:
+✅ EINE Begrüßung: "Guten Tag bei Friseur 1, mein Name ist Carola. Willkommen zurück, Hans Schuster! Wie kann ich Ihnen helfen?"
+❌ KEINE doppelte Begrüßung mit Pause
+❌ KEINE Unterbrechung nach generischer Begrüßung
+
+
+TEST 2: Multiple Zeiten Handling
+---------------------------------
+USER INPUT:
+Ich möchte morgen einen Herrenhaarschnitt buchen, entweder um 9 Uhr oder um 10 Uhr.
+
+EXPECTED AGENT BEHAVIOR:
+✅ Agent sagt: "Ich verstehe, 9 Uhr oder 10 Uhr"
+✅ Agent fragt: "Welche Zeit bevorzugen Sie - 9 Uhr oder 10 Uhr?"
+❌ Agent sagt NICHT sofort "verfügbar" oder "nicht verfügbar"
+❌ Agent bleibt NICHT stecken
+
+USER INPUT (Follow-up):
+9 Uhr bitte.
+
+EXPECTED AGENT BEHAVIOR:
+✅ Agent sagt: "Einen Moment, ich prüfe die Verfügbarkeit für Sie..."
+✅ API Call zu check_availability wird gemacht
+✅ Agent gibt ECHTES Ergebnis zurück (verfügbar oder nicht)
+
+
+TEST 3: Anti-Hallucination (Verfügbarkeit)
+-------------------------------------------
+USER INPUT:
+Haben Sie übermorgen um 14 Uhr frei für einen Herrenhaarschnitt?
+
+EXPECTED AGENT BEHAVIOR:
+✅ Agent sagt: "Ich prüfe das gleich für Sie" oder "Einen Moment..."
+✅ Agent macht ZUERST API Call zu check_availability
+✅ Agent antwortet DANN mit echtem Ergebnis
+❌ Agent sagt NICHT sofort "verfügbar" oder "nicht verfügbar" ohne API Call
+
+
+TEST 4: Kompletter Buchungsflow
+--------------------------------
+USER INPUT:
+Hallo, ich möchte einen Termin buchen.
+
+AGENT: Für welchen Service und wann möchten Sie kommen?
+
+USER INPUT:
+Herrenhaarschnitt. Morgen, haben Sie um 11 Uhr Zeit?
+
+EXPECTED AGENT BEHAVIOR:
+✅ "Ich prüfe das für Sie..."
+✅ API Call check_availability
+✅ Falls verfügbar: "11 Uhr ist verfügbar! Soll ich den Termin buchen?"
+✅ Falls nicht: "Leider nicht verfügbar. Ich habe [Alternative] frei."
+
+
+========================================
+SUCCESS CRITERIA
+========================================
+
+✅ FIX 1 (Greeting):
+   - Nur EINE Begrüßung
+   - Keine Pause/Unterbrechung
+   - Personalisierung bei bekanntem Kunden
+
+✅ FIX 2 (Multiple Times):
+   - Agent fragt bei "9 oder 10 Uhr" nach Präferenz
+   - Kein Steckenbleiben in "Datum & Zeit sammeln" Node
+   - Erfolgreiche Transition zu check_availability
+
+✅ FIX 3 (Anti-Hallucination):
+   - KEIN "verfügbar/nicht verfügbar" ohne API Call
+   - API Call passiert BEVOR Verfügbarkeit gesagt wird
+   - Nur echte Cal.com Daten werden verwendet
+
+
+========================================
+KNOWN CUSTOMER FOR TESTING
+========================================
+Name: Hans Schuster
+Phone: +4917012345678
+Customer ID: 7
+Company: Friseur 1 (ID: 15)
+
+
+========================================
+QUICK COPY-PASTE TESTS
+========================================
+
+Test 1 (Greeting):
+------------------
+Guten Tag, ich bin's Hans.
+
+Test 2 (Multiple Times):
+-------------------------
+Ich möchte morgen einen Herrenhaarschnitt, 9 oder 10 Uhr.
+
+Test 3 (Availability Question):
+--------------------------------
+Haben Sie morgen um 14 Uhr frei?
+
+Test 4 (Direct Time):
+---------------------
+Ich brauche morgen um 11 Uhr einen Herrenhaarschnitt.

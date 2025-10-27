@@ -1,0 +1,215 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  LIVEWIRE SERIALIZATION FAILURE FLOW                           ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+INITIAL STATE (Works):
+┌─────────────────────────────┐
+│  Customer View Page Loads   │
+│  (No serialization needed)  │
+│                             │
+│  ✓ Header widgets render   │
+│  ✓ Footer widgets render   │
+│  ✓ Relation managers ready │
+└─────────────────────────────┘
+           ↓
+       PAGE READY
+
+
+USER INTERACTION (Tab Click):
+┌─────────────────────────────┐
+│  User clicks "Anrufe" tab   │
+│  Alpine: $wire.$set(        │
+│    'activeRelationManager', │
+│    '1'                      │
+│  )                          │
+└─────────────────────────────┘
+           ↓
+  STATE CHANGE TRIGGERED
+
+
+LIVEWIRE RESPONSE:
+┌──────────────────────────────────────────────────────────┐
+│  Livewire: "State changed, must serialize component"    │
+│                                                          │
+│  Scope: ViewCustomer page component serialization       │
+│                                                          │
+│  Serialization includes:                                │
+│    [ ✓ $record (Customer model)                         │
+│      ✓ $activeRelationManager (string/int)              │
+│      ✓ header widgets                                    │
+│      ✓ footer widgets                                    │
+│      ✗ header actions ← CONTAINS CLOSURES!              │
+│    ]                                                     │
+└──────────────────────────────────────────────────────────┘
+           ↓
+   SERIALIZATION ATTEMPT
+
+
+SERIALIZATION PROCESS:
+┌────────────────────────────────────────────────────────────────┐
+│  For each property in ViewCustomer:                            │
+│                                                                │
+│  Step 1: $record                                              │
+│    → Customer model                                            │
+│    → PHP can serialize                                        │
+│    ✓ SUCCESS                                                  │
+│                                                                │
+│  Step 2: $activeRelationManager                               │
+│    → Integer (tab index)                                      │
+│    → PHP can serialize                                        │
+│    ✓ SUCCESS                                                  │
+│                                                                │
+│  Step 3: Header Actions Array                                │
+│    → Contains Action objects                                  │
+│    → Each Action may contain closures:                        │
+│                                                                │
+│      Action 1: "Call"                                         │
+│        → visibility: fn() → SAFE                              │
+│        → url callback → SAFE                                  │
+│        ✓ SUCCESS                                              │
+│                                                                │
+│      Action 2: "Add Email"                                    │
+│        → action: function(array $data) { ... }               │
+│        → Closes over $this                                   │
+│        ✗ CANNOT SERIALIZE CLOSURE                            │
+│        ✗ FAILURE - Stop here!                                │
+│                                                                │
+│  Step 4+: Never reached (failure at step 3)                  │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+           ↓
+     SERIALIZATION FAILS
+
+
+COMPONENT STATE CORRUPTION:
+┌─────────────────────────────────────────────────────────┐
+│  Livewire attempted serialization failed               │
+│                                                         │
+│  ViewCustomer snapshot is now:                         │
+│    [ incomplete / corrupted / invalid ]                │
+│                                                         │
+│  Livewire loses track of:                              │
+│    - Original component ID hash                        │
+│    - Component position in tree                        │
+│    - Child component references                        │
+│                                                         │
+│  Child widgets still exist:                            │
+│    - CustomerActivityTimeline (ID: mHBsqtYltg4NeW1xK6eH)
+│    - But parent reference is broken                    │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+           ↓
+   COMPONENT ORPHANING
+
+
+ERROR GENERATION:
+┌──────────────────────────────────────────────────────┐
+│  Livewire JavaScript:                                │
+│                                                      │
+│  When trying to update CustomerActivityTimeline:    │
+│                                                      │
+│  1. Find component by ID: mHBsqtYltg4NeW1xK6eH       │
+│  2. Look in component map... NOT FOUND              │
+│  3. Error: "Snapshot missing on Livewire component" │
+│     "with id: mHBsqtYltg4NeW1xK6eH"                 │
+│                                                      │
+│  Browser Console Output:                             │
+│  ✗ Uncaught Snapshot missing...                     │
+│  ✗ Component not found...                           │
+│  ✗ ReferenceError: filterTimeline not defined       │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+           ↓
+   USER SEES ERROR
+
+
+FINAL STATE (Broken):
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│  ViewCustomer page:                                 │
+│    ✓ Still loaded                                   │
+│    ✓ Still displays basic info                      │
+│    ✗ Footer widgets hidden                          │
+│    ✗ Relation manager tabs unresponsive             │
+│    ✗ Cannot interact further                        │
+│                                                      │
+│  Component tree:                                    │
+│    ViewCustomer                                     │
+│      ├─ CallsRelationManager ✓ (visible)           │
+│      ├─ CustomerActivityTimeline ✗ (orphaned)      │
+│      └─ (other footer widgets) ✗ (orphaned)        │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            THE FIX CONCEPT                                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+BEFORE (BROKEN):
+┌───────────────────────────────────────────────┐
+│  Header Actions:                              │
+│    → action: function () use ($duplicate) { }│  ← CLOSURE! Can't serialize
+│    → action: function (array $data) { }      │  ← CLOSURE! Can't serialize
+└───────────────────────────────────────────────┘
+
+
+AFTER (FIXED):
+┌───────────────────────────────────────────────┐
+│  Header Actions:                              │
+│    → action: fn () => redirect(...)           │  ← Arrow function
+│    → dispatch('handleAction', [...])          │  ← Event dispatch
+│    → method('handleSubmission')               │  ← Livewire method ref
+└───────────────────────────────────────────────┘
+
+
+RESULT:
+  ✓ All actions serializable
+  ✓ Livewire component state remains valid
+  ✓ Component snapshot stays clean
+  ✓ Footer widgets can access parent state
+  ✓ No "Snapshot missing" error
+  ✓ Tab switching works
+  ✓ User can interact normally
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                         CLOSURE DETECTION PATTERN                              ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+PROBLEMATIC PATTERNS:
+  ✗ ->action(function () { ... })              Regular closure
+  ✗ ->action(function () use ($var) { ... })   Closure with captured variable
+  ✗ ->form([...])->action(function () { ... }) Form action closure
+  ✗ ->modalDescription(function () { ... })    Modal callback closure
+
+SAFE PATTERNS:
+  ✓ ->action(fn () => ...)                     Arrow function
+  ✓ ->url(fn () => ...)                        Arrow function
+  ✓ ->visible(fn () => ...)                    Arrow function
+  ✓ ->action(function () { })  in arrow fn     Only if no context capture
+  ✓ #[On('eventName')] public function ...     Livewire event listener
+  ✓ ->dispatch('eventName')                    Dispatch event
+  ✓ ->action('methodName')                     Reference to class method
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                        PRIORITY RANKING                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+PRIORITY 1 (CRITICAL - Fix First):
+  ViewCustomer.php lines 120, 132 (merge action closures with use($duplicate))
+  Impact: Blocks page state serialization entirely
+  Affects: All relation manager tab switches
+
+PRIORITY 2 (HIGH - Fix Second):
+  ViewCustomer.php lines 56, 77 (addEmail, addNote closures)
+  Impact: Also blocks page state serialization
+  Affects: All relation manager tab switches
+
+PRIORITY 3 (HIGH - Fix Third):
+  AppointmentsRelationManager.php line 264 (viewFailedCalls)
+  CustomerRiskAlerts.php lines 118, 136 (contact, win_back)
+  Impact: Blocks widget/relation manager serialization
+  Affects: Widget rendering during tab switches
+

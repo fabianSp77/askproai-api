@@ -1,0 +1,70 @@
+[
+  {
+    "agent_id": "",
+    "channel": "voice",
+    "agent_name": "AskPro AI Test",
+    "response_engine": {
+      "type": "conversation-flow",
+      "version": 1
+    },
+    "language": "de-DE",
+    "opt_out_sensitive_data_storage": false,
+    "data_storage_setting": "everything",
+    "version": 1,
+    "is_published": false,
+    "voice_id": "11labs-Adrian",
+    "max_call_duration_ms": 3600000,
+    "interruption_sensitivity": 0.9,
+    "user_dtmf_options": {},
+    "retellLlmData": null,
+    "conversationFlow": {
+      "version": 1,
+      "global_prompt": "Du bist ein freundlicher Assistent.",
+      "start_node_id": "start",
+      "start_speaker": "agent",
+      "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+      },
+      "tools": [],
+      "nodes": [
+        {
+          "id": "start",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Hallo, willkommen!"
+          },
+          "edges": [
+            {
+              "id": "edge_1",
+              "condition": "User responds",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User responds"
+              },
+              "destination_node_id": "end"
+            }
+          ],
+          "display_position": {
+            "x": 100,
+            "y": 100
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "instruction": {
+            "type": "prompt",
+            "text": "End call"
+          },
+          "display_position": {
+            "x": 500,
+            "y": 100
+          }
+        }
+      ]
+    }
+  }
+]

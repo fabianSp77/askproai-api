@@ -1,0 +1,565 @@
+{
+  "tools": [
+    {
+      "tool_id": "tool-initialize-call",
+      "name": "initialize_call",
+      "url": "https://api.askproai.de/api/retell/initialize-call",
+      "description": "Initialize call and retrieve customer information. MUST be called at the start of every call to get customer context and company info.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          }
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-check-availability",
+      "name": "check_availability_v17",
+      "url": "https://api.askproai.de/api/retell/v17/check-availability",
+      "description": "Check if a specific date and time is available for booking. This does NOT create an appointment. Use this BEFORE confirming with customer. Returns available=true/false and alternative times if not available.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          },
+          "datum": {
+            "type": "string",
+            "description": "Date in format YYYY-MM-DD (e.g., 2025-10-25)"
+          },
+          "uhrzeit": {
+            "type": "string",
+            "description": "Time in format HH:MM (e.g., 14:00)"
+          },
+          "dienstleistung": {
+            "type": "string",
+            "description": "Service name (e.g., 'Herrenhaarschnitt', 'Damenhaarschnitt')"
+          },
+          "mitarbeiter": {
+            "type": "string",
+            "description": "Optional: Preferred staff member name"
+          }
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "tool-book-appointment",
+      "name": "book_appointment_v17",
+      "url": "https://api.askproai.de/api/retell/v17/book-appointment",
+      "description": "Book an appointment after customer confirms. ONLY call after check_availability_v17 returned available=true AND customer confirmed they want to book. This creates the actual appointment.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          },
+          "datum": {
+            "type": "string",
+            "description": "Date in format YYYY-MM-DD (e.g., 2025-10-25)"
+          },
+          "uhrzeit": {
+            "type": "string",
+            "description": "Time in format HH:MM (e.g., 14:00)"
+          },
+          "dienstleistung": {
+            "type": "string",
+            "description": "Service name (e.g., 'Herrenhaarschnitt', 'Damenhaarschnitt')"
+          },
+          "mitarbeiter": {
+            "type": "string",
+            "description": "Optional: Preferred staff member name"
+          }
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "tool-get-appointments",
+      "name": "get_customer_appointments",
+      "url": "https://api.askproai.de/api/retell/get-customer-appointments",
+      "description": "Get all upcoming appointments for the current customer. Use when customer asks 'Which appointments do I have?' or 'Show me my bookings'.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Optional: Customer name for lookup"
+          }
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-cancel-appointment",
+      "name": "cancel_appointment",
+      "url": "https://api.askproai.de/api/retell/cancel-appointment",
+      "description": "Cancel a specific appointment. Use when customer wants to cancel. MUST confirm with customer before calling this function.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          },
+          "appointment_id": {
+            "type": "string",
+            "description": "The appointment ID to cancel (get from get_customer_appointments)"
+          },
+          "datum": {
+            "type": "string",
+            "description": "Alternative: Appointment date if no ID available (YYYY-MM-DD)"
+          },
+          "uhrzeit": {
+            "type": "string",
+            "description": "Alternative: Appointment time if no ID available (HH:MM)"
+          }
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-reschedule-appointment",
+      "name": "reschedule_appointment",
+      "url": "https://api.askproai.de/api/retell/reschedule-appointment",
+      "description": "Reschedule an existing appointment to a new date/time. Use when customer wants to move an appointment. First check availability of new time with check_availability_v17.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          },
+          "appointment_id": {
+            "type": "string",
+            "description": "The appointment ID to reschedule"
+          },
+          "old_datum": {
+            "type": "string",
+            "description": "Current appointment date (YYYY-MM-DD)"
+          },
+          "old_uhrzeit": {
+            "type": "string",
+            "description": "Current appointment time (HH:MM)"
+          },
+          "new_datum": {
+            "type": "string",
+            "description": "New appointment date (YYYY-MM-DD)"
+          },
+          "new_uhrzeit": {
+            "type": "string",
+            "description": "New appointment time (HH:MM)"
+          }
+        },
+        "required": ["call_id", "new_datum", "new_uhrzeit"]
+      }
+    },
+    {
+      "tool_id": "tool-get-services",
+      "name": "get_available_services",
+      "url": "https://api.askproai.de/api/retell/get-available-services",
+      "description": "Get list of all available services the company offers. Use when customer is unsure what services are available or asks 'What do you offer?'.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "The Retell call ID"
+          }
+        },
+        "required": ["call_id"]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start_node"
+    },
+    {
+      "id": "func_initialize",
+      "type": "function",
+      "tool_id": "tool-initialize-call",
+      "wait_for_result": true,
+      "speak_during_execution": false,
+      "speak_after_execution": false
+    },
+    {
+      "id": "greeting",
+      "type": "speak_node",
+      "speak": "Guten Tag! Wie kann ich Ihnen helfen?"
+    },
+    {
+      "id": "intent_router",
+      "type": "intent_detection_node",
+      "intents": [
+        {
+          "name": "book_new_appointment",
+          "description": "Customer wants to book a new appointment",
+          "examples": [
+            "Ich möchte einen Termin buchen",
+            "Ich brauche einen Haarschnitt",
+            "Können Sie mich eintragen für morgen?"
+          ]
+        },
+        {
+          "name": "check_appointments",
+          "description": "Customer wants to see their existing appointments",
+          "examples": [
+            "Welche Termine habe ich?",
+            "Wann ist mein nächster Termin?",
+            "Zeigen Sie mir meine Buchungen"
+          ]
+        },
+        {
+          "name": "cancel_appointment",
+          "description": "Customer wants to cancel an appointment",
+          "examples": [
+            "Ich möchte einen Termin stornieren",
+            "Ich muss absagen",
+            "Können Sie meinen Termin löschen?"
+          ]
+        },
+        {
+          "name": "reschedule_appointment",
+          "description": "Customer wants to reschedule an appointment",
+          "examples": [
+            "Ich möchte meinen Termin verschieben",
+            "Kann ich einen anderen Tag haben?",
+            "Ich muss umbuchen"
+          ]
+        },
+        {
+          "name": "inquire_services",
+          "description": "Customer asks what services are available",
+          "examples": [
+            "Was bieten Sie an?",
+            "Welche Dienstleistungen haben Sie?",
+            "Was kann ich bei Ihnen machen lassen?"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collect_booking_info",
+      "type": "collect_info_node",
+      "collect_data": [
+        {
+          "name": "datum",
+          "type": "string",
+          "description": "Appointment date",
+          "speak_on_collect": "Für welchen Tag möchten Sie den Termin?",
+          "required": true
+        },
+        {
+          "name": "uhrzeit",
+          "type": "string",
+          "description": "Appointment time",
+          "speak_on_collect": "Um wie viel Uhr?",
+          "required": true
+        },
+        {
+          "name": "dienstleistung",
+          "type": "string",
+          "description": "Service type",
+          "speak_on_collect": "Welche Dienstleistung möchten Sie?",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "func_check_availability",
+      "type": "function",
+      "tool_id": "tool-check-availability",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "availability_result",
+      "type": "expression_node",
+      "expressions": [
+        {
+          "condition": "{{func_check_availability.available}} == true",
+          "description": "Time is available"
+        },
+        {
+          "condition": "{{func_check_availability.available}} == false",
+          "description": "Time is not available"
+        }
+      ]
+    },
+    {
+      "id": "present_availability",
+      "type": "speak_node",
+      "speak": "Der Termin am {{datum}} um {{uhrzeit}} für {{dienstleistung}} ist verfügbar. Möchten Sie diesen Termin buchen?"
+    },
+    {
+      "id": "present_alternatives",
+      "type": "speak_node",
+      "speak": "Leider ist der Termin am {{datum}} um {{uhrzeit}} nicht verfügbar. Ich habe folgende Alternativen für Sie: {{func_check_availability.alternatives}}. Welcher Zeitpunkt passt Ihnen?"
+    },
+    {
+      "id": "confirm_booking",
+      "type": "collect_info_node",
+      "collect_data": [
+        {
+          "name": "bestaetigung",
+          "type": "boolean",
+          "description": "Customer confirms booking",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "booking_decision",
+      "type": "expression_node",
+      "expressions": [
+        {
+          "condition": "{{bestaetigung}} == true",
+          "description": "Customer confirmed"
+        },
+        {
+          "condition": "{{bestaetigung}} == false",
+          "description": "Customer declined"
+        }
+      ]
+    },
+    {
+      "id": "func_book_appointment",
+      "type": "function",
+      "tool_id": "tool-book-appointment",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "booking_confirmation",
+      "type": "speak_node",
+      "speak": "Perfekt! Ihr Termin am {{datum}} um {{uhrzeit}} für {{dienstleistung}} wurde gebucht. Sie erhalten eine Bestätigungs-E-Mail. Kann ich sonst noch etwas für Sie tun?"
+    },
+    {
+      "id": "func_get_appointments",
+      "type": "function",
+      "tool_id": "tool-get-appointments",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "show_appointments",
+      "type": "speak_node",
+      "speak": "{{func_get_appointments.message}}"
+    },
+    {
+      "id": "select_appointment_to_cancel",
+      "type": "collect_info_node",
+      "collect_data": [
+        {
+          "name": "cancel_date",
+          "type": "string",
+          "description": "Date of appointment to cancel",
+          "required": true
+        },
+        {
+          "name": "cancel_time",
+          "type": "string",
+          "description": "Time of appointment to cancel",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "confirm_cancellation",
+      "type": "collect_info_node",
+      "collect_data": [
+        {
+          "name": "cancel_confirmed",
+          "type": "boolean",
+          "description": "Customer confirms cancellation",
+          "speak_on_collect": "Möchten Sie den Termin am {{cancel_date}} um {{cancel_time}} wirklich stornieren?",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "func_cancel_appointment",
+      "type": "function",
+      "tool_id": "tool-cancel-appointment",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "cancellation_done",
+      "type": "speak_node",
+      "speak": "Ihr Termin wurde storniert. Kann ich sonst noch etwas für Sie tun?"
+    },
+    {
+      "id": "func_get_services",
+      "type": "function",
+      "tool_id": "tool-get-services",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "present_services",
+      "type": "speak_node",
+      "speak": "Wir bieten folgende Dienstleistungen an: {{func_get_services.services}}. Für welche Dienstleistung interessieren Sie sich?"
+    },
+    {
+      "id": "booking_declined",
+      "type": "speak_node",
+      "speak": "Kein Problem. Möchten Sie einen anderen Termin oder kann ich sonst etwas für Sie tun?"
+    },
+    {
+      "id": "end_call",
+      "type": "speak_node",
+      "speak": "Vielen Dank für Ihren Anruf. Auf Wiederhören!"
+    },
+    {
+      "id": "end",
+      "type": "end_node"
+    }
+  ],
+  "edges": [
+    {
+      "from": "start",
+      "to": "func_initialize"
+    },
+    {
+      "from": "func_initialize",
+      "to": "greeting"
+    },
+    {
+      "from": "greeting",
+      "to": "intent_router"
+    },
+    {
+      "from": "intent_router",
+      "to": "collect_booking_info",
+      "condition": "{{intent}} == 'book_new_appointment'"
+    },
+    {
+      "from": "intent_router",
+      "to": "func_get_appointments",
+      "condition": "{{intent}} == 'check_appointments'"
+    },
+    {
+      "from": "intent_router",
+      "to": "func_get_appointments",
+      "condition": "{{intent}} == 'cancel_appointment'"
+    },
+    {
+      "from": "intent_router",
+      "to": "func_get_services",
+      "condition": "{{intent}} == 'inquire_services'"
+    },
+    {
+      "from": "collect_booking_info",
+      "to": "func_check_availability"
+    },
+    {
+      "from": "func_check_availability",
+      "to": "availability_result"
+    },
+    {
+      "from": "availability_result",
+      "to": "present_availability",
+      "condition": "{{func_check_availability.available}} == true"
+    },
+    {
+      "from": "availability_result",
+      "to": "present_alternatives",
+      "condition": "{{func_check_availability.available}} == false"
+    },
+    {
+      "from": "present_availability",
+      "to": "confirm_booking"
+    },
+    {
+      "from": "present_alternatives",
+      "to": "collect_booking_info"
+    },
+    {
+      "from": "confirm_booking",
+      "to": "booking_decision"
+    },
+    {
+      "from": "booking_decision",
+      "to": "func_book_appointment",
+      "condition": "{{bestaetigung}} == true"
+    },
+    {
+      "from": "booking_decision",
+      "to": "booking_declined",
+      "condition": "{{bestaetigung}} == false"
+    },
+    {
+      "from": "func_book_appointment",
+      "to": "booking_confirmation"
+    },
+    {
+      "from": "booking_confirmation",
+      "to": "end_call"
+    },
+    {
+      "from": "func_get_appointments",
+      "to": "show_appointments"
+    },
+    {
+      "from": "show_appointments",
+      "to": "select_appointment_to_cancel",
+      "condition": "{{intent}} == 'cancel_appointment'"
+    },
+    {
+      "from": "show_appointments",
+      "to": "end_call",
+      "condition": "{{intent}} == 'check_appointments'"
+    },
+    {
+      "from": "select_appointment_to_cancel",
+      "to": "confirm_cancellation"
+    },
+    {
+      "from": "confirm_cancellation",
+      "to": "func_cancel_appointment",
+      "condition": "{{cancel_confirmed}} == true"
+    },
+    {
+      "from": "func_cancel_appointment",
+      "to": "cancellation_done"
+    },
+    {
+      "from": "cancellation_done",
+      "to": "end_call"
+    },
+    {
+      "from": "func_get_services",
+      "to": "present_services"
+    },
+    {
+      "from": "present_services",
+      "to": "collect_booking_info"
+    },
+    {
+      "from": "booking_declined",
+      "to": "intent_router"
+    },
+    {
+      "from": "end_call",
+      "to": "end"
+    }
+  ]
+}

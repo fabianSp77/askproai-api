@@ -13,6 +13,73 @@ return new class extends Migration
     public function up(): void
     {
         // Create core tables for testing environment
+
+        // Users table (required for authentication)
+        if (!Schema::hasTable('users')) {
+            Schema::create('users', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->string('password');
+                $table->unsignedBigInteger('company_id')->nullable();
+                $table->unsignedBigInteger('branch_id')->nullable();
+                $table->unsignedBigInteger('staff_id')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
+
+        // Roles & Permissions tables (Spatie)
+        if (!Schema::hasTable('roles')) {
+            Schema::create('roles', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('guard_name');
+                $table->timestamps();
+                $table->unique(['name', 'guard_name']);
+            });
+        }
+
+        if (!Schema::hasTable('permissions')) {
+            Schema::create('permissions', function ($table) {
+                $table->id();
+                $table->string('name');
+                $table->string('guard_name');
+                $table->timestamps();
+                $table->unique(['name', 'guard_name']);
+            });
+        }
+
+        if (!Schema::hasTable('model_has_roles')) {
+            Schema::create('model_has_roles', function ($table) {
+                $table->unsignedBigInteger('role_id');
+                $table->string('model_type');
+                $table->unsignedBigInteger('model_id');
+                $table->primary(['role_id', 'model_id', 'model_type']);
+                $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+            });
+        }
+
+        if (!Schema::hasTable('model_has_permissions')) {
+            Schema::create('model_has_permissions', function ($table) {
+                $table->unsignedBigInteger('permission_id');
+                $table->string('model_type');
+                $table->unsignedBigInteger('model_id');
+                $table->primary(['permission_id', 'model_id', 'model_type'], 'model_has_permissions_permission_model_type_primary');
+                $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
+            });
+        }
+
+        if (!Schema::hasTable('role_has_permissions')) {
+            Schema::create('role_has_permissions', function ($table) {
+                $table->unsignedBigInteger('permission_id');
+                $table->unsignedBigInteger('role_id');
+                $table->primary(['permission_id', 'role_id']);
+                $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
+                $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+            });
+        }
+
         if (!Schema::hasTable('companies')) {
             Schema::create('companies', function ($table) {
                 $table->id();
@@ -21,6 +88,7 @@ return new class extends Migration
                 $table->unsignedInteger('calcom_team_id')->nullable();
                 $table->string('api_key', 500)->nullable();
                 $table->timestamps();
+                $table->softDeletes(); // Required for SoftDeletes trait
             });
         }
 
@@ -214,6 +282,51 @@ return new class extends Migration
                 $table->index(['status', 'sent_at']);
             });
         }
+
+        // Add foreign keys to users table (after other tables exist)
+        // In test environment, foreign keys are optional for performance
+        // The factories will handle data integrity
+        if (Schema::hasTable('users') && Schema::hasTable('companies') && Schema::hasColumn('users', 'company_id')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+                });
+            } catch (\Exception $e) {
+                // FK already exists or other error - skip silently in test environment
+            }
+        }
+
+        if (Schema::hasTable('users') && Schema::hasTable('branches') && Schema::hasColumn('users', 'branch_id')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('branch_id')->references('id')->on('branches')->onDelete('set null');
+                });
+            } catch (\Exception $e) {
+                // FK already exists - skip
+            }
+        }
+
+        if (Schema::hasTable('users') && Schema::hasTable('staff') && Schema::hasColumn('users', 'staff_id')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('staff_id')->references('id')->on('staff')->onDelete('set null');
+                });
+            } catch (\Exception $e) {
+                // FK already exists - skip
+            }
+        }
+
+        // Seed essential roles for testing
+        \DB::table('roles')->insertOrIgnore([
+            ['name' => 'super_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manager', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'staff', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'company_owner', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'company_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'company_manager', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'company_staff', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     public function down(): void

@@ -1,0 +1,457 @@
+{
+    "start_speaker": "agent",
+    "start_node_id": "node_01_initialization",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "global_prompt": "# AskPro AI Appointment Booking Agent\n\n## Core Rules\n- NEVER invent dates, times, or availability\n- ALWAYS use function results\n- Ask clarifying questions when uncertain\n- Use first name only (no Herr\/Frau without explicit gender)\n- Confirm important details before booking\n- Be polite, professional, and efficient\n\n## Date Parsing Rules\n- \"15.1\" means 15th of CURRENT month, NOT January\n- Use current_time_berlin() for reference\n- Parse relative dates: \"morgen\" = tomorrow, \"übermorgen\" = day after tomorrow\n\n## V85 Race Condition Protection\n- STEP 1: collect_appointment_data with bestaetigung=false (check only)\n- STEP 2: Get explicit user confirmation\n- STEP 3: collect_appointment_data with bestaetigung=true (book)\n- If race condition occurs, offer alternatives immediately\n\n## Anti-Silence Rule\n- Speak within 2 seconds of user utterance\n- If processing, say \"Einen Moment bitte...\"\n- Never let silence exceed 3 seconds",
+    "tools": [],
+    "nodes": [
+        {
+            "id": "node_01_initialization",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say immediately: \"Willkommen bei Ask Pro AI. Guten Tag!\" Then call current_time_berlin() and check_customer() in PARALLEL. WAIT for both responses!\n\nCall these functions: current_time_berlin and check_customer (in parallel)."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_01_initialization_1",
+                    "destination_node_id": "node_02_customer_routing",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "both_functions_complete"
+                    }
+                },
+                {
+                    "id": "edge_node_01_initialization_2",
+                    "destination_node_id": "node_99_error_handler",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "timeout",
+                        "operator": ">",
+                        "right_side": "5s"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_02_customer_routing",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Route based on customer status"
+            },
+            "edges": [
+                {
+                    "id": "edge_node_02_customer_routing_1",
+                    "destination_node_id": "node_03a_known_customer",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "customer_status",
+                        "operator": "==",
+                        "right_side": "found"
+                    }
+                },
+                {
+                    "id": "edge_node_02_customer_routing_2",
+                    "destination_node_id": "node_03b_new_customer",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "customer_status",
+                        "operator": "==",
+                        "right_side": "new_customer"
+                    }
+                },
+                {
+                    "id": "edge_node_02_customer_routing_3",
+                    "destination_node_id": "node_03c_anonymous_customer",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "customer_status",
+                        "operator": "==",
+                        "right_side": "anonymous"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03a_known_customer",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Use CUSTOMER_NAME from check_customer. Say: \"Guten Tag {{CUSTOMER_NAME}}! Möchten Sie einen Termin buchen?\" V85 rule: Use first name only, no Herr\/Frau without gender."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_03a_known_customer_1",
+                    "destination_node_id": "node_04_intent_capture",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_responds"
+                    }
+                },
+                {
+                    "id": "edge_node_03a_known_customer_2",
+                    "destination_node_id": "node_98_polite_end",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "silence",
+                        "operator": ">",
+                        "right_side": "5s"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03b_new_customer",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say: \"Guten Tag! Möchten Sie einen Termin buchen oder haben Sie eine Frage?\" Name will be collected during booking flow if needed."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_03b_new_customer_1",
+                    "destination_node_id": "node_04_intent_capture",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_responds"
+                    }
+                },
+                {
+                    "id": "edge_node_03b_new_customer_2",
+                    "destination_node_id": "node_98_polite_end",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "silence",
+                        "operator": ">",
+                        "right_side": "5s"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03c_anonymous_customer",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say IMMEDIATELY: \"Guten Tag! Möchten Sie einen Termin buchen?\" CRITICAL: No delay! This prevents Szenario 4 silence issue."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_03c_anonymous_customer_1",
+                    "destination_node_id": "node_05_name_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "booking_intent && no_name"
+                    }
+                },
+                {
+                    "id": "edge_node_03c_anonymous_customer_2",
+                    "destination_node_id": "node_04_intent_capture",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "other_intent"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_04_intent_capture",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Classify user intent"
+            },
+            "edges": [
+                {
+                    "id": "edge_node_04_intent_capture_1",
+                    "destination_node_id": "node_06_service_selection",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "intent",
+                        "operator": "==",
+                        "right_side": "book_appointment"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_05_name_collection",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask: \"Für die Buchung benötige ich Ihren Namen. Wie heißen Sie bitte?\" VALIDATION: Name must have 2+ characters. Retry max 3 times."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_05_name_collection_1",
+                    "destination_node_id": "node_04_intent_capture",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "valid_name_collected"
+                    }
+                },
+                {
+                    "id": "edge_node_05_name_collection_2",
+                    "destination_node_id": "node_99_error_handler",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "attempts",
+                        "operator": ">=",
+                        "right_side": "3"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_06_service_selection",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "If service mentioned, extract it. Otherwise use \"Beratung\" as default. Optional: Ask \"Für welche Dienstleistung?\""
+            },
+            "edges": [
+                {
+                    "id": "edge_node_06_service_selection_1",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "service_determined"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_07_datetime_collection",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "CRITICAL: NEVER invent date\/time! Ask: \"Für welchen Tag und welche Uhrzeit?\" Parse relative dates using current_time_berlin data. ALWAYS confirm: \"Das wäre {{weekday}}, der {{date}} um {{time}} Uhr. Richtig?\""
+            },
+            "edges": [
+                {
+                    "id": "edge_node_07_datetime_collection_1",
+                    "destination_node_id": "node_08_availability_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "date_and_time_collected && future_time"
+                    }
+                },
+                {
+                    "id": "edge_node_07_datetime_collection_2",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "past_time || missing_info"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_08_availability_check",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Check slot availability (STEP 1: bestaetigung=false)\n\nCall function: collect_appointment_data\n\nWhile function executes, say: \"Einen Moment, ich prüfe die Verfügbarkeit\""
+            },
+            "edges": [
+                {
+                    "id": "edge_node_08_availability_check_1",
+                    "destination_node_id": "node_09a_booking_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "slot_available"
+                    }
+                },
+                {
+                    "id": "edge_node_08_availability_check_2",
+                    "destination_node_id": "node_09b_alternative_offering",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "slot_unavailable"
+                    }
+                },
+                {
+                    "id": "edge_node_08_availability_check_3",
+                    "destination_node_id": "node_99_error_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "error"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_09a_booking_confirmation",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say: \"Der Termin am {{weekday}}, den {{date}} um {{time}} Uhr ist noch frei. Darf ich den Termin auf Ihren Namen, {{CUSTOMER_NAME}}, buchen?\" WAIT for explicit \"Ja\". If silence >3s, repeat. Never book without confirmation!"
+            },
+            "edges": [
+                {
+                    "id": "edge_node_09a_booking_confirmation_1",
+                    "destination_node_id": "node_09c_final_booking",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_confirmed"
+                    }
+                },
+                {
+                    "id": "edge_node_09a_booking_confirmation_2",
+                    "destination_node_id": "node_09b_alternative_offering",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_declined"
+                    }
+                },
+                {
+                    "id": "edge_node_09a_booking_confirmation_3",
+                    "destination_node_id": "node_98_polite_end",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "silence",
+                        "operator": ">",
+                        "right_side": "6s"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_09b_alternative_offering",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "If alternatives exist: \"Der Termin um {{original_time}} ist leider belegt. Ich kann Ihnen anbieten: {{alt1}} oder {{alt2}}. Was passt besser?\" If no alternatives: \"Leider nicht verfügbar. Möchten Sie einen anderen Tag?\""
+            },
+            "edges": [
+                {
+                    "id": "edge_node_09b_alternative_offering_1",
+                    "destination_node_id": "node_09a_booking_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_selects_alternative"
+                    }
+                },
+                {
+                    "id": "edge_node_09b_alternative_offering_2",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_requests_new_date"
+                    }
+                },
+                {
+                    "id": "edge_node_09b_alternative_offering_3",
+                    "destination_node_id": "node_98_polite_end",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "user_declines"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_09c_final_booking",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Execute booking (STEP 2: bestaetigung=true) with V85 double-check\n\nCall function: collect_appointment_data\n\nWhile function executes, say: \"Ich buche jetzt den Termin für Sie\""
+            },
+            "edges": [
+                {
+                    "id": "edge_node_09c_final_booking_1",
+                    "destination_node_id": "node_14_success_message",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "booking_success"
+                    }
+                },
+                {
+                    "id": "edge_node_09c_final_booking_2",
+                    "destination_node_id": "node_15_race_condition_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "race_condition"
+                    }
+                },
+                {
+                    "id": "edge_node_09c_final_booking_3",
+                    "destination_node_id": "node_99_error_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "booking_error"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_14_success_message",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say: \"Perfekt! Ihr Termin am {{weekday}}, den {{date}} um {{time}} Uhr ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Auf Wiederhören!\""
+            },
+            "edges": []
+        },
+        {
+            "id": "node_15_race_condition_handler",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say: \"Entschuldigung, der Slot wurde gerade vergeben. Ich kann Ihnen direkt anbieten: {{alt1}} oder {{alt2}}. Passt das?\" If no alternatives: ask for different date."
+            },
+            "edges": [
+                {
+                    "id": "edge_node_15_race_condition_handler_1",
+                    "destination_node_id": "node_09a_booking_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "alternatives_available"
+                    }
+                },
+                {
+                    "id": "edge_node_15_race_condition_handler_2",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "no_alternatives"
+                    }
+                },
+                {
+                    "id": "edge_node_15_race_condition_handler_3",
+                    "destination_node_id": "node_99_error_handler",
+                    "transition_condition": {
+                        "type": "equation",
+                        "left_side": "race_condition_count",
+                        "operator": ">=",
+                        "right_side": "3"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_98_polite_end",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Say: \"Kein Problem! Rufen Sie gerne wieder an wenn Sie einen Termin möchten. Auf Wiederhören!\""
+            },
+            "edges": []
+        },
+        {
+            "id": "node_99_error_handler",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "NEVER say \"technisches Problem\"! Say: \"Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es später erneut. Auf Wiederhören!\""
+            },
+            "edges": []
+        }
+    ],
+    "begin_after_user_silence_ms": 800
+}

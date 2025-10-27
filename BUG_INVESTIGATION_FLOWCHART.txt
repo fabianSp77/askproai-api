@@ -1,0 +1,294 @@
+================================================================================
+BUG INVESTIGATION FLOWCHART - Visual Decision Tree
+================================================================================
+
+START: 4 Critical Bugs to Fix
+|
++--- BUG #1: Agent Hallucination (Service Selection Mismatch)
+|    |
+|    +--[Information Needed]
+|    |   |
+|    |   +-- Q1: Where is conversation flow stored?
+|    |   |    +--[Local JSON] -> /public/friseur1_flow_*.json
+|    |   |    +--[Database] -> ConversationFlow table
+|    |   |    +--[Cloud] -> Retell Dashboard only
+|    |   |
+|    |   +-- Q2: How to update flow?
+|    |   |    +--[API] -> RetellApiController
+|    |   |    +--[Artisan] -> DeployConversationFlow command
+|    |   |    +--[Script] -> /scripts/deployment/auto_publish_retell.php
+|    |   |
+|    |   +-- Q3: Testing capability?
+|    |   |    +--[Simulator] -> Retell Dashboard
+|    |   |    +--[Local Mock] -> MockFunctionExecutor.php
+|    |   |    +--[Test Calls] -> Test phone numbers
+|    |   |
+|    |   +-- Q4: Function response passing?
+|    |   |    +--[JSON format] -> WebhookResponseService.php
+|    |   |    +--[State update] -> CallLifecycleService.php
+|    |   |
+|    |   +-- Q5: Flow transition syntax?
+|    |        +--[Condition logic] -> Check actual flow file
+|    |
+|    +--[Root Cause Analysis]
+|       |
+|       ├--[Hypothesis 1]: Agent doesn't validate service against DB
+|       |  Action: Check ServiceSelectionService.php for validation logic
+|       |
+|       ├--[Hypothesis 2]: Flow file has hardcoded services
+|       |  Action: Search for service names in conversation flow JSON
+|       |
+|       └--[Hypothesis 3]: Function response not properly formatted
+|          Action: Check WebhookResponseService.php response structure
+|
++--- BUG #2: Date Parsing Errors
+|    |
+|    +--[Information Needed]
+|    |   |
+|    |   +-- Q1: Methods available? [KNOWN: 10+ methods, 945 lines]
+|    |   |
+|    |   +-- Q2: German relative dates? [KNOWN: Yes, fully supported]
+|    |   |    Examples: 'heute', 'morgen', 'übermorgen', 'dieser Donnerstag'
+|    |   |
+|    |   +-- Q3: Input/output format? [KNOWN: Multiple formats supported]
+|    |   |    Input: ISO, German (DD.MM.YYYY), German short (D.M)
+|    |   |    Output: Carbon instance (Europe/Berlin timezone)
+|    |   |
+|    |   +-- Q4: Unit tests exist? [KNOWN: Yes]
+|    |   |    File: DateTimeParserShortFormatTest.php
+|    |   |    Run: vendor/bin/pest tests/Unit/Services/Retell/DateTimeParserShortFormatTest.php
+|    |   |
+|    |   +-- Q5: Timezone handling? [KNOWN: Europe/Berlin, caching for perf]
+|    |
+|    +--[Root Cause Analysis]
+|       |
+|       ├--[Hypothesis 1]: Past time handling issue
+|       |  Code: Line 112-134 (isPast check)
+|       |  Fix: Verify logic correctly rejects past times
+|       |
+|       ├--[Hypothesis 2]: Month inference bug
+|       |  Code: Line 475-553 (German short format)
+|       |  Fix: Check ".1" month handling for mid-month dates
+|       |
+|       ├--[Hypothesis 3]: Weekday pattern not recognized
+|       |  Code: Line 327-425 ("dieser"/"nächster" patterns)
+|       |  Fix: Verify regex matches user input
+|       |
+|       └--[Hypothesis 4]: Timezone calculation error
+|          Code: Line 35-51 (getCachedBerlinTime)
+|          Fix: Check if caching causes stale time in long-running calls
+|
++--- BUG #3: Email Crash (ICS Attachment)
+|    |
+|    +--[Information Needed]
+|    |   |
+|    |   +-- Q1: Which ICS library? [KNOWN: spatie/icalendar-generator v3.0]
+|    |   |
+|    |   +-- Q2: Version installed? [ACTION: Run composer show spatie/icalendar-generator]
+|    |   |
+|    |   +-- Q3: Recently updated? [ACTION: Check git log -- composer.lock]
+|    |   |
+|    |   +-- Q4: Other emails work? [ACTION: Test non-ICS notifications]
+|    |   |
+|    |   +-- Q5: Disable ICS temporarily? [YES: Config flag approach]
+|    |
+|    +--[Root Cause Analysis]
+|       |
+|       ├--[Hypothesis 1]: ICS library API change in v3.0
+|       |  Action: Check vendor/spatie/icalendar-generator/CHANGELOG.md
+|       |
+|       ├--[Hypothesis 2]: Mailable class not formatting ICS correctly
+|       |  Action: Find *Mail.php or *Notification.php and review attachment code
+|       |
+|       ├--[Hypothesis 3]: Missing ICS file in storage
+|       |  Action: Check if /storage/ics/ or temp directory has write permissions
+|       |
+|       └--[Hypothesis 4]: Email queue job failure
+|          Action: Check Laravel logs for queued mail errors
+|
++--- BUG #4: V9 Not Deployed
+|    |
+|    +--[Information Needed]
+|    |   |
+|    |   +-- Q1: Verify code version? [ACTION: git log --oneline -1]
+|    |   |
+|    |   +-- Q2: When was V9 committed? [ACTION: git log --all | grep V9]
+|    |   |
+|    |   +-- Q3: Version constants? [ACTION: grep -r VERSION /app]
+|    |   |
+|    |   +-- Q4: OPcache cleared? [ACTION: Check opcache_get_status()]
+|    |   |
+|    |   +-- Q5: PHP-FPM restarted? [ACTION: systemctl status php-fpm]
+|    |
+|    +--[Root Cause Analysis]
+|       |
+|       ├--[Hypothesis 1]: V9 commit not in current branch
+|       |  Action: git log -1 shows old commit
+|       |  Fix: git pull or cherry-pick V9 commit
+|       |
+|       ├--[Hypothesis 2]: OPcache caching old bytecode
+|       |  Action: opcache_get_status()['cache_full'] = true
+|       |  Fix: php artisan optimize:clear && sudo systemctl restart php-fpm
+|       |
+|       ├--[Hypothesis 3]: Code modified but not committed
+|       |  Action: git status shows modified files
+|       |  Fix: git stash or git add/commit
+|       |
+|       └--[Hypothesis 4]: Deployment script didn't run
+|          Action: Check deployment logs
+|          Fix: Manually run deployment or restart services
+|
+
+================================================================================
+PRIORITY ORDER FOR FIXES
+================================================================================
+
+1. BUG #4 (V9 Not Deployed) - CRITICAL FIX FIRST
+   Why: If code isn't deployed, other fixes are already in place but not running
+   Time: 5 min (clear caches + restart)
+   Verification: Check git log, run tests
+
+2. BUG #2 (Date Parsing) - MEDIUM PRIORITY
+   Why: Well-documented, comprehensive test coverage available
+   Time: 15 min (run tests, identify failure case)
+   Verification: Test with failing dates, validate fixes with tests
+
+3. BUG #3 (Email Crash) - MEDIUM PRIORITY
+   Why: Isolatable issue, known library, can disable temporarily
+   Time: 30 min (locate code, update library or disable ICS)
+   Verification: Send test email without ICS, then with fixed ICS
+
+4. BUG #1 (Agent Hallucination) - LOWER PRIORITY
+   Why: Requires flow update via external system
+   Time: 45 min (understand flow structure, update conditions, test in Retell)
+   Verification: Retell simulator test, test call
+
+================================================================================
+INVESTIGATION DECISION TREE
+================================================================================
+
+START HERE
+  |
+  ├─[Run automated verification script]
+  |  bash run_debug_verification.sh
+  |  Output: DEBUG_VERIFICATION_RESULTS_*.txt
+  |
+  ├─[Check BUG #4 FIRST]
+  |  Question: Is V9 deployed?
+  |  |
+  |  ├─NO (git shows old commit)
+  |  |  Action: Deploy V9 immediately
+  |  |  Steps:
+  |  |   1. git pull / git checkout V9 branch
+  |  |   2. php artisan optimize:clear
+  |  |   3. sudo systemctl restart php-fpm
+  |  |   4. Verify: git log --oneline -1 shows V9 commit
+  |  |
+  |  └─YES (git shows V9 commit)
+  |     Action: Check OPcache
+  |     Steps:
+  |      1. php -r "var_dump(opcache_get_status());"
+  |      2. If full: php artisan optimize:clear
+  |      3. Restart: sudo systemctl restart php-fpm
+  |      4. Verify: Run test suite
+  |
+  ├─[Check BUG #2 - Date Parsing]
+  |  Question: Are DateTimeParser tests passing?
+  |  |
+  |  ├─YES (all tests pass)
+  |  |  Action: Check logs for specific failure date patterns
+  |  |  Steps:
+  |  |   1. tail -200f storage/logs/laravel.log
+  |  |   2. Find failed date parsing entries
+  |  |   3. Test that specific input with DateTimeParser
+  |  |
+  |  └─NO (tests fail)
+  |     Action: Fix failing test case
+  |     Steps:
+  |      1. Run: vendor/bin/pest DateTimeParserShortFormatTest.php -v
+  |      2. Identify failing assertion
+  |      3. Check logic in DateTimeParser.php for that date pattern
+  |      4. Fix and re-run tests
+  |
+  ├─[Check BUG #3 - Email Crash]
+  |  Question: What's the exact error?
+  |  |
+  |  ├─"Class not found" or "Method doesn't exist"
+  |  |  Action: Update spatie/icalendar-generator library
+  |  |  Steps:
+  |  |   1. composer update spatie/icalendar-generator
+  |  |   2. Re-run tests
+  |  |
+  |  ├─"File not found" or "Permission denied"
+  |  |  Action: Fix file system issue
+  |  |  Steps:
+  |  |   1. Check storage/ directory permissions
+  |  |   2. Ensure /storage/ics/ exists and is writable
+  |  |
+  |  └─Unknown error
+  |     Action: Disable ICS attachment temporarily
+  |     Steps:
+  |      1. Add config flag: DISABLE_ICS_ATTACHMENT=true
+  |      2. Update notification to skip ICS when flag set
+  |      3. Test email sends without attachment
+  |      4. Then investigate and re-enable
+  |
+  └─[Check BUG #1 - Agent Hallucination]
+     Question: Where is conversation flow stored?
+     |
+     ├─[Retell Dashboard only]
+     |  Action: Update through Retell UI
+     |  Steps:
+     |   1. Log into Retell Dashboard
+     |   2. Edit conversation flow
+     |   3. Fix service selection validation
+     |   4. Test with Retell Simulator
+     |
+     ├─[Local JSON file in /public/]
+     |  Action: Edit JSON file locally
+     |  Steps:
+     |   1. Edit /public/friseur1_flow_*.json
+     |   2. Fix service validation conditions
+     |   3. Deploy/publish to Retell API
+     |   4. Test with Retell Simulator
+     |
+     └─[Database table]
+        Action: Update through Laravel
+        Steps:
+         1. Find ConversationFlow model
+         2. Update flow definition in DB
+         3. Run deployment command: php artisan deploy:conversation-flow
+         4. Verify via Retell API
+
+================================================================================
+KEY FILES BY BUG
+================================================================================
+
+BUG #1 (Agent Hallucination)
+├─ app/Services/Retell/ServiceSelectionService.php (primary)
+├─ app/Services/Retell/WebhookResponseService.php (response format)
+├─ app/Http/Controllers/RetellFunctionCallHandler.php (function calls)
+├─ public/friseur1_flow_*.json (flow definitions)
+└─ tests/Unit/Services/Retell/ServiceSelectionServiceTest.php (tests)
+
+BUG #2 (Date Parsing)
+├─ app/Services/Retell/DateTimeParser.php (primary - 945 lines)
+├─ app/Http/Controllers/RetellFunctionCallHandler.php (consumer)
+├─ tests/Unit/Services/Retell/DateTimeParserShortFormatTest.php (tests)
+└─ config/app.php (timezone config)
+
+BUG #3 (Email Crash)
+├─ [Notification class - find via grep] (primary)
+├─ [Mail or Mailable class - find via grep] (attachment logic)
+├─ config/mail.php (mail driver config)
+├─ composer.json (spatie/icalendar-generator)
+└─ vendor/spatie/icalendar-generator/ (library)
+
+BUG #4 (V9 Not Deployed)
+├─ All service files (verify they're loaded)
+├─ .env (environment variables)
+├─ composer.lock (dependency versions)
+├─ storage/logs/laravel.log (error messages)
+└─ OPcache (verify cache status)
+
+================================================================================

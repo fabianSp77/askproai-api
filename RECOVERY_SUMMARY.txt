@@ -1,0 +1,247 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║                    🚨 CRITICAL: PRODUCTION DATA LOSS 🚨                       ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+INCIDENT: Complete database wipe occurred 2025-10-27 at 06:28 CET
+ROOT CAUSE: Destructive migration command executed (migrate:fresh or similar)
+IMPACT: All production data lost (companies, appointments, services, customers)
+DATA LOSS: 23 days (October 4-27, 2025)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+EVIDENCE:
+---------
+✅ Log entry confirms table drop at 06:28:24 (200+ tables, 2.2 seconds)
+✅ Tables recreated empty between 06:58-07:03 (0 rows)
+✅ Current state: Companies=0, Services=0, Staff=0, Appointments=0
+✅ Backup available from October 4 with 5 companies and production data
+
+WHAT HAPPENED:
+--------------
+1. 06:28:24 - All database tables dropped (production.WARNING log)
+2. 06:28:26 - Migrations table recreated
+3. 06:28:27 - First 5 migrations re-executed (batch 1)
+4. 06:58-07:03 - Core tables recreated (empty, 0 rows)
+5. 07:30 - User reports: "All menu items and data missing"
+
+WHY MENU ITEMS ARE MISSING:
+---------------------------
+Resource discovery is DISABLED in AdminPanelProvider.php (line 53)
+Only CompanyResource manually registered (line 56)
+Comment says: "Temporarily disabled to prevent badge errors"
+
+36 Filament Resources exist but not loaded:
+- AppointmentResource, ServiceResource, StaffResource
+- CustomerResource, CallResource, PhoneNumberResource
+- ... and 30 more
+
+═══════════════════════════════════════════════════════════════════════════════
+
+RECOVERY ACTIONS (IN ORDER):
+----------------------------
+
+🔴 PHASE 1: RESTORE DATABASE (CRITICAL - DO THIS NOW)
+   File: /var/www/api-gateway/RECOVERY_QUICK_START.sh
+   Time: ~10 minutes
+   Risk: Medium (23 days data loss, but restores Oct 4 state)
+
+   Quick execution:
+   $ cd /var/www/api-gateway
+   $ sudo bash RECOVERY_QUICK_START.sh
+
+   Expected result:
+   - Companies: 5 (restored)
+   - Services: >0 (restored)
+   - Staff: >0 (restored)
+   - Appointments: Historical data restored
+
+🟡 PHASE 2: RE-ENABLE RESOURCES (URGENT - DO AFTER DATABASE)
+   File: app/Providers/Filament/AdminPanelProvider.php
+   Line: 53 (uncomment resource discovery)
+   Time: 5 minutes
+
+   Change:
+   // ->discoverResources(...) COMMENTED
+   ->resources([\App\Filament\Resources\CompanyResource::class])
+
+   To:
+   ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+   // Remove manual resources array
+
+   Expected result: All 36 menu items visible
+
+🟢 PHASE 3: FIX GUARD MISMATCH (IMPORTANT - DO AFTER RESOURCES)
+   Issue: User role uses 'web' guard, panel uses 'admin' guard
+   Time: 5 minutes
+
+   Option A (Recommended): Update user role guard
+   $ php artisan tinker
+   $admin = User::where('email', 'admin@askproai.de')->first();
+   $admin->syncRoles([]);
+   $admin->assignRole('super_admin'); // Will use correct guard
+
+   Option B: Change panel guard to 'web'
+   Edit: app/Providers/Filament/AdminPanelProvider.php line 34
+   Change: ->authGuard('admin')
+   To: ->authGuard('web')
+
+🔴 PHASE 4: PREVENT FUTURE INCIDENTS (CRITICAL - DO TODAY)
+   Actions:
+   1. Block destructive commands in production (migrate:fresh, db:wipe)
+   2. Setup daily automated backups (3am, 30-day retention)
+   3. Add data integrity monitoring (alerts on table drops)
+   4. Document and test recovery procedures
+
+   Detailed steps in full RCA report
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VERIFICATION AFTER RECOVERY:
+----------------------------
+1. Login: https://api.askproai.de/admin (admin@askproai.de)
+2. Check companies: Should see 5 companies
+3. Check menu: Should see 36+ menu items (not just "Companies")
+4. Check data: Appointments, Services, Staff should have records
+5. Test integrations: Retell AI, Cal.com should reconnect
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILES CREATED:
+--------------
+📖 Full RCA Report:
+   /var/www/api-gateway/RCA_ADMIN_PANEL_DATA_LOSS_2025-10-27.md
+   (Complete analysis with evidence, timeline, prevention measures)
+
+🔧 Recovery Script:
+   /var/www/api-gateway/RECOVERY_QUICK_START.sh
+   (Automated database restore with safety checks)
+
+📋 This Summary:
+   /var/www/api-gateway/RECOVERY_SUMMARY.txt
+   (Quick reference for immediate action)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BACKUP INFORMATION:
+-------------------
+Source: /var/www/backups/P4_pre_next_steps_20251004_112339/
+Date: 2025-10-04 11:23 CET (23 days old)
+Size: 9.7 MB (compressed)
+Contains:
+  - 5 Companies (Krückeberg, AskProAI, Demo Zahnarzt, Premium Telecom, Friseur Schmidt)
+  - Services, Appointments, Staff, Customers (historical data)
+  - Complete schema and relationships
+  - Restore script included
+
+Data Loss Window:
+  - From: October 4, 2025
+  - To: October 27, 2025
+  - Duration: 23 days
+  - Impact: New appointments, customers, config changes in this period are LOST
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TIMELINE OF EVENTS:
+-------------------
+Oct 4, 2025    - Last backup created (9.7 MB)
+Oct 26, 2025   - Yesterday: Badge errors → Resource discovery disabled
+Oct 27, 06:28  - TODAY: Database tables dropped (200+ tables, 2.2 sec)
+Oct 27, 06:59  - Core tables recreated (empty, 0 rows)
+Oct 27, 07:30  - User reports: "All data missing, only Companies menu visible"
+Oct 27, 07:31  - RCA completed, recovery plan ready
+
+═══════════════════════════════════════════════════════════════════════════════
+
+RISK ASSESSMENT:
+----------------
+Current State: 🔴 CRITICAL
+- No data accessible (all 0 rows)
+- Only 1 menu item visible (Companies)
+- Integrations non-functional (Retell, Cal.com)
+- Business operations halted (can't book appointments)
+
+After Phase 1 (Database Restore): 🟡 MEDIUM
+- Data restored (Oct 4 state)
+- 23 days data loss accepted
+- Menu still limited (need Phase 2)
+- Auth may have issues (need Phase 3)
+
+After Phase 2 (Resource Discovery): 🟢 LOW
+- All menu items visible
+- Full navigation restored
+- Badge errors may occur (fixable)
+
+After Phase 3 (Guard Fix): 🟢 LOW
+- Authentication fully functional
+- Permissions aligned
+- System operational
+
+After Phase 4 (Prevention): ✅ PROTECTED
+- Destructive commands blocked
+- Daily backups automated
+- Monitoring active
+- Recovery procedures documented
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DECISION REQUIRED:
+------------------
+The user (admin@askproai.de) must decide:
+
+[ ] Option 1: RESTORE FROM OCTOBER 4 BACKUP (Recommended)
+    ✅ Restores 5 companies and all data as of Oct 4
+    ✅ System operational within 15 minutes
+    ❌ Loses 23 days of new data (Oct 4-27)
+    Risk: Medium (known data loss, clean recovery)
+
+[ ] Option 2: SEARCH FOR MORE RECENT BACKUPS
+    ✅ Might find backup with less data loss
+    ❌ Takes time to search (delays recovery)
+    ❌ No guarantee better backup exists
+    Risk: High (delays recovery, may find nothing)
+
+[ ] Option 3: START FRESH (Not recommended)
+    ✅ Clean slate
+    ❌ Loses ALL historical data permanently
+    ❌ Requires full reconfiguration
+    Risk: Very High (permanent data loss)
+
+⚠️  RECOMMENDATION: Execute Option 1 (Restore) IMMEDIATELY
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SUPPORT CONTACTS:
+-----------------
+RCA Author: Claude (Root Cause Analyst)
+Report Date: 2025-10-27 07:31:00 CET
+Incident Date: 2025-10-27 06:28:24 CET
+User: admin@askproai.de
+
+For questions about recovery process:
+- Read full RCA: RCA_ADMIN_PANEL_DATA_LOSS_2025-10-27.md
+- Review recovery script: RECOVERY_QUICK_START.sh
+- Check backup integrity: /var/www/backups/P4_pre_next_steps_20251004_112339/
+
+═══════════════════════════════════════════════════════════════════════════════
+
+START RECOVERY NOW:
+-------------------
+$ cd /var/www/api-gateway
+$ sudo bash RECOVERY_QUICK_START.sh
+
+This will:
+1. Put app in maintenance mode
+2. Backup current (empty) state
+3. Restore October 4 database
+4. Run pending migrations
+5. Clear all caches
+6. Bring app back online
+7. Verify data restoration
+
+Estimated time: 10-15 minutes
+
+═══════════════════════════════════════════════════════════════════════════════
+
+END OF SUMMARY

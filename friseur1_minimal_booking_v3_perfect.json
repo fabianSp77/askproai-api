@@ -1,0 +1,236 @@
+{
+    "global_prompt": "# Friseur 1 - Terminassistent\n\nDu bist der freundliche Terminassistent von Friseur 1.\n\n## Services\n- Herrenhaarschnitt (30 Min, 25€)\n- Damenhaarschnitt (45 Min, 35€)\n- Färben (90 Min, 65€)\n\n## Wichtig\n- Sammle immer: Name, Dienstleistung, Datum, Uhrzeit\n- Prüfe Verfügbarkeit BEVOR du buchst\n- Buche nur nach expliziter Bestätigung des Kunden",
+    "start_node_id": "node_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-availability",
+            "name": "check_availability_v17",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit für einen Termin",
+            "url": "https://api.askproai.de/api/retell/v17/check-availability",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Kundenname"},
+                    "dienstleistung": {"type": "string", "description": "Service"},
+                    "datum": {"type": "string", "description": "Datum DD.MM.YYYY"},
+                    "uhrzeit": {"type": "string", "description": "Uhrzeit HH:MM"}
+                },
+                "required": ["name", "datum", "uhrzeit", "dienstleistung"]
+            }
+        },
+        {
+            "tool_id": "tool-book-appointment",
+            "name": "book_appointment_v17",
+            "type": "custom",
+            "description": "Bucht einen Termin",
+            "url": "https://api.askproai.de/api/retell/v17/book-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Kundenname"},
+                    "dienstleistung": {"type": "string", "description": "Service"},
+                    "datum": {"type": "string", "description": "Datum DD.MM.YYYY"},
+                    "uhrzeit": {"type": "string", "description": "Uhrzeit HH:MM"}
+                },
+                "required": ["name", "datum", "uhrzeit", "dienstleistung"]
+            }
+        }
+    ],
+    "dynamic_variables": [
+        {
+            "name": "customer_name",
+            "description": "Der Name des Kunden",
+            "type": "text"
+        },
+        {
+            "name": "service_type",
+            "description": "Die gewünschte Dienstleistung (Herrenhaarschnitt, Damenhaarschnitt, oder Färben)",
+            "type": "text"
+        },
+        {
+            "name": "appointment_date",
+            "description": "Das gewünschte Datum im Format DD.MM.YYYY",
+            "type": "text"
+        },
+        {
+            "name": "appointment_time",
+            "description": "Die gewünschte Uhrzeit im Format HH:MM",
+            "type": "text"
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Begrüße den Kunden freundlich: 'Guten Tag bei Friseur 1! Wie kann ich Ihnen helfen?'"
+            },
+            "edges": [{
+                "id": "edge_1",
+                "destination_node_id": "node_collect",
+                "transition_condition": {"type": "prompt", "prompt": "Customer responded"}
+            }]
+        },
+        {
+            "id": "node_collect",
+            "name": "Daten sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Frage nach:\n1. Name des Kunden\n2. Welche Dienstleistung? (Herrenhaarschnitt, Damenhaarschnitt, oder Färben)\n3. Welches Datum? (im Format Tag.Monat.Jahr)\n4. Welche Uhrzeit?\n\nSammle alle 4 Informationen bevor du weitergehst."
+            },
+            "edges": [{
+                "id": "edge_2",
+                "destination_node_id": "extract_name",
+                "transition_condition": {"type": "prompt", "prompt": "All 4 pieces of information collected"}
+            }]
+        },
+        {
+            "id": "extract_name",
+            "name": "Extract Name",
+            "type": "extract_dynamic_variable",
+            "dynamic_variable_name": "customer_name",
+            "edges": [{
+                "id": "edge_3",
+                "destination_node_id": "extract_service",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "extract_service",
+            "name": "Extract Service",
+            "type": "extract_dynamic_variable",
+            "dynamic_variable_name": "service_type",
+            "edges": [{
+                "id": "edge_4",
+                "destination_node_id": "extract_date",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "extract_date",
+            "name": "Extract Date",
+            "type": "extract_dynamic_variable",
+            "dynamic_variable_name": "appointment_date",
+            "edges": [{
+                "id": "edge_5",
+                "destination_node_id": "extract_time",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "extract_time",
+            "name": "Extract Time",
+            "type": "extract_dynamic_variable",
+            "dynamic_variable_name": "appointment_time",
+            "edges": [{
+                "id": "edge_6",
+                "destination_node_id": "func_check",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "func_check",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich prüfe die Verfügbarkeit..."
+            },
+            "tool_type": "local",
+            "tool_id": "tool-check-availability",
+            "wait_for_result": true,
+            "speak_during_execution": true,
+            "parameter_mapping": {
+                "call_id": "{{call_id}}",
+                "name": "{{customer_name}}",
+                "datum": "{{appointment_date}}",
+                "uhrzeit": "{{appointment_time}}",
+                "dienstleistung": "{{service_type}}"
+            },
+            "edges": [{
+                "id": "edge_7",
+                "destination_node_id": "node_present",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "node_present",
+            "name": "Ergebnis präsentieren",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Zeige das Ergebnis:\n- Falls verfügbar: 'Der Termin am {{appointment_date}} um {{appointment_time}} für {{service_type}} ist verfügbar. Soll ich ihn für Sie buchen?'\n- Falls nicht: 'Der Termin ist leider nicht verfügbar. Hier sind Alternativen: [Liste]'\n\nWarte auf Bestätigung bevor du buchst!"
+            },
+            "edges": [
+                {
+                    "id": "edge_8",
+                    "destination_node_id": "func_book",
+                    "transition_condition": {"type": "prompt", "prompt": "User confirmed booking"}
+                },
+                {
+                    "id": "edge_9",
+                    "destination_node_id": "node_collect",
+                    "transition_condition": {"type": "prompt", "prompt": "User wants different time"}
+                }
+            ]
+        },
+        {
+            "id": "func_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Einen Moment, ich buche den Termin..."
+            },
+            "tool_type": "local",
+            "tool_id": "tool-book-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true,
+            "parameter_mapping": {
+                "call_id": "{{call_id}}",
+                "name": "{{customer_name}}",
+                "datum": "{{appointment_date}}",
+                "uhrzeit": "{{appointment_time}}",
+                "dienstleistung": "{{service_type}}"
+            },
+            "edges": [{
+                "id": "edge_10",
+                "destination_node_id": "node_success",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "node_success",
+            "name": "Erfolg",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Vielen Dank!"
+            },
+            "edges": [{
+                "id": "edge_11",
+                "destination_node_id": "node_end",
+                "transition_condition": {"type": "always"}
+            }]
+        },
+        {
+            "id": "node_end",
+            "name": "Ende",
+            "type": "end",
+            "instruction": {"type": "static_text", "text": ""},
+            "edges": []
+        }
+    ]
+}

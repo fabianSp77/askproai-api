@@ -1,0 +1,168 @@
+{
+  "tools": [
+    {
+      "tool_id": "tool-check-availability",
+      "name": "check_availability_v17",
+      "url": "https://api.askproai.de/api/retell/v17/check-availability",
+      "description": "Prüft Verfügbarkeit für Datum/Uhrzeit und bucht optional direkt.",
+      "speak_during_execution": true,
+      "speak_during_execution_message": "Einen Moment bitte, ich prüfe die Verfügbarkeit...",
+      "speak_after_execution": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          },
+          "datum": {
+            "type": "string",
+            "description": "Datum im Format YYYY-MM-DD"
+          },
+          "uhrzeit": {
+            "type": "string",
+            "description": "Uhrzeit im Format HH:MM (24h)"
+          },
+          "dienstleistung": {
+            "type": "string",
+            "description": "Name der Dienstleistung (z.B. Haarschnitt, Färben)"
+          },
+          "bestaetigung": {
+            "type": "boolean",
+            "description": "false = nur prüfen, true = direkt buchen"
+          }
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung", "bestaetigung"]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "node-start",
+      "node_type": "start_node"
+    },
+    {
+      "node_id": "node-greeting",
+      "node_type": "conversation_node",
+      "prompt": "Begrüße den Kunden freundlich mit: 'Guten Tag bei Friseur 1! Mein Name ist Carola. Wie kann ich Ihnen helfen?'"
+    },
+    {
+      "node_id": "node-collect-booking-info",
+      "node_type": "conversation_node",
+      "prompt": "Sammle folgende Informationen vom Kunden:\n1. Welche Dienstleistung? (z.B. Haarschnitt, Färben, Styling)\n2. Welches Datum? (Frage nach konkretem Datum oder Wochentag)\n3. Welche Uhrzeit?\n\nWenn der Kunde alle drei Informationen genannt hat, gehe zum nächsten Schritt."
+    },
+    {
+      "node_id": "node-check-availability",
+      "node_type": "function_node",
+      "tool_id": "tool-check-availability",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false,
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "datum": "{{user_datum}}",
+        "uhrzeit": "{{user_uhrzeit}}",
+        "dienstleistung": "{{user_dienstleistung}}",
+        "bestaetigung": false
+      }
+    },
+    {
+      "node_id": "node-available-yes",
+      "node_type": "conversation_node",
+      "prompt": "Der Termin ist verfügbar! Sage dem Kunden: 'Der Termin am {{user_datum}} um {{user_uhrzeit}} Uhr für {{user_dienstleistung}} ist verfügbar. Soll ich den Termin für Sie buchen?'"
+    },
+    {
+      "node_id": "node-available-no",
+      "node_type": "conversation_node",
+      "prompt": "Der Termin ist leider nicht verfügbar. Sage: 'Leider ist der Termin am {{user_datum}} um {{user_uhrzeit}} nicht verfügbar. Hier sind alternative Zeiten: {{alternatives}}. Möchten Sie einen dieser Termine?'"
+    },
+    {
+      "node_id": "node-book-appointment",
+      "node_type": "function_node",
+      "tool_id": "tool-check-availability",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_during_execution_message": "Einen Moment, ich buche den Termin für Sie...",
+      "speak_after_execution": false,
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "datum": "{{user_datum}}",
+        "uhrzeit": "{{user_uhrzeit}}",
+        "dienstleistung": "{{user_dienstleistung}}",
+        "bestaetigung": true
+      }
+    },
+    {
+      "node_id": "node-booking-success",
+      "node_type": "conversation_node",
+      "prompt": "Bestätige die Buchung: 'Perfekt! Ihr Termin am {{user_datum}} um {{user_uhrzeit}} Uhr für {{user_dienstleistung}} ist gebucht. Sie erhalten eine Bestätigungs-E-Mail. Gibt es noch etwas, womit ich Ihnen helfen kann?'"
+    },
+    {
+      "node_id": "node-end",
+      "node_type": "end_node"
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "edge-1",
+      "source_node_id": "node-start",
+      "destination_node_id": "node-greeting"
+    },
+    {
+      "edge_id": "edge-2",
+      "source_node_id": "node-greeting",
+      "destination_node_id": "node-collect-booking-info"
+    },
+    {
+      "edge_id": "edge-3",
+      "source_node_id": "node-collect-booking-info",
+      "destination_node_id": "node-check-availability",
+      "transition_condition": {
+        "type": "expression_evaluation",
+        "expression": "user_datum != null && user_uhrzeit != null && user_dienstleistung != null"
+      }
+    },
+    {
+      "edge_id": "edge-4",
+      "source_node_id": "node-check-availability",
+      "destination_node_id": "node-available-yes",
+      "transition_condition": {
+        "type": "function_result_evaluation",
+        "function_result_expression": "verfuegbar == true"
+      }
+    },
+    {
+      "edge_id": "edge-5",
+      "source_node_id": "node-check-availability",
+      "destination_node_id": "node-available-no",
+      "transition_condition": {
+        "type": "function_result_evaluation",
+        "function_result_expression": "verfuegbar == false"
+      }
+    },
+    {
+      "edge_id": "edge-6",
+      "source_node_id": "node-available-yes",
+      "destination_node_id": "node-book-appointment",
+      "transition_condition": {
+        "type": "expression_evaluation",
+        "expression": "user_confirmed == true"
+      }
+    },
+    {
+      "edge_id": "edge-7",
+      "source_node_id": "node-available-no",
+      "destination_node_id": "node-collect-booking-info"
+    },
+    {
+      "edge_id": "edge-8",
+      "source_node_id": "node-book-appointment",
+      "destination_node_id": "node-booking-success"
+    },
+    {
+      "edge_id": "edge-9",
+      "source_node_id": "node-booking-success",
+      "destination_node_id": "node-end"
+    }
+  ]
+}

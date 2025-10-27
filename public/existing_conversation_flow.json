@@ -1,0 +1,65 @@
+{
+    "conversation_flow_id": "conversation_flow_da76e7c6f3ba",
+    "version": 3,
+    "nodes": [
+        {
+            "instruction": {
+                "type": "static_text",
+                "text": "Hello this is customer support department, how can I help you today?"
+            },
+            "name": "Welcome Node",
+            "edges": [
+                {
+                    "id": "edge-1",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User needs to return the package"
+                    }
+                },
+                {
+                    "id": "edge-2",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User needs to check the order status"
+                    }
+                }
+            ],
+            "start_speaker": "agent",
+            "id": "start-node-1761124545638",
+            "type": "conversation",
+            "display_position": {
+                "x": 342,
+                "y": 433
+            }
+        },
+        {
+            "name": "End Call",
+            "id": "end-call-node-1761124545638",
+            "type": "end",
+            "display_position": {
+                "x": 742,
+                "y": 433
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Politely end the call"
+            }
+        }
+    ],
+    "start_node_id": "start-node-1761124545638",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4.1-nano",
+        "high_priority": false
+    },
+    "kb_config": {
+        "top_k": 3,
+        "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+        "x": 122,
+        "y": 333
+    },
+    "is_published": false
+}

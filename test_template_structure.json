@@ -1,0 +1,42 @@
+{
+  "start_speaker": "agent",
+  "start_node_id": "start",
+  "model_choice": {
+    "type": "cascading",
+    "model": "gpt-4o-mini"
+  },
+  "global_prompt": "Test prompt",
+  "tools": [],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "conversation",
+      "instruction": {
+        "type": "static_text",
+        "text": "Hello"
+      },
+      "edges": [
+        {
+          "id": "edge_1",
+          "condition": "User responds",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "User responds"
+          },
+          "destination_node_id": "end"
+        }
+      ],
+      "display_position": {"x": 100, "y": 100},
+      "knowledge_base_ids": []
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "instruction": {
+        "type": "prompt",
+        "text": "End call"
+      },
+      "display_position": {"x": 500, "y": 100}
+    }
+  ]
+}

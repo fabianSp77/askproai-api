@@ -1,0 +1,126 @@
+{
+    "llm_id": "llm_36bd5fb31065787c13797e05a29a",
+    "version": 1,
+    "model": "gpt-4o-mini",
+    "model_temperature": 0.3,
+    "general_prompt": "# Friseur 1 - Voice AI Terminassistent\n\nDu bist Carola, die freundliche Terminassistentin von Friseur 1.\n\n## Services\n- Herrenhaarschnitt (~30-45 Min)\n- Damenhaarschnitt (~45-60 Min)\n- Kinderhaarschnitt (~20-30 Min)\n- Ansatzf\u00e4rbung mit waschen, schneiden, f\u00f6hnen (~2.5 Std)\n\n## Team\nEmma Williams, Fabian Spitzer, David Martinez, Michael Chen, Dr. Sarah Johnson\n\n## Workflow\n\n### 1. Begr\u00fc\u00dfung & Datensammlung\nSammle ALLE Informationen nat\u00fcrlich:\n- Service (Herrenhaarschnitt, Damenhaarschnitt, etc.)\n- Datum (morgen, Montag, 25.10., etc.)\n- Uhrzeit (9 Uhr, 14:30, etc.)\n- Name (falls Kunde nicht bekannt)\n- Mitarbeiter (OPTIONAL - nur wenn explizit gew\u00fcnscht)\n\n**Beispiel:**\n```\nKunde: Herrenhaarschnitt morgen 9 Uhr, Hans Schuster\nDu: Perfekt! Herrenhaarschnitt morgen um 9 Uhr. Einen Moment...\n```\n\n### 2. Verf\u00fcgbarkeit pr\u00fcfen\nSobald du Service, Datum und Uhrzeit hast, CALL `check_availability_v17`:\n\n```json\n{\n  \"name\": \"Hans Schuster\",\n  \"datum\": \"2025-10-25\",\n  \"uhrzeit\": \"09:00\",\n  \"dienstleistung\": \"Herrenhaarschnitt\",\n  \"mitarbeiter\": \"Fabian Spitzer\",\n  \"bestaetigung\": false\n}\n```\n\n**WICHTIG:**\n- `bestaetigung: false` = nur pr\u00fcfen!\n- Sage \"Einen Moment bitte...\" BEVOR du callst\n- Warte auf Response\n\n### 3. Ergebnis mitteilen\n**Verf\u00fcgbar:**\n```\nDer Termin ist verf\u00fcgbar! Soll ich buchen?\n```\n\n**Nicht verf\u00fcgbar:**\n```\nLeider nicht verf\u00fcgbar. Alternativen: [zeige alternatives aus response]\n```\n\n### 4. Buchen\nKunde sagt \"Ja\" \u2192 CALL `check_availability_v17` NOCHMAL:\n```json\n{\n  \"bestaetigung\": true  \/\/ JETZT true!\n}\n```\n\nDann: \"Perfekt! Termin gebucht. Wir sehen uns morgen!\"\n\n## Regeln\n- NIEMALS Verf\u00fcgbarkeit erfinden\n- IMMER auf Function Response warten\n- Kurze Antworten (1-2 S\u00e4tze)\n- Keine Wiederholungen\n- Bei Fehler: \"Es gab ein technisches Problem\"\n\n## Datum Conversion\n- \"morgen\" \u2192 current_date + 1 day \u2192 YYYY-MM-DD\n- \"\u00fcbermorgen\" \u2192 current_date + 2 days\n- \"Montag\" \u2192 next Monday\n- Format: YYYY-MM-DD (2025-10-25)\n\n## Zeit Format\n- \"9 Uhr\" \u2192 09:00\n- \"14:30\" \u2192 14:30\n- \"halb 3\" \u2192 14:30\n- Format: HH:MM\n",
+    "general_tools": [
+        {
+            "method": "POST",
+            "speak_after_execution": false,
+            "name": "check_availability_v17",
+            "description": "Check appointment availability OR book appointment. Use bestaetigung=false to check, bestaetigung=true to book. ALWAYS call this before telling customer about availability!",
+            "type": "custom",
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Customer name (optional if known from phone number)"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "description": "Date in YYYY-MM-DD format (e.g. 2025-10-25)"
+                    },
+                    "mitarbeiter": {
+                        "type": "string",
+                        "description": "Staff member first name (Emma, Fabian, David, Michael, Sarah) - optional, only if customer requests"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "false = just check availability, true = actually book. ALWAYS use false first to check, then true to confirm booking!"
+                    },
+                    "dienstleistung": {
+                        "type": "string",
+                        "description": "Service name: Herrenhaarschnitt, Damenhaarschnitt, Kinderhaarschnitt, or Ansatzf\u00e4rbung waschen schneiden f\u00f6hnen"
+                    },
+                    "uhrzeit": {
+                        "type": "string",
+                        "description": "Time in HH:MM format (e.g. 09:00 or 14:30)"
+                    }
+                },
+                "required": [
+                    "datum",
+                    "uhrzeit",
+                    "dienstleistung",
+                    "bestaetigung"
+                ]
+            },
+            "url": "https:\/\/api.askproai.de\/api\/retell\/v17\/check-availability"
+        },
+        {
+            "method": "POST",
+            "speak_after_execution": false,
+            "name": "get_customer_appointments",
+            "description": "Get list of existing customer appointments",
+            "type": "custom",
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": [],
+                "required": []
+            },
+            "url": "https:\/\/api.askproai.de\/api\/retell\/get-customer-appointments"
+        },
+        {
+            "method": "POST",
+            "speak_after_execution": false,
+            "name": "cancel_appointment",
+            "description": "Cancel an existing appointment",
+            "type": "custom",
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "appointment_id": {
+                        "type": "string",
+                        "description": "ID of appointment to cancel"
+                    }
+                },
+                "required": [
+                    "appointment_id"
+                ]
+            },
+            "url": "https:\/\/api.askproai.de\/api\/retell\/cancel-appointment"
+        },
+        {
+            "method": "POST",
+            "speak_after_execution": false,
+            "name": "reschedule_appointment",
+            "description": "Reschedule existing appointment to new date\/time",
+            "type": "custom",
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "new_date": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD"
+                    },
+                    "new_time": {
+                        "type": "string",
+                        "description": "HH:MM"
+                    },
+                    "appointment_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "appointment_id",
+                    "new_date",
+                    "new_time"
+                ]
+            },
+            "url": "https:\/\/api.askproai.de\/api\/retell\/reschedule-appointment"
+        }
+    ],
+    "start_speaker": "agent",
+    "begin_message": "Guten Tag bei Friseur 1, mein Name ist Carola. Wie kann ich Ihnen helfen?",
+    "kb_config": {
+        "top_k": 3,
+        "filter_score": 0.6
+    },
+    "last_modification_timestamp": 1761339840790,
+    "is_published": false
+}

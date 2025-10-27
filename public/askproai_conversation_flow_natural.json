@@ -1,0 +1,280 @@
+{
+    "global_prompt": "# AskPro AI Terminbuchungs-Agent\n\n## Identität\nDu bist der freundliche Assistent von Ask Pro AI. Sprich natürlich, professionell und effizient auf Deutsch.\n\n## Kernregeln\n- Sprich natürlich und freundlich\n- Keine technischen Begriffe vorlesen\n- Nur Vornamen verwenden (kein Herr/Frau)\n- Bei Unsicherheit nachfragen\n- Kurze, klare Sätze\n\n## Automatisches Intent-Erkennung\nWährend der Begrüßung achte auf:\n- Buchungswunsch: \"Termin\", \"buchen\", \"reservieren\" → {{user_intent}} = \"book\"\n- Datum: \"Donnerstag\", \"morgen\", \"15.1\" → speichere in {{mentioned_date}}\n- Uhrzeit: \"13 Uhr\", \"vormittags\" → speichere in {{mentioned_time}}\n\n## Informationen wiederverwenden\nWenn der Kunde bereits Datum/Uhrzeit genannt hat:\n- NICHT nochmal fragen\n- Direkt verwenden: \"Für [Datum] um [Uhrzeit]\"\n- Nur fehlende Infos erfragen\n\n## V85 Race Condition Schutz\nBei neuen Buchungen:\n1. Erst prüfen (bestaetigung=false)\n2. Kunde bestätigen lassen\n3. Dann buchen (bestaetigung=true)\n\n## Natürliche Sprache\n- \"Gerne!\" statt \"Okay\"\n- \"Einen Moment bitte\" bei längeren Operationen\n- \"Schön Sie wiederzuhören\" bei bekannten Kunden",
+    "start_node_id": "node_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-customer",
+            "name": "check_customer",
+            "type": "custom",
+            "description": "Überprüft ob Kunde in Datenbank existiert",
+            "url": "https://api.askproai.de/api/retell/check-customer",
+            "timeout_ms": 4000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "phone_number": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        {
+            "tool_id": "tool-current-time-berlin",
+            "name": "current_time_berlin",
+            "type": "custom",
+            "description": "Holt aktuelles Datum und Uhrzeit in Berlin",
+            "url": "https://api.askproai.de/api/retell/current-time-berlin",
+            "timeout_ms": 4000
+        },
+        {
+            "tool_id": "tool-collect-appointment-data",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit oder bucht Termin",
+            "url": "https://api.askproai.de/api/retell/collect-appointment-data",
+            "timeout_ms": 8000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string"
+                    },
+                    "customer_phone": {
+                        "type": "string"
+                    },
+                    "customer_email": {
+                        "type": "string"
+                    },
+                    "service": {
+                        "type": "string"
+                    },
+                    "preferred_date": {
+                        "type": "string"
+                    },
+                    "preferred_time": {
+                        "type": "string"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "bestaetigung"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Guten Tag bei Ask Pro AI. Wie kann ich Ihnen helfen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_greeting_done",
+                    "condition": "Nach Begrüßung",
+                    "destination_node_id": "func_time_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User responded"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_time_check",
+            "name": "Zeit abrufen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_time_to_customer",
+                    "condition": "Zeit abgerufen",
+                    "destination_node_id": "func_customer_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-current-time-berlin",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "func_customer_check",
+            "name": "Kunde prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_customer_to_details",
+                    "condition": "Kunde geprüft",
+                    "destination_node_id": "node_ask_details",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-check-customer",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "node_ask_details",
+            "name": "Details erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Gerne! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?"
+            },
+            "edges": [
+                {
+                    "id": "edge_details_to_date",
+                    "condition": "Details erhalten",
+                    "destination_node_id": "node_ask_date",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Has customer details"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_ask_date",
+            "name": "Datum erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Für welches Datum und welche Uhrzeit möchten Sie den Termin?"
+            },
+            "edges": [
+                {
+                    "id": "edge_date_to_collect",
+                    "condition": "Datum erhalten",
+                    "destination_node_id": "func_collect_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Has date and time"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_collect_check",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_check_to_confirm",
+                    "condition": "Verfügbarkeit geprüft",
+                    "destination_node_id": "node_confirm_booking",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment-data",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_confirm_booking",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Sehr gut! Der Termin ist verfügbar. Soll ich diesen für Sie buchen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_confirm_yes",
+                    "condition": "Bestätigt",
+                    "destination_node_id": "func_collect_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User confirms"
+                    }
+                },
+                {
+                    "id": "edge_confirm_no",
+                    "condition": "Abgelehnt",
+                    "destination_node_id": "end_polite",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User declines"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_collect_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_book_to_success",
+                    "condition": "Gebucht",
+                    "destination_node_id": "end_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment-data",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "end_success",
+            "name": "Erfolg",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Gibt es noch etwas?"
+            },
+            "edges": []
+        },
+        {
+            "id": "end_polite",
+            "name": "Verabschiedung",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie doch noch einen Termin möchten, rufen Sie gerne wieder an. Auf Wiederhören!"
+            },
+            "edges": []
+        }
+    ]
+}

@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  STAGING ENVIRONMENT - SCHNELLZUGRIFF
+═══════════════════════════════════════════════════════════════
+
+🌐 CUSTOMER PORTAL
+──────────────────────────────────────────────────────────────
+URL:      https://staging.askproai.de/portal
+Email:    customer@staging.local
+Passwort: TestPass123!
+Rolle:    Company Owner (Company #366)
+
+
+🔧 ADMIN PANEL
+──────────────────────────────────────────────────────────────
+URL:      https://staging.askproai.de/admin
+Email:    admin@staging.local
+Passwort: AdminPass123!
+Rolle:    Super Admin
+
+
+💾 DATENBANK
+──────────────────────────────────────────────────────────────
+Host:     127.0.0.1:3306
+Database: askproai_staging
+User:     askproai_staging_user
+Password: St4g1ng_S3cur3_P@ssw0rd_2025
+
+CLI:      mysql -u askproai_staging_user -p'St4g1ng_S3cur3_P@ssw0rd_2025' askproai_staging
+
+
+🔌 EXTERNE APIS
+──────────────────────────────────────────────────────────────
+Cal.com:
+  API Key: cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da
+  
+Retell AI:
+  API Key: key_6ff998ba48e842092e04a5455d19
+
+
+📊 TEST-DATEN
+──────────────────────────────────────────────────────────────
+Company ID:     366 (Test Company Staging)
+Call Sessions:  50 (letzte 50 Tage)
+Users:          2 (admin + customer)
+
+
+🛠️ NÜTZLICHE BEFEHLE
+──────────────────────────────────────────────────────────────
+# Cache leeren:
+cd /var/www/api-gateway-staging
+php artisan config:clear
+php artisan route:clear
+sudo systemctl reload nginx
+
+# Logs anzeigen:
+tail -f /var/www/api-gateway/storage/logs/laravel.log
+tail -f /var/log/nginx/staging.askproai.de-access.log
+
+# Performance Test:
+php scripts/performance_test_indexes.php
+
+
+📖 VOLLSTÄNDIGE DOKUMENTATION
+──────────────────────────────────────────────────────────────
+Datei: /var/www/api-gateway/STAGING_TESTANLEITUNG.md
+
+Oder online:
+cat /var/www/api-gateway/STAGING_TESTANLEITUNG.md | less
+
+
+✅ STATUS
+──────────────────────────────────────────────────────────────
+Environment:        staging ✅
+SSL:               Valid bis 2025-11-29 ✅
+Database:          244 Tabellen ✅
+Performance:       3-12x schneller als Ziel ✅
+Login:             Getestet & funktioniert ✅
+
+
+═══════════════════════════════════════════════════════════════
+

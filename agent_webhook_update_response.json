@@ -1,0 +1,33 @@
+{
+    "agent_id": "agent_f1ce85d06a84afb989dfbb16a9",
+    "channel": "voice",
+    "last_modification_timestamp": 1761298799845,
+    "agent_name": "Conversation Flow Agent Friseur 1",
+    "response_engine": {
+        "type": "conversation-flow",
+        "version": 43,
+        "conversation_flow_id": "conversation_flow_1607b81c8f93"
+    },
+    "webhook_url": "https:\/\/api.askproai.de\/api\/webhooks\/retell",
+    "webhook_timeout_ms": 10000,
+    "language": "de-DE",
+    "opt_out_sensitive_data_storage": false,
+    "data_storage_setting": "everything",
+    "opt_in_signed_url": false,
+    "version": 43,
+    "is_published": false,
+    "version_title": "V39 Flow Canvas Fix - check_availability edges added",
+    "post_call_analysis_model": "gpt-4o-mini",
+    "pii_config": {
+        "mode": "post_call",
+        "categories": []
+    },
+    "voice_id": "11labs-Carola",
+    "voice_temperature": 0.02,
+    "voice_speed": 1,
+    "volume": 1,
+    "max_call_duration_ms": 3600000,
+    "interruption_sensitivity": 0.9,
+    "allow_user_dtmf": true,
+    "user_dtmf_options": []
+}

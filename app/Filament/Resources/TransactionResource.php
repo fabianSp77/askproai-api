@@ -21,7 +21,21 @@ use Carbon\Carbon;
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
-    
+
+    /**
+     * Resource disabled - transactions table doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false; // Prevents all access to this resource
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Transaktionen';
     protected static ?string $navigationGroup = 'Abrechnung';

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Tools Anleitung - Alle 6 Tools</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .tool {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 6px solid;
+        }
+        .tool.p0 { border-color: #dc3545; }
+        .tool.p1 { border-color: #fd7e14; }
+        .tool.p2 { border-color: #ffc107; }
+        .tool h2 { margin-bottom: 15px; color: #667eea; }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+            color: white;
+        }
+        .badge-p0 { background: #dc3545; }
+        .badge-p1 { background: #fd7e14; }
+        .badge-p2 { background: #ffc107; color: #333; }
+        .field {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .field-value {
+            background: #f8f9fa;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        .json-value {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin-bottom: 10px;
+        }
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover { background: #764ba2; transform: translateY(-2px); }
+        .copy-btn.copied { background: #28a745; }
+        .alert {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Retell.ai Tools</h1>
+            <p style="font-size: 1.2em;">Komplette Anleitung - Alle 6 Tools</p>
+        </div>
+
+        <div class="content">
+            <div class="alert">
+                <strong style="font-size: 1.2em;">⚡ Schnellstart:</strong>
+                <p style="margin-top: 10px;">
+                    Erstelle NUR die ersten 2 Tools (P0) und teste sofort!<br>
+                    Die restlichen 4 Tools kannst du später hinzufügen.
+                </p>
+            </div>
+
+            <div style="background: #e7f3ff; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+                <h3 style="color: #004085; margin-bottom: 15px;">📝 Anleitung:</h3>
+                <ol style="margin-left: 25px; line-height: 2;">
+                    <li>Gehe zu: <code>https://dashboard.retellai.com</code></li>
+                    <li>Login → Finde "Tools" oder "Custom Tools"</li>
+                    <li>Für jedes Tool unten: Klicke "Create Tool" oder "+ New Tool"</li>
+                    <li>Kopiere die Werte mit den Buttons und füge sie ein</li>
+                    <li>Speichern nicht vergessen!</li>
+                </ol>
+            </div>
+
+            <!-- TOOL 1 -->
+            <div class="tool p0">
+                <h2>
+                    Tool 1: check_availability_v17
+                    <span class="badge badge-p0">🔴 P0 CRITICAL</span>
+                </h2>
+                <p style="margin-bottom: 15px; color: #dc3545; font-weight: bold;">
+                    ⚠️ OHNE DIESES TOOL FUNKTIONIERT GAR NICHTS!
+                </p>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n1">check_availability_v17</div>
+                    <button class="copy-btn" onclick="copy('n1', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Type:</span>
+                    <div class="field-value">Custom Function (im Dropdown wählen)</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u1">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u1', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d1">Prüft die Verfügbarkeit für einen bestimmten Termin</div>
+                    <button class="copy-btn" onclick="copy('d1', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">✅ JA - Checkbox ANKREUZEN!</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p1">{"type":"object","properties":{"datum":{"type":"string","description":"Datum im Format TT.MM.JJJJ"},"uhrzeit":{"type":"string","description":"Uhrzeit im Format HH:MM"},"dienstleistung":{"type":"string","description":"Name der Dienstleistung"}},"required":["datum","uhrzeit","dienstleistung"]}</div>
+                    <button class="copy-btn" onclick="copy('p1', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <!-- TOOL 2 -->
+            <div class="tool p0">
+                <h2>
+                    Tool 2: book_appointment_v17
+                    <span class="badge badge-p0">🔴 P0 CRITICAL</span>
+                </h2>
+                <p style="margin-bottom: 15px; color: #dc3545; font-weight: bold;">
+                    ⚠️ OHNE DIESES TOOL KANN NICHT GEBUCHT WERDEN!
+                </p>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n2">book_appointment_v17</div>
+                    <button class="copy-btn" onclick="copy('n2', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Type:</span>
+                    <div class="field-value">Custom Function</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u2">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u2', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d2">Bucht einen bestätigten Termin für den Kunden</div>
+                    <button class="copy-btn" onclick="copy('d2', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">✅ JA - Checkbox ANKREUZEN!</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p2">{"type":"object","properties":{"name":{"type":"string","description":"Vollständiger Name"},"datum":{"type":"string","description":"Datum TT.MM.JJJJ"},"uhrzeit":{"type":"string","description":"Uhrzeit HH:MM"},"dienstleistung":{"type":"string","description":"Dienstleistung"},"telefonnummer":{"type":"string","description":"Telefonnummer"},"bestaetigung":{"type":"boolean","description":"Bestätigung"}},"required":["name","datum","uhrzeit","dienstleistung"]}</div>
+                    <button class="copy-btn" onclick="copy('p2', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <div class="success">
+                <h3 style="color: #155724; margin-bottom: 15px;">🎉 Nach den ersten 2 Tools...</h3>
+                <p style="color: #155724; font-size: 1.1em;">
+                    ...funktioniert dein Agent bereits! Du kannst jetzt testen.<br>
+                    Die restlichen 4 Tools kannst du später hinzufügen.
+                </p>
+            </div>
+
+            <!-- TOOL 3 -->
+            <div class="tool p1">
+                <h2>
+                    Tool 3: get_alternatives
+                    <span class="badge badge-p1">🟠 P1 WICHTIG</span>
+                </h2>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n3">get_alternatives</div>
+                    <button class="copy-btn" onclick="copy('n3', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u3">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u3', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d3">Findet alternative Termine wenn der Wunschtermin nicht frei ist</div>
+                    <button class="copy-btn" onclick="copy('d3', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">❌ NEIN</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p3">{"type":"object","properties":{"datum":{"type":"string","description":"Gewünschtes Datum TT.MM.JJJJ"},"dienstleistung":{"type":"string","description":"Dienstleistung"}},"required":["datum","dienstleistung"]}</div>
+                    <button class="copy-btn" onclick="copy('p3', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <!-- TOOL 4 -->
+            <div class="tool p1">
+                <h2>
+                    Tool 4: get_appointments
+                    <span class="badge badge-p1">🟠 P1 WICHTIG</span>
+                </h2>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n4">get_appointments</div>
+                    <button class="copy-btn" onclick="copy('n4', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u4">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u4', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d4">Ruft die Termine eines Kunden ab</div>
+                    <button class="copy-btn" onclick="copy('d4', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">❌ NEIN</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p4">{"type":"object","properties":{"telefonnummer":{"type":"string","description":"Telefonnummer"}}}</div>
+                    <button class="copy-btn" onclick="copy('p4', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <!-- TOOL 5 -->
+            <div class="tool p2">
+                <h2>
+                    Tool 5: reschedule_appointment
+                    <span class="badge badge-p2">🟡 P2 OPTIONAL</span>
+                </h2>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n5">reschedule_appointment</div>
+                    <button class="copy-btn" onclick="copy('n5', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u5">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u5', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d5">Verschiebt einen existierenden Termin</div>
+                    <button class="copy-btn" onclick="copy('d5', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">✅ JA</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p5">{"type":"object","properties":{"neue_datum":{"type":"string","description":"Neues Datum TT.MM.JJJJ"},"neue_uhrzeit":{"type":"string","description":"Neue Uhrzeit HH:MM"},"bestaetigung":{"type":"boolean","description":"Bestätigung"}},"required":["neue_datum","neue_uhrzeit"]}</div>
+                    <button class="copy-btn" onclick="copy('p5', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <!-- TOOL 6 -->
+            <div class="tool p2">
+                <h2>
+                    Tool 6: cancel_appointment
+                    <span class="badge badge-p2">🟡 P2 OPTIONAL</span>
+                </h2>
+
+                <div class="field">
+                    <span class="field-label">Name:</span>
+                    <div class="field-value" id="n6">cancel_appointment</div>
+                    <button class="copy-btn" onclick="copy('n6', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">URL:</span>
+                    <div class="field-value" id="u6">https://api.askproai.de/api/webhooks/retell/function</div>
+                    <button class="copy-btn" onclick="copy('u6', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Description:</span>
+                    <div class="field-value" id="d6">Storniert einen existierenden Termin</div>
+                    <button class="copy-btn" onclick="copy('d6', this)">📋 Kopieren</button>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Speak During Execution:</span>
+                    <div class="field-value">✅ JA</div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Parameters (JSON):</span>
+                    <div class="json-value" id="p6">{"type":"object","properties":{"datum":{"type":"string","description":"Datum TT.MM.JJJJ"},"grund":{"type":"string","description":"Grund (optional)"}}}</div>
+                    <button class="copy-btn" onclick="copy('p6', this)">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <div class="success" style="margin-top: 40px;">
+                <h2 style="color: #155724; margin-bottom: 15px;">🚀 Fertig? Teste jetzt!</h2>
+                <p style="color: #155724; font-size: 1.2em;">
+                    Rufe an: <strong>+493033081738</strong><br>
+                    Sage: "Ich möchte einen Termin für Herrenhaarschnitt heute um 11 Uhr"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copy(id, btn) {
+            const el = document.getElementById(id);
+            const text = el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = '✅ Kopiert!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = orig;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

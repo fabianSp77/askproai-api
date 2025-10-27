@@ -1,0 +1,198 @@
+LIVEWIRE SERIALIZATION ERROR - ROOT CAUSE SUMMARY
+================================================================================
+
+ERROR ID: mHBsqtYltg4NeW1xK6eH (CustomerActivityTimeline widget)
+DATE: 2025-10-22
+SEVERITY: CRITICAL
+
+================================================================================
+WHAT IS FAILING
+================================================================================
+
+When user clicks relation manager tab (Anrufe, Termine, Notizen):
+  Browser: "Uncaught Snapshot missing on Livewire component with id: mHBsqtYltg4NeW1xK6eH"
+  Result: Footer widgets disappear, relation manager becomes unresponsive
+
+================================================================================
+WHY IT'S FAILING
+================================================================================
+
+ROOT CAUSE: PHP closures in header actions cannot be serialized by Livewire
+
+When relation manager tab changes:
+  1. Alpine.js calls: $wire.$set('activeRelationManager', '1')
+  2. Livewire must serialize ALL component state
+  3. Header actions contain closures (function () { ... })
+  4. PHP cannot serialize closures
+  5. Serialization fails, component snapshot corrupts
+  6. Livewire loses track of component ID
+  7. Footer widget (CustomerActivityTimeline) becomes orphaned
+  8. Error: "Snapshot missing"
+
+================================================================================
+WHICH CLOSURES ARE THE PROBLEM
+================================================================================
+
+PRIMARY CULPRIT (CRITICAL):
+  ✗ ViewCustomer.php line 120: modalDescription(function () use ($duplicate) { ... })
+  ✗ ViewCustomer.php line 132: action(function () use ($duplicate) { ... })
+  → These capture Customer model instances which are non-serializable
+  → Multiple instances (loop through duplicates)
+  → Part of page header actions = part of page state = must serialize on any state change
+
+SECONDARY CULPRITS (HIGH):
+  ✗ ViewCustomer.php line 56: action(function (array $data) { ... }) for addEmail
+  ✗ ViewCustomer.php line 77: action(function (array $data) { ... }) for addNote
+  → Close over $this (the page)
+  → Part of serializable state
+
+TERTIARY CULPRITS (HIGH):
+  ✗ AppointmentsRelationManager.php line 264: action(function () { ... }) for viewFailedCalls
+  ✗ CustomerRiskAlerts.php line 118: action(function ($record, array $data) { ... }) for contact
+  ✗ CustomerRiskAlerts.php line 136: action(function ($record) { ... }) for win_back
+  → Relation manager and widget actions
+  → Serialize during relation manager tab switch
+
+SAFE (arrow functions don't have the same issues):
+  ✓ AppointmentsRelationManager.php line 186: action(fn ($record) => ...)
+  ✓ AppointmentsRelationManager.php line 193: action(fn ($record) => ...)
+  ✓ AppointmentsRelationManager.php line 203: action(fn ($records) => ...)
+
+================================================================================
+WHY PREVIOUS FIXES FAILED
+================================================================================
+
+Fix #1 - Model Accessors (booking_status): INCOMPLETE
+  ✗ Only fixed CallsRelationManager column closure
+  ✗ Doesn't address header action closures (the primary cause)
+  ✗ Footer widgets still fail because parent state still corrupted
+
+Fix #2 - JavaScript Guard Pattern: INSUFFICIENT
+  ✓ Prevents JavaScript error about "filterTimeline is not defined"
+  ✓ Does NOT prevent component serialization failure
+  ✓ Livewire snapshot still corrupts
+
+Fix #3 - Cache Clearing: WRONG APPROACH
+  ✗ Livewire snapshot issue isn't about compiled views
+  ✗ It's about runtime PHP object serialization
+  ✗ Cache clearing doesn't help with serialization
+
+================================================================================
+COMPONENT DEPENDENCY CHAIN
+================================================================================
+
+ViewCustomer Page (Livewire Component)
+  ├─ Header Actions (contain closures) ← BLOCKS SERIALIZATION
+  ├─ Header Widgets
+  └─ Footer Widgets (CustomerActivityTimeline) ← DEPENDS ON PARENT STATE
+
+When user clicks relation manager tab:
+  1. Filament reactive system tries to update activeRelationManager state
+  2. ViewCustomer component must serialize ALL its data (including header actions)
+  3. Serialization hits closures and fails
+  4. Component state snapshot becomes invalid
+  5. Livewire can't render footer widgets (invalid parent reference)
+  6. Result: "Snapshot missing" error for mHBsqtYltg4NeW1xK6eH
+
+================================================================================
+KEY INSIGHT
+================================================================================
+
+The problem is NOT that closures exist in the code.
+The problem is that closures are part of Livewire component state.
+
+Filament header actions become part of the page component's serializable state.
+When reactive state changes (tab switch), Livewire must serialize ALL state.
+Closures cannot serialize.
+Serialization fails.
+Child components lose reference.
+Error.
+
+================================================================================
+SOLUTION REQUIRED
+================================================================================
+
+Remove ALL closures from ViewCustomer header actions:
+
+  Current (BROKEN):
+    ->action(function () use ($duplicate) { ... })
+
+  Fixed (SAFE):
+    ->action(fn () => redirect(...))
+    or
+    #[On('mergeDuplicate')]
+    public function mergeDuplicate($duplicateId) { ... }
+
+Extract closures to:
+  1. Arrow functions (fn () => ...)
+  2. Livewire lifecycle methods (#[On(...)])
+  3. Separate class methods
+
+Also fix:
+  - AppointmentsRelationManager action closures
+  - CustomerRiskAlerts action closures
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+Pre-Fix:
+  [ ] Navigate to Customer view page → Works
+  [ ] Click relation manager tab → FAILS with "Snapshot missing" error
+  [ ] Check DevTools console → Shows component ID error
+
+Post-Fix:
+  [ ] Navigate to Customer view page → Works
+  [ ] Click each relation manager tab → NO ERRORS
+  [ ] Footer widgets visible → YES
+  [ ] Click action buttons → All work
+  [ ] Form submissions → All work
+  [ ] Browser incognito mode → No errors
+  [ ] DevTools console → Clean (no serialization warnings)
+
+================================================================================
+FILES TO MODIFY
+================================================================================
+
+1. /var/www/api-gateway/app/Filament/Resources/CustomerResource/Pages/ViewCustomer.php
+   - Lines 56-62: addEmail action
+   - Lines 77-88: addNote action
+   - Lines 114-142: merge actions with use($duplicate)
+
+2. /var/www/api-gateway/app/Filament/Resources/CustomerResource/RelationManagers/AppointmentsRelationManager.php
+   - Lines 264-267: viewFailedCalls action
+
+3. /var/www/api-gateway/app/Filament/Resources/CustomerResource/Widgets/CustomerRiskAlerts.php
+   - Lines 118-130: contact action
+   - Lines 136-147: win_back action
+
+================================================================================
+DOCUMENTATION FILES CREATED
+================================================================================
+
+1. RCA_LIVEWIRE_PERSISTENCE_ROOT_CAUSE.md
+   → Detailed technical analysis
+   → Includes serialization behavior explanation
+   → Component dependency chain diagram
+
+2. CLOSURE_INVENTORY_COMPLETE.md
+   → Complete inventory of all closures
+   → Fix mapping for each one
+   → Code snippets for reference
+
+3. ROOT_CAUSE_SUMMARY.txt (this file)
+   → Quick reference guide
+   → Key insights
+   → File locations to modify
+
+================================================================================
+IMMEDIATE NEXT STEPS
+================================================================================
+
+1. Read RCA_LIVEWIRE_PERSISTENCE_ROOT_CAUSE.md for full context
+2. Review CLOSURE_INVENTORY_COMPLETE.md for exact locations
+3. Implement fixes starting with ViewCustomer.php (highest priority)
+4. Test after each fix
+5. Commit incremental fixes with clear messages
+
+================================================================================

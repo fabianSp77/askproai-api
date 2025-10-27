@@ -48,47 +48,56 @@ class CompanyResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('viewAny', static::getModel());
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('viewAny', static::getModel());
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create', static::getModel());
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('create', static::getModel());
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()->can('update', $record);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('update', $record);
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()->can('delete', $record);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('delete', $record);
     }
 
     public static function canDeleteAny(): bool
     {
-        return auth()->user()->hasRole(['admin']);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->hasRole(['admin']);
     }
 
     public static function canForceDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()->can('forceDelete', $record);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('forceDelete', $record);
     }
 
     public static function canForceDeleteAny(): bool
     {
-        return auth()->user()->hasRole(['super_admin']);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->hasRole(['super_admin']);
     }
 
     public static function canRestore(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()->can('restore', $record);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->can('restore', $record);
     }
 
     public static function canRestoreAny(): bool
     {
-        return auth()->user()->hasRole(['admin']);
+        $user = auth()->guard('admin')->user();
+        return $user && $user->hasRole(['admin']);
     }
 
     public static function form(Form $form): Form

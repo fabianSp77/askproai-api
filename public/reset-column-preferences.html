@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Filament Column Preferences</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .button {
+            background: #3B82F6;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover {
+            background: #2563EB;
+        }
+        .success {
+            background: #10B981;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+        .info {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Filament Column Preferences Reset</h1>
+
+    <div class="info">
+        <strong>Was macht dieses Tool?</strong>
+        <p>Filament speichert deine Spalten-Sichtbarkeitseinstellungen im Browser LocalStorage.
+        Wenn eine Spalte ausgeblendet wurde, bleibt sie auch nach Code-Änderungen versteckt.</p>
+        <p>Dieser Reset löscht alle gespeicherten Spalten-Einstellungen für die Call Monitoring Tabelle.</p>
+    </div>
+
+    <h2>Aktuelle LocalStorage Einträge:</h2>
+    <div id="current-storage" style="background: #F3F4F6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p>Lade LocalStorage Einträge...</p>
+    </div>
+
+    <button class="button" onclick="resetColumnPreferences()">
+        🔄 Spalten-Einstellungen zurücksetzen
+    </button>
+
+    <button class="button" onclick="clearAllFilament()">
+        🗑️ Alle Filament-Einstellungen löschen
+    </button>
+
+    <div id="success" class="success">
+        ✓ Einstellungen erfolgreich zurückgesetzt! Bitte lade die Call Monitoring Seite neu.
+    </div>
+
+    <div class="info" style="margin-top: 30px;">
+        <strong>Nächste Schritte:</strong>
+        <ol>
+            <li>Klicke auf "Spalten-Einstellungen zurücksetzen"</li>
+            <li>Öffne die <a href="/admin/calls" target="_blank">Call Monitoring Seite</a></li>
+            <li>Mache einen Hard Reload: <code>Ctrl + Shift + R</code> (Windows) oder <code>Cmd + Shift + R</code> (Mac)</li>
+            <li>Die Telefon-Spalte sollte jetzt sichtbar sein</li>
+        </ol>
+    </div>
+
+    <script>
+        function displayCurrentStorage() {
+            const storageDiv = document.getElementById('current-storage');
+            const keys = Object.keys(localStorage);
+            const filamentKeys = keys.filter(k => k.includes('filament') || k.includes('table'));
+
+            if (filamentKeys.length === 0) {
+                storageDiv.innerHTML = '<p style="color: #6B7280;">Keine Filament-Einträge im LocalStorage gefunden.</p>';
+            } else {
+                let html = '<strong>Gefundene Filament-Einträge:</strong><ul>';
+                filamentKeys.forEach(key => {
+                    html += `<li><code>${key}</code></li>`;
+                });
+                html += '</ul>';
+                storageDiv.innerHTML = html;
+            }
+        }
+
+        function resetColumnPreferences() {
+            let removed = 0;
+            const keys = Object.keys(localStorage);
+
+            // Remove all keys related to table columns
+            keys.forEach(key => {
+                if (key.includes('tableColumnToggles') ||
+                    key.includes('RetellCallSession') ||
+                    key.includes('table') && key.includes('column')) {
+                    localStorage.removeItem(key);
+                    removed++;
+                }
+            });
+
+            console.log(`Removed ${removed} column preference entries`);
+
+            document.getElementById('success').style.display = 'block';
+            displayCurrentStorage();
+
+            setTimeout(() => {
+                document.getElementById('success').style.display = 'none';
+            }, 5000);
+        }
+
+        function clearAllFilament() {
+            let removed = 0;
+            const keys = Object.keys(localStorage);
+
+            keys.forEach(key => {
+                if (key.includes('filament') || key.includes('livewire')) {
+                    localStorage.removeItem(key);
+                    removed++;
+                }
+            });
+
+            console.log(`Removed ${removed} Filament entries`);
+
+            document.getElementById('success').innerHTML =
+                `✓ ${removed} Filament-Einträge gelöscht! Bitte lade die Call Monitoring Seite neu.`;
+            document.getElementById('success').style.display = 'block';
+            displayCurrentStorage();
+
+            setTimeout(() => {
+                document.getElementById('success').style.display = 'none';
+            }, 5000);
+        }
+
+        // Display current storage on load
+        displayCurrentStorage();
+    </script>
+</body>
+</html>

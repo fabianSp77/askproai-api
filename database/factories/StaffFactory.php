@@ -18,7 +18,7 @@ class StaffFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => (string) Str::uuid(),
+            // id is auto-increment, not UUID
             'company_id' => Company::factory(),
             'branch_id' => null,
             'name' => $this->faker->name(),

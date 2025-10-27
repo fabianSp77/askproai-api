@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell.ai Tools Erstellen - Schritt-für-Schritt Anleitung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 30px;
+            border-radius: 5px;
+        }
+        
+        .alert strong {
+            color: #856404;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .step p {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .tool-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .tool-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .priority-badge {
+            background: #dc3545;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .copy-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px dashed #667eea;
+        }
+        
+        .copy-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1.1em;
+        }
+        
+        .copy-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .copy-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .copy-button:active {
+            transform: translateY(0);
+        }
+        
+        .copy-button.copied {
+            background: #28a745;
+        }
+        
+        .screenshot {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .screenshot-placeholder {
+            background: #e9ecef;
+            padding: 40px;
+            text-align: center;
+            border-radius: 5px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .success-box h3 {
+            color: #155724;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        
+        .success-box p {
+            color: #155724;
+            font-size: 1.2em;
+        }
+        
+        .url-highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            border: 2px solid #ffc107;
+        }
+        
+        .tips-box {
+            background: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .tips-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+        
+        .tips-box ul {
+            margin-left: 20px;
+            color: #0c5460;
+        }
+        
+        .tips-box li {
+            margin: 8px 0;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 3px solid #667eea;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+        
+        .json-preview {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .json-key { color: #61afef; }
+        .json-string { color: #98c379; }
+        .json-number { color: #d19a66; }
+        .json-boolean { color: #c678dd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Retell.ai Tools Erstellen</h1>
+            <p>Schritt-für-Schritt Anleitung für Anfänger</p>
+        </div>
+        
+        <div class="alert">
+            <strong>⚡ WICHTIG:</strong> Dein Voice Agent funktioniert aktuell NICHT, weil die Tools fehlen. 
+            Mit dieser Anleitung kannst du das in 10-15 Minuten selbst beheben - kein technisches Wissen nötig!
+        </div>
+        
+        <div class="content">
+            
+            <!-- SCHRITT 1 -->
+            <div class="step">
+                <div class="step-number">1</div>
+                <h2>Login ins Retell Dashboard</h2>
+                <p>Öffne deinen Browser und gehe zu:</p>
+                <div class="url-highlight">
+                    https://dashboard.retellai.com
+                </div>
+                <p>Logge dich mit deinen Retell.ai Zugangsdaten ein.</p>
+            </div>
+            
+            <!-- SCHRITT 2 -->
+            <div class="step">
+                <div class="step-number">2</div>
+                <h2>Zum Tools Bereich navigieren</h2>
+                <p>Nach dem Login siehst du das Dashboard. Suche in der linken Navigation nach einem dieser Menüpunkte:</p>
+                <ul style="margin-left: 40px; font-size: 1.1em; line-height: 2;">
+                    <li><strong>"Tools"</strong> (direkt in der Sidebar)</li>
+                    <li><strong>"Settings → Tools"</strong></li>
+                    <li><strong>Oder gehe zu deinem Agent → Tab "Tools"</strong></li>
+                </ul>
+                <div class="tips-box">
+                    <h4>💡 Tipp:</h4>
+                    <ul>
+                        <li>Wenn du "Tools" nicht sofort siehst, klicke auf deinen Agent "Conversation Flow Agent Friseur 1"</li>
+                        <li>Dort findest du einen Tab oder Button "Tools" oder "Custom Tools"</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- SCHRITT 3 -->
+            <div class="step">
+                <div class="step-number">3</div>
+                <h2>Erstes Tool erstellen: check_availability_v17</h2>
+                <p>Klicke auf den Button <strong>"Create Tool"</strong> oder <strong>"+ New Tool"</strong></p>
+                
+                <div class="tool-card">
+                    <h3>
+                        Tool 1: check_availability_v17 
+                        <span class="priority-badge">🔥 PRIORITY 1</span>
+                    </h3>
+                    <p style="color: #dc3545; font-weight: bold; margin-bottom: 20px;">
+                        ⚠️ Ohne dieses Tool kann der Agent KEINE Verfügbarkeit prüfen!
+                    </p>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📝 Tool Name:</span>
+                        <div class="copy-box" id="name1">check_availability_v17</div>
+                        <button class="copy-button" onclick="copyToClipboard('name1', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🌐 Tool Type:</span>
+                        <div class="copy-box" id="type1">Custom Function</div>
+                        <p style="margin-top: 10px; color: #6c757d;">👉 Wähle im Dropdown: <strong>Custom Function</strong></p>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🔗 URL:</span>
+                        <div class="copy-box" id="url1">https://api.askproai.de/api/webhooks/retell/function</div>
+                        <button class="copy-button" onclick="copyToClipboard('url1', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📄 Description (Beschreibung):</span>
+                        <div class="copy-box" id="desc1">Prüft die Verfügbarkeit für einen bestimmten Termin mit Datum, Uhrzeit und Dienstleistung</div>
+                        <button class="copy-button" onclick="copyToClipboard('desc1', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🗣️ Speak During Execution:</span>
+                        <div class="copy-box">✅ AKTIVIEREN (Checkbox ankreuzen!)</div>
+                        <p style="margin-top: 10px; color: #6c757d;">
+                            👉 Das sorgt dafür, dass der Agent "Einen Moment bitte..." sagt während er die Verfügbarkeit prüft
+                        </p>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">⚙️ Parameters (JSON):</span>
+                        <p style="color: #6c757d; margin-bottom: 10px;">Kopiere diesen KOMPLETTEN JSON-Block:</p>
+                        <div class="json-preview" id="params1">{
+  "type": "object",
+  "properties": {
+    "datum": {
+      "type": "string",
+      "description": "Datum im Format TT.MM.JJJJ (z.B. 24.10.2025)"
+    },
+    "uhrzeit": {
+      "type": "string",
+      "description": "Uhrzeit im Format HH:MM (z.B. 11:00)"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Name der gewünschten Dienstleistung (z.B. Herrenhaarschnitt)"
+    }
+  },
+  "required": ["datum", "uhrzeit", "dienstleistung"]
+}</div>
+                        <button class="copy-button" onclick="copyToClipboard('params1', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="tips-box">
+                        <h4>✅ Checkliste - Alles ausgefüllt?</h4>
+                        <ul>
+                            <li>✓ Name: check_availability_v17</li>
+                            <li>✓ Type: Custom Function</li>
+                            <li>✓ URL: https://api.askproai.de/api/webhooks/retell/function</li>
+                            <li>✓ Description: ausgefüllt</li>
+                            <li>✓ Speak During Execution: ✅ ANGEKREUZT</li>
+                            <li>✓ Parameters: JSON eingefügt</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #28a745;">
+                        Jetzt auf <strong>"Save"</strong> oder <strong>"Create Tool"</strong> klicken!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- SCHRITT 4 -->
+            <div class="step">
+                <div class="step-number">4</div>
+                <h2>Zweites Tool erstellen: book_appointment_v17</h2>
+                <p>Klicke wieder auf <strong>"Create Tool"</strong> oder <strong>"+ New Tool"</strong></p>
+                
+                <div class="tool-card">
+                    <h3>
+                        Tool 2: book_appointment_v17
+                        <span class="priority-badge">🔥 PRIORITY 2</span>
+                    </h3>
+                    <p style="color: #dc3545; font-weight: bold; margin-bottom: 20px;">
+                        ⚠️ Ohne dieses Tool kann der Agent KEINE Termine buchen!
+                    </p>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📝 Tool Name:</span>
+                        <div class="copy-box" id="name2">book_appointment_v17</div>
+                        <button class="copy-button" onclick="copyToClipboard('name2', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🌐 Tool Type:</span>
+                        <div class="copy-box" id="type2">Custom Function</div>
+                        <p style="margin-top: 10px; color: #6c757d;">👉 Wähle im Dropdown: <strong>Custom Function</strong></p>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🔗 URL:</span>
+                        <div class="copy-box" id="url2">https://api.askproai.de/api/webhooks/retell/function</div>
+                        <button class="copy-button" onclick="copyToClipboard('url2', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📄 Description:</span>
+                        <div class="copy-box" id="desc2">Bucht einen bestätigten Termin für den Kunden</div>
+                        <button class="copy-button" onclick="copyToClipboard('desc2', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🗣️ Speak During Execution:</span>
+                        <div class="copy-box">✅ AKTIVIEREN (Checkbox ankreuzen!)</div>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">⚙️ Parameters (JSON):</span>
+                        <div class="json-preview" id="params2">{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Vollständiger Name des Kunden"
+    },
+    "datum": {
+      "type": "string",
+      "description": "Datum im Format TT.MM.JJJJ"
+    },
+    "uhrzeit": {
+      "type": "string",
+      "description": "Uhrzeit im Format HH:MM"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Name der gewünschten Dienstleistung"
+    },
+    "telefonnummer": {
+      "type": "string",
+      "description": "Telefonnummer des Kunden"
+    }
+  },
+  "required": ["name", "datum", "uhrzeit", "dienstleistung"]
+}</div>
+                        <button class="copy-button" onclick="copyToClipboard('params2', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <p style="margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #28a745;">
+                        Auf <strong>"Save"</strong> klicken!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- SCHRITT 5 -->
+            <div class="step">
+                <div class="step-number">5</div>
+                <h2>Drittes Tool erstellen: get_alternatives</h2>
+                <p>Klicke wieder auf <strong>"Create Tool"</strong></p>
+                
+                <div class="tool-card">
+                    <h3>Tool 3: get_alternatives</h3>
+                    <p style="color: #17a2b8; font-weight: bold; margin-bottom: 20px;">
+                        💡 Dieses Tool bietet alternative Termine an, wenn der Wunschtermin nicht verfügbar ist
+                    </p>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📝 Tool Name:</span>
+                        <div class="copy-box" id="name3">get_alternatives</div>
+                        <button class="copy-button" onclick="copyToClipboard('name3', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🌐 Tool Type:</span>
+                        <div class="copy-box" id="type3">Custom Function</div>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🔗 URL:</span>
+                        <div class="copy-box" id="url3">https://api.askproai.de/api/webhooks/retell/function</div>
+                        <button class="copy-button" onclick="copyToClipboard('url3', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">📄 Description:</span>
+                        <div class="copy-box" id="desc3">Findet alternative verfügbare Termine wenn der Wunschtermin nicht frei ist</div>
+                        <button class="copy-button" onclick="copyToClipboard('desc3', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">🗣️ Speak During Execution:</span>
+                        <div class="copy-box">❌ NICHT aktivieren (bei diesem Tool)</div>
+                    </div>
+                    
+                    <div class="copy-section">
+                        <span class="copy-label">⚙️ Parameters (JSON):</span>
+                        <div class="json-preview" id="params3">{
+  "type": "object",
+  "properties": {
+    "datum": {
+      "type": "string",
+      "description": "Gewünschtes Datum im Format TT.MM.JJJJ"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Name der Dienstleistung"
+    }
+  },
+  "required": ["datum", "dienstleistung"]
+}</div>
+                        <button class="copy-button" onclick="copyToClipboard('params3', this)">📋 Kopieren</button>
+                    </div>
+                    
+                    <p style="margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #28a745;">
+                        Auf <strong>"Save"</strong> klicken!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- SCHRITT 6 -->
+            <div class="step">
+                <div class="step-number">6</div>
+                <h2>Tools dem Agent zuweisen</h2>
+                <p>Jetzt müssen die erstellten Tools deinem Agent zugewiesen werden:</p>
+                
+                <div class="tips-box">
+                    <h4>📌 So geht's:</h4>
+                    <ul>
+                        <li>Gehe zu deinem Agent: <strong>"Conversation Flow Agent Friseur 1"</strong></li>
+                        <li>Suche nach einem Bereich <strong>"Tools"</strong> oder <strong>"Attached Tools"</strong></li>
+                        <li>Klicke auf <strong>"Add Tool"</strong> oder <strong>"Attach Tool"</strong></li>
+                        <li>Wähle alle 3 Tools aus:
+                            <ul style="margin-top: 10px;">
+                                <li>✅ check_availability_v17</li>
+                                <li>✅ book_appointment_v17</li>
+                                <li>✅ get_alternatives</li>
+                            </ul>
+                        </li>
+                        <li>Klicke auf <strong>"Save"</strong> oder <strong>"Update Agent"</strong></li>
+                    </ul>
+                </div>
+                
+                <div class="alert" style="margin: 20px 0;">
+                    <strong>⚠️ WICHTIG:</strong> Manche Dashboards weisen Tools automatisch zu, andere nicht. 
+                    Wenn du keinen "Attach Tools" Button findest, sind sie möglicherweise schon zugewiesen.
+                </div>
+            </div>
+            
+            <!-- SCHRITT 7 -->
+            <div class="step">
+                <div class="step-number">7</div>
+                <h2>Agent neu veröffentlichen (Optional)</h2>
+                <p>Bei manchen Retell Versionen musst du den Agent neu veröffentlichen:</p>
+                
+                <ul style="margin-left: 40px; font-size: 1.1em; line-height: 2;">
+                    <li>Suche nach einem Button <strong>"Publish"</strong> oder <strong>"Deploy"</strong></li>
+                    <li>Falls vorhanden, klicke darauf</li>
+                    <li>Warte bis "Published Successfully" erscheint</li>
+                </ul>
+                
+                <div class="tips-box">
+                    <h4>💡 Nicht sicher?</h4>
+                    <p>Wenn du keinen "Publish" Button siehst, ist das OK - bei vielen Dashboards werden Änderungen automatisch übernommen!</p>
+                </div>
+            </div>
+            
+            <!-- ERFOLG -->
+            <div class="success-box">
+                <h3>🎉 Geschafft!</h3>
+                <p>Du hast alle wichtigen Tools erstellt!</p>
+                <p style="margin-top: 15px; font-size: 1em;">
+                    Dein Voice Agent kann jetzt:
+                </p>
+                <ul style="list-style: none; margin-top: 15px; font-size: 1.1em;">
+                    <li>✅ Verfügbarkeit prüfen</li>
+                    <li>✅ Termine buchen</li>
+                    <li>✅ Alternative Termine anbieten</li>
+                </ul>
+            </div>
+            
+            <!-- TEST -->
+            <div class="step">
+                <div class="step-number">8</div>
+                <h2>Testanruf durchführen</h2>
+                <p style="font-size: 1.2em; margin-bottom: 20px;">
+                    Jetzt kannst du einen Testanruf machen, um zu prüfen ob alles funktioniert:
+                </p>
+                
+                <div class="tips-box">
+                    <h4>📞 Testanruf Szenario:</h4>
+                    <ul>
+                        <li><strong>Rufe an:</strong> +493033081738</li>
+                        <li><strong>Sage:</strong> "Ich möchte einen Termin für einen Herrenhaarschnitt heute um 11 Uhr buchen"</li>
+                        <li><strong>Erwartetes Verhalten:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>✅ Agent sagt "Einen Moment bitte, ich prüfe das für Sie..."</li>
+                                <li>✅ Nach 1-2 Sekunden kommt die Antwort</li>
+                                <li>✅ Agent sagt ob verfügbar oder nicht</li>
+                                <li>❌ KEINE 17-Sekunden Pausen mehr!</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="alert" style="margin-top: 20px;">
+                    <strong>🎯 Was passiert nach dem Fix:</strong><br><br>
+                    Vorher: "Einen Moment bitte..." → [17 Sekunden Stille] → "Einen Moment bitte..." → User legt auf<br><br>
+                    Nachher: "Einen Moment bitte..." → [1-2 Sekunden] → "Der Termin um 11 Uhr ist leider nicht verfügbar. Wie wäre es mit 10 Uhr oder 14 Uhr?"
+                </div>
+            </div>
+            
+            <!-- HÄUFIGE FEHLER -->
+            <div class="step" style="background: #fff3cd; border-left-color: #ffc107;">
+                <h2 style="color: #856404;">⚠️ Häufige Fehler vermeiden</h2>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #856404; font-size: 1.3em; margin-bottom: 10px;">❌ FALSCH:</h3>
+                    <ul style="margin-left: 30px; font-size: 1.1em; line-height: 2;">
+                        <li>Tool Name: <code>check-availability-v17</code> (mit Bindestrichen statt Unterstrichen)</li>
+                        <li>URL: <code>https://api.askproai.de/webhooks/retell</code> (falsche URL)</li>
+                        <li>Parameters: Nur teilweise kopiert</li>
+                        <li>"Speak During Execution" vergessen anzukreuzen</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #28a745; font-size: 1.3em; margin-bottom: 10px;">✅ RICHTIG:</h3>
+                    <ul style="margin-left: 30px; font-size: 1.1em; line-height: 2;">
+                        <li>Tool Name: <code>check_availability_v17</code> (mit Unterstrichen)</li>
+                        <li>URL: <code>https://api.askproai.de/api/webhooks/retell/function</code> (komplette URL)</li>
+                        <li>Parameters: KOMPLETTEN JSON-Block kopieren</li>
+                        <li>"Speak During Execution" bei Tool 1 & 2 ankreuzen</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- HILFE -->
+            <div class="step" style="background: #d1ecf1; border-left-color: #17a2b8;">
+                <h2 style="color: #0c5460;">🆘 Brauchst du Hilfe?</h2>
+                
+                <p style="font-size: 1.1em; margin-bottom: 15px;">
+                    Falls etwas nicht funktioniert, prüfe diese Punkte:
+                </p>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #0c5460; margin-bottom: 10px;">1. Tool Namen EXAKT kopiert?</h4>
+                    <ul style="margin-left: 30px;">
+                        <li>check_availability_v17 (NICHT check-availability)</li>
+                        <li>book_appointment_v17 (NICHT book-appointment)</li>
+                        <li>get_alternatives (NICHT get-alternatives)</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #0c5460; margin-bottom: 10px;">2. URL komplett kopiert?</h4>
+                    <p style="margin-left: 30px;">
+                        Muss sein: <code>https://api.askproai.de/api/webhooks/retell/function</code>
+                    </p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #0c5460; margin-bottom: 10px;">3. JSON Parameters komplett?</h4>
+                    <p style="margin-left: 30px;">
+                        Muss mit <code>{</code> anfangen und mit <code>}</code> aufhören
+                    </p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #0c5460; margin-bottom: 10px;">4. Tools dem Agent zugewiesen?</h4>
+                    <p style="margin-left: 30px;">
+                        Prüfe im Agent unter "Tools" oder "Attached Tools"
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p><strong>Erstellt:</strong> 24.10.2025 | <strong>Version:</strong> 1.0</p>
+            <p style="margin-top: 10px;">Bei Problemen: Überprüfe ob alle Tool-Namen EXAKT mit Unterstrichen geschrieben sind!</p>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            // Create temporary textarea
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            
+            // Select and copy
+            textarea.select();
+            document.execCommand('copy');
+            
+            // Remove textarea
+            document.body.removeChild(textarea);
+            
+            // Update button
+            const originalText = button.textContent;
+            button.textContent = '✅ Kopiert!';
+            button.classList.add('copied');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

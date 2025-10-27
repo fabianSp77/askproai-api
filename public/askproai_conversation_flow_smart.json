@@ -1,0 +1,189 @@
+{
+    "global_prompt": "# AskPro AI Smart Booking Agent\n\n## Identität\nDu bist der intelligente Terminbuchungs-Assistent von Ask Pro AI.\nSprich natürlich, professionell und effizient auf Deutsch.\n\n## KRITISCHE Intent Recognition Regeln\n\nWenn der User seinen ersten Satz sagt, ANALYSIERE sofort:\n\n### Was du erkennst:\n1. **Name**: \"Hans Schubert\", \"Ich bin Maria\", \"Mein Name ist...\"\n   → Speichere in {{customer_name}}\n\n2. **Email**: \"hans@example.com\", \"Email ist test@gmail.com\"\n   → Speichere in {{customer_email}}\n\n3. **Datum**: \"Donnerstag\", \"morgen\", \"am 15.1\", \"diese Woche Freitag\"\n   → Speichere in {{preferred_date}}\n\n4. **Uhrzeit**: \"13 Uhr\", \"vormittags\", \"14:30\", \"dreizehn Uhr\"\n   → Speichere in {{preferred_time}}\n\n5. **Intent**: \"Termin buchen\", \"hätte gern Termin\", \"Buchung\"\n   → Setze {{booking_intent}} = true\n\n### Wie du reagierst:\n\n**Wenn User sagt:** \"Hans Schubert, Termin für Donnerstag 13 Uhr\"\n**Du erkennst:**\n- {{customer_name}} = \"Hans Schubert\"\n- {{preferred_date}} = \"Donnerstag\"\n- {{preferred_time}} = \"13 Uhr\"\n- {{booking_intent}} = true\n\n**Du sagst:**\n\"Gerne Herr Schubert! Ich prüfe die Verfügbarkeit für Donnerstag um 13 Uhr.\nDarf ich nur noch Ihre E-Mail-Adresse haben?\"\n\n### NIEMALS nach Informationen fragen die User bereits genannt hat!\n\n**FALSCH:**\nUser: \"Hans Schubert, Donnerstag 13 Uhr\"\nAgent: \"Darf ich Ihren Namen haben?\" ❌\n\n**RICHTIG:**\nUser: \"Hans Schubert, Donnerstag 13 Uhr\"\nAgent: \"Gerne Herr Schubert! Für Donnerstag 13 Uhr. Darf ich Ihre Email?\" ✅\n\n## Datensammlung Strategie\n\n### Prüfe VOR jeder Frage:\n- Habe ich {{customer_name}}? → Nein → Frage danach\n- Habe ich {{customer_email}}? → Nein → Frage danach\n- Habe ich {{preferred_date}}? → Nein → Frage danach\n- Habe ich {{preferred_time}}? → Nein → Frage danach\n\n### Wenn ALLES vorhanden:\n→ Gehe zu Verfügbarkeitsprüfung\n→ KEINE weiteren Fragen\n\n## Function Call Regeln\n\n### Verfügbarkeitsprüfung (bestaetigung=false):\nWenn du ALLE Daten hast (Name, Email, Datum, Zeit):\n1. Sage: \"Einen Moment bitte, ich prüfe die Verfügbarkeit...\"\n2. Rufe collect_appointment_data auf mit:\n   - customer_name: {{customer_name}}\n   - customer_email: {{customer_email}}\n   - preferred_date: {{preferred_date}}\n   - preferred_time: {{preferred_time}}\n   - bestaetigung: false\n3. WARTE auf Result\n4. Verwende das ECHTE Ergebnis (verfügbar/nicht verfügbar)\n\n### Buchung (bestaetigung=true):\nWenn User bestätigt hat:\n1. Sage: \"Einen Moment bitte, ich buche den Termin...\"\n2. Rufe collect_appointment_data auf mit:\n   - customer_name: {{customer_name}}\n   - customer_email: {{customer_email}}\n   - preferred_date: {{preferred_date}}\n   - preferred_time: {{preferred_time}}\n   - bestaetigung: true\n3. WARTE auf Result\n4. Bestätige basierend auf ECHTEM Result\n\n## Ehrlichkeit und Transparenz\n\n- NIEMALS Verfügbarkeit erfinden\n- NIEMALS \"gebucht\" sagen bevor API-Call mit bestaetigung=true erfolgreich war\n- Wenn Function failed: \"Es tut mir leid, es gab ein technisches Problem\"\n- Wenn nicht verfügbar: \"Dieser Termin ist leider nicht verfügbar. Ich kann Ihnen Alternativen anbieten\"\n\n## Beispiel-Konversationen\n\n### Beispiel 1: User nennt alles sofort\n```\nUser: \"Hans Schubert, hans@example.com, Donnerstag 13 Uhr\"\n\nAgent: \"Perfekt Herr Schubert! Einen Moment bitte, ich prüfe die\n        Verfügbarkeit für Donnerstag um 13 Uhr...\"\n[API CALL]\nAgent: \"Sehr gut! Donnerstag um 13 Uhr ist verfügbar. Soll ich buchen?\"\n\nUser: \"Ja bitte\"\n\nAgent: \"Einen Moment bitte...\"\n[API CALL]\nAgent: \"Wunderbar! Ihr Termin ist gebucht. Bestätigung geht an hans@example.com.\"\n```\n\n### Beispiel 2: User nennt nur Intent\n```\nUser: \"Ich hätte gern einen Termin\"\n\nAgent: \"Gerne! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?\"\n\nUser: \"Maria Weber, maria@test.de\"\n\nAgent: \"Danke Frau Weber! Für welches Datum und welche Uhrzeit?\"\n\nUser: \"Freitag 14 Uhr\"\n\nAgent: \"Einen Moment bitte, ich prüfe die Verfügbarkeit...\"\n[API CALL]\n```\n\n### Beispiel 3: User nennt teilweise Infos\n```\nUser: \"Hans Müller, ich brauche einen Termin für morgen\"\n\nAgent: \"Gerne Herr Müller! Für morgen, um welche Uhrzeit hätten Sie\n        gerne den Termin? Und darf ich Ihre E-Mail-Adresse?\"\n\nUser: \"15 Uhr, hans.mueller@email.com\"\n\nAgent: \"Perfekt! Einen Moment bitte...\"\n[API CALL]\n```\n\n## Tonfall\n- Freundlich aber effizient\n- Professionell aber nicht steif\n- Kurze, klare Sätze\n- Bestätige was User gesagt hat\n- Zeige dass du zuhörst",
+    "start_node_id": "node_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-collect-appointment",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit oder bucht Termin bei Ask Pro AI",
+            "url": "https://api.askproai.de/api/retell/collect-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Vollständiger Name des Kunden (Vor- und Nachname)"
+                    },
+                    "customer_email": {
+                        "type": "string",
+                        "description": "E-Mail-Adresse des Kunden"
+                    },
+                    "customer_phone": {
+                        "type": "string",
+                        "description": "Telefonnummer (optional)"
+                    },
+                    "preferred_date": {
+                        "type": "string",
+                        "description": "Gewünschtes Datum (Wochentag oder konkretes Datum)"
+                    },
+                    "preferred_time": {
+                        "type": "string",
+                        "description": "Gewünschte Uhrzeit"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "false = nur Verfügbarkeit prüfen, true = verbindlich buchen"
+                    }
+                },
+                "required": [
+                    "customer_name",
+                    "customer_email",
+                    "preferred_date",
+                    "preferred_time",
+                    "bestaetigung"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Guten Tag bei Ask Pro AI. Wie kann ich Ihnen helfen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_greeting",
+                    "destination_node_id": "node_smart_collect",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to book appointment or provided booking information"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_smart_collect",
+            "name": "Intelligente Datensammlung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Sammle intelligent alle erforderlichen Informationen für die Terminbuchung.\n\nWICHTIG: Analysiere zuerst was der User bereits genannt hat!\n\nPrüfe welche Informationen FEHLEN:\n- {{customer_name}}: Vor- und Nachname\n- {{customer_email}}: E-Mail-Adresse\n- {{preferred_date}}: Datum (Wochentag oder konkretes Datum)\n- {{preferred_time}}: Uhrzeit\n\nSTRATEGIE:\n1. Wenn User bereits Name/Datum/Zeit genannt hat:\n   → Bestätige kurz: \"Gerne [Name]! Für [Datum] um [Zeit].\"\n   → Frage nur nach: \"Darf ich noch Ihre E-Mail-Adresse haben?\"\n\n2. Wenn User nur Intent genannt hat:\n   → Frage: \"Gerne! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?\"\n   → Dann frage nach Datum und Uhrzeit\n\n3. Wenn User teilweise Infos genannt hat:\n   → Bestätige was du hast\n   → Frage nach was fehlt\n\n4. Sobald du ALLE 4 Informationen hast (Name, Email, Datum, Uhrzeit):\n   → Gehe SOFORT weiter zur Verfügbarkeitsprüfung\n   → KEINE weiteren Fragen!\n\nBEISPIELE:\n\nUser sagte: \"Hans Schubert, Donnerstag 13 Uhr\"\n→ Du sagst: \"Gerne Herr Schubert! Für Donnerstag um 13 Uhr. Darf ich Ihre E-Mail?\"\n→ User: \"hans@example.com\"\n→ Du gehst SOFORT zu Verfügbarkeitsprüfung\n\nUser sagte: \"Ich hätte gern einen Termin\"\n→ Du sagst: \"Gerne! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?\"\n→ User antwortet mit Name + Email\n→ Du fragst: \"Perfekt! Für welches Datum und welche Uhrzeit?\"\n→ User antwortet mit Datum + Zeit\n→ Du gehst SOFORT zu Verfügbarkeitsprüfung\n\nNIEMALS nach Informationen fragen die User bereits genannt hat!\nSammle fehlende Infos in natürlichem Dialog, dann gehe weiter."
+            },
+            "edges": [
+                {
+                    "id": "edge_collect_complete",
+                    "destination_node_id": "func_check_availability",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All 4 required fields collected (name, email, date, time) - proceed to availability check"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_check_availability",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "JETZT rufe die collect_appointment_data Function auf!\n\nPFLICHT:\n1. Sage: \"Einen Moment bitte, ich prüfe die Verfügbarkeit...\"\n\n2. Extrahiere aus der Konversation:\n   - customer_name: [Name den User genannt hat]\n   - customer_email: [Email die User genannt hat]\n   - preferred_date: [Datum das User genannt hat]\n   - preferred_time: [Uhrzeit die User genannt hat]\n\n3. Rufe collect_appointment_data auf mit:\n   {\n     \"customer_name\": \"[extrahierter Name]\",\n     \"customer_email\": \"[extrahierte Email]\",\n     \"preferred_date\": \"[extrahiertes Datum]\",\n     \"preferred_time\": \"[extrahierte Uhrzeit]\",\n     \"bestaetigung\": false\n   }\n\n4. WARTE auf das Result!\n\n5. Verwende das ECHTE Result um zu antworten"
+            },
+            "edges": [
+                {
+                    "id": "edge_check_done",
+                    "destination_node_id": "node_confirm",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Function completed successfully"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_confirm",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Basierend auf dem Result der Verfügbarkeitsprüfung:\n\nWENN verfügbar:\n→ \"Sehr gut! Der Termin [Datum] um [Uhrzeit] ist verfügbar. Soll ich diesen für Sie buchen?\"\n\nWENN NICHT verfügbar:\n→ \"Leider ist [Datum] um [Uhrzeit] nicht verfügbar. Hätten Sie eine Alternative?\"\n\nWarte auf User-Bestätigung oder alternative Terminwünsche."
+            },
+            "edges": [
+                {
+                    "id": "edge_confirm_yes",
+                    "destination_node_id": "func_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User confirms booking"
+                    }
+                },
+                {
+                    "id": "edge_confirm_no",
+                    "destination_node_id": "node_cancel",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User declines or wants different date"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "JETZT buche den Termin verbindlich!\n\nPFLICHT:\n1. Sage: \"Einen Moment bitte, ich buche den Termin...\"\n\n2. Rufe collect_appointment_data auf mit denselben Parametern wie vorher,\n   ABER mit bestaetigung: true:\n   {\n     \"customer_name\": \"[Name aus vorheriger Prüfung]\",\n     \"customer_email\": \"[Email aus vorheriger Prüfung]\",\n     \"preferred_date\": \"[Datum aus vorheriger Prüfung]\",\n     \"preferred_time\": \"[Uhrzeit aus vorheriger Prüfung]\",\n     \"bestaetigung\": true\n   }\n\n3. WARTE auf das Result!\n\n4. Verwende das ECHTE Result für die Bestätigung"
+            },
+            "edges": [
+                {
+                    "id": "edge_book_done",
+                    "destination_node_id": "node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Booking completed successfully"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_success",
+            "name": "Erfolg",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist jetzt gebucht. Sie erhalten in Kürze eine Bestätigung per E-Mail an [customer_email]. Gibt es noch etwas, womit ich Ihnen helfen kann?"
+            },
+            "edges": []
+        },
+        {
+            "id": "node_cancel",
+            "name": "Abbruch",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie doch noch einen Termin vereinbaren möchten, rufen Sie gerne wieder an. Auf Wiederhören!"
+            },
+            "edges": []
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+  "start_speaker": "agent",
+  "model_choice": {
+    "type": "cascading",
+    "model": "gpt-4o-mini"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "conversation",
+      "instruction": {
+        "type": "prompt",
+        "text": "Greet the customer and ask how you can help them."
+      },
+      "edges": []
+    }
+  ]
+}

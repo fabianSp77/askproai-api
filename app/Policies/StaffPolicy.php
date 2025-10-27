@@ -75,8 +75,8 @@ class StaffPolicy
             return $user->staff_id === $staff->id;
         }
 
-        // Company owners/admins can view all company staff
-        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin'])) {
+        // Company owners/admins/managers can view all company staff
+        if ($user->hasAnyRole(['manager', 'company_owner', 'company_admin', 'company_manager'])) {
             return true;
         }
 

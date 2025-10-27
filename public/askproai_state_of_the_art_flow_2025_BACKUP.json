@@ -1,0 +1,979 @@
+{
+    "global_prompt": "# AskPro AI Voice Agent 2025\n\n## Deine Rolle\nDu bist der intelligente Terminassistent von Ask Pro AI.\nSprich natürlich, freundlich und effizient auf Deutsch.\n\n## KRITISCHE Regel: Intent Recognition\nErkenne SOFORT aus dem ersten Satz was der Kunde will:\n1. NEUEN Termin buchen\n2. Bestehenden Termin VERSCHIEBEN\n3. Bestehenden Termin STORNIEREN\n4. Termine ANZEIGEN\/ABFRAGEN\n\nBei Unklarheit frage: \"Möchten Sie einen neuen Termin buchen oder einen bestehenden Termin ändern?\"\n\n## Benötigte Informationen\n\nFür NEUEN Termin:\n- Name (Vorname reicht, kein Herr\/Frau)\n- Telefonnummer\n- Service (z.B. Beratung)\n- Datum (Wochentag oder konkretes Datum)\n- Uhrzeit\n\nFür VERSCHIEBEN\/STORNIEREN:\n- Welcher Termin (Datum, Uhrzeit)\n- Neues Datum\/Zeit (nur bei Verschieben)\n\n## Datensammlung Strategie\n- Sammle Informationen in natürlichem Gespräch\n- Bestätige was Kunde bereits gesagt hat\n- Fasse Fragen zusammen wenn möglich\n- Frage nur nach fehlenden Informationen\n\n## Explizite Bestätigung (PFLICHT!)\nVor JEDER Buchung\/Änderung bestätige:\n\"Das wäre also [Datum] um [Uhrzeit] - ist das richtig?\"\n\nWarte auf Bestätigung bevor du buchst!\n\n## 2-Stufen Booking (Race Condition Schutz)\n1. collect_appointment_data mit bestaetigung=false (nur prüfen)\n2. Nach User-Bestätigung: bestaetigung=true (buchen)\n\nNIEMALS direkt mit bestaetigung=true buchen!\n\n## Ehrlichkeit & API-First\n- NIEMALS Verfügbarkeit erfinden\n- IMMER auf echte API-Results warten\n- Bei technischem Problem: \"Es gab ein technisches Problem\"\n- Bei Unverfügbarkeit: \"Leider nicht verfügbar. Ich habe aber folgende Alternativen...\"\n\n## Empathische Fehlerbehandlung\nBei Verständnisproblemen:\n1. Versuch 1: Nachfragen mit Beispiel (\"Meinen Sie [Datum]?\")\n2. Versuch 2: Vereinfachen (\"Welcher Wochentag passt Ihnen?\")\n3. Versuch 3: \"Lassen Sie mich einen Kollegen holen...\"\n\nNIEMALS User die Schuld geben!\n\n## Policy Violations\nBei Frist-Überschreitung empathisch:\n\"Ich verstehe Ihre Situation. Leider können wir kurzfristige Änderungen nur bis [Frist] vornehmen.\nMöchten Sie [Alternative] oder einen neuen Termin buchen?\"\n\n## Datumsverarbeitung\n- Nutze current_time_berlin() für aktuelles Datum\n- \"morgen\" = nächster Tag\n- \"15.1\" = 15. des AKTUELLEN Monats (nicht Januar!)\n- Bei Unsicherheit: Datum wiederholen zur Bestätigung\n\n## Kurze Antworten\n- 1-2 Sätze pro Antwort (außer bei Erklärungen)\n- Keine langen Monologe\n- Schnell zum Punkt kommen\n\n## Turn-Taking\n- Nach User Input sofort antworten (0.5-1s)\n- Während API-Calls: \"Einen Moment bitte...\"\n- Keine Stille über 3 Sekunden",
+    "start_node_id": "node_01_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-customer",
+            "name": "check_customer",
+            "type": "custom",
+            "description": "Check if customer exists by phone number",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/check-customer",
+            "timeout_ms": 4000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "phone_number": {
+                        "type": "string",
+                        "description": "Customer phone number"
+                    }
+                }
+            }
+        },
+        {
+            "tool_id": "tool-current-time-berlin",
+            "name": "current_time_berlin",
+            "type": "custom",
+            "description": "Get current date and time in Berlin timezone",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/current-time-berlin",
+            "timeout_ms": 4000
+        },
+        {
+            "tool_id": "tool-collect-appointment",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Check availability or book appointment",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/collect-appointment-data",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Customer name"
+                    },
+                    "customer_phone": {
+                        "type": "string",
+                        "description": "Phone number"
+                    },
+                    "service": {
+                        "type": "string",
+                        "description": "Service type"
+                    },
+                    "preferred_date": {
+                        "type": "string",
+                        "description": "Date YYYY-MM-DD"
+                    },
+                    "preferred_time": {
+                        "type": "string",
+                        "description": "Time HH:MM"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "false=check only, true=book"
+                    }
+                },
+                "required": [
+                    "bestaetigung"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-get-appointments",
+            "name": "get_customer_appointments",
+            "type": "custom",
+            "description": "Get all upcoming appointments for customer",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/get-customer-appointments",
+            "timeout_ms": 6000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Retell Call ID"
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Customer name (optional)"
+                    }
+                },
+                "required": [
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-cancel-appointment",
+            "name": "cancel_appointment",
+            "type": "custom",
+            "description": "Cancel an appointment",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/cancel-appointment",
+            "timeout_ms": 8000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Retell Call ID"
+                    },
+                    "appointment_date": {
+                        "type": "string",
+                        "description": "Appointment date YYYY-MM-DD"
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Customer name"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Cancellation reason"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "appointment_date"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-reschedule-appointment",
+            "name": "reschedule_appointment",
+            "type": "custom",
+            "description": "Reschedule an appointment to new date\/time",
+            "url": "https:\/\/api.askproai.de\/api\/retell\/reschedule-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Retell Call ID"
+                    },
+                    "old_date": {
+                        "type": "string",
+                        "description": "Current appointment date YYYY-MM-DD"
+                    },
+                    "new_date": {
+                        "type": "string",
+                        "description": "New appointment date YYYY-MM-DD"
+                    },
+                    "new_time": {
+                        "type": "string",
+                        "description": "New time HH:MM"
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Customer name"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "old_date",
+                    "new_date",
+                    "new_time"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_01_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Guten Tag bei Ask Pro AI. Wie kann ich Ihnen helfen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_01",
+                    "destination_node_id": "func_01_current_time",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always proceed to get current time"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_01_current_time",
+            "name": "Aktuelle Zeit holen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_02",
+                    "destination_node_id": "func_01_check_customer",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Time retrieved"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-current-time-berlin",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "func_01_check_customer",
+            "name": "Kunde prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_03",
+                    "destination_node_id": "node_02_customer_routing",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer check completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-check-customer",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "node_02_customer_routing",
+            "name": "Kundenrouting",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Route to appropriate greeting based on customer status from check_customer result."
+            },
+            "edges": [
+                {
+                    "id": "edge_04a",
+                    "destination_node_id": "node_03a_known_customer",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Known customer"
+                    }
+                },
+                {
+                    "id": "edge_04b",
+                    "destination_node_id": "node_03b_new_customer",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "New customer"
+                    }
+                },
+                {
+                    "id": "edge_04c",
+                    "destination_node_id": "node_03c_anonymous_customer",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Anonymous customer"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03a_known_customer",
+            "name": "Bekannter Kunde",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Greet known customer by name warmly. Ask how you can help."
+            },
+            "edges": [
+                {
+                    "id": "edge_05a",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer responded"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03b_new_customer",
+            "name": "Neuer Kunde",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Welcome new customer. Mention you see they have called before. Ask how you can help."
+            },
+            "edges": [
+                {
+                    "id": "edge_05b",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer responded"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03c_anonymous_customer",
+            "name": "Anonymer Kunde",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Greet customer friendly. Ask for name to better assist them."
+            },
+            "edges": [
+                {
+                    "id": "edge_05c",
+                    "destination_node_id": "node_05_name_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Need to collect name"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_05_name_collection",
+            "name": "Name sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Collect customer name if not yet known. Thank them and proceed to understand their request."
+            },
+            "edges": [
+                {
+                    "id": "edge_06",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Name collected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_04_intent_enhanced",
+            "name": "Intent erkennen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Understand what customer wants: book new appointment, reschedule existing, cancel existing, or view appointments. If unclear, ask."
+            },
+            "edges": [
+                {
+                    "id": "edge_07a",
+                    "destination_node_id": "node_06_service_selection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to book NEW appointment"
+                    }
+                },
+                {
+                    "id": "edge_07b",
+                    "destination_node_id": "func_get_appointments",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to view appointments"
+                    }
+                },
+                {
+                    "id": "edge_07c",
+                    "destination_node_id": "node_reschedule_identify",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to RESCHEDULE"
+                    }
+                },
+                {
+                    "id": "edge_07d",
+                    "destination_node_id": "node_cancel_identify",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to CANCEL"
+                    }
+                },
+                {
+                    "id": "edge_07e",
+                    "destination_node_id": "node_98_polite_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to end call"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_get_appointments",
+            "name": "Termine abrufen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich schaue nach Ihren Terminen."
+            },
+            "edges": [
+                {
+                    "id": "edge_08",
+                    "destination_node_id": "node_appointments_display",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Appointments retrieved"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-get-appointments",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_appointments_display",
+            "name": "Termine anzeigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "List the appointments clearly with date, time, and service. Ask if customer wants to change any or book a new one."
+            },
+            "edges": [
+                {
+                    "id": "edge_09a",
+                    "destination_node_id": "node_06_service_selection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants new appointment"
+                    }
+                },
+                {
+                    "id": "edge_09b",
+                    "destination_node_id": "node_reschedule_identify",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to reschedule"
+                    }
+                },
+                {
+                    "id": "edge_09c",
+                    "destination_node_id": "node_cancel_identify",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to cancel"
+                    }
+                },
+                {
+                    "id": "edge_09d",
+                    "destination_node_id": "end_node_polite",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer satisfied, no changes"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_06_service_selection",
+            "name": "Service wählen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask which service customer needs. If they already mentioned it, confirm and proceed."
+            },
+            "edges": [
+                {
+                    "id": "edge_10",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Service selected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_07_datetime_collection",
+            "name": "Datum & Zeit sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Collect preferred date and time. If customer already mentioned it, confirm. Ask for any missing information."
+            },
+            "edges": [
+                {
+                    "id": "edge_11",
+                    "destination_node_id": "func_08_availability_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All booking info collected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_08_availability_check",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich prüfe die Verfügbarkeit."
+            },
+            "edges": [
+                {
+                    "id": "edge_12a",
+                    "destination_node_id": "node_09a_booking_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Slot available"
+                    }
+                },
+                {
+                    "id": "edge_12b",
+                    "destination_node_id": "node_09b_alternative_offering",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Slot not available"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_09a_booking_confirmation",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Confirm the slot is available. Repeat date, time, and service. Ask customer to confirm before booking."
+            },
+            "edges": [
+                {
+                    "id": "edge_13a",
+                    "destination_node_id": "func_09c_final_booking",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer confirms booking"
+                    }
+                },
+                {
+                    "id": "edge_13b",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants different time"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_09b_alternative_offering",
+            "name": "Alternativen anbieten",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Inform slot not available. Offer alternative times from result. Be proactive and helpful."
+            },
+            "edges": [
+                {
+                    "id": "edge_14a",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer chooses alternative"
+                    }
+                },
+                {
+                    "id": "edge_14b",
+                    "destination_node_id": "node_98_polite_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer declines"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_09c_final_booking",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich buche den Termin für Sie."
+            },
+            "edges": [
+                {
+                    "id": "edge_15a",
+                    "destination_node_id": "node_14_success_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Booking successful"
+                    }
+                },
+                {
+                    "id": "edge_15b",
+                    "destination_node_id": "node_15_race_condition_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Race condition or booking failed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_15_race_condition_handler",
+            "name": "Race Condition Handler",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Apologize that slot was just taken. Offer alternatives from result empathetically."
+            },
+            "edges": [
+                {
+                    "id": "edge_16a",
+                    "destination_node_id": "node_07_datetime_collection",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer chooses alternative"
+                    }
+                },
+                {
+                    "id": "edge_16b",
+                    "destination_node_id": "node_98_polite_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to think about it"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_reschedule_identify",
+            "name": "Termin identifizieren",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask which appointment to reschedule. If customer mentioned date\/time, confirm. Otherwise ask for it."
+            },
+            "edges": [
+                {
+                    "id": "edge_17",
+                    "destination_node_id": "node_reschedule_datetime",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Old appointment identified"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_reschedule_datetime",
+            "name": "Neues Datum sammeln",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask for new preferred date and time. Confirm understanding before proceeding."
+            },
+            "edges": [
+                {
+                    "id": "edge_18",
+                    "destination_node_id": "func_reschedule_execute",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "New date and time collected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_reschedule_execute",
+            "name": "Verschieben ausführen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich verschiebe Ihren Termin."
+            },
+            "edges": [
+                {
+                    "id": "edge_19a",
+                    "destination_node_id": "node_reschedule_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Reschedule successful"
+                    }
+                },
+                {
+                    "id": "edge_19b",
+                    "destination_node_id": "node_policy_violation_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Policy violation"
+                    }
+                },
+                {
+                    "id": "edge_19c",
+                    "destination_node_id": "node_99_error_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Technical error"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-reschedule-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_reschedule_success",
+            "name": "Verschiebung erfolgreich",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Ihr Termin wurde verschoben. Sie erhalten eine Bestätigung per E-Mail. Kann ich noch etwas für Sie tun?"
+            },
+            "edges": [
+                {
+                    "id": "edge_20a",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants something else"
+                    }
+                },
+                {
+                    "id": "edge_20b",
+                    "destination_node_id": "end_node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer satisfied"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_cancel_identify",
+            "name": "Termin für Stornierung identifizieren",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask which appointment to cancel. Confirm date and time with customer."
+            },
+            "edges": [
+                {
+                    "id": "edge_21",
+                    "destination_node_id": "node_cancel_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Appointment identified"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_cancel_confirmation",
+            "name": "Stornierung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Confirm customer wants to cancel this appointment. Ask if they are sure."
+            },
+            "edges": [
+                {
+                    "id": "edge_22a",
+                    "destination_node_id": "func_cancel_execute",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer confirms cancellation"
+                    }
+                },
+                {
+                    "id": "edge_22b",
+                    "destination_node_id": "end_node_polite",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer changed mind"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_cancel_execute",
+            "name": "Stornierung ausführen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": "Einen Moment bitte, ich storniere den Termin."
+            },
+            "edges": [
+                {
+                    "id": "edge_23a",
+                    "destination_node_id": "node_cancel_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Cancellation successful"
+                    }
+                },
+                {
+                    "id": "edge_23b",
+                    "destination_node_id": "node_policy_violation_handler",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Policy violation"
+                    }
+                },
+                {
+                    "id": "edge_23c",
+                    "destination_node_id": "node_99_error_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Technical error"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-cancel-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_cancel_success",
+            "name": "Stornierung erfolgreich",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Ihr Termin wurde storniert. Sie erhalten eine Bestätigung per E-Mail. Kann ich noch etwas für Sie tun?"
+            },
+            "edges": [
+                {
+                    "id": "edge_24a",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants something else"
+                    }
+                },
+                {
+                    "id": "edge_24b",
+                    "destination_node_id": "end_node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer satisfied"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_policy_violation_handler",
+            "name": "Policy Violation Handler",
+            "type": "conversation",
+            "instruction": {
+                "type": "prompt",
+                "text": "Explain policy issue empathetically based on result. Offer alternatives or options available to customer."
+            },
+            "edges": [
+                {
+                    "id": "edge_25a",
+                    "destination_node_id": "node_04_intent_enhanced",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer wants to try alternative"
+                    }
+                },
+                {
+                    "id": "edge_25b",
+                    "destination_node_id": "node_98_polite_goodbye",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer accepts limitation"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_14_success_goodbye",
+            "name": "Erfolgreiche Buchung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Vielen Dank und auf Wiederhören!"
+            },
+            "edges": [
+                {
+                    "id": "edge_26",
+                    "destination_node_id": "end_node_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always end"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_98_polite_goodbye",
+            "name": "Höfliche Verabschiedung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie später einen Termin möchten, rufen Sie gerne wieder an. Auf Wiederhören!"
+            },
+            "edges": [
+                {
+                    "id": "edge_27",
+                    "destination_node_id": "end_node_polite",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always end"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_99_error_goodbye",
+            "name": "Fehler Verabschiedung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Es tut mir leid, es gab ein technisches Problem. Bitte rufen Sie uns später nochmal an. Auf Wiederhören!"
+            },
+            "edges": [
+                {
+                    "id": "edge_28",
+                    "destination_node_id": "end_node_error",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always end"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "end_node_success",
+            "name": "Ende - Erfolg",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": []
+        },
+        {
+            "id": "end_node_polite",
+            "name": "Ende - Höflich",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": []
+        },
+        {
+            "id": "end_node_error",
+            "name": "Ende - Fehler",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": []
+        }
+    ]
+}

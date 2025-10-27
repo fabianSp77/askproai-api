@@ -1,0 +1,111 @@
+EXECUTIVE BRIEF - V4 Agent Test Call RCA
+Call ID: call_4fe3efe8beada329a8270b3e8a2
+Date: 2025-10-25 13:12-13:15 UTC+2
+
+=== CRITICAL FINDINGS ===
+
+BUG #1: HARDCODED call_id="1"
+- Both check_availability_v17 and book_appointment_v17 receive call_id="1" instead of actual call ID
+- This breaks call tracking and prevents correlation of bookings to this specific call
+- Location: app/Http/Controllers/RetellFunctionCallHandler.php
+- Severity: BLOCKER
+
+BUG #2: AVAILABILITY DATE MISMATCH
+- User requested: 25.10.2025 at 15:00 (today)
+- Function received: datum="25.10.2025", uhrzeit="15:00" (correct)
+- System returned: Alternatives for 2025-10-27 (WRONG DATE - 2 days later!)
+- Root cause: Check_availability function querying wrong date or date parsing broken
+- Location: app/Services/Retell/AppointmentCreationService.php
+- Severity: BLOCKER
+
+BUG #3: SILENT BOOKING FAILURE
+- User accepted alternative (08:00 on 27th)
+- NO email confirmation logged
+- NO appointment confirmation message to user
+- Booking may have been recorded under call_id=1 (wrong call)
+- Location: app/Http/Controllers/Api/RetellApiController.php
+- Severity: BLOCKER
+
+=== UX ISSUES ===
+
+- Agent asks for name twice (data collection redundancy)
+- Agent doesn't understand "heute" (today) - needs explicit date format
+- Flow structure causes conversation to restart data collection
+- Call duration: 3min 36sec (should be <2min for this simple booking)
+
+=== IMMEDIATE ACTIONS REQUIRED ===
+
+1. ROLLBACK V4 agent immediately - do not use in production
+2. Fix hardcoded call_id="1" in RetellFunctionCallHandler
+3. Debug date parameter handling in availability check
+4. Verify booking confirmation logic
+5. Re-test all flows before re-deployment
+
+=== EVIDENCE ===
+
+From Log Line 11:
+{
+  "name": "check_availability_v17",
+  "args": {
+    "call_id": "1",    ← HARDCODED - Should be: call_4fe3efe8beada329a8270b3e8a2
+    "datum": "25.10.2025",
+    "uhrzeit": "15:00"
+  }
+}
+
+From Log Line 19:
+{
+  "count": 2,
+  "times": ["2025-10-27 08:00", "2025-10-27 06:00"]  ← WRONG DATE! Should be 25.10
+}
+
+=== DETAILED RCA ===
+
+See: TESTCALL_RCA_COMPLETE_V4_2025-10-25.md (Full analysis with code locations and testing approach)
+
+=== IMPACT ASSESSMENT ===
+
+Customer Impact:
+- Wrong date offered (would book appointment 2 days later)
+- No confirmation email (booking may have failed silently)
+- Frustrating experience with repeated questions
+
+System Impact:
+- Broken call tracking (can't link bookings to calls)
+- Silent booking failures (no audit trail)
+- Data corruption (bookings stored under call_id=1)
+
+Production Readiness:
+- V4 agent is NOT READY for production
+- Must fix critical bugs before release
+- All booking flows need re-testing
+
+Estimated Fix Time:
+- Critical bugs: 4-6 hours
+- UX improvements: 2-4 hours
+- Testing & QA: 2-3 hours
+- Total: ~8-13 hours
+
+=== RECOMMENDATIONS ===
+
+SHORT TERM (Today):
+1. Rollback V4 agent
+2. Fix hardcoded call_id in RetellFunctionCallHandler
+3. Add unit tests for parameter injection
+4. Add date parameter validation
+
+MEDIUM TERM (This Week):
+1. Fix date parsing in AppointmentCreationService
+2. Consolidate data collection logic
+3. Add natural language date parsing
+4. Full E2E testing of booking flow
+
+LONG TERM (Next Sprint):
+1. Redesign conversation flow for better UX
+2. Add conversation state preservation
+3. Implement automatic retry logic for failed bookings
+4. Add comprehensive monitoring/alerting
+
+=== CONTACT ===
+
+For questions, see complete RCA: /var/www/api-gateway/TESTCALL_RCA_COMPLETE_V4_2025-10-25.md

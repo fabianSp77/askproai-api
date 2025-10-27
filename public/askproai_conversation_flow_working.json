@@ -1,0 +1,245 @@
+{
+    "global_prompt": "# AskPro AI Terminbuchungs-Agent - WORKING VERSION\n\n## Identität\nDu bist der Assistent von Ask Pro AI. Sprich natürlich und professionell auf Deutsch.\n\n## KRITISCHE Regeln\n1. Folge EXAKT dem Conversation Flow - keine Abkürzungen!\n2. NIEMALS einen Termin als \"gebucht\" bezeichnen bevor collect_appointment_data mit bestaetigung=true aufgerufen wurde\n3. IMMER erst Name und Email erfragen bevor Termindetails gefragt werden\n4. NIEMALS Verfügbarkeit erfinden - immer API verwenden\n5. Bei Funktions-Aufrufen: \"Einen Moment bitte...\" sagen\n\n## Datensammlung\nWenn du nach Informationen fragst:\n- Name: Vor- und Nachname\n- Email: Vollständige Email-Adresse\n- Datum: Exaktes Datum oder Wochentag\n- Uhrzeit: Exakte Uhrzeit\n\n## V85 Race Condition Schutz\nZwei-Schritt-Prozess:\n1. collect_appointment_data mit bestaetigung=false (nur prüfen)\n2. Kunde bestätigen lassen\n3. collect_appointment_data mit bestaetigung=true (tatsächlich buchen)\n\n## Ehrlichkeit\n- Wenn du keine Informationen hast, SAGE ES\n- Wenn eine Function failed, SAGE ES\n- NIEMALS Dinge behaupten die nicht passiert sind",
+    "start_node_id": "node_01_greeting",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-customer",
+            "name": "check_customer",
+            "type": "custom",
+            "description": "Überprüft ob Kunde existiert",
+            "url": "https://api.askproai.de/api/retell/check-customer",
+            "timeout_ms": 4000
+        },
+        {
+            "tool_id": "tool-collect-appointment",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit oder bucht Termin",
+            "url": "https://api.askproai.de/api/retell/collect-appointment",
+            "timeout_ms": 8000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string"
+                    },
+                    "customer_email": {
+                        "type": "string"
+                    },
+                    "customer_phone": {
+                        "type": "string"
+                    },
+                    "preferred_date": {
+                        "type": "string"
+                    },
+                    "preferred_time": {
+                        "type": "string"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "false=prüfen, true=buchen"
+                    }
+                },
+                "required": [
+                    "bestaetigung"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_01_greeting",
+            "name": "Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Guten Tag bei Ask Pro AI. Wie kann ich Ihnen helfen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_01",
+                    "destination_node_id": "node_02_ask_name",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to book appointment"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_02_ask_name",
+            "name": "Name erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Gerne! Ich helfe Ihnen bei der Terminbuchung. Darf ich zunächst Ihren vollständigen Namen haben?"
+            },
+            "edges": [
+                {
+                    "id": "edge_02",
+                    "destination_node_id": "node_03_ask_email",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User provided name"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_03_ask_email",
+            "name": "Email erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Vielen Dank! Und wie lautet Ihre E-Mail-Adresse?"
+            },
+            "edges": [
+                {
+                    "id": "edge_03",
+                    "destination_node_id": "node_04_ask_date",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User provided email"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_04_ask_date",
+            "name": "Datum erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfekt! Für welches Datum möchten Sie den Termin? Bitte nennen Sie einen Wochentag oder ein konkretes Datum."
+            },
+            "edges": [
+                {
+                    "id": "edge_04",
+                    "destination_node_id": "node_05_ask_time",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User provided date"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_05_ask_time",
+            "name": "Uhrzeit erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Sehr gut! Und um welche Uhrzeit hätten Sie gerne den Termin?"
+            },
+            "edges": [
+                {
+                    "id": "edge_05",
+                    "destination_node_id": "func_06_check_availability",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User provided time"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_06_check_availability",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_06",
+                    "destination_node_id": "node_07_confirm",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Function completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_07_confirm",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Der Termin ist verfügbar! Möchten Sie diesen Termin verbindlich buchen?"
+            },
+            "edges": [
+                {
+                    "id": "edge_07_yes",
+                    "destination_node_id": "func_08_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User confirms"
+                    }
+                },
+                {
+                    "id": "edge_07_no",
+                    "destination_node_id": "node_09_cancel",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User declines"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_08_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_08",
+                    "destination_node_id": "node_10_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Function completed"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_10_success",
+            "name": "Erfolg",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Wunderbar! Ihr Termin ist jetzt gebucht. Sie erhalten in Kürze eine Bestätigung per E-Mail. Gibt es noch etwas, womit ich Ihnen helfen kann?"
+            },
+            "edges": []
+        },
+        {
+            "id": "node_09_cancel",
+            "name": "Abbruch",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie doch noch einen Termin vereinbaren möchten, rufen Sie gerne wieder an. Auf Wiederhören!"
+            },
+            "edges": []
+        }
+    ]
+}

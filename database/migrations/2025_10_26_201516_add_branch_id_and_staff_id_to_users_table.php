@@ -39,19 +39,34 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            // Add company_id first if it doesn't exist
+            if (!Schema::hasColumn('users', 'company_id')) {
+                $table->unsignedBigInteger('company_id')
+                    ->nullable()
+                    ->after('password')
+                    ->comment('Company this user belongs to');
+
+                $table->foreign('company_id')
+                    ->references('id')
+                    ->on('companies')
+                    ->onDelete('cascade');
+
+                $table->index('company_id');
+            }
+
             // Branch assignment for company_manager role
             // Allows managers to be assigned to specific branches
-            // Note: branches.id is UUID (char 36), not auto-increment
+            // Note: branches.id is bigint unsigned auto-increment
             // NULL = not a manager OR sees all branches (company_owner)
-            $table->char('branch_id', 36)
+            $table->unsignedBigInteger('branch_id')
                 ->nullable()
                 ->after('company_id')
                 ->comment('Branch assignment for company_manager role');
 
             // Staff relationship for company_staff role
             // Links user account to their staff entry (for appointments, calls, etc.)
-            // Note: staff.id is UUID (char 36), not auto-increment
-            $table->char('staff_id', 36)
+            // Note: staff.id is bigint unsigned auto-increment
+            $table->unsignedBigInteger('staff_id')
                 ->nullable()
                 ->after('branch_id')
                 ->comment('Staff entry this user represents (for company_staff role)');

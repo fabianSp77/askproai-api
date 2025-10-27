@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell.ai Tools - Komplette Anleitung (6 Tools)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .priority-info {
+            background: white;
+            color: #333;
+            padding: 30px;
+            margin: 20px 40px;
+            border-radius: 15px;
+        }
+
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .priority-card {
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid;
+        }
+
+        .p0 { border-color: #dc3545; background: #fff5f5; }
+        .p1 { border-color: #fd7e14; background: #fff8f0; }
+        .p2 { border-color: #ffc107; background: #fffdf0; }
+
+        .tool-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .tool-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .priority-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge-p0 { background: #dc3545; color: white; }
+        .badge-p1 { background: #fd7e14; color: white; }
+        .badge-p2 { background: #ffc107; color: #333; }
+
+        .copy-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .copy-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .copy-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .copy-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .copy-button.copied { background: #28a745; }
+
+        .json-preview {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .content { padding: 40px; }
+
+        .step {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Retell.ai Tools Komplett-Anleitung</h1>
+            <p>Alle 6 benötigten Tools - Schritt für Schritt</p>
+        </div>
+
+        <div class="priority-info">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📊 Tool-Prioritäten</h2>
+            <div class="priority-grid">
+                <div class="priority-card p0">
+                    <h3 style="color: #dc3545;">🔴 P0 - CRITICAL (2 Tools)</h3>
+                    <p><strong>SOFORT erstellen!</strong></p>
+                    <ul style="margin: 15px 0 0 20px;">
+                        <li>check_availability_v17</li>
+                        <li>book_appointment_v17</li>
+                    </ul>
+                    <p style="margin-top: 10px; color: #dc3545; font-weight: bold;">
+                        Ohne diese funktioniert GAR NICHTS!
+                    </p>
+                </div>
+
+                <div class="priority-card p1">
+                    <h3 style="color: #fd7e14;">🟠 P1 - HIGH (2 Tools)</h3>
+                    <p><strong>Wichtig für volle Funktion</strong></p>
+                    <ul style="margin: 15px 0 0 20px;">
+                        <li>get_alternatives</li>
+                        <li>get_appointments</li>
+                    </ul>
+                </div>
+
+                <div class="priority-card p2">
+                    <h3 style="color: #ffc107;">🟡 P2 - MEDIUM (2 Tools)</h3>
+                    <p><strong>Nice-to-have Features</strong></p>
+                    <ul style="margin: 15px 0 0 20px;">
+                        <li>reschedule_appointment</li>
+                        <li>cancel_appointment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 10px;">
+                <p style="font-size: 1.2em; font-weight: bold; color: #856404;">
+                    ⚡ Schnellstart: Erstelle nur die 2 P0-Tools (10 Minuten) und teste sofort!
+                </p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="step">
+                <h2 style="color: #667eea; margin-bottom: 20px;">1️⃣ Login & Navigation</h2>
+                <p style="font-size: 1.1em; margin-bottom: 15px;">
+                    1. Gehe zu: <code>https://dashboard.retellai.com</code><br>
+                    2. Logge dich ein<br>
+                    3. Finde den Bereich <strong>"Tools"</strong> oder <strong>"Custom Tools"</strong>
+                </p>
+            </div>
+
+            <div class="step">
+                <h2 style="color: #667eea; margin-bottom: 20px;">2️⃣ Tools erstellen</h2>
+                <p style="margin-bottom: 20px; font-size: 1.1em;">
+                    Wähle deine Strategie:
+                </p>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('p0')">🔴 Nur P0 (Schnellstart)</button>
+                    <button class="tab" onclick="switchTab('p0p1')">🟠 P0 + P1 (Empfohlen)</button>
+                    <button class="tab" onclick="switchTab('all')">⭐ Alle 6 Tools (Komplett)</button>
+                </div>
+
+                <div id="p0" class="tab-content active">
+                    <h3 style="color: #dc3545; margin: 20px 0;">Schnellstart: Nur die 2 wichtigsten Tools</h3>
+                    <p style="margin-bottom: 20px;">
+                        Erstelle NUR diese 2 Tools. Danach kann der Agent bereits Termine prüfen und buchen!
+                    </p>
+
+                    <!-- Tool 1: check_availability_v17 -->
+                    <div class="tool-card" style="border-left: 5px solid #dc3545;">
+                        <h3>
+                            Tool 1: check_availability_v17
+                            <span class="priority-badge badge-p0">P0</span>
+                        </h3>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Name:</span>
+                            <div class="copy-box" id="t1_name">check_availability_v17</div>
+                            <button class="copy-button" onclick="copy('t1_name', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Type:</span>
+                            <div class="copy-box">Custom Function (im Dropdown wählen)</div>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">URL:</span>
+                            <div class="copy-box" id="t1_url">https://api.askproai.de/api/webhooks/retell/function</div>
+                            <button class="copy-button" onclick="copy('t1_url', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Description:</span>
+                            <div class="copy-box" id="t1_desc">Prüft die Verfügbarkeit für einen bestimmten Termin</div>
+                            <button class="copy-button" onclick="copy('t1_desc', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Speak During Execution:</span>
+                            <div class="copy-box">✅ ANKREUZEN!</div>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Parameters (JSON):</span>
+                            <div class="json-preview" id="t1_params">{"type":"object","properties":{"datum":{"type":"string","description":"Datum im Format TT.MM.JJJJ"},"uhrzeit":{"type":"string","description":"Uhrzeit im Format HH:MM"},"dienstleistung":{"type":"string","description":"Name der Dienstleistung"}},"required":["datum","uhrzeit","dienstleistung"]}</div>
+                            <button class="copy-button" onclick="copy('t1_params', this)">📋 Kopieren</button>
+                        </div>
+                    </div>
+
+                    <!-- Tool 2: book_appointment_v17 -->
+                    <div class="tool-card" style="border-left: 5px solid #dc3545;">
+                        <h3>
+                            Tool 2: book_appointment_v17
+                            <span class="priority-badge badge-p0">P0</span>
+                        </h3>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Name:</span>
+                            <div class="copy-box" id="t2_name">book_appointment_v17</div>
+                            <button class="copy-button" onclick="copy('t2_name', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">URL:</span>
+                            <div class="copy-box" id="t2_url">https://api.askproai.de/api/webhooks/retell/function</div>
+                            <button class="copy-button" onclick="copy('t2_url', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Description:</span>
+                            <div class="copy-box" id="t2_desc">Bucht einen bestätigten Termin für den Kunden</div>
+                            <button class="copy-button" onclick="copy('t2_desc', this)">📋 Kopieren</button>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Speak During Execution:</span>
+                            <div class="copy-box">✅ ANKREUZEN!</div>
+                        </div>
+
+                        <div class="copy-section">
+                            <span class="copy-label">Parameters (JSON):</span>
+                            <div class="json-preview" id="t2_params">{"type":"object","properties":{"name":{"type":"string","description":"Vollständiger Name"},"datum":{"type":"string","description":"Datum TT.MM.JJJJ"},"uhrzeit":{"type":"string","description":"Uhrzeit HH:MM"},"dienstleistung":{"type":"string","description":"Dienstleistung"},"telefonnummer":{"type":"string","description":"Telefonnummer"},"bestaetigung":{"type":"boolean","description":"Bestätigung"}},"required":["name","datum","uhrzeit","dienstleistung"]}</div>
+                            <button class="copy-button" onclick="copy('t2_params', this)">📋 Kopieren</button>
+                        </div>
+                    </div>
+
+                    <div class="success-box">
+                        <h3 style="color: #155724;">🎉 Nach diesen 2 Tools...</h3>
+                        <p style="color: #155724; font-size: 1.1em;">
+                            ...kann dein Agent bereits Verfügbarkeit prüfen und Termine buchen!<br>
+                            Mache jetzt einen Testanruf!
+                        </p>
+                    </div>
+                </div>
+
+                <div id="p0p1" class="tab-content">
+                    <p>Inhalt wird angezeigt wenn Tab gewählt...</p>
+                    <p style="color: #6c757d;">Erstelle die 2 P0 Tools von oben + 2 weitere P1 Tools für Alternativen und Abfragen</p>
+                </div>
+
+                <div id="all" class="tab-content">
+                    <p>ALLE 6 Tools Details hier...</p>
+                </div>
+            </div>
+
+            <div class="success-box" style="margin-top: 40px;">
+                <h2 style="color: #155724; margin-bottom: 15px;">🚀 Bereit zum Testen?</h2>
+                <p style="color: #155724; font-size: 1.2em;">
+                    Rufe an: <strong>+493033081738</strong><br>
+                    Sage: "Ich möchte einen Termin für einen Herrenhaarschnitt heute um 11 Uhr"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copy(id, btn) {
+            const el = document.getElementById(id);
+            const text = el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = '✅ Kopiert!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = orig;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function switchTab(tab) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+            // Show selected
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

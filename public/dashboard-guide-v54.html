@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V54 Dashboard Guide - Version Identification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .version-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 3px solid;
+        }
+
+        .version-old {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .version-new {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .version-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .version-old h3 {
+            color: #dc3545;
+        }
+
+        .version-new h3 {
+            color: #28a745;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        .badge-old {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-new {
+            background: #28a745;
+            color: white;
+        }
+
+        .tool-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .tool-list li {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .tool-old {
+            border-left: 3px solid #dc3545;
+        }
+
+        .tool-new {
+            border-left: 3px solid #28a745;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background: #f8d7da;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #721c24;
+        }
+
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #155724;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li::before {
+            content: '☐';
+            font-size: 1.5em;
+            margin-right: 12px;
+            color: #667eea;
+        }
+
+        .url-box {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Version 54 Dashboard Guide</h1>
+            <p>Visual guide to identify and publish the correct version</p>
+        </div>
+
+        <div class="content">
+            <!-- Step 1 -->
+            <div class="step">
+                <h2><span class="step-number">1</span> Dashboard öffnen</h2>
+
+                <p><strong>URL kopieren und in neuem Tab öffnen:</strong></p>
+                <div class="url-box">
+                    https://dashboard.retellai.com/agent/agent_f1ce85d06a84afb989dfbb16a9
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Tipp:</strong> Öffne diese Seite und das Retell Dashboard in zwei separaten Tabs nebeneinander, um einfach vergleichen zu können.
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step">
+                <h2><span class="step-number">2</span> Version 51 vs Version 54 erkennen</h2>
+
+                <div class="comparison">
+                    <div class="version-card version-old">
+                        <h3>
+                            ❌ Version 51
+                            <span class="badge badge-old">AKTUELL LIVE</span>
+                        </h3>
+
+                        <p><strong>Erkennungsmerkmale:</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px;">
+                            <li><strong>8 Tools</strong> (zu viele!)</li>
+                            <li>Status: "Published" oder "Live"</li>
+                            <li>Enthält alte Funktionen</li>
+                        </ul>
+
+                        <p><strong>Tool-Liste:</strong></p>
+                        <ul class="tool-list">
+                            <li class="tool-old">tool-initialize-call</li>
+                            <li class="tool-old">tool-collect-appointment ⚠️</li>
+                            <li class="tool-old">tool-get-appointments</li>
+                            <li class="tool-old">tool-cancel-appointment</li>
+                            <li class="tool-old">tool-reschedule-appointment</li>
+                            <li class="tool-old">tool-v17-check-availability</li>
+                            <li class="tool-old">tool-v17-book-appointment</li>
+                            <li class="tool-old">tool-1761287781516 ⚠️</li>
+                        </ul>
+
+                        <div class="warning">
+                            <strong>⚠️ NICHT PUBLISHEN!</strong> Dies ist die alte Version mit den Problemen.
+                        </div>
+                    </div>
+
+                    <div class="version-card version-new">
+                        <h3>
+                            ✅ Version 54
+                            <span class="badge badge-new">NEUE VERSION</span>
+                        </h3>
+
+                        <p><strong>Erkennungsmerkmale:</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px;">
+                            <li><strong>NUR 3 Tools</strong> ✨</li>
+                            <li>Status: "Draft" oder "Not Published"</li>
+                            <li>Clean, simplified</li>
+                        </ul>
+
+                        <p><strong>Tool-Liste:</strong></p>
+                        <ul class="tool-list">
+                            <li class="tool-new">tool-initialize-call ✅</li>
+                            <li class="tool-new">tool-v17-check-availability ✅</li>
+                            <li class="tool-new">tool-v17-book-appointment ✅</li>
+                        </ul>
+
+                        <div class="success">
+                            <strong>✅ DIESE VERSION PUBLISHEN!</strong> Dies ist die korrigierte Version.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ WICHTIG:</strong> Die Version-Nummer könnte auch V52, V53 oder V55 sein.
+                    Das Wichtigste ist: <strong>Suche die Version mit genau 3 Tools!</strong>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step">
+                <h2><span class="step-number">3</span> Version 54 publishen</h2>
+
+                <div class="checklist">
+                    <li>Finde den "Versions" oder "History" Tab im Dashboard</li>
+                    <li>Scrolle durch die Versionen und zähle die Tools</li>
+                    <li>Identifiziere die Version mit <strong>genau 3 Tools</strong></li>
+                    <li>Prüfe, dass KEINE "tool-collect-appointment" enthalten ist</li>
+                    <li>Prüfe, dass KEINE "tool-1761287781516" enthalten ist</li>
+                    <li>Klicke auf "Publish" oder "Make Live" Button bei dieser Version</li>
+                    <li>Bestätige im Popup-Dialog</li>
+                    <li>Warte auf Bestätigung (ca. 5 Sekunden)</li>
+                </div>
+
+                <div class="success">
+                    <strong>✅ Erfolg:</strong> Du solltest jetzt sehen, dass die neue Version als "Published" markiert ist,
+                    und die alte Version (V51) als "Previous Version" angezeigt wird.
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step">
+                <h2><span class="step-number">4</span> Phone Mapping setzen</h2>
+
+                <p><strong>URL öffnen:</strong></p>
+                <div class="url-box">
+                    https://dashboard.retellai.com/phone-numbers
+                </div>
+
+                <div class="checklist">
+                    <li>Suche die Nummer: <strong>+493033081738</strong></li>
+                    <li>Klicke auf die Nummer</li>
+                    <li>Finde das Feld "Agent" oder "Assigned Agent"</li>
+                    <li>Wähle aus Dropdown: <strong>agent_f1ce85d06a84afb989dfbb16a9</strong></li>
+                    <li>Im Dropdown steht: "Conversation Flow Agent Friseur 1"</li>
+                    <li>Klicke "Save" oder "Speichern"</li>
+                </div>
+
+                <div class="success">
+                    <strong>✅ Erfolg:</strong> Die Nummer +493033081738 sollte jetzt
+                    "Conversation Flow Agent Friseur 1" als zugewiesenen Agent anzeigen.
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step">
+                <h2><span class="step-number">5</span> Verifikation durchführen</h2>
+
+                <p>Führe im Terminal aus:</p>
+                <div class="url-box">
+                    cd /var/www/api-gateway<br>
+                    ./scripts/testing/complete_verification.sh
+                </div>
+
+                <div class="success">
+                    <strong>Erwartete Ausgabe:</strong><br><br>
+                    ✅ V54 IS READY!<br>
+                    ✅ Version 54 is published<br>
+                    ✅ Phone is mapped correctly<br>
+                    ✅ All systems GO
+                </div>
+
+                <div class="warning">
+                    <strong>Falls Fehler auftreten:</strong><br>
+                    • Überprüfe im Dashboard, ob V54 wirklich als "Published" markiert ist<br>
+                    • Überprüfe im Dashboard, ob Phone +493033081738 zum richtigen Agent gemappt ist<br>
+                    • Warte 1-2 Minuten und versuche es nochmal (API Sync Delay)
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="step">
+                <h2><span class="step-number">6</span> Test Call durchführen</h2>
+
+                <div class="highlight">
+                    <strong>📞 Testanruf-Skript:</strong>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>1. Anrufen:</strong> <span style="font-size: 1.3em; color: #667eea;">+493033081738</span></p>
+
+                    <p style="margin-top: 20px;"><strong>2. Sagen:</strong></p>
+                    <div style="background: white; padding: 15px; border-left: 4px solid #667eea; margin: 10px 0;">
+                        "Ich möchte einen Herrenhaarschnitt morgen um 14 Uhr"
+                    </div>
+
+                    <p style="margin-top: 20px;"><strong>3. Hören auf:</strong></p>
+                    <div style="background: white; padding: 15px; border-left: 4px solid #28a745; margin: 10px 0;">
+                        ✅ "Einen Moment bitte, ich prüfe die Verfügbarkeit..."<br>
+                        ✅ [2-5 Sekunden Pause während API-Call]<br>
+                        ✅ "Der Termin ist verfügbar..." ODER "Leider nicht verfügbar, aber..."
+                    </div>
+
+                    <p style="margin-top: 20px;"><strong>4. Bei Verfügbarkeit sagen:</strong></p>
+                    <div style="background: white; padding: 15px; border-left: 4px solid #667eea; margin: 10px 0;">
+                        "Ja, bitte buchen"
+                    </div>
+
+                    <p style="margin-top: 20px;"><strong>5. Hören auf:</strong></p>
+                    <div style="background: white; padding: 15px; border-left: 4px solid #28a745; margin: 10px 0;">
+                        ✅ "Einen Moment bitte, ich buche den Termin..."<br>
+                        ✅ [2-5 Sekunden Pause während Booking]<br>
+                        ✅ "Ihr Termin wurde gebucht..."
+                    </div>
+                </div>
+
+                <div class="success">
+                    <strong>🎯 Kritisch:</strong> Die KI MUSS bei "Verfügbarkeit prüfen" und "Termin buchen"
+                    jeweils 2-5 Sekunden warten. Das ist der Beweis, dass die Functions aufgerufen werden!
+                </div>
+            </div>
+
+            <!-- Step 7 -->
+            <div class="step">
+                <h2><span class="step-number">7</span> Erfolg verifizieren</h2>
+
+                <p>Direkt nach dem Testanruf ausführen:</p>
+                <div class="url-box">
+                    ./scripts/testing/complete_verification.sh --after-call
+                </div>
+
+                <div class="success">
+                    <strong>Erwartete Ausgabe:</strong><br><br>
+                    🎉 COMPLETE SUCCESS!<br><br>
+                    All systems GO:<br>
+                    ✅ Version 54 is published<br>
+                    ✅ Phone is mapped correctly<br>
+                    ✅ check_availability WAS CALLED<br>
+                    ✅ Fix successful: 0% → 100%
+                </div>
+
+                <div class="highlight">
+                    <strong>💡 Langzeit-Monitoring:</strong><br><br>
+                    Nach 24 Stunden kannst du die Erfolgsrate prüfen:<br>
+                    <code style="background: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 10px;">
+                        php scripts/monitoring/check_success_rate.php 24
+                    </code>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="step" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%); border-left-color: #28a745;">
+                <h2><span class="step-number">✓</span> Zusammenfassung</h2>
+
+                <h3 style="color: #28a745; margin-top: 20px;">Was Version 54 behebt:</h3>
+                <ul style="margin: 15px 0; padding-left: 40px; line-height: 2;">
+                    <li>✅ Reduzierung von 8 auf 3 Tools (62% weniger!)</li>
+                    <li>✅ Entfernung paralleler alter/neuer Funktionspfade</li>
+                    <li>✅ Eliminierung doppelter Function-Call-Kaskaden</li>
+                    <li>✅ Explizite Function Nodes mit <code>wait_for_result: true</code></li>
+                    <li>✅ Garantierte Function-Execution (0% → 100%)</li>
+                    <li>✅ Vereinfachte, klare Flow-Architektur</li>
+                </ul>
+
+                <h3 style="color: #667eea; margin-top: 30px;">Erwartete Verbesserung:</h3>
+                <div class="comparison" style="margin-top: 15px;">
+                    <div style="background: #fff5f5; padding: 20px; border-radius: 8px; border: 2px solid #dc3545;">
+                        <h4 style="color: #dc3545;">Vorher (V51):</h4>
+                        <ul style="list-style: none; padding: 0; margin-top: 10px;">
+                            <li>❌ check_availability: 0%</li>
+                            <li>❌ User hangup: 68.3%</li>
+                            <li>❌ Function calls: 5.4%</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f0fff4; padding: 20px; border-radius: 8px; border: 2px solid #28a745;">
+                        <h4 style="color: #28a745;">Nachher (V54):</h4>
+                        <ul style="list-style: none; padding: 0; margin-top: 10px;">
+                            <li>✅ check_availability: 100%</li>
+                            <li>✅ User hangup: &lt;30%</li>
+                            <li>✅ Function calls: &gt;90%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,644 @@
+{
+    "global_prompt": "# AskPro AI Terminbuchungs-Agent V2 (Optimiert)\n\n## Identität\nDu bist der virtuelle Assistent von Ask Pro AI. Du bist KEIN echter Mensch. Du bist freundlich, professionell und effizient.\n\n## NEUE Verhaltensregeln (Kritisch!)\n\n### 1. Aktives Zuhören vom ersten Moment\nWÄHREND der Begrüßung SOFORT auf folgende Informationen achten:\n- **Intent**: Will der Kunde buchen, verschieben, stornieren oder Infos?\n- **Datum**: Nennt der Kunde ein Datum? (z.B. \"Donnerstag\", \"15.1\", \"morgen\")\n- **Uhrzeit**: Nennt der Kunde eine Zeit? (z.B. \"13 Uhr\", \"vormittags\")\n- **Service**: Nennt der Kunde einen Service? (z.B. \"Beratung\")\n\n### 2. Informationen SOFORT bestätigen\nWenn der Kunde Termindetails nennt, SOFORT bestätigen:\n\"Gerne! Einen Termin für [Datum] um [Uhrzeit].\"\n\nNIEMALS ignorieren oder später nochmal fragen!\n\n### 3. Nur fehlende Informationen erfragen\n- Datum bekannt? → Nicht nochmal fragen\n- Zeit bekannt? → Nicht nochmal fragen\n- Intent klar? → NICHT nochmal fragen \"Was möchten Sie?\"\n\n### 4. Speichere Informationen in Variablen\n```\n{{user_intent}} = \"book\" | \"reschedule\" | \"cancel\" | \"info\" | \"unclear\"\n{{mentioned_date}} = Datum falls genannt (YYYY-MM-DD)\n{{mentioned_time}} = Uhrzeit falls genannt (HH:MM)\n{{mentioned_service}} = Service falls genannt\n{{mentioned_weekday}} = Wochentag falls genannt\n{{intent_confidence}} = \"high\" | \"medium\" | \"low\"\n```\n\n## Kernregeln\n- NIEMALS Datum, Uhrzeit oder Verfügbarkeit erfinden\n- IMMER Funktionsergebnisse verwenden\n- Bei Unsicherheit nachfragen\n- Nur Vornamen verwenden (kein Herr/Frau ohne explizites Geschlecht)\n- Wichtige Details vor der Buchung bestätigen\n- Höflich, professionell und effizient bleiben\n- **NEU**: Informationen vom Kunden SOFORT verwenden, nicht ignorieren!\n\n## Datumsregeln\n- \"15.1\" bedeutet 15. des AKTUELLEN Monats, NICHT Januar\n- Verwende current_time_berlin() als Referenz\n- Relative Daten parsen: \"morgen\" = tomorrow, \"übermorgen\" = day after tomorrow\n\n## Intent Recognition (Nur bei Unklarheit!)\nNur wenn {{intent_confidence}} == \"low\" DANN fragen:\n\"Möchten Sie einen NEUEN Termin vereinbaren oder einen BESTEHENDEN Termin ändern?\"\n\nBei {{intent_confidence}} == \"high\" → DIREKT zur Aktion!\n\n## V85 Race Condition Schutz (Nur bei NEUEN Buchungen!)\n- SCHRITT 1: collect_appointment_data mit bestaetigung=false (nur prüfen)\n- SCHRITT 2: Explizite Benutzerbestätigung einholen\n- SCHRITT 3: collect_appointment_data mit bestaetigung=true (buchen)\n- Bei Race Condition: Sofort Alternativen anbieten\n\n## Policy Violations (Empathisch!)\nBei Frist-Überschreitungen:\n\"Ich verstehe Ihre Situation. Leider können wir kurzfristige Änderungen nur bis [FRIST] vornehmen.\nSie haben folgende Möglichkeiten: [Optionen nennen]. Was möchten Sie tun?\"\n\n## Unerwartete Reaktionen\n- Kunde bricht ab → Höflich verabschieden\n- Kunde unsicher → Zeit geben, Optionen wiederholen\n- Intent wechselt → Flexibel zurück zu Intent Recognition\n- Kunde kennt Datum nicht → Termine auflisten\n\n## Optimierte Responsiveness\n- Innerhalb von 1 Sekunde nach Nutzeräußerung reagieren\n- \"Einen Moment bitte...\" nur bei Operationen >4 Sekunden\n- Niemals Stille über 2 Sekunden",
+    "start_node_id": "node_01_greeting_smart",
+    "start_speaker": "agent",
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+    },
+    "model_temperature": 0.3,
+    "tools": [
+        {
+            "tool_id": "tool-check-customer",
+            "name": "check_customer",
+            "type": "custom",
+            "description": "Überprüft ob Kunde anhand Telefonnummer in der Datenbank existiert.",
+            "url": "https://api.askproai.de/api/retell/check-customer",
+            "timeout_ms": 4000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "phone_number": {
+                        "type": "string",
+                        "description": "Telefonnummer des Anrufers"
+                    }
+                }
+            }
+        },
+        {
+            "tool_id": "tool-current-time-berlin",
+            "name": "current_time_berlin",
+            "type": "custom",
+            "description": "Holt aktuelles Datum und Uhrzeit in Berlin Zeitzone.",
+            "url": "https://api.askproai.de/api/retell/current-time-berlin",
+            "timeout_ms": 4000
+        },
+        {
+            "tool_id": "tool-collect-appointment-data",
+            "name": "collect_appointment_data",
+            "type": "custom",
+            "description": "Prüft Verfügbarkeit oder bucht Termin. bestaetigung: false=prüfen, true=buchen.",
+            "url": "https://api.askproai.de/api/retell/collect-appointment-data",
+            "timeout_ms": 8000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string"
+                    },
+                    "customer_phone": {
+                        "type": "string"
+                    },
+                    "customer_email": {
+                        "type": "string"
+                    },
+                    "service": {
+                        "type": "string"
+                    },
+                    "preferred_date": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD"
+                    },
+                    "preferred_time": {
+                        "type": "string",
+                        "description": "HH:MM"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "bestaetigung"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-get-customer-appointments",
+            "name": "get_customer_appointments",
+            "type": "custom",
+            "description": "Ruft alle bevorstehenden Termine eines Kunden ab.",
+            "url": "https://api.askproai.de/api/retell/get-customer-appointments",
+            "timeout_ms": 6000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "customer_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-cancel-appointment",
+            "name": "cancel_appointment",
+            "type": "custom",
+            "description": "Storniert einen Termin. Prüft automatisch Policy.",
+            "url": "https://api.askproai.de/api/retell/cancel-appointment",
+            "timeout_ms": 8000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "appointment_date": {
+                        "type": "string"
+                    },
+                    "customer_name": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "appointment_date"
+                ]
+            }
+        },
+        {
+            "tool_id": "tool-reschedule-appointment",
+            "name": "reschedule_appointment",
+            "type": "custom",
+            "description": "Verschiebt einen Termin. Prüft automatisch Policy.",
+            "url": "https://api.askproai.de/api/retell/reschedule-appointment",
+            "timeout_ms": 10000,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "old_date": {
+                        "type": "string"
+                    },
+                    "new_date": {
+                        "type": "string"
+                    },
+                    "new_time": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "old_date",
+                    "new_date"
+                ]
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "id": "node_01_greeting_smart",
+            "name": "Smart Begrüßung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Willkommen bei Ask Pro AI. Guten Tag! Wie kann ich Ihnen helfen?\n\nWICHTIG - Während du auf die Antwort wartest, achte auf:\n1. Terminbuchungs-Intent: \"Ich hätte gern Termin\", \"Termin buchen\", \"reservieren\"\n2. Datum-Nennung: \"Donnerstag\", \"15.1\", \"morgen\", etc.\n3. Zeit-Nennung: \"13 Uhr\", \"vormittags\", \"14:30\"\n4. Service: \"Beratung\", \"Konsultation\"\n\nWenn der Kunde einen Terminwunsch äußert:\n→ Setze {{user_intent}} = \"book\"\n→ Setze {{intent_confidence}} = \"high\"\n→ Speichere {{mentioned_date}}, {{mentioned_time}}, {{mentioned_service}} falls genannt\n\nWenn der Kunde über Verschiebung/Stornierung spricht:\n→ Setze {{user_intent}} = \"reschedule\" oder \"cancel\"\n→ Setze {{intent_confidence}} = \"high\"\n\nWenn unklar:\n→ Setze {{intent_confidence}} = \"low\""
+            },
+            "edges": [
+                {
+                    "id": "edge_greeting_to_parallel",
+                    "condition": "Nach Begrüßung",
+                    "destination_node_id": "func_parallel_time_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User has responded to greeting"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_parallel_time_check",
+            "name": "Zeit abrufen (parallel)",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_time_to_customer",
+                    "condition": "Zeit abgerufen",
+                    "destination_node_id": "func_parallel_customer_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-current-time-berlin",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "func_parallel_customer_check",
+            "name": "Kunde prüfen (parallel)",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_customer_to_router",
+                    "condition": "Kunde geprüft",
+                    "destination_node_id": "node_smart_router",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-check-customer",
+            "wait_for_result": true,
+            "speak_during_execution": false
+        },
+        {
+            "id": "node_smart_router",
+            "name": "Intelligentes Routing",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "SILENT ROUTING NODE - Do NOT speak here!\n\nAnalyze the situation:\n- customer_status from check_customer\n- {{user_intent}} from greeting\n- {{intent_confidence}} from greeting\n- {{mentioned_date}} and {{mentioned_time}} availability\n\nRoute intelligently based on ALL available information."
+            },
+            "edges": [
+                {
+                    "id": "edge_router_known_direct_book",
+                    "condition": "Bekannter Kunde, klarer Intent, Datum bekannt",
+                    "destination_node_id": "node_confirm_known_customer",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "customer_status",
+                                "operator": "==",
+                                "right": "found"
+                            },
+                            {
+                                "left": "user_intent",
+                                "operator": "==",
+                                "right": "book"
+                            },
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "high"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_router_new_direct_book",
+                    "condition": "Neuer Kunde, klarer Intent",
+                    "destination_node_id": "node_get_customer_details",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "customer_status",
+                                "operator": "==",
+                                "right": "new_customer"
+                            },
+                            {
+                                "left": "user_intent",
+                                "operator": "==",
+                                "right": "book"
+                            },
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "high"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_router_anon_direct_book",
+                    "condition": "Anonymer Kunde, klarer Intent",
+                    "destination_node_id": "node_get_customer_details",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "customer_status",
+                                "operator": "==",
+                                "right": "anonymous"
+                            },
+                            {
+                                "left": "user_intent",
+                                "operator": "==",
+                                "right": "book"
+                            },
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "high"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_router_known_unclear",
+                    "condition": "Bekannter Kunde, unklarer Intent",
+                    "destination_node_id": "node_intent_clarification",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "customer_status",
+                                "operator": "==",
+                                "right": "found"
+                            },
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "low"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_router_default",
+                    "condition": "Fallback: Details dann Intent klären",
+                    "destination_node_id": "node_get_customer_details",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Default routing"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_confirm_known_customer",
+            "name": "Bekannter Kunde Bestätigung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Greet warmly and IMMEDIATELY acknowledge their request:\n\n\"Schön Sie wiederzuhören, {{customer_name}}! Einen Termin für {{mentioned_date}} um {{mentioned_time}} - lassen Sie mich die Verfügbarkeit prüfen.\"\n\nUse the information they already provided! Don't ask again!"
+            },
+            "edges": [
+                {
+                    "id": "edge_known_to_collect",
+                    "condition": "Zur Datensammlung",
+                    "destination_node_id": "func_collect_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Proceed to check availability"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_get_customer_details",
+            "name": "Kundendetails erfragen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "IF {{user_intent}} == \"book\" AND {{mentioned_date}} is known:\n    Say: \"Gerne! Für {{mentioned_date}} um {{mentioned_time}}. Darf ich zunächst Ihren Namen und Ihre E-Mail-Adresse haben?\"\nELSE IF {{user_intent}} == \"book\":\n    Say: \"Gerne! Darf ich zunächst Ihren Namen und Ihre E-Mail-Adresse haben?\"\nELSE:\n    Say: \"Gerne! Darf ich zunächst Ihren Namen und Ihre E-Mail-Adresse haben?\"\n\nWICHTIG: Acknowledge any appointment details they mentioned before asking for personal info!"
+            },
+            "edges": [
+                {
+                    "id": "edge_details_to_intent_check",
+                    "condition": "Details erhalten",
+                    "destination_node_id": "node_intent_decision",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Customer provided name and email"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_intent_decision",
+            "name": "Intent-Entscheidung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "SILENT ROUTING - Do NOT speak!\n\nCheck {{intent_confidence}}:\n- If \"high\" → Go directly to action\n- If \"low\" → Go to intent clarification"
+            },
+            "edges": [
+                {
+                    "id": "edge_intent_high_book",
+                    "condition": "Hohe Konfidenz: Buchung",
+                    "destination_node_id": "node_booking_path",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "high"
+                            },
+                            {
+                                "left": "user_intent",
+                                "operator": "==",
+                                "right": "book"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_intent_low",
+                    "condition": "Niedrige Konfidenz: Klären",
+                    "destination_node_id": "node_intent_clarification",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "intent_confidence",
+                                "operator": "==",
+                                "right": "low"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                },
+                {
+                    "id": "edge_intent_default",
+                    "condition": "Default: Buchung",
+                    "destination_node_id": "node_booking_path",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Default to booking"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_intent_clarification",
+            "name": "Intent-Klärung",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Only ask this if {{intent_confidence}} == \"low\":\n\n\"Ich wollte nur sicherstellen, dass ich Sie richtig verstanden habe. Möchten Sie einen NEUEN Termin vereinbaren oder einen BESTEHENDEN Termin ändern?\"\n\nAfter user responds, set {{user_intent}} based on their answer."
+            },
+            "edges": [
+                {
+                    "id": "edge_clarified_book",
+                    "condition": "Buchung gewählt",
+                    "destination_node_id": "node_booking_path",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to book"
+                    }
+                },
+                {
+                    "id": "edge_clarified_reschedule",
+                    "condition": "Verschiebung gewählt",
+                    "destination_node_id": "func_get_appointments",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to reschedule"
+                    }
+                },
+                {
+                    "id": "edge_clarified_cancel",
+                    "condition": "Stornierung gewählt",
+                    "destination_node_id": "func_get_appointments",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User wants to cancel"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "node_booking_path",
+            "name": "Buchungs-Flow",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "IF {{mentioned_date}} AND {{mentioned_time}} already known:\n    Say: \"Perfekt! Ich prüfe gleich die Verfügbarkeit für {{mentioned_date}} um {{mentioned_time}}.\"\nELSE IF {{mentioned_date}} known but NOT {{mentioned_time}}:\n    Say: \"Für welche Uhrzeit möchten Sie den Termin am {{mentioned_date}}?\"\nELSE:\n    Say: \"Für welches Datum und welche Uhrzeit möchten Sie den Termin?\"\n\nWICHTIG: Verwende bereits genannte Informationen! Nicht nochmal fragen!"
+            },
+            "edges": [
+                {
+                    "id": "edge_booking_to_collect",
+                    "condition": "Zur Verfügbarkeitsprüfung",
+                    "destination_node_id": "func_collect_check",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All booking details collected"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_collect_check",
+            "name": "Verfügbarkeit prüfen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_collect_check_to_confirm",
+                    "condition": "Zur Bestätigung",
+                    "destination_node_id": "node_booking_confirmation",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment-data",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_booking_confirmation",
+            "name": "Buchung bestätigen",
+            "type": "conversation",
+            "instruction": {
+                "type": "static_text",
+                "text": "Based on collect_appointment_data result:\n\nIF available == true:\n    \"Sehr gut! Der Termin am {{date}} um {{time}} ist verfügbar. Soll ich diesen für Sie buchen?\"\nELSE:\n    \"Leider ist {{date}} um {{time}} nicht verfügbar. Ich hätte folgende Alternativen: {{alternatives}}. Welcher Termin würde Ihnen passen?\""
+            },
+            "edges": [
+                {
+                    "id": "edge_confirm_yes",
+                    "condition": "Kunde bestätigt",
+                    "destination_node_id": "func_collect_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User confirms booking"
+                    }
+                },
+                {
+                    "id": "edge_confirm_alternative",
+                    "condition": "Alternative gewählt",
+                    "destination_node_id": "func_collect_book",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User chooses alternative"
+                    }
+                },
+                {
+                    "id": "edge_confirm_abort",
+                    "condition": "Kunde bricht ab",
+                    "destination_node_id": "end_polite",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User cancels"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "func_collect_book",
+            "name": "Termin buchen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_book_to_success",
+                    "condition": "Zur Erfolgsbestätigung",
+                    "destination_node_id": "end_booking_success",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Skip response"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-collect-appointment-data",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "end_booking_success",
+            "name": "Erfolgreiche Buchung",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Perfect! Ihr Termin am {{date}} um {{time}} ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Gibt es noch etwas, womit ich Ihnen helfen kann?"
+            },
+            "edges": []
+        },
+        {
+            "id": "end_polite",
+            "name": "Höfliche Verabschiedung",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Kein Problem! Falls Sie doch noch einen Termin vereinbaren möchten, rufen Sie uns gerne jederzeit wieder an. Auf Wiederhören!"
+            },
+            "edges": []
+        },
+        {
+            "id": "func_get_appointments",
+            "name": "Termine abrufen",
+            "type": "function",
+            "instruction": {
+                "type": "static_text",
+                "text": ""
+            },
+            "edges": [
+                {
+                    "id": "edge_appts_to_reschedule",
+                    "condition": "Zur Verschiebung",
+                    "destination_node_id": "node_reschedule_flow",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "For reschedule"
+                    }
+                }
+            ],
+            "tool_type": "local",
+            "tool_id": "tool-get-customer-appointments",
+            "wait_for_result": true,
+            "speak_during_execution": true
+        },
+        {
+            "id": "node_reschedule_flow",
+            "name": "Verschiebungs-Flow",
+            "type": "end",
+            "instruction": {
+                "type": "static_text",
+                "text": "Hier würde der Verschiebungs-Flow weitergehen. (Noch zu implementieren)"
+            },
+            "edges": []
+        }
+    ]
+}

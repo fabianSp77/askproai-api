@@ -1,0 +1,14 @@
+{
+  "name": "V17 Tool-Invocation Test (KRITISCH)",
+  "description": "Testet explizit die V17 Tool-Aufrufe - check_availability und book_appointment",
+  "priority": "critical",
+  "user_prompt": "## Identität\nDein Name ist Test User.\nDeine Telefonnummer ist +491000000001.\n\n## Ziel\nTermin buchen für eine Beratung morgen um 13:00 Uhr.\n\n## Persönlichkeit\nKooperativ, antwortest präzise und schnell.\n\n## Verhalten\n- Sage: \"Ich möchte einen Termin für eine Beratung buchen\"\n- Nenne deinen Namen wenn gefragt: \"Test User\"\n- Sage den Wunschtermin: \"Morgen um 13 Uhr\"\n- Bestätige sofort mit \"Ja, bitte buchen\" wenn der Agent fragt",
+  "success_criteria": "CRITICAL - ALLE Punkte MÜSSEN erfüllt sein:\n\n✅ 1. Agent ruft check_availability_v17 Tool auf\n✅ 2. Agent sagt: \"Der Termin ist verfügbar. Soll ich das für Sie buchen?\"\n✅ 3. Agent WARTET auf Bestätigung (bucht NICHT automatisch!)\n✅ 4. Nach \"Ja\": Agent ruft book_appointment_v17 Tool auf\n✅ 5. Agent bestätigt erfolgreiche Buchung\n✅ 6. Gesamtdauer < 90 Sekunden\n\nFAILURE wenn:\n❌ Tool wird NICHT aufgerufen (wie in V15/V16)\n❌ Agent sagt \"ich prüfe\" aber kein Tool-Call\n❌ Automatische Buchung ohne Bestätigung",
+  "variables": {
+    "from_number": "+491000000001",
+    "customer_name": "Test User",
+    "test_date": "23.10.2025",
+    "test_time": "13:00",
+    "service": "Beratung"
+  }
+}

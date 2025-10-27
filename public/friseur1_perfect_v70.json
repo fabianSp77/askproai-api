@@ -1,0 +1,193 @@
+{
+  "tools": [
+    {
+      "tool_id": "tool-init",
+      "name": "initialize_call",
+      "url": "https://api.askproai.de/api/retell/initialize-call",
+      "description": "Background system initialization. Called automatically, never mention this to the customer.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string"
+          }
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-check",
+      "name": "check_availability_v17",
+      "url": "https://api.askproai.de/api/retell/v17/check-availability",
+      "description": "Check availability for a date/time. Use BEFORE booking. Returns available status and alternatives.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "datum": {"type": "string", "description": "YYYY-MM-DD"},
+          "uhrzeit": {"type": "string", "description": "HH:MM"},
+          "dienstleistung": {"type": "string"},
+          "mitarbeiter": {"type": "string"}
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "tool-book",
+      "name": "book_appointment_v17",
+      "url": "https://api.askproai.de/api/retell/v17/book-appointment",
+      "description": "Create appointment after availability confirmed and customer agreed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "datum": {"type": "string", "description": "YYYY-MM-DD"},
+          "uhrzeit": {"type": "string", "description": "HH:MM"},
+          "dienstleistung": {"type": "string"},
+          "mitarbeiter": {"type": "string"}
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "tool-list",
+      "name": "get_customer_appointments",
+      "url": "https://api.askproai.de/api/retell/get-customer-appointments",
+      "description": "List customer's upcoming appointments.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"}
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-cancel",
+      "name": "cancel_appointment",
+      "url": "https://api.askproai.de/api/retell/cancel-appointment",
+      "description": "Cancel an appointment. Confirm with customer first.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "datum": {"type": "string"},
+          "uhrzeit": {"type": "string"}
+        },
+        "required": ["call_id"]
+      }
+    },
+    {
+      "tool_id": "tool-reschedule",
+      "name": "reschedule_appointment",
+      "url": "https://api.askproai.de/api/retell/reschedule-appointment",
+      "description": "Move appointment to new date/time. Check availability first.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "new_datum": {"type": "string"},
+          "new_uhrzeit": {"type": "string"}
+        },
+        "required": ["call_id", "new_datum", "new_uhrzeit"]
+      }
+    },
+    {
+      "tool_id": "tool-services",
+      "name": "get_available_services",
+      "url": "https://api.askproai.de/api/retell/get-available-services",
+      "description": "List available services.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"}
+        },
+        "required": ["call_id"]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start_node"
+    },
+    {
+      "id": "init",
+      "type": "function",
+      "tool_id": "tool-init",
+      "wait_for_result": true,
+      "speak_during_execution": false,
+      "speak_after_execution": false
+    },
+    {
+      "id": "greet",
+      "type": "speak_node",
+      "speak": "Guten Tag! Wie kann ich Ihnen helfen?"
+    },
+    {
+      "id": "collect",
+      "type": "collect_info_node",
+      "collect_data": [
+        {"name": "datum", "type": "string", "description": "Date", "required": true},
+        {"name": "uhrzeit", "type": "string", "description": "Time", "required": true},
+        {"name": "dienstleistung", "type": "string", "description": "Service", "required": true}
+      ]
+    },
+    {
+      "id": "check",
+      "type": "function",
+      "tool_id": "tool-check",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "available_yes",
+      "type": "speak_node",
+      "speak": "Der Termin ist verfügbar. Soll ich buchen?"
+    },
+    {
+      "id": "available_no",
+      "type": "speak_node",
+      "speak": "Leider nicht verfügbar. Alternative Zeiten: {{check.alternatives}}"
+    },
+    {
+      "id": "confirm",
+      "type": "collect_info_node",
+      "collect_data": [
+        {"name": "ja", "type": "boolean", "required": true}
+      ]
+    },
+    {
+      "id": "book",
+      "type": "function",
+      "tool_id": "tool-book",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "done",
+      "type": "speak_node",
+      "speak": "Gebucht! Sie erhalten eine Bestätigung per E-Mail."
+    },
+    {
+      "id": "end",
+      "type": "end_node"
+    }
+  ],
+  "edges": [
+    {"from": "start", "to": "init"},
+    {"from": "init", "to": "greet"},
+    {"from": "greet", "to": "collect"},
+    {"from": "collect", "to": "check"},
+    {"from": "check", "to": "available_yes", "condition": "{{check.available}} == true"},
+    {"from": "check", "to": "available_no", "condition": "{{check.available}} == false"},
+    {"from": "available_yes", "to": "confirm"},
+    {"from": "available_no", "to": "collect"},
+    {"from": "confirm", "to": "book", "condition": "{{ja}} == true"},
+    {"from": "confirm", "to": "collect", "condition": "{{ja}} == false"},
+    {"from": "book", "to": "done"},
+    {"from": "done", "to": "end"}
+  ]
+}

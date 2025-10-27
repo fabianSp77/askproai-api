@@ -291,7 +291,7 @@ class PolicyOnboarding extends Page implements HasForms
         };
 
         // Get user's company for multi-tenant safety
-        $userCompanyId = Auth::user()->company_id;
+        $userCompanyId = Auth::guard('admin')->user()->company_id;
 
         // Create policy
         try {

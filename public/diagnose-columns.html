@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filament Column Diagnostics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #F9FAFB;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1F2937; }
+        .code-box {
+            background: #1F2937;
+            color: #10B981;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .instruction {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .button {
+            background: #3B82F6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Filament Column Diagnostics Tool</h1>
+
+        <div class="warning">
+            <strong>⚠️ WICHTIG:</strong> Diese Seite muss parallel zur Call Monitoring Seite geöffnet sein!
+        </div>
+
+        <div class="instruction">
+            <h3>Schritt-für-Schritt Anleitung:</h3>
+            <ol>
+                <li><strong>Öffne in einem NEUEN Tab:</strong> <a href="/admin/calls" target="_blank">Call Monitoring Seite</a></li>
+                <li>Warte, bis die Tabelle geladen ist</li>
+                <li>Drücke <code>F12</code> um die Developer Tools zu öffnen</li>
+                <li>Gehe zum <strong>Console</strong> Tab</li>
+                <li>Kopiere den Code unten und füge ihn in die Console ein</li>
+                <li>Drücke <code>Enter</code></li>
+                <li>Schicke mir den Output als Screenshot</li>
+            </ol>
+        </div>
+
+        <h2>Diagnostic Code:</h2>
+        <div class="code-box" id="diagnostic-code">
+// Filament Table Column Diagnostic
+console.log('=== FILAMENT COLUMN DIAGNOSTIC ===');
+console.log('Timestamp:', new Date().toISOString());
+console.log('');
+
+// Check for Filament table
+const table = document.querySelector('[wire\\:id*="table"]') || document.querySelector('table');
+if (!table) {
+    console.error('❌ Keine Tabelle gefunden!');
+} else {
+    console.log('✓ Tabelle gefunden');
+}
+
+// Get all table headers
+const headers = Array.from(document.querySelectorAll('th'));
+console.log('');
+console.log('=== SPALTEN-ÜBERSCHRIFTEN ===');
+console.log('Anzahl Spalten:', headers.length);
+headers.forEach((th, index) => {
+    const text = th.innerText.trim();
+    console.log(`${index + 1}. "${text}"`);
+});
+
+// Check for specific columns
+console.log('');
+console.log('=== SPALTEN-CHECK ===');
+const columnNames = ['Telefon', '📞 Telefon', 'Phone', 'TEST'];
+columnNames.forEach(name => {
+    const found = headers.some(th => th.innerText.includes(name));
+    console.log(found ? `✓ "${name}" gefunden` : `❌ "${name}" NICHT gefunden`);
+});
+
+// Check LocalStorage
+console.log('');
+console.log('=== LOCALSTORAGE CHECK ===');
+const keys = Object.keys(localStorage);
+const filamentKeys = keys.filter(k =>
+    k.includes('table') ||
+    k.includes('column') ||
+    k.includes('toggle') ||
+    k.includes('RetellCallSession')
+);
+console.log('Filament-bezogene Keys:', filamentKeys.length);
+filamentKeys.forEach(key => {
+    console.log(`- ${key}`);
+});
+
+// Check for column toggle button
+console.log('');
+console.log('=== TOGGLE BUTTON CHECK ===');
+const toggleButton = document.querySelector('[wire\\:click*="column"]') ||
+                     document.querySelector('[aria-label*="column"]') ||
+                     document.querySelector('[title*="column"]');
+if (toggleButton) {
+    console.log('✓ Column Toggle Button gefunden:', toggleButton.outerHTML);
+} else {
+    console.log('❌ Column Toggle Button NICHT gefunden');
+}
+
+// Check Livewire components
+console.log('');
+console.log('=== LIVEWIRE COMPONENTS ===');
+const livewireElements = document.querySelectorAll('[wire\\:id]');
+console.log('Anzahl Livewire Components:', livewireElements.length);
+livewireElements.forEach((el, i) => {
+    console.log(`${i + 1}. ${el.getAttribute('wire:id')}`);
+});
+
+console.log('');
+console.log('=== END DIAGNOSTIC ===');
+console.log('📸 Bitte Screenshot von dieser kompletten Ausgabe machen!');
+        </div>
+
+        <button class="button" onclick="copyCode()">📋 Code kopieren</button>
+        <button class="button" onclick="window.open('/admin/calls', '_blank')">🔗 Call Monitoring öffnen</button>
+
+        <div class="instruction" style="margin-top: 30px;">
+            <h3>Was passiert dann?</h3>
+            <p>Der Code zeigt dir:</p>
+            <ul>
+                <li>✓ Welche Spalten tatsächlich im DOM sind</li>
+                <li>✓ Ob "Telefon" oder "TEST" Spalten existieren</li>
+                <li>✓ Welche LocalStorage Keys gespeichert sind</li>
+                <li>✓ Ob ein Column Toggle Button existiert</li>
+            </ul>
+            <p><strong>Damit kann ich sehen, was WIRKLICH auf der Seite passiert!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('diagnostic-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✓ Code in Zwischenablage kopiert!\n\nJetzt:\n1. Öffne Call Monitoring\n2. F12 → Console\n3. Einfügen (Strg+V) und Enter');
+            });
+        }
+    </script>
+</body>
+</html>

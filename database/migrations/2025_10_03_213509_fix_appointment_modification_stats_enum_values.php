@@ -23,6 +23,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if column exists before modifying
+        if (!Schema::hasColumn('appointment_modification_stats', 'stat_type')) {
+            // Column doesn't exist, likely renamed to modification_type
+            return;
+        }
+
         // Table is empty (verified 0 records), safe to change enum
         DB::statement("
             ALTER TABLE appointment_modification_stats

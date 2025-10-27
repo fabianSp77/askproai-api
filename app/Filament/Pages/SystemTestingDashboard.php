@@ -22,7 +22,7 @@ class SystemTestingDashboard extends Page
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user();
         return $user && $user->email === 'admin@askproai.de';
     }
 

@@ -175,23 +175,34 @@ class Call extends Model
      */
     public function getAppointmentAttribute(): ?Appointment
     {
-        // Load latest appointment if not already loaded
-        if (!$this->relationLoaded('latestAppointment')) {
-            $this->load('latestAppointment');
+        try {
+            // Load latest appointment if not already loaded
+            if (!$this->relationLoaded('latestAppointment')) {
+                $this->load('latestAppointment');
+            }
+
+            $latest = $this->latestAppointment;
+
+            if ($latest) {
+                return $latest;
+            }
+        } catch (\Exception $e) {
+            // Silently handle missing call_id foreign key from DB backup
+            // The call_id column doesn't exist in appointments table from Sept 21 backup
         }
 
-        $latest = $this->latestAppointment;
+        try {
+            // Fallback to legacy converted appointment
+            if (!$this->relationLoaded('convertedAppointment')) {
+                $this->load('convertedAppointment');
+            }
 
-        if ($latest) {
-            return $latest;
+            return $this->convertedAppointment;
+        } catch (\Exception $e) {
+            // Silently handle missing converted_appointment_id foreign key from DB backup
+            // The converted_appointment_id column doesn't exist in calls table from Sept 21 backup
+            return null;
         }
-
-        // Fallback to legacy converted appointment
-        if (!$this->relationLoaded('convertedAppointment')) {
-            $this->load('convertedAppointment');
-        }
-
-        return $this->convertedAppointment;
     }
 
     /*

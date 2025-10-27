@@ -1,0 +1,175 @@
+{
+  "tools": [
+    {
+      "tool_id": "init",
+      "name": "initialize_call",
+      "url": "https://api.askproai.de/api/retell/initialize-call",
+      "description": "Internal system call. Never mention to customer.",
+      "parameters": {"type": "object", "properties": {"call_id": {"type": "string"}}, "required": ["call_id"]}
+    },
+    {
+      "tool_id": "check",
+      "name": "check_availability_v17",
+      "url": "https://api.askproai.de/api/retell/v17/check-availability",
+      "description": "Check if time slot is available.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "datum": {"type": "string"},
+          "uhrzeit": {"type": "string"},
+          "dienstleistung": {"type": "string"}
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "book",
+      "name": "book_appointment_v17",
+      "url": "https://api.askproai.de/api/retell/v17/book-appointment",
+      "description": "Book the appointment.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {"type": "string"},
+          "datum": {"type": "string"},
+          "uhrzeit": {"type": "string"},
+          "dienstleistung": {"type": "string"}
+        },
+        "required": ["call_id", "datum", "uhrzeit", "dienstleistung"]
+      }
+    },
+    {
+      "tool_id": "list",
+      "name": "get_customer_appointments",
+      "url": "https://api.askproai.de/api/retell/get-customer-appointments",
+      "description": "Show customer's appointments.",
+      "parameters": {"type": "object", "properties": {"call_id": {"type": "string"}}, "required": ["call_id"]}
+    },
+    {
+      "tool_id": "cancel",
+      "name": "cancel_appointment",
+      "url": "https://api.askproai.de/api/retell/cancel-appointment",
+      "description": "Cancel an appointment.",
+      "parameters": {"type": "object", "properties": {"call_id": {"type": "string"}, "datum": {"type": "string"}, "uhrzeit": {"type": "string"}}, "required": ["call_id"]}
+    },
+    {
+      "tool_id": "reschedule",
+      "name": "reschedule_appointment",
+      "url": "https://api.askproai.de/api/retell/reschedule-appointment",
+      "description": "Move appointment to new time.",
+      "parameters": {"type": "object", "properties": {"call_id": {"type": "string"}, "new_datum": {"type": "string"}, "new_uhrzeit": {"type": "string"}}, "required": ["call_id", "new_datum", "new_uhrzeit"]}
+    },
+    {
+      "tool_id": "services",
+      "name": "get_available_services",
+      "url": "https://api.askproai.de/api/retell/get-available-services",
+      "description": "List available services.",
+      "parameters": {"type": "object", "properties": {"call_id": {"type": "string"}}, "required": ["call_id"]}
+    }
+  ],
+  "nodes": [
+    {"id": "start", "type": "start_node"},
+    {
+      "id": "sys_init",
+      "type": "function",
+      "tool_id": "init",
+      "wait_for_result": true,
+      "speak_during_execution": false,
+      "speak_after_execution": false
+    },
+    {"id": "greet", "type": "speak_node", "speak": "Guten Tag! Wie kann ich helfen?"},
+    {
+      "id": "intent",
+      "type": "intent_detection_node",
+      "intents": [
+        {"name": "new", "description": "Book new", "examples": ["Termin buchen", "Haarschnitt"]},
+        {"name": "list", "description": "Show appointments", "examples": ["Welche Termine", "Meine Buchungen"]},
+        {"name": "cancel", "description": "Cancel", "examples": ["Stornieren", "Absagen"]},
+        {"name": "services", "description": "Ask services", "examples": ["Was bieten Sie an"]}
+      ]
+    },
+    {
+      "id": "get_info",
+      "type": "collect_info_node",
+      "collect_data": [
+        {"name": "datum", "type": "string", "required": true},
+        {"name": "uhrzeit", "type": "string", "required": true},
+        {"name": "dienstleistung", "type": "string", "required": true}
+      ]
+    },
+    {
+      "id": "fn_check",
+      "type": "function",
+      "tool_id": "check",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {
+      "id": "say_avail",
+      "type": "speak_node",
+      "speak": "Verfügbar. Soll ich buchen?"
+    },
+    {
+      "id": "say_no",
+      "type": "speak_node",
+      "speak": "Nicht verfügbar. Alternativen: {{fn_check.alternatives}}"
+    },
+    {
+      "id": "get_confirm",
+      "type": "collect_info_node",
+      "collect_data": [{"name": "confirm", "type": "boolean", "required": true}]
+    },
+    {
+      "id": "fn_book",
+      "type": "function",
+      "tool_id": "book",
+      "wait_for_result": true,
+      "speak_during_execution": true,
+      "speak_after_execution": false
+    },
+    {"id": "say_done", "type": "speak_node", "speak": "Gebucht! Bestätigung per E-Mail."},
+    {
+      "id": "fn_list",
+      "type": "function",
+      "tool_id": "list",
+      "wait_for_result": true,
+      "speak_during_execution": false,
+      "speak_after_execution": false
+    },
+    {"id": "say_list", "type": "speak_node", "speak": "{{fn_list.message}}"},
+    {
+      "id": "fn_services",
+      "type": "function",
+      "tool_id": "services",
+      "wait_for_result": true,
+      "speak_during_execution": false,
+      "speak_after_execution": false
+    },
+    {"id": "say_services", "type": "speak_node", "speak": "{{fn_services.services}}"},
+    {"id": "end", "type": "end_node"}
+  ],
+  "edges": [
+    {"from": "start", "to": "sys_init"},
+    {"from": "sys_init", "to": "greet"},
+    {"from": "greet", "to": "intent"},
+    {"from": "intent", "to": "get_info", "condition": "{{intent}} == 'new'"},
+    {"from": "intent", "to": "fn_list", "condition": "{{intent}} == 'list'"},
+    {"from": "intent", "to": "fn_list", "condition": "{{intent}} == 'cancel'"},
+    {"from": "intent", "to": "fn_services", "condition": "{{intent}} == 'services'"},
+    {"from": "get_info", "to": "fn_check"},
+    {"from": "fn_check", "to": "say_avail", "condition": "{{fn_check.available}} == true"},
+    {"from": "fn_check", "to": "say_no", "condition": "{{fn_check.available}} == false"},
+    {"from": "say_avail", "to": "get_confirm"},
+    {"from": "say_no", "to": "get_info"},
+    {"from": "get_confirm", "to": "fn_book", "condition": "{{confirm}} == true"},
+    {"from": "get_confirm", "to": "get_info", "condition": "{{confirm}} == false"},
+    {"from": "fn_book", "to": "say_done"},
+    {"from": "say_done", "to": "end"},
+    {"from": "fn_list", "to": "say_list"},
+    {"from": "say_list", "to": "end"},
+    {"from": "fn_services", "to": "say_services"},
+    {"from": "say_services", "to": "get_info"}
+  ]
+}

@@ -23,33 +23,47 @@ return new class extends Migration
         });
 
         // Appointment Modification Stats - Critical for all policy widgets
-        Schema::table('appointment_modification_stats', function (Blueprint $table) {
-            $table->index(['customer_id', 'stat_type'], 'idx_ams_customer_stat_type');
-            $table->index(['company_id', 'created_at'], 'idx_ams_company_created');
-            $table->index(['stat_type', 'created_at'], 'idx_ams_stat_type_created');
-        });
+        // Skip if table structure doesn't match expectations
+        if (Schema::hasColumn('appointment_modification_stats', 'stat_type') &&
+            Schema::hasColumn('appointment_modification_stats', 'company_id')) {
+            Schema::table('appointment_modification_stats', function (Blueprint $table) {
+                $table->index(['customer_id', 'stat_type'], 'idx_ams_customer_stat_type');
+                $table->index(['company_id', 'created_at'], 'idx_ams_company_created');
+                $table->index(['stat_type', 'created_at'], 'idx_ams_stat_type_created');
+            });
+        }
+        // Table has different structure than expected, skip indexing
 
         // Notification Queue - Critical for notification widgets
-        Schema::table('notification_queues', function (Blueprint $table) {
-            $table->index(['status', 'created_at'], 'idx_nq_status_created');
-            $table->index(['channel', 'created_at', 'status'], 'idx_nq_channel_created_status');
-            $table->index(['created_at', 'status'], 'idx_nq_created_status');
-        });
+        if (Schema::hasTable('notification_queues')) {
+            Schema::table('notification_queues', function (Blueprint $table) {
+                $table->index(['status', 'created_at'], 'idx_nq_status_created');
+                $table->index(['channel', 'created_at', 'status'], 'idx_nq_channel_created_status');
+                $table->index(['created_at', 'status'], 'idx_nq_created_status');
+            });
+        }
 
         // Staff - Critical for StaffPerformanceWidget
-        Schema::table('staff', function (Blueprint $table) {
-            $table->index(['company_id', 'is_active'], 'idx_staff_company_active');
-        });
+        if (Schema::hasTable('staff')) {
+            Schema::table('staff', function (Blueprint $table) {
+                $table->index(['company_id', 'is_active'], 'idx_staff_company_active');
+            });
+        }
 
         // Customers - Critical for CustomerComplianceWidget
-        Schema::table('customers', function (Blueprint $table) {
-            $table->index(['company_id', 'journey_status'], 'idx_customers_company_journey');
-        });
+        if (Schema::hasColumn('customers', 'journey_status')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->index(['company_id', 'journey_status'], 'idx_customers_company_journey');
+            });
+        }
 
         // Policy Configurations - Critical for PolicyEffectivenessWidget
-        Schema::table('policy_configurations', function (Blueprint $table) {
-            $table->index(['company_id', 'is_active'], 'idx_policy_configs_company_active');
-        });
+        if (Schema::hasColumn('policy_configurations', 'company_id') &&
+            Schema::hasColumn('policy_configurations', 'is_active')) {
+            Schema::table('policy_configurations', function (Blueprint $table) {
+                $table->index(['company_id', 'is_active'], 'idx_policy_configs_company_active');
+            });
+        }
     }
 
     /**

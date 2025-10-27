@@ -1,0 +1,12 @@
+[
+  {
+    "name": "V17 Tool Test",
+    "prompt": "Du bist Test User. Telefon: +491000000001. Sage: 'Ich möchte einen Termin für eine Beratung buchen'. Wenn gefragt, Name: 'Test User', Termin: 'Morgen um 13 Uhr'. Bestätige mit 'Ja, bitte buchen'.",
+    "expected_outcome": "Agent ruft check_availability_v17 Tool auf. Agent fragt: 'Soll ich das buchen?'. Nach Ja: Agent ruft book_appointment_v17 auf. Buchung erfolgreich."
+  },
+  {
+    "name": "Neukunde Buchung",
+    "prompt": "Du bist Michael Schmidt, +491234567890, rufst zum ersten Mal an. Sage: 'Guten Tag, ich möchte einen Termin buchen'. Name: 'Michael Schmidt'. Service: 'Beratung'. Termin: 'Morgen um 14 Uhr'. Bestätige mit 'Ja, gerne'.",
+    "expected_outcome": "Agent sammelt Name, Service, Termin. Tool-Aufruf check_availability_v17. Tool-Aufruf book_appointment_v17. Buchung bestätigt."
+  }
+]

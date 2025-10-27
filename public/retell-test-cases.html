@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell V17 Test Cases</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header .meta {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header .meta span {
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .test-case {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .test-case:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .test-case.critical {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .test-case.high {
+            border-left: 5px solid #f39c12;
+        }
+
+        .test-case.medium {
+            border-left: 5px solid #3498db;
+        }
+
+        .test-case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .test-case h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge.critical {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .badge.high {
+            background: #f39c12;
+            color: white;
+        }
+
+        .badge.medium {
+            background: #3498db;
+            color: white;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .content-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .copy-btn.copied {
+            background: #2ecc71;
+        }
+
+        .variables {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .variable {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .variable-name {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 13px;
+        }
+
+        .variable-value {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Retell V17 Test Cases</h1>
+            <p style="margin: 10px 0; color: #666;">Explicit Function Nodes - 100% Tool Invocation</p>
+            <div class="meta">
+                <span>Flow Version: 18</span>
+                <span>Agent: agent_616d645570ae613e421edb98e7</span>
+                <span>Created: 2025-10-22</span>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 So verwendest du die Test Cases:</h3>
+            <ol>
+                <li>Klicke auf <strong>"Copy"</strong> bei jedem Feld um den Inhalt zu kopieren</li>
+                <li>Öffne Retell Dashboard → Agent → Test Tab</li>
+                <li>Klicke auf <strong>"+ Add Test Case"</strong></li>
+                <li>Füge die kopierten Inhalte in die entsprechenden Felder ein:
+                    <ul>
+                        <li><strong>Name</strong> → Name Feld</li>
+                        <li><strong>User Prompt</strong> → User Prompt Feld</li>
+                        <li><strong>Success Criteria</strong> → Success Criteria Feld</li>
+                        <li><strong>Variables</strong> → Dynamic Variables (einzeln hinzufügen)</li>
+                    </ul>
+                </li>
+                <li>Speichern und Test ausführen!</li>
+            </ol>
+        </div>
+
+        <div id="test-cases"></div>
+    </div>
+
+    <script>
+        const testCases = [
+            {
+                name: "V17 Tool-Invocation Test (KRITISCH)",
+                priority: "critical",
+                description: "Testet explizit die V17 Tool-Aufrufe - check_availability und book_appointment",
+                userPrompt: `## Identität
+Dein Name ist Test User.
+Deine Telefonnummer ist +491000000001.
+
+## Ziel
+Termin buchen für eine Beratung morgen um 13:00 Uhr.
+
+## Persönlichkeit
+Kooperativ, antwortest präzise und schnell.
+
+## Verhalten
+- Sage: "Ich möchte einen Termin für eine Beratung buchen"
+- Nenne deinen Namen wenn gefragt: "Test User"
+- Sage den Wunschtermin: "Morgen um 13 Uhr"
+- Bestätige sofort mit "Ja, bitte buchen" wenn der Agent fragt`,
+                successCriteria: `CRITICAL - ALLE Punkte MÜSSEN erfüllt sein:
+
+✅ 1. Agent ruft check_availability_v17 Tool auf
+✅ 2. Agent sagt: "Der Termin ist verfügbar. Soll ich das für Sie buchen?"
+✅ 3. Agent WARTET auf Bestätigung (bucht NICHT automatisch!)
+✅ 4. Nach "Ja": Agent ruft book_appointment_v17 Tool auf
+✅ 5. Agent bestätigt erfolgreiche Buchung
+✅ 6. Gesamtdauer < 90 Sekunden
+
+FAILURE wenn:
+❌ Tool wird NICHT aufgerufen (wie in V15/V16)
+❌ Agent sagt "ich prüfe" aber kein Tool-Call
+❌ Automatische Buchung ohne Bestätigung`,
+                variables: {
+                    from_number: "+491000000001",
+                    customer_name: "Test User",
+                    test_date: "23.10.2025",
+                    test_time: "13:00",
+                    service: "Beratung"
+                }
+            },
+            {
+                name: "Erfolgreiche Terminbuchung - Neukunde",
+                priority: "high",
+                description: "Standard-Flow für Neukunden mit vollständiger Datenerfassung",
+                userPrompt: `## Identität
+Dein Name ist Michael Schmidt.
+Telefonnummer: +491234567890
+Du rufst zum ersten Mal an.
+
+## Ziel
+Termin buchen für eine Beratung morgen um 14:00 Uhr.
+
+## Persönlichkeit
+Freundlich, geduldig, kooperativ.
+
+## Verhalten
+- Sage: "Guten Tag, ich möchte einen Termin buchen"
+- Nenne deinen Namen wenn gefragt: "Michael Schmidt"
+- Sage: "Für eine Beratung"
+- Wunschtermin: "Morgen um 14 Uhr"
+- Bei Verfügbarkeit: "Ja, gerne buchen"`,
+                successCriteria: `✅ Agent begrüßt freundlich
+✅ Agent sammelt: Name, Dienstleistung, Datum, Uhrzeit
+✅ Tool-Aufruf: check_availability_v17
+✅ Agent präsentiert Verfügbarkeit
+✅ Nach Bestätigung: Tool-Aufruf book_appointment_v17
+✅ Agent bestätigt Buchung mit allen Details
+✅ Dauer < 90 Sekunden`,
+                variables: {
+                    from_number: "+491234567890",
+                    customer_name: "Michael Schmidt",
+                    test_date: "23.10.2025",
+                    test_time: "14:00",
+                    service: "Beratung"
+                }
+            },
+            {
+                name: "Bekannter Kunde - Hansi Schnellbuchung",
+                priority: "high",
+                description: "Stammkunde wird erkannt, Name-Erfassung wird übersprungen",
+                userPrompt: `## Identität
+Dein Name ist Hansi (Stammkunde).
+Deine Telefonnummer wird übertragen: +491604366218
+
+## Ziel
+Schnell einen Termin buchen für übermorgen 10:00 Uhr, Beratung.
+
+## Persönlichkeit
+Ungeduldig, kennst den Prozess, möchtest es schnell erledigen.
+Du erwartest, dass der Agent dich erkennt.
+
+## Verhalten
+- Sage direkt: "Ich brauche einen Termin für eine Beratung übermorgen um 10 Uhr"
+- Wenn nach Namen gefragt wird: Sei überrascht ("Ihr kennt mich doch?")
+- Bestätige schnell mit "Ja"`,
+                successCriteria: `✅ Agent erkennt Telefonnummer
+✅ Agent fragt NICHT nach Namen (weil bekannter Kunde!)
+✅ Agent sammelt nur: Dienstleistung, Datum, Uhrzeit
+✅ Tool-Aufruf: check_availability_v17
+✅ Tool-Aufruf: book_appointment_v17
+✅ Erfolgreiche Buchung
+✅ Dauer < 60 Sekunden (schneller als Neukunde)`,
+                variables: {
+                    from_number: "+491604366218",
+                    customer_name: "Hansi",
+                    test_date: "24.10.2025",
+                    test_time: "10:00",
+                    service: "Beratung"
+                }
+            },
+            {
+                name: "Anonymer Anrufer - Name erfassen",
+                priority: "medium",
+                description: "Unterdrückte Nummer - Agent muss IMMER nach Namen fragen",
+                userPrompt: `## Identität
+Du rufst mit unterdrückter Nummer an (anonym).
+Dein Name ist Julia Meier.
+
+## Ziel
+Termin buchen für eine Beratung nächste Woche Montag 15:00 Uhr.
+
+## Persönlichkeit
+Etwas vorsichtig und zurückhaltend.
+
+## Verhalten
+- Sage: "Ich möchte einen Termin buchen"
+- Wenn nach Namen gefragt: Zögere kurz, dann sage "Julia Meier"
+- Nenne Dienstleistung: "Beratung"
+- Termin: "Nächsten Montag um 15 Uhr"
+- Bestätige mit "Ja"`,
+                successCriteria: `✅ Agent erkennt anonymen Anruf
+✅ Agent fragt IMMER nach dem Namen (CRITICAL!)
+✅ Agent sammelt: Name, Dienstleistung, Datum, Uhrzeit
+✅ Tool-Aufruf: check_availability_v17
+✅ Tool-Aufruf: book_appointment_v17
+✅ Erfolgreiche Buchung mit erfasstem Namen`,
+                variables: {
+                    from_number: "anonymous",
+                    customer_name: "Julia Meier",
+                    test_date: "27.10.2025",
+                    test_time: "15:00",
+                    service: "Beratung"
+                }
+            }
+        ];
+
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function renderTestCases() {
+            const container = document.getElementById('test-cases');
+
+            testCases.forEach((tc, index) => {
+                const div = document.createElement('div');
+                div.className = `test-case ${tc.priority}`;
+
+                let variablesHTML = '<div class="variables">';
+                for (const [key, value] of Object.entries(tc.variables)) {
+                    variablesHTML += `
+                        <div class="variable">
+                            <span class="variable-name">${key}</span>
+                            <span class="variable-value">${value}</span>
+                        </div>
+                    `;
+                }
+                variablesHTML += '</div>';
+
+                div.innerHTML = `
+                    <div class="test-case-header">
+                        <h2>
+                            ${index + 1}. ${tc.name}
+                            <span class="badge ${tc.priority}">${tc.priority}</span>
+                        </h2>
+                    </div>
+
+                    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">${tc.description}</p>
+
+                    <div class="section">
+                        <div class="section-title">📝 Name</div>
+                        <div class="content-box" style="white-space: normal;">
+                            ${tc.name}
+                            <button class="copy-btn" onclick="copyToClipboard(\`${tc.name.replace(/`/g, '\\`')}\`, this)">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">👤 User Prompt</div>
+                        <div class="content-box">
+${tc.userPrompt}
+                            <button class="copy-btn" onclick="copyToClipboard(\`${tc.userPrompt.replace(/`/g, '\\`')}\`, this)">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">✅ Success Criteria</div>
+                        <div class="content-box">
+${tc.successCriteria}
+                            <button class="copy-btn" onclick="copyToClipboard(\`${tc.successCriteria.replace(/`/g, '\\`')}\`, this)">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">🔧 Variables (Dynamic Variables im Dashboard einzeln hinzufügen)</div>
+                        ${variablesHTML}
+                    </div>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        // Make copyToClipboard globally accessible
+        window.copyToClipboard = copyToClipboard;
+
+        // Render on load
+        renderTestCases();
+    </script>
+</body>
+</html>

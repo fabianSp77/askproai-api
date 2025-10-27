@@ -1,0 +1,806 @@
+{
+    "call_id": "call_a3d98bb4522f6f1e0bfac5964b1",
+    "call_type": "phone_call",
+    "agent_id": "agent_f1ce85d06a84afb989dfbb16a9",
+    "agent_version": 42,
+    "agent_name": "Conversation Flow Agent Friseur 1",
+    "retell_llm_dynamic_variables": {
+        "twilio-callsid": "CA1d3fb8cf78c5bf74a1188ab480ad4265",
+        "twilio-accountsid": "AC008891bccf7c7e2f363eba6ae63d3f00"
+    },
+    "collected_dynamic_variables": {
+        "previous_node": "Anonymer Kunde",
+        "current_node": "Check Availability"
+    },
+    "custom_sip_headers": {
+        "x-twilio-callsid": "CA1d3fb8cf78c5bf74a1188ab480ad4265",
+        "x-twilio-accountsid": "AC008891bccf7c7e2f363eba6ae63d3f00"
+    },
+    "call_status": "ended",
+    "start_timestamp": 1761297670702,
+    "end_timestamp": 1761297706005,
+    "duration_ms": 35303,
+    "transcript": "Agent: Guten Tag! Wie kann ich Ihnen helfen? M\u00f6chten Sie einen neuen Termin buchen oder einen bestehenden Termin \u00e4ndern?\nUser: Ja, ich h\u00e4tte gern Herrenhaarschnitttermin f\u00fcr heute.\nUser: Sechzehn Uhr. \nUser: Mein Name ist Hans Robert.\nAgent: Einen Moment \nAgent: bitte, ich pr\u00fcfe \nAgent: die Verf\u00fcgbarkeit f\u00fcr Sie...\nAgent: Einen Moment bitte, ich pr\u00fcfe die Verf\u00fcgbarkeit f\u00fcr Sie...\n",
+    "transcript_object": [
+        {
+            "role": "agent",
+            "content": "Guten Tag! Wie kann ich Ihnen helfen? M\u00f6chten Sie einen neuen Termin buchen oder einen bestehenden Termin \u00e4ndern?",
+            "words": [
+                {
+                    "word": "Guten ",
+                    "start": 2.853,
+                    "end": 3.12
+                },
+                {
+                    "word": "Tag!",
+                    "start": 3.12,
+                    "end": 3.747
+                },
+                {
+                    "word": " Wie ",
+                    "start": 3.769791748046875,
+                    "end": 3.932791748046875
+                },
+                {
+                    "word": "kann ",
+                    "start": 3.932791748046875,
+                    "end": 4.106791748046875
+                },
+                {
+                    "word": "ich ",
+                    "start": 4.106791748046875,
+                    "end": 4.222791748046875
+                },
+                {
+                    "word": "Ihnen ",
+                    "start": 4.222791748046875,
+                    "end": 4.408791748046875
+                },
+                {
+                    "word": "helfen?",
+                    "start": 4.408791748046875,
+                    "end": 5.000791748046875
+                },
+                {
+                    "word": " M\u00f6chten ",
+                    "start": 5.046666748046875,
+                    "end": 5.337666748046875
+                },
+                {
+                    "word": "Sie ",
+                    "start": 5.337666748046875,
+                    "end": 5.464666748046875
+                },
+                {
+                    "word": "einen ",
+                    "start": 5.464666748046875,
+                    "end": 5.952666748046875
+                },
+                {
+                    "word": "neuen ",
+                    "start": 5.952666748046875,
+                    "end": 6.358666748046875
+                },
+                {
+                    "word": "Termin ",
+                    "start": 6.358666748046875,
+                    "end": 6.753666748046875
+                },
+                {
+                    "word": "buchen ",
+                    "start": 6.753666748046875,
+                    "end": 7.159666748046875
+                },
+                {
+                    "word": "oder ",
+                    "start": 7.159666748046875,
+                    "end": 7.392666748046875
+                },
+                {
+                    "word": "einen ",
+                    "start": 7.392666748046875,
+                    "end": 7.635666748046875
+                },
+                {
+                    "word": "bestehenden ",
+                    "start": 7.635666748046875,
+                    "end": 8.274666748046876
+                },
+                {
+                    "word": "Termin ",
+                    "start": 8.274666748046876,
+                    "end": 8.704666748046876
+                },
+                {
+                    "word": "\u00e4ndern?",
+                    "start": 8.704666748046876,
+                    "end": 9.365666748046875
+                }
+            ],
+            "metadata": {
+                "interrupt_id": 1
+            }
+        },
+        {
+            "role": "user",
+            "content": "Ja, ich h\u00e4tte gern Herrenhaarschnitttermin f\u00fcr heute.",
+            "words": [
+                {
+                    "word": "Ja, ",
+                    "start": 10.200999999999999,
+                    "end": 10.520999
+                },
+                {
+                    "word": "ich ",
+                    "start": 10.520999,
+                    "end": 10.600999999999999
+                },
+                {
+                    "word": "h\u00e4tte ",
+                    "start": 10.600999999999999,
+                    "end": 10.761
+                },
+                {
+                    "word": "gern ",
+                    "start": 10.761,
+                    "end": 11.161
+                },
+                {
+                    "word": "Herrenhaarschnitttermin ",
+                    "start": 11.161,
+                    "end": 12.360999
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 12.360999,
+                    "end": 12.761
+                },
+                {
+                    "word": "heute.",
+                    "start": 12.761,
+                    "end": 13.001
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": "Sechzehn Uhr. ",
+            "words": [
+                {
+                    "word": "Sechzehn ",
+                    "start": 13.120999999999999,
+                    "end": 13.600999
+                },
+                {
+                    "word": "Uhr. ",
+                    "start": 13.600999,
+                    "end": 14.001
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": "Mein Name ist Hans Robert.",
+            "words": [
+                {
+                    "word": "Mein ",
+                    "start": 14.001,
+                    "end": 14.161
+                },
+                {
+                    "word": "Name ",
+                    "start": 14.161,
+                    "end": 14.400998999999999
+                },
+                {
+                    "word": "ist ",
+                    "start": 14.400998999999999,
+                    "end": 14.640998999999999
+                },
+                {
+                    "word": "Hans ",
+                    "start": 14.640998999999999,
+                    "end": 14.960999999999999
+                },
+                {
+                    "word": "Robert.",
+                    "start": 14.960999999999999,
+                    "end": 15.360999
+                }
+            ]
+        },
+        {
+            "role": "agent",
+            "content": "Einen Moment ",
+            "words": [
+                {
+                    "word": "Einen ",
+                    "start": 16.232,
+                    "end": 16.673
+                },
+                {
+                    "word": "Moment ",
+                    "start": 16.673,
+                    "end": 17.079
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "agent",
+            "content": "bitte, ich pr\u00fcfe ",
+            "words": [
+                {
+                    "word": "bitte, ",
+                    "start": 17.079,
+                    "end": 17.613
+                },
+                {
+                    "word": "ich ",
+                    "start": 17.613,
+                    "end": 17.788
+                },
+                {
+                    "word": "pr\u00fcfe ",
+                    "start": 17.788,
+                    "end": 18.124
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "agent",
+            "content": "die Verf\u00fcgbarkeit f\u00fcr Sie...",
+            "words": [
+                {
+                    "word": "die ",
+                    "start": 18.124,
+                    "end": 18.264
+                },
+                {
+                    "word": "Verf\u00fcgbarkeit ",
+                    "start": 18.264,
+                    "end": 18.983
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 18.983,
+                    "end": 19.134
+                },
+                {
+                    "word": "Sie...",
+                    "start": 19.134,
+                    "end": 19.68
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "agent",
+            "content": "Einen Moment bitte, ich pr\u00fcfe die Verf\u00fcgbarkeit f\u00fcr Sie...",
+            "words": [
+                {
+                    "word": "Einen ",
+                    "start": 30.955,
+                    "end": 31.396
+                },
+                {
+                    "word": "Moment ",
+                    "start": 31.396,
+                    "end": 31.802
+                },
+                {
+                    "word": "bitte, ",
+                    "start": 31.802,
+                    "end": 32.336
+                },
+                {
+                    "word": "ich ",
+                    "start": 32.336,
+                    "end": 32.511
+                },
+                {
+                    "word": "pr\u00fcfe ",
+                    "start": 32.511,
+                    "end": 32.847
+                },
+                {
+                    "word": "die ",
+                    "start": 32.847,
+                    "end": 32.987
+                },
+                {
+                    "word": "Verf\u00fcgbarkeit ",
+                    "start": 32.987,
+                    "end": 33.718
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 33.718,
+                    "end": 33.869
+                },
+                {
+                    "word": "Sie...",
+                    "start": 33.869,
+                    "end": 34.403
+                }
+            ],
+            "metadata": {
+                "response_id": 3
+            }
+        }
+    ],
+    "transcript_with_tool_calls": [
+        {
+            "role": "node_transition",
+            "former_node_id": "begin",
+            "former_node_name": "begin",
+            "new_node_id": "func_00_initialize",
+            "new_node_name": "\ud83d\ude80 V16: Initialize Call (Parallel)",
+            "time_sec": 0
+        },
+        {
+            "role": "tool_call_invocation",
+            "tool_call_id": "tool_call_3d5cd1",
+            "name": "initialize_call",
+            "arguments": "{}",
+            "time_sec": 0.595,
+            "type": "custom"
+        },
+        {
+            "role": "tool_call_result",
+            "tool_call_id": "tool_call_3d5cd1",
+            "successful": true,
+            "content": "{\"success\":true,\"data\":{\"success\":false,\"error\":\"Call context not found\",\"message\":\"Guten Tag! Wie kann ich Ihnen helfen?\"}}",
+            "time_sec": 1.619
+        },
+        {
+            "role": "node_transition",
+            "former_node_id": "func_00_initialize",
+            "former_node_name": "\ud83d\ude80 V16: Initialize Call (Parallel)",
+            "new_node_id": "node_02_customer_routing",
+            "new_node_name": "Kundenrouting",
+            "time_sec": 1.821
+        },
+        {
+            "role": "agent",
+            "content": "Guten Tag! Wie kann ich Ihnen helfen? M\u00f6chten Sie einen neuen Termin buchen oder einen bestehenden Termin \u00e4ndern?",
+            "words": [
+                {
+                    "word": "Guten ",
+                    "start": 2.853,
+                    "end": 3.12
+                },
+                {
+                    "word": "Tag!",
+                    "start": 3.12,
+                    "end": 3.747
+                },
+                {
+                    "word": " Wie ",
+                    "start": 3.769791748046875,
+                    "end": 3.932791748046875
+                },
+                {
+                    "word": "kann ",
+                    "start": 3.932791748046875,
+                    "end": 4.106791748046875
+                },
+                {
+                    "word": "ich ",
+                    "start": 4.106791748046875,
+                    "end": 4.222791748046875
+                },
+                {
+                    "word": "Ihnen ",
+                    "start": 4.222791748046875,
+                    "end": 4.408791748046875
+                },
+                {
+                    "word": "helfen?",
+                    "start": 4.408791748046875,
+                    "end": 5.000791748046875
+                },
+                {
+                    "word": " M\u00f6chten ",
+                    "start": 5.046666748046875,
+                    "end": 5.337666748046875
+                },
+                {
+                    "word": "Sie ",
+                    "start": 5.337666748046875,
+                    "end": 5.464666748046875
+                },
+                {
+                    "word": "einen ",
+                    "start": 5.464666748046875,
+                    "end": 5.952666748046875
+                },
+                {
+                    "word": "neuen ",
+                    "start": 5.952666748046875,
+                    "end": 6.358666748046875
+                },
+                {
+                    "word": "Termin ",
+                    "start": 6.358666748046875,
+                    "end": 6.753666748046875
+                },
+                {
+                    "word": "buchen ",
+                    "start": 6.753666748046875,
+                    "end": 7.159666748046875
+                },
+                {
+                    "word": "oder ",
+                    "start": 7.159666748046875,
+                    "end": 7.392666748046875
+                },
+                {
+                    "word": "einen ",
+                    "start": 7.392666748046875,
+                    "end": 7.635666748046875
+                },
+                {
+                    "word": "bestehenden ",
+                    "start": 7.635666748046875,
+                    "end": 8.274666748046876
+                },
+                {
+                    "word": "Termin ",
+                    "start": 8.274666748046876,
+                    "end": 8.704666748046876
+                },
+                {
+                    "word": "\u00e4ndern?",
+                    "start": 8.704666748046876,
+                    "end": 9.365666748046875
+                }
+            ],
+            "metadata": {
+                "interrupt_id": 1
+            }
+        },
+        {
+            "role": "user",
+            "content": "Ja, ich h\u00e4tte gern Herrenhaarschnitttermin f\u00fcr heute.",
+            "words": [
+                {
+                    "word": "Ja, ",
+                    "start": 10.200999999999999,
+                    "end": 10.520999
+                },
+                {
+                    "word": "ich ",
+                    "start": 10.520999,
+                    "end": 10.600999999999999
+                },
+                {
+                    "word": "h\u00e4tte ",
+                    "start": 10.600999999999999,
+                    "end": 10.761
+                },
+                {
+                    "word": "gern ",
+                    "start": 10.761,
+                    "end": 11.161
+                },
+                {
+                    "word": "Herrenhaarschnitttermin ",
+                    "start": 11.161,
+                    "end": 12.360999
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 12.360999,
+                    "end": 12.761
+                },
+                {
+                    "word": "heute.",
+                    "start": 12.761,
+                    "end": 13.001
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": "Sechzehn Uhr. ",
+            "words": [
+                {
+                    "word": "Sechzehn ",
+                    "start": 13.120999999999999,
+                    "end": 13.600999
+                },
+                {
+                    "word": "Uhr. ",
+                    "start": 13.600999,
+                    "end": 14.001
+                }
+            ]
+        },
+        {
+            "role": "node_transition",
+            "former_node_id": "node_02_customer_routing",
+            "former_node_name": "Kundenrouting",
+            "new_node_id": "node_03c_anonymous_customer",
+            "new_node_name": "Anonymer Kunde",
+            "time_sec": 13.671
+        },
+        {
+            "role": "user",
+            "content": "Mein Name ist Hans Robert.",
+            "words": [
+                {
+                    "word": "Mein ",
+                    "start": 14.001,
+                    "end": 14.161
+                },
+                {
+                    "word": "Name ",
+                    "start": 14.161,
+                    "end": 14.400998999999999
+                },
+                {
+                    "word": "ist ",
+                    "start": 14.400998999999999,
+                    "end": 14.640998999999999
+                },
+                {
+                    "word": "Hans ",
+                    "start": 14.640998999999999,
+                    "end": 14.960999999999999
+                },
+                {
+                    "word": "Robert.",
+                    "start": 14.960999999999999,
+                    "end": 15.360999
+                }
+            ]
+        },
+        {
+            "role": "node_transition",
+            "former_node_id": "node_03c_anonymous_customer",
+            "former_node_name": "Anonymer Kunde",
+            "new_node_id": "func_check_availability_auto_74b489af",
+            "new_node_name": "Check Availability",
+            "time_sec": 16.013
+        },
+        {
+            "role": "agent",
+            "content": "Einen Moment ",
+            "words": [
+                {
+                    "word": "Einen ",
+                    "start": 16.232,
+                    "end": 16.673
+                },
+                {
+                    "word": "Moment ",
+                    "start": 16.673,
+                    "end": 17.079
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "tool_call_invocation",
+            "tool_call_id": "tool_call_f75507",
+            "name": "check_availability_v17",
+            "arguments": "{\"datum\":\"04.10.2023\",\"uhrzeit\":\"16:00\",\"dienstleistung\":\"Herrenhaarschnitt\"}",
+            "time_sec": 17.041,
+            "type": "custom"
+        },
+        {
+            "role": "agent",
+            "content": "bitte, ich pr\u00fcfe ",
+            "words": [
+                {
+                    "word": "bitte, ",
+                    "start": 17.079,
+                    "end": 17.613
+                },
+                {
+                    "word": "ich ",
+                    "start": 17.613,
+                    "end": 17.788
+                },
+                {
+                    "word": "pr\u00fcfe ",
+                    "start": 17.788,
+                    "end": 18.124
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "tool_call_result",
+            "tool_call_id": "tool_call_f75507",
+            "successful": true,
+            "content": "{\"success\":false,\"error\":\"Call context not available\"}",
+            "time_sec": 17.989
+        },
+        {
+            "role": "agent",
+            "content": "die Verf\u00fcgbarkeit f\u00fcr Sie...",
+            "words": [
+                {
+                    "word": "die ",
+                    "start": 18.124,
+                    "end": 18.264
+                },
+                {
+                    "word": "Verf\u00fcgbarkeit ",
+                    "start": 18.264,
+                    "end": 18.983
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 18.983,
+                    "end": 19.134
+                },
+                {
+                    "word": "Sie...",
+                    "start": 19.134,
+                    "end": 19.68
+                }
+            ],
+            "metadata": {
+                "response_id": 2
+            }
+        },
+        {
+            "role": "agent",
+            "content": "Einen Moment bitte, ich pr\u00fcfe die Verf\u00fcgbarkeit f\u00fcr Sie...",
+            "words": [
+                {
+                    "word": "Einen ",
+                    "start": 30.955,
+                    "end": 31.396
+                },
+                {
+                    "word": "Moment ",
+                    "start": 31.396,
+                    "end": 31.802
+                },
+                {
+                    "word": "bitte, ",
+                    "start": 31.802,
+                    "end": 32.336
+                },
+                {
+                    "word": "ich ",
+                    "start": 32.336,
+                    "end": 32.511
+                },
+                {
+                    "word": "pr\u00fcfe ",
+                    "start": 32.511,
+                    "end": 32.847
+                },
+                {
+                    "word": "die ",
+                    "start": 32.847,
+                    "end": 32.987
+                },
+                {
+                    "word": "Verf\u00fcgbarkeit ",
+                    "start": 32.987,
+                    "end": 33.718
+                },
+                {
+                    "word": "f\u00fcr ",
+                    "start": 33.718,
+                    "end": 33.869
+                },
+                {
+                    "word": "Sie...",
+                    "start": 33.869,
+                    "end": 34.403
+                }
+            ],
+            "metadata": {
+                "response_id": 3
+            }
+        }
+    ],
+    "recording_url": "https:\/\/dxc03zgurdly9.cloudfront.net\/d76fe9ee1f6a029e37e39138d89ebf54c7a5c3253ed8ef06f5aca181ff8ff182\/recording.wav",
+    "recording_multi_channel_url": "https:\/\/dxc03zgurdly9.cloudfront.net\/d76fe9ee1f6a029e37e39138d89ebf54c7a5c3253ed8ef06f5aca181ff8ff182\/recording_multichannel.wav",
+    "public_log_url": "https:\/\/dxc03zgurdly9.cloudfront.net\/d76fe9ee1f6a029e37e39138d89ebf54c7a5c3253ed8ef06f5aca181ff8ff182\/public.log",
+    "disconnection_reason": "user_hangup",
+    "latency": {
+        "llm": {
+            "p99": 736.76,
+            "min": 1,
+            "max": 737,
+            "p90": 734.6,
+            "num": 4,
+            "values": [
+                729,
+                650,
+                1,
+                737
+            ],
+            "p50": 689.5,
+            "p95": 735.8
+        },
+        "e2e": {
+            "p99": 836.0009765625,
+            "min": 836.0009765625,
+            "max": 836.0009765625,
+            "p90": 836.0009765625,
+            "num": 1,
+            "values": [
+                836.0009765625
+            ],
+            "p50": 836.0009765625,
+            "p95": 836.0009765625
+        },
+        "tts": {
+            "p99": 313.67,
+            "min": 259,
+            "max": 314,
+            "p90": 310.7,
+            "num": 4,
+            "values": [
+                268,
+                259,
+                303,
+                314
+            ],
+            "p50": 285.5,
+            "p95": 312.35
+        }
+    },
+    "call_cost": {
+        "total_duration_unit_price": 0.1266667,
+        "product_costs": [
+            {
+                "unit_price": 0.1166667,
+                "product": "elevenlabs_tts",
+                "cost": 4.2
+            },
+            {
+                "unit_price": 0.01,
+                "product": "gpt_4o_mini",
+                "cost": 0.36
+            }
+        ],
+        "combined_cost": 4.56,
+        "total_duration_seconds": 36
+    },
+    "call_analysis": {
+        "in_voicemail": false,
+        "call_summary": "The user, Hans Robert, called to book a men's haircut appointment for today at 16:00. However, the agent encountered an error while checking availability and could not complete the booking process.",
+        "user_sentiment": "Negative",
+        "custom_analysis_data": [],
+        "call_successful": false
+    },
+    "opt_out_sensitive_data_storage": false,
+    "data_storage_setting": "everything",
+    "opt_in_signed_url": false,
+    "llm_token_usage": {
+        "values": [
+            2351,
+            2383,
+            2435
+        ],
+        "average": 2389.6666666666665,
+        "num_requests": 3
+    },
+    "from_number": "anonymous",
+    "to_number": "+493033081738",
+    "direction": "inbound",
+    "telephony_identifier": {
+        "twilio_call_sid": "CA1d3fb8cf78c5bf74a1188ab480ad4265"
+    }
+}

@@ -1,0 +1,629 @@
+[
+  {
+    "agent_id": "",
+    "channel": "voice",
+    "agent_name": "AskPro AI Terminbuchungs-Agent",
+    "response_engine": {
+      "type": "conversation-flow",
+      "version": 1
+    },
+    "language": "de-DE",
+    "opt_out_sensitive_data_storage": false,
+    "data_storage_setting": "everything",
+    "version": 1,
+    "is_published": false,
+    "voice_id": "11labs-Adrian",
+    "max_call_duration_ms": 3600000,
+    "interruption_sensitivity": 0.9,
+    "user_dtmf_options": {},
+    "retellLlmData": null,
+    "conversationFlow": {
+      "version": 1,
+      "global_prompt": "# AskPro AI Terminbuchungs-Agent\n\n## Identität\nDu bist der virtuelle Assistent von Ask Pro AI. Du bist KEIN echter Mensch. Du bist freundlich, professionell und effizient.\n\n## Kernregeln\n- NIEMALS Datum, Uhrzeit oder Verfügbarkeit erfinden\n- IMMER Funktionsergebnisse verwenden\n- Bei Unsicherheit nachfragen\n- Nur Vornamen verwenden (kein Herr/Frau ohne explizites Geschlecht)\n- Wichtige Details vor der Buchung bestätigen\n- Höflich, professionell und effizient bleiben\n\n## Datumsregeln\n- \"15.1\" bedeutet 15. des AKTUELLEN Monats, NICHT Januar\n- Verwende current_time_berlin() als Referenz\n- Relative Daten parsen: \"morgen\" = tomorrow, \"übermorgen\" = day after tomorrow\n\n## V85 Race Condition Schutz\n- SCHRITT 1: collect_appointment_data mit bestaetigung=false (nur prüfen)\n- SCHRITT 2: Explizite Benutzerbestätigung einholen\n- SCHRITT 3: collect_appointment_data mit bestaetigung=true (buchen)\n- Bei Race Condition: Sofort Alternativen anbieten\n\n## Anti-Silence Regel\n- Innerhalb von 2 Sekunden nach Nutzeräußerung sprechen\n- Während Verarbeitung: \"Einen Moment bitte...\"\n- Niemals Stille über 3 Sekunden",
+      "start_node_id": "node_01_greeting",
+      "start_speaker": "agent",
+      "tools": [
+        {
+          "tool_id": "tool-check-customer",
+          "name": "check_customer",
+          "type": "custom",
+          "description": "Überprüft ob Kunde anhand Telefonnummer in der Datenbank existiert. Gibt customer_status zurück: 'found' (bekannter Kunde), 'new_customer' (neue Nummer, bekannter Name), oder 'anonymous' (unbekannt).",
+          "url": "https://api.askproai.de/api/retell/check-customer",
+          "timeout_ms": 4000
+        },
+        {
+          "tool_id": "tool-current-time-berlin",
+          "name": "current_time_berlin",
+          "type": "custom",
+          "description": "Holt aktuelles Datum und Uhrzeit in Berlin Zeitzone. Essentiell für Datumsberechnung bei relativen Angaben wie 'morgen' oder '15.1'.",
+          "url": "https://api.askproai.de/api/retell/current-time-berlin",
+          "timeout_ms": 4000
+        },
+        {
+          "tool_id": "tool-collect-appointment-data",
+          "name": "collect_appointment_data",
+          "type": "custom",
+          "description": "Prüft Verfügbarkeit oder bucht Termin. Parameter 'bestaetigung': false=nur prüfen, true=tatsächlich buchen. Gibt Verfügbarkeit und ggf. Alternativen zurück.",
+          "url": "https://api.askproai.de/api/retell/collect-appointment-data",
+          "timeout_ms": 8000,
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "customer_name": {
+                "type": "string",
+                "description": "Name des Kunden"
+              },
+              "customer_phone": {
+                "type": "string",
+                "description": "Telefonnummer des Kunden"
+              },
+              "service": {
+                "type": "string",
+                "description": "Dienstleistung (z.B. 'Beratung')"
+              },
+              "preferred_date": {
+                "type": "string",
+                "description": "Gewünschtes Datum im Format YYYY-MM-DD"
+              },
+              "preferred_time": {
+                "type": "string",
+                "description": "Gewünschte Uhrzeit im Format HH:MM"
+              },
+              "bestaetigung": {
+                "type": "boolean",
+                "description": "false = nur Verfügbarkeit prüfen, true = tatsächlich buchen"
+              }
+            },
+            "required": ["bestaetigung"]
+          }
+        }
+      ],
+      "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4o-mini"
+      },
+      "nodes": [
+        {
+          "id": "node_01_greeting",
+          "name": "Begrüßung",
+          "type": "conversation",
+          "start_speaker": "agent",
+          "instruction": {
+            "type": "static_text",
+            "text": "Willkommen bei Ask Pro AI. Guten Tag!"
+          },
+          "edges": [
+            {
+              "condition": "Greeting completed",
+              "id": "edge_greeting_to_time",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Greeting completed"
+              },
+              "destination_node_id": "func_01_current_time"
+            }
+          ],
+          "display_position": {
+            "x": 100,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "func_01_current_time",
+          "name": "Zeit abrufen",
+          "type": "function",
+          "tool_id": "tool-current-time-berlin",
+          "instruction": {
+            "type": "static_text",
+            "text": ""
+          },
+          "speak_during_execution": false,
+          "wait_for_result": true,
+          "edges": [
+            {
+              "condition": "Time retrieved",
+              "id": "edge_time_to_customer",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Time retrieved successfully"
+              },
+              "destination_node_id": "func_01_check_customer"
+            }
+          ],
+          "display_position": {
+            "x": 500,
+            "y": 1200
+          }
+        },
+        {
+          "id": "func_01_check_customer",
+          "name": "Kunde prüfen",
+          "type": "function",
+          "tool_id": "tool-check-customer",
+          "instruction": {
+            "type": "static_text",
+            "text": ""
+          },
+          "speak_during_execution": false,
+          "wait_for_result": true,
+          "edges": [
+            {
+              "condition": "Customer checked",
+              "id": "edge_customer_to_routing",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Customer check completed"
+              },
+              "destination_node_id": "node_02_customer_routing"
+            }
+          ],
+          "display_position": {
+            "x": 900,
+            "y": 1200
+          }
+        },
+        {
+          "id": "node_02_customer_routing",
+          "name": "Kunden-Routing",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Route based on customer status"
+          },
+          "edges": [
+            {
+              "condition": "Bekannter Kunde gefunden",
+              "id": "edge_routing_known",
+              "transition_condition": {
+                "type": "equation",
+                "equations": ["{{customer_status}} == \"found\""]
+              },
+              "destination_node_id": "node_03a_known_customer"
+            },
+            {
+              "condition": "Neuer Kunde",
+              "id": "edge_routing_new",
+              "transition_condition": {
+                "type": "equation",
+                "equations": ["{{customer_status}} == \"new_customer\""]
+              },
+              "destination_node_id": "node_03b_new_customer"
+            },
+            {
+              "condition": "Anonymer Kunde",
+              "id": "edge_routing_anonymous",
+              "transition_condition": {
+                "type": "equation",
+                "equations": ["{{customer_status}} == \"anonymous\""]
+              },
+              "destination_node_id": "node_03c_anonymous_customer"
+            }
+          ],
+          "display_position": {
+            "x": 1300,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_03a_known_customer",
+          "name": "Bekannter Kunde Begrüßung",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Use CUSTOMER_NAME from check_customer. Say: 'Guten Tag {{CUSTOMER_NAME}}! Möchten Sie einen Termin buchen?' Use first name only."
+          },
+          "edges": [
+            {
+              "condition": "Benutzer antwortet",
+              "id": "edge_known_respond",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User responds"
+              },
+              "destination_node_id": "node_04_intent_capture"
+            }
+          ],
+          "display_position": {
+            "x": 1700,
+            "y": 800
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_03b_new_customer",
+          "name": "Neuer Kunde Begrüßung",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Guten Tag! Möchten Sie einen Termin buchen?"
+          },
+          "edges": [
+            {
+              "condition": "Benutzer antwortet",
+              "id": "edge_new_respond",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User responds"
+              },
+              "destination_node_id": "node_04_intent_capture"
+            }
+          ],
+          "display_position": {
+            "x": 1700,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_03c_anonymous_customer",
+          "name": "Anonymer Kunde Begrüßung",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Guten Tag! Möchten Sie einen Termin buchen?"
+          },
+          "edges": [
+            {
+              "condition": "Buchungsabsicht",
+              "id": "edge_anon_booking",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User wants to book appointment"
+              },
+              "destination_node_id": "node_04_intent_capture"
+            }
+          ],
+          "display_position": {
+            "x": 1700,
+            "y": 1600
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_04_intent_capture",
+          "name": "Absichtserkennung",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Classify user intent and proceed to service selection"
+          },
+          "edges": [
+            {
+              "condition": "Termin buchen",
+              "id": "edge_intent_booking",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User wants to book an appointment"
+              },
+              "destination_node_id": "node_06_service_selection"
+            }
+          ],
+          "display_position": {
+            "x": 2100,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_06_service_selection",
+          "name": "Dienstleistung auswählen",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Ask what service they need. Default to 'Beratung' if not specified."
+          },
+          "edges": [
+            {
+              "condition": "Dienstleistung festgelegt",
+              "id": "edge_service_determined",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Service determined"
+              },
+              "destination_node_id": "node_07_datetime_collection"
+            }
+          ],
+          "display_position": {
+            "x": 2500,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_07_datetime_collection",
+          "name": "Datum & Zeit erfragen",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Ask: 'Für welchen Tag und welche Uhrzeit?' Parse dates using current_time_berlin. Confirm with user before proceeding."
+          },
+          "edges": [
+            {
+              "condition": "Datum und Zeit erfasst",
+              "id": "edge_datetime_valid",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Date and time collected and confirmed"
+              },
+              "destination_node_id": "func_08_availability_check"
+            }
+          ],
+          "display_position": {
+            "x": 2900,
+            "y": 1200
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "func_08_availability_check",
+          "name": "Verfügbarkeit prüfen",
+          "type": "function",
+          "tool_id": "tool-collect-appointment-data",
+          "instruction": {
+            "type": "static_text",
+            "text": "Einen Moment, ich prüfe die Verfügbarkeit."
+          },
+          "speak_during_execution": true,
+          "wait_for_result": true,
+          "edges": [
+            {
+              "condition": "Slot verfügbar",
+              "id": "edge_avail_available",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Slot is available"
+              },
+              "destination_node_id": "node_09a_booking_confirmation"
+            },
+            {
+              "condition": "Slot nicht verfügbar",
+              "id": "edge_avail_unavailable",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Slot is not available"
+              },
+              "destination_node_id": "node_09b_alternative_offering"
+            }
+          ],
+          "display_position": {
+            "x": 3300,
+            "y": 1200
+          }
+        },
+        {
+          "id": "node_09a_booking_confirmation",
+          "name": "Buchungsbestätigung",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Confirm the appointment details and ask for explicit confirmation to book."
+          },
+          "edges": [
+            {
+              "condition": "Benutzer bestätigt",
+              "id": "edge_confirm_yes",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User confirmed"
+              },
+              "destination_node_id": "func_09c_final_booking"
+            },
+            {
+              "condition": "Benutzer lehnt ab",
+              "id": "edge_confirm_no",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User declined"
+              },
+              "destination_node_id": "node_09b_alternative_offering"
+            }
+          ],
+          "display_position": {
+            "x": 3700,
+            "y": 800
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "node_09b_alternative_offering",
+          "name": "Alternativen anbieten",
+          "type": "conversation",
+          "instruction": {
+            "type": "prompt",
+            "text": "Offer alternative time slots or ask if they want to try a different date."
+          },
+          "edges": [
+            {
+              "condition": "Benutzer wählt Alternative",
+              "id": "edge_alt_select",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User selects an alternative"
+              },
+              "destination_node_id": "node_09a_booking_confirmation"
+            },
+            {
+              "condition": "Benutzer will anderen Tag",
+              "id": "edge_alt_new_date",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User wants different date"
+              },
+              "destination_node_id": "node_07_datetime_collection"
+            },
+            {
+              "condition": "Benutzer lehnt ab",
+              "id": "edge_alt_decline",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "User declines"
+              },
+              "destination_node_id": "node_98_polite_goodbye"
+            }
+          ],
+          "display_position": {
+            "x": 3700,
+            "y": 1600
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "func_09c_final_booking",
+          "name": "Termin buchen",
+          "type": "function",
+          "tool_id": "tool-collect-appointment-data",
+          "instruction": {
+            "type": "static_text",
+            "text": "Ich buche jetzt den Termin für Sie."
+          },
+          "speak_during_execution": true,
+          "wait_for_result": true,
+          "edges": [
+            {
+              "condition": "Buchung erfolgreich",
+              "id": "edge_book_success",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Booking successful"
+              },
+              "destination_node_id": "node_14_success_goodbye"
+            },
+            {
+              "condition": "Buchungsfehler",
+              "id": "edge_book_error",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Booking failed"
+              },
+              "destination_node_id": "node_99_error_goodbye"
+            }
+          ],
+          "display_position": {
+            "x": 4100,
+            "y": 800
+          }
+        },
+        {
+          "id": "node_14_success_goodbye",
+          "name": "Erfolgsbestätigung",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Perfekt! Ihr Termin ist gebucht. Sie erhalten eine Bestätigung per E-Mail. Auf Wiederhören!"
+          },
+          "edges": [],
+          "skip_response_edge": {
+            "condition": "End call after success",
+            "id": "edge_success_end",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Message delivered"
+            },
+            "destination_node_id": "end_node_success"
+          },
+          "display_position": {
+            "x": 4500,
+            "y": 600
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "end_node_success",
+          "name": "Anruf beenden (Erfolg)",
+          "type": "end",
+          "instruction": {
+            "type": "prompt",
+            "text": "Politely end the call"
+          },
+          "display_position": {
+            "x": 4900,
+            "y": 600
+          }
+        },
+        {
+          "id": "node_98_polite_goodbye",
+          "name": "Höfliche Verabschiedung",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Kein Problem! Rufen Sie gerne wieder an. Auf Wiederhören!"
+          },
+          "edges": [],
+          "skip_response_edge": {
+            "condition": "End call politely",
+            "id": "edge_polite_end",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Message delivered"
+            },
+            "destination_node_id": "end_node_polite"
+          },
+          "display_position": {
+            "x": 4500,
+            "y": 1800
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "end_node_polite",
+          "name": "Anruf beenden (Höflich)",
+          "type": "end",
+          "instruction": {
+            "type": "prompt",
+            "text": "Politely end the call"
+          },
+          "display_position": {
+            "x": 4900,
+            "y": 1800
+          }
+        },
+        {
+          "id": "node_99_error_goodbye",
+          "name": "Fehlerbehandlung",
+          "type": "conversation",
+          "instruction": {
+            "type": "static_text",
+            "text": "Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es später erneut. Auf Wiederhören!"
+          },
+          "edges": [],
+          "skip_response_edge": {
+            "condition": "End call after error",
+            "id": "edge_error_end",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Message delivered"
+            },
+            "destination_node_id": "end_node_error"
+          },
+          "display_position": {
+            "x": 4500,
+            "y": 2400
+          },
+          "knowledge_base_ids": []
+        },
+        {
+          "id": "end_node_error",
+          "name": "Anruf beenden (Fehler)",
+          "type": "end",
+          "instruction": {
+            "type": "prompt",
+            "text": "Politely end the call"
+          },
+          "display_position": {
+            "x": 4900,
+            "y": 2400
+          }
+        }
+      ],
+      "begin_tag_display_position": {
+        "x": -200,
+        "y": 1200
+      },
+      "is_published": false,
+      "knowledge_base_ids": []
+    },
+    "llmURL": null
+  }
+]

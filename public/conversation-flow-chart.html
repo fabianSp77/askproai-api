@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskPro AI - Conversation Flow Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-box .number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-box .label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            padding: 40px;
+            background: white;
+        }
+
+        .chart-title {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .mermaid {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            overflow-x: auto;
+        }
+
+        .json-container {
+            padding: 40px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .json-title {
+            font-size: 1.8em;
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .json-content {
+            background: #252526;
+            padding: 30px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .legend {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .legend h3 {
+            font-size: 1.5em;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+
+        .legend-color.success { background: #10b981; }
+        .legend-color.warning { background: #f59e0b; }
+        .legend-color.error { background: #ef4444; }
+        .legend-color.info { background: #3b82f6; }
+        .legend-color.neutral { background: #6b7280; }
+
+        .footer {
+            padding: 30px;
+            text-align: center;
+            background: #2d3748;
+            color: white;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container, .json-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 AskPro AI - Conversation Flow Chart</h1>
+            <p>Alle möglichen Gesprächsverläufe im Terminbuchungs-System</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-box">
+                <span class="number">5</span>
+                <span class="label">Haupt-Intents</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">23</span>
+                <span class="label">Gesprächsknoten</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">12</span>
+                <span class="label">Positive Outcomes</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">8</span>
+                <span class="label">Alternative Pfade</span>
+            </div>
+        </div>
+
+        <!-- Flow Chart -->
+        <div class="chart-container">
+            <h2 class="chart-title">📊 Vollständiger Gesprächsfluss</h2>
+            <div class="mermaid">
+graph TD
+    Start([🎧 Anruf Start]) --> Greeting[🙋 Begrüßung<br/>Guten Tag bei Ask Pro AI]
+
+    Greeting --> IntentRecog{🎯 Intent Recognition<br/>Was möchte der Kunde?}
+
+    %% Branch 1: Informationen sammeln
+    IntentRecog -->|Info sammeln| InfoIntent[📋 Informations-Request]
+    InfoIntent --> InfoType{Was für Infos?}
+    InfoType -->|Öffnungszeiten| OpenHours[🕐 Öffnungszeiten mitteilen]
+    InfoType -->|Leistungen| Services[💼 Leistungen erklären]
+    InfoType -->|Preise| Prices[💰 Preise mitteilen]
+    InfoType -->|Standort| Location[📍 Standort & Anfahrt]
+    OpenHours --> InfoSuccess[✅ Info gegeben]
+    Services --> InfoSuccess
+    Prices --> InfoSuccess
+    Location --> InfoSuccess
+    InfoSuccess --> AskMore{Noch Fragen?}
+    AskMore -->|Ja| InfoType
+    AskMore -->|Nein| ThankBye1[🙏 Danke & Auf Wiederhören]
+    AskMore -->|Will Termin| CollectData
+
+    %% Branch 2: Termin buchen
+    IntentRecog -->|Termin buchen| BookIntent[📅 Buchungs-Intent erkannt]
+    BookIntent --> CollectData[📝 Daten sammeln]
+    CollectData --> CheckName{Name vorhanden?}
+    CheckName -->|Nein| AskName[❓ Nach Name fragen]
+    CheckName -->|Ja| CheckEmail{Email vorhanden?}
+    AskName --> CheckEmail
+    CheckEmail -->|Nein| AskEmail[📧 Nach Email fragen]
+    CheckEmail -->|Ja| CheckDate{Datum vorhanden?}
+    AskEmail --> CheckDate
+    CheckDate -->|Nein| AskDate[📆 Nach Datum fragen]
+    CheckDate -->|Ja| CheckTime{Uhrzeit vorhanden?}
+    AskDate --> CheckTime
+    CheckTime -->|Nein| AskTime[🕐 Nach Uhrzeit fragen]
+    CheckTime -->|Ja| CallCheckAPI
+    AskTime --> CallCheckAPI
+
+    CallCheckAPI[🔍 API: Verfügbarkeit prüfen] --> CheckResult{Verfügbar?}
+    CheckResult -->|Ja| ConfirmBook[✅ Termin verfügbar!<br/>Soll ich buchen?]
+    CheckResult -->|Nein| NotAvailable[❌ Nicht verfügbar]
+
+    ConfirmBook --> UserConfirm{User bestätigt?}
+    UserConfirm -->|Ja| CallBookAPI[📲 API: Termin buchen]
+    UserConfirm -->|Nein| CancelBook[🚫 Buchung abgebrochen]
+
+    CallBookAPI --> BookSuccess[✅ Termin gebucht!<br/>Bestätigung per Email]
+    BookSuccess --> ThankBye2[🙏 Danke & Auf Wiederhören]
+
+    NotAvailable --> OfferAlternatives[💡 Alternativen anbieten]
+    OfferAlternatives --> AcceptAlt{Alternative OK?}
+    AcceptAlt -->|Ja| CallCheckAPI
+    AcceptAlt -->|Nein| NoBooking[❌ Keine Buchung]
+    NoBooking --> ThankBye3[🙏 Trotzdem Danke & Auf Wiederhören]
+
+    CancelBook --> ThankBye3
+
+    %% Branch 3: Termin verschieben
+    IntentRecog -->|Termin verschieben| ReschedIntent[🔄 Verschiebungs-Intent]
+    ReschedIntent --> IdentifyAppt[🔍 Termin identifizieren]
+    IdentifyAppt --> NeedIdentifier{Haben wir<br/>Identifier?}
+    NeedIdentifier -->|Nein| AskIdentifier[❓ Nach Name/Email/Tel fragen]
+    AskIdentifier --> SearchAppt
+    NeedIdentifier -->|Ja| SearchAppt[🔎 API: Termin suchen]
+
+    SearchAppt --> ApptFound{Termin gefunden?}
+    ApptFound -->|Nein| ApptNotFound[❌ Kein Termin gefunden]
+    ApptNotFound --> ThankBye4[🙏 Entschuldigung & Auf Wiederhören]
+
+    ApptFound -->|Ja| ShowAppt[📋 Termin anzeigen:<br/>Aktuell gebucht für...]
+    ShowAppt --> AskNewDate[📆 Nach neuem Datum fragen]
+    AskNewDate --> AskNewTime[🕐 Nach neuer Uhrzeit fragen]
+    AskNewTime --> CheckNewAvail[🔍 API: Neue Zeit prüfen]
+    CheckNewAvail --> NewAvail{Verfügbar?}
+
+    NewAvail -->|Ja| ConfirmReschedule[✅ Neue Zeit verfügbar!<br/>Verschieben?]
+    NewAvail -->|Nein| NoNewTime[❌ Neue Zeit nicht frei]
+    NoNewTime --> OfferAltReschedule[💡 Andere Zeiten anbieten]
+    OfferAltReschedule --> AcceptAltReschedule{Alternative OK?}
+    AcceptAltReschedule -->|Ja| ConfirmReschedule
+    AcceptAltReschedule -->|Nein| KeepOriginal[📅 Ursprünglichen Termin behalten]
+    KeepOriginal --> ThankBye5[🙏 Termin bleibt & Auf Wiederhören]
+
+    ConfirmReschedule --> UserConfirmReschedule{User bestätigt?}
+    UserConfirmReschedule -->|Ja| CallRescheduleAPI[🔄 API: Termin verschieben]
+    UserConfirmReschedule -->|Nein| KeepOriginal
+
+    CallRescheduleAPI --> RescheduleSuccess[✅ Termin verschoben!<br/>Bestätigung per Email]
+    RescheduleSuccess --> ThankBye6[🙏 Danke & Auf Wiederhören]
+
+    %% Branch 4: Termin stornieren
+    IntentRecog -->|Termin stornieren| CancelIntent[🗑️ Storno-Intent]
+    CancelIntent --> IdentifyCancel[🔍 Zu stornierenden Termin finden]
+    IdentifyCancel --> NeedCancelID{Identifier vorhanden?}
+    NeedCancelID -->|Nein| AskCancelID[❓ Nach Name/Email fragen]
+    AskCancelID --> SearchCancelAppt
+    NeedCancelID -->|Ja| SearchCancelAppt[🔎 API: Termin suchen]
+
+    SearchCancelAppt --> CancelFound{Termin gefunden?}
+    CancelFound -->|Nein| CancelNotFound[❌ Kein Termin gefunden]
+    CancelNotFound --> ThankBye7[🙏 Auf Wiederhören]
+
+    CancelFound -->|Ja| ShowCancelAppt[📋 Termin anzeigen:<br/>Gebucht für...]
+    ShowCancelAppt --> ConfirmCancel[⚠️ Wirklich stornieren?]
+    ConfirmCancel --> UserConfirmCancel{User bestätigt?}
+
+    UserConfirmCancel -->|Ja| CallCancelAPI[🗑️ API: Termin stornieren]
+    UserConfirmCancel -->|Nein| KeepAppt[✅ Termin behalten]
+    KeepAppt --> ThankBye8[🙏 Termin bleibt & Auf Wiederhören]
+
+    CallCancelAPI --> CancelSuccess[✅ Termin storniert!<br/>Bestätigung per Email]
+    CancelSuccess --> OfferRebook[💡 Neuen Termin buchen?]
+    OfferRebook --> WantRebook{Will neu buchen?}
+    WantRebook -->|Ja| CollectData
+    WantRebook -->|Nein| ThankBye9[🙏 Danke & Auf Wiederhören]
+
+    %% Branch 5: Sonstiges / Unclear Intent
+    IntentRecog -->|Unklar| UnclearIntent[❓ Intent unklar]
+    UnclearIntent --> Clarify[🤔 Nachfragen: Wie kann ich helfen?]
+    Clarify --> ReIntent{Intent jetzt klar?}
+    ReIntent -->|Buchen| BookIntent
+    ReIntent -->|Verschieben| ReschedIntent
+    ReIntent -->|Stornieren| CancelIntent
+    ReIntent -->|Info| InfoIntent
+    ReIntent -->|Immer noch unklar| Escalate[👤 An Mitarbeiter weiterleiten]
+    Escalate --> ThankBye10[🙏 Weitergeleitet & Auf Wiederhören]
+
+    %% End Nodes
+    ThankBye1 --> End1([🔚 Gespräch Ende])
+    ThankBye2 --> End2([🔚 Gespräch Ende])
+    ThankBye3 --> End3([🔚 Gespräch Ende])
+    ThankBye4 --> End4([🔚 Gespräch Ende])
+    ThankBye5 --> End5([🔚 Gespräch Ende])
+    ThankBye6 --> End6([🔚 Gespräch Ende])
+    ThankBye7 --> End7([🔚 Gespräch Ende])
+    ThankBye8 --> End8([🔚 Gespräch Ende])
+    ThankBye9 --> End9([🔚 Gespräch Ende])
+    ThankBye10 --> End10([🔚 Gespräch Ende])
+
+    %% Styling
+    classDef successClass fill:#10b981,stroke:#059669,stroke-width:3px,color:#fff
+    classDef warningClass fill:#f59e0b,stroke:#d97706,stroke-width:3px,color:#fff
+    classDef errorClass fill:#ef4444,stroke:#dc2626,stroke-width:3px,color:#fff
+    classDef infoClass fill:#3b82f6,stroke:#2563eb,stroke-width:3px,color:#fff
+    classDef decisionClass fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#fff
+    classDef apiClass fill:#06b6d4,stroke:#0891b2,stroke-width:3px,color:#fff
+
+    class BookSuccess,RescheduleSuccess,CancelSuccess,InfoSuccess successClass
+    class NotAvailable,ApptNotFound,CancelNotFound,NoNewTime errorClass
+    class ConfirmBook,ConfirmReschedule,ConfirmCancel,OfferAlternatives warningClass
+    class CollectData,IdentifyAppt,IdentifyCancel infoClass
+    class IntentRecog,CheckResult,ApptFound,NewAvail,CancelFound decisionClass
+    class CallCheckAPI,CallBookAPI,SearchAppt,CheckNewAvail,CallRescheduleAPI,SearchCancelAppt,CallCancelAPI apiClass
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h3>🎨 Legende</h3>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-color success"></div>
+                    <span><strong>Erfolgreiche Aktionen</strong> - Ziel erreicht</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color error"></div>
+                    <span><strong>Fehler/Nicht verfügbar</strong> - Problem aufgetreten</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color warning"></div>
+                    <span><strong>Bestätigung nötig</strong> - User-Entscheidung</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color info"></div>
+                    <span><strong>Datensammlung</strong> - Info erfassen</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color neutral"></div>
+                    <span><strong>Entscheidungspunkt</strong> - Verzweigung</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#06b6d4"></div>
+                    <span><strong>API Call</strong> - Backend-Kommunikation</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Schema -->
+        <div class="json-container">
+            <h2 class="json-title">📦 JSON Schema - Maschinenlesbare Struktur</h2>
+            <div class="json-content">
+<pre>{
+  "conversation_flow_schema": {
+    "version": "1.0",
+    "last_updated": "2025-10-22",
+    "description": "AskPro AI Telefon-Gesprächsfluss mit allen möglichen Szenarien",
+
+    "intents": [
+      {
+        "id": "info_request",
+        "name": "Informationen sammeln",
+        "description": "Kunde möchte Infos über Leistungen, Öffnungszeiten, Preise",
+        "sub_intents": [
+          "opening_hours",
+          "services",
+          "prices",
+          "location"
+        ],
+        "typical_phrases": [
+          "Wann haben Sie geöffnet?",
+          "Was bieten Sie an?",
+          "Was kostet das?",
+          "Wo sind Sie?"
+        ],
+        "outcomes": {
+          "success": "Info gegeben, User zufrieden",
+          "leads_to_booking": "User will nach Info einen Termin buchen"
+        }
+      },
+      {
+        "id": "book_appointment",
+        "name": "Termin buchen",
+        "description": "Kunde möchte neuen Termin vereinbaren",
+        "required_data": [
+          "customer_name",
+          "customer_email",
+          "preferred_date",
+          "preferred_time"
+        ],
+        "optional_data": [
+          "customer_phone",
+          "service_type",
+          "notes"
+        ],
+        "flow_steps": [
+          {
+            "step": 1,
+            "action": "recognize_intent",
+            "description": "Erkenne Buchungswunsch aus User-Input"
+          },
+          {
+            "step": 2,
+            "action": "collect_data",
+            "description": "Sammle fehlende Informationen (Name, Email, Datum, Zeit)",
+            "substeps": [
+              "check_if_name_provided",
+              "check_if_email_provided",
+              "check_if_date_provided",
+              "check_if_time_provided"
+            ]
+          },
+          {
+            "step": 3,
+            "action": "api_check_availability",
+            "endpoint": "/api/retell/collect-appointment",
+            "parameters": {
+              "bestaetigung": false
+            }
+          },
+          {
+            "step": 4,
+            "action": "confirm_with_user",
+            "branches": {
+              "available": "Ask user to confirm booking",
+              "not_available": "Offer alternatives"
+            }
+          },
+          {
+            "step": 5,
+            "action": "api_book_appointment",
+            "endpoint": "/api/retell/collect-appointment",
+            "parameters": {
+              "bestaetigung": true
+            },
+            "condition": "user_confirmed"
+          },
+          {
+            "step": 6,
+            "action": "confirmation",
+            "description": "Bestätige Buchung, sende Email"
+          }
+        ],
+        "outcomes": {
+          "success": "Termin gebucht, Bestätigung versendet",
+          "alternative_booked": "User akzeptierte Alternativtermin",
+          "no_availability": "Keine passende Zeit gefunden",
+          "user_cancelled": "User brach Buchung ab"
+        }
+      },
+      {
+        "id": "reschedule_appointment",
+        "name": "Termin verschieben",
+        "description": "Kunde möchte bestehenden Termin auf neue Zeit verschieben",
+        "required_data": [
+          "appointment_identifier",
+          "new_date",
+          "new_time"
+        ],
+        "flow_steps": [
+          {
+            "step": 1,
+            "action": "identify_appointment",
+            "description": "Finde bestehenden Termin via Name/Email/Telefon"
+          },
+          {
+            "step": 2,
+            "action": "api_search_appointment",
+            "endpoint": "/api/retell/get-customer-appointments"
+          },
+          {
+            "step": 3,
+            "action": "display_current_appointment",
+            "description": "Zeige aktuellen Termin"
+          },
+          {
+            "step": 4,
+            "action": "collect_new_datetime",
+            "description": "Frage nach neuem Datum und Uhrzeit"
+          },
+          {
+            "step": 5,
+            "action": "api_check_new_availability",
+            "endpoint": "/api/retell/collect-appointment",
+            "parameters": {
+              "bestaetigung": false
+            }
+          },
+          {
+            "step": 6,
+            "action": "confirm_reschedule",
+            "branches": {
+              "available": "Ask user to confirm reschedule",
+              "not_available": "Offer other times"
+            }
+          },
+          {
+            "step": 7,
+            "action": "api_reschedule",
+            "endpoint": "/api/retell/reschedule-appointment",
+            "condition": "user_confirmed"
+          },
+          {
+            "step": 8,
+            "action": "confirmation",
+            "description": "Bestätige Verschiebung, sende Email"
+          }
+        ],
+        "outcomes": {
+          "success": "Termin verschoben, Bestätigung versendet",
+          "appointment_not_found": "Kein Termin gefunden",
+          "no_new_availability": "Neue Zeit nicht verfügbar",
+          "user_kept_original": "User behielt ursprünglichen Termin"
+        }
+      },
+      {
+        "id": "cancel_appointment",
+        "name": "Termin stornieren",
+        "description": "Kunde möchte bestehenden Termin absagen",
+        "required_data": [
+          "appointment_identifier"
+        ],
+        "flow_steps": [
+          {
+            "step": 1,
+            "action": "identify_appointment",
+            "description": "Finde zu stornierenden Termin"
+          },
+          {
+            "step": 2,
+            "action": "api_search_appointment",
+            "endpoint": "/api/retell/get-customer-appointments"
+          },
+          {
+            "step": 3,
+            "action": "display_appointment",
+            "description": "Zeige zu stornierenden Termin"
+          },
+          {
+            "step": 4,
+            "action": "confirm_cancellation",
+            "description": "Sicherheitsfrage: Wirklich stornieren?"
+          },
+          {
+            "step": 5,
+            "action": "api_cancel",
+            "endpoint": "/api/retell/cancel-appointment",
+            "condition": "user_confirmed"
+          },
+          {
+            "step": 6,
+            "action": "offer_rebook",
+            "description": "Biete an, direkt neuen Termin zu buchen"
+          }
+        ],
+        "outcomes": {
+          "success": "Termin storniert, Bestätigung versendet",
+          "success_with_rebook": "Termin storniert und neuer gebucht",
+          "appointment_not_found": "Kein Termin gefunden",
+          "user_kept_appointment": "User entschied sich Termin zu behalten"
+        }
+      },
+      {
+        "id": "unclear_intent",
+        "name": "Intent unklar",
+        "description": "Nicht klar was Kunde möchte",
+        "flow_steps": [
+          {
+            "step": 1,
+            "action": "clarify_intent",
+            "description": "Nachfragen: Wie kann ich Ihnen helfen?"
+          },
+          {
+            "step": 2,
+            "action": "re_evaluate_intent",
+            "branches": {
+              "now_clear": "Route zu entsprechendem Intent",
+              "still_unclear": "Eskalation zu menschlichem Mitarbeiter"
+            }
+          }
+        ],
+        "outcomes": {
+          "clarified": "Intent geklärt, zu passendem Flow geroutet",
+          "escalated": "An menschlichen Mitarbeiter weitergeleitet"
+        }
+      }
+    ],
+
+    "global_rules": {
+      "intent_recognition": {
+        "description": "Erkenne Intent aus erstem User-Input",
+        "priority": "highest",
+        "keywords": {
+          "book": ["termin", "buchen", "reservieren", "vereinbaren"],
+          "reschedule": ["verschieben", "ändern", "umbuchen", "verlegen"],
+          "cancel": ["stornieren", "absagen", "löschen", "canceln"],
+          "info": ["information", "frage", "öffnungszeiten", "kosten", "preis"]
+        }
+      },
+      "data_collection": {
+        "description": "Verwende bereits genannte Informationen",
+        "rule": "NIEMALS nach Daten fragen die User bereits genannt hat",
+        "strategy": "Erkenne Name, Email, Datum, Uhrzeit aus jedem User-Input"
+      },
+      "api_calls": {
+        "description": "Immer echte API-Calls machen",
+        "rule": "NIEMALS Verfügbarkeit erfinden oder halluzinieren",
+        "endpoints": {
+          "check_availability": "/api/retell/collect-appointment",
+          "book_appointment": "/api/retell/collect-appointment",
+          "search_appointments": "/api/retell/get-customer-appointments",
+          "reschedule": "/api/retell/reschedule-appointment",
+          "cancel": "/api/retell/cancel-appointment"
+        }
+      },
+      "error_handling": {
+        "api_error": "Sage ehrlich: 'Es gab ein technisches Problem'",
+        "not_found": "Sage ehrlich: 'Ich konnte keinen Termin finden'",
+        "not_available": "Biete Alternativen an"
+      },
+      "conversation_endings": {
+        "successful": "Danke für Ihren Anruf! Auf Wiederhören!",
+        "unsuccessful": "Trotzdem danke für Ihren Anruf! Auf Wiederhören!",
+        "escalated": "Ich verbinde Sie mit einem Mitarbeiter. Einen Moment bitte."
+      }
+    },
+
+    "statistics": {
+      "total_nodes": 23,
+      "decision_points": 8,
+      "api_calls": 6,
+      "possible_outcomes": 12,
+      "average_call_duration": {
+        "info_request": "60-90 seconds",
+        "book_appointment": "120-180 seconds",
+        "reschedule": "90-150 seconds",
+        "cancel": "60-90 seconds"
+      }
+    },
+
+    "success_metrics": {
+      "booking_conversion": "% of calls that result in successful booking",
+      "first_call_resolution": "% of issues resolved in first call",
+      "customer_satisfaction": "Post-call satisfaction rating",
+      "average_handle_time": "Average duration per call type",
+      "api_success_rate": "% of successful API calls"
+    }
+  }
+}</pre>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>AskPro AI</strong> - Conversation Flow Chart v1.0</p>
+            <p>Erstellt: 2025-10-22 | Flow ID: conversation_flow_da76e7c6f3ba</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 15
+            }
+        });
+    </script>
+</body>
+</html>

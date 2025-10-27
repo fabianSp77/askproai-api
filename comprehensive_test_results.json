@@ -1,0 +1,60 @@
+{
+    "custom_pages": {
+        "Dashboard": {
+            "status": "ok",
+            "widgets": 0
+        },
+        "SystemAdministration": {
+            "status": "ok",
+            "widgets": 0
+        },
+        "ProfitDashboard": {
+            "status": "ok",
+            "widgets": 1
+        },
+        "SystemTestingDashboard": {
+            "status": "ok",
+            "widgets": 0
+        },
+        "SettingsDashboard": {
+            "status": "ok",
+            "widgets": 0
+        },
+        "PolicyOnboarding": {
+            "status": "ok",
+            "widgets": 0
+        },
+        "TestChecklist": {
+            "status": "ok",
+            "widgets": 0
+        }
+    },
+    "resources": [],
+    "widgets": {
+        "CustomerStatsOverview": {
+            "status": "ok",
+            "stats": 1
+        },
+        "CallStatsOverview": {
+            "status": "ok",
+            "stats": 5
+        },
+        "StatsOverview": {
+            "status": "ok",
+            "stats": 1
+        },
+        "DashboardStats": {
+            "status": "ok",
+            "stats": 1
+        },
+        "RecentCalls": {
+            "status": "ok"
+        },
+        "RecentAppointments": {
+            "status": "ok"
+        },
+        "LatestCustomers": {
+            "status": "ok"
+        }
+    }
+}
