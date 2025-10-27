@@ -38,7 +38,6 @@ class Staff extends Model
         'vacation_dates',
         'is_available',
         'is_active',
-        'active',
         'is_bookable',
         'can_book_appointments',
         'appointment_duration_minutes',

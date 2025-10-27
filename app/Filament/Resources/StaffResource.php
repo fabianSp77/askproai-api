@@ -94,13 +94,9 @@ class StaffResource extends Resource
                                                 ->native(false),
                                         ]),
 
-                                        Grid::make(3)->schema([
+                                        Grid::make(2)->schema([
                                             Forms\Components\Toggle::make('is_active')
                                                 ->label('Aktiv')
-                                                ->default(true),
-
-                                            Forms\Components\Toggle::make('active')
-                                                ->label('Verfügbar')
                                                 ->default(true),
 
                                             Forms\Components\Toggle::make('is_bookable')
@@ -397,7 +393,6 @@ class StaffResource extends Resource
                     ->label('Aktuell verfügbar')
                     ->query(fn (Builder $query): Builder =>
                         $query->where('is_active', true)
-                            ->where('active', true)
                             ->where('is_bookable', true)
                     )
                     ->default(),
@@ -553,9 +548,6 @@ class StaffResource extends Resource
                             Forms\Components\Toggle::make('is_active')
                                 ->label('Mitarbeiter aktiv')
                                 ->default(fn ($record) => $record->is_active),
-                            Forms\Components\Toggle::make('active')
-                                ->label('Aktuell verfügbar')
-                                ->default(fn ($record) => $record->active),
                             Forms\Components\Toggle::make('is_bookable')
                                 ->label('Buchbar')
                                 ->default(fn ($record) => $record->is_bookable),
