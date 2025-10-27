@@ -39,7 +39,7 @@ class RecentCallsActivity extends BaseWidget
                     ->url(fn ($record) => $record->customer
                         ? route('filament.admin.resources.customers.edit', $record->customer)
                         : null),
-                Tables\Columns\BadgeColumn::make('call_successful')
+                Tables\Columns\BadgeColumn::make('call_successful')  // ✅ Uses accessor (status === 'completed')
                     ->label('Status')
                     ->boolean()
                     ->trueColor('success')
@@ -70,7 +70,7 @@ class RecentCallsActivity extends BaseWidget
                         'negative' => 'danger',
                         default => 'secondary',
                     }),
-                Tables\Columns\IconColumn::make('appointment_made')
+                Tables\Columns\IconColumn::make('appointment_made')  // ✅ Uses accessor (has_appointment)
                     ->label('Termin')
                     ->boolean()
                     ->trueIcon('heroicon-o-calendar-days')
@@ -82,7 +82,7 @@ class RecentCallsActivity extends BaseWidget
                     ->limit(15)
                     ->default('-')
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('cost_cents')
+                Tables\Columns\TextColumn::make('calculated_cost')  // ✅ FIXED: uses calculated_cost instead of cost_cents
                     ->label('Kosten')
                     ->money('EUR', divideBy: 100)
                     ->alignEnd()

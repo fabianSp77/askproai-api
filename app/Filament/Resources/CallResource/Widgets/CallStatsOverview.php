@@ -103,23 +103,24 @@ class CallStatsOverview extends BaseWidget
         // 🔒 SECURITY: Single query for month stats with role filtering (including profit and conversion calculations)
         // Using whereBetween instead of whereMonth/whereYear for better index usage
         // ✅ FIXED: uses has_appointment (actual DB column)
+        // ⚠️ DISABLED: Profit tracking columns don't exist in Sept 21 backup
+        //    (cost_cents, platform_profit, total_profit, profit_margin_total, customer_cost)
         $monthStats = $this->applyRoleFilter(Call::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]))
             ->selectRaw('
                 COUNT(*) as total_count,
                 SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count,
-                SUM(COALESCE(cost_cents, 0)) / 100.0 as total_cost,
-                SUM(COALESCE(platform_profit, 0)) / 100.0 as total_platform_profit,
-                SUM(COALESCE(total_profit, 0)) / 100.0 as total_profit,
-                AVG(CASE WHEN customer_cost > 0 THEN profit_margin_total ELSE NULL END) as avg_profit_margin
+                SUM(COALESCE(calculated_cost, 0)) / 100.0 as total_cost
             ')
             ->first();
 
         $monthCount = $monthStats->total_count ?? 0;
         $monthAppointments = $monthStats->appointment_count ?? 0;
         $monthCost = $monthStats->total_cost ?? 0;
-        $monthPlatformProfit = $monthStats->total_platform_profit ?? 0;
-        $monthTotalProfit = $monthStats->total_profit ?? 0;
-        $avgProfitMargin = $monthStats->avg_profit_margin ?? 0;
+
+        // ⚠️ DISABLED: Profit columns don't exist in Sept 21 backup
+        $monthPlatformProfit = 0;
+        $monthTotalProfit = 0;
+        $avgProfitMargin = 0;
 
         // Calculate business metrics
         $avgCostPerCall = $monthCount > 0 ? $monthCost / $monthCount : 0;
@@ -241,10 +242,11 @@ class CallStatsOverview extends BaseWidget
         $costs = [];
 
         // Get data aggregated by week
+        // ✅ FIXED: uses calculated_cost (actual column) instead of cost_cents
         $data = $this->applyRoleFilter(Call::whereBetween('created_at', [$startOfMonth, $endOfMonth]))
             ->selectRaw('
                 WEEK(created_at, 1) as week_number,
-                SUM(COALESCE(cost_cents, 0)) / 100.0 as total_cost
+                SUM(COALESCE(calculated_cost, 0)) / 100.0 as total_cost
             ')
             ->groupBy('week_number')
             ->orderBy('week_number')
