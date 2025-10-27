@@ -94,16 +94,14 @@ class CallbacksByBranchWidget extends BaseWidget
                 $sevenDaysAgo = $now->copy()->subDays(7);
 
                 // Single optimized query for all current stats
+                // ⚠️ FIXED: assigned_at column doesn't exist in Sept 21 backup
+                // Response time calculation disabled until database is restored
                 $currentStats = CallbackRequest::query()
                     ->selectRaw('
                         COUNT(CASE WHEN status IN (?, ?) THEN 1 END) as pending_count,
                         COUNT(CASE WHEN expires_at < ? AND status NOT IN (?, ?, ?) THEN 1 END) as overdue_count,
                         COUNT(CASE WHEN status = ? AND DATE(completed_at) = ? THEN 1 END) as completed_today,
-                        AVG(CASE
-                            WHEN contacted_at IS NOT NULL AND assigned_at IS NOT NULL
-                            THEN TIMESTAMPDIFF(HOUR, assigned_at, contacted_at)
-                            ELSE NULL
-                        END) as avg_response_hours
+                        0 as avg_response_hours
                     ', [
                         CallbackRequest::STATUS_PENDING,
                         CallbackRequest::STATUS_ASSIGNED,
@@ -143,17 +141,14 @@ class CallbacksByBranchWidget extends BaseWidget
      */
     protected function getSevenDayTrends(Carbon $startDate, Carbon $endDate): array
     {
+        // ⚠️ FIXED: assigned_at column doesn't exist - response time disabled
         $dailyStats = CallbackRequest::query()
             ->selectRaw('
                 DATE(created_at) as date,
                 COUNT(CASE WHEN status IN (?, ?) THEN 1 END) as pending,
                 COUNT(CASE WHEN expires_at < NOW() AND status NOT IN (?, ?, ?) THEN 1 END) as overdue,
                 COUNT(CASE WHEN status = ? THEN 1 END) as completed,
-                AVG(CASE
-                    WHEN contacted_at IS NOT NULL AND assigned_at IS NOT NULL
-                    THEN TIMESTAMPDIFF(HOUR, assigned_at, contacted_at)
-                    ELSE NULL
-                END) as avg_hours
+                0 as avg_hours
             ', [
                 CallbackRequest::STATUS_PENDING,
                 CallbackRequest::STATUS_ASSIGNED,
