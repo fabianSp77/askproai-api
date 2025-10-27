@@ -17,6 +17,15 @@ class NotificationAnalyticsWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '30s';
 
+    /**
+     * Widget disabled - notification_queue table doesn't exist in Sept 21 database backup
+     * TODO: Re-enable when database is fully restored
+     */
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getStats(): array
     {
         $companyId = auth()->user()->company_id;
