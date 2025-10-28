@@ -44,15 +44,42 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 'panels::head.end',
-                fn (): string => '<script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
+                fn (): string => '<script>console.log("🔍 Loading Tippy.js from CDN...");</script><script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js" onload="console.log(\'✅ Tippy.js loaded:\', typeof window.tippy);"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
             )
             ->renderHook(
                 'panels::body.end',
                 fn (): string => '<script>
-(function() {
-    console.log("🔍 Tooltip patch loading...");
-    console.log("Alpine available:", typeof window.Alpine !== "undefined");
-    console.log("Tippy available:", typeof window.tippy !== "undefined");
+console.log("🔍 Tooltip patch script starting...");
+console.log("Alpine at script start:", typeof window.Alpine);
+console.log("Tippy at script start:", typeof window.tippy);
+
+document.addEventListener("alpine:init", function() {
+    console.log("🎯 Alpine:init event fired!");
+    console.log("Alpine now available:", typeof window.Alpine !== "undefined");
+    console.log("Tippy now available:", typeof window.tippy !== "undefined");
+
+    if (typeof window.Alpine === "undefined") {
+        console.error("❌ Alpine still not available after alpine:init event!");
+        return;
+    }
+
+    if (typeof window.tippy === "undefined") {
+        console.error("❌ Tippy not available! Waiting 1 second...");
+        setTimeout(function() {
+            if (typeof window.tippy === "undefined") {
+                console.error("❌ Tippy still not available after 1s. CDN may be blocked.");
+                return;
+            }
+            initTooltipPatch();
+        }, 1000);
+        return;
+    }
+
+    initTooltipPatch();
+});
+
+function initTooltipPatch() {
+    console.log("🔧 Patching Alpine Tooltip directive...");
 
     function decodeHtmlEntities(text) {
         if (typeof text !== "string") return text;
@@ -62,76 +89,63 @@ class AdminPanelProvider extends PanelProvider
         return textarea.value;
     }
 
-    function waitForDependencies(callback) {
-        if (typeof window.Alpine !== "undefined" && typeof window.tippy !== "undefined") {
-            callback();
-        } else {
-            setTimeout(() => waitForDependencies(callback), 50);
-        }
-    }
+    const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+    const isDark = document.documentElement.classList.contains("dark");
 
-    waitForDependencies(() => {
-        const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
-        const isDark = document.documentElement.classList.contains("dark");
+    window.Alpine.directive("tooltip", (el, { expression, modifiers }, { evaluateLater, effect }) => {
+        let getContent = evaluateLater(expression);
 
-        console.log("🔧 Patching Alpine Tooltip for HTML support...");
+        effect(() => {
+            getContent((value) => {
+                let config = typeof value === "string" ? { content: value } : value;
+                let content = config.content || value;
+                content = decodeHtmlEntities(content);
 
-        window.Alpine.directive("tooltip", (el, { expression, modifiers }, { evaluateLater, effect }) => {
-            let getContent = evaluateLater(expression);
-
-            effect(() => {
-                getContent((value) => {
-                    let config = typeof value === "string" ? { content: value } : value;
-                    let content = config.content || value;
-                    content = decodeHtmlEntities(content);
-
-                    const tippyConfig = {
-                        content: content,
-                        allowHTML: true,
-                        interactive: true,
-                        maxWidth: isTouchDevice ? "90vw" : 400,
-                        trigger: isTouchDevice ? "click" : "mouseenter focus",
-                        touch: isTouchDevice ? ["hold", 500] : true,
-                        theme: isDark ? "dark" : "light",
-                        onShow(instance) {
-                            const currentDark = document.documentElement.classList.contains("dark");
-                            instance.setProps({ theme: currentDark ? "dark" : "light" });
-                        }
-                    };
-
-                    if (el._tippy) {
-                        el._tippy.setProps(tippyConfig);
-                    } else {
-                        window.tippy(el, tippyConfig);
+                const tippyConfig = {
+                    content: content,
+                    allowHTML: true,
+                    interactive: true,
+                    maxWidth: isTouchDevice ? "90vw" : 400,
+                    trigger: isTouchDevice ? "click" : "mouseenter focus",
+                    touch: isTouchDevice ? ["hold", 500] : true,
+                    theme: isDark ? "dark" : "light",
+                    onShow(instance) {
+                        const currentDark = document.documentElement.classList.contains("dark");
+                        instance.setProps({ theme: currentDark ? "dark" : "light" });
                     }
-                });
-            });
-        });
+                };
 
-        console.log("✅ Alpine Tooltip patched with HTML support + entity decoder (Mobile: " + isTouchDevice + ")");
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === "class") {
-                        const isDarkNow = document.documentElement.classList.contains("dark");
-                        const theme = isDarkNow ? "dark" : "light";
-                        if (typeof tippy !== "undefined" && tippy.instances) {
-                            tippy.instances.forEach(instance => {
-                                instance.setProps({ theme: theme });
-                            });
-                        }
-                    }
-                });
+                if (el._tippy) {
+                    el._tippy.setProps(tippyConfig);
+                } else {
+                    window.tippy(el, tippyConfig);
+                }
             });
-            observer.observe(document.documentElement, {
-                attributes: true,
-                attributeFilter: ["class"]
-            });
-            console.log("✅ Dark mode observer initialized");
         });
     });
-})();
+
+    console.log("✅ Alpine Tooltip patched with HTML support (Mobile: " + isTouchDevice + ")");
+
+    // Dark mode observer
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === "class") {
+                const isDarkNow = document.documentElement.classList.contains("dark");
+                const theme = isDarkNow ? "dark" : "light";
+                if (typeof window.tippy !== "undefined" && window.tippy.instances) {
+                    window.tippy.instances.forEach(instance => {
+                        instance.setProps({ theme: theme });
+                    });
+                }
+            }
+        });
+    });
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+    console.log("✅ Dark mode observer initialized");
+}
 </script>'
             )
             // NOTE: Removed Livewire.start() - Livewire 3 auto-initializes server-rendered components
