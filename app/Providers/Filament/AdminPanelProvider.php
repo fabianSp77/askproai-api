@@ -44,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 'panels::head.end',
-                fn (): string => '<script>console.log("🔍 Loading Tippy.js from CDN...");</script><script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js" onload="console.log(\'✅ Tippy.js loaded:\', typeof window.tippy);"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
+                fn (): string => '<script>console.log("🔍 Loading Tippy.js IIFE build...");</script><script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script><script src="https://unpkg.com/tippy.js@6/dist/tippy.umd.min.js" onload="console.log(\'✅ Tippy.js loaded:\', typeof window.tippy, window.tippy);"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
             )
             ->renderHook(
                 'panels::body.end',
