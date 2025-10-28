@@ -1145,27 +1145,23 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('staff_assignment')
                     ->label('Mitarbeiter')
                     ->getStateUsing(function ($record) {
-                        $config = $record->policyConfiguration;
-                        $method = $config?->staff_assignment_method ?? 'any';
+                        $staff = $record->allowedStaff;
 
-                        if ($method === 'any') {
-                            return '👥 Alle verfügbaren';
+                        if ($staff->isEmpty()) {
+                            return '👥 Keine zugewiesen';
                         }
 
-                        $count = $record->allowedStaff()->count();
-
-                        if ($method === 'preferred' && $config?->preferred_staff_id) {
-                            $staff = \App\Models\Staff::find($config->preferred_staff_id);
-                            return $staff ? "⭐ {$staff->name} (+{$count})" : "👤 {$count} zugewiesen";
+                        $count = $staff->count();
+                        if ($count > 3) {
+                            $first = $staff->take(3)->pluck('name')->join(', ');
+                            return "{$first} (+" . ($count - 3) . " weitere)";
                         }
 
-                        return "👤 {$count} zugewiesen";
+                        return $staff->pluck('name')->join(', ');
                     })
                     ->badge()
                     ->color(fn ($record) =>
-                        ($record->policyConfiguration?->staff_assignment_method ?? 'any') === 'any'
-                            ? 'gray'
-                            : 'info'
+                        $record->allowedStaff->isEmpty() ? 'gray' : 'success'
                     )
                     ->tooltip(function ($record) {
                         $staff = $record->allowedStaff;

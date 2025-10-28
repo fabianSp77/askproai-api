@@ -328,85 +328,22 @@ class ViewService extends ViewRecord
                     ->description('Welche Mitarbeiter können diesen Service ausführen')
                     ->icon('heroicon-o-user-group')
                     ->schema([
-                        Grid::make(2)->schema([
-                            TextEntry::make('assignment_method')
-                                ->label('Zuweisungsmethode')
-                                ->getStateUsing(fn ($record) =>
-                                    $record->policyConfiguration?->staff_assignment_method ?? 'any'
-                                )
-                                ->formatStateUsing(fn ($state) => match($state) {
-                                    'any' => '👥 Alle verfügbaren Mitarbeiter',
-                                    'specific' => '👤 Spezifische Mitarbeiter',
-                                    'preferred' => '⭐ Bevorzugter Mitarbeiter',
-                                    default => $state,
-                                })
-                                ->badge()
-                                ->color(fn ($state) => $state === 'any' ? 'gray' : 'info'),
-
-                            TextEntry::make('preferred_staff')
-                                ->label('Bevorzugter Mitarbeiter')
-                                ->getStateUsing(function ($record) {
-                                    $preferredId = $record->policyConfiguration?->preferred_staff_id;
-                                    if (!$preferredId) return null;
-
-                                    $staff = \App\Models\Staff::find($preferredId);
-                                    return $staff ? $staff->name : 'Nicht gefunden';
-                                })
-                                ->placeholder('Kein bevorzugter Mitarbeiter')
-                                ->visible(fn ($record) =>
-                                    ($record->policyConfiguration?->staff_assignment_method ?? 'any') === 'preferred'
-                                )
-                                ->icon('heroicon-m-star'),
-                        ]),
-
                         TextEntry::make('allowed_staff')
-                            ->label('Zugelassene Mitarbeiter')
-                            ->getStateUsing(function ($record) {
-                                $method = $record->policyConfiguration?->staff_assignment_method ?? 'any';
-
-                                if ($method === 'any') {
-                                    $count = \App\Models\Staff::where('company_id', $record->company_id)
-                                        ->where('is_active', true)
-                                        ->count();
-                                    return "Alle aktiven Mitarbeiter ({$count})";
-                                }
-
-                                $staff = $record->allowedStaff;
-                                if ($staff->isEmpty()) {
-                                    return 'Keine Mitarbeiter zugewiesen';
-                                }
-
-                                return $staff->pluck('name')->join(', ');
-                            })
+                            ->label('Zugewiesene Mitarbeiter')
+                            ->getStateUsing(fn ($record) =>
+                                $record->allowedStaff->isEmpty()
+                                    ? 'Keine Mitarbeiter zugewiesen'
+                                    : $record->allowedStaff->pluck('name')->join(', ')
+                            )
                             ->badge()
-                            ->color('info')
+                            ->color(fn ($record) => $record->allowedStaff->isEmpty() ? 'gray' : 'success')
                             ->columnSpanFull(),
 
-                        Grid::make(3)->schema([
-                            IconEntry::make('policyConfiguration.auto_assign_staff')
-                                ->label('Auto-Zuweisung')
-                                ->boolean()
-                                ->trueIcon('heroicon-o-check-circle')
-                                ->falseIcon('heroicon-o-x-circle')
-                                ->trueColor('success')
-                                ->falseColor('gray'),
-
-                            IconEntry::make('policyConfiguration.allow_double_booking')
-                                ->label('Doppelbuchung erlaubt')
-                                ->boolean()
-                                ->trueIcon('heroicon-o-check-circle')
-                                ->falseIcon('heroicon-o-x-circle')
-                                ->trueColor('success')
-                                ->falseColor('gray'),
-
-                            IconEntry::make('policyConfiguration.respect_staff_breaks')
-                                ->label('Pausen respektieren')
-                                ->boolean()
-                                ->trueIcon('heroicon-o-check-circle')
-                                ->falseIcon('heroicon-o-x-circle')
-                                ->trueColor('success')
-                                ->falseColor('gray'),
-                        ]),
+                        TextEntry::make('staff_count')
+                            ->label('Anzahl Mitarbeiter')
+                            ->getStateUsing(fn ($record) => $record->allowedStaff->count())
+                            ->badge()
+                            ->color('info'),
                     ]),
 
                 Section::make('Buchungsstatistiken')
