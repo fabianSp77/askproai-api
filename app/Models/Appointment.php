@@ -133,6 +133,15 @@ class Appointment extends Model
     }
 
     /**
+     * Processing Time phases for this appointment
+     * Returns phases in chronological order (initial → processing → final)
+     */
+    public function phases(): HasMany
+    {
+        return $this->hasMany(AppointmentPhase::class);
+    }
+
+    /**
      * Call that originated this appointment
      */
     public function call(): BelongsTo
