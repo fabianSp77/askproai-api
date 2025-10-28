@@ -1213,6 +1213,11 @@ class ServiceResource extends Resource
                     ->sortable(query: function ($query, $direction) {
                         $query->withCount('allowedStaff')
                             ->orderBy('allowed_staff_count', $direction);
+                    })
+                    ->searchable(query: function ($query, string $search) {
+                        $query->whereHas('allowedStaff', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
                     }),
             ])
             ->defaultSort('company.name')
