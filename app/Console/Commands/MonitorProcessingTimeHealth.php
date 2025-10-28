@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Manual execution:
  *   php artisan monitor:processing-time-health
- *   php artisan monitor:processing-time-health --verbose
+ *   php artisan monitor:processing-time-health --details
  */
 class MonitorProcessingTimeHealth extends Command
 {
@@ -32,7 +32,7 @@ class MonitorProcessingTimeHealth extends Command
      * @var string
      */
     protected $signature = 'monitor:processing-time-health
-                            {--verbose : Output detailed diagnostics}';
+                            {--details : Output detailed diagnostics}';
 
     /**
      * The console command description.
@@ -61,7 +61,7 @@ class MonitorProcessingTimeHealth extends Command
         $this->newLine();
 
         // Check feature flag status
-        if ($this->option('verbose')) {
+        if ($this->option('details')) {
             $this->checkFeatureFlags();
         }
 
@@ -221,7 +221,7 @@ class MonitorProcessingTimeHealth extends Command
         if ($orphaned->count() > 0) {
             $this->warn('⚠️  Found ' . $orphaned->count() . ' orphaned appointments without phases');
 
-            if ($this->option('verbose')) {
+            if ($this->option('details')) {
                 $this->line('  Appointment IDs: ' . $orphaned->pluck('id')->implode(', '));
             }
 
