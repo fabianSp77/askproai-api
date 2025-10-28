@@ -773,7 +773,59 @@ class ServiceResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->lineClamp(2)
-                    ->tooltip(fn ($record) => $record->calcom_name ?? $record->name)
+                    ->tooltip(function ($record) {
+                        $builder = TooltipBuilder::make();
+
+                        // Section 1: IDs
+                        $idContent = $builder->keyValue('Service ID', $record->id, true);
+                        if ($record->calcom_event_type_id) {
+                            $idContent .= '<br>' . $builder->keyValue('Cal.com Event Type', $record->calcom_event_type_id, true);
+                        }
+                        $builder->section('🆔 Identifiers', $idContent);
+
+                        // Section 2: Pausen (only if composite service)
+                        if ($record->composite && !empty($record->segments)) {
+                            $segments = is_string($record->segments)
+                                ? json_decode($record->segments, true)
+                                : $record->segments;
+
+                            if (is_array($segments)) {
+                                $pauseItems = [];
+                                foreach ($segments as $index => $segment) {
+                                    $gap = (int)($segment['gap_after'] ?? 0);
+                                    if ($gap > 0 && $index < count($segments) - 1) {
+                                        $segmentName = $segment['name'] ?? "Schritt " . ($index + 1);
+                                        $pauseItems[] = "{$segmentName}: <strong>+{$gap} min</strong>";
+                                    }
+                                }
+
+                                if (!empty($pauseItems)) {
+                                    $builder->section('⏱️ Pausen (Einwirkzeiten)', $builder->list($pauseItems));
+                                }
+                            }
+                        }
+
+                        // Section 3: Availability Policy
+                        $policy = $record->availability_gap_policy ?? 'blocked';
+                        $policyBadge = match($policy) {
+                            'free' => $builder->badge('FREI buchbar', 'success'),
+                            'flexible' => $builder->badge('FLEXIBEL buchbar', 'warning'),
+                            'blocked' => $builder->badge('RESERVIERT', 'error'),
+                            default => $builder->badge('Unbekannt', 'gray'),
+                        };
+
+                        $policyExplanation = match($policy) {
+                            'free' => 'Andere Services können während Einwirkzeit gebucht werden',
+                            'flexible' => 'Zeitfenster flexibel, abhängig von Auslastung',
+                            'blocked' => 'Zeitfenster während Einwirkzeit blockiert',
+                            default => 'Keine Verfügbarkeitspolicy definiert',
+                        };
+
+                        $builder->section('📅 Verfügbarkeit während Einwirkzeit',
+                            $policyBadge . '<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">' . $policyExplanation . '</div>');
+
+                        return $builder->build();
+                    })
                     ->description(fn ($record) =>
                         ($record->calcom_name && $record->display_name ?
                             "Cal.com: " . Str::limit($record->calcom_name, 40, '...') : '') .
@@ -891,7 +943,82 @@ class ServiceResource extends Resource
                         return $state . ' min';
                     })
                     ->sortable()
-                    ->alignCenter(),
+                    ->alignCenter()
+                    ->tooltip(function ($record) {
+                        $builder = TooltipBuilder::make();
+
+                        $activeDuration = 0;
+                        $gapDuration = 0;
+
+                        // Calculate durations for composite services
+                        if ($record->composite && !empty($record->segments)) {
+                            $segments = is_string($record->segments)
+                                ? json_decode($record->segments, true)
+                                : $record->segments;
+
+                            if (is_array($segments)) {
+                                foreach ($segments as $index => $segment) {
+                                    $activeDuration += (int)($segment['duration'] ?? 0);
+                                    if ($index < count($segments) - 1) {
+                                        $gapDuration += (int)($segment['gap_after'] ?? 0);
+                                    }
+                                }
+                            }
+                        } else {
+                            $activeDuration = $record->duration_minutes ?? 0;
+                            $gapDuration = $record->gap_duration ?? 0;
+                        }
+
+                        $totalDuration = $activeDuration + $gapDuration;
+
+                        if ($totalDuration === 0) {
+                            return TooltipBuilder::simple('Keine Dauer festgelegt', '⏱️');
+                        }
+
+                        // Calculate percentages
+                        $activePercent = $totalDuration > 0 ? round(($activeDuration / $totalDuration) * 100) : 0;
+                        $gapPercent = $totalDuration > 0 ? round(($gapDuration / $totalDuration) * 100) : 0;
+
+                        // Build breakdown
+                        $breakdown = sprintf(
+                            '<div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⚡ Aktive Behandlung</span>
+                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                    </div>
+                                    %s
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💤 Einwirkzeit</span>
+                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                    </div>
+                                    %s
+                                </div>
+                                <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">⏱️ Gesamtzeit</span>
+                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                    </div>
+                                </div>
+                            </div>',
+                            $activeDuration,
+                            $builder->progressBar($activePercent, 'success'),
+                            $gapDuration,
+                            $builder->progressBar($gapPercent, 'warning'),
+                            $totalDuration
+                        );
+
+                        $builder->section('🔢 Gesamtdauer Breakdown', $breakdown);
+
+                        if ($gapDuration > 0) {
+                            $builder->section('ℹ️ Info',
+                                '<div class="text-xs text-gray-600 dark:text-gray-400">Einwirkzeit = Wartezeit zwischen Behandlungsschritten</div>');
+                        }
+
+                        return $builder->build();
+                    }),
 
                 Tables\Columns\IconColumn::make('composite')
                     ->label('Komposit')
@@ -1041,29 +1168,47 @@ class ServiceResource extends Resource
                             : 'info'
                     )
                     ->tooltip(function ($record) {
-                        $config = $record->policyConfiguration;
-                        if (!$config) return 'Keine Konfiguration';
+                        $staff = $record->allowedStaff;
 
-                        $method = $config->staff_assignment_method ?? 'any';
-                        $parts = ["Methode: " . match($method) {
-                            'any' => 'Alle verfügbaren',
-                            'specific' => 'Spezifische Auswahl',
-                            'preferred' => 'Bevorzugt',
-                            default => $method,
-                        }];
-
-                        if ($method !== 'any') {
-                            $staff = $record->allowedStaff()->pluck('name')->take(5);
-                            if ($staff->count() > 0) {
-                                $parts[] = "Mitarbeiter: " . $staff->join(', ');
-                                if ($record->allowedStaff()->count() > 5) {
-                                    $remaining = $record->allowedStaff()->count() - 5;
-                                    $parts[] = "... und {$remaining} weitere";
-                                }
-                            }
+                        if ($staff->isEmpty()) {
+                            return TooltipBuilder::simple('Keine Mitarbeiter für diesen Service zugewiesen', '👥');
                         }
 
-                        return implode("\n", $parts);
+                        $builder = TooltipBuilder::make();
+                        $staffList = '';
+
+                        foreach ($staff as $member) {
+                            $badges = [];
+
+                            // PRIMARY badge (green)
+                            if ($member->pivot->is_primary) {
+                                $badges[] = $builder->badge('⭐ PRIMARY', 'success');
+                            }
+
+                            // Bookable status (blue/gray)
+                            if ($member->pivot->can_book) {
+                                $badges[] = $builder->badge('✓ Buchbar', 'info');
+                            } else {
+                                $badges[] = $builder->badge('Nicht buchbar', 'gray');
+                            }
+
+                            // Build staff member card
+                            $staffList .= sprintf(
+                                '<div class="flex flex-col gap-1.5 py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">%s</div>
+                                    <div class="flex flex-wrap items-center gap-1.5">%s</div>
+                                    %s
+                                </div>',
+                                htmlspecialchars($member->name),
+                                implode(' ', $badges),
+                                $member->calcom_user_id
+                                    ? '<div class="text-xs text-gray-500 dark:text-gray-400 font-mono">Cal.com ID: ' . htmlspecialchars($member->calcom_user_id) . '</div>'
+                                    : ''
+                            );
+                        }
+
+                        $builder->section('👥 Zugewiesene Mitarbeiter (' . $staff->count() . ')', $staffList);
+                        return $builder->build();
                     })
                     ->sortable(query: function ($query, $direction) {
                         $query->withCount('allowedStaff')
