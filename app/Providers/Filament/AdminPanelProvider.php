@@ -42,6 +42,60 @@ class AdminPanelProvider extends PanelProvider
                     ->withEntryPoints(['resources/css/call-detail-full-width.css'])
                     ->toHtml()
             )
+            ->renderHook(
+                'panels::body.end',
+                fn (): string => <<<'HTML'
+                <script>
+                    // Configure Tippy.js for HTML tooltips with dark mode support
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Detect touch device
+                        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+                        // Detect dark mode
+                        const isDark = document.documentElement.classList.contains('dark');
+
+                        // Set global Tippy.js defaults for HTML tooltips
+                        if (typeof tippy !== 'undefined' && tippy.setDefaultProps) {
+                            tippy.setDefaultProps({
+                                allowHTML: true,
+                                interactive: true,
+                                maxWidth: isTouchDevice ? '90vw' : 400,
+                                trigger: isTouchDevice ? 'click' : 'mouseenter focus',
+                                touch: isTouchDevice ? ['hold', 500] : true,
+                                theme: isDark ? 'dark' : 'light',
+                                onShow(instance) {
+                                    // Update theme if changed during session
+                                    const currentDark = document.documentElement.classList.contains('dark');
+                                    instance.setProps({ theme: currentDark ? 'dark' : 'light' });
+                                }
+                            });
+                        }
+
+                        // Watch for dark mode changes and update all tooltips
+                        const observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if (mutation.attributeName === 'class') {
+                                    const isDarkNow = document.documentElement.classList.contains('dark');
+                                    const theme = isDarkNow ? 'dark' : 'light';
+
+                                    // Update all active Tippy instances
+                                    if (typeof tippy !== 'undefined' && tippy.instances) {
+                                        tippy.instances.forEach(instance => {
+                                            instance.setProps({ theme: theme });
+                                        });
+                                    }
+                                }
+                            });
+                        });
+
+                        observer.observe(document.documentElement, {
+                            attributes: true,
+                            attributeFilter: ['class']
+                        });
+                    });
+                </script>
+                HTML
+            )
             // NOTE: Removed Livewire.start() - Livewire 3 auto-initializes server-rendered components
             // Calling start() on already-hydrated pages can interfere with directive attachment
             // Livewire will process wire:snapshot attributes automatically

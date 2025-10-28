@@ -7,6 +7,7 @@ use App\Filament\Resources\ServiceResource\RelationManagers;
 use App\Models\Service;
 use App\Models\Company;
 use App\Services\ServiceMatcher;
+use App\Support\TooltipBuilder;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -821,26 +822,33 @@ class ServiceResource extends Resource
                         default => null,
                     })
                     ->tooltip(function ($record): ?string {
-                        $parts = [];
+                        $builder = TooltipBuilder::make();
 
+                        // Event Type ID
                         if ($record->calcom_event_type_id) {
-                            $parts[] = "Event Type: {$record->calcom_event_type_id}";
+                            $eventContent = $builder->keyValue('Event Type ID', $record->calcom_event_type_id, true);
+                            $builder->section('🆔 Cal.com Verbindung', $eventContent);
                         }
 
+                        // Last Sync Info
                         if ($record->last_calcom_sync) {
-                            $parts[] = "Letzter Sync: " . $record->last_calcom_sync->format('d.m.Y H:i')
-                                     . " (" . $record->last_calcom_sync->diffForHumans() . ")";
+                            $syncContent = $builder->keyValue('Letzter Sync', $record->last_calcom_sync->format('d.m.Y H:i'));
+                            $syncContent .= '<br><span class="text-xs text-gray-500 dark:text-gray-400">' . $record->last_calcom_sync->diffForHumans() . '</span>';
+                            $builder->section('🔄 Synchronisation', $syncContent);
                         }
 
+                        // Error Info
                         if ($record->sync_error) {
-                            $parts[] = "Fehler: {$record->sync_error}";
+                            $errorContent = '<div class="text-sm text-red-600 dark:text-red-400">' . htmlspecialchars(Str::limit($record->sync_error, 150)) . '</div>';
+                            $builder->section('⚠️ Fehler', $errorContent);
                         }
 
-                        if (empty($parts)) {
-                            $parts[] = "Keine Synchronisation";
+                        // No sync info
+                        if (!$record->calcom_event_type_id && !$record->last_calcom_sync) {
+                            return TooltipBuilder::simple('Keine Cal.com Synchronisation konfiguriert', '📅');
                         }
 
-                        return implode("\n", $parts);
+                        return $builder->build();
                     })
                     ->searchable(query: function ($query, $search) {
                         return $query->where('calcom_event_type_id', 'like', "%{$search}%");
@@ -915,20 +923,24 @@ class ServiceResource extends Resource
                             : null
                     )
                     ->tooltip(function ($record) {
-                        $parts = [
-                            "Grundpreis: " . number_format($record->price, 2) . " €",
-                        ];
+                        $builder = TooltipBuilder::make();
+
+                        // Section 1: Price Information
+                        $priceContent = $builder->keyValue('Grundpreis', number_format($record->price, 2) . ' €');
 
                         if ($record->duration_minutes > 0) {
                             $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2);
-                            $parts[] = "Stundensatz: {$hourlyRate} €/h";
+                            $priceContent .= '<br>' . $builder->keyValue('Stundensatz', $hourlyRate . ' €/h');
                         }
 
                         if ($record->deposit_required) {
-                            $parts[] = "Anzahlung erforderlich: " . number_format($record->deposit_amount, 2) . " €";
+                            $priceContent .= '<br>' . $builder->keyValue('Anzahlung', number_format($record->deposit_amount, 2) . ' €', false);
+                            $priceContent .= '<br>' . $builder->badge('Anzahlung erforderlich', 'warning');
                         }
 
-                        return implode("\n", $parts);
+                        $builder->section('💰 Preis & Konditionen', $priceContent);
+
+                        return $builder->build();
                     })
                     ->sortable(query: function ($query, $direction) {
                         $query->orderBy('price', $direction);
@@ -968,18 +980,34 @@ class ServiceResource extends Resource
                         return $recent > 0 ? "📈 {$recent} neue (30 Tage)" : null;
                     })
                     ->tooltip(function ($record) {
+                        $builder = TooltipBuilder::make();
+
+                        // Get statistics
                         $total = $record->appointments()->count();
                         $completed = $record->appointments()->where('status', 'completed')->count();
                         $cancelled = $record->appointments()->where('status', 'cancelled')->count();
-                        // Calculate revenue: completed appointments * service price
+                        $scheduled = $record->appointments()->where('status', 'scheduled')->count();
                         $revenue = $completed * ($record->price ?? 0);
 
-                        return implode("\n", [
-                            "Gesamt: {$total}",
-                            "Abgeschlossen: {$completed}",
-                            "Storniert: {$cancelled}",
-                            "Umsatz: " . number_format($revenue, 2) . " €",
-                        ]);
+                        // Stats list
+                        $stats = $builder->keyValue('Gesamt', $total);
+                        $stats .= '<br>' . $builder->keyValue('Abgeschlossen', $completed) . ' ' . $builder->badge($completed, 'success');
+                        $stats .= '<br>' . $builder->keyValue('Geplant', $scheduled) . ' ' . $builder->badge($scheduled, 'info');
+                        if ($cancelled > 0) {
+                            $stats .= '<br>' . $builder->keyValue('Storniert', $cancelled) . ' ' . $builder->badge($cancelled, 'error');
+                        }
+
+                        $builder->section('📊 Termine', $stats);
+
+                        // Revenue section
+                        $revenueContent = $builder->keyValue('Gesamtumsatz', number_format($revenue, 2) . ' €', true);
+                        if ($completed > 0) {
+                            $avgRevenue = $revenue / $completed;
+                            $revenueContent .= '<br>' . $builder->keyValue('Ø pro Termin', number_format($avgRevenue, 2) . ' €', true);
+                        }
+                        $builder->section('💰 Umsatz', $revenueContent);
+
+                        return $builder->build();
                     })
                     ->sortable(query: function ($query, $direction) {
                         $query->withCount('appointments')
