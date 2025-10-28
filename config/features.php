@@ -128,6 +128,139 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Processing Time / Split Appointments (Bearbeitungszeit)
+    |--------------------------------------------------------------------------
+    |
+    | Enable service phase splitting (Initial → Processing → Final)
+    | where staff is AVAILABLE during processing phase for parallel bookings.
+    |
+    | Use Case: Hairdresser can book another customer during hair dye processing time
+    |
+    | When ENABLED: Services with has_processing_time=1 create 3 phases:
+    |   - Initial Phase: Staff required (e.g., applying dye - 15 min)
+    |   - Processing Phase: Staff available (e.g., dye processing - 30 min)
+    |   - Final Phase: Staff required (e.g., washing out - 15 min)
+    |
+    | Architecture:
+    |   - Service Model: has_processing_time column + processing_time_minutes
+    |   - AppointmentPhase Model: Stores individual phases with staff_required flag
+    |   - AppointmentPhaseObserver: Auto-creates phases on appointment creation
+    |   - WeeklyAvailabilityService: Cache isolation with :pt_{0|1} suffix
+    |   - Cal.com Sync: Syncs as single event with metadata
+    |
+    | Rollout Strategy:
+    |   - Phase 1 (Week 1): Internal testing (service whitelist only)
+    |   - Phase 2 (Week 2): Pilot customers (company whitelist)
+    |   - Phase 3 (Week 3+): General availability (full rollout)
+    |
+    | Related:
+    |   - Models: App\Models\Service, AppointmentPhase, Appointment
+    |   - Services: App\Services\Appointments\WeeklyAvailabilityService
+    |   - Services: App\Services\AppointmentPhaseCreationService
+    |   - Observer: App\Observers\AppointmentPhaseObserver
+    |   - Widgets: App\Filament\Resources\AppointmentResource\Widgets\AppointmentCalendar
+    |   - Docs: claudedocs/02_BACKEND/Processing_Time/
+    |
+    | @default false (safe deployment - opt-in per service)
+    | @since 2025-10-28 (Phase 1: MVP Implementation)
+    */
+
+    /*
+     * Master Toggle - Global feature enablement
+     *
+     * When FALSE: Processing Time completely disabled (safe mode)
+     * When TRUE: Feature enabled according to whitelist/company rules
+     *
+     * @default false
+     */
+    'processing_time_enabled' => env('FEATURE_PROCESSING_TIME_ENABLED', false),
+
+    /**
+     * Service Whitelist - Specific services for controlled rollout
+     *
+     * Array of service UUIDs that can use Processing Time
+     * regardless of global enabled state.
+     *
+     * Useful for:
+     *   - Internal testing (specific test services)
+     *   - Pilot rollout (selected services only)
+     *   - Emergency disable (remove from whitelist)
+     *
+     * Format: Comma-separated UUIDs in .env
+     * Example: FEATURE_PROCESSING_TIME_SERVICE_WHITELIST="uuid1,uuid2,uuid3"
+     *
+     * @default empty (no services whitelisted)
+     */
+    'processing_time_service_whitelist' => array_filter(
+        explode(',', env('FEATURE_PROCESSING_TIME_SERVICE_WHITELIST', ''))
+    ),
+
+    /**
+     * Company Whitelist - Pilot companies for gradual rollout
+     *
+     * Array of company IDs with access to Processing Time feature.
+     * Only services from these companies can use the feature.
+     *
+     * Rollout phases:
+     *   - Phase 1: Empty (service whitelist only)
+     *   - Phase 2: [1,2,3] (3 pilot companies)
+     *   - Phase 3: Empty (all companies - general availability)
+     *
+     * Format: Comma-separated IDs in .env
+     * Example: FEATURE_PROCESSING_TIME_COMPANY_WHITELIST="1,5,12"
+     *
+     * @default empty (all companies when enabled=true)
+     */
+    'processing_time_company_whitelist' => array_filter(
+        array_map('intval', explode(',', env('FEATURE_PROCESSING_TIME_COMPANY_WHITELIST', '')))
+    ),
+
+    /**
+     * Frontend UI Display - Show Processing Time visualizations
+     *
+     * Controls visibility of phase breakdowns in:
+     *   - Appointment Detail View (InfoSection with phase timeline)
+     *   - Calendar Day View (phase badges under appointments)
+     *   - Staff Schedule Widget (timeline view)
+     *
+     * Can be disabled separately for A/B testing UI impact
+     * without affecting backend phase creation logic.
+     *
+     * @default true (show UI when feature enabled)
+     */
+    'processing_time_show_ui' => env('FEATURE_PROCESSING_TIME_SHOW_UI', true),
+
+    /**
+     * Cal.com Sync - Sync phases to Cal.com
+     *
+     * When TRUE: Appointments with phases sync to Cal.com as single events
+     * When FALSE: Skip Cal.com sync (testing/development mode)
+     *
+     * Note: Processing Time appointments always sync as SINGLE events
+     * to Cal.com with phase metadata. Cal.com handles availability
+     * calculation including interleaving slots automatically.
+     *
+     * @default true (sync enabled)
+     */
+    'processing_time_calcom_sync_enabled' => env('FEATURE_PROCESSING_TIME_CALCOM_SYNC', true),
+
+    /**
+     * Automatic Phase Creation - Observer-based phase generation
+     *
+     * When TRUE: AppointmentPhaseObserver auto-creates phases on appointment creation
+     * When FALSE: Manual phase management (testing mode)
+     *
+     * Disable only for:
+     *   - Testing custom phase configurations
+     *   - Debugging phase creation logic
+     *   - Development/migration scenarios
+     *
+     * @default true (auto-create enabled)
+     */
+    'processing_time_auto_create_phases' => env('FEATURE_PROCESSING_TIME_AUTO_PHASES', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Customer Portal (Endkunden-Portal für Friseure)
     |--------------------------------------------------------------------------
     |

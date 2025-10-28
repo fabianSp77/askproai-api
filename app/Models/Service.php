@@ -49,6 +49,12 @@ class Service extends Model
         'minimum_booking_notice',
         'before_event_buffer',
 
+        // Processing Time (Split Appointments)
+        'has_processing_time',
+        'initial_duration',
+        'processing_duration',
+        'final_duration',
+
         // Pricing
         'price',
 
@@ -115,6 +121,11 @@ class Service extends Model
         'composite' => 'boolean',
         'segments' => 'array',
         'reschedule_policy' => 'array',
+        // Processing Time casts
+        'has_processing_time' => 'boolean',
+        'initial_duration' => 'integer',
+        'processing_duration' => 'integer',
+        'final_duration' => 'integer',
     ];
 
     /**
@@ -200,6 +211,15 @@ class Service extends Model
     public function availableStaff(): BelongsToMany
     {
         return $this->staff()->wherePivot('can_book', true);
+    }
+
+    /**
+     * Get allowed staff for this service
+     * Used by admin interface to display staff assignments
+     */
+    public function allowedStaff(): BelongsToMany
+    {
+        return $this->staff();
     }
 
     /**
@@ -350,5 +370,209 @@ class Service extends Model
     public function calcomMappings(): HasMany
     {
         return $this->hasMany(CalcomEventMap::class);
+    }
+
+    // =========================================================================
+    // PROCESSING TIME (SPLIT APPOINTMENTS) METHODS
+    // =========================================================================
+
+    /**
+     * Check if service uses processing time (split appointments)
+     *
+     * Checks both service configuration AND feature flags for controlled rollout.
+     *
+     * Feature Flag Logic:
+     * 1. Master toggle must be enabled (processing_time_enabled)
+     * 2. Service must be configured (has_processing_time = true)
+     * 3. Check whitelist rules (service OR company whitelist)
+     * 4. Fallback: If enabled globally and not restricted, allow all
+     *
+     * Rollout Strategy:
+     * - Phase 1: Service whitelist only (testing)
+     * - Phase 2: Company whitelist (pilot)
+     * - Phase 3: Global enabled (full rollout)
+     *
+     * @return bool True if Processing Time is enabled for this service
+     */
+    public function hasProcessingTime(): bool
+    {
+        // Service must have processing time configured
+        if (!$this->has_processing_time) {
+            return false;
+        }
+
+        // Check feature flag: Master toggle
+        if (!config('features.processing_time_enabled', false)) {
+            // Master toggle OFF - check service whitelist (for testing)
+            $serviceWhitelist = config('features.processing_time_service_whitelist', []);
+            return in_array($this->id, $serviceWhitelist, true);
+        }
+
+        // Master toggle ON - check company whitelist
+        $companyWhitelist = config('features.processing_time_company_whitelist', []);
+
+        // If company whitelist is empty, feature is available to all companies
+        if (empty($companyWhitelist)) {
+            return true;
+        }
+
+        // Check if this service's company is in the whitelist
+        return in_array($this->company_id, $companyWhitelist, true);
+    }
+
+    /**
+     * Get total duration including all phases
+     */
+    public function getTotalDuration(): int
+    {
+        if ($this->hasProcessingTime()) {
+            return ($this->initial_duration ?? 0) +
+                   ($this->processing_duration ?? 0) +
+                   ($this->final_duration ?? 0);
+        }
+
+        return $this->duration_minutes;
+    }
+
+    /**
+     * Get phase durations breakdown
+     *
+     * @return array{initial: int, processing: int, final: int, total: int}|null
+     */
+    public function getPhasesDuration(): ?array
+    {
+        if (!$this->hasProcessingTime()) {
+            return null;
+        }
+
+        return [
+            'initial' => $this->initial_duration ?? 0,
+            'processing' => $this->processing_duration ?? 0,
+            'final' => $this->final_duration ?? 0,
+            'total' => $this->getTotalDuration(),
+        ];
+    }
+
+    /**
+     * Generate AppointmentPhase records for a given appointment start time
+     *
+     * @param \Carbon\Carbon $startTime
+     * @return array Array of phase data ready for insertion
+     */
+    public function generatePhases(\Carbon\Carbon $startTime): array
+    {
+        if (!$this->hasProcessingTime()) {
+            return [];
+        }
+
+        $phases = [];
+        $offset = 0;
+
+        // Initial Phase (Staff BUSY)
+        if ($this->initial_duration > 0) {
+            $phases[] = [
+                'phase_type' => 'initial',
+                'start_offset_minutes' => $offset,
+                'duration_minutes' => $this->initial_duration,
+                'staff_required' => true,
+                'start_time' => $startTime->copy()->addMinutes($offset),
+                'end_time' => $startTime->copy()->addMinutes($offset + $this->initial_duration),
+            ];
+            $offset += $this->initial_duration;
+        }
+
+        // Processing Phase (Staff AVAILABLE)
+        if ($this->processing_duration > 0) {
+            $phases[] = [
+                'phase_type' => 'processing',
+                'start_offset_minutes' => $offset,
+                'duration_minutes' => $this->processing_duration,
+                'staff_required' => false,
+                'start_time' => $startTime->copy()->addMinutes($offset),
+                'end_time' => $startTime->copy()->addMinutes($offset + $this->processing_duration),
+            ];
+            $offset += $this->processing_duration;
+        }
+
+        // Final Phase (Staff BUSY)
+        if ($this->final_duration > 0) {
+            $phases[] = [
+                'phase_type' => 'final',
+                'start_offset_minutes' => $offset,
+                'duration_minutes' => $this->final_duration,
+                'staff_required' => true,
+                'start_time' => $startTime->copy()->addMinutes($offset),
+                'end_time' => $startTime->copy()->addMinutes($offset + $this->final_duration),
+            ];
+        }
+
+        return $phases;
+    }
+
+    /**
+     * Validate processing time configuration
+     *
+     * @return array{valid: bool, errors: array<string>}
+     */
+    public function validateProcessingTime(): array
+    {
+        $errors = [];
+
+        if (!$this->hasProcessingTime()) {
+            return ['valid' => true, 'errors' => []];
+        }
+
+        // Check that at least initial or final duration is set
+        if (($this->initial_duration ?? 0) === 0 && ($this->final_duration ?? 0) === 0) {
+            $errors[] = 'Processing time service must have at least an initial or final phase.';
+        }
+
+        // Check that processing duration is set
+        if (($this->processing_duration ?? 0) === 0) {
+            $errors[] = 'Processing time service must have a processing duration (gap time).';
+        }
+
+        // Check that total duration matches
+        $calculatedTotal = $this->getTotalDuration();
+        if ($calculatedTotal !== $this->duration_minutes) {
+            $errors[] = "Total phase duration ({$calculatedTotal} min) must match service duration ({$this->duration_minutes} min).";
+        }
+
+        // Check for negative values
+        if (($this->initial_duration ?? 0) < 0 || ($this->processing_duration ?? 0) < 0 || ($this->final_duration ?? 0) < 0) {
+            $errors[] = 'Phase durations cannot be negative.';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Get human-readable processing time description
+     */
+    public function getProcessingTimeDescription(): ?string
+    {
+        if (!$this->hasProcessingTime()) {
+            return null;
+        }
+
+        $phases = $this->getPhasesDuration();
+        $parts = [];
+
+        if ($phases['initial'] > 0) {
+            $parts[] = "Initial phase: {$phases['initial']} min (staff busy)";
+        }
+
+        if ($phases['processing'] > 0) {
+            $parts[] = "Processing: {$phases['processing']} min (staff available)";
+        }
+
+        if ($phases['final'] > 0) {
+            $parts[] = "Final phase: {$phases['final']} min (staff busy)";
+        }
+
+        return implode(' → ', $parts) . " | Total: {$phases['total']} min";
     }
 }

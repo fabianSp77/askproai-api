@@ -8,6 +8,7 @@ use App\Models\CallbackRequest;
 use App\Models\NotificationConfiguration;
 use App\Observers\ServiceObserver;
 use App\Observers\AppointmentObserver;
+use App\Observers\AppointmentPhaseObserver;
 use App\Observers\PolicyConfigurationObserver;
 use App\Observers\CallbackRequestObserver;
 use App\Observers\NotificationConfigurationObserver;
@@ -82,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Appointment Observer (auto-syncs call flags)
         Appointment::observe(AppointmentObserver::class);
+
+        // Register AppointmentPhase Observer (auto-creates phases for processing time services)
+        Appointment::observe(AppointmentPhaseObserver::class);
 
         // Register Multi-Tenant Input Validation Observers
         PolicyConfiguration::observe(PolicyConfigurationObserver::class);
