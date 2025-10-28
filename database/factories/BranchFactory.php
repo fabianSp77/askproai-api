@@ -17,7 +17,7 @@ class BranchFactory extends Factory
     public function definition(): array
     {
         return [
-            // id is auto-increment, not UUID
+            'id' => (string) Str::uuid(), // Branch uses UUIDs, not auto-increment
             'company_id' => Company::factory(),
             'name' => $this->faker->company() . ' Branch',
             'is_active' => true,

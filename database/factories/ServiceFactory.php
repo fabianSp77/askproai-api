@@ -26,11 +26,11 @@ class ServiceFactory extends Factory
 
         return [
             'company_id' => Company::factory(),
-            'branch_id' => null,
             'name' => $name,
             'slug' => \Illuminate\Support\Str::slug($name),
             'is_active' => true,
             'calcom_event_type_id' => (string) $this->faker->numberBetween(100000, 999999),
+            'sync_status' => 'synced',
         ];
     }
 

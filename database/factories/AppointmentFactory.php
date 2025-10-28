@@ -45,7 +45,7 @@ class AppointmentFactory extends Factory
 
         return [
             'company_id' => $company->id,
-            'branch_id' => $branch->id,
+            'branch_id' => $branch->id, // Required for multi-tenant isolation
             'service_id' => $service->id,
             'customer_id' => $customer->id,
             'staff_id' => $staff->id,

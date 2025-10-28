@@ -94,8 +94,9 @@ return new class extends Migration
 
         if (!Schema::hasTable('branches')) {
             Schema::create('branches', function ($table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+                $table->char('id', 36)->primary(); // UUID as primary key
+                $table->unsignedBigInteger('company_id');
+                $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
                 $table->string('name');
                 $table->string('slug')->nullable();
                 $table->boolean('is_active')->default(true);
@@ -119,9 +120,11 @@ return new class extends Migration
 
         if (!Schema::hasTable('staff')) {
             Schema::create('staff', function ($table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
+                $table->char('id', 36)->primary(); // UUID as primary key
+                $table->unsignedBigInteger('company_id');
+                $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
+                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->string('name');
                 $table->string('email')->nullable();
                 $table->unsignedInteger('calcom_user_id')->nullable();
@@ -142,11 +145,30 @@ return new class extends Migration
 
         if (!Schema::hasTable('phone_numbers')) {
             Schema::create('phone_numbers', function ($table) {
-                $table->id();
-                $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+                $table->uuid('id')->primary();
+                $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+                $table->char('branch_id', 36)->nullable();
+                $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
+
                 $table->string('phone_number', 20);
+                $table->string('number_normalized', 20)->unique();
+
+                $table->string('retell_agent_id')->nullable();
+                $table->string('agent_id')->nullable();
+                $table->string('type', 50)->default('hotline');
+
+                $table->boolean('is_active')->default(true);
                 $table->boolean('is_primary')->default(false);
+
+                $table->string('friendly_name')->nullable();
+                $table->text('description')->nullable();
+                $table->string('provider')->nullable();
+                $table->string('country_code', 10)->default('+49');
+
                 $table->timestamps();
+
+                $table->index('number_normalized');
+                $table->index(['company_id', 'is_active']);
             });
         }
 
@@ -154,13 +176,27 @@ return new class extends Migration
             Schema::create('appointments', function ($table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->foreignId('service_id')->constrained()->cascadeOnDelete();
                 $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('staff_id')->nullable()->constrained()->nullOnDelete();
+                $table->char('staff_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('staff_id')->references('id')->on('staff')->nullOnDelete();
                 $table->timestamp('start_time');
                 $table->timestamp('end_time');
-                $table->enum('status', ['scheduled', 'completed', 'cancelled', 'no_show'])->default('scheduled');
+                $table->enum('status', ['pending', 'booked', 'confirmed', 'completed', 'cancelled', 'no-show'])->default('pending');
+                $table->string('source')->nullable();
                 $table->unsignedInteger('calcom_booking_id')->nullable();
+                $table->string('calcom_v2_booking_id')->nullable();
+                $table->decimal('price', 10, 2)->nullable();
+                $table->json('metadata')->nullable();
+                $table->text('notes')->nullable();
+                $table->string('google_event_id')->nullable();
+                $table->string('outlook_event_id')->nullable();
+                $table->boolean('is_recurring')->default(false);
+                $table->json('recurring_pattern')->nullable();
+                $table->string('external_calendar_source')->nullable();
+                $table->string('external_calendar_id')->nullable();
                 $table->timestamps();
             });
         }
@@ -200,10 +236,12 @@ return new class extends Migration
             Schema::create('callback_requests', function ($table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
+                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
                 $table->foreignId('service_id')->nullable()->constrained()->nullOnDelete();
-                $table->foreignId('assigned_staff_id')->nullable()->constrained('staff')->nullOnDelete();
+                $table->char('assigned_staff_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('assigned_staff_id')->references('id')->on('staff')->nullOnDelete();
                 $table->string('customer_name');
                 $table->string('customer_phone', 20);
                 $table->string('customer_email')->nullable();
@@ -225,8 +263,10 @@ return new class extends Migration
             Schema::create('callback_escalations', function ($table) {
                 $table->id();
                 $table->foreignId('callback_request_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('escalated_by_id')->nullable()->constrained('staff')->nullOnDelete();
-                $table->foreignId('escalated_to_id')->nullable()->constrained('staff')->nullOnDelete();
+                $table->char('escalated_by_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('escalated_by_id')->references('id')->on('staff')->nullOnDelete();
+                $table->char('escalated_to_id', 36)->nullable(); // UUID foreign key
+                $table->foreign('escalated_to_id')->references('id')->on('staff')->nullOnDelete();
                 $table->text('reason')->nullable();
                 $table->timestamp('escalated_at');
                 $table->timestamps();
