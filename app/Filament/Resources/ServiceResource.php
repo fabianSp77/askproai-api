@@ -1031,13 +1031,10 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('pricing')
                     ->label('Preis')
                     ->getStateUsing(function ($record) {
-                        $price = number_format($record->price, 2) . ' €';
+                        // Hauptanzeige: NUR volle Euro (ohne Cent)
+                        $price = number_format($record->price, 0, ',', '.') . ' €';
 
-                        if ($record->duration_minutes > 0) {
-                            $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2);
-                            $price .= " ({$hourlyRate} €/h)";
-                        }
-
+                        // Anzahlung-Indikator (falls erforderlich)
                         if ($record->deposit_required) {
                             $price .= " 💰";
                         }
@@ -1046,22 +1043,26 @@ class ServiceResource extends Resource
                     })
                     ->description(fn ($record) =>
                         $record->deposit_required
-                            ? "Anzahlung: " . number_format($record->deposit_amount, 2) . " €"
+                            ? "Anzahlung: " . number_format($record->deposit_amount, 0, ',', '.') . " €"
                             : null
                     )
                     ->tooltip(function ($record) {
                         $builder = TooltipBuilder::make();
 
-                        // Section 1: Price Information
-                        $priceContent = $builder->keyValue('Grundpreis', number_format($record->price, 2) . ' €');
+                        // Section 1: Price Information (MIT CENT im Tooltip!)
+                        $priceContent = $builder->keyValue('Grundpreis', number_format($record->price, 2, ',', '.') . ' €');
 
+                        // Stundensatz NUR im Tooltip (als Referenz)
                         if ($record->duration_minutes > 0) {
-                            $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2);
-                            $priceContent .= '<br>' . $builder->keyValue('Stundensatz', $hourlyRate . ' €/h');
+                            $hourlyRate = number_format($record->price / ($record->duration_minutes / 60), 2, ',', '.');
+                            $priceContent .= '<br><div class="text-xs text-gray-500 dark:text-gray-400 italic">'
+                                . $builder->keyValue('Stundensatz (Referenz)', $hourlyRate . ' €/h')
+                                . '</div>';
                         }
 
+                        // Anzahlung (falls erforderlich)
                         if ($record->deposit_required) {
-                            $priceContent .= '<br>' . $builder->keyValue('Anzahlung', number_format($record->deposit_amount, 2) . ' €', false);
+                            $priceContent .= '<br>' . $builder->keyValue('Anzahlung', number_format($record->deposit_amount, 2, ',', '.') . ' €', false);
                             $priceContent .= '<br>' . $builder->badge('Anzahlung erforderlich', 'warning');
                         }
 
