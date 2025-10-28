@@ -40,7 +40,9 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => \Illuminate\Support\Facades\Vite::useHotFile(public_path('hot'))
                     ->useBuildDirectory('build')
                     ->withEntryPoints(['resources/css/call-detail-full-width.css'])
-                    ->toHtml()
+                    ->toHtml() .
+                '<script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>' .
+                '<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
             )
             ->renderHook(
                 'panels::body.end',
