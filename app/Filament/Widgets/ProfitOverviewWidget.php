@@ -43,7 +43,7 @@ class ProfitOverviewWidget extends StatsOverviewWidget
 
             // Today's profit - ✅ FIX PERF-001: Eager load appointments to prevent N+1
             $todayCalls = (clone $query)->whereDate('created_at', today())
-                ->with('appointments:id,call_id,price')
+                ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
                 ->get();
             $todayProfit = 0;
             $todayPlatformProfit = 0;
@@ -63,7 +63,7 @@ class ProfitOverviewWidget extends StatsOverviewWidget
 
             // Yesterday comparison - ✅ FIX PERF-001: Eager load appointments
             $yesterdayCalls = (clone $query)->whereDate('created_at', today()->subDay())
-                ->with('appointments:id,call_id,price')
+                ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
                 ->get();
             $yesterdayProfit = 0;
 
@@ -78,7 +78,7 @@ class ProfitOverviewWidget extends StatsOverviewWidget
             $monthProfit = 0;
             $monthCalls = (clone $query)->whereMonth('created_at', now()->month)
                                        ->whereYear('created_at', now()->year)
-                                       ->with('appointments:id,call_id,price')
+                                       ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
                                        ->get();
 
             foreach ($monthCalls as $call) {
@@ -143,7 +143,7 @@ class ProfitOverviewWidget extends StatsOverviewWidget
             $date = now()->subDays($i);
             // ✅ FIX PERF-001: Eager load appointments for chart data
             $calls = (clone $baseQuery)->whereDate('created_at', $date)
-                ->with('appointments:id,call_id,price')
+                ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
                 ->get();
 
             $dayProfit = 0;

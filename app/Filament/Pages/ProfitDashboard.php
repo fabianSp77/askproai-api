@@ -97,7 +97,7 @@ class ProfitDashboard extends Page
 
         // Today's stats - ✅ FIX PERF-001: Eager load appointments to prevent N+1
         $todayCalls = (clone $query)->whereDate('created_at', today())
-            ->with('appointments:id,call_id,price')
+            ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
             ->get();
         $todayProfit = 0;
         $todayPlatformProfit = 0;
@@ -118,7 +118,7 @@ class ProfitDashboard extends Page
         // This month's stats - ✅ FIX PERF-001: Eager load appointments
         $monthCalls = (clone $query)->whereMonth('created_at', now()->month)
                                    ->whereYear('created_at', now()->year)
-                                   ->with('appointments:id,call_id,price')
+                                   ->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])
                                    ->get();
         $monthProfit = 0;
         foreach ($monthCalls as $call) {
@@ -171,7 +171,7 @@ class ProfitDashboard extends Page
                 });
             }
 
-            $calls = $query->with('appointments:id,call_id,price')->get();
+            $calls = $query->with(['appointments:id,call_id,service_id,status', 'appointments.service:id,price'])->get();
             $dayProfit = 0;
             $dayPlatformProfit = 0;
             $dayResellerProfit = 0;

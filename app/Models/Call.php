@@ -404,7 +404,7 @@ class Call extends Model
     */
 
     /**
-     * Get appointment revenue (only paid appointments)
+     * Get appointment revenue (calculated from service prices)
      *
      * ✅ FIX PERF-001: Uses eager loaded appointments when available to prevent N+1
      * @return int Revenue in cents (EUR)
@@ -413,13 +413,17 @@ class Call extends Model
     {
         // ✅ Use relationship data if loaded (prevents N+1 queries)
         if ($this->relationLoaded('appointments')) {
-            return (int)($this->appointments->where('price', '>', 0)->sum('price') * 100);
+            $revenue = $this->appointments
+                ->filter(fn($appointment) => $appointment->relationLoaded('service'))
+                ->sum(fn($appointment) => $appointment->service->price ?? 0);
+            return (int)($revenue * 100);
         }
 
-        // Fallback to query if not eager loaded
-        return $this->appointments()
-            ->where('price', '>', 0)
-            ->sum('price') * 100; // Convert EUR to cents
+        // Fallback to query if not eager loaded - join with services to get price
+        return (int)($this->appointments()
+            ->join('services', 'appointments.service_id', '=', 'services.id')
+            ->where('appointments.status', 'completed')
+            ->sum('services.price') * 100); // Convert EUR to cents
     }
 
     /**

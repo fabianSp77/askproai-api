@@ -947,9 +947,11 @@ class ServiceResource extends Resource
                     ->label('Termine & Umsatz')
                     ->getStateUsing(function ($record) {
                         $count = $record->appointments()->count();
-                        $revenue = $record->appointments()
+                        // Calculate revenue: completed appointments * service price
+                        $completedCount = $record->appointments()
                             ->where('status', 'completed')
-                            ->sum('price');
+                            ->count();
+                        $revenue = $completedCount * ($record->price ?? 0);
 
                         return "{$count} Termine • " . number_format($revenue, 0) . " €";
                     })
@@ -969,7 +971,8 @@ class ServiceResource extends Resource
                         $total = $record->appointments()->count();
                         $completed = $record->appointments()->where('status', 'completed')->count();
                         $cancelled = $record->appointments()->where('status', 'cancelled')->count();
-                        $revenue = $record->appointments()->where('status', 'completed')->sum('price');
+                        // Calculate revenue: completed appointments * service price
+                        $revenue = $completed * ($record->price ?? 0);
 
                         return implode("\n", [
                             "Gesamt: {$total}",

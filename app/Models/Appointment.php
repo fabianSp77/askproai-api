@@ -50,7 +50,7 @@ class Appointment extends Model
         'metadata' => 'array',
         'is_recurring' => 'boolean',
         'recurring_pattern' => 'array',
-        'price' => 'decimal:2',
+        // 'price' => 'decimal:2',  // ❌ REMOVED: appointments table has no price column (price comes from service)
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         // Composite casts
