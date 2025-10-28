@@ -29,3 +29,7 @@ yarn-error.log
 # Database backups
 backups/
 *.sql
+
+# Test call recordings with sensitive data
+call_*_full.json
+last_test_call_analysis.json
