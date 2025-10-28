@@ -40,116 +40,99 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => \Illuminate\Support\Facades\Vite::useHotFile(public_path('hot'))
                     ->useBuildDirectory('build')
                     ->withEntryPoints(['resources/css/call-detail-full-width.css'])
-                    ->toHtml() .
-                '<script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>' .
-                '<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
+                    ->toHtml()
+            )
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => '<script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
             )
             ->renderHook(
                 'panels::body.end',
-                fn (): string => <<<'HTML'
-                <script>
-                    // CRITICAL FIX: Wait for Tippy.js to be loaded by Filament before patching
-                    (function() {
-                        // Decode HTML entities (needed because Blade's @js() escapes HTML)
-                        function decodeHtmlEntities(text) {
-                            if (typeof text !== 'string') return text;
+                fn (): string => '<script>
+(function() {
+    console.log("🔍 Tooltip patch loading...");
+    console.log("Alpine available:", typeof window.Alpine !== "undefined");
+    console.log("Tippy available:", typeof window.tippy !== "undefined");
 
-                            // Only decode if it looks like escaped HTML
-                            if (!text.includes('&lt;') && !text.includes('&gt;')) {
-                                return text;
-                            }
+    function decodeHtmlEntities(text) {
+        if (typeof text !== "string") return text;
+        if (!text.includes("&lt;") && !text.includes("&gt;")) return text;
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = text;
+        return textarea.value;
+    }
 
-                            // Use browser's native HTML decoding
-                            const textarea = document.createElement('textarea');
-                            textarea.innerHTML = text;
-                            return textarea.value;
+    function waitForDependencies(callback) {
+        if (typeof window.Alpine !== "undefined" && typeof window.tippy !== "undefined") {
+            callback();
+        } else {
+            setTimeout(() => waitForDependencies(callback), 50);
+        }
+    }
+
+    waitForDependencies(() => {
+        const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+        const isDark = document.documentElement.classList.contains("dark");
+
+        console.log("🔧 Patching Alpine Tooltip for HTML support...");
+
+        window.Alpine.directive("tooltip", (el, { expression, modifiers }, { evaluateLater, effect }) => {
+            let getContent = evaluateLater(expression);
+
+            effect(() => {
+                getContent((value) => {
+                    let config = typeof value === "string" ? { content: value } : value;
+                    let content = config.content || value;
+                    content = decodeHtmlEntities(content);
+
+                    const tippyConfig = {
+                        content: content,
+                        allowHTML: true,
+                        interactive: true,
+                        maxWidth: isTouchDevice ? "90vw" : 400,
+                        trigger: isTouchDevice ? "click" : "mouseenter focus",
+                        touch: isTouchDevice ? ["hold", 500] : true,
+                        theme: isDark ? "dark" : "light",
+                        onShow(instance) {
+                            const currentDark = document.documentElement.classList.contains("dark");
+                            instance.setProps({ theme: currentDark ? "dark" : "light" });
                         }
+                    };
 
-                        // Wait for both Alpine and Tippy to be available
-                        function waitForDependencies(callback) {
-                            if (typeof window.Alpine !== 'undefined' && typeof window.tippy !== 'undefined') {
-                                callback();
-                            } else {
-                                setTimeout(() => waitForDependencies(callback), 50);
-                            }
+                    if (el._tippy) {
+                        el._tippy.setProps(tippyConfig);
+                    } else {
+                        window.tippy(el, tippyConfig);
+                    }
+                });
+            });
+        });
+
+        console.log("✅ Alpine Tooltip patched with HTML support + entity decoder (Mobile: " + isTouchDevice + ")");
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === "class") {
+                        const isDarkNow = document.documentElement.classList.contains("dark");
+                        const theme = isDarkNow ? "dark" : "light";
+                        if (typeof tippy !== "undefined" && tippy.instances) {
+                            tippy.instances.forEach(instance => {
+                                instance.setProps({ theme: theme });
+                            });
                         }
-
-                        // Initialize after dependencies are loaded
-                        waitForDependencies(() => {
-                            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-                            const isDark = document.documentElement.classList.contains('dark');
-
-                            console.log('🔧 Patching Alpine Tooltip for HTML support...');
-
-                            // Override Alpine's x-tooltip directive
-                            window.Alpine.directive('tooltip', (el, { expression, modifiers }, { evaluateLater, effect }) => {
-                                let getContent = evaluateLater(expression);
-
-                                effect(() => {
-                                    getContent((value) => {
-                                        let config = typeof value === 'string' ? { content: value } : value;
-
-                                        // 1. DECODE HTML ENTITIES
-                                        let content = config.content || value;
-                                        content = decodeHtmlEntities(content);
-
-                                        // 2. FORCE allowHTML: true
-                                        const tippyConfig = {
-                                            content: content,
-                                            allowHTML: true,                    // ← CRITICAL FIX
-                                            interactive: true,
-                                            maxWidth: isTouchDevice ? '90vw' : 400,
-                                            trigger: isTouchDevice ? 'click' : 'mouseenter focus',
-                                            touch: isTouchDevice ? ['hold', 500] : true,
-                                            theme: isDark ? 'dark' : 'light',
-                                            onShow(instance) {
-                                                // Update theme if changed during session
-                                                const currentDark = document.documentElement.classList.contains('dark');
-                                                instance.setProps({ theme: currentDark ? 'dark' : 'light' });
-                                            }
-                                        };
-
-                                        // 3. CREATE TIPPY INSTANCE
-                                        if (el._tippy) {
-                                            el._tippy.setProps(tippyConfig);
-                                        } else {
-                                            window.tippy(el, tippyConfig);
-                                        }
-                                    });
-                                });
-                            });
-
-                            console.log('✅ Alpine Tooltip patched with HTML support + entity decoder (Mobile: ' + isTouchDevice + ')');
-
-                            // Watch for dark mode changes and update all tooltips
-                            document.addEventListener('DOMContentLoaded', function() {
-                        const observer = new MutationObserver(function(mutations) {
-                            mutations.forEach(function(mutation) {
-                                if (mutation.attributeName === 'class') {
-                                    const isDarkNow = document.documentElement.classList.contains('dark');
-                                    const theme = isDarkNow ? 'dark' : 'light';
-
-                                    // Update all active Tippy instances
-                                    if (typeof tippy !== 'undefined' && tippy.instances) {
-                                        tippy.instances.forEach(instance => {
-                                            instance.setProps({ theme: theme });
-                                        });
-                                    }
-                                }
-                            });
-                        });
-
-                        observer.observe(document.documentElement, {
-                            attributes: true,
-                            attributeFilter: ['class']
-                        });
-
-                                console.log('✅ Dark mode observer initialized');
-                            });
-                        });
-                    })();
-                </script>
-                HTML
+                    }
+                });
+            });
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ["class"]
+            });
+            console.log("✅ Dark mode observer initialized");
+        });
+    });
+})();
+</script>'
             )
             // NOTE: Removed Livewire.start() - Livewire 3 auto-initializes server-rendered components
             // Calling start() on already-hydrated pages can interfere with directive attachment
