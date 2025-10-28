@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -13,9 +14,10 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SyncRetellCalls::class,
         \App\Console\Commands\DetectCallConversions::class,
         \App\Console\Commands\ConfigureRetellWebhook::class,
+        \App\Console\Commands\MonitorProcessingTimeHealth::class,
     ];
 
-    protected function schedule(Schedule $schedule): void
+    public function schedule(Schedule $schedule): void
     {
         // Exchange rates update - runs daily at 2am to get fresh USD/EUR/GBP rates from ECB
         $schedule->command('exchange-rates:update')
@@ -74,10 +76,9 @@ class Kernel extends ConsoleKernel
             $service = app(\App\Services\Policies\MaterializedStatService::class);
             $service->refreshAllStats();
         })
+            ->name('materialized-stats-refresh')
             ->hourly()
             ->withoutOverlapping()
-            ->runInBackground()
-            ->name('materialized-stats-refresh')
             ->appendOutputTo(storage_path('logs/materialized-stats.log'));
 
         // Materialized Stats: Clean up old stats daily at 3am (stats older than 90 days)
@@ -85,10 +86,9 @@ class Kernel extends ConsoleKernel
             $service = app(\App\Services\Policies\MaterializedStatService::class);
             $service->cleanupOldStats();
         })
+            ->name('materialized-stats-cleanup')
             ->dailyAt('03:00')
             ->withoutOverlapping()
-            ->runInBackground()
-            ->name('materialized-stats-cleanup')
             ->appendOutputTo(storage_path('logs/materialized-stats.log'));
 
         // 🛡️ DATA CONSISTENCY MONITORING (2025-10-20)
@@ -105,9 +105,9 @@ class Kernel extends ConsoleKernel
                 ]);
             }
         })
+            ->name('data-consistency-check')
             ->everyFiveMinutes()
             ->withoutOverlapping()
-            ->name('data-consistency-check')
             ->appendOutputTo(storage_path('logs/data-consistency.log'));
 
         // Daily validation report - comprehensive data quality report
@@ -117,10 +117,9 @@ class Kernel extends ConsoleKernel
 
             Log::info('📊 Daily data consistency report generated', $report);
         })
+            ->name('data-consistency-daily-report')
             ->dailyAt('02:00')
             ->withoutOverlapping()
-            ->runInBackground()
-            ->name('data-consistency-daily-report')
             ->appendOutputTo(storage_path('logs/data-consistency.log'))
             ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
 
@@ -133,11 +132,22 @@ class Kernel extends ConsoleKernel
                 Log::info("✅ Processed {$processed} items from manual review queue");
             }
         })
+            ->name('manual-review-queue-processing')
             ->hourly()
             ->withoutOverlapping()
-            ->runInBackground()
-            ->name('manual-review-queue-processing')
             ->appendOutputTo(storage_path('logs/data-consistency.log'));
+
+        // 📊 PROCESSING TIME / SPLIT APPOINTMENTS MONITORING (2025-10-28)
+
+        // Processing Time health check - runs hourly during business hours
+        // Monitors phase creation success rate and detects orphaned appointments
+        $schedule->command('monitor:processing-time-health')
+            ->hourly()
+            ->between('8:00', '20:00')
+            ->timezone('Europe/Berlin')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/processing-time-health.log'));
     }
 
     protected function commands(): void
