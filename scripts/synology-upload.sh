@@ -23,8 +23,8 @@ LOG_FILE="/var/log/synology-upload.log"
 # ============================================================================
 # Option 1: Direct SSH/SFTP (Recommended if available)
 # Requires: Port forwarding or DynDNS (e.g., askpro.synology.me)
-: ${SYNOLOGY_HOST:=""}  # e.g., "askpro.synology.me" or "YOUR_PUBLIC_IP"
-: ${SYNOLOGY_PORT:="22"}
+: ${SYNOLOGY_HOST:="fs-cloud1977.synology.me"}
+: ${SYNOLOGY_PORT:="50222"}
 : ${SYNOLOGY_USER:="AskProAI"}
 : ${SYNOLOGY_BASE_PATH:="/volume1/homes/FSAdmin/Backup/Server AskProAI"}
 
