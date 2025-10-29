@@ -1,0 +1,352 @@
+# ==============================================================================
+# Daily Backup Workflow
+# ==============================================================================
+# Purpose: Automated daily backups to Synology NAS
+# Schedule: 02:00 CET (01:00 UTC) every day
+# Retention: Keep last 7 daily backups
+# Storage: Synology NAS at /volume1/homes/FSAdmin/Backup/Server AskProAI/daily/
+# ==============================================================================
+
+name: Daily Backup
+
+on:
+  schedule:
+    # 02:00 CET = 01:00 UTC (winter time)
+    # 02:00 CEST = 00:00 UTC (summer time)
+    - cron: '0 1 * * *'  # 01:00 UTC
+  workflow_dispatch:  # Manual trigger
+
+env:
+  PRODUCTION_HOST: api.askproai.de
+  PRODUCTION_USER: www-data
+  PRODUCTION_BASE_DIR: /var/www/api-gateway
+  BACKUP_RETENTION: daily
+
+jobs:
+  # ===========================================================================
+  # Create backup on production server
+  # ===========================================================================
+  create-backup:
+    name: Create Daily Backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Setup SSH access
+      # -----------------------------------------------------------------------
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      # -----------------------------------------------------------------------
+      # 2. Create database backup
+      # -----------------------------------------------------------------------
+      - name: Backup Database
+        run: |
+          echo "🗄️  Creating database backup..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          mkdir -p "$BACKUP_DIR"
+
+          DB_FILE="backup-db-${TIMESTAMP}.sql.gz"
+
+          echo "📊 Dumping database..."
+          mysqldump -h 127.0.0.1 -u root askproai_db \
+              --single-transaction \
+              --quick \
+              --routines \
+              --triggers \
+              --events \
+              --add-drop-table \
+              --add-locks | gzip > "$BACKUP_DIR/$DB_FILE"
+
+          # Calculate checksum
+          cd "$BACKUP_DIR"
+          sha256sum "$DB_FILE" > "${DB_FILE}.sha256"
+
+          # Get size
+          SIZE=$(stat -c%s "$DB_FILE")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+
+          echo "✅ Database backup created: $DB_FILE ($SIZE_MB MB)"
+          echo "DB_FILE=$DB_FILE" >> /tmp/backup_env
+          echo "TIMESTAMP=$TIMESTAMP" >> /tmp/backup_env
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 3. Create application snapshot
+      # -----------------------------------------------------------------------
+      - name: Backup Application
+        run: |
+          echo "📦 Creating application snapshot..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+          source /tmp/backup_env
+
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          APP_FILE="backup-app-${TIMESTAMP}.tar.gz"
+
+          echo "📁 Creating application tarball..."
+          cd "${{ env.PRODUCTION_BASE_DIR }}/current"
+
+          tar -czf "$BACKUP_DIR/$APP_FILE" \
+              --exclude='storage/logs/*' \
+              --exclude='storage/framework/cache/*' \
+              --exclude='storage/framework/sessions/*' \
+              --exclude='storage/framework/views/*' \
+              --exclude='vendor' \
+              --exclude='node_modules' \
+              --exclude='.git' \
+              .
+
+          # Calculate checksum
+          cd "$BACKUP_DIR"
+          sha256sum "$APP_FILE" > "${APP_FILE}.sha256"
+
+          # Get size
+          SIZE=$(stat -c%s "$APP_FILE")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+
+          echo "✅ Application backup created: $APP_FILE ($SIZE_MB MB)"
+          echo "APP_FILE=$APP_FILE" >> /tmp/backup_env
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 4. Create backup manifest
+      # -----------------------------------------------------------------------
+      - name: Create Backup Manifest
+        run: |
+          echo "📋 Creating backup manifest..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+          source /tmp/backup_env
+
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          MANIFEST_FILE="backup-manifest-${TIMESTAMP}.txt"
+
+          cd "$BACKUP_DIR"
+
+          cat > "$MANIFEST_FILE" << MANIFEST
+          ====================================================================
+          DAILY BACKUP MANIFEST
+          ====================================================================
+          Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Type: Daily Backup
+          Server: ${{ env.PRODUCTION_HOST }}
+          Retention: 7 days
+
+          DATABASE BACKUP:
+            File: $DB_FILE
+            Size: $(stat -c%s "$DB_FILE" | numfmt --to=iec-i)
+            SHA256: $(cat "${DB_FILE}.sha256" | cut -d' ' -f1)
+
+          APPLICATION BACKUP:
+            File: $APP_FILE
+            Size: $(stat -c%s "$APP_FILE" | numfmt --to=iec-i)
+            SHA256: $(cat "${APP_FILE}.sha256" | cut -d' ' -f1)
+
+          TOTAL SIZE: $(du -sh "$DB_FILE" "$APP_FILE" | awk '{sum+=$1}END{print sum}')M
+
+          ====================================================================
+          MANIFEST
+
+          echo "✅ Manifest created: $MANIFEST_FILE"
+          cat "$MANIFEST_FILE"
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 5. Upload to Synology NAS
+      # -----------------------------------------------------------------------
+      - name: Upload to Synology
+        run: |
+          echo "☁️  Uploading backups to Synology NAS..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+          source /tmp/backup_env
+
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          cd "${{ env.PRODUCTION_BASE_DIR }}"
+
+          # Check if synology-upload.sh exists
+          if [ ! -f "scripts/synology-upload.sh" ]; then
+              echo "❌ Error: scripts/synology-upload.sh not found!"
+              exit 1
+          fi
+
+          # Upload database backup
+          echo "📤 Uploading database backup..."
+          ./scripts/synology-upload.sh "$BACKUP_DIR/$DB_FILE" "${{ env.BACKUP_RETENTION }}"
+
+          # Upload application backup
+          echo "📤 Uploading application backup..."
+          ./scripts/synology-upload.sh "$BACKUP_DIR/$APP_FILE" "${{ env.BACKUP_RETENTION }}"
+
+          echo "✅ Backups uploaded to Synology NAS"
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 6. Cleanup local backups (keep last 3 locally)
+      # -----------------------------------------------------------------------
+      - name: Cleanup Local Backups
+        if: success()
+        run: |
+          echo "🧹 Cleaning up local backups..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          KEEP_LOCAL=3
+
+          cd "$BACKUP_DIR"
+
+          # Count backups
+          COUNT=$(ls -1 backup-db-*.sql.gz 2>/dev/null | wc -l)
+
+          if [ "$COUNT" -gt "$KEEP_LOCAL" ]; then
+              echo "Found $COUNT local backups, keeping last $KEEP_LOCAL..."
+
+              # Remove old database backups
+              ls -1t backup-db-*.sql.gz | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
+              ls -1t backup-db-*.sql.gz.sha256 | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
+
+              # Remove old app backups
+              ls -1t backup-app-*.tar.gz | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
+              ls -1t backup-app-*.tar.gz.sha256 | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
+
+              # Remove old manifests
+              ls -1t backup-manifest-*.txt | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
+
+              echo "✅ Local cleanup completed"
+          else
+              echo "Only $COUNT local backups, nothing to clean"
+          fi
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 7. Verify backup integrity
+      # -----------------------------------------------------------------------
+      - name: Verify Backup Integrity
+        run: |
+          echo "🔐 Verifying backup integrity..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          set -euo pipefail
+          source /tmp/backup_env
+
+          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          cd "$BACKUP_DIR"
+
+          # Verify database backup
+          echo "🔍 Verifying database backup..."
+          if sha256sum -c "${DB_FILE}.sha256" 2>/dev/null; then
+              echo "✅ Database backup checksum valid"
+          else
+              echo "❌ Database backup checksum failed!"
+              exit 1
+          fi
+
+          # Verify application backup
+          echo "🔍 Verifying application backup..."
+          if sha256sum -c "${APP_FILE}.sha256" 2>/dev/null; then
+              echo "✅ Application backup checksum valid"
+          else
+              echo "❌ Application backup checksum failed!"
+              exit 1
+          fi
+
+          # Test database dump is readable
+          echo "🔍 Testing database dump..."
+          if gunzip -t "$DB_FILE" 2>/dev/null; then
+              echo "✅ Database dump is valid gzip"
+          else
+              echo "❌ Database dump is corrupted!"
+              exit 1
+          fi
+
+          # Test application tarball is readable
+          echo "🔍 Testing application tarball..."
+          if tar -tzf "$APP_FILE" > /dev/null 2>&1; then
+              echo "✅ Application tarball is valid"
+          else
+              echo "❌ Application tarball is corrupted!"
+              exit 1
+          fi
+
+          echo "✅ All backups verified successfully"
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 8. Cleanup temp files
+      # -----------------------------------------------------------------------
+      - name: Cleanup Temp Files
+        if: always()
+        run: |
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+
+          rm -f /tmp/backup_env
+          EOF
+
+  # ===========================================================================
+  # Backup summary
+  # ===========================================================================
+  summary:
+    name: Backup Summary
+    runs-on: ubuntu-latest
+    needs: [create-backup]
+    if: always()
+
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## Daily Backup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ needs.create-backup.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "**Server**: ${{ env.PRODUCTION_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Retention**: 7 days (daily)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.create-backup.result }}" == "success" ]; then
+              echo "✅ **Backup completed successfully**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Backups uploaded to Synology NAS:" >> $GITHUB_STEP_SUMMARY
+              echo "- Database dump" >> $GITHUB_STEP_SUMMARY
+              echo "- Application snapshot" >> $GITHUB_STEP_SUMMARY
+              echo "- SHA256 checksums" >> $GITHUB_STEP_SUMMARY
+          else
+              echo "❌ **Backup failed!**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️  **Action required**: Check logs and investigate failure" >> $GITHUB_STEP_SUMMARY
+          fi
