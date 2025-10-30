@@ -292,6 +292,12 @@ jobs:
           name: backend-build-${{ github.sha }}
           path: vendor/
 
+      - name: Create Storage Directories
+        run: |
+          mkdir -p storage/framework/{cache,sessions,testing,views}
+          mkdir -p storage/logs
+          chmod -R 775 storage bootstrap/cache
+
       - name: Setup Environment
         run: |
           cp .env.example .env.testing
