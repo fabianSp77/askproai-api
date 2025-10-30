@@ -87,7 +87,7 @@ jobs:
           name: unit-tests-coverage
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage-report/
@@ -238,7 +238,7 @@ jobs:
           echo "✅ Performance tests passed - booking flow < 45s" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Performance Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: performance-results
@@ -288,7 +288,7 @@ jobs:
         run: npx playwright test tests/E2E/playwright/
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
