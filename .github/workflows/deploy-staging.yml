@@ -130,9 +130,21 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # Write key and set permissions
-          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          # Write key with proper formatting (strip trailing whitespace)
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
+
+          # Debug key format
+          echo "📋 Key file info:"
+          wc -l ~/.ssh/staging_key
+          head -n 1 ~/.ssh/staging_key
+          tail -n 1 ~/.ssh/staging_key
+
+          # Validate key format
+          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/staging_key; then
+            echo "❌ Invalid key format - missing BEGIN PRIVATE KEY header!"
+            exit 1
+          fi
 
           # Add staging server to known_hosts
           ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
