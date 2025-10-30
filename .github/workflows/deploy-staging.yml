@@ -15,6 +15,11 @@ on:
     types: [completed]
     branches: [develop]
   workflow_dispatch:  # Manual trigger
+    inputs:
+      build_run_id:
+        description: 'Optional Build Run ID (defaults to latest successful build)'
+        required: false
+        type: string
 
 env:
   STAGING_HOST: staging.askproai.de
@@ -38,33 +43,112 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Download build artifacts from completed workflow
+      # 1. Checkout and determine build run ID
       # -----------------------------------------------------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Determine Build Run ID
+        id: build_run
+        run: |
+          echo "🔍 Determining build run ID..."
+
+          # Priority 1: workflow_run event (auto-triggered)
+          if [ -n "${{ github.event.workflow_run.id || '' }}" ]; then
+            BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
+            BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
+            echo "✅ Using workflow_run ID: $BUILD_RUN_ID"
+
+          # Priority 2: Manual input
+          elif [ -n "${{ inputs.build_run_id || '' }}" ]; then
+            BUILD_RUN_ID="${{ inputs.build_run_id }}"
+            echo "✅ Using manual input ID: $BUILD_RUN_ID"
+            # Get SHA from this run
+            BUILD_SHA=$(gh run view "$BUILD_RUN_ID" --json headSha --jq '.headSha')
+
+          # Priority 3: Find by current SHA via API
+          else
+            SHA="${{ github.sha }}"
+            echo "🔎 Searching for build run with SHA: ${SHA:0:8}..."
+
+            BUILD_RUN_ID=$(gh run list \
+              --workflow "Build Artifacts" \
+              --branch "${{ github.ref_name }}" \
+              --json databaseId,headSha,status,conclusion \
+              --limit 20 | jq -r \
+              --arg sha "$SHA" \
+              '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+
+            if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+              echo "❌ No successful build found for SHA: $SHA"
+              exit 1
+            fi
+
+            BUILD_SHA="$SHA"
+            echo "✅ Found build run: $BUILD_RUN_ID"
+          fi
+
+          echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
+          echo "BUILD_SHA=$BUILD_SHA" >> $GITHUB_ENV
+          echo "run_id=$BUILD_RUN_ID" >> $GITHUB_OUTPUT
+          echo "sha=$BUILD_SHA" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "📋 Build Context:"
+          echo "  Run ID: $BUILD_RUN_ID"
+          echo "  SHA: ${BUILD_SHA:0:8}"
+          echo "  View: https://github.com/${{ github.repository }}/actions/runs/$BUILD_RUN_ID"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 2. Download build artifacts from determined run
+      # -----------------------------------------------------------------------
       - name: Download Deployment Bundle
         uses: actions/download-artifact@v4
         with:
-          name: deployment-bundle-${{ github.event.workflow_run.head_sha }}
+          name: deployment-bundle-${{ env.BUILD_SHA }}
           path: ./deploy/
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ env.BUILD_RUN_ID }}
 
       # -----------------------------------------------------------------------
-      # 2. Setup SSH access
+      # 3. Setup SSH access with ssh-agent
       # -----------------------------------------------------------------------
       - name: Setup SSH Key
         run: |
+          echo "🔐 Setting up SSH key..."
+
+          # Set restrictive umask
+          umask 077
+
+          # Create SSH directory
           mkdir -p ~/.ssh
-          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
-          chmod 600 ~/.ssh/staging_key
+
+          # Write key to standard location
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
 
           # Add staging server to known_hosts
           ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
 
+          # Start ssh-agent and add key
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
+
+          # Configure SSH
+          cat >> ~/.ssh/config << 'EOF'
+          Host ${{ env.STAGING_HOST }}
+            User ${{ env.STAGING_USER }}
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+            UserKnownHostsFile ~/.ssh/known_hosts
+          EOF
+
+          echo "✅ SSH key configured and loaded"
+
       # -----------------------------------------------------------------------
-      # 3. Upload deployment bundle to staging
+      # 4. Upload deployment bundle to staging
       # -----------------------------------------------------------------------
       - name: Upload Bundle to Staging
         run: |
@@ -73,29 +157,25 @@ jobs:
           BUNDLE_FILE=$(ls deploy/deploy-bundle-*.tar.gz)
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
 
-          # Upload to staging server
-          scp -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              "$BUNDLE_FILE" \
-              "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+          # Upload to staging server (ssh-agent handles key)
+          scp "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
 
           echo "✅ Bundle uploaded: $BUNDLE_NAME"
           echo "bundle_name=$BUNDLE_NAME" >> $GITHUB_ENV
 
       # -----------------------------------------------------------------------
-      # 4. Extract bundle and prepare release
+      # 5. Extract bundle and prepare release
       # -----------------------------------------------------------------------
       - name: Prepare Release on Staging
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
 
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          COMMIT_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-8)
-          RELEASE_NAME="${TIMESTAMP}-${COMMIT_SHA}"
+          COMMIT_SHA="${{ env.BUILD_SHA }}"
+          COMMIT_SHA_SHORT="${COMMIT_SHA:0:8}"
+          RELEASE_NAME="${TIMESTAMP}-${COMMIT_SHA_SHORT}"
           RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/${RELEASE_NAME}"
 
           echo "🎯 Creating release: $RELEASE_NAME"
@@ -132,9 +212,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Run Migrations
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -160,9 +238,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Caches
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -189,9 +265,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Switch to New Release (Atomic)
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -215,9 +289,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Reload Services
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "♻️  Reloading services..."
 
@@ -235,9 +307,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Nginx Cache
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "🧹 Purging Nginx cache..."
 
@@ -273,9 +343,7 @@ jobs:
           fi
 
           # Database check
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           cd "${{ env.STAGING_BASE_DIR }}/current"
           if php artisan migrate:status > /dev/null 2>&1; then
@@ -322,9 +390,7 @@ jobs:
       - name: Cleanup Old Releases
         if: success()
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "🧹 Cleaning up old releases..."
 
@@ -347,9 +413,7 @@ jobs:
       - name: Cleanup Temp Files
         if: always()
         run: |
-          ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           rm -f /tmp/${{ env.bundle_name }}
           rm -f /tmp/deploy_env
@@ -422,8 +486,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment**: Staging" >> $GITHUB_STEP_SUMMARY
           echo "**Domain**: https://staging.askproai.de" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.event.workflow_run.head_branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.event.workflow_run.head_sha || github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.event.workflow_run.head_branch || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
