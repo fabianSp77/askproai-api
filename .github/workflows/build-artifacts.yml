@@ -95,6 +95,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+      - name: Create Vite manifest (CI workaround)
+        run: |
+          echo "📝 Creating minimal Vite manifest for Laravel package discovery..."
+          mkdir -p public/build/assets
+          cat > public/build/manifest.json << 'EOF'
+          {
+            "resources/js/app-admin.js": {
+              "file": "assets/app-admin.js",
+              "isEntry": true
+            },
+            "resources/css/app.css": {
+              "file": "assets/app.css",
+              "isEntry": true
+            }
+          }
+          EOF
+          touch public/build/assets/app-admin.js
+          touch public/build/assets/app.css
+          echo "✅ Manifest created"
+
       - name: Install Backend Dependencies
         run: |
           echo "📦 Installing Composer dependencies (production mode)..."
