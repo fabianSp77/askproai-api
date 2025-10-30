@@ -64,6 +64,11 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Create Vite manifest (CI workaround)
+        run: |
+          mkdir -p public/build
+          echo '{}' > public/build/manifest.json
+
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
