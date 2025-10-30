@@ -113,46 +113,130 @@ jobs:
           run-id: ${{ env.BUILD_RUN_ID }}
 
       # -----------------------------------------------------------------------
-      # 3. Setup SSH access
+      # 3. Validate SSH Key Presence (Fail-Fast)
       # -----------------------------------------------------------------------
-      - name: Setup SSH Key
+      - name: Validate SSH Key Presence
         run: |
-          echo "🔐 Setting up SSH key..."
+          echo "🔍 Checking SSH key secret presence..."
 
-          # Validate secret exists
           if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo ""
             echo "❌ STAGING_SSH_KEY secret is empty or not set!"
-            echo "Please configure the secret in: Settings → Environments → staging → Secrets"
+            echo ""
+            echo "📋 Required Action:"
+            echo "   1. Go to: Settings → Environments → staging → Secrets"
+            echo "   2. Add secret: STAGING_SSH_KEY"
+            echo "   3. Paste the PRIVATE key (NOT the .pub file)"
+            echo "   4. Ensure newlines are preserved (30-40 lines)"
+            echo ""
+            echo "   Example format:"
+            echo "   -----BEGIN OPENSSH PRIVATE KEY-----"
+            echo "   b3BlbnNzaC1rZXktdjEAAAAA..."
+            echo "   ... (multiple lines) ..."
+            echo "   -----END OPENSSH PRIVATE KEY-----"
+            echo ""
             exit 1
           fi
+
+          echo "✅ STAGING_SSH_KEY secret is configured"
+
+      # -----------------------------------------------------------------------
+      # 4. Validate SSH Key Format (Fail-Fast)
+      # -----------------------------------------------------------------------
+      - name: Validate SSH Key Format
+        run: |
+          echo "🔍 Validating SSH key format..."
 
           # Create SSH directory
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # Write key with proper formatting (strip trailing whitespace)
+          # Write key to file
           printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
 
-          # Debug key format
-          echo "📋 Key file info:"
-          wc -l ~/.ssh/staging_key
-          head -n 1 ~/.ssh/staging_key
-          tail -n 1 ~/.ssh/staging_key
-
-          # Validate key format
-          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/staging_key; then
-            echo "❌ Invalid key format - missing BEGIN PRIVATE KEY header!"
+          # Check 1: File not empty
+          if [ ! -s ~/.ssh/staging_key ]; then
+            echo "❌ Key file is empty!"
             exit 1
           fi
 
-          # Add staging server to known_hosts
-          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+          # Check 2: Line count (SSH keys are typically 30-40 lines)
+          LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
+          echo "📋 Key file has $LINE_COUNT lines"
 
-          echo "✅ SSH key configured"
+          if [ "$LINE_COUNT" -lt 10 ]; then
+            echo ""
+            echo "❌ Invalid key format - too few lines ($LINE_COUNT)!"
+            echo ""
+            echo "   SSH private keys should have 30-40 lines in PEM format."
+            echo "   Your key appears to be stored as a single line or corrupted."
+            echo ""
+            echo "   First line: $(head -n 1 ~/.ssh/staging_key)"
+            echo "   Last line:  $(tail -n 1 ~/.ssh/staging_key)"
+            echo ""
+            echo "📋 Fix: Re-configure secret with proper multi-line format"
+            echo "   See: /tmp/SSH_KEY_ISSUE_ROOT_CAUSE.md for details"
+            echo ""
+            exit 1
+          fi
+
+          # Check 3: BEGIN/END headers
+          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/staging_key; then
+            echo ""
+            echo "❌ Invalid key format - missing BEGIN PRIVATE KEY header!"
+            echo ""
+            echo "   First line: $(head -n 1 ~/.ssh/staging_key)"
+            echo "   Expected: -----BEGIN OPENSSH PRIVATE KEY-----"
+            echo ""
+            exit 1
+          fi
+
+          if ! grep -q "END.*PRIVATE KEY" ~/.ssh/staging_key; then
+            echo ""
+            echo "❌ Invalid key format - missing END PRIVATE KEY footer!"
+            echo ""
+            echo "   Last line: $(tail -n 1 ~/.ssh/staging_key)"
+            echo "   Expected: -----END OPENSSH PRIVATE KEY-----"
+            echo ""
+            exit 1
+          fi
+
+          # Check 4: OpenSSL/ssh-keygen validation
+          echo "🔍 Running ssh-keygen format validation..."
+          if ! ssh-keygen -lf ~/.ssh/staging_key 2>&1 | grep -q "SHA256"; then
+            echo ""
+            echo "❌ ssh-keygen validation failed!"
+            echo ""
+            echo "   The key file has correct headers but OpenSSL cannot parse it."
+            echo "   This usually means:"
+            echo "   - Key is corrupted"
+            echo "   - Wrong key type (must be RSA, ED25519, or ECDSA)"
+            echo "   - Encoding issues (check for hidden characters)"
+            echo ""
+            ssh-keygen -lf ~/.ssh/staging_key 2>&1 || true
+            echo ""
+            exit 1
+          fi
+
+          # Display key fingerprint
+          echo ""
+          echo "✅ SSH key format is valid!"
+          echo "📋 Key details:"
+          ssh-keygen -lf ~/.ssh/staging_key
+          echo ""
 
       # -----------------------------------------------------------------------
-      # 4. Upload deployment bundle to staging
+      # 5. Setup SSH Known Hosts
+      # -----------------------------------------------------------------------
+      - name: Setup SSH Known Hosts
+        run: |
+          echo "🔐 Adding staging server to known_hosts..."
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+          echo "✅ SSH setup complete"
+
+      # -----------------------------------------------------------------------
+      # 6. Upload deployment bundle to staging
       # -----------------------------------------------------------------------
       - name: Upload Bundle to Staging
         run: |
@@ -168,7 +252,7 @@ jobs:
           echo "bundle_name=$BUNDLE_NAME" >> $GITHUB_ENV
 
       # -----------------------------------------------------------------------
-      # 5. Extract bundle and prepare release
+      # 7. Extract bundle and prepare release
       # -----------------------------------------------------------------------
       - name: Prepare Release on Staging
         run: |
@@ -212,7 +296,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 5. Run database migrations
+      # 8. Run database migrations
       # -----------------------------------------------------------------------
       - name: Run Migrations
         run: |
@@ -238,7 +322,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 6. Clear caches
+      # 9. Clear caches
       # -----------------------------------------------------------------------
       - name: Clear Caches
         run: |
@@ -265,7 +349,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 7. Atomic symlink switch
+      # 10. Atomic symlink switch
       # -----------------------------------------------------------------------
       - name: Switch to New Release (Atomic)
         run: |
@@ -289,7 +373,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 8. Reload services
+      # 11. Reload services
       # -----------------------------------------------------------------------
       - name: Reload Services
         run: |
@@ -307,7 +391,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 9. Clear Nginx cache
+      # 12. Clear Nginx cache
       # -----------------------------------------------------------------------
       - name: Clear Nginx Cache
         run: |
@@ -324,7 +408,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 10. Health checks
+      # 13. Health checks
       # -----------------------------------------------------------------------
       - name: Run Health Checks
         run: |
@@ -361,7 +445,7 @@ jobs:
           echo "✅ All health checks passed"
 
       # -----------------------------------------------------------------------
-      # 11. Vite Asset Check
+      # 14. Vite Asset Check
       # -----------------------------------------------------------------------
       - name: Verify Vite Assets
         run: |
@@ -389,7 +473,7 @@ jobs:
           echo "✅ All Vite assets loaded successfully"
 
       # -----------------------------------------------------------------------
-      # 12. Cleanup old releases
+      # 15. Cleanup old releases
       # -----------------------------------------------------------------------
       - name: Cleanup Old Releases
         if: success()
@@ -412,7 +496,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 13. Cleanup temp files
+      # 16. Cleanup temp files
       # -----------------------------------------------------------------------
       - name: Cleanup Temp Files
         if: always()
