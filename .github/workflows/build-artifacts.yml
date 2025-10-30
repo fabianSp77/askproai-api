@@ -46,10 +46,12 @@ jobs:
               - 'config/**'
               - 'database/**'
               - 'composer.*'
+              - '.github/workflows/**'  # CI changes require full build
             frontend:
               - 'resources/**'
               - 'vite.config.*'
               - 'package*.json'
+              - '.github/workflows/**'  # CI changes require full build
 
   build-frontend:
     name: Build Frontend Assets

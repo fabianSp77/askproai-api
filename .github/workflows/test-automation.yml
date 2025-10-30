@@ -46,10 +46,12 @@ jobs:
               - 'phpstan.neon'
               - 'phpunit.xml*'
               - '.env.testing'
+              - '.github/workflows/**'  # CI changes may affect tests
             frontend:
               - 'resources/**'
               - 'vite.config.*'
               - 'package*.json'
+              - '.github/workflows/**'  # CI changes may affect tests
 
   # =========================================
   # Unit Tests
