@@ -66,8 +66,21 @@ jobs:
 
       - name: Create Vite manifest (CI workaround)
         run: |
-          mkdir -p public/build
-          echo '{}' > public/build/manifest.json
+          mkdir -p public/build/assets
+          cat > public/build/manifest.json << 'EOF'
+          {
+            "resources/js/app-admin.js": {
+              "file": "assets/app-admin.js",
+              "isEntry": true
+            },
+            "resources/css/app.css": {
+              "file": "assets/app.css",
+              "isEntry": true
+            }
+          }
+          EOF
+          touch public/build/assets/app-admin.js
+          touch public/build/assets/app.css
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
