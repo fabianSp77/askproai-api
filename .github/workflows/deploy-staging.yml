@@ -37,9 +37,9 @@ jobs:
     # Only deploy if build-artifacts succeeded OR manually triggered
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 30
-    # environment:
-    #   name: staging
-    #   url: https://staging.askproai.de
+    environment:
+      name: staging
+      url: https://staging.askproai.de
 
     steps:
       # -----------------------------------------------------------------------
