@@ -210,9 +210,14 @@ jobs:
 
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           BUNDLE_NAME="deploy-bundle-${GITHUB_SHA:0:8}-${TIMESTAMP}.tar.gz"
+          STAGING_DIR="/tmp/deploy-staging-$$"
 
-          # Create tarball with built artifacts
-          tar -czf "$BUNDLE_NAME" \
+          # Create staging directory
+          mkdir -p "$STAGING_DIR"
+
+          # Copy source files (excluding unnecessary directories)
+          echo "Copying source files..."
+          rsync -a \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='storage/logs/*' \
@@ -220,9 +225,17 @@ jobs:
             --exclude='storage/framework/sessions/*' \
             --exclude='tests' \
             --exclude='.env*' \
-            --exclude='deploy-bundle-*.tar.gz' \
-            --exclude='deploy-bundle-*.tar.gz.sha256' \
-            .
+            . "$STAGING_DIR/"
+
+          # If vendor exists (backend built), it's already copied by rsync
+          # If public/build exists (frontend built), it's already copied by rsync
+
+          # Create tarball from staging directory
+          echo "Creating tarball..."
+          tar -czf "$BUNDLE_NAME" -C "$STAGING_DIR" .
+
+          # Cleanup staging
+          rm -rf "$STAGING_DIR"
 
           # Calculate checksum
           sha256sum "$BUNDLE_NAME" > "${BUNDLE_NAME}.sha256"
