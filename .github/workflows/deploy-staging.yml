@@ -2,14 +2,17 @@
 # Deploy to Staging Workflow
 # ==============================================================================
 # Purpose: Automatic deployment to staging.askproai.de
-# Trigger: Push to develop branch (after build-artifacts passes)
+# Trigger: After build-artifacts workflow completes successfully
+# Pattern: workflow_run (not reusable workflow - GitHub Actions limitation)
 # Server: staging.askproai.de
 # ==============================================================================
 
 name: Deploy to Staging
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types: [completed]
     branches: [develop]
   workflow_dispatch:  # Manual trigger
 
@@ -21,20 +24,13 @@ env:
 
 jobs:
   # ===========================================================================
-  # Build artifacts first (reuse build-artifacts.yml)
-  # ===========================================================================
-  build:
-    name: Build Artifacts
-    uses: ./.github/workflows/build-artifacts.yml
-    secrets: inherit
-
-  # ===========================================================================
   # Deploy to staging server
   # ===========================================================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [build]
+    # Only deploy if build-artifacts succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 30
     environment:
       name: staging
@@ -42,7 +38,7 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Download build artifacts
+      # 1. Download build artifacts from completed workflow
       # -----------------------------------------------------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -50,8 +46,10 @@ jobs:
       - name: Download Deployment Bundle
         uses: actions/download-artifact@v4
         with:
-          name: deployment-bundle-${{ github.sha }}
+          name: deployment-bundle-${{ github.event.workflow_run.head_sha }}
           path: ./deploy/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       # -----------------------------------------------------------------------
       # 2. Setup SSH access
@@ -96,7 +94,7 @@ jobs:
           set -euo pipefail
 
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          COMMIT_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-8)
           RELEASE_NAME="${TIMESTAMP}-${COMMIT_SHA}"
           RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/${RELEASE_NAME}"
 
@@ -266,6 +264,14 @@ jobs:
               exit 1
           fi
 
+          # API health check
+          if curl -sf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null; then
+              echo "✅ API health check passed"
+          else
+              echo "❌ API health check failed!"
+              exit 1
+          fi
+
           # Database check
           ssh -i ~/.ssh/staging_key \
               -o StrictHostKeyChecking=no \
@@ -283,7 +289,35 @@ jobs:
           echo "✅ All health checks passed"
 
       # -----------------------------------------------------------------------
-      # 11. Cleanup old releases
+      # 11. Vite Asset Check
+      # -----------------------------------------------------------------------
+      - name: Verify Vite Assets
+        run: |
+          echo "🎨 Checking Vite assets..."
+
+          # Fetch homepage and extract asset URLs
+          ASSETS=$(curl -s "https://${{ env.DOMAIN }}" | grep -oP '/build/assets/[^"]+' | sort -u)
+
+          FAILED=0
+          for ASSET in $ASSETS; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}${ASSET}")
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✅ $ASSET"
+            else
+              echo "❌ $ASSET (HTTP $STATUS)"
+              FAILED=1
+            fi
+          done
+
+          if [ $FAILED -eq 1 ]; then
+            echo "❌ Some Vite assets failed to load!"
+            exit 1
+          fi
+
+          echo "✅ All Vite assets loaded successfully"
+
+      # -----------------------------------------------------------------------
+      # 12. Cleanup old releases
       # -----------------------------------------------------------------------
       - name: Cleanup Old Releases
         if: success()
@@ -308,7 +342,7 @@ jobs:
           EOF
 
       # -----------------------------------------------------------------------
-      # 12. Cleanup temp files
+      # 13. Cleanup temp files
       # -----------------------------------------------------------------------
       - name: Cleanup Temp Files
         if: always()
@@ -334,7 +368,7 @@ jobs:
       - name: Test Homepage
         run: |
           echo "🧪 Testing homepage..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de")
 
           if [ "$STATUS" -eq 200 ]; then
               echo "✅ Homepage OK (200)"
@@ -346,7 +380,7 @@ jobs:
       - name: Test Health Endpoint
         run: |
           echo "🧪 Testing health endpoint..."
-          RESPONSE=$(curl -sf "https://${{ env.DOMAIN }}/health")
+          RESPONSE=$(curl -sf "https://staging.askproai.de/health")
 
           if echo "$RESPONSE" | grep -q "ok"; then
               echo "✅ Health endpoint OK"
@@ -358,7 +392,7 @@ jobs:
       - name: Test API Endpoint
         run: |
           echo "🧪 Testing API..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}/api/health")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de/api/health")
 
           if [ "$STATUS" -eq 200 ]; then
               echo "✅ API OK (200)"
@@ -387,9 +421,9 @@ jobs:
           echo "| Smoke Tests | ${{ needs.smoke-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment**: Staging" >> $GITHUB_STEP_SUMMARY
-          echo "**Domain**: https://${{ env.DOMAIN }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Domain**: https://staging.askproai.de" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.event.workflow_run.head_branch }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
