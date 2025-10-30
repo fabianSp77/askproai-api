@@ -15,11 +15,50 @@ env:
 
 jobs:
   # =========================================
+  # Change Detection
+  # =========================================
+  detect-changes:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.filter.outputs.docs_only }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs_only:
+              - 'docs/**'
+              - 'storage/docs/**'
+              - '**/*.md'
+              - '!app/**/*.md'
+              - '!tests/**/*.md'
+            backend:
+              - 'app/**'
+              - 'routes/**'
+              - 'config/**'
+              - 'database/**'
+              - 'composer.*'
+              - 'phpstan.neon'
+              - 'phpunit.xml*'
+              - '.env.testing'
+            frontend:
+              - 'resources/**'
+              - 'vite.config.*'
+              - 'package*.json'
+
+  # =========================================
   # Unit Tests
   # =========================================
   unit-tests:
     name: Unit Tests (PHPUnit)
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
 
     services:
       mysql:
@@ -87,6 +126,12 @@ jobs:
 
       - name: Copy environment file
         run: cp .env.testing .env
+
+      - name: Create storage directories
+        run: |
+          mkdir -p storage/framework/{cache,sessions,testing,views}
+          mkdir -p storage/logs
+          chmod -R 775 storage bootstrap/cache
 
       - name: Generate application key
         run: php artisan key:generate
