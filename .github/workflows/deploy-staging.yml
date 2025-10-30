@@ -113,39 +113,37 @@ jobs:
           run-id: ${{ env.BUILD_RUN_ID }}
 
       # -----------------------------------------------------------------------
-      # 3. Setup SSH access with ssh-agent
+      # 3. Setup SSH access
       # -----------------------------------------------------------------------
       - name: Setup SSH Key
         run: |
           echo "🔐 Setting up SSH key..."
 
-          # Set restrictive umask
-          umask 077
+          # Validate secret exists
+          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo "❌ STAGING_SSH_KEY secret is empty or not set!"
+            echo "Please configure the secret in: Settings → Environments → staging → Secrets"
+            exit 1
+          fi
 
           # Create SSH directory
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
 
-          # Write key to standard location
-          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          # Write key and set permissions
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
 
           # Add staging server to known_hosts
-          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
 
-          # Start ssh-agent and add key
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_ed25519
+          # Test key format
+          ssh-keygen -l -f ~/.ssh/staging_key || {
+            echo "❌ Invalid SSH key format!"
+            exit 1
+          }
 
-          # Configure SSH
-          cat >> ~/.ssh/config << 'EOF'
-          Host ${{ env.STAGING_HOST }}
-            User ${{ env.STAGING_USER }}
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking no
-            UserKnownHostsFile ~/.ssh/known_hosts
-          EOF
-
-          echo "✅ SSH key configured and loaded"
+          echo "✅ SSH key configured"
 
       # -----------------------------------------------------------------------
       # 4. Upload deployment bundle to staging
@@ -158,7 +156,7 @@ jobs:
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
 
           # Upload to staging server (ssh-agent handles key)
-          scp "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
 
           echo "✅ Bundle uploaded: $BUNDLE_NAME"
           echo "bundle_name=$BUNDLE_NAME" >> $GITHUB_ENV
@@ -168,7 +166,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Prepare Release on Staging
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
 
@@ -212,7 +210,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Run Migrations
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -238,7 +236,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Caches
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -265,7 +263,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Switch to New Release (Atomic)
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           set -euo pipefail
           source /tmp/deploy_env
@@ -289,7 +287,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Reload Services
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "♻️  Reloading services..."
 
@@ -307,7 +305,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Nginx Cache
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "🧹 Purging Nginx cache..."
 
@@ -343,7 +341,7 @@ jobs:
           fi
 
           # Database check
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           cd "${{ env.STAGING_BASE_DIR }}/current"
           if php artisan migrate:status > /dev/null 2>&1; then
@@ -390,7 +388,7 @@ jobs:
       - name: Cleanup Old Releases
         if: success()
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "🧹 Cleaning up old releases..."
 
@@ -413,7 +411,7 @@ jobs:
       - name: Cleanup Temp Files
         if: always()
         run: |
-          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           rm -f /tmp/${{ env.bundle_name }}
           rm -f /tmp/deploy_env
