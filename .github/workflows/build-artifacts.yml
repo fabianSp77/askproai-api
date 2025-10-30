@@ -220,6 +220,8 @@ jobs:
             --exclude='storage/framework/sessions/*' \
             --exclude='tests' \
             --exclude='.env*' \
+            --exclude='deploy-bundle-*.tar.gz' \
+            --exclude='deploy-bundle-*.tar.gz.sha256' \
             .
 
           # Calculate checksum
