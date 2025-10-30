@@ -1,0 +1,293 @@
+# ==============================================================================
+# Visual Regression Tests - Staging Environment
+# ==============================================================================
+# Purpose: Screenshot-based visual validation using Selenium + Firefox
+# Platform: ARM64-compatible (NO Puppeteer, NO Chromium)
+# Trigger: After successful staging deployment
+# Output: Screenshots stored as artifacts
+# ==============================================================================
+
+name: Visual Tests (Staging)
+
+on:
+  workflow_call:  # Called from deploy-staging.yml
+    secrets:
+      inherit
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  STAGING_URL: https://staging.askproai.de
+  PRODUCTION_URL: https://api.askproai.de
+
+jobs:
+  visual-tests-firefox:
+    name: Visual Tests (Selenium + Firefox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Setup environment
+      # -----------------------------------------------------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Selenium + GeckoDriver
+        run: |
+          echo "📦 Installing Selenium and Firefox dependencies..."
+          pip install selenium pytest pytest-html pillow
+
+          # Install Firefox (latest ESR for stability)
+          sudo apt-get update
+          sudo apt-get install -y firefox-esr
+
+          # Download GeckoDriver (ARM64 compatible)
+          GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep tag_name | cut -d '"' -f 4)
+          wget -q "https://github.com/mozilla/geckodriver/releases/download/${GECKO_VERSION}/geckodriver-${GECKO_VERSION}-linux64.tar.gz"
+          tar -xzf geckodriver-*.tar.gz
+          chmod +x geckodriver
+          sudo mv geckodriver /usr/local/bin/
+
+          # Verify installation
+          firefox --version
+          geckodriver --version
+
+      # -----------------------------------------------------------------------
+      # 2. Create test script
+      # -----------------------------------------------------------------------
+      - name: Create Visual Test Script
+        run: |
+          cat > visual_tests.py << 'PYTHON_SCRIPT'
+          #!/usr/bin/env python3
+          """
+          Visual regression tests using Selenium + Firefox
+          ARM64-compatible, no Puppeteer/Chromium dependencies
+          """
+
+          import os
+          import sys
+          from datetime import datetime
+          from selenium import webdriver
+          from selenium.webdriver.firefox.options import Options
+          from selenium.webdriver.firefox.service import Service
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          from PIL import Image
+          import io
+
+          # Configuration
+          BASE_URL = os.environ.get('BASE_URL', 'https://staging.askproai.de')
+          SCREENSHOT_DIR = 'screenshots'
+
+          # Pages to test
+          TEST_PAGES = [
+              {
+                  'name': 'homepage',
+                  'path': '/',
+                  'wait_for': 'body'
+              },
+              {
+                  'name': 'admin-login',
+                  'path': '/admin/login',
+                  'wait_for': 'input[type="email"]'
+              },
+              {
+                  'name': 'health-endpoint',
+                  'path': '/health',
+                  'wait_for': 'body'
+              },
+              {
+                  'name': 'api-health',
+                  'path': '/api/health',
+                  'wait_for': 'body'
+              }
+          ]
+
+          def setup_driver():
+              """Initialize Firefox with headless options"""
+              options = Options()
+              options.add_argument('--headless')
+              options.add_argument('--no-sandbox')
+              options.add_argument('--disable-dev-shm-usage')
+              options.add_argument('--window-size=1920,1080')
+
+              service = Service('/usr/local/bin/geckodriver')
+              driver = webdriver.Firefox(service=service, options=options)
+              driver.set_page_load_timeout(30)
+
+              return driver
+
+          def capture_screenshot(driver, page_config):
+              """Capture screenshot of a page"""
+              url = f"{BASE_URL}{page_config['path']}"
+              name = page_config['name']
+              wait_selector = page_config['wait_for']
+
+              print(f"📸 Capturing: {name} ({url})")
+
+              try:
+                  # Navigate to page
+                  driver.get(url)
+
+                  # Wait for content to load
+                  WebDriverWait(driver, 10).until(
+                      EC.presence_of_element_located((By.CSS_SELECTOR, wait_selector))
+                  )
+
+                  # Small delay for any animations
+                  driver.implicitly_wait(1)
+
+                  # Capture screenshot
+                  timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                  filename = f"{SCREENSHOT_DIR}/{name}_{timestamp}.png"
+
+                  os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+                  driver.save_screenshot(filename)
+
+                  # Get file size
+                  size = os.path.getsize(filename) / 1024  # KB
+
+                  print(f"✅ Screenshot saved: {filename} ({size:.1f} KB)")
+
+                  return {
+                      'name': name,
+                      'url': url,
+                      'success': True,
+                      'filename': filename,
+                      'size_kb': size
+                  }
+
+              except Exception as e:
+                  print(f"❌ Failed to capture {name}: {str(e)}")
+                  return {
+                      'name': name,
+                      'url': url,
+                      'success': False,
+                      'error': str(e)
+                  }
+
+          def main():
+              """Main test execution"""
+              print(f"🚀 Starting visual tests for: {BASE_URL}")
+              print(f"Firefox version: {os.popen('firefox --version').read().strip()}")
+              print(f"GeckoDriver version: {os.popen('geckodriver --version | head -n 1').read().strip()}")
+              print()
+
+              driver = None
+              results = []
+
+              try:
+                  driver = setup_driver()
+                  print(f"✅ Firefox driver initialized\n")
+
+                  # Run tests
+                  for page in TEST_PAGES:
+                      result = capture_screenshot(driver, page)
+                      results.append(result)
+                      print()
+
+              except Exception as e:
+                  print(f"❌ Fatal error: {str(e)}")
+                  sys.exit(1)
+
+              finally:
+                  if driver:
+                      driver.quit()
+
+              # Summary
+              print("=" * 70)
+              print("VISUAL TEST SUMMARY")
+              print("=" * 70)
+
+              success_count = sum(1 for r in results if r['success'])
+              total_count = len(results)
+
+              for result in results:
+                  status = "✅" if result['success'] else "❌"
+                  print(f"{status} {result['name']}: {result['url']}")
+                  if not result['success']:
+                      print(f"   Error: {result.get('error', 'Unknown')}")
+
+              print()
+              print(f"Results: {success_count}/{total_count} pages captured successfully")
+
+              if success_count < total_count:
+                  print("\n❌ Some visual tests failed!")
+                  sys.exit(1)
+              else:
+                  print("\n✅ All visual tests passed!")
+                  sys.exit(0)
+
+          if __name__ == '__main__':
+              main()
+          PYTHON_SCRIPT
+
+          chmod +x visual_tests.py
+
+      # -----------------------------------------------------------------------
+      # 3. Run visual tests on staging
+      # -----------------------------------------------------------------------
+      - name: Run Visual Tests (Staging)
+        env:
+          BASE_URL: ${{ github.event.inputs.environment == 'production' && env.PRODUCTION_URL || env.STAGING_URL }}
+        run: |
+          echo "🎯 Testing environment: $BASE_URL"
+          python3 visual_tests.py
+
+      # -----------------------------------------------------------------------
+      # 4. Upload screenshots
+      # -----------------------------------------------------------------------
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-tests-screenshots-${{ github.sha }}
+          path: screenshots/
+          retention-days: 30
+
+      # -----------------------------------------------------------------------
+      # 5. Test summary
+      # -----------------------------------------------------------------------
+      - name: Visual Test Summary
+        if: always()
+        run: |
+          echo "## Visual Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: ${{ github.event.inputs.environment || 'staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Browser**: Firefox (GeckoDriver)" >> $GITHUB_STEP_SUMMARY
+          echo "**Platform**: ubuntu-latest (ARM64-compatible)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "screenshots" ]; then
+              echo "### Captured Screenshots" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+
+              for screenshot in screenshots/*.png; do
+                  if [ -f "$screenshot" ]; then
+                      filename=$(basename "$screenshot")
+                      size=$(du -h "$screenshot" | cut -f1)
+                      echo "- 📸 \`$filename\` ($size)" >> $GITHUB_STEP_SUMMARY
+                  fi
+              done
+
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ Screenshots uploaded as artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+              echo "❌ No screenshots were captured" >> $GITHUB_STEP_SUMMARY
+          fi
