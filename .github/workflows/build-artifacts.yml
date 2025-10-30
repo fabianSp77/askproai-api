@@ -20,10 +20,43 @@ env:
   PHP_VERSION: '8.3'
 
 jobs:
+  detect-changes:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.filter.outputs.docs_only }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs_only:
+              - 'docs/**'
+              - 'storage/docs/**'
+              - '**/*.md'
+              - '!app/**/*.md'
+              - '!tests/**/*.md'
+            backend:
+              - 'app/**'
+              - 'routes/**'
+              - 'config/**'
+              - 'database/**'
+              - 'composer.*'
+            frontend:
+              - 'resources/**'
+              - 'vite.config.*'
+              - 'package*.json'
+
   build-frontend:
     name: Build Frontend Assets
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
 
     steps:
       - name: Checkout Code
@@ -72,6 +105,8 @@ jobs:
     name: Build Backend Dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
 
     steps:
       - name: Checkout Code
