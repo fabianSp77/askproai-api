@@ -54,39 +54,46 @@ return new class extends Migration
                 $table->index('company_id');
             }
 
-            // Branch assignment for company_manager role
-            // Allows managers to be assigned to specific branches
-            // Note: branches.id is bigint unsigned auto-increment
-            // NULL = not a manager OR sees all branches (company_owner)
-            $table->unsignedBigInteger('branch_id')
-                ->nullable()
-                ->after('company_id')
-                ->comment('Branch assignment for company_manager role');
+            // Branch assignment for company_manager role (with idempotency check)
+            if (!Schema::hasColumn('users', 'branch_id')) {
+                // Allows managers to be assigned to specific branches
+                // Note: branches.id is bigint unsigned auto-increment
+                // NULL = not a manager OR sees all branches (company_owner)
+                $table->unsignedBigInteger('branch_id')
+                    ->nullable()
+                    ->after('company_id')
+                    ->comment('Branch assignment for company_manager role');
 
-            // Staff relationship for company_staff role
-            // Links user account to their staff entry (for appointments, calls, etc.)
-            // Note: staff.id is bigint unsigned auto-increment
-            $table->unsignedBigInteger('staff_id')
-                ->nullable()
-                ->after('branch_id')
-                ->comment('Staff entry this user represents (for company_staff role)');
+                // Foreign key constraint
+                $table->foreign('branch_id')
+                    ->references('id')
+                    ->on('branches')
+                    ->onDelete('set null')  // If branch deleted, set NULL (don't delete user)
+                    ->onUpdate('cascade');  // If branch ID changes, update reference
 
-            // Foreign key constraints
-            $table->foreign('branch_id')
-                ->references('id')
-                ->on('branches')
-                ->onDelete('set null')  // If branch deleted, set NULL (don't delete user)
-                ->onUpdate('cascade');  // If branch ID changes, update reference
+                // Index for performance (policy checks will query this frequently)
+                $table->index('branch_id', 'users_branch_id_index');
+            }
 
-            $table->foreign('staff_id')
-                ->references('id')
-                ->on('staff')
-                ->onDelete('set null')  // If staff deleted, set NULL (don't delete user)
-                ->onUpdate('cascade');  // If staff ID changes, update reference
+            // Staff relationship for company_staff role (with idempotency check)
+            if (!Schema::hasColumn('users', 'staff_id')) {
+                // Links user account to their staff entry (for appointments, calls, etc.)
+                // Note: staff.id is bigint unsigned auto-increment
+                $table->unsignedBigInteger('staff_id')
+                    ->nullable()
+                    ->after('branch_id')
+                    ->comment('Staff entry this user represents (for company_staff role)');
 
-            // Indexes for performance (policy checks will query these frequently)
-            $table->index('branch_id', 'users_branch_id_index');
-            $table->index('staff_id', 'users_staff_id_index');
+                // Foreign key constraint
+                $table->foreign('staff_id')
+                    ->references('id')
+                    ->on('staff')
+                    ->onDelete('set null')  // If staff deleted, set NULL (don't delete user)
+                    ->onUpdate('cascade');  // If staff ID changes, update reference
+
+                // Index for performance (policy checks will query this frequently)
+                $table->index('staff_id', 'users_staff_id_index');
+            }
         });
     }
 
@@ -96,16 +103,31 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Drop foreign keys first (before dropping columns)
-            $table->dropForeign(['branch_id']);
-            $table->dropForeign(['staff_id']);
+            // Drop foreign keys, indexes, and columns with idempotency checks
 
-            // Drop indexes
-            $table->dropIndex('users_branch_id_index');
-            $table->dropIndex('users_staff_id_index');
+            // Check and drop branch_id
+            if (Schema::hasColumn('users', 'branch_id')) {
+                // Drop foreign key constraint
+                $table->dropForeign(['branch_id']);
 
-            // Drop columns
-            $table->dropColumn(['branch_id', 'staff_id']);
+                // Drop index
+                $table->dropIndex('users_branch_id_index');
+
+                // Drop column
+                $table->dropColumn('branch_id');
+            }
+
+            // Check and drop staff_id
+            if (Schema::hasColumn('users', 'staff_id')) {
+                // Drop foreign key constraint
+                $table->dropForeign(['staff_id']);
+
+                // Drop index
+                $table->dropIndex('users_staff_id_index');
+
+                // Drop column
+                $table->dropColumn('staff_id');
+            }
         });
     }
 };
