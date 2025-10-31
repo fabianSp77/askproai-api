@@ -124,8 +124,8 @@ return new class extends Migration
 
         Schema::table('retell_function_traces', function (Blueprint $table) {
             // Function traces by call session
-            // Query: WHERE call_session_id = ? ORDER BY executed_at
-            $table->index(['call_session_id', 'executed_at'], 'idx_function_traces_session_time');
+            // Query: WHERE call_session_id = ? ORDER BY started_at
+            $table->index(['call_session_id', 'started_at'], 'idx_function_traces_session_time');
         });
     }
 
