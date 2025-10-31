@@ -33,6 +33,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if customers table exists (skip on fresh databases)
+        if (!Schema::hasTable('customers')) {
+            Log::info('⚠️  Migration skipped - customers table does not exist (fresh database)');
+            return;
+        }
+
+        // Check if company_id column exists
+        if (!Schema::hasColumn('customers', 'company_id')) {
+            Log::info('⚠️  Migration skipped - company_id column does not exist (prerequisite migration not yet run)');
+            return;
+        }
+
         Log::info('=== Adding NOT NULL Constraint to customers.company_id ===');
 
         // CRITICAL: Pre-flight validation - abort if ANY NULL values exist
