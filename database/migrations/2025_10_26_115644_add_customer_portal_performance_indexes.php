@@ -35,20 +35,44 @@ return new class extends Migration
         // ================================================================
 
         Schema::table('retell_call_sessions', function (Blueprint $table) {
-            // Branch filtering (managers view their branches)
-            $table->index('branch_id', 'idx_retell_sessions_branch');
+            // Check and create branch_id index
+            $branchIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_branch'
+            ");
+            if (empty($branchIndex)) {
+                // Branch filtering (managers view their branches)
+                $table->index('branch_id', 'idx_retell_sessions_branch');
+            }
 
-            // Customer call history (sorted by date, most recent first)
-            // Query: WHERE customer_id = ? ORDER BY started_at DESC
-            $table->index(['customer_id', 'started_at'], 'idx_retell_sessions_customer_date');
+            // Check and create customer_date index
+            $customerDateIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_customer_date'
+            ");
+            if (empty($customerDateIndex)) {
+                // Customer call history (sorted by date, most recent first)
+                // Query: WHERE customer_id = ? ORDER BY started_at DESC
+                $table->index(['customer_id', 'started_at'], 'idx_retell_sessions_customer_date');
+            }
 
-            // Company dashboard with status filtering
-            // Query: WHERE company_id = ? AND call_status = ? ORDER BY started_at DESC
-            $table->index(['company_id', 'started_at', 'call_status'], 'idx_retell_sessions_company_status');
+            // Check and create company_status index
+            $companyStatusIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_company_status'
+            ");
+            if (empty($companyStatusIndex)) {
+                // Company dashboard with status filtering
+                // Query: WHERE company_id = ? AND call_status = ? ORDER BY started_at DESC
+                $table->index(['company_id', 'started_at', 'call_status'], 'idx_retell_sessions_company_status');
+            }
 
-            // Manager view: company + branch + date
-            // Query: WHERE company_id = ? AND branch_id = ? ORDER BY started_at DESC
-            $table->index(['company_id', 'branch_id', 'started_at'], 'idx_retell_sessions_company_branch_date');
+            // Check and create company_branch_date index
+            $companyBranchIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_company_branch_date'
+            ");
+            if (empty($companyBranchIndex)) {
+                // Manager view: company + branch + date
+                // Query: WHERE company_id = ? AND branch_id = ? ORDER BY started_at DESC
+                $table->index(['company_id', 'branch_id', 'started_at'], 'idx_retell_sessions_company_branch_date');
+            }
         });
 
         // ================================================================
@@ -142,12 +166,35 @@ return new class extends Migration
             }
         });
 
-        // retell_call_sessions
+        // retell_call_sessions (check if exists before dropping)
         Schema::table('retell_call_sessions', function (Blueprint $table) {
-            $table->dropIndex('idx_retell_sessions_branch');
-            $table->dropIndex('idx_retell_sessions_customer_date');
-            $table->dropIndex('idx_retell_sessions_company_status');
-            $table->dropIndex('idx_retell_sessions_company_branch_date');
+            $branchIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_branch'
+            ");
+            if (!empty($branchIndex)) {
+                $table->dropIndex('idx_retell_sessions_branch');
+            }
+
+            $customerDateIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_customer_date'
+            ");
+            if (!empty($customerDateIndex)) {
+                $table->dropIndex('idx_retell_sessions_customer_date');
+            }
+
+            $companyStatusIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_company_status'
+            ");
+            if (!empty($companyStatusIndex)) {
+                $table->dropIndex('idx_retell_sessions_company_status');
+            }
+
+            $companyBranchIndex = DB::select("
+                SHOW INDEX FROM retell_call_sessions WHERE Key_name = 'idx_retell_sessions_company_branch_date'
+            ");
+            if (!empty($companyBranchIndex)) {
+                $table->dropIndex('idx_retell_sessions_company_branch_date');
+            }
         });
     }
 };
