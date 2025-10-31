@@ -50,19 +50,17 @@ return new class extends Migration
         // CRITICAL: Pre-flight validation - abort if ANY NULL values exist
         $this->validateNoNullValues();
 
-        DB::transaction(function () {
-            // Step 1: Add foreign key constraint (if not exists)
-            $this->addForeignKeyConstraint();
+        // Step 1: Add foreign key constraint (if not exists)
+        $this->addForeignKeyConstraint();
 
-            // Step 2: Add NOT NULL constraint
-            $this->addNotNullConstraint();
+        // Step 2: Add NOT NULL constraint
+        $this->addNotNullConstraint();
 
-            // Step 3: Create audit trigger for NULL attempts
-            $this->createNullAuditTrigger();
+        // Step 3: Create audit trigger for NULL attempts
+        $this->createNullAuditTrigger();
 
-            // Step 4: Verify constraint applied
-            $this->verifyConstraintApplied();
-        });
+        // Step 4: Verify constraint applied
+        $this->verifyConstraintApplied();
 
         Log::info('=== NOT NULL Constraint Successfully Applied ===');
     }
