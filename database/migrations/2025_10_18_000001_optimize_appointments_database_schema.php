@@ -46,14 +46,6 @@ return new class extends Migration
             }
         });
 
-        // Verify critical indexes exist
-        if (!$this->indexExists('appointments', 'idx_appointments_call_lookup')) {
-            Schema::table('appointments', function (Blueprint $table) {
-                $table->index(['call_id'], 'idx_appointments_call_lookup');
-            });
-            \Log::info('✅ Verified/Added index: idx_appointments_call_lookup');
-        }
-
         $totalRows = DB::table('appointments')->count();
         \Log::info('📊 Phase 1 Migration Complete', [
             'total_rows' => $totalRows,
