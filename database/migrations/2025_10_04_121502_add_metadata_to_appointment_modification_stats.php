@@ -16,9 +16,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('appointment_modification_stats', function (Blueprint $table) {
-            $table->json('metadata')->nullable()->after('count');
-        });
+        // Check if table exists before attempting to modify
+        if (!Schema::hasTable('appointment_modification_stats')) {
+            return;
+        }
+
+        // Check if column already exists (idempotency)
+        if (!Schema::hasColumn('appointment_modification_stats', 'metadata')) {
+            Schema::table('appointment_modification_stats', function (Blueprint $table) {
+                // Remove ->after('count') as 'count' column doesn't exist in this table
+                $table->json('metadata')->nullable();
+            });
+        }
     }
 
     /**
