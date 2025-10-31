@@ -55,22 +55,30 @@ return new class extends Migration
         // 2. APPOINTMENTS - Customer portal appointment views
         // ================================================================
 
-        // Partial index for active appointments by customer
-        // Query: WHERE customer_id = ? AND deleted_at IS NULL ORDER BY starts_at DESC
-        // Note: PostgreSQL supports partial indexes for better performance
-        DB::statement(
-            'CREATE INDEX IF NOT EXISTS idx_appointments_customer_active
-             ON appointments(customer_id, starts_at DESC)
-             WHERE deleted_at IS NULL'
-        );
+        // Note: MySQL/MariaDB does NOT support partial indexes with WHERE clause
+        // We create full indexes instead. Application filters deleted_at IS NULL
+        Schema::table('appointments', function (Blueprint $table) {
+            // Check if indexes already exist (idempotency)
+            $customerIndex = DB::select("
+                SHOW INDEX FROM appointments WHERE Key_name = 'idx_appointments_customer_active'
+            ");
 
-        // Company-wide appointment dashboard
-        // Query: WHERE company_id = ? AND deleted_at IS NULL ORDER BY starts_at
-        DB::statement(
-            'CREATE INDEX IF NOT EXISTS idx_appointments_company_active
-             ON appointments(company_id, starts_at DESC)
-             WHERE deleted_at IS NULL'
-        );
+            if (empty($customerIndex)) {
+                // Index for active appointments by customer
+                // Query: WHERE customer_id = ? AND deleted_at IS NULL ORDER BY starts_at DESC
+                $table->index(['customer_id', 'starts_at'], 'idx_appointments_customer_active');
+            }
+
+            $companyIndex = DB::select("
+                SHOW INDEX FROM appointments WHERE Key_name = 'idx_appointments_company_active'
+            ");
+
+            if (empty($companyIndex)) {
+                // Company-wide appointment dashboard
+                // Query: WHERE company_id = ? AND deleted_at IS NULL ORDER BY starts_at
+                $table->index(['company_id', 'starts_at'], 'idx_appointments_company_active');
+            }
+        });
 
         // ================================================================
         // 3. RETELL_TRANSCRIPT_SEGMENTS - Efficient transcript loading
@@ -117,9 +125,22 @@ return new class extends Migration
             $table->dropIndex('idx_transcript_segments_session_time');
         });
 
-        // appointments (partial indexes via raw SQL)
-        DB::statement('DROP INDEX IF EXISTS idx_appointments_customer_active');
-        DB::statement('DROP INDEX IF EXISTS idx_appointments_company_active');
+        // appointments (check if exists before dropping)
+        Schema::table('appointments', function (Blueprint $table) {
+            $customerIndex = DB::select("
+                SHOW INDEX FROM appointments WHERE Key_name = 'idx_appointments_customer_active'
+            ");
+            if (!empty($customerIndex)) {
+                $table->dropIndex('idx_appointments_customer_active');
+            }
+
+            $companyIndex = DB::select("
+                SHOW INDEX FROM appointments WHERE Key_name = 'idx_appointments_company_active'
+            ");
+            if (!empty($companyIndex)) {
+                $table->dropIndex('idx_appointments_company_active');
+            }
+        });
 
         // retell_call_sessions
         Schema::table('retell_call_sessions', function (Blueprint $table) {
