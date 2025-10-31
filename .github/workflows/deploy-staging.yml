@@ -17,8 +17,8 @@ on:
         type: string
 
 env:
-  STAGING_HOST: 152.53.116.127          # DNS optional: staging.askproai.de
-  STAGING_USER: deploy                  # SSH-User (kein www-data)
+  STAGING_HOST: 152.53.116.127
+  STAGING_USER: deploy
   STAGING_BASE_DIR: /var/www/api-gateway-staging
   DOMAIN: staging.askproai.de
 
@@ -33,32 +33,26 @@ jobs:
       url: https://staging.askproai.de
 
     steps:
-      # 0) Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 0b) Tools prüfen (jq ist nötig; gh ist auf GitHub-Runnern vorhanden)
       - name: Ensure tools
         run: |
           type jq >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y jq; }
-          type gh >/dev/null 2>&1 || { echo "gh CLI fehlt"; exit 1; }
+          type gh >/dev/null 2>&1 || { echo "gh CLI fehlt (Runner)"; exit 1; }
 
-      # 1) Build-Run-ID ermitteln
       - name: Determine Build Run ID
         id: build_run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # 1) Auto-Trigger
           if [ -n "${{ github.event.workflow_run.id || '' }}" ]; then
             BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
             BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
-          # 2) Manuelle Eingabe
           elif [ -n "${{ inputs.build_run_id || '' }}" ]; then
             BUILD_RUN_ID="${{ inputs.build_run_id }}"
             BUILD_SHA=$(gh run view "$BUILD_RUN_ID" --json headSha --jq '.headSha')
-          # 3) Per SHA suchen
           else
             SHA="${{ github.sha }}"
             BUILD_RUN_ID=$(gh run list \
@@ -75,7 +69,6 @@ jobs:
           echo "run_id=$BUILD_RUN_ID"       >> $GITHUB_OUTPUT
           echo "sha=$BUILD_SHA"             >> $GITHUB_OUTPUT
 
-      # 2) Artefakt holen
       - name: Download Deployment Bundle
         uses: actions/download-artifact@v4
         with:
@@ -84,7 +77,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.BUILD_RUN_ID }}
 
-      # 3) Secret prüfen + Key schreiben
       - name: Write SSH key from secret
         run: |
           [ -n "${{ secrets.STAGING_SSH_KEY }}" ] || { echo "STAGING_SSH_KEY missing"; exit 1; }
@@ -93,11 +85,11 @@ jobs:
           chmod 600 ~/.ssh/staging_key
           head -n1 ~/.ssh/staging_key | grep -q "BEGIN OPENSSH PRIVATE KEY" || { echo "Invalid key format"; exit 1; }
 
-      # 4) Known hosts setzen
       - name: Setup known_hosts
-        run: ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+        run: |
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+          ssh-keyscan -H ${{ env.DOMAIN }}       >> ~/.ssh/known_hosts 2>&1 || true
 
-      # 5) Bundle hochladen
       - name: Upload bundle to server
         run: |
           set -euo pipefail
@@ -107,7 +99,6 @@ jobs:
           echo "BUNDLE_NAME=$BUNDLE_NAME" >> $GITHUB_ENV
           echo "Uploaded $BUNDLE_NAME"
 
-      # 6) Release vorbereiten
       - name: Prepare release on server
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
@@ -127,7 +118,6 @@ jobs:
           echo "RELEASE_PATH=\$RELEASE_PATH" > /tmp/deploy_env
           EOF
 
-      # 7) Migrationen
       - name: Run migrations
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
@@ -138,7 +128,6 @@ jobs:
           php artisan migrate --force
           EOF
 
-      # 8) Caches
       - name: Clear caches
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
@@ -154,7 +143,6 @@ jobs:
           php artisan route:cache  || true
           EOF
 
-      # 9) Atomic switch
       - name: Switch current symlink
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
@@ -166,7 +154,6 @@ jobs:
           mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
           EOF
 
-      # 10) Services reload (best-effort)
       - name: Reload services
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
@@ -174,13 +161,11 @@ jobs:
           sudo nginx -t && sudo systemctl reload nginx || true
           EOF
 
-      # 11) Health checks
       - name: Health checks
         run: |
           curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
           curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
 
-      # 12) Cleanup
       - name: Cleanup temp
         if: always()
         run: |
