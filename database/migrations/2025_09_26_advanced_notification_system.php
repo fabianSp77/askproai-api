@@ -42,35 +42,30 @@ return new class extends Migration
         });
 
         // Customer notification preferences
-        if (Schema::hasTable('notification_preferences')) {
-            return;
+        if (!Schema::hasTable('notification_preferences')) {
+            Schema::create('notification_preferences', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+                    $table->string('channel');
+                    $table->boolean('enabled')->default(true);
+                    $table->json('types')->nullable();
+                    $table->string('language')->default('de');
+                    $table->json('quiet_hours')->nullable();
+                    $table->time('preferred_time')->nullable();
+                    $table->json('frequency_limits')->nullable();
+                    $table->boolean('marketing_consent')->default(false);
+                    $table->timestamp('marketing_consent_at')->nullable();
+                    $table->string('unsubscribe_token')->nullable();
+                    $table->timestamps();
+
+                    $table->unique(['customer_id', 'channel']);
+                    $table->index('unsubscribe_token');
+                });
         }
-
-        Schema::create('notification_preferences', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-                $table->string('channel');
-                $table->boolean('enabled')->default(true);
-                $table->json('types')->nullable();
-                $table->string('language')->default('de');
-                $table->json('quiet_hours')->nullable();
-                $table->time('preferred_time')->nullable();
-                $table->json('frequency_limits')->nullable();
-                $table->boolean('marketing_consent')->default(false);
-                $table->timestamp('marketing_consent_at')->nullable();
-                $table->string('unsubscribe_token')->nullable();
-                $table->timestamps();
-
-                $table->unique(['customer_id', 'channel']);
-                $table->index('unsubscribe_token');
-            });
 
         // Enhanced notification queue
-        if (Schema::hasTable('notification_queue')) {
-            return;
-        }
-
-        Schema::create('notification_queue', function (Blueprint $table) {
+        if (!Schema::hasTable('notification_queue')) {
+            Schema::create('notification_queue', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid')->unique();
                 $table->morphs('notifiable');
@@ -100,105 +95,98 @@ return new class extends Migration
                 $table->index('notifiable_id');
                 $table->index('sent_at');
             });
+        }
 
         // Notification delivery logs (detailed tracking)
-        if (Schema::hasTable('notification_deliveries')) {
-            return;
+        if (!Schema::hasTable('notification_deliveries')) {
+            Schema::create('notification_deliveries', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('notification_queue_id')->constrained('notification_queue');
+                    $table->string('event');
+                    $table->json('data')->nullable();
+                    $table->string('provider')->nullable();
+                    $table->string('provider_status')->nullable();
+                    $table->text('provider_response')->nullable();
+                    $table->string('ip_address')->nullable();
+                    $table->string('user_agent')->nullable();
+                    $table->timestamp('occurred_at');
+                    $table->timestamps();
+
+                    $table->index(['notification_queue_id', 'event']);
+                    $table->index('occurred_at');
+                });
         }
-
-        Schema::create('notification_deliveries', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('notification_queue_id')->constrained('notification_queue');
-                $table->string('event');
-                $table->json('data')->nullable();
-                $table->string('provider')->nullable();
-                $table->string('provider_status')->nullable();
-                $table->text('provider_response')->nullable();
-                $table->string('ip_address')->nullable();
-                $table->string('user_agent')->nullable();
-                $table->timestamp('occurred_at');
-                $table->timestamps();
-
-                $table->index(['notification_queue_id', 'event']);
-                $table->index('occurred_at');
-            });
 
         // SMS/WhatsApp provider configurations
-        if (Schema::hasTable('notification_providers')) {
-            return;
+        if (!Schema::hasTable('notification_providers')) {
+            Schema::create('notification_providers', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('company_id')->nullable()->constrained();
+                    $table->string('name');
+                    $table->string('type');
+                    $table->string('channel');
+                    $table->json('credentials');
+                    $table->json('config')->nullable();
+                    $table->boolean('is_default')->default(false);
+                    $table->boolean('is_active')->default(true);
+                    $table->integer('priority')->default(1);
+                    $table->decimal('balance', 10, 2)->nullable();
+                    $table->integer('rate_limit')->nullable();
+                    $table->json('allowed_countries')->nullable();
+                    $table->json('statistics')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['company_id', 'channel', 'is_active']);
+                });
         }
-
-        Schema::create('notification_providers', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->nullable()->constrained();
-                $table->string('name');
-                $table->string('type');
-                $table->string('channel');
-                $table->json('credentials');
-                $table->json('config')->nullable();
-                $table->boolean('is_default')->default(false);
-                $table->boolean('is_active')->default(true);
-                $table->integer('priority')->default(1);
-                $table->decimal('balance', 10, 2)->nullable();
-                $table->integer('rate_limit')->nullable();
-                $table->json('allowed_countries')->nullable();
-                $table->json('statistics')->nullable();
-                $table->timestamps();
-
-                $table->index(['company_id', 'channel', 'is_active']);
-            });
 
         // Notification analytics
-        if (Schema::hasTable('notification_analytics')) {
-            return;
+        if (!Schema::hasTable('notification_analytics')) {
+            Schema::create('notification_analytics', function (Blueprint $table) {
+                    $table->id();
+                    $table->date('date');
+                    $table->foreignId('company_id')->nullable()->constrained();
+                    $table->string('channel');
+                    $table->string('type');
+                    $table->integer('sent_count')->default(0);
+                    $table->integer('delivered_count')->default(0);
+                    $table->integer('opened_count')->default(0);
+                    $table->integer('clicked_count')->default(0);
+                    $table->integer('failed_count')->default(0);
+                    $table->integer('bounced_count')->default(0);
+                    $table->decimal('total_cost', 10, 4)->default(0);
+                    $table->float('delivery_rate')->nullable();
+                    $table->float('open_rate')->nullable();
+                    $table->float('click_rate')->nullable();
+                    $table->integer('avg_delivery_time')->nullable();
+                    $table->json('metadata')->nullable();
+                    $table->timestamps();
+
+                    $table->unique(['date', 'company_id', 'channel', 'type']);
+                    $table->index(['company_id', 'date']);
+                });
         }
-
-        Schema::create('notification_analytics', function (Blueprint $table) {
-                $table->id();
-                $table->date('date');
-                $table->foreignId('company_id')->nullable()->constrained();
-                $table->string('channel');
-                $table->string('type');
-                $table->integer('sent_count')->default(0);
-                $table->integer('delivered_count')->default(0);
-                $table->integer('opened_count')->default(0);
-                $table->integer('clicked_count')->default(0);
-                $table->integer('failed_count')->default(0);
-                $table->integer('bounced_count')->default(0);
-                $table->decimal('total_cost', 10, 4)->default(0);
-                $table->float('delivery_rate')->nullable();
-                $table->float('open_rate')->nullable();
-                $table->float('click_rate')->nullable();
-                $table->integer('avg_delivery_time')->nullable();
-                $table->json('metadata')->nullable();
-                $table->timestamps();
-
-                $table->unique(['date', 'company_id', 'channel', 'type']);
-                $table->index(['company_id', 'date']);
-            });
 
         // Unsubscribe list
-        if (Schema::hasTable('notification_unsubscribes')) {
-            return;
+        if (!Schema::hasTable('notification_unsubscribes')) {
+            Schema::create('notification_unsubscribes', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('email')->nullable();
+                    $table->string('phone')->nullable();
+                    $table->string('channel');
+                    $table->string('type')->nullable();
+                    $table->foreignId('customer_id')->nullable()->constrained();
+                    $table->string('reason')->nullable();
+                    $table->text('feedback')->nullable();
+                    $table->string('method');
+                    $table->string('ip_address')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['email', 'channel']);
+                    $table->index(['phone', 'channel']);
+                    $table->index('customer_id');
+                });
         }
-
-        Schema::create('notification_unsubscribes', function (Blueprint $table) {
-                $table->id();
-                $table->string('email')->nullable();
-                $table->string('phone')->nullable();
-                $table->string('channel');
-                $table->string('type')->nullable();
-                $table->foreignId('customer_id')->nullable()->constrained();
-                $table->string('reason')->nullable();
-                $table->text('feedback')->nullable();
-                $table->string('method');
-                $table->string('ip_address')->nullable();
-                $table->timestamps();
-
-                $table->index(['email', 'channel']);
-                $table->index(['phone', 'channel']);
-                $table->index('customer_id');
-            });
 
         // Add notification fields to customers table
         
