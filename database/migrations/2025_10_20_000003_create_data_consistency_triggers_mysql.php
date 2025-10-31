@@ -190,94 +190,10 @@ return new class extends Migration
             END
         ");
 
-        // Trigger 5: Sync appointment link status when appointment is created
-        DB::unprepared("
-            CREATE TRIGGER after_insert_appointment_sync_call
-            AFTER INSERT ON appointments
-            FOR EACH ROW
-            BEGIN
-                -- When appointment is created with call_id, update call's flags
-                IF NEW.call_id IS NOT NULL THEN
-                    UPDATE calls
-                    SET
-                        appointment_link_status = 'linked',
-                        appointment_linked_at = NOW(),
-                        appointment_made = 1,
-                        session_outcome = COALESCE(session_outcome, 'appointment_booked')
-                    WHERE id = NEW.call_id;
-
-                    -- Log successful linking
-                    INSERT INTO data_consistency_alerts (
-                        alert_type,
-                        severity,
-                        entity_type,
-                        entity_id,
-                        description,
-                        detected_at,
-                        auto_corrected,
-                        corrected_at,
-                        created_at,
-                        updated_at
-                    ) VALUES (
-                        'appointment_linked',
-                        'info',
-                        'appointment',
-                        NEW.id,
-                        CONCAT('Appointment ', NEW.id, ' automatically linked to call ', NEW.call_id, ' via trigger'),
-                        NOW(),
-                        1,
-                        NOW(),
-                        NOW(),
-                        NOW()
-                    );
-                END IF;
-            END
-        ");
-
-        // Trigger 6: Sync appointment link status when appointment is deleted
-        DB::unprepared("
-            CREATE TRIGGER after_delete_appointment_sync_call
-            AFTER DELETE ON appointments
-            FOR EACH ROW
-            BEGIN
-                -- When appointment is deleted, check if call should be marked as unlinked
-                IF OLD.call_id IS NOT NULL THEN
-                    -- Only update if there are no other appointments for this call
-                    IF (SELECT COUNT(*) FROM appointments WHERE call_id = OLD.call_id AND deleted_at IS NULL) = 0 THEN
-                        UPDATE calls
-                        SET
-                            appointment_link_status = 'unlinked',
-                            appointment_made = 0
-                        WHERE id = OLD.call_id;
-
-                        -- Log unlinking
-                        INSERT INTO data_consistency_alerts (
-                            alert_type,
-                            severity,
-                            entity_type,
-                            entity_id,
-                            description,
-                            detected_at,
-                            auto_corrected,
-                            corrected_at,
-                            created_at,
-                            updated_at
-                        ) VALUES (
-                            'appointment_unlinked',
-                            'warning',
-                            'appointment',
-                            OLD.id,
-                            CONCAT('Appointment ', OLD.id, ' deleted - call ', OLD.call_id, ' flags updated via trigger'),
-                            NOW(),
-                            1,
-                            NOW(),
-                            NOW(),
-                            NOW()
-                        );
-                    END IF;
-                END IF;
-            END
-        ");
+        // Trigger 5 & 6: REMOVED - referenced non-existent call_id column in appointments table
+        // The appointments table does not have a call_id column, so these triggers cannot be created
+        // - after_insert_appointment_sync_call (referenced NEW.call_id)
+        // - after_delete_appointment_sync_call (referenced OLD.call_id)
     }
 
     /**
@@ -290,7 +206,8 @@ return new class extends Migration
         DB::unprepared("DROP TRIGGER IF EXISTS before_update_call_sync_customer_link;");
         DB::unprepared("DROP TRIGGER IF EXISTS before_insert_call_validate_outcome;");
         DB::unprepared("DROP TRIGGER IF EXISTS before_update_call_validate_outcome;");
-        DB::unprepared("DROP TRIGGER IF EXISTS after_insert_appointment_sync_call;");
-        DB::unprepared("DROP TRIGGER IF EXISTS after_delete_appointment_sync_call;");
+        // Triggers 5 & 6 were never created due to non-existent call_id column
+        // DB::unprepared("DROP TRIGGER IF EXISTS after_insert_appointment_sync_call;");
+        // DB::unprepared("DROP TRIGGER IF EXISTS after_delete_appointment_sync_call;");
     }
 };
