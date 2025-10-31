@@ -12,17 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('appointments', function (Blueprint $table) {
-            // Add branch_id column after company_id for multi-tenant isolation
-            $table->uuid('branch_id')->nullable()->after('company_id');
+            // Check if branch_id column exists before adding (idempotency)
+            if (!Schema::hasColumn('appointments', 'branch_id')) {
+                // Add branch_id column after company_id for multi-tenant isolation
+                $table->uuid('branch_id')->nullable()->after('company_id');
 
-            // Add foreign key constraint
-            $table->foreign('branch_id')
-                  ->references('id')
-                  ->on('branches')
-                  ->onDelete('cascade');
+                // Add foreign key constraint
+                $table->foreign('branch_id')
+                      ->references('id')
+                      ->on('branches')
+                      ->onDelete('cascade');
 
-            // Add composite index for multi-tenant queries
-            $table->index(['company_id', 'branch_id'], 'idx_appointments_company_branch');
+                // Add composite index for multi-tenant queries
+                $table->index(['company_id', 'branch_id'], 'idx_appointments_company_branch');
+            }
         });
     }
 
@@ -32,12 +35,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('appointments', function (Blueprint $table) {
-            // Drop foreign key and index first
-            $table->dropForeign(['branch_id']);
-            $table->dropIndex('idx_appointments_company_branch');
+            // Check if branch_id column exists before dropping (idempotency)
+            if (Schema::hasColumn('appointments', 'branch_id')) {
+                // Drop foreign key and index first
+                $table->dropForeign(['branch_id']);
+                $table->dropIndex('idx_appointments_company_branch');
 
-            // Drop column
-            $table->dropColumn('branch_id');
+                // Drop column
+                $table->dropColumn('branch_id');
+            }
         });
     }
 };
