@@ -13,6 +13,7 @@
         "laravel-notification-channels/telegram": "^6.0",
         "laravel-notification-channels/twilio": "^4.1",
         "laravel/framework": "^11.31",
+        "laravel/horizon": "^5.38",
         "laravel/telescope": "^5.11",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",

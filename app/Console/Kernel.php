@@ -19,6 +19,16 @@ class Kernel extends ConsoleKernel
 
     public function schedule(Schedule $schedule): void
     {
+        // Horizon snapshot - runs in all environments for queue monitoring
+        $schedule->command('horizon:snapshot')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+
+        // Telescope cleanup - runs in all environments
+        $schedule->command('telescope:prune')
+            ->daily()
+            ->withoutOverlapping();
+
         // Exchange rates update - runs daily at 2am to get fresh USD/EUR/GBP rates from ECB
         $schedule->command('exchange-rates:update')
             ->dailyAt('02:00')

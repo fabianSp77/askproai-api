@@ -59,6 +59,16 @@ class AppServiceProvider extends ServiceProvider
         // CRITICAL DEBUG: Log boot start
         \Log::info('🚀 AppServiceProvider::boot() START - Memory: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB');
 
+        // STAGING GUARD: Prevent production database access
+        if (app()->environment('staging')) {
+            if (config('database.connections.mysql.database') === 'askproai_db') {
+                throw new \RuntimeException(
+                    '🚨 STAGING DARF NICHT GEGEN PRODUCTION DB LAUFEN! ' .
+                    'Check .env: DB_DATABASE muss askproai_staging sein.'
+                );
+            }
+        }
+
         // Phase 4: Enable Database Performance Monitor for N+1 detection
         \App\Services\Monitoring\DatabasePerformanceMonitor::enable();
 
