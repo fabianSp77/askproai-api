@@ -18,16 +18,19 @@ return new class extends Migration
     public function up(): void
     {
         // Add the normalized column
-        
+
         if (!Schema::hasTable('phone_numbers')) {
             return;
         }
 
-        Schema::table('phone_numbers', function (Blueprint $table) {
-            $table->string('number_normalized', 20)->nullable()
-                ->comment('E.164 normalized format for consistent lookups');
-            $table->index('number_normalized', 'idx_phone_numbers_normalized');
-        });
+        // Check if column already exists (idempotency)
+        if (!Schema::hasColumn('phone_numbers', 'number_normalized')) {
+            Schema::table('phone_numbers', function (Blueprint $table) {
+                $table->string('number_normalized', 20)->nullable()
+                    ->comment('E.164 normalized format for consistent lookups');
+                $table->index('number_normalized', 'idx_phone_numbers_normalized');
+            });
+        }
 
         // Migrate existing data to normalized format
         $this->migrateExistingPhoneNumbers();
