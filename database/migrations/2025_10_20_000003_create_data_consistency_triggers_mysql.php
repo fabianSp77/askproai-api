@@ -13,6 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         // Trigger 1: Auto-set direction to 'inbound' if NULL on INSERT
+        DB::unprepared("DROP TRIGGER IF EXISTS before_insert_call_set_direction;");
+
         DB::unprepared("
             CREATE TRIGGER before_insert_call_set_direction
             BEFORE INSERT ON calls
@@ -26,6 +28,8 @@ return new class extends Migration
         ");
 
         // Trigger 2: Auto-sync customer link status when customer_id is set on UPDATE
+        DB::unprepared("DROP TRIGGER IF EXISTS before_update_call_sync_customer_link;");
+
         DB::unprepared("
             CREATE TRIGGER before_update_call_sync_customer_link
             BEFORE UPDATE ON calls
@@ -52,6 +56,8 @@ return new class extends Migration
         ");
 
         // Trigger 3: Validate session outcome consistency on INSERT
+        DB::unprepared("DROP TRIGGER IF EXISTS before_insert_call_validate_outcome;");
+
         DB::unprepared("
             CREATE TRIGGER before_insert_call_validate_outcome
             BEFORE INSERT ON calls
@@ -122,6 +128,8 @@ return new class extends Migration
         ");
 
         // Trigger 4: Validate session outcome consistency on UPDATE
+        DB::unprepared("DROP TRIGGER IF EXISTS before_update_call_validate_outcome;");
+
         DB::unprepared("
             CREATE TRIGGER before_update_call_validate_outcome
             BEFORE UPDATE ON calls
