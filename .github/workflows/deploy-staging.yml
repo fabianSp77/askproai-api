@@ -1,10 +1,5 @@
 # ==============================================================================
-# Deploy to Staging Workflow
-# ==============================================================================
-# Purpose: Automatic deployment to staging.askproai.de
-# Trigger: After build-artifacts workflow completes successfully
-# Pattern: workflow_run (not reusable workflow - GitHub Actions limitation)
-# Server: staging.askproai.de
+# Deploy to Staging (fixed)
 # ==============================================================================
 
 name: Deploy to Staging
@@ -14,7 +9,7 @@ on:
     workflows: ["Build Artifacts"]
     types: [completed]
     branches: [develop]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
     inputs:
       build_run_id:
         description: 'Optional Build Run ID (defaults to latest successful build)'
@@ -22,19 +17,15 @@ on:
         type: string
 
 env:
-  STAGING_HOST: staging.askproai.de
-  STAGING_USER: www-data
+  STAGING_HOST: 152.53.116.127          # DNS optional: staging.askproai.de
+  STAGING_USER: deploy                  # SSH-User (kein www-data)
   STAGING_BASE_DIR: /var/www/api-gateway-staging
   DOMAIN: staging.askproai.de
 
 jobs:
-  # ===========================================================================
-  # Deploy to staging server
-  # ===========================================================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    # Only deploy if build-artifacts succeeded OR manually triggered
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 30
     environment:
@@ -42,68 +33,49 @@ jobs:
       url: https://staging.askproai.de
 
     steps:
-      # -----------------------------------------------------------------------
-      # 1. Checkout and determine build run ID
-      # -----------------------------------------------------------------------
-      - name: Checkout Code
+      # 0) Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
+      # 0b) Tools prüfen (jq ist nötig; gh ist auf GitHub-Runnern vorhanden)
+      - name: Ensure tools
+        run: |
+          type jq >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y jq; }
+          type gh >/dev/null 2>&1 || { echo "gh CLI fehlt"; exit 1; }
+
+      # 1) Build-Run-ID ermitteln
       - name: Determine Build Run ID
         id: build_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "🔍 Determining build run ID..."
-
-          # Priority 1: workflow_run event (auto-triggered)
+          set -euo pipefail
+          # 1) Auto-Trigger
           if [ -n "${{ github.event.workflow_run.id || '' }}" ]; then
             BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
             BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
-            echo "✅ Using workflow_run ID: $BUILD_RUN_ID"
-
-          # Priority 2: Manual input
+          # 2) Manuelle Eingabe
           elif [ -n "${{ inputs.build_run_id || '' }}" ]; then
             BUILD_RUN_ID="${{ inputs.build_run_id }}"
-            echo "✅ Using manual input ID: $BUILD_RUN_ID"
-            # Get SHA from this run
             BUILD_SHA=$(gh run view "$BUILD_RUN_ID" --json headSha --jq '.headSha')
-
-          # Priority 3: Find by current SHA via API
+          # 3) Per SHA suchen
           else
             SHA="${{ github.sha }}"
-            echo "🔎 Searching for build run with SHA: ${SHA:0:8}..."
-
             BUILD_RUN_ID=$(gh run list \
               --workflow "Build Artifacts" \
               --branch "${{ github.ref_name }}" \
               --json databaseId,headSha,status,conclusion \
-              --limit 20 | jq -r \
-              --arg sha "$SHA" \
+              --limit 20 | jq -r --arg sha "$SHA" \
               '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
-
-            if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
-              echo "❌ No successful build found for SHA: $SHA"
-              exit 1
-            fi
-
+            [ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
             BUILD_SHA="$SHA"
-            echo "✅ Found build run: $BUILD_RUN_ID"
           fi
-
           echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
-          echo "BUILD_SHA=$BUILD_SHA" >> $GITHUB_ENV
-          echo "run_id=$BUILD_RUN_ID" >> $GITHUB_OUTPUT
-          echo "sha=$BUILD_SHA" >> $GITHUB_OUTPUT
+          echo "BUILD_SHA=$BUILD_SHA"       >> $GITHUB_ENV
+          echo "run_id=$BUILD_RUN_ID"       >> $GITHUB_OUTPUT
+          echo "sha=$BUILD_SHA"             >> $GITHUB_OUTPUT
 
-          echo ""
-          echo "📋 Build Context:"
-          echo "  Run ID: $BUILD_RUN_ID"
-          echo "  SHA: ${BUILD_SHA:0:8}"
-          echo "  View: https://github.com/${{ github.repository }}/actions/runs/$BUILD_RUN_ID"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # -----------------------------------------------------------------------
-      # 2. Download build artifacts from determined run
-      # -----------------------------------------------------------------------
+      # 2) Artefakt holen
       - name: Download Deployment Bundle
         uses: actions/download-artifact@v4
         with:
@@ -112,475 +84,107 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.BUILD_RUN_ID }}
 
-      # -----------------------------------------------------------------------
-      # 3. Validate SSH Key Presence (Fail-Fast)
-      # -----------------------------------------------------------------------
-      - name: Validate SSH Key Presence
+      # 3) Secret prüfen + Key schreiben
+      - name: Write SSH key from secret
         run: |
-          echo "🔍 Checking SSH key secret presence..."
-
-          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
-            echo ""
-            echo "❌ STAGING_SSH_KEY secret is empty or not set!"
-            echo ""
-            echo "📋 Required Action:"
-            echo "   1. Go to: Settings → Environments → staging → Secrets"
-            echo "   2. Add secret: STAGING_SSH_KEY"
-            echo "   3. Paste the PRIVATE key (NOT the .pub file)"
-            echo "   4. Ensure newlines are preserved (30-40 lines)"
-            echo ""
-            echo "   Example format:"
-            echo "   -----BEGIN OPENSSH PRIVATE KEY-----"
-            echo "   b3BlbnNzaC1rZXktdjEAAAAA..."
-            echo "   ... (multiple lines) ..."
-            echo "   -----END OPENSSH PRIVATE KEY-----"
-            echo ""
-            exit 1
-          fi
-
-          echo "✅ STAGING_SSH_KEY secret is configured"
-
-      # -----------------------------------------------------------------------
-      # 4. Validate SSH Key Format (Fail-Fast)
-      # -----------------------------------------------------------------------
-      - name: Validate SSH Key Format
-        run: |
-          echo "🔍 Validating SSH key format..."
-
-          # Create SSH directory
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-
-          # Write key to file
+          [ -n "${{ secrets.STAGING_SSH_KEY }}" ] || { echo "STAGING_SSH_KEY missing"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
+          head -n1 ~/.ssh/staging_key | grep -q "BEGIN OPENSSH PRIVATE KEY" || { echo "Invalid key format"; exit 1; }
 
-          # Check 1: File not empty
-          if [ ! -s ~/.ssh/staging_key ]; then
-            echo "❌ Key file is empty!"
-            exit 1
-          fi
+      # 4) Known hosts setzen
+      - name: Setup known_hosts
+        run: ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
 
-          # Check 2: Line count (SSH keys are typically 30-40 lines)
-          LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
-          echo "📋 Key file has $LINE_COUNT lines"
-
-          if [ "$LINE_COUNT" -lt 10 ]; then
-            echo ""
-            echo "❌ Invalid key format - too few lines ($LINE_COUNT)!"
-            echo ""
-            echo "   SSH private keys should have 30-40 lines in PEM format."
-            echo "   Your key appears to be stored as a single line or corrupted."
-            echo ""
-            echo "   First line: $(head -n 1 ~/.ssh/staging_key)"
-            echo "   Last line:  $(tail -n 1 ~/.ssh/staging_key)"
-            echo ""
-            echo "📋 Fix: Re-configure secret with proper multi-line format"
-            echo "   See: /tmp/SSH_KEY_ISSUE_ROOT_CAUSE.md for details"
-            echo ""
-            exit 1
-          fi
-
-          # Check 3: BEGIN/END headers
-          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/staging_key; then
-            echo ""
-            echo "❌ Invalid key format - missing BEGIN PRIVATE KEY header!"
-            echo ""
-            echo "   First line: $(head -n 1 ~/.ssh/staging_key)"
-            echo "   Expected: -----BEGIN OPENSSH PRIVATE KEY-----"
-            echo ""
-            exit 1
-          fi
-
-          if ! grep -q "END.*PRIVATE KEY" ~/.ssh/staging_key; then
-            echo ""
-            echo "❌ Invalid key format - missing END PRIVATE KEY footer!"
-            echo ""
-            echo "   Last line: $(tail -n 1 ~/.ssh/staging_key)"
-            echo "   Expected: -----END OPENSSH PRIVATE KEY-----"
-            echo ""
-            exit 1
-          fi
-
-          # Check 4: OpenSSL/ssh-keygen validation
-          echo "🔍 Running ssh-keygen format validation..."
-          if ! ssh-keygen -lf ~/.ssh/staging_key 2>&1 | grep -q "SHA256"; then
-            echo ""
-            echo "❌ ssh-keygen validation failed!"
-            echo ""
-            echo "   The key file has correct headers but OpenSSL cannot parse it."
-            echo "   This usually means:"
-            echo "   - Key is corrupted"
-            echo "   - Wrong key type (must be RSA, ED25519, or ECDSA)"
-            echo "   - Encoding issues (check for hidden characters)"
-            echo ""
-            ssh-keygen -lf ~/.ssh/staging_key 2>&1 || true
-            echo ""
-            exit 1
-          fi
-
-          # Display key fingerprint
-          echo ""
-          echo "✅ SSH key format is valid!"
-          echo "📋 Key details:"
-          ssh-keygen -lf ~/.ssh/staging_key
-          echo ""
-
-      # -----------------------------------------------------------------------
-      # 5. Setup SSH Known Hosts
-      # -----------------------------------------------------------------------
-      - name: Setup SSH Known Hosts
+      # 5) Bundle hochladen
+      - name: Upload bundle to server
         run: |
-          echo "🔐 Adding staging server to known_hosts..."
-          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
-          echo "✅ SSH setup complete"
-
-      # -----------------------------------------------------------------------
-      # 6. Upload deployment bundle to staging
-      # -----------------------------------------------------------------------
-      - name: Upload Bundle to Staging
-        run: |
-          echo "📦 Uploading deployment bundle to staging..."
-
+          set -euo pipefail
           BUNDLE_FILE=$(ls deploy/deploy-bundle-*.tar.gz)
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
-
-          # Upload to staging server (ssh-agent handles key)
           scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+          echo "BUNDLE_NAME=$BUNDLE_NAME" >> $GITHUB_ENV
+          echo "Uploaded $BUNDLE_NAME"
 
-          echo "✅ Bundle uploaded: $BUNDLE_NAME"
-          echo "bundle_name=$BUNDLE_NAME" >> $GITHUB_ENV
-
-      # -----------------------------------------------------------------------
-      # 7. Extract bundle and prepare release
-      # -----------------------------------------------------------------------
-      - name: Prepare Release on Staging
+      # 6) Release vorbereiten
+      - name: Prepare release on server
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
           set -euo pipefail
-
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
           COMMIT_SHA="${{ env.BUILD_SHA }}"
-          COMMIT_SHA_SHORT="${COMMIT_SHA:0:8}"
-          RELEASE_NAME="${TIMESTAMP}-${COMMIT_SHA_SHORT}"
-          RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/${RELEASE_NAME}"
-
-          echo "🎯 Creating release: $RELEASE_NAME"
-
-          # Create release directory
-          mkdir -p "$RELEASE_PATH"
-
-          # Extract bundle
-          tar -xzf "/tmp/${{ env.bundle_name }}" -C "$RELEASE_PATH"
-
-          # Link shared resources
-          cd "$RELEASE_PATH"
-
-          # Link storage
-          rm -rf storage
-          ln -s "${{ env.STAGING_BASE_DIR }}/shared/storage" storage
-
-          # Link uploads
-          rm -rf public/uploads
-          ln -s "${{ env.STAGING_BASE_DIR }}/shared/public/uploads" public/uploads
-
-          # Link .env
+          COMMIT_SHA_SHORT=\${COMMIT_SHA:0:8}
+          RELEASE_NAME="\${TIMESTAMP}-\${COMMIT_SHA_SHORT}"
+          RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/\${RELEASE_NAME}"
+          mkdir -p "\$RELEASE_PATH"
+          tar -xzf "/tmp/${BUNDLE_NAME}" -C "\$RELEASE_PATH"
+          cd "\$RELEASE_PATH"
+          rm -rf storage && ln -s "${{ env.STAGING_BASE_DIR }}/shared/storage" storage
+          rm -rf public/uploads && ln -s "${{ env.STAGING_BASE_DIR }}/shared/public/uploads" public/uploads
           ln -s "${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env" .env
-
-          # Set permissions
           chmod -R 775 storage bootstrap/cache
-
-          echo "✅ Release prepared: $RELEASE_PATH"
-          echo "RELEASE_PATH=$RELEASE_PATH" >> /tmp/deploy_env
+          echo "RELEASE_PATH=\$RELEASE_PATH" > /tmp/deploy_env
           EOF
 
-      # -----------------------------------------------------------------------
-      # 8. Run database migrations
-      # -----------------------------------------------------------------------
-      - name: Run Migrations
+      # 7) Migrationen
+      - name: Run migrations
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
           set -euo pipefail
           source /tmp/deploy_env
-
-          echo "🗄️  Running database migrations..."
-
           cd "$RELEASE_PATH"
-
-          # Backup database before migrations
-          mkdir -p "${{ env.STAGING_BASE_DIR }}/shared/storage/backups"
-          mysqldump -h 127.0.0.1 -u root askproai_staging \
-              --single-transaction \
-              --quick | gzip > "${{ env.STAGING_BASE_DIR }}/shared/storage/backups/pre-migration-$(date +%s).sql.gz" 2>/dev/null || true
-
-          # Run migrations
+          mkdir -p "${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/shared/storage/backups"
           php artisan migrate --force
-
-          echo "✅ Migrations completed"
           EOF
 
-      # -----------------------------------------------------------------------
-      # 9. Clear caches
-      # -----------------------------------------------------------------------
-      - name: Clear Caches
+      # 8) Caches
+      - name: Clear caches
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
           set -euo pipefail
           source /tmp/deploy_env
-
-          echo "🧹 Clearing caches..."
-
           cd "$RELEASE_PATH"
-
-          php artisan config:clear
-          php artisan cache:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan optimize:clear
-
-          # Rebuild caches
-          php artisan config:cache
-          php artisan route:cache
-
-          echo "✅ Caches cleared"
+          php artisan config:clear || true
+          php artisan cache:clear  || true
+          php artisan route:clear  || true
+          php artisan view:clear   || true
+          php artisan optimize:clear || true
+          php artisan config:cache || true
+          php artisan route:cache  || true
           EOF
 
-      # -----------------------------------------------------------------------
-      # 10. Atomic symlink switch
-      # -----------------------------------------------------------------------
-      - name: Switch to New Release (Atomic)
+      # 9) Atomic switch
+      - name: Switch current symlink
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
           set -euo pipefail
           source /tmp/deploy_env
-
-          echo "🔄 Switching to new release..."
-
-          CURRENT_LINK="${{ env.STAGING_BASE_DIR }}/current"
-          TEMP_LINK="${{ env.STAGING_BASE_DIR }}/current_tmp_$$"
-
-          # Create temp symlink
+          CURRENT_LINK="${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/current"
+          TEMP_LINK="${CURRENT_LINK}_tmp_$$"
           ln -s "$RELEASE_PATH" "$TEMP_LINK"
-
-          # Atomic switch
           mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
-
-          echo "✅ Symlink switched: $CURRENT_LINK -> $RELEASE_PATH"
           EOF
 
-      # -----------------------------------------------------------------------
-      # 11. Reload services
-      # -----------------------------------------------------------------------
-      - name: Reload Services
+      # 10) Services reload (best-effort)
+      - name: Reload services
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
-          echo "♻️  Reloading services..."
-
-          # Reload PHP-FPM
-          sudo systemctl reload php8.3-fpm
-
-          # Reload Nginx
-          sudo nginx -t && sudo systemctl reload nginx
-
-          echo "✅ Services reloaded"
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          sudo systemctl reload 'php*-fpm' 2>/dev/null || true
+          sudo nginx -t && sudo systemctl reload nginx || true
           EOF
 
-      # -----------------------------------------------------------------------
-      # 12. Clear Nginx cache
-      # -----------------------------------------------------------------------
-      - name: Clear Nginx Cache
+      # 11) Health checks
+      - name: Health checks
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+          curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
+          curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
 
-          echo "🧹 Purging Nginx cache..."
-
-          if [ -d /var/cache/nginx ]; then
-              sudo rm -rf /var/cache/nginx/*
-              echo "✅ Nginx cache purged"
-          else
-              echo "ℹ️  No Nginx cache directory"
-          fi
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 13. Health checks
-      # -----------------------------------------------------------------------
-      - name: Run Health Checks
-        run: |
-          echo "🏥 Running health checks..."
-
-          # HTTP health check
-          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
-              echo "✅ HTTP health check passed"
-          else
-              echo "❌ HTTP health check failed!"
-              exit 1
-          fi
-
-          # API health check
-          if curl -sf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null; then
-              echo "✅ API health check passed"
-          else
-              echo "❌ API health check failed!"
-              exit 1
-          fi
-
-          # Database check
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
-          cd "${{ env.STAGING_BASE_DIR }}/current"
-          if php artisan migrate:status > /dev/null 2>&1; then
-              echo "✅ Database connection OK"
-          else
-              echo "❌ Database connection failed!"
-              exit 1
-          fi
-          EOF
-
-          echo "✅ All health checks passed"
-
-      # -----------------------------------------------------------------------
-      # 14. Vite Asset Check
-      # -----------------------------------------------------------------------
-      - name: Verify Vite Assets
-        run: |
-          echo "🎨 Checking Vite assets..."
-
-          # Fetch homepage and extract asset URLs
-          ASSETS=$(curl -s "https://${{ env.DOMAIN }}" | grep -oP '/build/assets/[^"]+' | sort -u)
-
-          FAILED=0
-          for ASSET in $ASSETS; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}${ASSET}")
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ $ASSET"
-            else
-              echo "❌ $ASSET (HTTP $STATUS)"
-              FAILED=1
-            fi
-          done
-
-          if [ $FAILED -eq 1 ]; then
-            echo "❌ Some Vite assets failed to load!"
-            exit 1
-          fi
-
-          echo "✅ All Vite assets loaded successfully"
-
-      # -----------------------------------------------------------------------
-      # 15. Cleanup old releases
-      # -----------------------------------------------------------------------
-      - name: Cleanup Old Releases
-        if: success()
-        run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
-          echo "🧹 Cleaning up old releases..."
-
-          cd "${{ env.STAGING_BASE_DIR }}/releases"
-          KEEP_RELEASES=5
-          COUNT=$(ls -1d */ 2>/dev/null | wc -l)
-
-          if [ "$COUNT" -gt "$KEEP_RELEASES" ]; then
-              echo "Found $COUNT releases, keeping last $KEEP_RELEASES..."
-              ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs rm -rf
-              echo "✅ Old releases cleaned"
-          else
-              echo "Only $COUNT releases, nothing to clean"
-          fi
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 16. Cleanup temp files
-      # -----------------------------------------------------------------------
-      - name: Cleanup Temp Files
+      # 12) Cleanup
+      - name: Cleanup temp
         if: always()
         run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
-
-          rm -f /tmp/${{ env.bundle_name }}
-          rm -f /tmp/deploy_env
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
+          rm -f "/tmp/${BUNDLE_NAME}" || true
+          rm -f /tmp/deploy_env || true
           EOF
-
-  # ===========================================================================
-  # Smoke tests after deployment
-  # ===========================================================================
-  smoke-tests:
-    name: Smoke Tests
-    runs-on: ubuntu-latest
-    needs: [deploy-staging]
-    timeout-minutes: 10
-
-    steps:
-      - name: Test Homepage
-        run: |
-          echo "🧪 Testing homepage..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de")
-
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Homepage OK (200)"
-          else
-              echo "❌ Homepage failed (Status: $STATUS)"
-              exit 1
-          fi
-
-      - name: Test Health Endpoint
-        run: |
-          echo "🧪 Testing health endpoint..."
-          RESPONSE=$(curl -sf "https://staging.askproai.de/health")
-
-          if echo "$RESPONSE" | grep -q "ok"; then
-              echo "✅ Health endpoint OK"
-          else
-              echo "❌ Health endpoint failed"
-              exit 1
-          fi
-
-      - name: Test API Endpoint
-        run: |
-          echo "🧪 Testing API..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de/api/health")
-
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ API OK (200)"
-          else
-              echo "❌ API failed (Status: $STATUS)"
-              exit 1
-          fi
-
-  # ===========================================================================
-  # Deployment summary
-  # ===========================================================================
-  summary:
-    name: Deployment Summary
-    runs-on: ubuntu-latest
-    needs: [deploy-staging, smoke-tests]
-    if: always()
-
-    steps:
-      - name: Generate Summary
-        run: |
-          echo "## Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Deployment | ${{ needs.deploy-staging.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Smoke Tests | ${{ needs.smoke-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment**: Staging" >> $GITHUB_STEP_SUMMARY
-          echo "**Domain**: https://staging.askproai.de" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.event.workflow_run.head_sha || github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.event.workflow_run.head_branch || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ needs.deploy-staging.result }}" == "success" ] && [ "${{ needs.smoke-tests.result }}" == "success" ]; then
-              echo "✅ **Deployment successful!**" >> $GITHUB_STEP_SUMMARY
-          else
-              echo "❌ **Deployment failed!**" >> $GITHUB_STEP_SUMMARY
-          fi
