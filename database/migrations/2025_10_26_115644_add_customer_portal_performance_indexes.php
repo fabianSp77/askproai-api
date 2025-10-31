@@ -109,13 +109,25 @@ return new class extends Migration
         // ================================================================
 
         Schema::table('retell_transcript_segments', function (Blueprint $table) {
-            // Transcript loading by call session, ordered by sequence
-            // Query: WHERE call_session_id = ? ORDER BY segment_sequence
-            $table->index(['call_session_id', 'segment_sequence'], 'idx_transcript_segments_session_seq');
+            // Check and create session_seq index
+            $sessionSeqIndex = DB::select("
+                SHOW INDEX FROM retell_transcript_segments WHERE Key_name = 'idx_transcript_segments_session_seq'
+            ");
+            if (empty($sessionSeqIndex)) {
+                // Transcript loading by call session, ordered by sequence
+                // Query: WHERE call_session_id = ? ORDER BY segment_sequence
+                $table->index(['call_session_id', 'segment_sequence'], 'idx_transcript_segments_session_seq');
+            }
 
-            // Timeline view with timestamps
-            // Query: WHERE call_session_id = ? ORDER BY occurred_at
-            $table->index(['call_session_id', 'occurred_at'], 'idx_transcript_segments_session_time');
+            // Check and create session_time index
+            $sessionTimeIndex = DB::select("
+                SHOW INDEX FROM retell_transcript_segments WHERE Key_name = 'idx_transcript_segments_session_time'
+            ");
+            if (empty($sessionTimeIndex)) {
+                // Timeline view with timestamps
+                // Query: WHERE call_session_id = ? ORDER BY occurred_at
+                $table->index(['call_session_id', 'occurred_at'], 'idx_transcript_segments_session_time');
+            }
         });
 
         // ================================================================
@@ -123,9 +135,15 @@ return new class extends Migration
         // ================================================================
 
         Schema::table('retell_function_traces', function (Blueprint $table) {
-            // Function traces by call session
-            // Query: WHERE call_session_id = ? ORDER BY started_at
-            $table->index(['call_session_id', 'started_at'], 'idx_function_traces_session_time');
+            // Check and create function traces index
+            $functionTracesIndex = DB::select("
+                SHOW INDEX FROM retell_function_traces WHERE Key_name = 'idx_function_traces_session_time'
+            ");
+            if (empty($functionTracesIndex)) {
+                // Function traces by call session
+                // Query: WHERE call_session_id = ? ORDER BY started_at
+                $table->index(['call_session_id', 'started_at'], 'idx_function_traces_session_time');
+            }
         });
     }
 
@@ -138,15 +156,31 @@ return new class extends Migration
         // Drop indexes in reverse order
         // ================================================================
 
-        // retell_function_traces
+        // retell_function_traces (check if exists before dropping)
         Schema::table('retell_function_traces', function (Blueprint $table) {
-            $table->dropIndex('idx_function_traces_session_time');
+            $functionTracesIndex = DB::select("
+                SHOW INDEX FROM retell_function_traces WHERE Key_name = 'idx_function_traces_session_time'
+            ");
+            if (!empty($functionTracesIndex)) {
+                $table->dropIndex('idx_function_traces_session_time');
+            }
         });
 
-        // retell_transcript_segments
+        // retell_transcript_segments (check if exists before dropping)
         Schema::table('retell_transcript_segments', function (Blueprint $table) {
-            $table->dropIndex('idx_transcript_segments_session_seq');
-            $table->dropIndex('idx_transcript_segments_session_time');
+            $sessionSeqIndex = DB::select("
+                SHOW INDEX FROM retell_transcript_segments WHERE Key_name = 'idx_transcript_segments_session_seq'
+            ");
+            if (!empty($sessionSeqIndex)) {
+                $table->dropIndex('idx_transcript_segments_session_seq');
+            }
+
+            $sessionTimeIndex = DB::select("
+                SHOW INDEX FROM retell_transcript_segments WHERE Key_name = 'idx_transcript_segments_session_time'
+            ");
+            if (!empty($sessionTimeIndex)) {
+                $table->dropIndex('idx_transcript_segments_session_time');
+            }
         });
 
         // appointments (check if exists before dropping)
