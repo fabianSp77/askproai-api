@@ -23,9 +23,114 @@ env:
   DOMAIN: staging.askproai.de
 
 jobs:
+  # ==========================================================================
+  # SSH Secret Validation (Fail-Fast)
+  # ==========================================================================
+  validate-ssh-secret:
+    name: Validate SSH Secret
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate STAGING_SSH_KEY Format
+        run: |
+          echo "🔍 Validating STAGING_SSH_KEY format..."
+
+          # Check if secret exists
+          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo "❌ STAGING_SSH_KEY secret is empty or not set"
+            echo "Please configure STAGING_SSH_KEY in GitHub repository secrets"
+            exit 1
+          fi
+
+          # Write secret to temp file
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+          # Check for BEGIN marker
+          if ! head -n1 ~/.ssh/staging_key | grep -q "BEGIN"; then
+            echo "❌ Secret does not start with BEGIN marker"
+            echo "Expected: -----BEGIN OPENSSH PRIVATE KEY-----"
+            echo "Got: $(head -n1 ~/.ssh/staging_key | head -c 50)..."
+            exit 1
+          fi
+
+          # Count lines
+          LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
+          echo "📊 Key has $LINE_COUNT lines"
+
+          if [ "$LINE_COUNT" -lt 10 ]; then
+            echo "❌ Key seems too short (< 10 lines)"
+            echo "Please ensure STAGING_SSH_KEY is a complete multi-line OpenSSH private key"
+            exit 1
+          fi
+
+          # Extract fingerprint
+          if ! FINGERPRINT=$(ssh-keygen -lf ~/.ssh/staging_key 2>&1); then
+            echo "❌ Invalid SSH key format"
+            echo "Error: $FINGERPRINT"
+            exit 1
+          fi
+
+          echo "✅ SSH secret validation passed"
+          echo "📋 Fingerprint: $FINGERPRINT"
+
+  # ==========================================================================
+  # SSH Reachability Check
+  # ==========================================================================
+  dry-run-ssh:
+    name: SSH Reachability Test
+    runs-on: ubuntu-latest
+    needs: [validate-ssh-secret]
+    timeout-minutes: 5
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+      - name: Test SSH Connection
+        run: |
+          echo "🔌 Testing SSH connection to ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}..."
+
+          # Add host to known_hosts
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Try SSH connection
+          if ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} "echo 'SSH connection successful!'" 2>&1; then
+            echo "✅ SSH connection works!"
+            echo "🎯 Ready for deployment"
+          else
+            echo "❌ SSH connection failed"
+            echo ""
+            echo "Possible causes:"
+            echo "  1. User 'deploy' does not exist on server"
+            echo "  2. Public key not in /home/deploy/.ssh/authorized_keys"
+            echo "  3. Incorrect permissions on .ssh directory or authorized_keys"
+            echo "  4. SSH daemon configuration blocking pubkey authentication"
+            echo ""
+            echo "To fix, run these commands on the staging server as root:"
+            echo "  id -u deploy >/dev/null 2>&1 || adduser --disabled-password --gecos '' deploy"
+            echo "  install -d -m 700 -o deploy -g deploy /home/deploy/.ssh"
+            echo "  echo 'YOUR_PUBLIC_KEY' >> /home/deploy/.ssh/authorized_keys"
+            echo "  chown deploy:deploy /home/deploy/.ssh/authorized_keys"
+            echo "  chmod 600 /home/deploy/.ssh/authorized_keys"
+            exit 1
+          fi
+
+  # ==========================================================================
+  # Deploy to Staging
+  # ==========================================================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
+    needs: [dry-run-ssh]
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 30
     environment:
