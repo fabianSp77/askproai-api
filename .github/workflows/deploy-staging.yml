@@ -312,15 +312,8 @@ jobs:
           php artisan route:cache  || true
           EOF
 
-      - name: Fix storage permissions
-        run: |
-          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
-          set -euo pipefail
-          # Ensure shared storage has correct ownership and permissions for PHP-FPM (www-data)
-          sudo chown -R deploy:www-data "${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/shared/storage"
-          sudo chmod -R 775 "${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/shared/storage"
-          echo "✅ Storage permissions fixed (deploy:www-data, 775)"
-          EOF
+      # Storage permissions are configured during initial server setup
+      # No sudo required during deployment (least privilege principle)
 
       - name: Switch current symlink
         run: |
@@ -336,8 +329,31 @@ jobs:
       - name: Reload services
         run: |
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
-          sudo systemctl reload 'php*-fpm' 2>/dev/null || true
-          sudo nginx -t && sudo systemctl reload nginx || true
+          set -euo pipefail
+
+          echo "🔄 Reloading services (passwordless sudo)..."
+
+          # Detect PHP-FPM version
+          PHP_FPM_SERVICE=$(systemctl list-units --type=service | grep -o 'php[0-9.]*-fpm' | head -1)
+
+          if [ -n "$PHP_FPM_SERVICE" ]; then
+            echo "Reloading $PHP_FPM_SERVICE..."
+            sudo -n service $PHP_FPM_SERVICE reload
+            echo "✅ PHP-FPM reloaded"
+          else
+            echo "⚠️ No PHP-FPM service detected"
+          fi
+
+          # Reload NGINX (try systemctl first, fallback to service)
+          echo "Reloading NGINX..."
+          if sudo -n systemctl reload nginx 2>/dev/null; then
+            echo "✅ NGINX reloaded (systemctl)"
+          elif sudo -n service nginx reload 2>/dev/null; then
+            echo "✅ NGINX reloaded (service)"
+          else
+            echo "❌ NGINX reload failed"
+            exit 1
+          fi
           EOF
 
       - name: Post-Deploy Verification

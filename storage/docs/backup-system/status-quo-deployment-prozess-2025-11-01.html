@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Quo: Deployment-Prozess - 2025-11-01</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #1e40af;
+            margin-top: 40px;
+            border-left: 4px solid #2563eb;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #3b82f6;
+            margin-top: 25px;
+        }
+        .executive-summary {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status-green {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        .status-yellow {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        .status-red {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .status-blue {
+            color: #2563eb;
+            font-weight: bold;
+        }
+        .check-item {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .check-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+        .check-failed {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+        }
+        .check-pending {
+            background: #dbeafe;
+            border-left: 4px solid #2563eb;
+        }
+        .metadata {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .timestamp {
+            color: #64748b;
+            font-size: 14px;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+        .summary-box {
+            background: #dbeafe;
+            border: 2px solid #2563eb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .diagram {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .diagram pre {
+            background: transparent;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .section-separator {
+            margin: 60px 0;
+            border: none;
+            border-top: 2px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Status Quo: Deployment-Prozess</h1>
+        <p class="timestamp">Detaillierte Bestandsaufnahme - 2025-11-01 23:15 UTC</p>
+        <p class="timestamp">Zweck: Vollständige Gegenüberstellung IST vs. SOLL vs. Dokumentation</p>
+
+        <div class="executive-summary">
+            <h2 style="margin-top: 0;">Executive Summary</h2>
+            <p style="font-size: 18px;"><span class="status-yellow">🟡 TEILWEISE FUNKTIONAL</span></p>
+            <ul style="list-style: none; padding-left: 0;">
+                <li><span class="status-green">✅ Gates funktionieren</span> (auf Staging validiert, auf Prod verifiziert)</li>
+                <li><span class="status-yellow">⚠️ Staging-Deployment blockiert</span> (sudo-Permissions)</li>
+                <li><span class="status-green">✅ Production Pre-Flight erfolgreich</span> (Dry-Run ohne Änderungen)</li>
+                <li><span class="status-blue">⏳ Production-Deployment bereit</span> (wartet auf User-Freigabe)</li>
+            </ul>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>1. BUILD-PROZESS (CI/CD - GitHub Actions)</h2>
+
+        <h3>1.1 Build Artifacts Workflow</h3>
+        <div class="check-item">
+            <p><strong>Datei:</strong> <code>.github/workflows/build-artifacts.yml</code></p>
+            <p><strong>Status:</strong> <span class="status-green">✅ FUNKTIONIERT</span></p>
+            <p><strong>Letzte Änderung:</strong> Commit 4144baac (2025-11-01)</p>
+        </div>
+
+        <h4>Jobs:</h4>
+        <ol>
+            <li><code>build-frontend</code> - ✅ Vite build (npm run build)</li>
+            <li><code>build-backend</code> - ✅ Composer install (--no-dev --optimize-autoloader)</li>
+            <li><code>static-analysis</code> - ✅ PHPStan (level 5)</li>
+            <li><code>run-tests</code> - ✅ Pest tests mit MariaDB</li>
+            <li><code>create-deployment-bundle</code> - ✅ <strong>NEU: Mit Pre-Bundle Gates</strong></li>
+        </ol>
+
+        <h4>Neue Pre-Bundle Gates (Layer 1):</h4>
+        <pre>- name: Verify Release Structure (Pre-Bundle Gate)
+  run: |
+    # 9 kritische Checks:
+    test -f release/artisan
+    test -f release/composer.json
+    test -f release/public/index.php      # CRITICAL
+    test -f release/public/build/manifest.json
+    test -f release/vendor/autoload.php   # CRITICAL
+    test -d release/bootstrap
+    test -d release/config
+    test -d release/routes
+    test -d release/app</pre>
+
+        <div class="check-item">
+            <h4 style="margin-top: 0;">✅ Validierung erfolgreich</h4>
+            <ul>
+                <li><strong>Build-Run:</strong> 19003049369 (commit 4144baac)</li>
+                <li><strong>Status:</strong> ALLE GATES BESTANDEN</li>
+                <li><strong>Bundle:</strong> <code>deployment-bundle-4144baac...tar.gz</code> (21 MB)</li>
+                <li><strong>SHA256:</strong> <code>0a95b3ab59a479bfccdc24a560ef115b1ef30bced8e7474ce3893ea6397c37fd</code></li>
+                <li><strong>Artifact:</strong> Hochgeladen (Retention: 30 Tage)</li>
+            </ul>
+            <p><strong>Dokumentiert in:</strong> <a href="PROD_FIX_BUNDLE_GATES.md">PROD_FIX_BUNDLE_GATES.md</a> (Zeilen 56-91)</p>
+        </div>
+
+        <h3>1.2 PR vs. Push Verhalten</h3>
+        <table>
+            <tr>
+                <th>Modus</th>
+                <th>Verhalten</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td><strong>PR-Modus</strong> (pull_request auf main)</td>
+                <td>Dummy checks, keine echten Builds, keine Artifacts</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td><strong>Push-Modus</strong> (develop/main)</td>
+                <td>Volle Builds, alle Gates, Artifacts werden erstellt</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+        </table>
+
+        <hr class="section-separator">
+
+        <h2>2. STAGING-DEPLOYMENT</h2>
+
+        <h3>2.1 Deploy Staging Workflow</h3>
+        <div class="check-warning">
+            <p><strong>Datei:</strong> <code>.github/workflows/deploy-staging.yml</code></p>
+            <p><strong>Status:</strong> <span class="status-yellow">⚠️ TEILWEISE FUNKTIONAL</span> (Gates OK, aber sudo-Problem)</p>
+            <p><strong>Letzte Änderung:</strong> Commit 4144baac (2025-11-01)</p>
+        </div>
+
+        <h4>Jobs:</h4>
+        <ol>
+            <li><code>check-health</code> - ✅ Staging health check vor Deployment</li>
+            <li><code>backup-staging</code> - ✅ Pre-deploy backup (App + DB)</li>
+            <li><code>deploy-staging</code> - ⚠️ <strong>BLOCKIERT</strong> bei "Fix storage permissions"</li>
+            <li><code>smoke-tests</code> - ⏳ Abhängig von deploy-staging</li>
+            <li><code>auto-rollback</code> - ✅ Bei Failure</li>
+        </ol>
+
+        <h4>Deployment-Flow:</h4>
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Schritt</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>Check Health</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Backup</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Download Bundle</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Verify Checksum</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Upload to Server</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Extract Bundle</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td><strong>PRE-SWITCH GATE</strong></td>
+                <td><span class="status-green">✅ ALLE 9 CHECKS BESTANDEN</span> (Run 19003120779)</td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>Run Migrations</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>Clear Caches</td>
+                <td><span class="status-green">✅ FUNKTIONIERT</span></td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>Fix Permissions</td>
+                <td><span class="status-red">❌ FEHLER: sudo verlangt Passwort</span></td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td>Switch Symlink</td>
+                <td><span class="status-blue">⏳ Nicht erreicht</span></td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td>Reload Services</td>
+                <td><span class="status-blue">⏳ Nicht erreicht</span></td>
+            </tr>
+        </table>
+
+        <h4>Pre-Switch Gate Ergebnis (Run 19003120779):</h4>
+        <div class="check-item">
+            <pre>🔎 Verifying release structure before migrations...
+
+✅ All pre-switch gates PASSED
+
+Release structure verified:
+-rw-r--r--  1 deploy deploy 1,2K  1. Nov 22:44 index.php
+-rw-r--r--  1 deploy deploy  748  1. Nov 22:44 autoload.php
+
+✅ Release is safe for deployment</pre>
+            <p><strong>Release erstellt:</strong> <code>/var/www/api-gateway-staging/releases/20251101_225026-4144baac</code></p>
+            <p><strong>Struktur:</strong> Vollständig verifiziert</p>
+            <p><strong>Gates:</strong> Haben funktioniert</p>
+            <p><strong>ABER:</strong> Deployment nicht abgeschlossen</p>
+        </div>
+
+        <div class="check-failed">
+            <h4 style="margin-top: 0;">❌ Problem</h4>
+            <pre>sudo: Ein Passwort ist notwendig
+Process completed with exit code 1</pre>
+            <p><strong>Betroffener Befehl:</strong></p>
+            <pre>sudo chown -R deploy:www-data "${STAGING_BASE_DIR}/shared/storage"
+sudo chmod -R 775 "${STAGING_BASE_DIR}/shared/storage"</pre>
+            <p><strong>Ursache:</strong> User <code>deploy</code> hat KEIN passwordless sudo</p>
+        </div>
+
+        <h3>2.2 Was FUNKTIONIERT:</h3>
+        <ul>
+            <li>✅ <strong>Pre-Switch Gates (Layer 2)</strong> - VALIDIERT</li>
+            <li>✅ Bundle-Download & Verifikation</li>
+            <li>✅ SHA256-Checksum</li>
+            <li>✅ Bundle-Extraktion</li>
+            <li>✅ Migrations</li>
+            <li>✅ Cache-Clearing</li>
+        </ul>
+
+        <h3>2.3 Was NICHT FUNKTIONIERT:</h3>
+        <ul>
+            <li>❌ sudo chown/chmod ohne Passwort</li>
+            <li>❌ Symlink-Switch (wird nie erreicht)</li>
+            <li>❌ Service-Reloads (werden nie erreicht)</li>
+            <li>❌ Smoke Tests (Deployment schlägt vorher fehl)</li>
+        </ul>
+
+        <h3>2.4 Fix benötigt:</h3>
+        <div class="check-pending">
+            <h4 style="margin-top: 0;">Lösung: Passwordless sudo für deploy-User (minimal, least-privilege)</h4>
+            <pre># /etc/sudoers.d/deploy-staging
+deploy ALL=(root) NOPASSWD:/usr/bin/chown
+deploy ALL=(root) NOPASSWD:/usr/bin/chmod
+deploy ALL=(root) NOPASSWD:/usr/sbin/service php8.3-fpm reload
+deploy ALL=(root) NOPASSWD:/bin/systemctl reload nginx</pre>
+            <p><strong>Status:</strong> <span class="status-blue">⏳ AUFTRAG 2</span> (noch nicht durchgeführt)</p>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>3. PRODUCTION-DEPLOYMENT</h2>
+
+        <h3>3.1 Deploy Production Workflow</h3>
+        <div class="check-item">
+            <p><strong>Datei:</strong> <code>.github/workflows/deploy-production.yml</code></p>
+            <p><strong>Status:</strong> <span class="status-green">✅ PRE-FLIGHT ERFOLGREICH</span> (Dry-Run validiert)</p>
+            <p><strong>Letzte Änderung:</strong> Commit 4144baac (2025-11-01)</p>
+        </div>
+
+        <h4>Jobs:</h4>
+        <ol>
+            <li><code>check-staging</code> - ✅ Staging health check vor Prod-Deploy</li>
+            <li><code>pre-deploy-backup</code> - ✅ Pre-deploy backup (App + DB)</li>
+            <li><code>deploy-production</code> - ✅ <strong>PRE-SWITCH GATES IMPLEMENTIERT</strong></li>
+            <li><code>smoke-tests</code> - ✅ Health + Vite manifest checks</li>
+            <li><code>auto-rollback</code> - ✅ Bei Failure</li>
+        </ol>
+
+        <h4>Pre-Switch Gates (Layer 3):</h4>
+        <pre>- name: Deploy to Server
+  run: |
+    # Nach Bundle-Extraktion, VOR Symlink-Switch:
+
+    echo "🔎 PRE-SWITCH GATE: Verifying release structure..."
+
+    # 9 kritische Checks (identisch zu Staging):
+    test -f public/index.php || { echo "❌ FAILED"; exit 1; }
+    test -f vendor/autoload.php || { echo "❌ FAILED"; exit 1; }
+    php -r "require 'vendor/autoload.php'; echo 'autoload-ok';"
+    php artisan --version
+
+    echo "✅ All PRE-SWITCH GATES PASSED"
+
+    # NUR wenn alle Gates pass:
+    ln -sfn ${RELEASE_DIR} /var/www/api-gateway/current
+    sudo systemctl reload php8.3-fpm</pre>
+
+        <h3>3.2 Production Pre-Flight (Dry-Run)</h3>
+        <div class="check-item">
+            <h4 style="margin-top: 0;">✅ ALLE 3 GATES BESTANDEN</h4>
+            <p><strong>Durchgeführt:</strong> 2025-11-01 23:07-23:10 UTC</p>
+            <p><strong>Typ:</strong> Manual validation (KEIN Symlink-Switch)</p>
+
+            <table>
+                <tr>
+                    <th>Check</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+                <tr>
+                    <td>1. public/index.php</td>
+                    <td><span class="status-green">✅ PASSED</span></td>
+                    <td>1.2 KB, Laravel Entry Point</td>
+                </tr>
+                <tr>
+                    <td>2. vendor/autoload.php</td>
+                    <td><span class="status-green">✅ PASSED</span></td>
+                    <td>748 bytes, loadable</td>
+                </tr>
+                <tr>
+                    <td>3. php artisan config:cache</td>
+                    <td><span class="status-green">✅ PASSED</span></td>
+                    <td>Laravel 11.46.0</td>
+                </tr>
+            </table>
+
+            <p><strong>Bundle SHA256:</strong> <code>0a95b3ab59a479bfccdc24a560ef115b1ef30bced8e7474ce3893ea6397c37fd</code></p>
+            <p><strong>Bundle-Größe:</strong> 21 MB</p>
+            <p><strong>Release-Pfad:</strong> <code>/var/www/api-gateway/releases/PREFLIGHT_20251101_230749</code> (aufgeräumt)</p>
+            <p><strong>Production Impact:</strong> 🟢 <strong>ZERO</strong> (nur Verifikation, keine Änderungen)</p>
+        </div>
+
+        <div class="metadata">
+            <h4>Dokumentiert in:</h4>
+            <ul>
+                <li><a href="deployment-preflight-prod-2025-11-01.html">deployment-preflight-prod-2025-11-01.html</a></li>
+                <li><a href="../../../backups/deployment_ledger_preflight_20251101_231000.json">deployment_ledger_preflight_20251101_231000.json</a></li>
+            </ul>
+        </div>
+
+        <h3>3.3 Production-Deployment-Bereitschaft</h3>
+        <div class="check-pending">
+            <h4 style="margin-top: 0;">Status: <span class="status-green">✅ READY</span> (nach sudo-Fix auf Staging)</h4>
+
+            <p><strong>Voraussetzungen:</strong></p>
+            <ul>
+                <li>⏳ Staging sudo-Fix</li>
+                <li>⏳ Staging vollständiges Deployment</li>
+                <li>⏳ Staging Smoke Tests (5/5)</li>
+                <li>⏳ User-Freigabe: <code>"PROD-DEPLOY FREIGEGEBEN"</code></li>
+            </ul>
+
+            <p><strong>Wenn freigegeben:</strong></p>
+            <ul>
+                <li>Bundle: <code>deployment-bundle-4144baac...tar.gz</code> (bereits validiert)</li>
+                <li>Pre-Switch Gates: Layer 3 aktiv</li>
+                <li>Auto-Rollback: Bei Failure</li>
+                <li>Zero-Downtime: Atomic symlink switch</li>
+            </ul>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>4. GATE-SYSTEM (4-Schicht-Verteidigung)</h2>
+
+        <table>
+            <tr>
+                <th>Layer</th>
+                <th>Location</th>
+                <th>Checks</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td><strong>Layer 1</strong><br>Build Gates</td>
+                <td><code>build-artifacts.yml</code><br>"Verify Release Structure"</td>
+                <td>9 (artisan, index.php, autoload, etc.)</td>
+                <td><span class="status-green">✅ VALIDIERT</span><br>Run 19003049369</td>
+            </tr>
+            <tr>
+                <td><strong>Layer 2</strong><br>Staging Pre-Switch</td>
+                <td><code>deploy-staging.yml</code><br>Nach Extraktion, vor Migrations</td>
+                <td>9 + PHP autoload + artisan version</td>
+                <td><span class="status-green">✅ VALIDIERT</span><br>Run 19003120779<br>ALLE 9 CHECKS BESTANDEN</td>
+            </tr>
+            <tr>
+                <td><strong>Layer 3</strong><br>Production Pre-Switch</td>
+                <td><code>deploy-production.yml</code><br>Nach Extraktion, vor Symlink</td>
+                <td>9 + PHP autoload + artisan version</td>
+                <td><span class="status-green">✅ VALIDIERT</span><br>Pre-Flight Dry-Run<br>ALLE 3 CHECKS BESTANDEN</td>
+            </tr>
+            <tr>
+                <td><strong>Layer 4</strong><br>Post-Switch Smoke</td>
+                <td>Nach Deployment<br>Health checks</td>
+                <td>Staging: 5, Prod: 2</td>
+                <td><span class="status-green">✅ IMPLEMENTIERT</span><br>(schon vorher vorhanden)</td>
+            </tr>
+        </table>
+
+        <div class="summary-box">
+            <h3 style="margin-top: 0;">Gate-System Status</h3>
+            <ul>
+                <li><span class="status-green">✅ Layer 1 (Build Gates):</span> Funktioniert & validiert</li>
+                <li><span class="status-green">✅ Layer 2 (Staging Pre-Switch):</span> Funktioniert & validiert</li>
+                <li><span class="status-green">✅ Layer 3 (Production Pre-Switch):</span> Implementiert & pre-flight validiert</li>
+                <li><span class="status-green">✅ Layer 4 (Post-Switch Smoke):</span> Existiert (bereits implementiert)</li>
+            </ul>
+            <p><strong>Dokumentation:</strong> <a href="PROD_FIX_BUNDLE_GATES.md">PROD_FIX_BUNDLE_GATES.md</a></p>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>5. SOLL vs. IST Vergleich</h2>
+
+        <h3>5.1 Build-Prozess</h3>
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>SOLL</th>
+                <th>IST</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Frontend Build</td>
+                <td>Vite + manifest</td>
+                <td>Vite + manifest</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Backend Build</td>
+                <td>Composer --no-dev</td>
+                <td>Composer --no-dev</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Bundle-Struktur</td>
+                <td>Vollständig</td>
+                <td>Vollständig</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td><strong>Pre-Bundle Gates</strong></td>
+                <td><strong>9 Checks</strong></td>
+                <td><strong>9 Checks</strong></td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Artifact Upload</td>
+                <td>30 Tage</td>
+                <td>30 Tage</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>SHA256 Checksum</td>
+                <td>Ja</td>
+                <td>Ja</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+        </table>
+
+        <h3>5.2 Staging-Deployment</h3>
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>SOLL</th>
+                <th>IST</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Health Check</td>
+                <td>Vor Deployment</td>
+                <td>Vor Deployment</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Backup</td>
+                <td>App + DB + SHA256</td>
+                <td>App + DB + SHA256</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td><strong>Pre-Switch Gates</strong></td>
+                <td><strong>9 Checks</strong></td>
+                <td><strong>9 Checks</strong></td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Migrations</td>
+                <td>Vor Symlink</td>
+                <td>Vor Symlink</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td><strong>Permissions Fix</strong></td>
+                <td><strong>sudo</strong></td>
+                <td><strong>Fehlt: passwordless</strong></td>
+                <td><span class="status-red">❌</span></td>
+            </tr>
+            <tr>
+                <td>Symlink Switch</td>
+                <td>Atomic</td>
+                <td>Nicht erreicht</td>
+                <td><span class="status-blue">⏳</span></td>
+            </tr>
+            <tr>
+                <td>Service Reload</td>
+                <td>NGINX + PHP-FPM</td>
+                <td>Nicht erreicht</td>
+                <td><span class="status-blue">⏳</span></td>
+            </tr>
+            <tr>
+                <td>Smoke Tests</td>
+                <td>5/5</td>
+                <td>Nicht erreicht</td>
+                <td><span class="status-blue">⏳</span></td>
+            </tr>
+        </table>
+
+        <h3>5.3 Production-Deployment</h3>
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>SOLL</th>
+                <th>IST</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Staging Check</td>
+                <td>Vor Prod</td>
+                <td>Vor Prod</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Backup</td>
+                <td>App + DB + SHA256 + NGINX</td>
+                <td>App + DB + SHA256 + NGINX</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td><strong>Pre-Switch Gates</strong></td>
+                <td><strong>9 Checks</strong></td>
+                <td><strong>9 Checks (Dry-Run validiert)</strong></td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Symlink Switch</td>
+                <td>Atomic</td>
+                <td>Implementiert</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Service Reload</td>
+                <td>PHP-FPM</td>
+                <td>Implementiert</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Smoke Tests</td>
+                <td>2 Checks</td>
+                <td>Implementiert</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+            <tr>
+                <td>Auto-Rollback</td>
+                <td>Bei Failure</td>
+                <td>Implementiert</td>
+                <td><span class="status-green">✅</span></td>
+            </tr>
+        </table>
+
+        <hr class="section-separator">
+
+        <h2>6. PROBLEME & BLOCKIERUNGEN</h2>
+
+        <h3>6.1 Kritische Blockierung</h3>
+        <div class="check-failed">
+            <h4 style="margin-top: 0;">❌ Staging-Deployment schlägt bei sudo fehl</h4>
+            <p><strong>Impact:</strong></p>
+            <ul>
+                <li>⚠️ Staging-Deployment unvollständig</li>
+                <li>⚠️ Smoke Tests können nicht laufen</li>
+                <li>⚠️ Vollständige Staging-Validierung blockiert</li>
+            </ul>
+            <p><strong>Ursache:</strong> User <code>deploy</code> hat kein passwordless sudo</p>
+            <p><strong>Fix:</strong> <span class="status-blue">⏳ Auftrag 2</span> (noch nicht durchgeführt)</p>
+        </div>
+
+        <h3>6.2 Nicht-Blockierende Probleme</h3>
+        <div class="check-item">
+            <h4 style="margin-top: 0;">✅ Alte Release-Bundles ohne index.php - BEHOBEN</h4>
+            <p><strong>Problem:</strong> Alte Releases (vor Gates) können unvollständig sein</p>
+            <p><strong>Lösung:</strong> Nur neue Bundles (mit Gates) verwenden</p>
+            <p><strong>Beispiel:</strong> Release <code>20251031_194038-80d6a856</code> (verursachte PROD-FIX Rollback)</p>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>7. NÄCHSTE SCHRITTE (Priorisiert)</h2>
+
+        <h3>7.1 Sofort (Auftrag 2)</h3>
+        <div class="check-pending">
+            <h4 style="margin-top: 0;">🎯 Ziel: Staging vollständig funktionsfähig machen</h4>
+            <ol>
+                <li>⏳ Passwordless sudo für <code>deploy</code> auf Staging konfigurieren</li>
+                <li>⏳ Staging-Deployment erneut triggern</li>
+                <li>⏳ Staging Smoke Tests ausführen (5/5 erwartet)</li>
+                <li>⏳ Dokumentation updaten</li>
+            </ol>
+            <p><strong>Erwartetes Ergebnis:</strong> Staging vollständig grün</p>
+        </div>
+
+        <h3>7.2 Dann (nach Staging-Success)</h3>
+        <div class="check-pending">
+            <h4 style="margin-top: 0;">🚀 Ziel: Production-Deployment durchführen</h4>
+            <ol>
+                <li>⏳ User-Freigabe einholen: <code>"PROD-DEPLOY FREIGEGEBEN"</code></li>
+                <li>⏳ Merge develop → main (oder manuell triggern)</li>
+                <li>⏳ Production-Deployment via <code>deploy-production.yml</code></li>
+                <li>⏳ Production Smoke Tests (2/2)</li>
+                <li>⏳ Production-Deployment-Ledger erstellen</li>
+            </ol>
+            <p><strong>Erwartetes Ergebnis:</strong> Production mit Gates deployed</p>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>8. DEPLOYMENT-FLOW DIAGRAM</h2>
+
+        <div class="diagram">
+            <pre>
+┌─────────────────────────────────────────────────────────┐
+│  BUILD PIPELINE (GitHub Actions)                        │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │ 1. build-frontend (Vite)                    │   │
+│  │ 2. build-backend (Composer)                 │   │
+│  │ 3. static-analysis (PHPStan)                │   │
+│  │ 4. run-tests (Pest + MariaDB)               │   │
+│  │                                               │   │
+│  │ 5. create-deployment-bundle                  │   │
+│  │    ├─ Prepare Release Directory              │   │
+│  │    ├─ ✅ PRE-BUNDLE GATE (Layer 1)           │   │
+│  │    │  └─ 9 Checks (index.php, autoload, etc)│   │
+│  │    ├─ Create Tarball                         │   │
+│  │    └─ Upload Artifact (30 days)              │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+                      ↓ (artifact)
+┌─────────────────────────────────────────────────────────┐
+│  STAGING DEPLOYMENT (GitHub Actions)                    │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │ 1. check-health (Staging)                    │   │
+│  │ 2. backup-staging (App + DB + SHA256)        │   │
+│  │                                               │   │
+│  │ 3. deploy-staging                             │   │
+│  │    ├─ Download Bundle                         │   │
+│  │    ├─ Verify Checksum                         │   │
+│  │    ├─ Upload to Server                        │   │
+│  │    ├─ Extract Bundle                          │   │
+│  │    ├─ ✅ PRE-SWITCH GATE (Layer 2)            │   │
+│  │    │  └─ 9 Checks + PHP + artisan             │   │
+│  │    ├─ Run Migrations                          │   │
+│  │    ├─ Clear Caches                            │   │
+│  │    ├─ ❌ Fix Permissions (sudo FEHLT)         │   │
+│  │    ├─ ⏳ Switch Symlink (nicht erreicht)       │   │
+│  │    └─ ⏳ Reload Services (nicht erreicht)      │   │
+│  │                                               │   │
+│  │ 4. ⏳ smoke-tests (blockiert)                  │   │
+│  │ 5. auto-rollback (bei Failure)               │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+                      ↓ (wenn Staging grün)
+┌─────────────────────────────────────────────────────────┐
+│  PRODUCTION DEPLOYMENT (GitHub Actions)                 │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │ 1. check-staging (Health Check)              │   │
+│  │ 2. pre-deploy-backup (App + DB + NGINX)      │   │
+│  │                                               │   │
+│  │ 3. deploy-production                          │   │
+│  │    ├─ Download Bundle                         │   │
+│  │    ├─ Verify Checksum                         │   │
+│  │    ├─ Upload to Server                        │   │
+│  │    ├─ Extract Bundle                          │   │
+│  │    ├─ ✅ PRE-SWITCH GATE (Layer 3)            │   │
+│  │    │  └─ 9 Checks + PHP + artisan             │   │
+│  │    ├─ Switch Symlink (ATOMIC)                 │   │
+│  │    └─ Reload PHP-FPM                          │   │
+│  │                                               │   │
+│  │ 4. smoke-tests (Layer 4)                      │   │
+│  │    ├─ /health Check                           │   │
+│  │    └─ /build/manifest.json Check              │   │
+│  │                                               │   │
+│  │ 5. auto-rollback (bei Smoke-Failure)         │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>9. ZUSAMMENFASSUNG</h2>
+
+        <h3>Was FUNKTIONIERT ✅</h3>
+        <ul>
+            <li>✅ <strong>Build-Pipeline mit Gates</strong> (Layer 1)</li>
+            <li>✅ <strong>Staging Pre-Switch Gates</strong> (Layer 2) - validiert</li>
+            <li>✅ <strong>Production Pre-Switch Gates</strong> (Layer 3) - pre-flight validiert</li>
+            <li>✅ <strong>Backup-System</strong> (App + DB + SHA256)</li>
+            <li>✅ <strong>Auto-Rollback</strong> (bei Smoke-Test-Failure)</li>
+            <li>✅ <strong>Documentation Hub</strong> (mit Timestamps & HTML)</li>
+            <li>✅ <strong>Deployment Ledger</strong> (JSON-Format)</li>
+        </ul>
+
+        <h3>Was NICHT FUNKTIONIERT ❌</h3>
+        <ul>
+            <li>❌ <strong>Staging-Deployment-Completion</strong> (sudo-Problem)</li>
+            <li>❌ <strong>Staging Smoke Tests</strong> (Deployment schlägt vorher fehl)</li>
+        </ul>
+
+        <h3>Was BEREIT ist ⏳</h3>
+        <ul>
+            <li>⏳ <strong>Production-Deployment</strong> (Gates validiert, wartet auf User)</li>
+            <li>⏳ <strong>Passwordless sudo Fix</strong> (Auftrag 2, noch nicht durchgeführt)</li>
+        </ul>
+
+        <hr class="section-separator">
+
+        <h2>10. DOKUMENTATIONS-REFERENZEN</h2>
+        <ul>
+            <li><a href="PROD_FIX_BUNDLE_GATES.md">PROD_FIX_BUNDLE_GATES.md</a> - 4-Schicht-Verteidigung (vollständig)</li>
+            <li><a href="GATE_VALIDATION_SUMMARY_2025-11-01.md">GATE_VALIDATION_SUMMARY_2025-11-01.md</a> - Executive Summary</li>
+            <li><a href="deployment-preflight-prod-2025-11-01.html">deployment-preflight-prod-2025-11-01.html</a> - Pre-Flight Report</li>
+            <li><a href="index.html">Documentation Hub Index</a> - Alle Dokumente</li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 1px solid #e2e8f0;">
+        <p class="timestamp">Report erstellt: 2025-11-01 23:30 UTC</p>
+        <p class="timestamp">Generiert von: Claude (Automated Status Quo Analysis)</p>
+        <p class="timestamp">Basis: Session-Kontext + Workflow-Dateien + Validierungs-Evidenz</p>
+    </div>
+</body>
+</html>

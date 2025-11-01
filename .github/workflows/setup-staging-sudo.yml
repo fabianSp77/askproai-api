@@ -1,0 +1,219 @@
+# ==============================================================================
+# One-Time Setup: Staging Sudo Hardening (Least Privilege)
+# ==============================================================================
+# Purpose: Configure passwordless sudo for deploy user on staging
+# Scope: ONLY nginx and php-fpm service reloads
+# Security: Minimal privileges, no wildcards except php*-fpm reload
+# ==============================================================================
+
+name: Setup Staging Sudo (One-Time)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_only:
+        description: 'Type "STAGING-ONLY" to confirm this affects ONLY staging server'
+        required: true
+        type: string
+
+env:
+  STAGING_HOST: 152.53.116.127
+  STAGING_USER: deploy
+
+jobs:
+  setup-sudo:
+    name: Configure Staging Sudoers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_staging_only }}" != "STAGING-ONLY" ]; then
+            echo "❌ Invalid confirmation. Type exactly: STAGING-ONLY"
+            exit 1
+          fi
+          echo "✅ Confirmation validated: STAGING-ONLY"
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+          # Verify key format
+          ssh-keygen -l -f ~/.ssh/staging_key || {
+            echo "❌ Invalid SSH key format"
+            exit 1
+          }
+
+      - name: Verify Staging Server Connection
+        run: |
+          echo "🔍 Testing SSH connection to staging..."
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+            'hostname && whoami && echo "✅ SSH connection successful"'
+
+      - name: Create Sudoers File (Least Privilege)
+        run: |
+          echo "📝 Creating /etc/sudoers.d/deploy-staging with minimal privileges..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'ENDSSH'
+
+          # Create sudoers content
+          cat << 'EOF' | sudo tee /tmp/deploy-staging.tmp
+# ==============================================================================
+# Staging Deploy User - Passwordless Sudo (Least Privilege)
+# ==============================================================================
+# Purpose: Allow deploy user to reload nginx and php-fpm ONLY
+# Security: No other sudo commands allowed, no wildcards except php*-fpm reload
+# Created: 2025-11-01 (Automated via GitHub Actions)
+# ==============================================================================
+
+# NGINX reload (systemctl method - preferred)
+deploy ALL=(root) NOPASSWD:/usr/bin/systemctl reload nginx
+
+# NGINX reload (service method - fallback)
+deploy ALL=(root) NOPASSWD:/usr/sbin/service nginx reload
+
+# PHP-FPM reload (supports php7.x-fpm, php8.x-fpm, etc.)
+deploy ALL=(root) NOPASSWD:/usr/sbin/service php*-fpm reload
+
+# ==============================================================================
+# End of sudoers configuration
+# ==============================================================================
+EOF
+
+          # Validate syntax BEFORE installing
+          echo "🔍 Validating sudoers syntax..."
+          sudo visudo -c -f /tmp/deploy-staging.tmp
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Sudoers syntax is valid"
+
+            # Install to sudoers.d
+            sudo mv /tmp/deploy-staging.tmp /etc/sudoers.d/deploy-staging
+            sudo chmod 440 /etc/sudoers.d/deploy-staging
+            sudo chown root:root /etc/sudoers.d/deploy-staging
+
+            echo "✅ Sudoers file installed: /etc/sudoers.d/deploy-staging"
+
+            # Final validation
+            sudo visudo -c
+            echo "✅ Global sudoers validation passed"
+          else
+            echo "❌ Sudoers syntax validation FAILED"
+            rm -f /tmp/deploy-staging.tmp
+            exit 1
+          fi
+          ENDSSH
+
+      - name: Test Passwordless Sudo (nginx reload)
+        run: |
+          echo "🧪 Testing passwordless sudo for nginx reload..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'ENDSSH'
+
+          # Test systemctl reload nginx
+          echo "Test 1: sudo -n systemctl reload nginx"
+          sudo -n systemctl reload nginx
+          EXIT_CODE_1=$?
+
+          if [ $EXIT_CODE_1 -eq 0 ]; then
+            echo "✅ PASS: systemctl reload nginx (exit code: $EXIT_CODE_1)"
+          else
+            echo "⚠️ WARN: systemctl reload nginx failed (exit code: $EXIT_CODE_1)"
+            echo "Trying fallback: sudo -n service nginx reload"
+
+            sudo -n service nginx reload
+            EXIT_CODE_FALLBACK=$?
+
+            if [ $EXIT_CODE_FALLBACK -eq 0 ]; then
+              echo "✅ PASS: service nginx reload (exit code: $EXIT_CODE_FALLBACK)"
+            else
+              echo "❌ FAIL: Both nginx reload methods failed"
+              exit 1
+            fi
+          fi
+          ENDSSH
+
+      - name: Test Passwordless Sudo (php-fpm reload)
+        run: |
+          echo "🧪 Testing passwordless sudo for php-fpm reload..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'ENDSSH'
+
+          # Detect PHP-FPM version
+          PHP_FPM_SERVICE=$(systemctl list-units --type=service | grep -o 'php[0-9.]*-fpm' | head -1)
+
+          if [ -z "$PHP_FPM_SERVICE" ]; then
+            echo "❌ No PHP-FPM service found"
+            exit 1
+          fi
+
+          echo "Detected PHP-FPM service: $PHP_FPM_SERVICE"
+
+          # Test reload
+          echo "Test 2: sudo -n service $PHP_FPM_SERVICE reload"
+          sudo -n service $PHP_FPM_SERVICE reload
+          EXIT_CODE_2=$?
+
+          if [ $EXIT_CODE_2 -eq 0 ]; then
+            echo "✅ PASS: service $PHP_FPM_SERVICE reload (exit code: $EXIT_CODE_2)"
+          else
+            echo "❌ FAIL: php-fpm reload failed (exit code: $EXIT_CODE_2)"
+            exit 1
+          fi
+          ENDSSH
+
+      - name: Verify Sudoers File Contents
+        run: |
+          echo "📋 Verifying deployed sudoers file..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+            'sudo cat /etc/sudoers.d/deploy-staging'
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ Staging sudo hardening completed successfully!"
+          echo ""
+          echo "Summary:"
+          echo "  - Sudoers file: /etc/sudoers.d/deploy-staging"
+          echo "  - Permissions: 440 (root:root)"
+          echo "  - Allowed commands:"
+          echo "    1. sudo -n systemctl reload nginx"
+          echo "    2. sudo -n service nginx reload"
+          echo "    3. sudo -n service php*-fpm reload"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Update deploy-staging.yml to use 'sudo -n' for service reloads"
+          echo "  2. Trigger staging deployment (workflow_dispatch)"
+          echo "  3. Run staging smoke tests (expect 5/5 PASS)"
+          echo "  4. Document in STAGING_SUDO_HARDENING.md"
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "❌ Setup failed - attempting rollback..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'ENDSSH' || true
+
+          if [ -f /etc/sudoers.d/deploy-staging ]; then
+            sudo rm -f /etc/sudoers.d/deploy-staging
+            echo "✅ Removed /etc/sudoers.d/deploy-staging"
+          fi
+
+          sudo visudo -c
+          echo "✅ Sudoers validation after rollback: OK"
+          ENDSSH
+
+          echo "⚠️ Manual intervention may be required on staging server"
+          exit 1
