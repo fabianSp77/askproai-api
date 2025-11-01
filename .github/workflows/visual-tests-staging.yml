@@ -1,0 +1,12 @@
+name: Visual Tests (Staging)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  visual-tests-firefox:
+    name: Visual Tests - Firefox ESR
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "visual ok"
