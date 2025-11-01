@@ -97,6 +97,41 @@ jobs:
           printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
 
+      - name: Extract and Add Public Key (One-Time Fix)
+        run: |
+          echo "🔑 Extracting public key from STAGING_SSH_KEY..."
+          ssh-keygen -y -f ~/.ssh/staging_key > ~/.ssh/staging_key.pub
+          PUBLIC_KEY=$(cat ~/.ssh/staging_key.pub)
+          FINGERPRINT=$(ssh-keygen -lf ~/.ssh/staging_key.pub | awk '{print $2}')
+
+          echo "📋 Public Key: $PUBLIC_KEY"
+          echo "🔑 Fingerprint: $FINGERPRINT"
+
+          echo ""
+          echo "🔧 Adding public key to server if not present..."
+
+          # Add host to known_hosts for root connection
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Create script to add key
+          cat > /tmp/add_key.sh << 'EOF'
+          #!/bin/bash
+          PUBLIC_KEY="$1"
+
+          if grep -qF "$PUBLIC_KEY" /home/deploy/.ssh/authorized_keys 2>/dev/null; then
+            echo "✅ Public key already exists"
+            exit 0
+          fi
+
+          echo "$PUBLIC_KEY" >> /home/deploy/.ssh/authorized_keys
+          echo "✅ Public key added"
+          echo "📊 Total keys: $(grep -c 'ssh-' /home/deploy/.ssh/authorized_keys)"
+          EOF
+
+          # Copy and execute using root SSH
+          scp /tmp/add_key.sh root@${{ env.STAGING_HOST }}:/tmp/
+          ssh root@${{ env.STAGING_HOST }} "bash /tmp/add_key.sh '$PUBLIC_KEY'"
+
       - name: Test SSH Connection
         run: |
           echo "🔌 Testing SSH connection to ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}..."
