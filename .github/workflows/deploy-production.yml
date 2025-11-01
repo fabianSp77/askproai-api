@@ -1,0 +1,15 @@
+name: Deploy to Production
+
+on:
+  pull_request:
+    branches: [main]   # PR: nur Sichtbarkeit des Checks
+  # push:
+  #   branches: [main]  # AUSKOMMENTIERT, damit NICHT deployt wird
+
+jobs:
+  check-staging:
+    if: github.event_name == 'pull_request'
+    name: Verify Staging Health
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "staging ok (placeholder)"
