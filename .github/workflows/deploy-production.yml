@@ -12,6 +12,8 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]  # Make "Verify Staging Health" check visible for branch protection
   workflow_dispatch:  # Manual trigger with approval
 
 env:
@@ -63,6 +65,7 @@ jobs:
     name: Pre-Deploy Backup
     runs-on: ubuntu-latest
     needs: [check-staging]
+    if: github.event_name == 'push'  # Only run actual deployment on push, not PR
     timeout-minutes: 20
 
     steps:
@@ -199,6 +202,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build]
+    if: github.event_name == 'push'  # Only deploy on push, not PR
     timeout-minutes: 30
     environment:
       name: production
@@ -532,6 +536,7 @@ jobs:
     name: Production Smoke Tests
     runs-on: ubuntu-latest
     needs: [deploy-production]
+    if: github.event_name == 'push'  # Only run on push, not PR
     timeout-minutes: 10
 
     steps:
@@ -570,7 +575,7 @@ jobs:
     name: Record Deployment
     runs-on: ubuntu-latest
     needs: [deploy-production, smoke-tests]
-    if: success()
+    if: success() && github.event_name == 'push'  # Only record on actual deployments
     timeout-minutes: 5
 
     steps:
@@ -613,7 +618,7 @@ jobs:
     name: Auto-Rollback on Failure
     runs-on: ubuntu-latest
     needs: [deploy-production, smoke-tests]
-    if: failure()
+    if: failure() && github.event_name == 'push'  # Only rollback on actual deployments
     timeout-minutes: 10
 
     steps:

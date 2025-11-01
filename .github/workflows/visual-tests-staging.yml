@@ -16,6 +16,9 @@ on:
     types: [completed]
     branches: [develop]
 
+  pull_request:
+    branches: [main]  # Make check visible for branch protection
+
   workflow_dispatch:  # Manual trigger for testing
 
 env:
