@@ -292,21 +292,60 @@ jobs:
           sudo nginx -t && sudo systemctl reload nginx || true
           EOF
 
-      - name: Health checks
+      - name: Post-Deploy Verification
         run: |
-          echo "🏥 Running health checks..."
+          echo "🏥 Running comprehensive post-deploy verification..."
+          echo ""
 
-          # Use Bearer token with standalone healthcheck.php endpoint
-          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
-            echo "Using Bearer token for health check"
-            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
-              "https://${{ env.DOMAIN }}/healthcheck.php" > /dev/null
-          else
-            echo "❌ HEALTHCHECK_TOKEN not configured - health check skipped"
+          if [ -z "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
+            echo "❌ HEALTHCHECK_TOKEN not configured"
             exit 1
           fi
 
-          echo "✅ Health check passed"
+          TOKEN="${{ secrets.HEALTHCHECK_TOKEN }}"
+          DOMAIN="${{ env.DOMAIN }}"
+          FAILED=0
+
+          # Test 1: healthcheck.php (standalone, no Laravel)
+          echo "1️⃣  Testing /healthcheck.php..."
+          HTTP_CODE=$(curl -sS -o /tmp/health1.json -w "%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/healthcheck.php")
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health1.json > /dev/null; then
+            echo "   ✅ healthcheck.php: 200 OK"
+          else
+            echo "   ❌ healthcheck.php: HTTP $HTTP_CODE"
+            FAILED=1
+          fi
+
+          # Test 2: /health (Laravel route)
+          echo "2️⃣  Testing /health..."
+          HTTP_CODE=$(curl -sS -o /tmp/health2.json -w "%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/health")
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health2.json > /dev/null; then
+            echo "   ✅ /health: 200 OK"
+          else
+            echo "   ❌ /health: HTTP $HTTP_CODE"
+            FAILED=1
+          fi
+
+          # Test 3: /api/health-check (API endpoint)
+          echo "3️⃣  Testing /api/health-check..."
+          HTTP_CODE=$(curl -sS -o /tmp/health3.json -w "%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/api/health-check")
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health3.json > /dev/null; then
+            echo "   ✅ /api/health-check: 200 OK"
+          else
+            echo "   ❌ /api/health-check: HTTP $HTTP_CODE"
+            FAILED=1
+          fi
+
+          echo ""
+          if [ "$FAILED" -eq 1 ]; then
+            echo "❌ Post-deploy verification FAILED - will trigger auto-rollback"
+            exit 1
+          fi
+
+          echo "✅ All health checks passed"
 
       - name: Vite Asset Validation
         run: |
@@ -332,6 +371,45 @@ jobs:
             echo "❌ Vite assets not found"
             exit 1
           fi
+
+      - name: Create Deployment Ledger
+        run: |
+          echo "📝 Creating deployment ledger with SHA256 verification..."
+
+          # Get bundle SHA256
+          BUNDLE_SHA256=$(cat bundle/*.sha256 | awk '{print $1}')
+
+          # Create ledger entry
+          cat > deployment-ledger.json << LEDGER
+          {
+            "deployment_id": "${{ github.run_id }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "environment": "staging",
+            "commit_sha": "${{ env.BUILD_SHA }}",
+            "commit_sha_short": "${BUILD_SHA:0:8}",
+            "bundle_name": "${BUNDLE_NAME}",
+            "bundle_sha256": "${BUNDLE_SHA256}",
+            "deployed_by": "${{ github.actor }}",
+            "trigger": "${{ github.event_name }}",
+            "health_checks": {
+              "healthcheck_php": "passed",
+              "health_endpoint": "passed",
+              "api_health_check": "passed",
+              "vite_assets": "passed"
+            },
+            "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          LEDGER
+
+          echo "✅ Deployment ledger created"
+          cat deployment-ledger.json | jq '.'
+
+      - name: Upload Deployment Ledger
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-ledger-${{ github.run_id }}
+          path: deployment-ledger.json
+          retention-days: 90
 
       - name: Cleanup temp
         if: always()
