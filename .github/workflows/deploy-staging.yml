@@ -62,9 +62,10 @@ jobs:
           LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
           echo "📊 Key has $LINE_COUNT lines"
 
-          if [ "$LINE_COUNT" -lt 10 ]; then
-            echo "❌ Key seems too short (< 10 lines)"
-            echo "Please ensure STAGING_SSH_KEY is a complete multi-line OpenSSH private key"
+          if [ "$LINE_COUNT" -lt 5 ]; then
+            echo "❌ Key seems too short (< 5 lines)"
+            echo "Please ensure STAGING_SSH_KEY is a complete OpenSSH private key"
+            echo "Note: Ed25519 keys are typically 5-7 lines, RSA keys 10+ lines"
             exit 1
           fi
 
