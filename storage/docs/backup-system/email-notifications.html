@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>E-Mail Benachrichtigungen: Bleiben Sie informiert - AskPro AI Gateway</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .meta-info {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-bottom: 3px solid #f093fb;
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-item .label {
+            font-size: 0.85em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .meta-item .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #f093fb;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: #f093fb;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h3 {
+            color: #495057;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .analogy-box h3 {
+            color: white;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+
+        .analogy-box p {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .error-box {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .email-preview {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            margin: -30px -30px 20px -30px;
+        }
+
+        .email-header-success {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+        }
+
+        .email-header-error {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+        }
+
+        .email-subject {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .email-from {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .email-body {
+            font-size: 1em;
+            color: #2c3e50;
+        }
+
+        .email-section {
+            margin: 20px 0;
+        }
+
+        .email-section h4 {
+            color: #f093fb;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.2);
+            border-color: #f093fb;
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding: 20px 20px 20px 70px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #f093fb;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .email-preview {
+                padding: 15px;
+            }
+
+            .email-header {
+                margin: -15px -15px 15px -15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 E-Mail Benachrichtigungen</h1>
+            <p class="subtitle">Bleiben Sie immer informiert - automatisch und transparent</p>
+        </div>
+
+        <div class="meta-info">
+            <div class="meta-item">
+                <div class="label">E-Mails pro Tag</div>
+                <div class="value">3×</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Formate</div>
+                <div class="value">HTML + Text</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Empfänger</div>
+                <div class="value">2</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Reaktionszeit</div>
+                <div class="value">Sofort</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Analogy Section -->
+            <div class="analogy-box">
+                <h3>📱 Wie Benachrichtigungen auf Ihrem Handy</h3>
+                <p><strong>Stellen Sie sich vor:</strong> Ihr Backup-System ist wie eine App auf Ihrem Handy, die Ihnen nach jeder wichtigen Aktion eine Push-Benachrichtigung schickt. Nur dass hier die "Benachrichtigungen" professionelle E-Mails sind - mit allen Details, die Sie brauchen.</p>
+                <p style="margin-top: 15px;"><strong>Transparent & Nachvollziehbar:</strong> Keine stillen Fehler, keine versteckten Probleme. Sie bekommen jede Aktivität direkt in Ihr Postfach - egal ob alles gut lief oder ob es ein Problem gibt.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">✅</div>
+                    <div class="stat-label">Erfolgs-Mails</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">❌</div>
+                    <div class="stat-label">Fehler-Mails</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">📎</div>
+                    <div class="stat-label">Mit Anhängen</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">🔔</div>
+                    <div class="stat-label">GitHub Issues</div>
+                </div>
+            </div>
+
+            <!-- Email Flow Section -->
+            <div class="section">
+                <h2><span class="icon">🔄</span> Wann bekommen Sie E-Mails?</h2>
+
+                <div class="mermaid">
+                    graph TB
+                        A[⏰ Backup startet<br/>07:00 / 13:00 / 19:00] --> B{Läuft Backup durch?}
+                        B -->|Ja| C[✅ Backup erfolgreich]
+                        B -->|Nein| D[❌ Fehler aufgetreten]
+                        C --> E[📧 Erfolgs-Mail versenden]
+                        D --> F[📧 Fehler-Mail versenden]
+                        E --> G[📎 Anhänge hinzufügen<br/>Manifest + Checksumme]
+                        F --> H[🔔 GitHub Issue erstellen]
+                        G --> I[📬 E-Mail zugestellt]
+                        H --> I
+                        I --> J{Weitere Backups heute?}
+                        J -->|Ja| K[⏰ Nächstes Backup abwarten]
+                        J -->|Nein| L[✨ Tag abgeschlossen]
+                        K --> A
+
+                        style A fill:#f093fb,stroke:#f5576c,stroke-width:3px,color:#fff
+                        style C fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+                        style D fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+                        style E fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+                        style F fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+                        style I fill:#2196F3,stroke:#1976D2,stroke-width:2px,color:#fff
+                </div>
+            </div>
+
+            <!-- Success Email Example -->
+            <div class="section">
+                <h2><span class="icon">✅</span> Erfolgs-Mail: So sieht sie aus</h2>
+
+                <div class="email-preview">
+                    <div class="email-header email-header-success">
+                        <div class="email-subject">✅ Backup erfolgreich - 07:00 Uhr (1. November 2025)</div>
+                        <div class="email-from">Von: AskPro AI Backup System &lt;backup@askproai.de&gt;</div>
+                    </div>
+
+                    <div class="email-body">
+                        <div class="email-section">
+                            <h4>📊 Backup-Details</h4>
+                            <table>
+                                <tr>
+                                    <td><strong>Zeitpunkt:</strong></td>
+                                    <td>1. November 2025, 07:00:15 Uhr (CET)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dauer:</strong></td>
+                                    <td>2 Minuten 18 Sekunden</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Größe:</strong></td>
+                                    <td>142.3 MB (komprimiert)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dateiname:</strong></td>
+                                    <td>backup-20251101_070015.tar.gz</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Checksumme (SHA256):</strong></td>
+                                    <td><code style="font-size: 0.85em;">a1b2c3d4e5f6...</code></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>📁 Inhalt</h4>
+                            <ul>
+                                <li>✅ Datenbank (4.2 MB)</li>
+                                <li>✅ Anwendungs-Dateien (138.1 MB)</li>
+                                <li>✅ System-Konfiguration (0.2 MB)</li>
+                            </ul>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>☁️ Speicherort</h4>
+                            <p><strong>NAS:</strong> <code>/volume1/homes/FSAdmin/Backup/Server AskProAI/daily/2025/11/01/0700/</code></p>
+                            <p><strong>Lokal:</strong> <code>/var/backups/askproai/</code></p>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>🚀 Schnellzugriff-Befehle</h4>
+                            <div class="code-block">
+# Backup-Liste anzeigen<br/>
+ssh askproai@fs-cloud1977.synology.me -p 50222 \<br/>
+&nbsp;&nbsp;ls -lh /volume1/homes/FSAdmin/Backup/Server\ AskProAI/daily/2025/11/01/0700/<br/>
+<br/>
+# Backup herunterladen<br/>
+scp -P 50222 askproai@fs-cloud1977.synology.me:\<br/>
+&nbsp;&nbsp;/volume1/homes/.../backup-20251101_070015.tar.gz ./
+                            </div>
+                        </div>
+
+                        <div class="email-section">
+                            <p style="color: #4caf50; font-weight: bold;">✨ Alles gut! Ihr Backup ist sicher auf der NAS gespeichert.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h3 style="margin-top: 0;">📎 Anhänge in Erfolgs-Mails</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>backup-manifest.txt</strong> - Detaillierte Liste aller gesicherten Dateien</li>
+                        <li><strong>backup-checksums.txt</strong> - SHA256-Prüfsummen zur Integritätsprüfung</li>
+                    </ul>
+                    <p style="margin-top: 10px;">Diese Anhänge können Sie archivieren als Nachweis und Audit-Trail.</p>
+                </div>
+            </div>
+
+            <!-- Error Email Example -->
+            <div class="section">
+                <h2><span class="icon">❌</span> Fehler-Mail: Was passiert bei Problemen?</h2>
+
+                <div class="email-preview">
+                    <div class="email-header email-header-error">
+                        <div class="email-subject">❌ BACKUP FEHLGESCHLAGEN - 13:00 Uhr (1. November 2025)</div>
+                        <div class="email-from">Von: AskPro AI Backup System &lt;backup@askproai.de&gt;</div>
+                    </div>
+
+                    <div class="email-body">
+                        <div class="email-section">
+                            <h4>⚠️ Problem erkannt</h4>
+                            <div class="error-box">
+                                <strong>Fehler:</strong> NAS-Upload fehlgeschlagen - Verbindungstimeout<br/>
+                                <strong>Exit-Code:</strong> 1<br/>
+                                <strong>Zeitpunkt:</strong> 1. November 2025, 13:02:45 Uhr (CET)
+                            </div>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>📋 Fehlerdetails</h4>
+                            <div class="code-block">
+Error: Connection to fs-cloud1977.synology.me:50222 timed out<br/>
+Backup file created successfully: backup-20251101_130015.tar.gz<br/>
+Local backup exists: /var/backups/askproai/backup-20251101_130015.tar.gz<br/>
+Upload to NAS failed after 3 retry attempts<br/>
+<br/>
+Last retry error: ssh: connect to host fs-cloud1977.synology.me<br/>
+port 50222: Connection timed out
+                            </div>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>✅ Was funktioniert noch?</h4>
+                            <ul>
+                                <li>✅ Backup wurde lokal erstellt</li>
+                                <li>✅ Datenbank-Dump erfolgreich</li>
+                                <li>✅ Dateien komprimiert</li>
+                                <li>✅ Checksumme erstellt</li>
+                                <li>❌ Upload zur NAS fehlgeschlagen</li>
+                            </ul>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>🔧 Nächste Schritte</h4>
+                            <ol style="margin-left: 20px;">
+                                <li>IT-Team wurde automatisch benachrichtigt (GitHub Issue erstellt)</li>
+                                <li>Lokales Backup ist verfügbar unter: <code>/var/backups/askproai/</code></li>
+                                <li>Nächster automatischer Versuch: 19:00 Uhr</li>
+                            </ol>
+                        </div>
+
+                        <div class="email-section">
+                            <h4>🔗 GitHub Issue</h4>
+                            <p>Automatisch erstellt: <a href="#">#Issue-Nummer</a></p>
+                            <p><strong>Priorität:</strong> Hoch - NAS-Konnektivitätsproblem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h3 style="margin-top: 0;">🚨 Automatische Eskalation</h3>
+                    <p>Bei jedem fehlgeschlagenen Backup:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>📧 Sofortige E-Mail an alle Empfänger</li>
+                        <li>🔔 Automatisches GitHub Issue für IT-Team</li>
+                        <li>📊 Fehler-Logs werden angehängt</li>
+                        <li>⚡ Retry beim nächsten geplanten Backup</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="section">
+                <h2><span class="icon">🎯</span> E-Mail-Features im Detail</h2>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-title">Responsive Design</div>
+                        <div class="feature-description">
+                            Sieht perfekt aus auf Desktop, Tablet und Smartphone - egal wo Sie die E-Mail öffnen.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📄</div>
+                        <div class="feature-title">Doppel-Format</div>
+                        <div class="feature-description">
+                            HTML (schön formatiert) + Plain Text (für alle E-Mail-Clients) - jeder kann sie lesen.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📎</div>
+                        <div class="feature-title">Nützliche Anhänge</div>
+                        <div class="feature-description">
+                            Manifest und Checksummen als TXT-Dateien - perfekt für Archivierung und Audit.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Quick-Commands</div>
+                        <div class="feature-description">
+                            Fertige SSH/SCP-Befehle direkt in der E-Mail - Copy & Paste genügt!
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🌍</div>
+                        <div class="feature-title">Zeitzonen-korrekt</div>
+                        <div class="feature-description">
+                            Alle Zeitstempel in Europe/Berlin (CET/CEST) - keine Verwirrung mit UTC!
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔐</div>
+                        <div class="feature-title">Sichere Übertragung</div>
+                        <div class="feature-description">
+                            Verschlüsselt via TLS - Ihre Backup-Informationen bleiben vertraulich.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipients Section -->
+            <div class="section">
+                <h2><span class="icon">👥</span> Wer bekommt die E-Mails?</h2>
+
+                <div class="info-box">
+                    <h3 style="margin-top: 0;">📧 Aktuelle Empfänger</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>E-Mail-Adresse</th>
+                                <th>Typ</th>
+                                <th>Zweck</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>fabian@askproai.de</code></td>
+                                <td>Geschäftlich</td>
+                                <td>Haupt-Empfänger (Office)</td>
+                            </tr>
+                            <tr>
+                                <td><code>fabianspitzer@icloud.com</code></td>
+                                <td>Privat</td>
+                                <td>Backup-Empfänger (Mobil)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="success-box">
+                    <h3 style="margin-top: 0;">💡 Warum zwei Adressen?</h3>
+                    <p><strong>Redundanz & Erreichbarkeit:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Falls eine E-Mail-Adresse nicht erreichbar ist</li>
+                        <li>Berufliche + private Benachrichtigungen</li>
+                        <li>Auch am Wochenende/Urlaub erreichbar</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2><span class="icon">⚙️</span> Wie funktioniert die E-Mail-Zustellung?</h2>
+
+                <div class="analogy-box">
+                    <h3>📬 Wie die Post - nur digitaler</h3>
+                    <p><strong>SMTP-Server</strong> ist wie ein Postamt für E-Mails. Ihr Backup-System gibt die "Briefe" (E-Mails) dort ab, und das Postamt (Gmail, SendGrid etc.) kümmert sich um die Zustellung.</p>
+                </div>
+
+                <h3>Unterstützte SMTP-Provider</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Vorteile</th>
+                            <th>Empfohlen für</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Gmail / Google Workspace</strong></td>
+                            <td>Einfach, zuverlässig, kostenlos</td>
+                            <td>Kleine bis mittlere Projekte</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SendGrid</strong></td>
+                            <td>Professionell, Analytics, API</td>
+                            <td>Geschäftliche Anwendungen</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AWS SES</strong></td>
+                            <td>Skalierbar, AWS-Integration</td>
+                            <td>Wenn bereits AWS genutzt wird</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-box">
+                    <h3 style="margin-top: 0;">🔒 Sicherheit</h3>
+                    <p><strong>SMTP-Credentials sind geschützt:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Gespeichert in <code>/etc/msmtprc</code> mit Rechten 600 (nur root kann lesen)</li>
+                        <li>App-Passwords statt echtes Passwort (bei Gmail)</li>
+                        <li>API-Keys mit eingeschränkten Berechtigungen (bei SendGrid/AWS)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Email Types Section -->
+            <div class="section">
+                <h2><span class="icon">📨</span> Alle E-Mail-Typen im Überblick</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>E-Mail-Typ</th>
+                            <th>Wann?</th>
+                            <th>Inhalt</th>
+                            <th>Anhänge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>✅ Erfolgs-Mail</td>
+                            <td>Nach jedem erfolgreichen Backup</td>
+                            <td>Details, Größe, Checksumme, Quick-Commands</td>
+                            <td>Manifest + Checksummen</td>
+                        </tr>
+                        <tr>
+                            <td>❌ Fehler-Mail</td>
+                            <td>Bei fehlgeschlagenem Backup</td>
+                            <td>Fehlermeldung, Logs, Troubleshooting, GitHub Issue</td>
+                            <td>Fehler-Logs</td>
+                        </tr>
+                        <tr>
+                            <td>⚠️ Größen-Warnung</td>
+                            <td>Bei Anomalien (±50% Größenabweichung)</td>
+                            <td>Vergleich mit Durchschnitt, mögliche Ursachen</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>🔔 NAS-Problem</td>
+                            <td>Bei Upload-Fehlern zur NAS</td>
+                            <td>Verbindungsdetails, Retry-Status, lokale Kopie</td>
+                            <td>Verbindungs-Logs</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Testing Section -->
+            <div class="section">
+                <h2><span class="icon">🧪</span> E-Mail-System testen</h2>
+
+                <div class="info-box">
+                    <h3 style="margin-top: 0;">💡 Test-Mails versenden</h3>
+                    <p>Sie können jederzeit Test-Mails versenden um zu prüfen, ob alles funktioniert:</p>
+
+                    <div class="code-block" style="margin-top: 15px;">
+# Erfolgs-Mail testen<br/>
+/var/www/api-gateway/scripts/test-backup-notifications.sh success<br/>
+<br/>
+# Fehler-Mail testen<br/>
+/var/www/api-gateway/scripts/test-backup-notifications.sh failure<br/>
+<br/>
+# Beide testen<br/>
+/var/www/api-gateway/scripts/test-backup-notifications.sh both
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h3 style="margin-top: 0;">✅ Was wird getestet?</h3>
+                    <ul style="margin-left: 20px;">
+                        <li>SMTP-Verbindung zum Mail-Server</li>
+                        <li>E-Mail-Formatierung (HTML + Plain Text)</li>
+                        <li>Anhänge (werden Manifest & Checksummen angehängt?)</li>
+                        <li>Empfänger-Adressen (kommen alle an?)</li>
+                        <li>Zeitzonen-Darstellung</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="section">
+                <h2><span class="icon">✨</span> Zusammenfassung</h2>
+
+                <div class="analogy-box">
+                    <h3>🎯 Das Wichtigste in Kürze</h3>
+                    <ul style="margin-left: 20px; font-size: 1.05em; line-height: 2;">
+                        <li>✅ <strong>Nach jedem Backup</strong> - erfolg reich oder fehlgeschlagen</li>
+                        <li>✅ <strong>Zwei Formate</strong> - HTML (schön) + Plain Text (kompatibel)</li>
+                        <li>✅ <strong>Mit Anhängen</strong> - Manifest & Checksummen zum Archivieren</li>
+                        <li>✅ <strong>Quick-Commands</strong> - fertige Befehle zum Kopieren</li>
+                        <li>✅ <strong>Automatische Eskalation</strong> - GitHub Issues bei Fehlern</li>
+                        <li>✅ <strong>Zwei Empfänger</strong> - redundant & immer erreichbar</li>
+                        <li>✅ <strong>Zeitzonen-korrekt</strong> - Europe/Berlin (CET/CEST)</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <a href="/docs/backup-system/" class="btn">🏠 Zurück zum Dokumentations-Hub</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            }
+        });
+    </script>
+</body>
+</html>

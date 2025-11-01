@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Backup-System: So funktioniert es - AskPro AI Gateway</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .meta-info {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-item .label {
+            font-size: 0.85em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .meta-item .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h3 {
+            color: #495057;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
+        }
+
+        .analogy-box h3 {
+            color: white;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+
+        .analogy-box p {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            margin: 30px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin: 40px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .timeline-item:nth-child(odd) {
+            flex-direction: row;
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border: 2px solid #e9ecef;
+            margin: 0 30px;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-right: calc(50% + 30px);
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: calc(50% + 30px);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            z-index: 10;
+        }
+
+        .timeline-time {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .timeline-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .timeline-description {
+            color: #6c757d;
+            font-size: 0.95em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding: 20px 20px 20px 70px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .timeline::before {
+                left: 30px;
+            }
+
+            .timeline-item {
+                flex-direction: column !important;
+                align-items: flex-start;
+            }
+
+            .timeline-content {
+                margin: 0 0 0 60px !important;
+            }
+
+            .timeline-marker {
+                left: 30px !important;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💾 Backup-System: So funktioniert es</h1>
+            <p class="subtitle">Ihre Daten sind sicher - rund um die Uhr geschützt</p>
+        </div>
+
+        <div class="meta-info">
+            <div class="meta-item">
+                <div class="label">Backups pro Tag</div>
+                <div class="value">3×</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Aufbewahrung</div>
+                <div class="value">14 Tage</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Wiederherstellung</div>
+                <div class="value">Jederzeit</div>
+            </div>
+            <div class="meta-item">
+                <div class="label">Datenverlust</div>
+                <div class="value">0%</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Analogy Section -->
+            <div class="analogy-box">
+                <h3>🏦 Wie ein Tresor für Ihre Daten</h3>
+                <p><strong>Stellen Sie sich vor:</strong> Ihr Backup-System ist wie ein hochmoderner Bank-Tresor, der dreimal täglich automatisch eine perfekte Kopie Ihrer gesamten Firma erstellt. Nicht nur einmal am Tag - sondern morgens, mittags und abends. Wenn etwas schiefgeht, können Sie jederzeit zurück zu einem dieser Zeitpunkte springen.</p>
+                <p style="margin-top: 15px;"><strong>Noch besser:</strong> Zwischen diesen großen Kopien wird zusätzlich jede einzelne Änderung protokolliert (wie eine lückenlose Video-Aufnahme). So können Sie nicht nur zu den 3 Backup-Zeitpunkten zurück, sondern zu <em>jedem beliebigen Moment</em> - auf die Sekunde genau!</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">07:00</div>
+                    <div class="stat-label">Morgen-Backup</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">13:00</div>
+                    <div class="stat-label">Mittags-Backup</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">19:00</div>
+                    <div class="stat-label">Abend-Backup</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">10 Min</div>
+                    <div class="stat-label">Änderungs-Protokoll</div>
+                </div>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="section">
+                <h2><span class="icon">⏰</span> Tagesablauf: Was passiert wann?</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker">🌅</div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">07:00 Uhr</div>
+                            <div class="timeline-title">Morgen-Backup</div>
+                            <div class="timeline-description">
+                                Vollständige Kopie aller Daten: Datenbank + Dateien + Einstellungen.<br>
+                                <strong>Dauer:</strong> ~2 Minuten | <strong>Größe:</strong> ~142 MB
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">☀️</div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">13:00 Uhr</div>
+                            <div class="timeline-title">Mittags-Backup</div>
+                            <div class="timeline-description">
+                                Zweite vollständige Kopie - fängt alle Änderungen vom Vormittag ein.<br>
+                                <strong>Warum wichtig?</strong> Falls am Morgen etwas schief ging, haben Sie diesen Rettungspunkt.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">🌆</div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">19:00 Uhr</div>
+                            <div class="timeline-title">Abend-Backup</div>
+                            <div class="timeline-description">
+                                Dritte und letzte Kopie des Tages - sichert den kompletten Arbeitstag.<br>
+                                <strong>Bonus:</strong> Jeden 1. und 15. des Monats wird diese Kopie 6 Monate aufbewahrt!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">🔄</div>
+                        <div class="timeline-content">
+                            <div class="timeline-time">Alle 10 Minuten</div>
+                            <div class="timeline-title">Änderungs-Protokoll</div>
+                            <div class="timeline-description">
+                                Zwischen den Backups: Jede einzelne Datenbank-Änderung wird protokolliert.<br>
+                                <strong>Ergebnis:</strong> Sie können zu <em>jedem</em> Zeitpunkt zurück - nicht nur zu 07:00, 13:00 und 19:00!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flowchart Section -->
+            <div class="section">
+                <h2><span class="icon">🔄</span> Backup-Ablauf: Schritt für Schritt</h2>
+
+                <div class="mermaid">
+                    graph TB
+                        A[⏰ Backup-Zeit erreicht<br/>07:00 / 13:00 / 19:00] --> B{System bereit?}
+                        B -->|Ja| C[📊 Datenbank sichern<br/>~4 MB]
+                        B -->|Läuft bereits| Z[⏸️ Warten]
+                        C --> D[📁 Dateien packen<br/>~138 MB]
+                        D --> E[⚙️ System-Config sichern<br/>~200 KB]
+                        E --> F[🔐 Checksumme berechnen<br/>SHA256]
+                        F --> G[📦 Alles in ein Paket<br/>backup-YYYYMMDD_HHMMSS.tar.gz]
+                        G --> H[☁️ Upload zur NAS<br/>Synology]
+                        H --> I{Upload erfolgreich?}
+                        I -->|Ja| J[✅ Erfolgs-Mail senden]
+                        I -->|Nein| K[❌ Fehler-Mail + Alarm]
+                        J --> L[🧹 Alte Backups aufräumen<br/>>14 Tage löschen]
+                        K --> M[🔔 GitHub Issue erstellen]
+                        L --> N[✨ Fertig!]
+                        M --> N
+
+                        style A fill:#667eea,stroke:#764ba2,stroke-width:3px,color:#fff
+                        style J fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+                        style K fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+                        style N fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+                </div>
+            </div>
+
+            <!-- PITR Section -->
+            <div class="section">
+                <h2><span class="icon">⏮️</span> Point-in-Time Recovery (PITR)</h2>
+
+                <div class="analogy-box">
+                    <h3>🎬 Wie eine Video-Zeitmaschine</h3>
+                    <p><strong>Normale Backups</strong> sind wie Fotos: Sie haben Momentaufnahmen von 07:00, 13:00 und 19:00 Uhr.</p>
+                    <p style="margin-top: 10px;"><strong>PITR ist wie ein Video:</strong> Sie können zu jedem Zeitpunkt zwischen den Fotos springen. Ein Fehler passierte um 14:37 Uhr? Kein Problem - Sie können exakt zu 14:36 Uhr zurück!</p>
+                </div>
+
+                <h3>Wie funktioniert das?</h3>
+                <ol class="step-list">
+                    <li>
+                        <strong>Basis-Backup wiederherstellen</strong><br>
+                        Wir nehmen das letzte Backup <em>vor</em> dem Problem (z.B. 13:00 Uhr)
+                    </li>
+                    <li>
+                        <strong>Änderungen nachspielen</strong><br>
+                        Das System spielt alle protokollierten Änderungen von 13:00 bis zu Ihrem Wunsch-Zeitpunkt (z.B. 14:36) nach
+                    </li>
+                    <li>
+                        <strong>Exakte Wiederherstellung</strong><br>
+                        Ihre Datenbank ist jetzt exakt im Zustand von 14:36 Uhr - auf die Sekunde genau!
+                    </li>
+                </ol>
+
+                <div class="success-box">
+                    <strong>📌 Beispiel:</strong> Um 14:37 Uhr wurde versehentlich eine wichtige Kundenliste gelöscht. Mit PITR können Sie zu 14:36 Uhr zurück - eine Minute bevor es passierte. Die Kundenliste ist wieder da! ✨
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="section">
+                <h2><span class="icon">🛡️</span> Sicherheits-Features</h2>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔐</div>
+                        <div class="feature-title">Verschlüsselte Übertragung</div>
+                        <div class="feature-description">
+                            Alle Backups werden über SSH übertragen - wie ein Panzerwagen für Ihre Daten.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">✓</div>
+                        <div class="feature-title">Integritätsprüfung</div>
+                        <div class="feature-description">
+                            Jedes Backup bekommt einen digitalen Fingerabdruck (SHA256). So erkennen wir sofort, wenn etwas manipuliert wurde.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🚨</div>
+                        <div class="feature-description">
+                            Wenn ein Backup plötzlich 50% größer/kleiner ist als normal, schlagen wir Alarm - könnte ein Fehler sein!
+                        </div>
+                        <div class="feature-title">Größen-Anomalie-Erkennung</div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-title">Kein gleichzeitiges Backup</div>
+                        <div class="feature-description">
+                            Lockfile verhindert, dass zwei Backups gleichzeitig laufen - könnte zu Chaos führen!
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">💾</div>
+                        <div class="feature-title">Lokale + Externe Kopie</div>
+                        <div class="feature-description">
+                            Die letzten 3 Backups bleiben auf dem Server (schneller Zugriff), alle Backups auf der NAS (externe Sicherheit).
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📧</div>
+                        <div class="feature-title">E-Mail bei jedem Backup</div>
+                        <div class="feature-description">
+                            Sie bekommen nach jedem Backup eine E-Mail - egal ob erfolgreich oder fehlgeschlagen. Transparenz garantiert!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Section -->
+            <div class="section">
+                <h2><span class="icon">🗄️</span> Wo werden Backups gespeichert?</h2>
+
+                <div class="info-box">
+                    <h3 style="margin-top: 0;">📍 Synology NAS (Hauptspeicher)</h3>
+                    <p><strong>Standort:</strong> <code>/volume1/homes/FSAdmin/Backup/Server AskProAI/</code></p>
+                    <p><strong>Struktur:</strong></p>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>daily/</strong> - Tägliche Backups (14 Tage aufbewahrt)</li>
+                        <li><strong>biweekly/</strong> - Zweiwöchentliche Snapshots (6 Monate aufbewahrt)</li>
+                        <li><strong>binlogs/</strong> - Änderungs-Protokolle für PITR</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3 style="margin-top: 0;">💻 Lokaler Server (Schnellzugriff)</h3>
+                    <p><strong>Standort:</strong> <code>/var/backups/askproai/</code></p>
+                    <p><strong>Inhalt:</strong> Die letzten 3 Backups - für schnelle Wiederherstellung ohne NAS-Zugriff</p>
+                </div>
+
+                <h3>Aufbewahrungsfristen</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Backup-Typ</th>
+                            <th>Zeitpunkt</th>
+                            <th>Aufbewahrung</th>
+                            <th>Zweck</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tägliche Backups</td>
+                            <td>07:00, 13:00, 19:00</td>
+                            <td>14 Tage</td>
+                            <td>Schnelle Wiederherstellung</td>
+                        </tr>
+                        <tr>
+                            <td>Zweiwöchentliche Snapshots</td>
+                            <td>1. & 15. um 19:00</td>
+                            <td>6 Monate</td>
+                            <td>Langzeit-Archiv, Compliance</td>
+                        </tr>
+                        <tr>
+                            <td>Änderungs-Protokolle</td>
+                            <td>Alle 10 Minuten</td>
+                            <td>14 Tage</td>
+                            <td>Point-in-Time Recovery</td>
+                        </tr>
+                        <tr>
+                            <td>Lokale Kopien</td>
+                            <td>Letzte 3 Backups</td>
+                            <td>Bis überschrieben</td>
+                            <td>Notfall-Zugriff</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recovery Section -->
+            <div class="section">
+                <h2><span class="icon">🔧</span> Wiederherstellung: Was passiert im Notfall?</h2>
+
+                <div class="warning-box">
+                    <h3 style="margin-top: 0;">⚠️ Wichtig: Immer IT kontaktieren!</h3>
+                    <p>Eine Wiederherstellung sollte <strong>nie</strong> ohne IT-Expertise durchgeführt werden. Dieser Abschnitt erklärt den Prozess für Ihr Verständnis, nicht zur Selbst-Ausführung.</p>
+                </div>
+
+                <h3>Szenarien & Lösungen</h3>
+
+                <div class="success-box">
+                    <h4>1️⃣ Datei wurde versehentlich gelöscht (vor 2 Stunden)</h4>
+                    <p><strong>Lösung:</strong> Point-in-Time Recovery</p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>Letztes Backup wiederherstellen (z.B. 13:00 Uhr)</li>
+                        <li>Änderungsprotokolle bis kurz vor Löschung nachspielen</li>
+                        <li>Datei ist zurück! ✨</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Dauer:</strong> ~15 Minuten</p>
+                </div>
+
+                <div class="success-box">
+                    <h4>2️⃣ Kompletter Server-Crash</h4>
+                    <p><strong>Lösung:</strong> Vollständige System-Wiederherstellung</p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>Neuen Server aufsetzen</li>
+                        <li>Letztes Backup von NAS laden</li>
+                        <li>Datenbank + Dateien + Konfiguration wiederherstellen</li>
+                        <li>System läuft wieder! ✨</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Dauer:</strong> ~2 Stunden</p>
+                </div>
+
+                <div class="success-box">
+                    <h4>3️⃣ Daten von vor 3 Tagen benötigt</h4>
+                    <p><strong>Lösung:</strong> Backup vom entsprechenden Tag</p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>Backup vom gewünschten Tag auf NAS finden</li>
+                        <li>Nur die benötigten Daten extrahieren</li>
+                        <li>Daten bereitstellen - System läuft weiter! ✨</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Dauer:</strong> ~30 Minuten</p>
+                </div>
+            </div>
+
+            <!-- Monitoring Section -->
+            <div class="section">
+                <h2><span class="icon">📊</span> Überwachung & Benachrichtigungen</h2>
+
+                <h3>Sie werden automatisch informiert bei:</h3>
+                <ul class="step-list">
+                    <li>
+                        <strong>Jedem erfolgreichen Backup</strong><br>
+                        E-Mail mit Details: Größe, Dauer, Checksumme, Download-Links
+                    </li>
+                    <li>
+                        <strong>Jedem fehlgeschlagenen Backup</strong><br>
+                        E-Mail + automatisches GitHub Issue für IT-Team
+                    </li>
+                    <li>
+                        <strong>Größen-Anomalien</strong><br>
+                        Warnung wenn Backup ungewöhnlich groß/klein ist
+                    </li>
+                    <li>
+                        <strong>Upload-Problemen zur NAS</strong><br>
+                        Sofortige Benachrichtigung bei Verbindungsproblemen
+                    </li>
+                </ul>
+
+                <div class="info-box">
+                    <h3 style="margin-top: 0;">📧 Empfänger</h3>
+                    <ul style="margin-left: 20px;">
+                        <li>fabian@askproai.de</li>
+                        <li>fabianspitzer@icloud.com</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Format:</strong> HTML (schön formatiert) + Plain Text (für alle E-Mail-Clients)</p>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="section">
+                <h2><span class="icon">✨</span> Zusammenfassung</h2>
+
+                <div class="analogy-box">
+                    <h3>🎯 Das Wichtigste in Kürze</h3>
+                    <ul style="margin-left: 20px; font-size: 1.05em; line-height: 2;">
+                        <li>✅ <strong>3 Backups pro Tag</strong> - morgens, mittags, abends</li>
+                        <li>✅ <strong>14 Tage Aufbewahrung</strong> - alle täglichen Backups</li>
+                        <li>✅ <strong>6 Monate Archiv</strong> - zweiwöchentliche Snapshots</li>
+                        <li>✅ <strong>Sekundengenaue Wiederherstellung</strong> - dank PITR</li>
+                        <li>✅ <strong>Automatische Überwachung</strong> - E-Mail bei jedem Backup</li>
+                        <li>✅ <strong>Externe Sicherheit</strong> - alle Daten auf Synology NAS</li>
+                        <li>✅ <strong>Null Datenverlust</strong> - durch Änderungs-Protokolle</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <a href="/docs/backup-system/" class="btn">🏠 Zurück zum Dokumentations-Hub</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            }
+        });
+    </script>
+</body>
+</html>
