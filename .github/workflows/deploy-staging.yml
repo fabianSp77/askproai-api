@@ -1,0 +1,175 @@
+# ==============================================================================
+# Deploy to Staging (fixed)
+# ==============================================================================
+
+name: Deploy to Staging
+
+on:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types: [completed]
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Optional Build Run ID (defaults to latest successful build)'
+        required: false
+        type: string
+
+env:
+  STAGING_HOST: 152.53.116.127
+  STAGING_USER: deploy
+  STAGING_BASE_DIR: /var/www/api-gateway-staging
+  DOMAIN: staging.askproai.de
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 30
+    environment:
+      name: staging
+      url: https://staging.askproai.de
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure tools
+        run: |
+          type jq >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y jq; }
+          type gh >/dev/null 2>&1 || { echo "gh CLI fehlt (Runner)"; exit 1; }
+
+      - name: Determine Build Run ID
+        id: build_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ github.event.workflow_run.id || '' }}" ]; then
+            BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
+            BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
+          elif [ -n "${{ inputs.build_run_id || '' }}" ]; then
+            BUILD_RUN_ID="${{ inputs.build_run_id }}"
+            BUILD_SHA=$(gh run view "$BUILD_RUN_ID" --json headSha --jq '.headSha')
+          else
+            SHA="${{ github.sha }}"
+            BUILD_RUN_ID=$(gh run list \
+              --workflow "Build Artifacts" \
+              --branch "${{ github.ref_name }}" \
+              --json databaseId,headSha,status,conclusion \
+              --limit 20 | jq -r --arg sha "$SHA" \
+              '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+            [ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+            BUILD_SHA="$SHA"
+          fi
+          echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
+          echo "BUILD_SHA=$BUILD_SHA"       >> $GITHUB_ENV
+          echo "run_id=$BUILD_RUN_ID"       >> $GITHUB_OUTPUT
+          echo "sha=$BUILD_SHA"             >> $GITHUB_OUTPUT
+
+      - name: Download Deployment Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-bundle-${{ env.BUILD_SHA }}
+          path: ./deploy/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.BUILD_RUN_ID }}
+
+      - name: Write SSH key from secret
+        run: |
+          [ -n "${{ secrets.STAGING_SSH_KEY }}" ] || { echo "STAGING_SSH_KEY missing"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          head -n1 ~/.ssh/staging_key | grep -q "BEGIN OPENSSH PRIVATE KEY" || { echo "Invalid key format"; exit 1; }
+
+      - name: Setup known_hosts
+        run: |
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+          ssh-keyscan -H ${{ env.DOMAIN }}       >> ~/.ssh/known_hosts 2>&1 || true
+
+      - name: Upload bundle to server
+        run: |
+          set -euo pipefail
+          BUNDLE_FILE=$(ls deploy/deploy-bundle-*.tar.gz)
+          BUNDLE_NAME=$(basename "$BUNDLE_FILE")
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+          echo "BUNDLE_NAME=$BUNDLE_NAME" >> $GITHUB_ENV
+          echo "Uploaded $BUNDLE_NAME"
+
+      - name: Prepare release on server
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
+          set -euo pipefail
+          TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+          COMMIT_SHA="${{ env.BUILD_SHA }}"
+          COMMIT_SHA_SHORT=\${COMMIT_SHA:0:8}
+          RELEASE_NAME="\${TIMESTAMP}-\${COMMIT_SHA_SHORT}"
+          RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/\${RELEASE_NAME}"
+          mkdir -p "\$RELEASE_PATH"
+          tar -xzf "/tmp/${BUNDLE_NAME}" -C "\$RELEASE_PATH"
+          cd "\$RELEASE_PATH"
+          rm -rf storage && ln -s "${{ env.STAGING_BASE_DIR }}/shared/storage" storage
+          rm -rf public/uploads && ln -s "${{ env.STAGING_BASE_DIR }}/shared/public/uploads" public/uploads
+          ln -s "${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env" .env
+          chmod -R 775 storage bootstrap/cache
+          echo "RELEASE_PATH=\$RELEASE_PATH" > /tmp/deploy_env
+          EOF
+
+      - name: Run migrations
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          cd "$RELEASE_PATH"
+          mkdir -p "${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/shared/storage/backups"
+          php artisan migrate --force
+          EOF
+
+      - name: Clear caches
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          cd "$RELEASE_PATH"
+          php artisan config:clear || true
+          php artisan cache:clear  || true
+          php artisan route:clear  || true
+          php artisan view:clear   || true
+          php artisan optimize:clear || true
+          php artisan config:cache || true
+          php artisan route:cache  || true
+          EOF
+
+      - name: Switch current symlink
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          CURRENT_LINK="${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/current"
+          TEMP_LINK="${CURRENT_LINK}_tmp_$$"
+          ln -s "$RELEASE_PATH" "$TEMP_LINK"
+          mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
+          EOF
+
+      - name: Reload services
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          sudo systemctl reload 'php*-fpm' 2>/dev/null || true
+          sudo nginx -t && sudo systemctl reload nginx || true
+          EOF
+
+      - name: Health checks
+        run: |
+          curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
+          curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+
+      - name: Cleanup temp
+        if: always()
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
+          rm -f "/tmp/${BUNDLE_NAME}" || true
+          rm -f /tmp/deploy_env || true
+          EOF

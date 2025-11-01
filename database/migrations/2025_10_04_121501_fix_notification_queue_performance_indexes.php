@@ -17,6 +17,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if notification_queue table exists before attempting to modify
+        if (!Schema::hasTable('notification_queue')) {
+            return;
+        }
+
         Schema::table('notification_queue', function (Blueprint $table) {
             // Create indexes that were supposed to be created by 2025_10_04_110927
             $table->index(['status', 'created_at'], 'idx_nq_status_created');

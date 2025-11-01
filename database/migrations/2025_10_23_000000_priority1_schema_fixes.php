@@ -105,13 +105,16 @@ return new class extends Migration
      */
     protected function backfillCompanyIds(): void
     {
-        // Backfill services.company_id from branches
-        $servicesUpdated = DB::table('services')
-            ->whereNull('company_id')
-            ->whereNotNull('branch_id')
-            ->update([
-                'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = services.branch_id)')
-            ]);
+        // Backfill services.company_id from branches (only if branch_id column exists)
+        $servicesUpdated = 0;
+        if (Schema::hasColumn('services', 'branch_id')) {
+            $servicesUpdated = DB::table('services')
+                ->whereNull('company_id')
+                ->whereNotNull('branch_id')
+                ->update([
+                    'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = services.branch_id)')
+                ]);
+        }
 
         // Backfill remaining services.company_id with default company (ID=1)
         $servicesDefaulted = DB::table('services')
@@ -267,14 +270,21 @@ return new class extends Migration
         });
 
         // 3. services branch filtering (company_id, branch_id, is_active)
+        // Note: Only add branch_id to index if column exists
         Schema::table('services', function (Blueprint $table) {
             $indexes = DB::select("
                 SHOW INDEX FROM services WHERE Key_name = 'idx_services_branch_active'
             ");
 
             if (empty($indexes)) {
-                $table->index(['company_id', 'branch_id', 'is_active'], 'idx_services_branch_active');
-                \Log::info('Added index: services(company_id, branch_id, is_active)');
+                if (Schema::hasColumn('services', 'branch_id')) {
+                    $table->index(['company_id', 'branch_id', 'is_active'], 'idx_services_branch_active');
+                    \Log::info('Added index: services(company_id, branch_id, is_active)');
+                } else {
+                    // If branch_id doesn't exist, create simpler index
+                    $table->index(['company_id', 'is_active'], 'idx_services_branch_active');
+                    \Log::info('Added index: services(company_id, is_active) - branch_id column does not exist');
+                }
             }
         });
 

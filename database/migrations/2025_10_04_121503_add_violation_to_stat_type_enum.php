@@ -15,6 +15,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table exists before attempting to modify
+        if (!\Illuminate\Support\Facades\Schema::hasTable('appointment_modification_stats')) {
+            return;
+        }
+
+        // Check if stat_type column exists before attempting to modify
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('appointment_modification_stats', 'stat_type')) {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE appointment_modification_stats
             MODIFY COLUMN stat_type ENUM(
