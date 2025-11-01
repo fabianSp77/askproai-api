@@ -257,6 +257,50 @@ jobs:
             deploy-bundle-*.tar.gz.sha256
           retention-days: 30
 
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-backend]
+    # Only run if backend code changed
+    if: needs.detect-changes.outputs.backend == 'true' && needs.build-backend.result == 'success'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none
+
+      - name: Download Backend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-${{ github.sha }}
+          path: vendor/
+
+      - name: Install PHPStan
+        run: |
+          echo "📦 Installing PHPStan..."
+          composer require --dev phpstan/phpstan --no-interaction --prefer-dist
+
+      - name: Run PHPStan Analysis
+        run: |
+          echo "🔍 Running PHPStan static analysis..."
+          vendor/bin/phpstan analyse app/ --level=5 --no-progress --error-format=table
+
+      - name: Upload Analysis Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpstan-results-${{ github.sha }}
+          path: phpstan-*.txt
+          retention-days: 7
+          if-no-files-found: ignore
+
   run-tests:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -320,7 +364,7 @@ jobs:
   build-summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-frontend, build-backend, create-deployment-bundle, run-tests]
+    needs: [detect-changes, build-frontend, build-backend, create-deployment-bundle, static-analysis, run-tests]
     if: always()
 
     steps:
@@ -333,6 +377,7 @@ jobs:
           echo "| Frontend Build | ${{ needs.build-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Backend Build | ${{ needs.build-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deployment Bundle | ${{ needs.create-deployment-bundle.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Analysis | ${{ needs.static-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ${{ needs.run-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
