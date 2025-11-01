@@ -1,0 +1,30 @@
+name: Build Artifacts
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-frontend:
+    name: Build Frontend Assets
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "frontend ok"
+
+  build-backend:
+    name: Build Backend Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "backend ok"
+
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "phpstan ok"
+
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "tests ok"
