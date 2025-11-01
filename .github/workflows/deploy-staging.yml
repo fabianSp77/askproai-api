@@ -235,7 +235,7 @@ jobs:
           rm -rf storage && ln -s "${{ env.STAGING_BASE_DIR }}/shared/storage" storage
           rm -rf public/uploads && ln -s "${{ env.STAGING_BASE_DIR }}/shared/public/uploads" public/uploads
           ln -s "${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env" .env
-          chmod -R 775 storage bootstrap/cache
+          chmod -R 775 bootstrap/cache
           echo "RELEASE_PATH=\$RELEASE_PATH" > /tmp/deploy_env
           EOF
 
@@ -340,6 +340,7 @@ jobs:
     needs: [deploy-staging]
     if: failure() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 10
+    environment: staging
 
     steps:
       - name: Checkout
