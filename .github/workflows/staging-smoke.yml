@@ -1,0 +1,164 @@
+# ==============================================================================
+# Staging Smoke Tests - One-Click Sanity Check
+# ==============================================================================
+# Purpose: Quick health verification of staging environment
+# Trigger: Manual dispatch or on-demand
+# Duration: ~30 seconds
+# ==============================================================================
+
+name: Staging Smoke Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every 6 hours to catch regressions
+    - cron: '0 */6 * * *'
+
+env:
+  STAGING_URL: https://staging.askproai.de
+
+jobs:
+  smoke-tests:
+    name: Staging Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Smoke Tests
+        env:
+          HEALTHCHECK_TOKEN: ${{ secrets.HEALTHCHECK_TOKEN }}
+        run: |
+          echo "🔥 Running staging smoke tests..."
+          echo ""
+
+          FAILED=0
+          RESULTS_FILE="/tmp/smoke-results.txt"
+          > $RESULTS_FILE
+
+          # Test 1: healthcheck.php
+          echo "1️⃣  Testing /healthcheck.php..."
+          HTTP_CODE=$(curl -sS -o /tmp/health1.json -w "%{http_code}" \
+            -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+            "$STAGING_URL/healthcheck.php")
+
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health1.json > /dev/null; then
+            echo "   ✅ healthcheck.php: 200 OK"
+            echo "✅ healthcheck.php: 200 OK" >> $RESULTS_FILE
+          else
+            echo "   ❌ healthcheck.php: HTTP $HTTP_CODE"
+            echo "❌ healthcheck.php: HTTP $HTTP_CODE" >> $RESULTS_FILE
+            FAILED=1
+          fi
+
+          # Test 2: /health (Laravel route)
+          echo "2️⃣  Testing /health..."
+          HTTP_CODE=$(curl -sS -o /tmp/health2.json -w "%{http_code}" \
+            -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+            "$STAGING_URL/health")
+
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health2.json > /dev/null; then
+            echo "   ✅ /health: 200 OK"
+            echo "✅ /health: 200 OK" >> $RESULTS_FILE
+          else
+            echo "   ❌ /health: HTTP $HTTP_CODE"
+            echo "❌ /health: HTTP $HTTP_CODE" >> $RESULTS_FILE
+            FAILED=1
+          fi
+
+          # Test 3: /api/health-check
+          echo "3️⃣  Testing /api/health-check..."
+          HTTP_CODE=$(curl -sS -o /tmp/health3.json -w "%{http_code}" \
+            -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+            "$STAGING_URL/api/health-check")
+
+          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health3.json > /dev/null; then
+            echo "   ✅ /api/health-check: 200 OK"
+            echo "✅ /api/health-check: 200 OK" >> $RESULTS_FILE
+          else
+            echo "   ❌ /api/health-check: HTTP $HTTP_CODE"
+            echo "❌ /api/health-check: HTTP $HTTP_CODE" >> $RESULTS_FILE
+            FAILED=1
+          fi
+
+          # Test 4: Vite manifest.json
+          echo "4️⃣  Testing /build/manifest.json..."
+          HTTP_CODE=$(curl -sS -o /tmp/manifest.json -w "%{http_code}" \
+            "$STAGING_URL/build/manifest.json")
+
+          if [ "$HTTP_CODE" = "200" ] && jq empty /tmp/manifest.json 2>/dev/null; then
+            echo "   ✅ manifest.json: 200 OK (valid JSON)"
+            echo "✅ manifest.json: 200 OK" >> $RESULTS_FILE
+          else
+            echo "   ❌ manifest.json: HTTP $HTTP_CODE"
+            echo "❌ manifest.json: HTTP $HTTP_CODE" >> $RESULTS_FILE
+            FAILED=1
+          fi
+
+          # Test 5: Vite asset (first entry in manifest)
+          echo "5️⃣  Testing Vite asset accessibility..."
+          ASSET_PATH=$(jq -r 'to_entries | .[0].value.file' /tmp/manifest.json)
+          HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -I \
+            "$STAGING_URL/build/$ASSET_PATH")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "   ✅ Vite asset ($ASSET_PATH): 200 OK"
+            echo "✅ Vite asset: 200 OK" >> $RESULTS_FILE
+          else
+            echo "   ❌ Vite asset: HTTP $HTTP_CODE"
+            echo "❌ Vite asset: HTTP $HTTP_CODE" >> $RESULTS_FILE
+            FAILED=1
+          fi
+
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          if [ "$FAILED" -eq 0 ]; then
+            echo "  ✅ ALL SMOKE TESTS PASSED"
+            echo ""
+            echo "Summary:"
+            cat $RESULTS_FILE
+          else
+            echo "  ❌ SMOKE TESTS FAILED"
+            echo ""
+            echo "Summary:"
+            cat $RESULTS_FILE
+            exit 1
+          fi
+          echo "═══════════════════════════════════════════════════════"
+
+      - name: Create Smoke Test Summary
+        if: always()
+        run: |
+          cat > smoke-summary.json << SUMMARY
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "environment": "staging",
+            "url": "$STAGING_URL",
+            "workflow_run_id": "${{ github.run_id }}",
+            "trigger": "${{ github.event_name }}",
+            "triggered_by": "${{ github.actor }}",
+            "status": "${{ job.status }}",
+            "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          SUMMARY
+
+          echo "Smoke test summary created:"
+          cat smoke-summary.json | jq '.'
+
+      - name: Upload Smoke Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results-${{ github.run_id }}
+          path: |
+            smoke-summary.json
+            /tmp/smoke-results.txt
+          retention-days: 30
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "::warning::Staging smoke tests failed - check results artifact"
