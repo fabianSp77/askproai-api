@@ -265,6 +265,7 @@ jobs:
           mkdir -p release/public
           cp -a public/index.php release/public/
           cp -a public/.htaccess release/public/ 2>/dev/null || true
+          cp -a public/healthcheck.php release/public/ 2>/dev/null || true
           cp -a public/build release/public/
 
           # Vendor
