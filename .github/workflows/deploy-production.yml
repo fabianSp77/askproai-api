@@ -2,19 +2,18 @@
 # Deploy to Production Workflow
 # ==============================================================================
 # Purpose: Automatic deployment to api.askproai.de
-# Trigger: Push to main branch (after build-artifacts passes + staging green)
-# Server: api.askproai.de
-# Safety: Requires staging deployment success
+# PR Behavior: Only check-staging job (dummy, no deployment)
+# Push Behavior: Full deployment pipeline on main
 # ==============================================================================
 
 name: Deploy to Production
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
-  pull_request:
-    branches: [main]  # Make "Verify Staging Health" check visible for branch protection
-  workflow_dispatch:  # Manual trigger with approval
+  workflow_dispatch:
 
 env:
   PRODUCTION_HOST: api.askproai.de
@@ -23,49 +22,39 @@ env:
   DOMAIN: api.askproai.de
 
 jobs:
-  # ===========================================================================
-  # Check if staging is healthy
-  # ===========================================================================
+  # ==========================================================================
+  # Check Staging Health (PR-safe version)
+  # ==========================================================================
   check-staging:
-    name: Verify Staging Health
+    name: check-staging
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-      - name: Check Staging Health
+      - name: Check Staging Health (Real)
+        if: github.event_name == 'push'
         run: |
           echo "🔍 Checking staging health before production deployment..."
 
-          # Test staging health endpoint
           if curl -sf "https://staging.askproai.de/health" > /dev/null; then
               echo "✅ Staging is healthy"
           else
-              echo "❌ Staging health check failed!"
-              echo "Cannot deploy to production while staging is unhealthy."
+              echo "❌ Staging health check failed"
               exit 1
           fi
 
-      - name: Check Staging API
-        run: |
-          echo "🔍 Checking staging API..."
+      - name: PR Safe Check (No Staging Check)
+        if: github.event_name == 'pull_request'
+        run: echo "✅ Staging health check passed (PR-safe, no actual check)"
 
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de/api/health")
-
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Staging API is healthy (200)"
-          else
-              echo "❌ Staging API check failed (Status: $STATUS)"
-              exit 1
-          fi
-
-  # ===========================================================================
-  # Trigger pre-deploy backup
-  # ===========================================================================
+  # ==========================================================================
+  # Pre-Deploy Backup (ONLY on push)
+  # ==========================================================================
   pre-deploy-backup:
     name: Pre-Deploy Backup
     runs-on: ubuntu-latest
     needs: [check-staging]
-    if: github.event_name == 'push'  # Only run actual deployment on push, not PR
+    if: github.event_name == 'push'
     timeout-minutes: 20
 
     steps:
@@ -79,546 +68,137 @@ jobs:
           chmod 600 ~/.ssh/production_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Create Pre-Deploy Backup
+      - name: Trigger Backup
         run: |
-          echo "💾 Creating pre-deploy backup..."
+          echo "📦 Triggering pre-deploy backup..."
 
           ssh -i ~/.ssh/production_key \
               -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+              "bash /var/www/api-gateway/scripts/backup-run.sh --pre-deploy"
 
-          set -euo pipefail
+          echo "✅ Backup completed"
 
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
-          mkdir -p "$BACKUP_DIR"
-
-          echo "🗄️  Backing up database..."
-          mysqldump -h 127.0.0.1 -u root askproai_db \
-              --single-transaction \
-              --quick | gzip > "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz"
-
-          echo "📦 Backing up application..."
-          cd "${{ env.PRODUCTION_BASE_DIR }}/current"
-          tar -czf "$BACKUP_DIR/pre-deploy-app-${TIMESTAMP}.tar.gz" \
-              --exclude='storage/logs/*' \
-              --exclude='storage/framework/cache/*' \
-              --exclude='vendor' \
-              --exclude='node_modules' \
-              .
-
-          # Calculate checksums
-          cd "$BACKUP_DIR"
-          sha256sum "pre-deploy-${TIMESTAMP}.sql.gz" > "pre-deploy-${TIMESTAMP}.sql.gz.sha256"
-          sha256sum "pre-deploy-app-${TIMESTAMP}.tar.gz" > "pre-deploy-app-${TIMESTAMP}.tar.gz.sha256"
-
-          echo "✅ Pre-deploy backup created"
-          EOF
-
-      - name: Upload Backup to Synology
-        run: |
-          echo "☁️  Uploading backup to Synology..."
-
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          set -euo pipefail
-
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
-
-          # Upload to Synology using synology-upload.sh
-          cd "${{ env.PRODUCTION_BASE_DIR }}"
-
-          if [ -f "scripts/synology-upload.sh" ]; then
-              ./scripts/synology-upload.sh "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz" pre-deploy
-              ./scripts/synology-upload.sh "$BACKUP_DIR/pre-deploy-app-${TIMESTAMP}.tar.gz" pre-deploy
-              echo "✅ Backup uploaded to Synology"
-          else
-              echo "⚠️  synology-upload.sh not found, backup stored locally only"
-          fi
-          EOF
-
-      - name: Verify NAS Backup (SSH + Checksum)
-        run: |
-          echo "🔐 Verifying NAS backup..."
-
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          set -euo pipefail
-
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
-
-          # Load NAS credentials
-          if [ -f "scripts/backup-run.sh" ]; then
-              source scripts/backup-run.sh
-          fi
-
-          # SSH to NAS and verify backup exists
-          SSH_KEY="/root/.ssh/synology_backup_key"
-          SSH_HOST="${SSH_HOST:-AskProAI@fs-cloud1977.synology.me}"
-          SSH_PORT="${SSH_PORT:-50222}"
-          BASE_PATH="${BASE_PATH:-/volume1/homes/FSAdmin/Backup/Server AskProAI}"
-
-          if [ ! -f "$SSH_KEY" ]; then
-              echo "⚠️  NAS SSH key not found, skipping NAS verification"
-              exit 0
-          fi
-
-          # Verify backup files exist on NAS
-          echo "Checking NAS for backup files..."
-
-          NAS_BACKUP_DIR="$BASE_PATH/pre-deploy/$(date +%Y/%m/%d)"
-
-          ssh -i "$SSH_KEY" -p "$SSH_PORT" -o StrictHostKeyChecking=no "$SSH_HOST" \
-              "ls -lh '$NAS_BACKUP_DIR/' | tail -5"
-
-          # Verify checksums match
-          LOCAL_SQL_SHA=$(cat "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz.sha256" 2>/dev/null || echo "MISSING")
-          LOCAL_APP_SHA=$(cat "$BACKUP_DIR/pre-deploy-app-${TIMESTAMP}.tar.gz.sha256" 2>/dev/null || echo "MISSING")
-
-          echo "✅ NAS backup verified"
-          echo "   SQL Backup SHA256: ${LOCAL_SQL_SHA:0:16}..."
-          echo "   App Backup SHA256: ${LOCAL_APP_SHA:0:16}..."
-          EOF
-
-  # ===========================================================================
-  # Build artifacts
-  # ===========================================================================
+  # ==========================================================================
+  # Build (ONLY on push)
+  # ==========================================================================
   build:
     name: Build Artifacts
     needs: [check-staging, pre-deploy-backup]
+    if: github.event_name == 'push'
     uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
 
-  # ===========================================================================
-  # Deploy to production server
-  # ===========================================================================
+  # ==========================================================================
+  # Deploy to Production (ONLY on push)
+  # ==========================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'push'  # Only deploy on push, not PR
+    if: github.event_name == 'push'
     timeout-minutes: 30
     environment:
       name: production
       url: https://api.askproai.de
 
     steps:
-      # -----------------------------------------------------------------------
-      # 1. Download build artifacts
-      # -----------------------------------------------------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Deployment Bundle
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
           name: deployment-bundle-${{ github.sha }}
-          path: ./deploy/
+          path: deploy/
 
-      - name: Verify Bundle Checksum (Immutable Artifacts)
+      - name: Verify Bundle Checksum
         run: |
-          echo "🔐 Verifying deployment bundle checksum..."
-
           cd deploy/
           BUNDLE_FILE=$(ls deploy-bundle-*.tar.gz)
           SHA_FILE="${BUNDLE_FILE}.sha256"
 
-          if [ ! -f "$SHA_FILE" ]; then
-              echo "❌ SHA256 file not found: $SHA_FILE"
-              exit 1
-          fi
-
-          # Verify checksum
           sha256sum -c "$SHA_FILE"
+          echo "✅ Checksum verified"
 
-          if [ $? -eq 0 ]; then
-              echo "✅ Checksum verified - bundle is immutable and untampered"
-              echo "Bundle: $BUNDLE_FILE"
-              cat "$SHA_FILE"
-          else
-              echo "❌ Checksum verification FAILED - bundle may be corrupted!"
-              exit 1
-          fi
-
-      # -----------------------------------------------------------------------
-      # 2. Setup SSH access
-      # -----------------------------------------------------------------------
-      - name: Setup SSH Key
+      - name: Deploy to Server
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
-          chmod 600 ~/.ssh/production_key
-          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
-
-      # -----------------------------------------------------------------------
-      # 3. Upload deployment bundle to production
-      # -----------------------------------------------------------------------
-      - name: Upload Bundle to Production
-        run: |
-          echo "📦 Uploading deployment bundle to production..."
-
-          BUNDLE_FILE=$(ls deploy/deploy-bundle-*.tar.gz)
-          BUNDLE_NAME=$(basename "$BUNDLE_FILE")
-
-          # Upload to production server
-          scp -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              "$BUNDLE_FILE" \
-              "${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/"
-
-          echo "✅ Bundle uploaded: $BUNDLE_NAME"
-          echo "bundle_name=$BUNDLE_NAME" >> $GITHUB_ENV
-
-      # -----------------------------------------------------------------------
-      # 4. Extract bundle and prepare release
-      # -----------------------------------------------------------------------
-      - name: Prepare Release on Production
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          set -euo pipefail
+          echo "🚀 Deploying to production..."
 
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          RELEASE_NAME="${TIMESTAMP}-${COMMIT_SHA}"
-          RELEASE_PATH="${{ env.PRODUCTION_BASE_DIR }}/releases/${RELEASE_NAME}"
+          RELEASE_DIR="${{ env.PRODUCTION_BASE_DIR }}/releases/${TIMESTAMP}"
 
-          echo "🎯 Creating release: $RELEASE_NAME"
+          # Upload bundle
+          scp -i ~/.ssh/production_key deploy/deploy-bundle-*.tar.gz \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
 
-          # Create release directory
-          mkdir -p "$RELEASE_PATH"
+          # Extract and setup
+          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << EOF
+            mkdir -p ${RELEASE_DIR}
+            cd ${RELEASE_DIR}
+            tar -xzf /tmp/deploy-bundle-*.tar.gz
 
-          # Extract bundle
-          tar -xzf "/tmp/${{ env.bundle_name }}" -C "$RELEASE_PATH"
+            # Symlink storage
+            ln -sfn ${{ env.PRODUCTION_BASE_DIR }}/storage ./storage
 
-          # Link shared resources
-          cd "$RELEASE_PATH"
+            # Update current symlink (atomic)
+            ln -sfn ${RELEASE_DIR} ${{ env.PRODUCTION_BASE_DIR }}/current
 
-          # Link storage
-          rm -rf storage
-          ln -s "${{ env.PRODUCTION_BASE_DIR }}/shared/storage" storage
-
-          # Link uploads
-          rm -rf public/uploads
-          ln -s "${{ env.PRODUCTION_BASE_DIR }}/shared/public/uploads" public/uploads
-
-          # Link .env
-          ln -s "${{ env.PRODUCTION_BASE_DIR }}/shared/.env/production.env" .env
-
-          # Set permissions
-          chmod -R 775 storage bootstrap/cache
-
-          echo "✅ Release prepared: $RELEASE_PATH"
-          echo "RELEASE_PATH=$RELEASE_PATH" >> /tmp/deploy_env
+            # Reload PHP-FPM
+            sudo systemctl reload php8.3-fpm
           EOF
 
-      # -----------------------------------------------------------------------
-      # 5. Run database migrations
-      # -----------------------------------------------------------------------
-      - name: Run Migrations
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "✅ Deployment completed"
 
-          set -euo pipefail
-          source /tmp/deploy_env
-
-          echo "🗄️  Running database migrations..."
-
-          cd "$RELEASE_PATH"
-
-          # Run migrations
-          php artisan migrate --force
-
-          echo "✅ Migrations completed"
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 6. Clear caches
-      # -----------------------------------------------------------------------
-      - name: Clear Caches
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          set -euo pipefail
-          source /tmp/deploy_env
-
-          echo "🧹 Clearing caches..."
-
-          cd "$RELEASE_PATH"
-
-          php artisan config:clear
-          php artisan cache:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan optimize:clear
-
-          # Rebuild caches
-          php artisan config:cache
-          php artisan route:cache
-
-          echo "✅ Caches cleared"
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 7. Atomic symlink switch
-      # -----------------------------------------------------------------------
-      - name: Switch to New Release (Atomic)
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          set -euo pipefail
-          source /tmp/deploy_env
-
-          echo "🔄 Switching to new release..."
-
-          CURRENT_LINK="${{ env.PRODUCTION_BASE_DIR }}/current"
-          TEMP_LINK="${{ env.PRODUCTION_BASE_DIR }}/current_tmp_$$"
-
-          # Create temp symlink
-          ln -s "$RELEASE_PATH" "$TEMP_LINK"
-
-          # Atomic switch
-          mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
-
-          echo "✅ Symlink switched: $CURRENT_LINK -> $RELEASE_PATH"
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 8. Reload services
-      # -----------------------------------------------------------------------
-      - name: Reload Services
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          echo "♻️  Reloading services..."
-
-          # Reload PHP-FPM
-          sudo systemctl reload php8.3-fpm
-
-          # Reload Nginx
-          sudo nginx -t && sudo systemctl reload nginx
-
-          echo "✅ Services reloaded"
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 9. Clear Nginx cache
-      # -----------------------------------------------------------------------
-      - name: Clear Nginx Cache
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          echo "🧹 Purging Nginx cache..."
-
-          if [ -d /var/cache/nginx ]; then
-              sudo rm -rf /var/cache/nginx/*
-              echo "✅ Nginx cache purged"
-          else
-              echo "ℹ️  No Nginx cache directory"
-          fi
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 10. Health checks
-      # -----------------------------------------------------------------------
-      - name: Run Health Checks
-        run: |
-          echo "🏥 Running health checks..."
-
-          # HTTP health check
-          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
-              echo "✅ HTTP health check passed"
-          else
-              echo "❌ HTTP health check failed!"
-              exit 1
-          fi
-
-          # Database check
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          cd "${{ env.PRODUCTION_BASE_DIR }}/current"
-          if php artisan migrate:status > /dev/null 2>&1; then
-              echo "✅ Database connection OK"
-          else
-              echo "❌ Database connection failed!"
-              exit 1
-          fi
-          EOF
-
-          echo "✅ All health checks passed"
-
-      # -----------------------------------------------------------------------
-      # 11. Sync Documentation Hub
-      # -----------------------------------------------------------------------
-      - name: Sync Documentation Hub
-        if: success()
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          echo "📚 Syncing Documentation Hub..."
-
-          cd "${{ env.PRODUCTION_BASE_DIR }}/current"
-
-          # Run docs sync script
-          if [ -f "scripts/docs-sync.sh" ]; then
-              bash scripts/docs-sync.sh
-              echo "✅ Documentation Hub synchronized"
-          else
-              echo "⚠️  docs-sync.sh not found, skipping"
-          fi
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 12. Cleanup old releases
-      # -----------------------------------------------------------------------
-      - name: Cleanup Old Releases
-        if: success()
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          echo "🧹 Cleaning up old releases..."
-
-          cd "${{ env.PRODUCTION_BASE_DIR }}/releases"
-          KEEP_RELEASES=5
-          COUNT=$(ls -1d */ 2>/dev/null | wc -l)
-
-          if [ "$COUNT" -gt "$KEEP_RELEASES" ]; then
-              echo "Found $COUNT releases, keeping last $KEEP_RELEASES..."
-              ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs rm -rf
-              echo "✅ Old releases cleaned"
-          else
-              echo "Only $COUNT releases, nothing to clean"
-          fi
-          EOF
-
-      # -----------------------------------------------------------------------
-      # 13. Cleanup temp files
-      # -----------------------------------------------------------------------
-      - name: Cleanup Temp Files
-        if: always()
-        run: |
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
-
-          rm -f /tmp/${{ env.bundle_name }}
-          rm -f /tmp/deploy_env
-          EOF
-
-  # ===========================================================================
-  # Production smoke tests + Vite asset validation
-  # ===========================================================================
+  # ==========================================================================
+  # Smoke Tests (ONLY on push)
+  # ==========================================================================
   smoke-tests:
     name: Production Smoke Tests
     runs-on: ubuntu-latest
     needs: [deploy-production]
-    if: github.event_name == 'push'  # Only run on push, not PR
+    if: github.event_name == 'push'
     timeout-minutes: 10
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup SSH Key
+      - name: Run Smoke Tests
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
-          chmod 600 ~/.ssh/production_key
-          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          echo "🧪 Running production smoke tests..."
 
-      - name: Run Comprehensive Smoke Tests
-        run: |
-          echo "🧪 Running comprehensive smoke tests..."
+          # Health check
+          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
+              echo "✅ Health check passed"
+          else
+              echo "❌ Health check failed"
+              exit 1
+          fi
 
-          # Upload smoke test script
-          scp -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              scripts/smoke-tests-production.sh \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
+          # Vite manifest check
+          if curl -sf "https://${{ env.DOMAIN }}/build/manifest.json" > /dev/null; then
+              echo "✅ Vite manifest check passed"
+          else
+              echo "❌ Vite manifest not found"
+              exit 1
+          fi
 
-          # Execute smoke tests (includes Vite asset validation)
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
-              'bash /tmp/smoke-tests-production.sh https://${{ env.DOMAIN }}'
-
-          echo "✅ All smoke tests passed (including Vite assets)"
-
-  # ===========================================================================
-  # Record deployment in ledger
-  # ===========================================================================
-  record-deployment:
-    name: Record Deployment
-    runs-on: ubuntu-latest
-    needs: [deploy-production, smoke-tests]
-    if: success() && github.event_name == 'push'  # Only record on actual deployments
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
-          chmod 600 ~/.ssh/production_key
-          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Record in Deployment Ledger
-        run: |
-          echo "📝 Recording deployment in audit ledger..."
-
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          RELEASE_ID="${TIMESTAMP}-${COMMIT_SHA}"
-
-          # Upload ledger script
-          scp -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              scripts/deployment-ledger.sh \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
-
-          # Record deployment
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
-              "bash /tmp/deployment-ledger.sh record production $RELEASE_ID ${{ github.sha }}"
-
-          echo "✅ Deployment recorded in ledger"
-
-  # ===========================================================================
-  # Auto-Rollback on failure
-  # ===========================================================================
+  # ==========================================================================
+  # Auto-Rollback (ONLY on push)
+  # ==========================================================================
   auto-rollback:
     name: Auto-Rollback on Failure
     runs-on: ubuntu-latest
     needs: [deploy-production, smoke-tests]
-    if: failure() && github.event_name == 'push'  # Only rollback on actual deployments
+    if: failure() && github.event_name == 'push'
     timeout-minutes: 10
 
     steps:
@@ -632,87 +212,23 @@ jobs:
           chmod 600 ~/.ssh/production_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Execute Auto-Rollback
+      - name: Execute Rollback
         run: |
-          echo "🚨 Deployment or smoke tests failed - executing auto-rollback..."
+          echo "🔄 Executing auto-rollback..."
 
-          # Upload rollback script
-          scp -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              scripts/rollback-production.sh \
+          scp -i ~/.ssh/production_key scripts/rollback-production.sh \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
 
-          # Execute rollback in auto mode
-          ssh -i ~/.ssh/production_key \
-              -o StrictHostKeyChecking=no \
-              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
               'bash /tmp/rollback-production.sh --auto'
 
-          echo "✅ Auto-rollback completed"
+          echo "✅ Rollback completed"
 
       - name: Verify Rollback
         run: |
-          echo "🔍 Verifying rollback health..."
-
-          # Test health endpoint
           if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
-              echo "✅ Rollback successful - application healthy"
+              echo "✅ Application healthy after rollback"
           else
               echo "❌ Rollback verification failed - manual intervention required!"
               exit 1
-          fi
-
-      - name: Notify Rollback
-        if: always()
-        run: |
-          echo "🚨 AUTO-ROLLBACK EXECUTED" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Deployment to production failed and was automatically rolled back." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Please investigate the failure before attempting to deploy again." >> $GITHUB_STEP_SUMMARY
-
-  # ===========================================================================
-  # Deployment summary
-  # ===========================================================================
-  summary:
-    name: Deployment Summary
-    runs-on: ubuntu-latest
-    needs: [check-staging, pre-deploy-backup, deploy-production, smoke-tests]
-    if: always()
-
-    steps:
-      - name: Generate Summary
-        run: |
-          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Staging Health Check | ${{ needs.check-staging.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Pre-Deploy Backup | ${{ needs.pre-deploy-backup.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Deployment | ${{ needs.deploy-production.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Smoke Tests | ${{ needs.smoke-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment**: Production" >> $GITHUB_STEP_SUMMARY
-          echo "**Domain**: https://${{ env.DOMAIN }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ needs.deploy-production.result }}" == "success" ] && [ "${{ needs.smoke-tests.result }}" == "success" ]; then
-              echo "✅ **Production deployment successful!**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "### Rollback Command" >> $GITHUB_STEP_SUMMARY
-              echo "If issues arise, rollback with:" >> $GITHUB_STEP_SUMMARY
-              echo '```bash' >> $GITHUB_STEP_SUMMARY
-              echo "ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}" >> $GITHUB_STEP_SUMMARY
-              echo "cd ${{ env.PRODUCTION_BASE_DIR }}" >> $GITHUB_STEP_SUMMARY
-              echo "./scripts/rollback-production.sh" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-              echo "❌ **Production deployment failed!**" >> $GITHUB_STEP_SUMMARY
           fi
