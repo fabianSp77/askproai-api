@@ -73,9 +73,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: deployment-bundle-${{ env.BUILD_SHA }}
-          path: ./deploy/
+          path: ./bundle/
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.BUILD_RUN_ID }}
+
+      - name: Inspect Bundle
+        run: |
+          echo "📦 Bundle contents:"
+          ls -lh bundle/
+
+          echo ""
+          echo "✅ Verifying checksum..."
+          cd bundle
+          sha256sum -c *.sha256
+          cd ..
+
+          echo "✅ Bundle verified successfully"
 
       - name: Write SSH key from secret
         run: |
@@ -93,11 +106,11 @@ jobs:
       - name: Upload bundle to server
         run: |
           set -euo pipefail
-          BUNDLE_FILE=$(ls deploy/deploy-bundle-*.tar.gz)
+          BUNDLE_FILE=$(ls bundle/deployment-bundle-*.tar.gz)
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
           scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
           echo "BUNDLE_NAME=$BUNDLE_NAME" >> $GITHUB_ENV
-          echo "Uploaded $BUNDLE_NAME"
+          echo "✅ Uploaded $BUNDLE_NAME"
 
       - name: Prepare release on server
         run: |
@@ -163,8 +176,47 @@ jobs:
 
       - name: Health checks
         run: |
-          curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
-          curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+          echo "🏥 Running health checks..."
+
+          # Use Bearer token if available, otherwise fail with Basic Auth
+          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
+            echo "Using Bearer token for health checks"
+            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/health" > /dev/null
+            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+          else
+            echo "⚠️ No HEALTHCHECK_TOKEN configured, attempting without token..."
+            curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
+            curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+          fi
+
+          echo "✅ Health checks passed"
+
+      - name: Vite Asset Validation
+        run: |
+          echo "📦 Validating Vite build artifacts..."
+
+          # Check manifest.json exists and is valid JSON
+          MANIFEST_URL="https://${{ env.DOMAIN }}/build/manifest.json"
+
+          if curl -sSf "$MANIFEST_URL" | jq empty; then
+            echo "✅ Vite manifest.json is valid"
+          else
+            echo "❌ Vite manifest.json is invalid or missing"
+            exit 1
+          fi
+
+          # Check at least one asset exists
+          ASSET_PATH=$(curl -sSf "$MANIFEST_URL" | jq -r 'to_entries | .[0].value.file')
+          ASSET_URL="https://${{ env.DOMAIN }}/build/${ASSET_PATH}"
+
+          if curl -sSf -I "$ASSET_URL" > /dev/null; then
+            echo "✅ Vite assets are accessible"
+          else
+            echo "❌ Vite assets not found"
+            exit 1
+          fi
 
       - name: Cleanup temp
         if: always()
@@ -173,3 +225,63 @@ jobs:
           rm -f "/tmp/${BUNDLE_NAME}" || true
           rm -f /tmp/deploy_env || true
           EOF
+
+  # ==========================================================================
+  # Auto-Rollback on Deployment Failure
+  # ==========================================================================
+  auto-rollback:
+    name: Auto-Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: failure() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write SSH key from secret
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+      - name: Setup known_hosts
+        run: |
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+
+      - name: Execute Rollback
+        run: |
+          echo "🔄 Deployment failed! Executing auto-rollback..."
+
+          # Upload rollback script if not already on server
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            scripts/staging-rollback.sh \
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+
+          # Execute rollback
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" \
+            "bash /tmp/staging-rollback.sh --auto"
+
+          echo "✅ Rollback completed"
+
+      - name: Verify Rollback
+        run: |
+          echo "🔍 Verifying application health after rollback..."
+
+          sleep 3
+
+          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
+            HEALTH_CHECK=$(curl -sf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/health" || echo "fail")
+          else
+            HEALTH_CHECK=$(curl -sf "https://${{ env.DOMAIN }}/health" || echo "fail")
+          fi
+
+          if [[ "${HEALTH_CHECK}" == "fail" ]]; then
+            echo "❌ Rollback verification failed - manual intervention required!"
+            exit 1
+          fi
+
+          echo "✅ Application healthy after rollback"

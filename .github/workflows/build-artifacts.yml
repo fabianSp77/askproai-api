@@ -57,6 +57,14 @@ jobs:
             exit 1
           fi
 
+      - name: Upload Frontend Build Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: public/build/
+          retention-days: 7
+
       - name: PR Safe Check (No Build)
         if: github.event_name == 'pull_request'
         run: echo "✅ Frontend build check passed (PR-safe, no actual build)"
@@ -100,6 +108,14 @@ jobs:
         run: |
           ls -lah vendor/ | head -10
           du -sh vendor/
+
+      - name: Upload Backend Vendor Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-vendor-${{ github.sha }}
+          path: vendor/
+          retention-days: 7
 
       - name: PR Safe Check (No Build)
         if: github.event_name == 'pull_request'
@@ -197,3 +213,106 @@ jobs:
       - name: PR Safe Check (No Tests)
         if: github.event_name == 'pull_request'
         run: echo "✅ Test check passed (PR-safe, no actual tests)"
+
+  # ==========================================================================
+  # Create Deployment Bundle
+  # ==========================================================================
+  create-deployment-bundle:
+    name: create-deployment-bundle
+    needs: [build-frontend, build-backend, static-analysis, run-tests]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: public/build
+
+      - name: Download Backend Vendor Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-vendor-${{ github.sha }}
+          path: vendor
+
+      - name: Prepare Release Directory
+        run: |
+          rm -rf release && mkdir -p release
+
+          # Laravel Core
+          cp -a app bootstrap config database resources routes artisan composer.json composer.lock release/
+
+          # Public with build
+          mkdir -p release/public
+          cp -a public/index.php release/public/
+          cp -a public/.htaccess release/public/ 2>/dev/null || true
+          cp -a public/build release/public/
+
+          # Vendor
+          cp -a vendor release/
+
+          # Storage structure (empty dirs)
+          mkdir -p release/storage/{app/{public,private},framework/{cache,sessions,testing,views},logs}
+
+          # .env template
+          if [ -f .env.production ]; then
+            cp .env.production release/.env.production.template
+          elif [ -f .env.example ]; then
+            cp .env.example release/.env.production.template
+          else
+            cat > release/.env.production.template <<'EOF'
+          APP_ENV=production
+          APP_DEBUG=false
+          APP_URL=https://staging.askproai.de
+
+          LOG_CHANNEL=stack
+          LOG_LEVEL=error
+
+          DB_CONNECTION=mysql
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_DATABASE=askproai
+          DB_USERNAME=askproai_user
+          DB_PASSWORD=
+
+          CACHE_DRIVER=redis
+          QUEUE_CONNECTION=redis
+          SESSION_DRIVER=redis
+
+          REDIS_HOST=127.0.0.1
+          REDIS_PASSWORD=null
+          REDIS_PORT=6379
+          EOF
+          fi
+
+          # Cleanup
+          find release -name ".DS_Store" -delete
+          find release -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
+
+          echo "✅ Release directory prepared"
+          du -sh release
+
+      - name: Create Tarball & Checksum
+        run: |
+          BUNDLE="deployment-bundle-${GITHUB_SHA}.tar.gz"
+          tar -czf "$BUNDLE" -C release .
+          sha256sum "$BUNDLE" > "$BUNDLE.sha256"
+
+          echo "✅ Bundle created:"
+          ls -lh "$BUNDLE"*
+
+          echo "BUNDLE=$BUNDLE" >> $GITHUB_ENV
+
+      - name: Upload Deployment Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-bundle-${{ github.sha }}
+          path: |
+            ${{ env.BUNDLE }}
+            ${{ env.BUNDLE }}.sha256
+          retention-days: 30
