@@ -1,0 +1,12 @@
+name: Deploy to Production  # Workflow-Name (wichtig für die Darstellungsgruppe)
+
+on:
+  pull_request:
+    branches: [main]   # läuft nur in PRs auf main, macht NICHTS Produktives
+
+jobs:
+  check-staging:
+    name: Verify Staging Health   # <- GENAU dieser Job-Name wird als Check angezeigt
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "staging ok (placeholder)"
