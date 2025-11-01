@@ -286,20 +286,17 @@ jobs:
         run: |
           echo "🏥 Running health checks..."
 
-          # Use Bearer token if available, otherwise fail with Basic Auth
+          # Use Bearer token with standalone healthcheck.php endpoint
           if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
-            echo "Using Bearer token for health checks"
+            echo "Using Bearer token for health check"
             curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
-              "https://${{ env.DOMAIN }}/health" > /dev/null
-            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
-              "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+              "https://${{ env.DOMAIN }}/healthcheck.php" > /dev/null
           else
-            echo "⚠️ No HEALTHCHECK_TOKEN configured, attempting without token..."
-            curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
-            curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+            echo "❌ HEALTHCHECK_TOKEN not configured - health check skipped"
+            exit 1
           fi
 
-          echo "✅ Health checks passed"
+          echo "✅ Health check passed"
 
       - name: Vite Asset Validation
         run: |
