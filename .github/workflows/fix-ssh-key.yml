@@ -1,0 +1,112 @@
+# ==============================================================================
+# FIX4b-6b: Extract and Add Correct SSH Public Key
+# ==============================================================================
+
+name: Fix SSH Key
+
+on:
+  workflow_dispatch:
+
+env:
+  STAGING_HOST: 152.53.116.127
+
+jobs:
+  extract-and-add-key:
+    name: Extract Public Key and Add to Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+
+    steps:
+      - name: Extract Public Key from STAGING_SSH_KEY
+        id: extract
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Write private key
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+          # Extract public key
+          ssh-keygen -y -f ~/.ssh/staging_key > ~/.ssh/staging_key.pub
+
+          PUBLIC_KEY=$(cat ~/.ssh/staging_key.pub)
+          FINGERPRINT=$(ssh-keygen -lf ~/.ssh/staging_key.pub | awk '{print $2}')
+
+          echo "📋 Public Key:"
+          echo "$PUBLIC_KEY"
+          echo ""
+          echo "🔑 Fingerprint: $FINGERPRINT"
+
+          # Save to output (escaped for multiline)
+          echo "public_key<<EOF" >> $GITHUB_OUTPUT
+          echo "$PUBLIC_KEY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "fingerprint=$FINGERPRINT" >> $GITHUB_OUTPUT
+
+      - name: Add Public Key to Server
+        run: |
+          PUBLIC_KEY="${{ steps.extract.outputs.public_key }}"
+
+          echo "🔌 Connecting to server to add public key..."
+
+          # Use existing root SSH access to add the key
+          cat > /tmp/add_key.sh << 'SCRIPT'
+          #!/bin/bash
+          PUBLIC_KEY="$1"
+
+          # Check if key already exists
+          if grep -qF "$PUBLIC_KEY" /home/deploy/.ssh/authorized_keys 2>/dev/null; then
+            echo "✅ Public key already exists in authorized_keys"
+            exit 0
+          fi
+
+          # Add the key
+          echo "$PUBLIC_KEY" >> /home/deploy/.ssh/authorized_keys
+          echo "✅ Public key added to /home/deploy/.ssh/authorized_keys"
+
+          # Verify
+          echo ""
+          echo "📊 Total keys: $(grep -c 'ssh-' /home/deploy/.ssh/authorized_keys)"
+          echo ""
+          echo "🔑 New key fingerprint:"
+          echo "$PUBLIC_KEY" | ssh-keygen -lf -
+          SCRIPT
+
+          chmod +x /tmp/add_key.sh
+
+          # Copy script to server and execute
+          scp /tmp/add_key.sh root@${{ env.STAGING_HOST }}:/tmp/
+          ssh root@${{ env.STAGING_HOST }} "bash /tmp/add_key.sh '$PUBLIC_KEY'"
+
+      - name: Test SSH Connection as deploy
+        run: |
+          echo "🧪 Testing SSH connection as deploy user..."
+
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          if ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no deploy@${{ env.STAGING_HOST }} "echo 'SSH connection works!'" 2>&1; then
+            echo "✅ SSH connection successful!"
+            echo "🎯 deploy@${{ env.STAGING_HOST }} is now accessible with STAGING_SSH_KEY"
+          else
+            echo "❌ SSH connection still failing"
+            exit 1
+          fi
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "════════════════════════════════════════════════════════════"
+          echo "✅ FIX4b-6b COMPLETE"
+          echo "════════════════════════════════════════════════════════════"
+          echo ""
+          echo "Public Key: ${{ steps.extract.outputs.public_key }}"
+          echo "Fingerprint: ${{ steps.extract.outputs.fingerprint }}"
+          echo ""
+          echo "The key has been added to /home/deploy/.ssh/authorized_keys"
+          echo "SSH connection to deploy@${{ env.STAGING_HOST }} is working"
+          echo ""
+          echo "Next: Deploy to Staging workflow should now succeed"
+          echo "════════════════════════════════════════════════════════════"
