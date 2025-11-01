@@ -94,6 +94,13 @@ jobs:
         if: github.event_name == 'push'
         run: composer validate --strict
 
+      - name: Create Vite Manifest (Workaround)
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p public/build/assets
+          echo '{"resources/js/app-admin.js":{"file":"assets/app-admin.js","isEntry":true}}' > public/build/manifest.json
+          touch public/build/assets/app-admin.js
+
       - name: Install Dependencies
         if: github.event_name == 'push'
         run: |
