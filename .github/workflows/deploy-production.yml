@@ -129,20 +129,68 @@ jobs:
           scp -i ~/.ssh/production_key deploy/deploy-bundle-*.tar.gz \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
 
-          # Extract and setup
-          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << EOF
+          # Extract and verify release structure (CRITICAL GATES!)
+          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+            set -euo pipefail
+            RELEASE_DIR="${{ env.PRODUCTION_BASE_DIR }}/releases/$(date +%Y%m%d_%H%M%S)"
+
+            echo "📦 Extracting bundle..."
             mkdir -p ${RELEASE_DIR}
             cd ${RELEASE_DIR}
             tar -xzf /tmp/deploy-bundle-*.tar.gz
 
+            echo "🔎 PRE-SWITCH GATE: Verifying release structure..."
+            echo ""
+
+            # Critical Laravel files
+            test -f artisan || { echo "❌ PRE-SWITCH GATE FAILED: artisan missing"; exit 1; }
+            test -f composer.json || { echo "❌ PRE-SWITCH GATE FAILED: composer.json missing"; exit 1; }
+
+            # Public entry point (CRITICAL!)
+            test -f public/index.php || { echo "❌ PRE-SWITCH GATE FAILED: public/index.php MISSING!"; exit 1; }
+            test -f public/build/manifest.json || { echo "❌ PRE-SWITCH GATE FAILED: build/manifest.json missing"; exit 1; }
+
+            # Vendor autoload (CRITICAL!)
+            test -f vendor/autoload.php || { echo "❌ PRE-SWITCH GATE FAILED: vendor/autoload.php MISSING!"; exit 1; }
+
+            # Directory structure
+            test -d bootstrap || { echo "❌ PRE-SWITCH GATE FAILED: bootstrap/ missing"; exit 1; }
+            test -d config || { echo "❌ PRE-SWITCH GATE FAILED: config/ missing"; exit 1; }
+            test -d routes || { echo "❌ PRE-SWITCH GATE FAILED: routes/ missing"; exit 1; }
+            test -d app || { echo "❌ PRE-SWITCH GATE FAILED: app/ missing"; exit 1; }
+
+            # PHP Autoload test (CRITICAL!)
+            php -r "require 'vendor/autoload.php'; echo 'autoload-ok';" | grep -q autoload-ok || {
+              echo "❌ PRE-SWITCH GATE FAILED: Autoload broken"
+              exit 1
+            }
+
+            # Artisan test (CRITICAL!)
+            php artisan --version >/dev/null || {
+              echo "❌ PRE-SWITCH GATE FAILED: artisan failed"
+              exit 1
+            }
+
+            echo "✅ All PRE-SWITCH GATES PASSED"
+            echo ""
+            echo "Release structure verified:"
+            ls -lah public/ | grep index.php
+            ls -lah vendor/ | grep autoload.php
+            echo ""
+
             # Symlink storage
+            echo "🔗 Creating storage symlink..."
             ln -sfn ${{ env.PRODUCTION_BASE_DIR }}/storage ./storage
 
             # Update current symlink (atomic)
+            echo "🔄 Switching current symlink (atomic)..."
             ln -sfn ${RELEASE_DIR} ${{ env.PRODUCTION_BASE_DIR }}/current
 
             # Reload PHP-FPM
+            echo "♻️  Reloading PHP-FPM..."
             sudo systemctl reload php8.3-fpm
+
+            echo "✅ Deployment completed successfully"
           EOF
 
           echo "✅ Deployment completed"

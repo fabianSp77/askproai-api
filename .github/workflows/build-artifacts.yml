@@ -305,12 +305,49 @@ jobs:
           EOF
           fi
 
+          # Copy additional public assets
+          cp -a public/*.ico release/public/ 2>/dev/null || true
+          cp -a public/*.png release/public/ 2>/dev/null || true
+          cp -a public/robots.txt release/public/ 2>/dev/null || true
+          cp -a public/favicon.ico release/public/ 2>/dev/null || true
+
           # Cleanup
           find release -name ".DS_Store" -delete
           find release -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
 
           echo "✅ Release directory prepared"
           du -sh release
+
+      - name: Verify Release Structure (Pre-Bundle Gate)
+        run: |
+          echo "🔎 Verifying release structure integrity..."
+
+          # Critical Laravel files
+          test -f release/artisan || { echo "❌ artisan missing"; exit 1; }
+          test -f release/composer.json || { echo "❌ composer.json missing"; exit 1; }
+
+          # Public entry point (CRITICAL!)
+          test -f release/public/index.php || { echo "❌ public/index.php MISSING!"; exit 1; }
+          test -f release/public/build/manifest.json || { echo "❌ build/manifest.json missing"; exit 1; }
+
+          # Vendor autoload (CRITICAL!)
+          test -f release/vendor/autoload.php || { echo "❌ vendor/autoload.php MISSING!"; exit 1; }
+
+          # Directory structure
+          test -d release/bootstrap || { echo "❌ bootstrap/ missing"; exit 1; }
+          test -d release/config || { echo "❌ config/ missing"; exit 1; }
+          test -d release/routes || { echo "❌ routes/ missing"; exit 1; }
+          test -d release/app || { echo "❌ app/ missing"; exit 1; }
+
+          echo "✅ All critical files present"
+          echo ""
+          echo "Release structure:"
+          ls -la release/
+          echo ""
+          echo "Public directory:"
+          ls -la release/public/
+          echo ""
+          echo "✅ Release structure verification PASSED"
 
       - name: Create Tarball & Checksum
         run: |
