@@ -200,6 +200,13 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
           coverage: none
 
+      - name: Create Vite Manifest (Workaround)
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p public/build/assets
+          echo '{"resources/js/app-admin.js":{"file":"assets/app-admin.js","isEntry":true}}' > public/build/manifest.json
+          touch public/build/assets/app-admin.js
+
       - name: Install Dependencies
         if: github.event_name == 'push'
         run: composer install --no-interaction --prefer-dist
