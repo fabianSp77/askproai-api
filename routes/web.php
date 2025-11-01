@@ -58,6 +58,15 @@ Route::prefix('test-checklist')->group(function () {
     Route::post('/clear-cache', [TestChecklistController::class, 'clearCache'])->name('test-checklist.clear-cache');
 });
 
+// Public Health Check Endpoints (CI/CD with Bearer Token or Basic Auth)
+Route::middleware(['health.auth'])->group(function () {
+    // Primary health endpoint (used by GitHub Actions)
+    Route::get('/health', [MonitoringController::class, 'health'])->name('health');
+
+    // API health check (used by deployment gates)
+    Route::get('/api/health-check', [MonitoringController::class, 'health'])->name('api.health-check');
+});
+
 // Monitoring Routes
 Route::prefix('monitor')->group(function () {
     Route::get('/health', [MonitoringController::class, 'health'])->name('monitor.health');
@@ -113,19 +122,74 @@ Route::middleware(['docs.auth'])->prefix('docs/backup-system')->group(function (
         // Inject logout button if authenticated
         $username = \App\Http\Controllers\DocsAuthController::getUsername();
         if ($username) {
+            // Improved logout button integrated into accessibility bar
             $logoutButton = '
-            <div style="position: fixed; top: 10px; right: 10px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10000; display: flex; align-items: center; gap: 10px;">
-                <span style="color: #666; font-size: 14px;">👤 ' . htmlspecialchars($username) . '</span>
-                <form method="POST" action="' . url('/docs/backup-system/logout') . '" style="margin: 0;">
+            <div class="user-info" style="margin-left: auto; display: flex; align-items: center; gap: 0.8rem; padding-left: 1rem; border-left: 1px solid rgba(255,255,255,0.2);">
+                <span style="color: var(--text-sidebar, #ecf0f1); font-size: 0.9em; display: flex; align-items: center; gap: 0.4rem;">
+                    <span class="mdi mdi-account-circle" style="font-size: 1.3em;"></span>
+                    <span class="username-text">' . htmlspecialchars($username) . '</span>
+                </span>
+                <form method="POST" action="' . url('/docs/backup-system/logout') . '" style="margin: 0; display: inline;">
                     ' . csrf_field() . '
-                    <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;">
-                        Abmelden
+                    <button type="submit" title="Abmelden" aria-label="Abmelden" style="background: rgba(231, 76, 60, 0.9); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: 500; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; transition: all 0.2s ease;">
+                        <span class="mdi mdi-logout"></span>
+                        <span class="logout-text">Abmelden</span>
                     </button>
                 </form>
-            </div>';
+            </div>
 
-            // Inject before closing </body> tag
-            $html = str_replace('</body>', $logoutButton . '</body>', $html);
+            <style>
+                /* Responsive logout button */
+                @media (max-width: 768px) {
+                    .user-info .username-text { display: none; }
+                    .user-info .logout-text { display: none; }
+                    .user-info { padding-left: 0.5rem; gap: 0.5rem; }
+                    .user-info button { padding: 0.5rem; min-width: 44px; justify-content: center; }
+                }
+
+                @media (max-width: 480px) {
+                    .accessibility-bar {
+                        flex-wrap: wrap;
+                        padding: 0.4rem 0.5rem;
+                        gap: 0.5rem;
+                    }
+                    .user-info {
+                        border-left: none;
+                        width: 100%;
+                        justify-content: flex-end;
+                        padding-left: 0;
+                    }
+                }
+
+                .user-info button:hover {
+                    background: rgba(231, 76, 60, 1);
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                }
+
+                .user-info button:active {
+                    transform: translateY(0);
+                }
+
+                .user-info button:focus {
+                    outline: 2px solid var(--warning, #f39c12);
+                    outline-offset: 2px;
+                }
+            </style>';
+
+            // Inject into accessibility bar (before closing </div> of accessibility-bar)
+            $html = str_replace('</div><!-- accessibility-bar end -->', $logoutButton . '</div><!-- accessibility-bar end -->', $html);
+
+            // Fallback: If accessibility-bar marker not found, inject before first closing div after accessibility-bar class
+            if (strpos($html, $logoutButton) === false) {
+                // Try alternative: inject after the last button in accessibility-bar
+                $html = preg_replace(
+                    '/(<div class="accessibility-bar"[^>]*>.*?)(<\/div>)/s',
+                    '$1' . $logoutButton . '$2',
+                    $html,
+                    1
+                );
+            }
         }
 
         return response($html, 200, [
@@ -170,7 +234,7 @@ Route::middleware(['docs.auth'])->prefix('docs/backup-system')->group(function (
                     $category = 'Executive / Management';
                 } elseif (str_contains($filename, 'BACKUP') || str_contains($filename, 'PITR') || str_contains($filename, 'Zero-Loss') || str_contains($filename, 'NAS')) {
                     $category = 'Backup & PITR';
-                } elseif (str_contains($filename, 'DEPLOY') || str_contains($filename, 'deployment-release') || str_contains($filename, 'STAGING')) {
+                } elseif (str_contains($filename, 'DEPLOY') || str_contains($filename, 'deployment-release') || str_contains($filename, 'STAGING') || str_contains($filename, 'BRANCH') || str_contains($filename, 'PROTECTION')) {
                     $category = 'Deployment & Gates';
                 } elseif (str_contains($filename, 'TEST') || str_contains($filename, 'VALIDATION') || str_contains($filename, 'VERIFICATION')) {
                     $category = 'Testing & Validation';
@@ -260,6 +324,24 @@ Route::prefix('conversation-flow')->group(function () {
     });
 });
 
+// --- CI/CD Health Endpoints (Bearer Token) ---
+Route::get('/health', function (Illuminate\Http\Request $request) {
+    $token = $request->bearerToken();
+    abort_unless($token && hash_equals(env('HEALTHCHECK_TOKEN', ''), $token), 401);
+    return response()->json([
+        'status' => 'healthy',
+        'env'    => app()->environment(),
+    ], 200);
+});
+
+Route::get('/api/health-check', function (Illuminate\Http\Request $request) {
+    $token = $request->bearerToken();
+    abort_unless($token && hash_equals(env('HEALTHCHECK_TOKEN', ''), $token), 401);
+    return response()->json([
+        'status'  => 'healthy',
+        'service' => 'api',
+    ], 200);
+});
 
 require __DIR__.'/auth.php';
 require __DIR__.'/web-test.php';
