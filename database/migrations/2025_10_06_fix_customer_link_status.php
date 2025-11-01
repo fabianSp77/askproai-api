@@ -20,6 +20,24 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if calls table exists before attempting to modify
+        if (!\Illuminate\Support\Facades\Schema::hasTable('calls')) {
+            Log::info('⚠️  Migration skipped - calls table does not exist');
+            return;
+        }
+
+        // Check if customer_link_status column exists
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('calls', 'customer_link_status')) {
+            Log::info('⚠️  Migration skipped - customer_link_status column does not exist');
+            return;
+        }
+
+        // Check if customer_name column exists
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('calls', 'customer_name')) {
+            Log::info('⚠️  Migration skipped - customer_name column does not exist (prerequisite migration not yet run)');
+            return;
+        }
+
         Log::info('🔧 Migration: Starting customer_link_status correction');
 
         // Get counts before changes for logging
@@ -31,14 +49,15 @@ return new class extends Migration
         ];
 
         // Fix misclassified "name_only" and "unlinked" calls
+        // NOTE: Using customer_name instead of extracted_name (extracted_name column doesn't exist)
         DB::statement("
             UPDATE calls SET
                 customer_link_status = CASE
                     -- Already linked with customer_id (keep as linked)
                     WHEN customer_id IS NOT NULL THEN 'linked'
 
-                    -- Has extracted name OR customer name (name_only)
-                    WHEN extracted_name IS NOT NULL OR customer_name IS NOT NULL THEN 'name_only'
+                    -- Has customer name (name_only)
+                    WHEN customer_name IS NOT NULL THEN 'name_only'
 
                     -- Anonymous caller (blocked/withheld number)
                     WHEN from_number IN ('anonymous', 'unknown', 'blocked', 'private', 'withheld')

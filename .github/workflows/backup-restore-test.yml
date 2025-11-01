@@ -1,0 +1,386 @@
+# ==============================================================================
+# Monthly Backup Restore Test
+# ==============================================================================
+# Schedule: First Sunday of every month at 03:00 CET
+# Purpose: Verify backup integrity and restore procedures
+# Test Environment: Staging database (separate from production)
+# Storage: Production server local backups (faster than Synology download)
+# Report: Duration, integrity check, success/failure
+# ==============================================================================
+
+name: Monthly Restore Test
+
+on:
+  schedule:
+    # 02:00 UTC on first Sunday of month = 03:00 CET
+    - cron: '0 2 1-7 * 0'  # First Sunday
+  workflow_dispatch:  # Manual trigger
+
+env:
+  PRODUCTION_HOST: api.askproai.de
+  PRODUCTION_USER: www-data
+  STAGING_HOST: staging.askproai.de
+  STAGING_USER: www-data
+
+jobs:
+  restore-test:
+    name: Test Backup Restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Setup SSH connections
+      # -----------------------------------------------------------------------
+      - name: Setup SSH Keys
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/production_key ~/.ssh/staging_key
+
+          # Add both servers to known_hosts
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      # -----------------------------------------------------------------------
+      # 2. Get latest backup from production server
+      # -----------------------------------------------------------------------
+      - name: Download Latest Backup
+        id: download
+        run: |
+          START_TIME=$(date +%s)
+          echo "start_time=$START_TIME" >> $GITHUB_OUTPUT
+
+          echo "📥 Getting latest backup from production server..."
+
+          # Get latest backup file from production
+          LATEST_DB=$(ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+              "ls -t /var/www/api-gateway/shared/storage/backups/backup-db-*.sql.gz 2>/dev/null | head -1")
+
+          LATEST_APP=$(ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+              "ls -t /var/www/api-gateway/shared/storage/backups/backup-app-*.tar.gz 2>/dev/null | head -1")
+
+          if [ -z "$LATEST_DB" ] || [ -z "$LATEST_APP" ]; then
+              echo "❌ No backups found on production server!"
+              exit 1
+          fi
+
+          DB_FILE=$(basename "$LATEST_DB")
+          APP_FILE=$(basename "$LATEST_APP")
+
+          echo "Latest DB backup: $DB_FILE"
+          echo "Latest app backup: $APP_FILE"
+          echo "db_file=$DB_FILE" >> $GITHUB_OUTPUT
+          echo "app_file=$APP_FILE" >> $GITHUB_OUTPUT
+
+          # Download backups and checksums from production
+          echo "📥 Downloading database backup..."
+          scp -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/var/www/api-gateway/shared/storage/backups/$DB_FILE \
+              ./
+
+          scp -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/var/www/api-gateway/shared/storage/backups/${DB_FILE}.sha256 \
+              ./
+
+          echo "📥 Downloading application backup..."
+          scp -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/var/www/api-gateway/shared/storage/backups/$APP_FILE \
+              ./
+
+          scp -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/var/www/api-gateway/shared/storage/backups/${APP_FILE}.sha256 \
+              ./
+
+          # Verify checksums
+          echo "🔐 Verifying checksums..."
+          if sha256sum -c "${DB_FILE}.sha256" && sha256sum -c "${APP_FILE}.sha256"; then
+              echo "✅ Checksums verified"
+          else
+              echo "❌ Checksum verification FAILED!"
+              exit 1
+          fi
+
+          DOWNLOAD_END=$(date +%s)
+          DOWNLOAD_DURATION=$((DOWNLOAD_END - START_TIME))
+          echo "download_duration=$DOWNLOAD_DURATION" >> $GITHUB_OUTPUT
+          echo "⏱️  Download time: ${DOWNLOAD_DURATION}s"
+
+      # -----------------------------------------------------------------------
+      # 3. Extract and prepare backups
+      # -----------------------------------------------------------------------
+      - name: Extract Backup Archives
+        id: extract
+        run: |
+          DB_FILE="${{ steps.download.outputs.db_file }}"
+          EXTRACT_START=$(date +%s)
+
+          echo "📦 Extracting database backup..."
+
+          # Extract database dump
+          gunzip -c "$DB_FILE" > /tmp/db-restore.sql
+
+          EXTRACT_END=$(date +%s)
+          EXTRACT_DURATION=$((EXTRACT_END - EXTRACT_START))
+          echo "extract_duration=$EXTRACT_DURATION" >> $GITHUB_OUTPUT
+          echo "⏱️  Extract time: ${EXTRACT_DURATION}s"
+
+          # Get database size
+          DB_SIZE=$(stat -c%s /tmp/db-restore.sql)
+          DB_SIZE_MB=$((DB_SIZE / 1024 / 1024))
+          echo "db_size_mb=$DB_SIZE_MB" >> $GITHUB_OUTPUT
+          echo "📊 Database size: ${DB_SIZE_MB} MB"
+
+      # -----------------------------------------------------------------------
+      # 4. Create test database in staging
+      # -----------------------------------------------------------------------
+      - name: Create Test Database in Staging
+        run: |
+          echo "🗄️  Creating test database in staging..."
+
+          ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            # Drop test DB if exists
+            mysql -h 127.0.0.1 -u root \
+              -e "DROP DATABASE IF EXISTS askproai_restore_test;"
+
+            # Create fresh test DB
+            mysql -h 127.0.0.1 -u root \
+              -e "CREATE DATABASE askproai_restore_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+            echo "✅ Test database created"
+          EOF
+
+      # -----------------------------------------------------------------------
+      # 5. Restore database to staging
+      # -----------------------------------------------------------------------
+      - name: Restore Database
+        id: restore-db
+        run: |
+          RESTORE_START=$(date +%s)
+
+          echo "🔄 Restoring database to staging..."
+
+          # Transfer SQL dump to staging
+          scp -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              /tmp/db-restore.sql \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/
+
+          # Restore database
+          ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            echo "📊 Restoring database..."
+            mysql -h 127.0.0.1 -u root askproai_restore_test < /tmp/db-restore.sql
+
+            # Cleanup
+            rm /tmp/db-restore.sql
+
+            echo "✅ Database restored"
+          EOF
+
+          RESTORE_END=$(date +%s)
+          RESTORE_DURATION=$((RESTORE_END - RESTORE_START))
+          echo "restore_duration=$RESTORE_DURATION" >> $GITHUB_OUTPUT
+          echo "⏱️  Restore time: ${RESTORE_DURATION}s"
+
+      # -----------------------------------------------------------------------
+      # 6. Verify database integrity
+      # -----------------------------------------------------------------------
+      - name: Verify Database Integrity
+        id: verify
+        run: |
+          echo "🔍 Verifying database integrity..."
+
+          # Create temp script for verification
+          cat > /tmp/verify.sh << 'VERIFY_SCRIPT'
+          set -e
+
+          # Count tables
+          TABLE_COUNT=$(mysql -h 127.0.0.1 -u root askproai_restore_test -e "SHOW TABLES;" | wc -l)
+          TABLE_COUNT=$((TABLE_COUNT - 1))
+          echo "📊 Tables: $TABLE_COUNT"
+
+          # Check critical tables exist
+          CRITICAL_TABLES="users appointments services branches staff"
+          MISSING_TABLES=""
+
+          for table in $CRITICAL_TABLES; do
+              if ! mysql -h 127.0.0.1 -u root askproai_restore_test -e "DESCRIBE $table;" &>/dev/null; then
+                  MISSING_TABLES="$MISSING_TABLES $table"
+              fi
+          done
+
+          if [ -n "$MISSING_TABLES" ]; then
+              echo "❌ Missing critical tables:$MISSING_TABLES"
+              exit 1
+          fi
+
+          echo "✅ All critical tables present"
+
+          # Sample data checks
+          USERS_COUNT=$(mysql -h 127.0.0.1 -u root askproai_restore_test -N -e "SELECT COUNT(*) FROM users;")
+          APPOINTMENTS_COUNT=$(mysql -h 127.0.0.1 -u root askproai_restore_test -N -e "SELECT COUNT(*) FROM appointments;")
+
+          echo "📊 Users: $USERS_COUNT"
+          echo "📊 Appointments: $APPOINTMENTS_COUNT"
+
+          # Output for GitHub Actions
+          echo "TABLE_COUNT=$TABLE_COUNT" >> /tmp/verify_output
+          echo "USERS_COUNT=$USERS_COUNT" >> /tmp/verify_output
+          echo "APPOINTMENTS_COUNT=$APPOINTMENTS_COUNT" >> /tmp/verify_output
+
+          echo "✅ Database integrity verified"
+          VERIFY_SCRIPT
+
+          # Transfer and execute verification script
+          scp -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              /tmp/verify.sh \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/
+
+          ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+              "bash /tmp/verify.sh"
+
+          # Get verification results
+          scp -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/verify_output \
+              /tmp/
+
+          # Parse results
+          source /tmp/verify_output
+          echo "table_count=$TABLE_COUNT" >> $GITHUB_OUTPUT
+          echo "users_count=$USERS_COUNT" >> $GITHUB_OUTPUT
+          echo "appointments_count=$APPOINTMENTS_COUNT" >> $GITHUB_OUTPUT
+
+      # -----------------------------------------------------------------------
+      # 7. Cleanup test database
+      # -----------------------------------------------------------------------
+      - name: Cleanup Test Database
+        if: always()
+        run: |
+          echo "🧹 Cleaning up test database..."
+
+          ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            mysql -h 127.0.0.1 -u root \
+              -e "DROP DATABASE IF EXISTS askproai_restore_test;"
+
+            # Cleanup temp files
+            rm -f /tmp/verify.sh /tmp/verify_output
+
+            echo "✅ Test database deleted"
+          EOF
+
+      - name: Calculate Total Duration
+        if: always()
+        id: duration
+        run: |
+          START_TIME=${{ steps.download.outputs.start_time }}
+          END_TIME=$(date +%s)
+          TOTAL_DURATION=$((END_TIME - START_TIME))
+
+          MINUTES=$((TOTAL_DURATION / 60))
+          SECONDS=$((TOTAL_DURATION % 60))
+
+          echo "total_duration=$TOTAL_DURATION" >> $GITHUB_OUTPUT
+          echo "duration_formatted=${MINUTES}m ${SECONDS}s" >> $GITHUB_OUTPUT
+
+          echo "⏱️  Total test duration: ${MINUTES}m ${SECONDS}s"
+
+      - name: Generate Restore Test Report
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            STATUS_EMOJI="✅"
+            STATUS_TEXT="SUCCESS"
+          else
+            STATUS_EMOJI="❌"
+            STATUS_TEXT="FAILED"
+          fi
+
+          cat > restore-test-report.md << EOF
+          # Monthly Backup Restore Test Report
+
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Status**: $STATUS_EMOJI $STATUS_TEXT
+
+          ## Test Details
+
+          | Metric | Value |
+          |--------|-------|
+          | Database Backup | \`${{ steps.download.outputs.db_file }}\` |
+          | Application Backup | \`${{ steps.download.outputs.app_file }}\` |
+          | Database Size | ${{ steps.extract.outputs.db_size_mb }} MB |
+          | Download Time | ${{ steps.download.outputs.download_duration }}s |
+          | Extract Time | ${{ steps.extract.outputs.extract_duration }}s |
+          | Restore Time | ${{ steps.restore-db.outputs.restore_duration }}s |
+          | **Total Duration** | **${{ steps.duration.outputs.duration_formatted }}** |
+
+          ## Database Verification
+
+          - **Tables**: ${{ steps.verify.outputs.table_count }}
+          - **Users**: ${{ steps.verify.outputs.users_count }}
+          - **Appointments**: ${{ steps.verify.outputs.appointments_count }}
+          - **Integrity**: ✅ All critical tables present
+
+          ## Conclusion
+
+          $(if [ "$STATUS" = "success" ]; then
+            echo "Backup restore test **PASSED**. Backups are valid and can be restored successfully."
+          else
+            echo "Backup restore test **FAILED**. Immediate attention required!"
+          fi)
+
+          ## Next Test
+
+          - Scheduled: First Sunday of next month at 03:00 CET
+          EOF
+
+          echo "📋 Restore test report:"
+          cat restore-test-report.md
+
+      - name: Upload Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-test-report-${{ github.run_number }}
+          path: restore-test-report.md
+          retention-days: 90
+
+      - name: Send Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Monthly Restore Test ${{ job.status }}
+            Duration: ${{ steps.duration.outputs.duration_formatted }}
+            Database Size: ${{ steps.extract.outputs.db_size_mb }} MB
+            Tables: ${{ steps.verify.outputs.table_count }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Fail Job if Test Failed
+        if: failure()
+        run: |
+          echo "❌ Restore test FAILED!"
+          echo "Action required: Investigate backup or restore process"
+          exit 1

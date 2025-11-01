@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('branch_service')) {
             Schema::create('branch_service', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('branch_id')->constrained('branches')->cascadeOnDelete();
+                $table->char('branch_id', 36); // UUID to match branches table
                 $table->foreignId('service_id')->constrained()->cascadeOnDelete();
 
                 // Override-Felder pro Filiale
@@ -35,6 +35,12 @@ return new class extends Migration
                 // Indizes
                 $table->unique(['branch_id', 'service_id']);
                 $table->index(['service_id', 'is_active']);
+
+                // Foreign Keys
+                $table->foreign('branch_id')
+                    ->references('id')
+                    ->on('branches')
+                    ->cascadeOnDelete();
             });
         }
     }

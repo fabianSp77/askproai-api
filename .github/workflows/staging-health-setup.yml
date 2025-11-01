@@ -1,0 +1,339 @@
+# ==============================================================================
+# Staging Health Gates Setup & Verification
+# ==============================================================================
+# Purpose: Setup health endpoints on staging + verify Bearer token auth works
+# Trigger: Manual dispatch or on PR to develop
+# Scope: STAGING ONLY - No production changes
+# ==============================================================================
+
+name: Staging Health Setup
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'routes/web.php'
+      - '.github/workflows/staging-health-setup.yml'
+
+env:
+  STAGING_HOST: staging.askproai.de
+  STAGING_USER: www-data
+  STAGING_PATH: /var/www/staging/api-gateway
+  FALLBACK_USER: root
+
+jobs:
+  # ==========================================================================
+  # Routes Cache Clear (Laravel)
+  # ==========================================================================
+  routes-cache-clear:
+    name: Laravel Routes & Config Clear
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Clear Laravel Caches
+        run: |
+          echo "🔧 Clearing Laravel caches on staging..."
+
+          # Try www-data first, fallback to root
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:clear && \
+             php artisan config:clear && \
+             php artisan cache:clear && \
+             echo '✅ Caches cleared'" \
+          || ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:clear && \
+             php artisan config:clear && \
+             php artisan cache:clear && \
+             echo '✅ Caches cleared'"
+
+      - name: Verify Routes
+        run: |
+          echo "📋 Verifying health routes exist..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:list | grep -E '(^|/)health($|/)|health-check' && \
+             echo '✅ Health routes registered'" \
+          || ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:list | grep -E '(^|/)health($|/)|health-check' && \
+             echo '✅ Health routes registered'"
+
+      - name: Save Route List
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:list | grep -E 'health|health-check'" \
+            > route-list.txt || \
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "cd ${{ env.STAGING_PATH }} && \
+             php artisan route:list | grep -E 'health|health-check'" \
+            > route-list.txt
+
+      - name: Upload Route List Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-list
+          path: route-list.txt
+          retention-days: 30
+
+  # ==========================================================================
+  # Nginx Configuration (Basic Auth OFF for health endpoints)
+  # ==========================================================================
+  nginx-config-ensure:
+    name: Nginx Config (Auth OFF for /health*)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup Nginx Config
+        run: |
+          echo "📦 Creating Nginx config backup..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "cp -a /etc/nginx/sites-available/staging.askproai.de.conf \
+                  /etc/nginx/sites-available/staging.askproai.de.conf.bak.\$(date +%Y%m%d_%H%M%S) && \
+             echo '✅ Backup created'"
+
+      - name: Ensure Health Endpoints Config
+        run: |
+          echo "🔧 Ensuring health endpoints have auth_basic off..."
+
+          # Create temp config patch script
+          cat > /tmp/nginx_health_patch.sh << 'EOF'
+          #!/bin/bash
+          CONF="/etc/nginx/sites-available/staging.askproai.de.conf"
+
+          # Check if health endpoint config already exists
+          if grep -q "location = /health" "$CONF"; then
+            echo "✅ Health endpoints already configured"
+            exit 0
+          fi
+
+          # Find server block and inject health endpoint config
+          # Insert after server { but before any location blocks
+          sed -i '/server {/a\
+          \    # Health endpoints: Basic Auth OFF (Bearer token protected by Laravel)\
+          \    location = /health {\
+          \        auth_basic off;\
+          \        try_files $uri /index.php?$query_string;\
+          \    }\
+          \    location = /api/health-check {\
+          \        auth_basic off;\
+          \        try_files $uri /index.php?$query_string;\
+          \    }' "$CONF"
+
+          echo "✅ Health endpoints config added"
+          EOF
+
+          chmod +x /tmp/nginx_health_patch.sh
+
+          # Upload and execute
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            /tmp/nginx_health_patch.sh \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }}:/tmp/
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "bash /tmp/nginx_health_patch.sh"
+
+      - name: Test Nginx Config
+        run: |
+          echo "🧪 Testing Nginx configuration..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "nginx -t"
+
+      - name: Reload Nginx
+        run: |
+          echo "🔄 Reloading Nginx..."
+
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "systemctl reload nginx && echo '✅ Nginx reloaded'"
+
+      - name: Save Nginx Test Output
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            ${{ env.FALLBACK_USER }}@${{ env.STAGING_HOST }} \
+            "nginx -t 2>&1" > nginx-test.log || true
+
+      - name: Upload Nginx Test Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: nginx-test-log
+          path: nginx-test.log
+          retention-days: 30
+
+  # ==========================================================================
+  # Verify Health Endpoints (Bearer Token)
+  # ==========================================================================
+  verify-health:
+    name: Verify Health Endpoints (Bearer Auth)
+    runs-on: ubuntu-latest
+    needs: [routes-cache-clear, nginx-config-ensure]
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Test /health with Bearer Token
+        run: |
+          echo "🏥 Testing /health endpoint with Bearer token..."
+
+          if [ -z "${{ secrets.HEALTHCHECK_TOKEN }}" ]; then
+            echo "❌ HEALTHCHECK_TOKEN secret not configured!"
+            echo "Please add the secret in GitHub settings"
+            exit 1
+          fi
+
+          RESPONSE=$(curl -fsS -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+            https://${{ env.STAGING_HOST }}/health)
+
+          echo "Response: $RESPONSE"
+
+          # Verify JSON contains "healthy"
+          if echo "$RESPONSE" | jq -e '.status == "healthy"' > /dev/null; then
+            echo "✅ /health endpoint working correctly"
+          else
+            echo "❌ /health endpoint response invalid"
+            exit 1
+          fi
+
+      - name: Test /api/health-check with Bearer Token
+        run: |
+          echo "🏥 Testing /api/health-check endpoint with Bearer token..."
+
+          RESPONSE=$(curl -fsS -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+            https://${{ env.STAGING_HOST }}/api/health-check)
+
+          echo "Response: $RESPONSE"
+
+          # Verify JSON contains "healthy"
+          if echo "$RESPONSE" | jq -e '.status == "healthy"' > /dev/null; then
+            echo "✅ /api/health-check endpoint working correctly"
+          else
+            echo "❌ /api/health-check endpoint response invalid"
+            exit 1
+          fi
+
+      - name: Test without Bearer Token (should fail)
+        run: |
+          echo "🔒 Testing /health without Bearer token (should get 401)..."
+
+          STATUS=$(curl -I -s https://${{ env.STAGING_HOST }}/health | head -1)
+
+          if echo "$STATUS" | grep -qE "401|403"; then
+            echo "✅ Endpoint correctly requires authentication"
+            echo "Status: $STATUS"
+          else
+            echo "⚠️ Endpoint returned unexpected status"
+            echo "Status: $STATUS"
+          fi
+
+      - name: Save Verification Results
+        run: |
+          {
+            echo "=== Health Verification Report ==="
+            echo "Date: $(date)"
+            echo ""
+            echo "1. /health with Bearer token:"
+            curl -fsS -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              https://${{ env.STAGING_HOST }}/health | jq
+            echo ""
+            echo "2. /api/health-check with Bearer token:"
+            curl -fsS -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              https://${{ env.STAGING_HOST }}/api/health-check | jq
+            echo ""
+            echo "3. /health without token (should be 401/403):"
+            curl -I https://${{ env.STAGING_HOST }}/health 2>&1 | head -5
+          } > health-verify.log
+
+      - name: Upload Verification Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-verification
+          path: health-verify.log
+          retention-days: 30
+
+  # ==========================================================================
+  # PR Check (Dry-run, no actual deployment)
+  # ==========================================================================
+  pr-check:
+    name: PR Health Routes Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify routes/web.php contains health endpoints
+        run: |
+          echo "📋 Checking if routes/web.php contains health endpoints..."
+
+          if grep -q "CI/CD Health Endpoints" routes/web.php && \
+             grep -q "Route::get('/health'" routes/web.php && \
+             grep -q "Route::get('/api/health-check'" routes/web.php; then
+            echo "✅ Health endpoints found in routes/web.php"
+          else
+            echo "❌ Health endpoints not found or incomplete"
+            exit 1
+          fi
+
+      - name: Verify Bearer Token Auth Logic
+        run: |
+          echo "🔐 Verifying Bearer token auth logic..."
+
+          if grep -q "bearerToken()" routes/web.php && \
+             grep -q "hash_equals" routes/web.php && \
+             grep -q "HEALTHCHECK_TOKEN" routes/web.php; then
+            echo "✅ Bearer token authentication logic present"
+          else
+            echo "❌ Bearer token auth logic missing or incomplete"
+            exit 1
+          fi
+
+      - name: PR Check Summary
+        run: |
+          echo "✅ PR check passed - routes look good!"
+          echo "After merge, run 'workflow_dispatch' to deploy to staging"

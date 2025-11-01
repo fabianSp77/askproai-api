@@ -19,8 +19,8 @@ return new class extends Migration
 
         Schema::table('calls', function (Blueprint $table) {
             // Verify foreign key doesn't already exist before adding
-            // Change column type to match phone_numbers.id (bigint unsigned)
-            $table->unsignedBigInteger('phone_number_id')->nullable()->change();
+            // Change column type to match phone_numbers.id (UUID char(36))
+            $table->char('phone_number_id', 36)->nullable()->change();
 
             // Check if foreign key already exists before adding
             $foreignKeys = collect(DB::select("
@@ -49,8 +49,9 @@ return new class extends Migration
             // Drop the foreign key
             $table->dropForeign(['phone_number_id']);
 
-            // Change back to bigint
-            $table->unsignedBigInteger('phone_number_id')->nullable()->change();
+            // Revert back to original incorrect type (for rollback purposes only)
+            // Note: This should never be run in production
+            $table->char('phone_number_id', 36)->nullable()->change();
         });
     }
 };

@@ -14,7 +14,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::createIfNotExists('call_cost_migration_log', function (Blueprint $table) {
+        // Check if table already exists before creating
+        if (!Schema::hasTable('call_cost_migration_log')) {
+            Schema::create('call_cost_migration_log', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('call_id');
             $table->string('migration_batch', 50);
@@ -47,7 +49,8 @@ return new class extends Migration
 
             // Foreign key (optional - depends on your schema)
             // $table->foreign('call_id')->references('id')->on('calls')->onDelete('cascade');
-        });
+            });
+        }
     }
 
     /**

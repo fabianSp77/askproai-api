@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('external_id')->unique()->nullable();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('customer_id')->nullable();
-            $table->unsignedBigInteger('phone_number_id')->nullable();
+            $table->char('phone_number_id', 36)->nullable(); // UUID to match phone_numbers table
             $table->unsignedBigInteger('appointment_id')->nullable();
             $table->string('retell_call_id')->unique();
             $table->string('status')->default('ongoing');

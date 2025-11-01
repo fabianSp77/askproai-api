@@ -55,36 +55,44 @@ return new class extends Migration
             // ═══════════════════════════════════════════════════════════
 
             // Laravel job ID for tracking sync job status
-            $table->string('sync_job_id', 100)
-                  ->nullable()
-                  ->after('sync_initiated_by_user_id')
-                  ->comment('Laravel job ID for tracking sync progress');
+            if (!Schema::hasColumn('appointments', 'sync_job_id')) {
+                $table->string('sync_job_id', 100)
+                      ->nullable()
+                      ->after('sync_initiated_by_user_id')
+                      ->comment('Laravel job ID for tracking sync progress');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // SYNC RETRY TRACKING
             // ═══════════════════════════════════════════════════════════
 
             // Number of sync attempts (for exponential backoff)
-            $table->unsignedTinyInteger('sync_attempt_count')
-                  ->default(0)
-                  ->after('sync_job_id')
-                  ->comment('Number of sync attempts (for retry logic)');
+            if (!Schema::hasColumn('appointments', 'sync_attempt_count')) {
+                $table->unsignedTinyInteger('sync_attempt_count')
+                      ->default(0)
+                      ->after('sync_job_id')
+                      ->comment('Number of sync attempts (for retry logic)');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // MANUAL REVIEW FLAGS
             // ═══════════════════════════════════════════════════════════
 
             // Flag for appointments requiring manual review (after max retries)
-            $table->boolean('requires_manual_review')
-                  ->default(false)
-                  ->after('sync_attempt_count')
-                  ->comment('True if sync failed after max retries');
+            if (!Schema::hasColumn('appointments', 'requires_manual_review')) {
+                $table->boolean('requires_manual_review')
+                      ->default(false)
+                      ->after('sync_attempt_count')
+                      ->comment('True if sync failed after max retries');
+            }
 
             // When the appointment was flagged for manual review
-            $table->timestamp('manual_review_flagged_at')
-                  ->nullable()
-                  ->after('requires_manual_review')
-                  ->comment('When appointment was flagged for manual review');
+            if (!Schema::hasColumn('appointments', 'manual_review_flagged_at')) {
+                $table->timestamp('manual_review_flagged_at')
+                      ->nullable()
+                      ->after('requires_manual_review')
+                      ->comment('When appointment was flagged for manual review');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // INDEXES (Performance Optimization)

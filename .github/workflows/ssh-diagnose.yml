@@ -1,0 +1,149 @@
+# ==============================================================================
+# SSH Diagnostics Workflow (Temporary)
+# ==============================================================================
+# Purpose: Diagnose STAGING_SSH_KEY and extract public key for server setup
+# Trigger: Manual dispatch only
+# ==============================================================================
+
+name: SSH Diagnostics
+
+on:
+  workflow_dispatch:
+
+env:
+  STAGING_HOST: 152.53.116.127
+  STAGING_USER: deploy
+
+jobs:
+  diagnose-ssh:
+    name: SSH Secret Validation & Public Key Extraction
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate SSH Secret Format
+        id: validate
+        run: |
+          echo "🔍 Validating STAGING_SSH_KEY format..."
+
+          # Check if secret exists
+          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo "❌ STAGING_SSH_KEY secret is empty or not set"
+            exit 1
+          fi
+
+          # Write secret to temp file
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+          # Check for BEGIN marker
+          if ! head -n1 ~/.ssh/staging_key | grep -q "BEGIN"; then
+            echo "❌ Secret does not start with BEGIN marker"
+            echo "First line: $(head -n1 ~/.ssh/staging_key | head -c 50)..."
+            exit 1
+          fi
+
+          # Count lines
+          LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
+          echo "📊 Key has $LINE_COUNT lines"
+
+          if [ "$LINE_COUNT" -lt 10 ]; then
+            echo "⚠️ Key seems too short (< 10 lines)"
+          fi
+
+          echo "✅ Secret format looks valid"
+
+      - name: Extract Public Key
+        id: extract
+        run: |
+          echo "🔑 Extracting public key from private key..."
+
+          # Generate public key from private key
+          ssh-keygen -y -f ~/.ssh/staging_key > ~/.ssh/staging_key.pub
+
+          # Get fingerprint
+          FINGERPRINT=$(ssh-keygen -lf ~/.ssh/staging_key.pub)
+          echo "📋 Fingerprint: $FINGERPRINT"
+
+          # Read public key
+          PUBLIC_KEY=$(cat ~/.ssh/staging_key.pub)
+
+          echo "✅ Public key extracted successfully"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "📋 PUBLIC KEY FOR SERVER (copy this entire line):"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "$PUBLIC_KEY"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo ""
+
+          # Save fingerprint to output
+          echo "fingerprint=$FINGERPRINT" >> $GITHUB_OUTPUT
+
+      - name: Test SSH Connection
+        id: ssh_test
+        continue-on-error: true
+        run: |
+          echo "🔌 Testing SSH connection to ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}..."
+
+          # Add host to known_hosts
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Try SSH connection
+          if ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} "echo 'SSH connection successful!'" 2>&1; then
+            echo "✅ SSH connection works!"
+            echo "ssh_works=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ SSH connection failed"
+            echo "ssh_works=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Server Setup Instructions
+        if: steps.ssh_test.outputs.ssh_works != 'true'
+        run: |
+          PUBLIC_KEY=$(cat ~/.ssh/staging_key.pub)
+
+          echo "════════════════════════════════════════════════════════════════"
+          echo "⚠️ SSH CONNECTION FAILED - SERVER SETUP REQUIRED"
+          echo "════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "Execute these commands ON THE SERVER as root (one-time setup):"
+          echo ""
+          echo "# 1) Ensure deploy user exists"
+          echo "id -u deploy >/dev/null 2>&1 || adduser --disabled-password --gecos '' deploy"
+          echo ""
+          echo "# 2) Create .ssh directory with correct permissions"
+          echo "install -d -m 700 -o deploy -g deploy /home/deploy/.ssh"
+          echo ""
+          echo "# 3) Add public key to authorized_keys"
+          echo "echo '$PUBLIC_KEY' >> /home/deploy/.ssh/authorized_keys"
+          echo ""
+          echo "# 4) Fix permissions"
+          echo "chown deploy:deploy /home/deploy/.ssh/authorized_keys"
+          echo "chmod 600 /home/deploy/.ssh/authorized_keys"
+          echo ""
+          echo "# 5) Verify SSH config (optional - just check, don't modify)"
+          echo "grep -E '^(PubkeyAuthentication|PasswordAuthentication|AllowUsers)' /etc/ssh/sshd_config || true"
+          echo ""
+          echo "# 6) Reload SSH daemon"
+          echo "systemctl reload ssh || systemctl reload sshd"
+          echo ""
+          echo "════════════════════════════════════════════════════════════════"
+          echo "After running these commands, re-run this workflow to verify."
+          echo "════════════════════════════════════════════════════════════════"
+
+      - name: Summary
+        run: |
+          echo "📊 SSH Diagnostics Summary:"
+          echo "  - Secret format: ✅ Valid"
+          echo "  - Public key: ✅ Extracted"
+          echo "  - Fingerprint: ${{ steps.extract.outputs.fingerprint }}"
+
+          if [ "${{ steps.ssh_test.outputs.ssh_works }}" = "true" ]; then
+            echo "  - SSH connection: ✅ Working"
+          else
+            echo "  - SSH connection: ❌ Failed (see server setup instructions above)"
+          fi

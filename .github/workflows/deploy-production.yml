@@ -1,0 +1,224 @@
+# ==============================================================================
+# Deploy to Production Workflow
+# ==============================================================================
+# Purpose: Automatic deployment to api.askproai.de
+# PR Behavior: Only check-staging job (dummy, no deployment)
+# Push Behavior: Full deployment pipeline on main
+# ==============================================================================
+
+name: Deploy to Production
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PRODUCTION_HOST: api.askproai.de
+  PRODUCTION_USER: www-data
+  PRODUCTION_BASE_DIR: /var/www/api-gateway
+  DOMAIN: api.askproai.de
+
+jobs:
+  # ==========================================================================
+  # Check Staging Health (PR-safe version)
+  # ==========================================================================
+  check-staging:
+    name: check-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check Staging Health (Real)
+        if: github.event_name == 'push'
+        run: |
+          echo "🔍 Checking staging health before production deployment..."
+
+          if curl -sf "https://staging.askproai.de/health" > /dev/null; then
+              echo "✅ Staging is healthy"
+          else
+              echo "❌ Staging health check failed"
+              exit 1
+          fi
+
+      - name: PR Safe Check (No Staging Check)
+        if: github.event_name == 'pull_request'
+        run: echo "✅ Staging health check passed (PR-safe, no actual check)"
+
+  # ==========================================================================
+  # Pre-Deploy Backup (ONLY on push)
+  # ==========================================================================
+  pre-deploy-backup:
+    name: Pre-Deploy Backup
+    runs-on: ubuntu-latest
+    needs: [check-staging]
+    if: github.event_name == 'push'
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Trigger Backup
+        run: |
+          echo "📦 Triggering pre-deploy backup..."
+
+          ssh -i ~/.ssh/production_key \
+              -o StrictHostKeyChecking=no \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+              "bash /var/www/api-gateway/scripts/backup-run.sh --pre-deploy"
+
+          echo "✅ Backup completed"
+
+  # ==========================================================================
+  # Deploy to Production (ONLY on push)
+  # ==========================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [check-staging, pre-deploy-backup]
+    if: github.event_name == 'push'
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://api.askproai.de
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-bundle-${{ github.sha }}
+          path: deploy/
+
+      - name: Verify Bundle Checksum
+        run: |
+          cd deploy/
+          BUNDLE_FILE=$(ls deploy-bundle-*.tar.gz)
+          SHA_FILE="${BUNDLE_FILE}.sha256"
+
+          sha256sum -c "$SHA_FILE"
+          echo "✅ Checksum verified"
+
+      - name: Deploy to Server
+        run: |
+          echo "🚀 Deploying to production..."
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          RELEASE_DIR="${{ env.PRODUCTION_BASE_DIR }}/releases/${TIMESTAMP}"
+
+          # Upload bundle
+          scp -i ~/.ssh/production_key deploy/deploy-bundle-*.tar.gz \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
+
+          # Extract and setup
+          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << EOF
+            mkdir -p ${RELEASE_DIR}
+            cd ${RELEASE_DIR}
+            tar -xzf /tmp/deploy-bundle-*.tar.gz
+
+            # Symlink storage
+            ln -sfn ${{ env.PRODUCTION_BASE_DIR }}/storage ./storage
+
+            # Update current symlink (atomic)
+            ln -sfn ${RELEASE_DIR} ${{ env.PRODUCTION_BASE_DIR }}/current
+
+            # Reload PHP-FPM
+            sudo systemctl reload php8.3-fpm
+          EOF
+
+          echo "✅ Deployment completed"
+
+  # ==========================================================================
+  # Smoke Tests (ONLY on push)
+  # ==========================================================================
+  smoke-tests:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.event_name == 'push'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Smoke Tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+
+          # Health check
+          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
+              echo "✅ Health check passed"
+          else
+              echo "❌ Health check failed"
+              exit 1
+          fi
+
+          # Vite manifest check
+          if curl -sf "https://${{ env.DOMAIN }}/build/manifest.json" > /dev/null; then
+              echo "✅ Vite manifest check passed"
+          else
+              echo "❌ Vite manifest not found"
+              exit 1
+          fi
+
+  # ==========================================================================
+  # Auto-Rollback (ONLY on push)
+  # ==========================================================================
+  auto-rollback:
+    name: Auto-Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-production, smoke-tests]
+    if: failure() && github.event_name == 'push'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Execute Rollback
+        run: |
+          echo "🔄 Executing auto-rollback..."
+
+          scp -i ~/.ssh/production_key scripts/rollback-production.sh \
+              ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/
+
+          ssh -i ~/.ssh/production_key ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} \
+              'bash /tmp/rollback-production.sh --auto'
+
+          echo "✅ Rollback completed"
+
+      - name: Verify Rollback
+        run: |
+          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
+              echo "✅ Application healthy after rollback"
+          else
+              echo "❌ Rollback verification failed - manual intervention required!"
+              exit 1
+          fi

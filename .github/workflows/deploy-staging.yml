@@ -1,0 +1,394 @@
+# ==============================================================================
+# Deploy to Staging (fixed)
+# ==============================================================================
+
+name: Deploy to Staging
+
+on:
+  workflow_run:
+    workflows: ["Build Artifacts"]
+    types: [completed]
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Optional Build Run ID (defaults to latest successful build)'
+        required: false
+        type: string
+
+env:
+  STAGING_HOST: 152.53.116.127
+  STAGING_USER: deploy
+  STAGING_BASE_DIR: /var/www/api-gateway-staging
+  DOMAIN: staging.askproai.de
+
+jobs:
+  # ==========================================================================
+  # SSH Secret Validation (Fail-Fast)
+  # ==========================================================================
+  validate-ssh-secret:
+    name: Validate SSH Secret
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+
+    steps:
+      - name: Validate STAGING_SSH_KEY Format
+        run: |
+          echo "🔍 Validating STAGING_SSH_KEY format..."
+
+          # Check if secret exists
+          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo "❌ STAGING_SSH_KEY secret is empty or not set"
+            echo "Please configure STAGING_SSH_KEY in GitHub repository secrets"
+            exit 1
+          fi
+
+          # Write secret to temp file
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+          # Check for BEGIN marker
+          if ! head -n1 ~/.ssh/staging_key | grep -q "BEGIN"; then
+            echo "❌ Secret does not start with BEGIN marker"
+            echo "Expected: -----BEGIN OPENSSH PRIVATE KEY-----"
+            echo "Got: $(head -n1 ~/.ssh/staging_key | head -c 50)..."
+            exit 1
+          fi
+
+          # Count lines
+          LINE_COUNT=$(wc -l < ~/.ssh/staging_key)
+          echo "📊 Key has $LINE_COUNT lines"
+
+          if [ "$LINE_COUNT" -lt 10 ]; then
+            echo "❌ Key seems too short (< 10 lines)"
+            echo "Please ensure STAGING_SSH_KEY is a complete multi-line OpenSSH private key"
+            exit 1
+          fi
+
+          # Extract fingerprint
+          if ! FINGERPRINT=$(ssh-keygen -lf ~/.ssh/staging_key 2>&1); then
+            echo "❌ Invalid SSH key format"
+            echo "Error: $FINGERPRINT"
+            exit 1
+          fi
+
+          echo "✅ SSH secret validation passed"
+          echo "📋 Fingerprint: $FINGERPRINT"
+
+  # ==========================================================================
+  # SSH Reachability Check
+  # ==========================================================================
+  dry-run-ssh:
+    name: SSH Reachability Test
+    runs-on: ubuntu-latest
+    needs: [validate-ssh-secret]
+    timeout-minutes: 5
+    environment: staging
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+      - name: Test SSH Connection
+        run: |
+          echo "🔌 Testing SSH connection to ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}..."
+
+          # Add host to known_hosts
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Try SSH connection
+          if ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+              ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} "echo 'SSH connection successful!'" 2>&1; then
+            echo "✅ SSH connection works!"
+            echo "🎯 Ready for deployment"
+          else
+            echo "❌ SSH connection failed"
+            echo ""
+            echo "Possible causes:"
+            echo "  1. User 'deploy' does not exist on server"
+            echo "  2. Public key not in /home/deploy/.ssh/authorized_keys"
+            echo "  3. Incorrect permissions on .ssh directory or authorized_keys"
+            echo "  4. SSH daemon configuration blocking pubkey authentication"
+            echo ""
+            echo "To fix, run these commands on the staging server as root:"
+            echo "  id -u deploy >/dev/null 2>&1 || adduser --disabled-password --gecos '' deploy"
+            echo "  install -d -m 700 -o deploy -g deploy /home/deploy/.ssh"
+            echo "  echo 'YOUR_PUBLIC_KEY' >> /home/deploy/.ssh/authorized_keys"
+            echo "  chown deploy:deploy /home/deploy/.ssh/authorized_keys"
+            echo "  chmod 600 /home/deploy/.ssh/authorized_keys"
+            exit 1
+          fi
+
+  # ==========================================================================
+  # Deploy to Staging
+  # ==========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [dry-run-ssh]
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 30
+    environment:
+      name: staging
+      url: https://staging.askproai.de
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure tools
+        run: |
+          type jq >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y jq; }
+          type gh >/dev/null 2>&1 || { echo "gh CLI fehlt (Runner)"; exit 1; }
+
+      - name: Determine Build Run ID
+        id: build_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ github.event.workflow_run.id || '' }}" ]; then
+            BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
+            BUILD_SHA="${{ github.event.workflow_run.head_sha }}"
+          elif [ -n "${{ inputs.build_run_id || '' }}" ]; then
+            BUILD_RUN_ID="${{ inputs.build_run_id }}"
+            BUILD_SHA=$(gh run view "$BUILD_RUN_ID" --json headSha --jq '.headSha')
+          else
+            SHA="${{ github.sha }}"
+            BUILD_RUN_ID=$(gh run list \
+              --workflow "Build Artifacts" \
+              --branch "${{ github.ref_name }}" \
+              --json databaseId,headSha,status,conclusion \
+              --limit 20 | jq -r --arg sha "$SHA" \
+              '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+            [ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+            BUILD_SHA="$SHA"
+          fi
+          echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
+          echo "BUILD_SHA=$BUILD_SHA"       >> $GITHUB_ENV
+          echo "run_id=$BUILD_RUN_ID"       >> $GITHUB_OUTPUT
+          echo "sha=$BUILD_SHA"             >> $GITHUB_OUTPUT
+
+      - name: Download Deployment Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-bundle-${{ env.BUILD_SHA }}
+          path: ./bundle/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.BUILD_RUN_ID }}
+
+      - name: Inspect Bundle
+        run: |
+          echo "📦 Bundle contents:"
+          ls -lh bundle/
+
+          echo ""
+          echo "✅ Verifying checksum..."
+          cd bundle
+          sha256sum -c *.sha256
+          cd ..
+
+          echo "✅ Bundle verified successfully"
+
+      - name: Write SSH key from secret
+        run: |
+          [ -n "${{ secrets.STAGING_SSH_KEY }}" ] || { echo "STAGING_SSH_KEY missing"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          head -n1 ~/.ssh/staging_key | grep -q "BEGIN OPENSSH PRIVATE KEY" || { echo "Invalid key format"; exit 1; }
+
+      - name: Setup known_hosts
+        run: |
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+          ssh-keyscan -H ${{ env.DOMAIN }}       >> ~/.ssh/known_hosts 2>&1 || true
+
+      - name: Upload bundle to server
+        run: |
+          set -euo pipefail
+          BUNDLE_FILE=$(ls bundle/deployment-bundle-*.tar.gz)
+          BUNDLE_NAME=$(basename "$BUNDLE_FILE")
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "$BUNDLE_FILE" "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+          echo "BUNDLE_NAME=$BUNDLE_NAME" >> $GITHUB_ENV
+          echo "✅ Uploaded $BUNDLE_NAME"
+
+      - name: Prepare release on server
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
+          set -euo pipefail
+          TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+          COMMIT_SHA="${{ env.BUILD_SHA }}"
+          COMMIT_SHA_SHORT=\${COMMIT_SHA:0:8}
+          RELEASE_NAME="\${TIMESTAMP}-\${COMMIT_SHA_SHORT}"
+          RELEASE_PATH="${{ env.STAGING_BASE_DIR }}/releases/\${RELEASE_NAME}"
+          mkdir -p "\$RELEASE_PATH"
+          tar -xzf "/tmp/${BUNDLE_NAME}" -C "\$RELEASE_PATH"
+          cd "\$RELEASE_PATH"
+          rm -rf storage && ln -s "${{ env.STAGING_BASE_DIR }}/shared/storage" storage
+          rm -rf public/uploads && ln -s "${{ env.STAGING_BASE_DIR }}/shared/public/uploads" public/uploads
+          ln -s "${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env" .env
+          chmod -R 775 storage bootstrap/cache
+          echo "RELEASE_PATH=\$RELEASE_PATH" > /tmp/deploy_env
+          EOF
+
+      - name: Run migrations
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          cd "$RELEASE_PATH"
+          mkdir -p "${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/shared/storage/backups"
+          php artisan migrate --force
+          EOF
+
+      - name: Clear caches
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          cd "$RELEASE_PATH"
+          php artisan config:clear || true
+          php artisan cache:clear  || true
+          php artisan route:clear  || true
+          php artisan view:clear   || true
+          php artisan optimize:clear || true
+          php artisan config:cache || true
+          php artisan route:cache  || true
+          EOF
+
+      - name: Switch current symlink
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          set -euo pipefail
+          source /tmp/deploy_env
+          CURRENT_LINK="${STAGING_BASE_DIR:-/var/www/api-gateway-staging}/current"
+          TEMP_LINK="${CURRENT_LINK}_tmp_$$"
+          ln -s "$RELEASE_PATH" "$TEMP_LINK"
+          mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
+          EOF
+
+      - name: Reload services
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << 'EOF'
+          sudo systemctl reload 'php*-fpm' 2>/dev/null || true
+          sudo nginx -t && sudo systemctl reload nginx || true
+          EOF
+
+      - name: Health checks
+        run: |
+          echo "🏥 Running health checks..."
+
+          # Use Bearer token if available, otherwise fail with Basic Auth
+          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
+            echo "Using Bearer token for health checks"
+            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/health" > /dev/null
+            curl -sSf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+          else
+            echo "⚠️ No HEALTHCHECK_TOKEN configured, attempting without token..."
+            curl -sSf "https://${{ env.DOMAIN }}/health" > /dev/null
+            curl -sSf "https://${{ env.DOMAIN }}/api/health-check" > /dev/null
+          fi
+
+          echo "✅ Health checks passed"
+
+      - name: Vite Asset Validation
+        run: |
+          echo "📦 Validating Vite build artifacts..."
+
+          # Check manifest.json exists and is valid JSON
+          MANIFEST_URL="https://${{ env.DOMAIN }}/build/manifest.json"
+
+          if curl -sSf "$MANIFEST_URL" | jq empty; then
+            echo "✅ Vite manifest.json is valid"
+          else
+            echo "❌ Vite manifest.json is invalid or missing"
+            exit 1
+          fi
+
+          # Check at least one asset exists
+          ASSET_PATH=$(curl -sSf "$MANIFEST_URL" | jq -r 'to_entries | .[0].value.file')
+          ASSET_URL="https://${{ env.DOMAIN }}/build/${ASSET_PATH}"
+
+          if curl -sSf -I "$ASSET_URL" > /dev/null; then
+            echo "✅ Vite assets are accessible"
+          else
+            echo "❌ Vite assets not found"
+            exit 1
+          fi
+
+      - name: Cleanup temp
+        if: always()
+        run: |
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" << EOF
+          rm -f "/tmp/${BUNDLE_NAME}" || true
+          rm -f /tmp/deploy_env || true
+          EOF
+
+  # ==========================================================================
+  # Auto-Rollback on Deployment Failure
+  # ==========================================================================
+  auto-rollback:
+    name: Auto-Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: failure() && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write SSH key from secret
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+
+      - name: Setup known_hosts
+        run: |
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts 2>&1
+
+      - name: Execute Rollback
+        run: |
+          echo "🔄 Deployment failed! Executing auto-rollback..."
+
+          # Upload rollback script if not already on server
+          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            scripts/staging-rollback.sh \
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
+
+          # Execute rollback
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" \
+            "bash /tmp/staging-rollback.sh --auto"
+
+          echo "✅ Rollback completed"
+
+      - name: Verify Rollback
+        run: |
+          echo "🔍 Verifying application health after rollback..."
+
+          sleep 3
+
+          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
+            HEALTH_CHECK=$(curl -sf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
+              "https://${{ env.DOMAIN }}/health" || echo "fail")
+          else
+            HEALTH_CHECK=$(curl -sf "https://${{ env.DOMAIN }}/health" || echo "fail")
+          fi
+
+          if [[ "${HEALTH_CHECK}" == "fail" ]]; then
+            echo "❌ Rollback verification failed - manual intervention required!"
+            exit 1
+          fi
+
+          echo "✅ Application healthy after rollback"
