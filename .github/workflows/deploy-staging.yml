@@ -484,6 +484,7 @@ jobs:
         run: |
           echo "🏥 Testing public healthcheck.php..."
           code=$(curl -sS -o /tmp/out2.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
             "https://${{ env.DOMAIN }}/healthcheck.php" 2>/dev/null || echo "000")
 
           echo "/healthcheck.php -> HTTP $code"
