@@ -31,6 +31,10 @@ class DocsAuthController extends Controller
 
     /**
      * Handle login attempt
+     *
+     * SECURITY FIX (2025-11-02):
+     * - Added session regeneration to prevent session fixation attacks
+     * - Session ID now changes after successful authentication
      */
     public function login(Request $request)
     {
@@ -46,9 +50,14 @@ class DocsAuthController extends Controller
         $validUsername = env('DOCS_USERNAME', 'admin');
         $validPassword = env('DOCS_PASSWORD', '');
 
-        // Validate credentials
-        if ($username === $validUsername && $password === $validPassword) {
+        // Validate credentials (timing-safe comparison)
+        if (hash_equals($validUsername, $username) && hash_equals($validPassword, $password)) {
             // Authentication successful
+
+            // SECURITY FIX: Regenerate session ID to prevent session fixation
+            // This ensures any pre-authentication session ID is invalidated
+            $request->session()->regenerate();
+
             $request->session()->put('docs_authenticated', true);
             $request->session()->put('docs_username', $username);
             $request->session()->put('docs_last_activity', time());
@@ -85,6 +94,10 @@ class DocsAuthController extends Controller
 
     /**
      * Handle logout
+     *
+     * SECURITY IMPROVEMENT (2025-11-02):
+     * - Enhanced session cleanup with regeneration
+     * - Prevents session reuse after logout
      */
     public function logout(Request $request)
     {
@@ -95,8 +108,11 @@ class DocsAuthController extends Controller
             'ip' => $request->ip()
         ]);
 
-        // Clear session
+        // Clear session data
         $request->session()->forget(['docs_authenticated', 'docs_username', 'docs_last_activity', 'docs_remember']);
+
+        // Regenerate session ID to prevent session reuse
+        $request->session()->regenerate();
 
         return redirect()->route('docs.backup-system.login')
             ->with('success', 'Sie wurden erfolgreich abgemeldet.');
