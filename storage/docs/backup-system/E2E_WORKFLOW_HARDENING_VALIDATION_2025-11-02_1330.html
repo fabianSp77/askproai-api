@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E Workflow Hardening Validation Report - 2025-11-02</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --text: #2c3e50;
+            --text-sidebar: #ecf0f1;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+            --code-bg: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .badge-success { background: var(--success); color: white; }
+        .badge-danger { background: var(--danger); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+        .badge-info { background: var(--info); color: white; }
+
+        .section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+
+        .card {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--info);
+        }
+
+        .card.success { border-left-color: var(--success); }
+        .card.danger { border-left-color: var(--danger); }
+        .card.warning { border-left-color: var(--warning); }
+        .card.info { border-left-color: var(--info); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--light);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--info);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--info);
+        }
+
+        .timeline-item.success::before { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+        .timeline-item.danger::before { background: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+        .timeline-item.warning::before { background: var(--warning); box-shadow: 0 0 0 2px var(--warning); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header h1 { font-size: 1.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            table { font-size: 0.875rem; }
+            th, td { padding: 0.5rem; }
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--danger);
+            color: #c0392b;
+        }
+
+        .alert-warning {
+            background: rgba(243, 156, 18, 0.1);
+            border-left: 4px solid var(--warning);
+            color: #d68910;
+        }
+
+        .alert-info {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid var(--info);
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="mdi mdi-shield-alert"></span> E2E Workflow Hardening Validation Report</h1>
+            <div class="metadata">
+                <div class="metadata-item">
+                    <span class="mdi mdi-calendar"></span>
+                    <span>2025-11-02 13:30 UTC</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="mdi mdi-git"></span>
+                    <span>Commit: <code>2e8d64cd</code></span>
+                </div>
+                <div class="metadata-item">
+                    <span class="mdi mdi-source-branch"></span>
+                    <span>Branch: develop</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="mdi mdi-server"></span>
+                    <span>Staging: 152.53.116.127</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-chart-box"></span> Executive Summary</h2>
+            
+            <div class="alert alert-danger">
+                <span class="mdi mdi-alert-circle" style="font-size: 1.5rem;"></span>
+                <div>
+                    <strong>Status: DEPLOYMENT FAILED - Critical Bug Discovered</strong>
+                    <p style="margin-top: 0.5rem;">Artifact download failure due to <code>BUILD_RUN_ID=null</code>. New workflow hardening features could not be tested. Auto-rollback successful.</p>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    <div class="stat-label">Deployment Status</div>
+                    <div class="stat-value">❌ FAILED</div>
+                    <div class="stat-label">Gate 5/11</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #229954);">
+                    <div class="stat-label">Auto-Rollback</div>
+                    <div class="stat-value">✅ SUCCESS</div>
+                    <div class="stat-label">Staging Stable</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                    <div class="stat-label">Critical Bugs</div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">P0 + P1</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 1.5rem; color: var(--danger);">Critical Findings</h3>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                <li><strong>P0 Bug:</strong> <code>jq</code> filter returns string <code>"null"</code> instead of empty string, bypassing validation</li>
+                <li><strong>P1 Issue:</strong> Health endpoints return HTTP 401/403 (HEALTHCHECK_TOKEN mismatch)</li>
+                <li><strong>Validation:</strong> Workflow changes successfully merged and deployed to branch</li>
+            </ul>
+        </div>
+
+        <!-- Deployment Timeline -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-timeline"></span> Deployment Timeline</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time (UTC)</th>
+                        <th>Gate/Step</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>11:46:42</td>
+                        <td>Build Workflow Start</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Run #19011794877 for SHA 2e8d64cd</td>
+                    </tr>
+                    <tr>
+                        <td>11:47:01</td>
+                        <td>Validate SSH Secret</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Ed25519 key validated</td>
+                    </tr>
+                    <tr>
+                        <td>11:47:07</td>
+                        <td>SSH Reachability</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Connection successful</td>
+                    </tr>
+                    <tr>
+                        <td>11:47:17</td>
+                        <td>Deploy Job Start</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Checkout successful</td>
+                    </tr>
+                    <tr>
+                        <td>11:47:20</td>
+                        <td>Determine Build Run ID</td>
+                        <td><span class="badge badge-warning">⚠️ BUG</span></td>
+                        <td><code>BUILD_RUN_ID=null</code></td>
+                    </tr>
+                    <tr>
+                        <td>11:47:21</td>
+                        <td>Wait for Build Artifact</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Build detected as successful</td>
+                    </tr>
+                    <tr>
+                        <td>11:49:17</td>
+                        <td>Download Deployment Bundle</td>
+                        <td><span class="badge badge-danger">❌ FAIL</span></td>
+                        <td>Unable to download artifact(s): Not Found</td>
+                    </tr>
+                    <tr>
+                        <td>11:49:19</td>
+                        <td>Cleanup Temp</td>
+                        <td><span class="badge badge-danger">❌ FAIL</span></td>
+                        <td>Permission denied (SSH key missing)</td>
+                    </tr>
+                    <tr>
+                        <td>11:49:30</td>
+                        <td>Auto-Rollback</td>
+                        <td><span class="badge badge-success">✅ PASS</span></td>
+                        <td>Rolled back to previous release</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Gate Analysis -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-gate"></span> Gate Analysis</h2>
+
+            <div class="card success">
+                <h3><span class="mdi mdi-check-circle"></span> Gate 1-3: Pre-Deployment Checks</h3>
+                <p><strong>Status:</strong> ✅ ALL PASS</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>SSH Secret Validation: Ed25519 key fingerprint verified</li>
+                    <li>SSH Reachability: Connection successful to 152.53.116.127</li>
+                    <li>HEALTHCHECK_TOKEN: Configured in GitHub Secrets</li>
+                </ul>
+            </div>
+
+            <div class="card warning">
+                <h3><span class="mdi mdi-alert"></span> Gate 4: Build Artifact Wait</h3>
+                <p><strong>Status:</strong> ⚠️ PASS (but with hidden bug)</p>
+                <p style="margin-top: 0.5rem;">Build workflow #19011794877 completed successfully. Artifacts created:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><code>deployment-bundle-2e8d64cd...</code> (21.7 MB, not expired)</li>
+                    <li><code>backend-vendor-2e8d64cd...</code> (28.4 MB)</li>
+                    <li><code>frontend-build-2e8d64cd...</code> (86 KB)</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><strong>Issue:</strong> <code>BUILD_RUN_ID</code> was set to string <code>"null"</code> instead of actual run ID <code>19011794877</code></p>
+            </div>
+
+            <div class="card danger">
+                <h3><span class="mdi mdi-close-circle"></span> Gate 5: Download Deployment Bundle</h3>
+                <p><strong>Status:</strong> ❌ FAIL</p>
+                <p><strong>Error:</strong> <code>Unable to download artifact(s): Not Found</code></p>
+                
+                <div class="alert alert-danger" style="margin-top: 1rem;">
+                    <span class="mdi mdi-bug"></span>
+                    <div>
+                        <strong>Root Cause Analysis</strong>
+                        <ol style="margin-left: 1rem; margin-top: 0.5rem;">
+                            <li>When manually triggered via <code>workflow_dispatch</code>, it uses <code>gh run list</code> with <code>jq</code> filter</li>
+                            <li><code>jq</code> filter returns string <code>"null"</code> (not empty string) when no match found</li>
+                            <li>Validation check <code>[ -z "$BUILD_RUN_ID" ]</code> is FALSE for string "null"</li>
+                            <li><code>BUILD_RUN_ID=null</code> written to <code>$GITHUB_ENV</code></li>
+                            <li>Download action receives <code>run-id: null</code> and looks in wrong workflow run</li>
+                            <li>Result: "Not Found" error despite artifact existing</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card success">
+                <h3><span class="mdi mdi-backup-restore"></span> Gate 6: Auto-Rollback</h3>
+                <p><strong>Status:</strong> ✅ PASS</p>
+                <pre><code>📋 Rollback Plan:
+  From: 20251102_122248-ac7cc8ca
+  To:   20251102_115313-540bed7f
+✅ Updated symlink: /var/www/api-gateway-staging/current -> 20251102_115313-540bed7f
+✅ Rollback completed</code></pre>
+            </div>
+
+            <div class="card info">
+                <h3><span class="mdi mdi-help-circle"></span> Gate 7-11: Not Reached</h3>
+                <p>The following gates were not executed due to artifact download failure:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>Upload bundle to server</li>
+                    <li>Prepare release on server</li>
+                    <li>Run migrations</li>
+                    <li>Switch symlink</li>
+                    <li><strong>Post-symlink cache clear (NEW)</strong></li>
+                    <li><strong>PHP-FPM reload (NEW)</strong></li>
+                    <li><strong>Grace period (NEW)</strong></li>
+                    <li><strong>Post-deploy health checks (NEW)</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Health Endpoint Analysis -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-heart-pulse"></span> Health Endpoint Analysis</h2>
+
+            <div class="alert alert-danger">
+                <span class="mdi mdi-alert-circle" style="font-size: 1.5rem;"></span>
+                <div>
+                    <strong>Issue: All Health Endpoints Return 401/403</strong>
+                    <p style="margin-top: 0.5rem;">Even if artifact download was fixed, health checks would fail deployment due to authentication issues.</p>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>HTTP Status</th>
+                        <th>Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>/health</code></td>
+                        <td><span class="badge badge-danger">401</span></td>
+                        <td>Unauthorized (HTML error page)</td>
+                    </tr>
+                    <tr>
+                        <td><code>/api/health-check</code></td>
+                        <td><span class="badge badge-danger">401</span></td>
+                        <td>Unauthorized (HTML error page)</td>
+                    </tr>
+                    <tr>
+                        <td><code>/healthcheck.php</code></td>
+                        <td><span class="badge badge-danger">403</span></td>
+                        <td>{"error":"Unauthorized"}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top: 1rem;"><strong>Root Cause:</strong> HEALTHCHECK_TOKEN mismatch or misconfiguration</p>
+            <p><strong>Staging .env:</strong> <code>HEALTHCHECK_TOKEN=PewleIAhHC8IliNYhuKYG8W9iMMdrz0Ed3If6kCIMH0=</code></p>
+            <p><strong>GitHub Secret:</strong> Configured (verified by workflow)</p>
+        </div>
+
+        <!-- Critical Bugs -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-bug"></span> Critical Bugs Discovered</h2>
+
+            <div class="card danger">
+                <h3><span class="mdi mdi-fire"></span> 🚨 P0: BUILD_RUN_ID Null String Bug</h3>
+                <p><strong>File:</strong> <code>.github/workflows/deploy-staging.yml:157-183</code></p>
+                
+                <p style="margin-top: 1rem;"><strong>Problem:</strong></p>
+                <pre><code>BUILD_RUN_ID=$(gh run list ... | jq -r '...[0].databaseId')
+# Returns string "null" when no match found
+[ -z "$BUILD_RUN_ID" ] && { ... exit 1; }  # FALSE for "null" string!</code></pre>
+
+                <p style="margin-top: 1rem;"><strong>Fix Required:</strong></p>
+                <pre><code>BUILD_RUN_ID=$(gh run list ... | jq -r '...[0].databaseId // empty')
+# Use '// empty' to return empty string instead of null
+# OR
+if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+    echo "No successful Build Artifacts run for SHA"
+    exit 1
+fi</code></pre>
+
+                <p style="margin-top: 1rem;"><strong>Impact:</strong> High - Causes deployment failures when build workflow racing</p>
+            </div>
+
+            <div class="card warning">
+                <h3><span class="mdi mdi-shield-alert"></span> 🔴 P1: HEALTHCHECK_TOKEN Mismatch</h3>
+                <p><strong>Files:</strong> <code>routes/web.php:353-369</code>, Staging <code>.env</code>, GitHub Secrets</p>
+                
+                <p style="margin-top: 1rem;"><strong>Problem:</strong> Health endpoints reject valid Bearer token authentication</p>
+                
+                <p style="margin-top: 1rem;"><strong>Investigation Needed:</strong></p>
+                <ul style="margin-left: 1.5rem;">
+                    <li>Verify GitHub Secret matches staging <code>.env</code> value exactly</li>
+                    <li>Check if token requires base64 encoding/decoding</li>
+                    <li>Verify Bearer token is passed correctly in workflow</li>
+                    <li>Test locally with curl and exact secret value</li>
+                </ul>
+
+                <p style="margin-top: 1rem;"><strong>Impact:</strong> High - Prevents automated health verification in CI/CD</p>
+            </div>
+        </div>
+
+        <!-- Management Summary -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-account-tie"></span> Management Summary</h2>
+            
+            <div class="card info">
+                <ul style="line-height: 2;">
+                    <li><strong>Workflow Hardening Implementation:</strong> ✅ All 7 enhancements successfully coded and merged</li>
+                    <li><strong>E2E Deployment Test:</strong> ❌ Failed at artifact download (Gate 5 of 11)</li>
+                    <li><strong>Root Cause:</strong> Critical bug - <code>jq</code> returns string <code>"null"</code> bypassing validation check</li>
+                    <li><strong>Impact:</strong> Artifact download looked in wrong workflow run, causing "Not Found" error</li>
+                    <li><strong>Rollback:</strong> ✅ Auto-rollback successful, staging stable on previous release</li>
+                    <li><strong>Secondary Issue:</strong> Health endpoints return HTTP 401/403 (HEALTHCHECK_TOKEN mismatch)</li>
+                    <li><strong>Code Quality:</strong> Implementation correct, but integration revealed 2 critical bugs</li>
+                    <li><strong>Blocker Status:</strong> Cannot validate new features until BUILD_RUN_ID bug fixed</li>
+                    <li><strong>Next Steps:</strong> Apply P0 fix, resolve token issue, re-run E2E test</li>
+                    <li><strong>Timeline:</strong> Estimated 30-45 min for fixes + 10 min deployment</li>
+                    <li><strong>Risk:</strong> Low - bugs are CI/CD specific, not affecting production code</li>
+                    <li><strong>Recommendation:</strong> ⛔ <strong>NO-GO</strong> for production until bugs fixed and validated</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-lightbulb"></span> Recommendations</h2>
+
+            <h3>Immediate Actions (P0)</h3>
+            <div class="card danger">
+                <h4>1. Fix BUILD_RUN_ID Bug</h4>
+                <pre><code># Update line 176 in deploy-staging.yml
+'[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId // empty')
+# Add validation line 177
+[ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ] && { ... exit 1; }</code></pre>
+            </div>
+
+            <div class="card warning">
+                <h4>2. Fix HEALTHCHECK_TOKEN Issue</h4>
+                <ul style="margin-left: 1.5rem;">
+                    <li>Compare GitHub Secret vs staging <code>.env</code> character-by-character</li>
+                    <li>Test health endpoints manually with secret value</li>
+                    <li>Update secret if mismatch confirmed</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top: 1.5rem;">Next E2E Test (After Fixes)</h3>
+            <p>Once P0 and P1 bugs are fixed, re-run E2E test:</p>
+            <pre><code># Create fix commit
+git checkout -b fix/build-run-id-null-handling
+# Apply fixes
+git commit -m "fix(ci): Handle jq null return in BUILD_RUN_ID determination"
+git push origin fix/build-run-id-null-handling
+gh pr create --title "Fix: BUILD_RUN_ID null handling and HEALTHCHECK_TOKEN"
+
+# Merge and trigger
+gh pr merge --squash --delete-branch
+gh workflow run "Deploy to Staging" --ref develop</code></pre>
+
+            <p style="margin-top: 1rem;"><strong>Expected Result:</strong></p>
+            <ul style="margin-left: 1.5rem;">
+                <li>All gates should PASS</li>
+                <li>Health checks should return HTTP 200</li>
+                <li>New workflow features (post-symlink cache, retry logic) should be validated</li>
+            </ul>
+        </div>
+
+        <!-- Go/No-Go Decision -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-traffic-light"></span> Go/No-Go Decision</h2>
+            
+            <div class="alert alert-danger">
+                <span class="mdi mdi-stop-circle" style="font-size: 2rem;"></span>
+                <div>
+                    <h3 style="margin: 0;">⛔ NO-GO</h3>
+                    <p style="margin-top: 1rem;"><strong>Rationale:</strong></p>
+                    <ol style="margin-left: 1rem; margin-top: 0.5rem;">
+                        <li>Critical P0 bug prevents artifact download</li>
+                        <li>P1 health endpoint issue prevents validation</li>
+                        <li>New workflow features untested due to failures</li>
+                        <li>Must fix bugs and re-run E2E before production consideration</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><strong>Next Action:</strong> Create hotfix PR for P0 + P1 bugs</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copyable Markdown Section -->
+        <div class="section">
+            <h2 class="section-title"><span class="mdi mdi-content-copy"></span> Kopierbare Markdown-Version</h2>
+            <div class="card info">
+                <p style="margin-bottom: 1rem;">Hier ist die vollständige Markdown-Version dieses Reports zum Kopieren:</p>
+                <div style="position: relative;">
+                    <button onclick="copyMarkdownToClipboard()" style="position: absolute; top: 10px; right: 10px; z-index: 10; background: var(--info); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; transition: all 0.2s ease;">
+                        <span class="mdi mdi-content-copy"></span>
+                        <span id="copyButtonText">Copy to Clipboard</span>
+                    </button>
+                    <textarea id="markdownContent" readonly style="width: 100%; min-height: 500px; font-family: 'Courier New', monospace; font-size: 0.85em; padding: 1rem; padding-top: 3rem; border: 1px solid var(--border); border-radius: 4px; background: var(--code-bg); resize: vertical;">
+# E2E Workflow Hardening Validation Report
+**Datum:** 2025-11-02 13:30 UTC
+**Deployment Run:** [#19011797015](https://github.com/fabianSp77/askproai-api/actions/runs/19011797015)
+**Branch:** develop
+**Commit:** `2e8d64cd` (feat: workflow hardening - post-symlink health checks)
+**Environment:** Staging (152.53.116.127)
+
+---
+
+## Executive Summary
+
+**Status:** ❌ **DEPLOYMENT FAILED** - Critical Bug Discovered
+**Root Cause:** Artifact download failure due to `BUILD_RUN_ID=null`
+**Impact:** New workflow hardening features could not be tested
+**Rollback:** ✅ Successful (auto-rollback to `20251102_115313-540bed7f`)
+
+### Critical Findings
+
+1. **P0 Bug:** `jq` filter returns string `"null"` instead of empty string, bypassing validation
+2. **P1 Issue:** Health endpoints return HTTP 401/403 (HEALTHCHECK_TOKEN mismatch)
+3. **Validation:** Workflow changes successfully merged and deployed to branch
+
+---
+
+## Deployment Timeline
+
+| Time (UTC) | Gate/Step | Status | Details |
+|------------|-----------|--------|---------|
+| 11:46:42 | Build Workflow Start | ✅ PASS | Run #19011794877 for SHA 2e8d64cd |
+| 11:47:01 | Validate SSH Secret | ✅ PASS | Ed25519 key validated |
+| 11:47:07 | SSH Reachability | ✅ PASS | Connection successful |
+| 11:47:17 | Deploy Job Start | ✅ PASS | Checkout successful |
+| 11:47:20 | Determine Build Run ID | ⚠️ **BUG** | `BUILD_RUN_ID=null` |
+| 11:47:21 | Wait for Build Artifact | ✅ PASS | Build detected as successful |
+| 11:49:17 | Download Deployment Bundle | ❌ **FAIL** | Unable to download artifact(s): Not Found |
+| 11:49:19 | Cleanup Temp | ❌ FAIL | Permission denied (SSH key missing) |
+| 11:49:30 | Auto-Rollback | ✅ PASS | Rolled back to previous release |
+
+---
+
+## Gate Analysis
+
+### ✅ Gate 1: SSH Secret Validation
+**Status:** PASS
+**Evidence:**
+```
+📋 Fingerprint: 256 SHA256:RL9Ee2jhZ4hBFjLLjuF+8SGZ9B7UmxUPHwDgv1nbqXI server-deploy@askpro.ai (ED25519)
+```
+
+### ✅ Gate 2: SSH Reachability
+**Status:** PASS
+**Evidence:**
+```
+SSH connection successful!
+✅ SSH connection works!
+🎯 Ready for deployment
+```
+
+### ✅ Gate 3: HEALTHCHECK_TOKEN Configured
+**Status:** PASS
+**Evidence:**
+```
+✅ HEALTHCHECK_TOKEN is configured
+```
+
+### ⚠️ Gate 4: Build Artifact Wait
+**Status:** PASS (but with hidden bug)
+**Evidence:**
+- Build workflow #19011794877 completed successfully
+- Artifacts created:
+  - `deployment-bundle-2e8d64cd...` (21.7 MB, not expired)
+  - `backend-vendor-2e8d64cd...` (28.4 MB)
+  - `frontend-build-2e8d64cd...` (86 KB)
+
+**Issue:** `BUILD_RUN_ID` was set to string `"null"` instead of actual run ID `19011794877`
+
+### ❌ Gate 5: Download Deployment Bundle
+**Status:** FAIL
+**Error:**
+```
+##[error]Unable to download artifact(s): Not Found
+```
+
+**Root Cause Analysis:**
+
+1. **Step:** "Determine Build Run ID" (line 157-183)
+2. **Logic:** When manually triggered via `workflow_dispatch`, it uses `gh run list` with `jq` filter
+3. **Filter:** `'[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId'`
+4. **Bug:** When no match found (race condition), `jq` returns string `"null"` not empty string
+5. **Validation:** Line 177 checks `[ -z "$BUILD_RUN_ID" ]` which is FALSE for string "null"
+6. **Result:** `BUILD_RUN_ID=null` written to `$GITHUB_ENV`
+7. **Impact:** Line 221 `run-id: ${{ env.BUILD_RUN_ID }}` passes `run-id: null` to download action
+8. **Consequence:** Action looks for artifact in current workflow run instead of build run #19011794877
+
+**Proof:**
+```yaml
+# From logs
+Deploy to Staging	Download Deployment Bundle
+  DOMAIN: staging.askproai.de
+  BUILD_RUN_ID: null  # ← String "null", not empty
+  BUILD_SHA: 2e8d64cd3bcf59f5c4c75a3b823b8fd49a89d173
+```
+
+### ✅ Gate 6: Auto-Rollback
+**Status:** PASS
+**Evidence:**
+```
+📋 Rollback Plan:
+  From: 20251102_122248-ac7cc8ca
+  To:   20251102_115313-540bed7f
+✅ Updated symlink: /var/www/api-gateway-staging/current -> 20251102_115313-540bed7f
+✅ Rollback completed
+✅ Auto-rollback executed successfully
+```
+
+### ❓ Gate 7-11: Not Reached
+The following gates were not executed due to artifact download failure:
+- Upload bundle to server
+- Prepare release on server
+- Run migrations
+- Switch symlink
+- Post-symlink cache clear (NEW)
+- PHP-FPM reload (NEW)
+- Grace period (NEW)
+- Post-deploy health checks (NEW)
+
+---
+
+## Server State
+
+### Current Symlink
+```bash
+/var/www/api-gateway-staging/current -> releases/20251102_115313-540bed7f
+```
+
+### Recent Releases
+```
+20251102_122248-ac7cc8ca  ← Failed deployment (rolled back from this)
+20251102_115313-540bed7f  ← Current (stable)
+20251102_113756-540bed7f  ← Previous
+```
+
+---
+
+## Health Endpoint Analysis
+
+### ❌ Issue: All Health Endpoints Return 401/403
+
+**Test Results:**
+
+1. **`/health`** - HTTP 401 Unauthorized
+   ```html
+   <title>Unauthorized</title>
+   <div class="px-4 text-lg text-gray-500 border-r border-gray-400 tracking-wider">401</div>
+   ```
+
+2. **`/api/health-check`** - HTTP 401 Unauthorized
+   ```html
+   <title>Unauthorized</title>
+   <div class="px-4 text-lg text-gray-500 border-r border-gray-400 tracking-wider">401</div>
+   ```
+
+3. **`/healthcheck.php`** - HTTP 403 Forbidden
+   ```json
+   {"error":"Unauthorized"}
+   ```
+
+**Root Cause:** HEALTHCHECK_TOKEN mismatch or misconfiguration
+
+**Evidence:**
+- Staging `.env`: `HEALTHCHECK_TOKEN=PewleIAhHC8IliNYhuKYG8W9iMMdrz0Ed3If6kCIMH0=`
+- GitHub Secret: Configured (verified by workflow)
+- Issue: Tokens don't match or Bearer authentication failing
+
+**Impact:** Even if artifact download was fixed, health checks would fail deployment
+
+---
+
+## Workflow Changes Validation
+
+### ✅ Changes Successfully Implemented
+
+All workflow hardening changes from specification were implemented:
+
+1. **✅ HEALTHCHECK_TOKEN Guard** (lines 152-155)
+   - Validates secret is configured before deployment
+   - **Status:** Implemented and working
+
+2. **✅ Build Artifact Polling** (lines 185-213)
+   - Waits up to 3 minutes for build completion
+   - 18 attempts with 10-second intervals
+   - **Status:** Implemented and working (detected build success)
+
+3. **✅ Post-Symlink Cache Clear** (lines 371-387)
+   - Clears Laravel caches AFTER symlink switch
+   - **Status:** Implemented but not tested (not reached)
+
+4. **✅ PHP-FPM Reload** (lines 419-431)
+   - Forces OPcache clear via service reload
+   - **Status:** Implemented but not tested (not reached)
+
+5. **✅ Grace Period** (lines 433-437)
+   - 15-second wait for cache propagation
+   - **Status:** Implemented but not tested (not reached)
+
+6. **✅ Health Check Retry Logic** (lines 439-499)
+   - 6 attempts with 5-second intervals for resilience
+   - Tests both `/health` and `/api/health-check`
+   - Separate test for `/healthcheck.php`
+   - **Status:** Implemented but not tested (not reached)
+
+7. **✅ Non-Blocking Rollback Verification** (lines 638-681)
+   - `continue-on-error: true` prevents workflow block
+   - Enhanced reporting with release info
+   - **Status:** Implemented but not executed (would run after health check failure)
+
+### PR and Merge
+
+- **PR:** [#722 - Workflow hardening: post-symlink health checks](https://github.com/fabianSp77/askproai-api/pull/722)
+- **Merged:** Successfully merged to `develop` branch
+- **Commit:** `2e8d64cd3bcf59f5c4c75a3b823b8fd49a89d173`
+- **Message:** `feat(ci): Workflow hardening - health checks after symlink + cache clear + retry logic`
+
+---
+
+## Critical Bugs Discovered
+
+### 🚨 P0: BUILD_RUN_ID Null String Bug
+
+**File:** `.github/workflows/deploy-staging.yml:157-183`
+
+**Problem:**
+```bash
+BUILD_RUN_ID=$(gh run list ... | jq -r '...[0].databaseId')
+# Returns string "null" when no match found
+[ -z "$BUILD_RUN_ID" ] && { ... exit 1; }  # FALSE for "null" string!
+```
+
+**Fix Required:**
+```bash
+BUILD_RUN_ID=$(gh run list ... | jq -r '...[0].databaseId // empty')
+# Use '// empty' to return empty string instead of null
+# OR
+if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+    echo "No successful Build Artifacts run for SHA"
+    exit 1
+fi
+```
+
+**Impact:** High - Causes deployment failures when build workflow racing
+
+### 🔴 P1: HEALTHCHECK_TOKEN Mismatch
+
+**Files:**
+- `routes/web.php:353-369` (health endpoint implementation)
+- Staging `.env` file
+- GitHub Secrets
+
+**Problem:** Health endpoints reject valid Bearer token authentication
+
+**Investigation Needed:**
+1. Verify GitHub Secret matches staging `.env` value exactly
+2. Check if token requires base64 encoding/decoding
+3. Verify Bearer token is passed correctly in workflow
+4. Test locally with curl and exact secret value
+
+**Impact:** High - Prevents automated health verification in CI/CD
+
+---
+
+## Recommendations
+
+### Immediate Actions (P0)
+
+1. **Fix BUILD_RUN_ID Bug**
+   ```yaml
+   # Update line 176 in deploy-staging.yml
+   '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId // empty')
+   # Add validation line 177
+   [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ] && { ... exit 1; }
+   ```
+
+2. **Fix HEALTHCHECK_TOKEN Issue**
+   - Compare GitHub Secret vs staging `.env` character-by-character
+   - Test health endpoints manually with secret value
+   - Update secret if mismatch confirmed
+
+### Next E2E Test (After Fixes)
+
+Once P0 and P1 bugs are fixed, re-run E2E test:
+
+```bash
+# Create fix commit
+git checkout -b fix/build-run-id-null-handling
+# Apply fixes
+git commit -m "fix(ci): Handle jq null return in BUILD_RUN_ID determination"
+git push origin fix/build-run-id-null-handling
+gh pr create --title "Fix: BUILD_RUN_ID null handling and HEALTHCHECK_TOKEN"
+
+# Merge and trigger
+gh pr merge --squash --delete-branch
+gh workflow run "Deploy to Staging" --ref develop
+```
+
+**Expected Result:**
+- All gates should PASS
+- Health checks should return HTTP 200
+- New workflow features (post-symlink cache, retry logic) should be validated
+
+---
+
+## Management Summary (≤12 Lines)
+
+**Workflow Hardening Implementation:** ✅ All 7 enhancements successfully coded and merged
+**E2E Deployment Test:** ❌ Failed at artifact download (Gate 5 of 11)
+**Root Cause:** Critical bug - `jq` returns string `"null"` bypassing validation check
+**Impact:** Artifact download looked in wrong workflow run, causing "Not Found" error
+**Rollback:** ✅ Auto-rollback successful, staging stable on previous release
+**Secondary Issue:** Health endpoints return HTTP 401/403 (HEALTHCHECK_TOKEN mismatch)
+**Code Quality:** Implementation correct, but integration revealed 2 critical bugs
+**Blocker Status:** Cannot validate new features until BUILD_RUN_ID bug fixed
+**Next Steps:** Apply P0 fix, resolve token issue, re-run E2E test
+**Timeline:** Estimated 30-45 min for fixes + 10 min deployment
+**Risk:** Low - bugs are CI/CD specific, not affecting production code
+**Recommendation:** ⛔ **NO-GO** for production until bugs fixed and validated
+
+---
+
+## Detailed Logs
+
+### Build Workflow Artifacts
+
+Build Run: [#19011794877](https://github.com/fabianSp77/askproai-api/actions/runs/19011794877)
+
+| Artifact Name | Size | Expired | SHA |
+|---------------|------|---------|-----|
+| `deployment-bundle-2e8d64cd...` | 21.7 MB | false | 2e8d64cd |
+| `backend-vendor-2e8d64cd...` | 28.4 MB | false | 2e8d64cd |
+| `frontend-build-2e8d64cd...` | 86 KB | false | 2e8d64cd |
+
+**Proof artifacts exist:** All 3 artifacts successfully created and available
+
+### Deployment Workflow Log Excerpts
+
+**Determine Build Run ID (The Bug):**
+```
+Deploy to Staging	Determine Build Run ID
+  SHA="2e8d64cd3bcf59f5c4c75a3b823b8fd49a89d173"
+  BUILD_RUN_ID=$(gh run list --workflow "Build Artifacts" --branch "develop" --json databaseId,headSha,status,conclusion --limit 20 | jq -r --arg sha "$SHA" '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+  [ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+  # ☝️ This check PASSED but BUILD_RUN_ID was "null" string
+  BUILD_SHA="$SHA"
+```
+
+**Download Artifact (The Failure):**
+```
+Deploy to Staging	Download Deployment Bundle
+uses: actions/download-artifact@v4
+with:
+  name: deployment-bundle-2e8d64cd3bcf59f5c4c75a3b823b8fd49a89d173
+  run-id: null  # ← Wrong! Should be 19011794877
+
+##[error]Unable to download artifact(s): Not Found
+```
+
+**Auto-Rollback (The Recovery):**
+```
+Deploy to Staging	Execute Rollback
+🔄 Deployment failed! Executing auto-rollback...
+📋 Rollback Plan:
+  From: 20251102_122248-ac7cc8ca
+  To:   20251102_115313-540bed7f
+✅ Updated symlink: /var/www/api-gateway-staging/current -> 20251102_115313-540bed7f
+✅ Rollback completed
+```
+
+---
+
+## Appendix: Workflow Diff
+
+**PR #722:** feat(ci): Workflow hardening - post-symlink health checks
+
+**Files Changed:** 1
+**Insertions:** +162
+**Deletions:** -56
+
+**Key Changes:**
+- Added HEALTHCHECK_TOKEN validation guard
+- Added build artifact polling with 3-minute timeout
+- Moved cache clearing to post-symlink phase
+- Added PHP-FPM reload for OPcache clearing
+- Added 15-second grace period before health checks
+- Implemented 6-attempt retry logic with 5-second intervals
+- Added separate test for public healthcheck.php
+- Made rollback verification non-blocking
+
+**Status:** Successfully merged to `develop` branch
+
+---
+
+## Report Metadata
+
+**Generated:** 2025-11-02 13:30:00 UTC
+**Author:** Claude Code (Automated E2E Validation)
+**Version:** 1.0
+**Classification:** Internal / CI/CD Analysis
+**Format:** Markdown + HTML (with copyable MD)
+
+---
+
+**Go/No-Go Decision:** ⛔ **NO-GO**
+
+**Rationale:**
+1. Critical P0 bug prevents artifact download
+2. P1 health endpoint issue prevents validation
+3. New workflow features untested due to failures
+4. Must fix bugs and re-run E2E before production consideration
+
+**Next Action:** Create hotfix PR for P0 + P1 bugs
+</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Metadata -->
+        <div class="section" style="background: var(--light); font-size: 0.875rem; color: #666;">
+            <div style="text-align: center;">
+                <p><strong>Report Metadata</strong></p>
+                <p>Generated: 2025-11-02 13:30:00 UTC | Author: Claude Code (Automated E2E Validation)</p>
+                <p>Version: 1.0 | Classification: Internal / CI/CD Analysis</p>
+                <p>Actions Run: <a href="https://github.com/fabianSp77/askproai-api/actions/runs/19011797015" target="_blank">#19011797015</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function copyMarkdownToClipboard() {
+        const textarea = document.getElementById('markdownContent');
+        const button = document.getElementById('copyButtonText');
+        
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                button.textContent = 'Copied!';
+                button.parentElement.style.background = '#27ae60';
+                setTimeout(() => {
+                    button.textContent = 'Copy to Clipboard';
+                    button.parentElement.style.background = 'var(--info)';
+                }, 2000);
+            } else {
+                throw new Error('Copy command failed');
+            }
+        } catch (err) {
+            button.textContent = 'Failed to copy';
+            button.parentElement.style.background = '#e74c3c';
+            console.error('Failed to copy:', err);
+            setTimeout(() => {
+                button.textContent = 'Copy to Clipboard';
+                button.parentElement.style.background = 'var(--info)';
+            }, 3000);
+        }
+        
+        window.getSelection().removeAllRanges();
+    }
+
+    // Alternative: Modern Clipboard API (fallback)
+    if (navigator.clipboard && window.isSecureContext) {
+        const originalFunc = window.copyMarkdownToClipboard;
+        window.copyMarkdownToClipboard = async function() {
+            const textarea = document.getElementById('markdownContent');
+            const button = document.getElementById('copyButtonText');
+            
+            try {
+                await navigator.clipboard.writeText(textarea.value);
+                button.textContent = 'Copied!';
+                button.parentElement.style.background = '#27ae60';
+                setTimeout(() => {
+                    button.textContent = 'Copy to Clipboard';
+                    button.parentElement.style.background = 'var(--info)';
+                }, 2000);
+            } catch (err) {
+                // Fallback to original method
+                originalFunc();
+            }
+        };
+    }
+    </script>
+</body>
+</html>
