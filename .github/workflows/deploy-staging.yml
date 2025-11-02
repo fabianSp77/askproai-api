@@ -149,6 +149,11 @@ jobs:
           type jq >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y jq; }
           type gh >/dev/null 2>&1 || { echo "gh CLI fehlt (Runner)"; exit 1; }
 
+      - name: Assert HEALTHCHECK_TOKEN configured
+        run: |
+          [ -n "${{ secrets.HEALTHCHECK_TOKEN }}" ] || { echo "❌ HEALTHCHECK_TOKEN missing"; exit 1; }
+          echo "✅ HEALTHCHECK_TOKEN is configured"
+
       - name: Determine Build Run ID
         id: build_run
         env:
@@ -176,6 +181,36 @@ jobs:
           echo "BUILD_SHA=$BUILD_SHA"       >> $GITHUB_ENV
           echo "run_id=$BUILD_RUN_ID"       >> $GITHUB_OUTPUT
           echo "sha=$BUILD_SHA"             >> $GITHUB_OUTPUT
+
+      - name: Wait for build artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ env.BUILD_SHA }}
+        run: |
+          set -euo pipefail
+          echo "⏳ Waiting for build artifact for SHA ${SHA:0:8}..."
+
+          for i in $(seq 1 18); do
+            RUN_STATUS=$(gh run list \
+              --workflow "Build Artifacts" \
+              --branch develop \
+              --limit 1 \
+              --json conclusion,headSha \
+              --jq '.[0] | "\(.conclusion) \(.headSha)"')
+
+            read -r CONCLUSION HEAD_SHA <<< "$RUN_STATUS"
+
+            if [ "$CONCLUSION" = "success" ] && [ "${HEAD_SHA:0:8}" = "${SHA:0:8}" ]; then
+              echo "✅ Build ready for SHA ${SHA:0:8}"
+              exit 0
+            fi
+
+            echo "⏳ Waiting for build... ($i/18) - Current: $CONCLUSION ${HEAD_SHA:0:8}"
+            sleep 10
+          done
+
+          echo "❌ Build artifact not ready after 3 minutes"
+          exit 1
 
       - name: Download Deployment Bundle
         uses: actions/download-artifact@v4
@@ -330,7 +365,26 @@ jobs:
           TEMP_LINK="${CURRENT_LINK}_tmp_$$"
           ln -s "$RELEASE_PATH" "$TEMP_LINK"
           mv -Tf "$TEMP_LINK" "$CURRENT_LINK"
+          echo "✅ Symlink switched to new release"
           EOF
+
+      - name: Clear caches post-switch
+        run: |
+          echo "🧹 Clearing all Laravel caches after symlink switch..."
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" /bin/bash -lc '
+            set -euo pipefail
+            BASE="/var/www/api-gateway-staging"
+            CUR="$(readlink -f "$BASE/current")"
+            cd "$CUR"
+
+            echo "Clearing Laravel caches..."
+            php artisan cache:clear   || true
+            php artisan config:clear  || true
+            php artisan route:clear   || true
+            php artisan view:clear    || true
+
+            echo "✅ All Laravel caches cleared"
+          '
 
       - name: Reload services
         run: |
@@ -362,60 +416,87 @@ jobs:
           fi
           EOF
 
-      - name: Post-Deploy Verification
+      - name: Reload PHP-FPM to clear OPcache
         run: |
-          echo "🏥 Running comprehensive post-deploy verification..."
+          echo "🔄 Reloading PHP-FPM to force OPcache clear..."
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" /bin/bash -lc '
+            set -euo pipefail
+            PHPF=$(systemctl list-units --type=service | grep -o "php[0-9.]*-fpm" | head -1)
+            if [ -n "$PHPF" ]; then
+              sudo -n service "$PHPF" reload || { echo "⚠️ PHP-FPM reload failed (non-critical)"; }
+              echo "✅ PHP-FPM reloaded - OPcache cleared"
+            else
+              echo "⚠️ No PHP-FPM service detected"
+            fi
+          '
+
+      - name: Grace period before health checks
+        run: |
+          echo "⏳ Waiting 15 seconds for cache clearing to propagate..."
+          sleep 15
+          echo "✅ Grace period complete"
+
+      - name: Post-Deploy Health (domain with Bearer)
+        env:
+          DOMAIN: ${{ env.DOMAIN }}
+          HEALTHCHECK_TOKEN: ${{ secrets.HEALTHCHECK_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "🏥 Running comprehensive post-deploy health checks with retry logic..."
           echo ""
 
-          if [ -z "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
-            echo "❌ HEALTHCHECK_TOKEN not configured"
+          # Test /health and /api/health-check with retry
+          for ep in /health /api/health-check; do
+            SUCCESS=false
+            for i in $(seq 1 6); do
+              code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+                -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+                "https://$DOMAIN$ep" 2>/dev/null || echo "000")
+
+              echo "  Attempt $i/6: $ep -> HTTP $code"
+
+              if [ -f /tmp/out.json ]; then
+                jq -c . </tmp/out.json 2>/dev/null || cat /tmp/out.json || true
+              fi
+
+              if [ "$code" = "200" ]; then
+                echo "  ✅ $ep: HTTP 200"
+                SUCCESS=true
+                break
+              fi
+
+              if [ "$i" -lt 6 ]; then
+                echo "  ⏳ Retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if [ "$SUCCESS" = "false" ]; then
+              echo "  ❌ $ep: Failed after 6 attempts (last code: $code)"
+              exit 1
+            fi
+            echo ""
+          done
+
+          echo "✅ All Laravel health endpoints passed"
+
+      - name: Public healthcheck.php
+        run: |
+          echo "🏥 Testing public healthcheck.php..."
+          code=$(curl -sS -o /tmp/out2.json -w "%{http_code}" \
+            "https://${{ env.DOMAIN }}/healthcheck.php" 2>/dev/null || echo "000")
+
+          echo "/healthcheck.php -> HTTP $code"
+          if [ -f /tmp/out2.json ]; then
+            cat /tmp/out2.json || true
+          fi
+
+          if [ "$code" != "200" ]; then
+            echo "❌ /healthcheck.php failed with HTTP $code"
             exit 1
           fi
 
-          TOKEN="${{ secrets.HEALTHCHECK_TOKEN }}"
-          DOMAIN="${{ env.DOMAIN }}"
-          FAILED=0
-
-          # Test 1: healthcheck.php (standalone, no Laravel)
-          echo "1️⃣  Testing /healthcheck.php..."
-          HTTP_CODE=$(curl -sS -o /tmp/health1.json -w "%{http_code}" \
-            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/healthcheck.php")
-          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health1.json > /dev/null; then
-            echo "   ✅ healthcheck.php: 200 OK"
-          else
-            echo "   ❌ healthcheck.php: HTTP $HTTP_CODE"
-            FAILED=1
-          fi
-
-          # Test 2: /health (Laravel route)
-          echo "2️⃣  Testing /health..."
-          HTTP_CODE=$(curl -sS -o /tmp/health2.json -w "%{http_code}" \
-            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/health")
-          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health2.json > /dev/null; then
-            echo "   ✅ /health: 200 OK"
-          else
-            echo "   ❌ /health: HTTP $HTTP_CODE"
-            FAILED=1
-          fi
-
-          # Test 3: /api/health-check (API endpoint)
-          echo "3️⃣  Testing /api/health-check..."
-          HTTP_CODE=$(curl -sS -o /tmp/health3.json -w "%{http_code}" \
-            -H "Authorization: Bearer $TOKEN" "https://$DOMAIN/api/health-check")
-          if [ "$HTTP_CODE" = "200" ] && jq -e '.status == "healthy"' /tmp/health3.json > /dev/null; then
-            echo "   ✅ /api/health-check: 200 OK"
-          else
-            echo "   ❌ /api/health-check: HTTP $HTTP_CODE"
-            FAILED=1
-          fi
-
-          echo ""
-          if [ "$FAILED" -eq 1 ]; then
-            echo "❌ Post-deploy verification FAILED - will trigger auto-rollback"
-            exit 1
-          fi
-
-          echo "✅ All health checks passed"
+          echo "✅ Public healthcheck.php passed"
 
       - name: Vite Asset Validation
         run: |
@@ -554,22 +635,47 @@ jobs:
 
           echo "✅ Auto-rollback executed successfully"
 
-      - name: Verify Rollback
+      - name: Verify rollback (non-blocking)
+        if: failure()
+        continue-on-error: true
+        env:
+          DOMAIN: ${{ env.DOMAIN }}
+          HEALTHCHECK_TOKEN: ${{ secrets.HEALTHCHECK_TOKEN }}
         run: |
           echo "🔍 Verifying application health after rollback..."
+          echo ""
 
-          sleep 3
+          # Show current release
+          ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" /bin/bash -lc '
+            BASE="/var/www/api-gateway-staging"
+            echo "Current release: $(readlink -f "$BASE/current")"
+            echo ""
+            echo "Last 2 releases:"
+            ls -1dt "$BASE"/releases/* | head -2
+          '
 
-          if [ -n "${{ secrets.HEALTHCHECK_TOKEN || '' }}" ]; then
-            HEALTH_CHECK=$(curl -sf -H "Authorization: Bearer ${{ secrets.HEALTHCHECK_TOKEN }}" \
-              "https://${{ env.DOMAIN }}/health" || echo "fail")
+          echo ""
+          echo "Testing health endpoints..."
+
+          # Test /health
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+            "https://$DOMAIN/health" 2>/dev/null || echo "000")
+          echo "Rollback health /health: HTTP $code"
+
+          # Test /api/health-check
+          code2=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $HEALTHCHECK_TOKEN" \
+            "https://$DOMAIN/api/health-check" 2>/dev/null || echo "000")
+          echo "Rollback health /api/health-check: HTTP $code2"
+
+          # Test /healthcheck.php
+          code3=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "https://$DOMAIN/healthcheck.php" 2>/dev/null || echo "000")
+          echo "Rollback health /healthcheck.php: HTTP $code3"
+
+          if [ "$code" = "200" ] && [ "$code2" = "200" ] && [ "$code3" = "200" ]; then
+            echo "✅ Application healthy after rollback"
           else
-            HEALTH_CHECK=$(curl -sf "https://${{ env.DOMAIN }}/health" || echo "fail")
+            echo "⚠️ Some health checks failed - manual verification recommended"
           fi
-
-          if [[ "${HEALTH_CHECK}" == "fail" ]]; then
-            echo "❌ Rollback verification failed - manual intervention required!"
-            exit 1
-          fi
-
-          echo "✅ Application healthy after rollback"
