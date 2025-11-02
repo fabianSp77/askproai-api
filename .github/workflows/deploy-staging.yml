@@ -519,42 +519,40 @@ jobs:
           echo "🔄 Deployment failed! Executing auto-rollback..."
 
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" bash << 'ROLLBACK'
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" /bin/bash -lc '
             set -euo pipefail
+            BASE="/var/www/api-gateway-staging"
+            CUR="$BASE/current"
+            REL="$BASE/releases"
 
-            STAGING_BASE="/var/www/api-gateway-staging"
-            RELEASES_DIR="$STAGING_BASE/releases"
-            CURRENT_LINK="$STAGING_BASE/current"
+            # Verify current symlink exists
+            test -L "$CUR" || { echo "❌ No current deployment found"; exit 1; }
 
-            # Get current release
-            if [ ! -L "$CURRENT_LINK" ]; then
-              echo "❌ No current deployment found"
-              exit 1
-            fi
+            # Get current and previous releases
+            NOW="$(readlink -f "$CUR")"
+            PREV="$(ls -1dt "$REL"/* | grep -v "$(basename "$NOW")" | head -1)"
 
-            CURRENT_RELEASE=$(readlink -f "$CURRENT_LINK")
-            CURRENT_RELEASE_NAME=$(basename "$CURRENT_RELEASE")
-
-            # Find previous release
-            PREVIOUS_RELEASE=$(ls -1dt "$RELEASES_DIR"/* | grep -v "$CURRENT_RELEASE_NAME" | head -n1)
-
-            if [ -z "$PREVIOUS_RELEASE" ] || [ ! -d "$PREVIOUS_RELEASE" ]; then
-              echo "❌ No previous release found to rollback to"
-              exit 1
-            fi
-
-            PREVIOUS_RELEASE_NAME=$(basename "$PREVIOUS_RELEASE")
+            # Verify previous release exists
+            test -d "$PREV" || { echo "❌ No previous release found"; exit 1; }
 
             echo "📋 Rollback Plan:"
-            echo "  From: $CURRENT_RELEASE_NAME"
-            echo "  To:   $PREVIOUS_RELEASE_NAME"
+            echo "  From: $(basename "$NOW")"
+            echo "  To:   $(basename "$PREV")"
 
             # Perform rollback
-            ln -snf "$PREVIOUS_RELEASE" "$CURRENT_LINK"
-            echo "✅ Updated symlink: $CURRENT_LINK -> $PREVIOUS_RELEASE_NAME"
+            ln -snf "$PREV" "$CUR"
+            echo "✅ Updated symlink: $CUR -> $(basename "$PREV")"
+
+            # Reload services (best effort)
+            if command -v systemctl >/dev/null 2>&1; then
+              sudo -n systemctl reload nginx 2>/dev/null || true
+            fi
+            sudo -n service php8.3-fpm reload 2>/dev/null || true
 
             echo "✅ Rollback completed"
-            ROLLBACK
+          '
+
+          echo "✅ Auto-rollback executed successfully"
 
       - name: Verify Rollback
         run: |
