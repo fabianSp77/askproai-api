@@ -49,6 +49,9 @@ return Application::configure(basePath: dirname(__DIR__))
             /* 🎯 Feature flags - Customer Portal Security */
             'feature' => \App\Http\Middleware\CheckFeatureFlag::class,
 
+            /* 📚 Documentation authentication */
+            'docs.auth' => \App\Http\Middleware\DocsAuthenticated::class,
+
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
             'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,

@@ -100,8 +100,8 @@ Route::prefix('docs/backup-system')->group(function () {
         ->name('docs.backup-system.logout');
 });
 
-// Backup System Documentation Hub - Protected Routes (NGINX handles Basic Auth)
-Route::prefix('docs/backup-system')->group(function () {
+// Backup System Documentation Hub - Protected Routes (Laravel Session Auth)
+Route::prefix('docs/backup-system')->middleware('docs.auth')->group(function () {
     // Main hub page
     Route::get('/', function () {
         $indexPath = storage_path('docs/backup-system/index.html');
