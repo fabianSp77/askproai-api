@@ -58,14 +58,7 @@ Route::prefix('test-checklist')->group(function () {
     Route::post('/clear-cache', [TestChecklistController::class, 'clearCache'])->name('test-checklist.clear-cache');
 });
 
-// Public Health Check Endpoints (CI/CD with Bearer Token or Basic Auth)
-Route::middleware(['health.auth'])->group(function () {
-    // Primary health endpoint (used by GitHub Actions)
-    Route::get('/health', [MonitoringController::class, 'health'])->name('health');
-
-    // API health check (used by deployment gates)
-    Route::get('/api/health-check', [MonitoringController::class, 'health'])->name('api.health-check');
-});
+// CI/CD Health Endpoints sind weiter unten mit Bearer-Token abgesichert (Zeilen 327-344)
 
 // Monitoring Routes
 Route::prefix('monitor')->group(function () {
@@ -119,8 +112,8 @@ Route::prefix('docs/backup-system')->group(function () {
         // Get HTML content
         $html = file_get_contents($indexPath);
 
-        // Inject logout button if authenticated
-        $username = \App\Http\Controllers\DocsAuthController::getUsername();
+        // Inject logout button if authenticated (NGINX Basic Auth)
+        $username = request()->server('PHP_AUTH_USER');
         if ($username) {
             // Improved logout button integrated into accessibility bar
             $logoutButton = '
