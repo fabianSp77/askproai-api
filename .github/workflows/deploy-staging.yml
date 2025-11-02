@@ -273,10 +273,16 @@ jobs:
           }
 
           # Artisan test (CRITICAL!)
-          php artisan --version >/dev/null || {
+          echo "Testing artisan..."
+          if php artisan --version 2>&1 | head -5; then
+            echo "✅ Artisan working"
+          else
             echo "❌ PRE-SWITCH GATE FAILED: artisan failed"
+            echo "Debug info:"
+            ls -la artisan .env 2>&1 || true
+            php -v 2>&1 | head -2 || true
             exit 1
-          }
+          fi
 
           echo "✅ All pre-switch gates PASSED"
           echo ""
@@ -512,17 +518,43 @@ jobs:
         run: |
           echo "🔄 Deployment failed! Executing auto-rollback..."
 
-          # Upload rollback script if not already on server
-          scp -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            scripts/staging-rollback.sh \
-            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
-
-          # Execute rollback
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" \
-            "bash /tmp/staging-rollback.sh --auto"
+            "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}" bash << 'ROLLBACK'
+            set -euo pipefail
 
-          echo "✅ Rollback completed"
+            STAGING_BASE="/var/www/api-gateway-staging"
+            RELEASES_DIR="$STAGING_BASE/releases"
+            CURRENT_LINK="$STAGING_BASE/current"
+
+            # Get current release
+            if [ ! -L "$CURRENT_LINK" ]; then
+              echo "❌ No current deployment found"
+              exit 1
+            fi
+
+            CURRENT_RELEASE=$(readlink -f "$CURRENT_LINK")
+            CURRENT_RELEASE_NAME=$(basename "$CURRENT_RELEASE")
+
+            # Find previous release
+            PREVIOUS_RELEASE=$(ls -1dt "$RELEASES_DIR"/* | grep -v "$CURRENT_RELEASE_NAME" | head -n1)
+
+            if [ -z "$PREVIOUS_RELEASE" ] || [ ! -d "$PREVIOUS_RELEASE" ]; then
+              echo "❌ No previous release found to rollback to"
+              exit 1
+            fi
+
+            PREVIOUS_RELEASE_NAME=$(basename "$PREVIOUS_RELEASE")
+
+            echo "📋 Rollback Plan:"
+            echo "  From: $CURRENT_RELEASE_NAME"
+            echo "  To:   $PREVIOUS_RELEASE_NAME"
+
+            # Perform rollback
+            ln -snf "$PREVIOUS_RELEASE" "$CURRENT_LINK"
+            echo "✅ Updated symlink: $CURRENT_LINK -> $PREVIOUS_RELEASE_NAME"
+
+            echo "✅ Rollback completed"
+            ROLLBACK
 
       - name: Verify Rollback
         run: |

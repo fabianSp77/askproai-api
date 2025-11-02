@@ -61,31 +61,18 @@ jobs:
           echo "📝 Creating /etc/sudoers.d/deploy-staging with minimal privileges..."
 
           ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'ENDSSH'
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} bash << 'ENDSSH'
 
           # Create sudoers content
-          cat << 'EOF' | sudo tee /tmp/deploy-staging.tmp
-# ==============================================================================
-# Staging Deploy User - Passwordless Sudo (Least Privilege)
-# ==============================================================================
-# Purpose: Allow deploy user to reload nginx and php-fpm ONLY
-# Security: No other sudo commands allowed, no wildcards except php*-fpm reload
-# Created: 2025-11-01 (Automated via GitHub Actions)
-# ==============================================================================
+          sudo tee /tmp/deploy-staging.tmp > /dev/null << 'SUDOEOF'
+          # Staging Deploy User - Passwordless Sudo (Least Privilege)
+          # Purpose: Allow deploy user to reload nginx and php-fpm ONLY
+          # Created: 2025-11-01 (Automated via GitHub Actions)
 
-# NGINX reload (systemctl method - preferred)
-deploy ALL=(root) NOPASSWD:/usr/bin/systemctl reload nginx
-
-# NGINX reload (service method - fallback)
-deploy ALL=(root) NOPASSWD:/usr/sbin/service nginx reload
-
-# PHP-FPM reload (supports php7.x-fpm, php8.x-fpm, etc.)
-deploy ALL=(root) NOPASSWD:/usr/sbin/service php*-fpm reload
-
-# ==============================================================================
-# End of sudoers configuration
-# ==============================================================================
-EOF
+          deploy ALL=(root) NOPASSWD:/usr/bin/systemctl reload nginx
+          deploy ALL=(root) NOPASSWD:/usr/sbin/service nginx reload
+          deploy ALL=(root) NOPASSWD:/usr/sbin/service php*-fpm reload
+          SUDOEOF
 
           # Validate syntax BEFORE installing
           echo "🔍 Validating sudoers syntax..."
