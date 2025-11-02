@@ -86,7 +86,7 @@ Route::middleware(['auth'])->prefix('docs')->group(function () {
 });
 
 // Backup System Documentation Hub - Login Routes (NO AUTH)
-Route::prefix('docs/backup-system')->group(function () {
+Route::prefix('docs/backup-system')->middleware('docs.nocache')->group(function () {
     // Login form (no auth required)
     Route::get('/login', [\App\Http\Controllers\DocsAuthController::class, 'showLogin'])
         ->name('docs.backup-system.login');
@@ -101,7 +101,7 @@ Route::prefix('docs/backup-system')->group(function () {
 });
 
 // Backup System Documentation Hub - Protected Routes (Laravel Session Auth)
-Route::prefix('docs/backup-system')->middleware('docs.auth')->group(function () {
+Route::prefix('docs/backup-system')->middleware(['docs.nocache', 'docs.auth'])->group(function () {
     // Main hub page
     Route::get('/', function () {
         $indexPath = storage_path('docs/backup-system/index.html');

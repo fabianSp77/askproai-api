@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             /* 📚 Documentation authentication */
             'docs.auth' => \App\Http\Middleware\DocsAuthenticated::class,
+            'docs.nocache' => \App\Http\Middleware\NoCacheDocsMiddleware::class,
 
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
