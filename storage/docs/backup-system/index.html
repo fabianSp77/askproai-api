@@ -300,6 +300,361 @@
             border-left: 4px solid var(--info);
         }
 
+        /* Incident Cards */
+        .incident-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .incident-card.critical {
+            border-left: 4px solid #dc2626;
+            background: #fef2f2;
+        }
+
+        .incident-card.high {
+            border-left: 4px solid #ea580c;
+            background: #fff7ed;
+        }
+
+        .incident-card.medium {
+            border-left: 4px solid #f59e0b;
+            background: #fffbeb;
+        }
+
+        .incident-card.low {
+            border-left: 4px solid #3b82f6;
+            background: #eff6ff;
+        }
+
+        .incident-card.info {
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+        }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .incident-title {
+            font-weight: 600;
+            font-size: 1.05em;
+            color: var(--text-main);
+        }
+
+        .incident-severity {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .incident-severity.critical {
+            background: #dc2626;
+            color: white;
+        }
+
+        .incident-severity.high {
+            background: #ea580c;
+            color: white;
+        }
+
+        .incident-severity.medium {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .incident-severity.low {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .incident-severity.info {
+            background: #10b981;
+            color: white;
+        }
+
+        .incident-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .incident-description {
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .incident-resolution {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 0.75rem;
+        }
+
+        .incident-resolution strong {
+            color: #059669;
+        }
+
+        .incident-badge {
+            background: #dc2626;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .incident-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .incident-stat {
+            text-align: center;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .incident-stat-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .incident-stat-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* Status Badges */
+        .incident-status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .incident-status-badge.resolved {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .incident-status-badge.open {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            animation: pulse-warning 2s infinite;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        /* Verification Box */
+        .incident-verification {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 0.75rem;
+        }
+
+        .incident-verification strong {
+            color: #1d4ed8;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .incident-verification code {
+            display: block;
+            background: #1e293b;
+            color: #10b981;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+            overflow-x: auto;
+        }
+
+        /* Incident Card States */
+        .incident-card.resolved-incident {
+            opacity: 0.85;
+            border-left-style: solid;
+        }
+
+        .incident-card.open-incident {
+            border-left-style: solid;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .incident-card.open-incident.critical,
+        .incident-card.open-incident.high {
+            animation: pulse-critical 3s infinite;
+        }
+
+        @keyframes pulse-critical {
+            0%, 100% {
+                box-shadow: 0 4px 16px var(--shadow);
+            }
+            50% {
+                box-shadow: 0 4px 24px rgba(220, 38, 38, 0.4);
+            }
+        }
+
+        /* Section Headers */
+        .incidents-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .incidents-section-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .incidents-section-header.open-header {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #dc2626;
+            color: #7f1d1d;
+        }
+
+        .incidents-section-header.resolved-header {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #10b981;
+            color: #14532d;
+        }
+
+        .incidents-section-header.resolved-header:hover {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Count Badges */
+        .incident-count-badge {
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .incident-count-badge.open-badge {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        .incident-count-badge.resolved-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Category Groups */
+        .incident-category-group {
+            margin-bottom: 2rem;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 1rem;
+            text-transform: capitalize;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .category-badge.resolved {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+        }
+
+        /* No Incidents Message */
+        .no-incidents-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            border: 2px solid #10b981;
+            margin: 2rem 0;
+        }
+
+        .no-incidents-message h3 {
+            color: #14532d;
+            font-size: 1.5em;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .no-incidents-message p {
+            color: #166534;
+            font-size: 1.1em;
+        }
+
+        /* Toggle Icon */
+        .toggle-icon {
+            font-size: 1.5em;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        /* Responsive Improvements */
+        @media (max-width: 768px) {
+            .incidents-section-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .incident-category-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .category-badge {
+                display: block;
+                text-align: center;
+            }
+        }
+
         .status-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px var(--shadow);
@@ -567,6 +922,30 @@
 
         .file-card:hover::before {
             transform: scaleY(1);
+        }
+
+        .file-card.card-highlight {
+            border: 2px solid var(--success);
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.05) 0%, var(--bg-card) 100%);
+        }
+
+        .file-card.card-highlight::after {
+            content: '✨ E2E Report';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
         }
 
         .file-card-header {
@@ -980,6 +1359,17 @@
                 </div>
             </div>
 
+            <!-- Incident History Section -->
+            <div id="incidents-section" class="incidents-section" style="margin: 2rem 0; display: none;">
+                <h2 style="color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🚨</span> Incident History
+                    <span id="incident-badge" class="incident-badge" style="display: none;"></span>
+                </h2>
+                <div id="incidents-container">
+                    <p style="color: var(--text-secondary);">Lade Incident-Historie...</p>
+                </div>
+            </div>
+
             <div class="quick-actions">
                 <button class="quick-action-btn" onclick="expandAll()">
                     <span>▼</span> Alle erweitern
@@ -995,6 +1385,21 @@
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <p>Dokumentation wird geladen...</p>
+            </div>
+
+            <!-- Latest Reports Section -->
+            <div id="latest-reports" style="display:none;">
+                <div class="section-header" style="margin-bottom: 1.5rem;">
+                    <h2 style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
+                        <span class="mdi mdi-clock-outline"></span>
+                        <span>Neueste Reports</span>
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: 0.5rem;">
+                        Die aktuellsten Dokumentationen und Validierungsberichte auf einen Blick
+                    </p>
+                </div>
+                <div id="latest-reports-grid" class="file-grid"></div>
+                <hr style="margin: 2rem 0; border: none; border-top: 2px solid var(--border);">
             </div>
 
             <div id="categories" style="display:none;"></div>
@@ -1135,6 +1540,204 @@
             }
         }
 
+        // Load incidents from API
+        async function loadIncidents() {
+            try {
+                const res = await fetch('/docs/backup-system/api/incidents', {
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const container = document.getElementById('incidents-container');
+                const section = document.getElementById('incidents-section');
+                const badge = document.getElementById('incident-badge');
+
+                if (!data.incidents || data.incidents.length === 0) {
+                    container.innerHTML = '<p style="color: var(--success); padding: 2rem; text-align: center; font-size: 1.2em;">✅ Keine Incidents - System läuft stabil</p>';
+                    section.style.display = 'block';
+                    return;
+                }
+
+                // Separate open and resolved
+                const openIncidents = data.incidents.filter(i => i.status === 'open');
+                const resolvedIncidents = data.incidents.filter(i => i.status === 'resolved');
+
+                // Group by category
+                const groupByCategory = (incidents) => {
+                    const groups = {};
+                    incidents.forEach(inc => {
+                        if (!groups[inc.category]) groups[inc.category] = [];
+                        groups[inc.category].push(inc);
+                    });
+                    return groups;
+                };
+
+                // Sort by severity (Critical > High > Medium > Low > Info)
+                const severityOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+                const sortBySeverity = (a, b) => severityOrder[a.severity] - severityOrder[b.severity];
+
+                let html = '';
+
+                // Stats
+                const stats = data.stats || {};
+                html += '<div class="incident-stats">';
+                html += `<div class="incident-stat"><div class="incident-stat-value">${openIncidents.length}</div><div class="incident-stat-label">🔴 Open</div></div>`;
+                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #dc2626;">${stats.critical || 0}</div><div class="incident-stat-label">Critical</div></div>`;
+                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #ea580c;">${stats.high || 0}</div><div class="incident-stat-label">High</div></div>`;
+                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #f59e0b;">${stats.medium || 0}</div><div class="incident-stat-label">Medium</div></div>`;
+                html += `<div class="incident-stat"><div class="incident-stat-value">${resolvedIncidents.length}</div><div class="incident-stat-label">✅ Resolved</div></div>`;
+                html += '</div>';
+
+                // Function to render incident card
+                const renderIncident = (inc) => {
+                    const timestamp = new Date(inc.timestamp);
+                    const severityIcon = {
+                        'critical': '🔴',
+                        'high': '🟠',
+                        'medium': '🟡',
+                        'low': '🔵',
+                        'info': '🟢'
+                    }[inc.severity] || '⚪';
+
+                    const statusBadge = inc.status === 'resolved'
+                        ? '<span class="incident-status-badge resolved">✅ RESOLVED</span>'
+                        : '<span class="incident-status-badge open">🔄 OPEN</span>';
+
+                    return `
+                        <div class="incident-card ${inc.severity} ${inc.status === 'resolved' ? 'resolved-incident' : 'open-incident'}">
+                            <div class="incident-header">
+                                <div class="incident-title">${severityIcon} ${inc.title}</div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    ${statusBadge}
+                                    <span class="incident-severity ${inc.severity}">${inc.severity}</span>
+                                </div>
+                            </div>
+                            <div class="incident-meta">
+                                <span>📅 ${formatGermanDate(Math.floor(timestamp.getTime() / 1000))}</span>
+                                <span>🏷️ ${inc.category}</span>
+                                <span>🆔 ${inc.id}</span>
+                            </div>
+                            <div class="incident-description">${inc.description}</div>
+                            ${inc.resolution ? `
+                                <div class="incident-resolution">
+                                    <strong>✅ Resolution:</strong> ${inc.resolution}
+                                </div>
+                            ` : ''}
+                            ${inc.verification ? `
+                                <div class="incident-verification">
+                                    <strong>🔍 Verification:</strong><br>
+                                    <code>${inc.verification}</code>
+                                </div>
+                            ` : ''}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <a href="/docs/backup-system/incidents/${inc.id}.md"
+                                   target="_blank"
+                                   style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+                                          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                                          color: white; text-decoration: none; border-radius: 6px;
+                                          font-size: 0.9em; font-weight: 600; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                                          transition: transform 0.2s, box-shadow 0.2s;"
+                                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)';"
+                                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)';">
+                                    📄 Markdown für KI-Analyse
+                                </a>
+                                <span style="margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.85em;">
+                                    (Zum Kopieren & Teilen mit KI)
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                // OPEN INCIDENTS - Prominent display
+                if (openIncidents.length > 0) {
+                    html += '<div class="incidents-section-header open-header">';
+                    html += '<h3>🚨 Active Incidents</h3>';
+                    html += `<span class="incident-count-badge open-badge">${openIncidents.length} Open</span>`;
+                    html += '</div>';
+
+                    // Group by category
+                    const openByCategory = groupByCategory(openIncidents);
+                    Object.keys(openByCategory).sort().forEach(category => {
+                        const categoryIncidents = openByCategory[category].sort(sortBySeverity);
+
+                        html += `<div class="incident-category-group">`;
+                        html += `<div class="category-badge">${category}</div>`;
+                        categoryIncidents.forEach(inc => {
+                            html += renderIncident(inc);
+                        });
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<div class="no-incidents-message">';
+                    html += '<span style="font-size: 3em;">✅</span>';
+                    html += '<h3>Keine aktiven Probleme</h3>';
+                    html += '<p>Alle Systeme funktionieren normal</p>';
+                    html += '</div>';
+                }
+
+                // RESOLVED INCIDENTS - Collapsed by default
+                if (resolvedIncidents.length > 0) {
+                    html += '<div class="incidents-section-header resolved-header" style="margin-top: 2rem; cursor: pointer;" onclick="toggleResolved()">';
+                    html += '<h3>📋 Resolved Incidents</h3>';
+                    html += `<div style="display: flex; align-items: center; gap: 1rem;">`;
+                    html += `<span class="incident-count-badge resolved-badge">${resolvedIncidents.length} Resolved</span>`;
+                    html += '<span class="toggle-icon" id="resolved-toggle">▼</span>';
+                    html += '</div>';
+                    html += '</div>';
+
+                    html += '<div id="resolved-incidents" style="display: none; margin-top: 1rem;">';
+
+                    // Group by category
+                    const resolvedByCategory = groupByCategory(resolvedIncidents.slice(0, 20)); // Show last 20
+                    Object.keys(resolvedByCategory).sort().forEach(category => {
+                        const categoryIncidents = resolvedByCategory[category].sort(sortBySeverity);
+
+                        html += `<div class="incident-category-group">`;
+                        html += `<div class="category-badge resolved">${category}</div>`;
+                        categoryIncidents.forEach(inc => {
+                            html += renderIncident(inc);
+                        });
+                        html += '</div>';
+                    });
+
+                    html += '</div>';
+                }
+
+                container.innerHTML = html;
+
+                // Show badge for open critical/high incidents
+                const openCritical = openIncidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
+                if (openCritical > 0) {
+                    badge.textContent = `${openCritical} critical`;
+                    badge.style.display = 'inline-block';
+                }
+
+                section.style.display = 'block';
+            } catch (e) {
+                console.error('Incidents load error:', e);
+                const container = document.getElementById('incidents-container');
+                if (container) {
+                    container.innerHTML = '<p style="color: var(--danger);">Fehler beim Laden der Incident-Historie</p>';
+                }
+            }
+        }
+
+        // Toggle resolved incidents visibility
+        function toggleResolved() {
+            const resolvedSection = document.getElementById('resolved-incidents');
+            const toggleIcon = document.getElementById('resolved-toggle');
+
+            if (resolvedSection.style.display === 'none') {
+                resolvedSection.style.display = 'block';
+                toggleIcon.textContent = '▲';
+            } else {
+                resolvedSection.style.display = 'none';
+                toggleIcon.textContent = '▼';
+            }
+        }
+
         // Load files from API
         async function loadFiles() {
             try {
@@ -1144,8 +1747,10 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const data = await res.json();
                 allFiles = data.files;
+                renderLatestReports(allFiles);
                 renderCategories(allFiles);
                 document.getElementById('loading').style.display = 'none';
+                document.getElementById('latest-reports').style.display = 'block';
                 document.getElementById('categories').style.display = 'block';
 
                 handleHashNavigation();
@@ -1158,12 +1763,43 @@
             }
         }
 
+        // Render latest reports section
+        function renderLatestReports(files) {
+            // Filter for actual documentation files (HTML/MD), exclude index and non-docs
+            const docFiles = files.filter(f =>
+                (f.type === 'html' || f.type === 'md') &&
+                !f.title.toLowerCase().includes('index') &&
+                f.category !== 'Hub & Index'
+            );
+
+            // Sort by modification time (newest first) and take top 8
+            const latestFiles = docFiles
+                .sort((a, b) => b.mtime - a.mtime)
+                .slice(0, 8);
+
+            if (latestFiles.length === 0) {
+                document.getElementById('latest-reports').style.display = 'none';
+                return;
+            }
+
+            const latestHtml = latestFiles.map(file => {
+                // Highlight E2E reports
+                const isE2E = file.category === 'E2E Validation Reports';
+                const cardClass = isE2E ? 'card-highlight' : '';
+
+                return renderCard(file, cardClass);
+            }).join('');
+
+            document.getElementById('latest-reports-grid').innerHTML = latestHtml;
+        }
+
         // Render categories
         function renderCategories(files) {
             const cats = [...new Set(files.map(f => f.category))].sort();
             const icons = {
                 'Hub & Index': '🏠',
                 'Executive / Management': '👔',
+                'E2E Validation Reports': '✅',
                 'Backup & PITR': '💾',
                 'Deployment & Gates': '🚀',
                 'Testing & Validation': '🧪',
@@ -1249,7 +1885,7 @@
         }
 
         // Render file card
-        function renderCard(f) {
+        function renderCard(f, additionalClass = '') {
             const kb = (f.size / 1024).toFixed(1);
             const modifiedDate = formatShortDate(f.mtime);
             const createdDate = formatShortDate(f.ctime);
@@ -1266,7 +1902,7 @@
             const fullDate = isHtml ? formatGermanDate(f.ctime) : formatGermanDate(f.mtime);
 
             return `
-                <article class="file-card">
+                <article class="file-card ${additionalClass}">
                     <div class="file-card-header">
                         <div class="file-card-badges">
                             ${ageBadge}
@@ -1606,6 +2242,7 @@
         // Initialize
         loadStatus();
         loadFiles();
+        loadIncidents();
 
         // Update status every 5 minutes
         setInterval(loadStatus, 5 * 60 * 1000);

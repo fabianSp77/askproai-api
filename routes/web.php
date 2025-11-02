@@ -225,6 +225,8 @@ Route::prefix('docs/backup-system')->group(function () {
                     $category = 'Hub & Index';
                 } elseif (str_contains($filename, 'EXECUTIVE') || str_contains($filename, 'SUMMARY')) {
                     $category = 'Executive / Management';
+                } elseif (str_contains($filename, 'E2E') || str_contains($filename, 'WORKFLOW_HARDENING') || str_contains($filename, 'GATE_VALIDATION')) {
+                    $category = 'E2E Validation Reports';
                 } elseif (str_contains($filename, 'BACKUP') || str_contains($filename, 'PITR') || str_contains($filename, 'Zero-Loss') || str_contains($filename, 'NAS')) {
                     $category = 'Backup & PITR';
                 } elseif (str_contains($filename, 'DEPLOY') || str_contains($filename, 'deployment-release') || str_contains($filename, 'STAGING') || str_contains($filename, 'BRANCH') || str_contains($filename, 'PROTECTION')) {
@@ -271,6 +273,58 @@ Route::prefix('docs/backup-system')->group(function () {
             'X-Robots-Tag' => 'noindex, nofollow',
         ]);
     })->name('docs.backup-system.api.files');
+
+    // API: Get incident history
+    Route::get('/api/incidents', function () {
+        $incidentFile = '/var/backups/askproai/incidents.json';
+
+        if (!file_exists($incidentFile)) {
+            return response()->json([
+                'status' => 'success',
+                'incidents' => [],
+                'stats' => [
+                    'total' => 0,
+                    'critical' => 0,
+                    'high' => 0,
+                    'medium' => 0,
+                    'low' => 0,
+                    'info' => 0,
+                ]
+            ]);
+        }
+
+        $data = json_decode(file_get_contents($incidentFile), true);
+
+        return response()->json([
+            'status' => 'success',
+            'incidents' => $data['incidents'] ?? [],
+            'stats' => $data['stats'] ?? [],
+        ], 200, [
+            'Content-Security-Policy' => "default-src 'none';",
+            'X-Frame-Options' => 'DENY',
+            'X-Robots-Tag' => 'noindex, nofollow',
+        ]);
+    })->name('docs.backup-system.api.incidents');
+
+    // Serve incident markdown files
+    Route::get('/incidents/{incidentId}', function ($incidentId) {
+        // Security: Validate incident ID format (INC-YYYYMMDDHHMMSS-XXXXXX.md)
+        if (!preg_match('/^INC-\d{14}-[A-Za-z0-9]{6}\.md$/', $incidentId)) {
+            abort(403, 'Invalid incident ID format');
+        }
+
+        $filePath = storage_path('docs/backup-system/incidents/' . $incidentId);
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            abort(404, 'Incident documentation not found');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => 'text/markdown; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . $incidentId . '"',
+            'X-Robots-Tag' => 'noindex, nofollow',
+        ]);
+    })->name('docs.backup-system.incidents.show');
 
     // Serve individual documentation files
     Route::get('/{file}', function ($file) {
