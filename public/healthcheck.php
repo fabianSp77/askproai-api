@@ -13,7 +13,19 @@
 
 // Load environment variables from .env file
 // (Standalone PHP without Laravel bootstrap)
-$envPath = dirname(__DIR__) . '/.env';
+// Follow symlinks to find actual .env location
+$baseDir = dirname(__DIR__);
+$envPath = $baseDir . '/.env';
+
+// If .env is a symlink, resolve it
+if (is_link($envPath)) {
+    $envPath = readlink($envPath);
+    // If relative path, make it absolute
+    if ($envPath[0] !== '/') {
+        $envPath = $baseDir . '/' . $envPath;
+    }
+}
+
 $expectedToken = '';
 
 if (file_exists($envPath)) {
