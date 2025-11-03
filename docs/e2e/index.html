@@ -801,26 +801,45 @@ erDiagram
     datetime starts_at
     datetime ends_at
     boolean is_composite
-    json segments "NULL bei Simple"
-    string composite_group_uid "NULL bei Simple"
-    string status "scheduled|in_progress|completed|cancelled"
+    json segments
+    string composite_group_uid
+    string status
     datetime created_at
     datetime updated_at
     datetime deleted_at
   }
 
-  SERVICE ||--o{ APPOINTMENT : "für"
-  CUSTOMER ||--o{ APPOINTMENT : "bucht"
-  STAFF ||--o{ APPOINTMENT : "führt durch"
-  BRANCH ||--o{ APPOINTMENT : "in"
-  COMPANY ||--o{ APPOINTMENT : "gehört zu"
-
-  note for APPOINTMENT "segments JSON-Struktur:\n[\n  {\n    start: '2025-11-03 10:30:00',\n    end: '2025-11-03 11:15:00',\n    label: 'Färben Phase 1',\n    type: 'work',\n    order: 1,\n    duration_minutes: 45\n  },\n  {\n    start: '2025-11-03 11:15:00',\n    end: '2025-11-03 11:45:00',\n    label: 'Einwirkzeit',\n    type: 'break',\n    order: 2,\n    duration_minutes: 30\n  },\n  ...\n]"
+  SERVICE ||--o{ APPOINTMENT : fuer
+  CUSTOMER ||--o{ APPOINTMENT : bucht
+  STAFF ||--o{ APPOINTMENT : fuehrt_durch
+  BRANCH ||--o{ APPOINTMENT : in
+  COMPANY ||--o{ APPOINTMENT : gehoert_zu
   </div>
   <p>
-    <strong>Persistenz:</strong> Alle Appointment-Daten in einer Tabelle. Segmente als JSON.
+    <strong>Persistenz:</strong> Alle Appointment-Daten in einer Tabelle. Segmente als JSON im <code>segments</code>-Feld.
     <code>composite_group_uid</code> erlaubt Gruppierung mehrerer Termine (z.B. für komplexe Behandlungen).
   </p>
+  <p>
+    <strong>segments JSON-Struktur (Beispiel):</strong>
+  </p>
+  <pre><code>[
+  {
+    "start": "2025-11-03 10:30:00",
+    "end": "2025-11-03 11:15:00",
+    "label": "Färben Phase 1",
+    "type": "work",
+    "order": 1,
+    "duration_minutes": 45
+  },
+  {
+    "start": "2025-11-03 11:15:00",
+    "end": "2025-11-03 11:45:00",
+    "label": "Einwirkzeit",
+    "type": "break",
+    "order": 2,
+    "duration_minutes": 30
+  }
+]</code></pre>
 </section>
 
 </main>
