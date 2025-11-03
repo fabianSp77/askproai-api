@@ -277,6 +277,14 @@ jobs:
           cp -a public/healthcheck.php release/public/ 2>/dev/null || true
           cp -a public/build release/public/
 
+          # Filament Framework Assets (CSS, JS, Vendor/Livewire)
+          cp -a public/css release/public/ 2>/dev/null || true
+          cp -a public/js release/public/ 2>/dev/null || true
+          cp -a public/vendor release/public/ 2>/dev/null || true
+
+          # Livewire symlink (livewire -> vendor/livewire)
+          cd release/public && ln -sf vendor/livewire livewire && cd ../..
+
           # Vendor
           cp -a vendor release/
 
