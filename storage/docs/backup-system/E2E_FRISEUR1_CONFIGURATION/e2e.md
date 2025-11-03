@@ -9,6 +9,7 @@
 6. [Akzeptanzkriterien & Testfälle](#akzeptanzkriterien--testfälle)
 7. [Go-Live-Checkliste](#go-live-checkliste)
 8. [Rollout-Template](#rollout-template)
+9. [Terminarten & Datenmodell](#terminarten--datenmodell)
 
 ---
 
@@ -447,6 +448,198 @@ TODO: GAP-003 - Branch-spezifische Policies konfigurieren (falls unterschiedlich
 - 5+ Staff (Cal.com User IDs gemappt)
 - Funktionsfähiger Retell.ai Agent
 - E2E-Dokumentation generiert
+
+---
+
+## Terminarten & Datenmodell
+
+Das System unterstützt zwei Arten von Terminen:
+
+### Simple Appointments
+
+**Definition:** Einfache Termine mit einem durchgehenden Zeitraum ohne Unterbrechungen.
+
+**Eigenschaften:**
+- `is_composite = false`
+- `segments = null`
+- Nur `starts_at` und `ends_at` gesetzt
+- Direkte Zeitblöcke
+
+**Beispiele:**
+- Beratungsgespräch (60 Minuten)
+- Herrenhaarschnitt (30 Minuten)
+- Bart trimmen (15 Minuten)
+
+**Datenstruktur:**
+```json
+{
+  "id": "uuid",
+  "title": "Beratungsgespräch",
+  "starts_at": "2025-11-03 09:00:00",
+  "ends_at": "2025-11-03 10:00:00",
+  "is_composite": false,
+  "segments": null
+}
+```
+
+### Composite Appointments
+
+**Definition:** Mehrteilige Termine mit mehreren Arbeitsphasen und optionalen Pausen.
+
+**Eigenschaften:**
+- `is_composite = true`
+- `segments = [...]` (JSON-Array)
+- `starts_at/ends_at` umfassen gesamte Zeitspanne
+- Segmente haben eigene Start/End-Zeiten
+
+**Segment-Typen:**
+- **WORK**: Aktive Arbeitsphasen (z.B. Färben, Auswaschen, Föhnen)
+- **BREAK**: Pausen/Einwirkzeiten (z.B. Farbeinwirkung 30min)
+
+**Beispiele:**
+- Färben mit Einwirkzeit (120 Minuten gesamt)
+  - Phase 1: Färben (45min) - WORK
+  - Phase 2: Einwirkzeit (30min) - BREAK
+  - Phase 3: Auswaschen (20min) - WORK
+  - Phase 4: Föhnen (25min) - WORK
+
+**Datenstruktur:**
+```json
+{
+  "id": "uuid",
+  "title": "Komplette Färbung",
+  "starts_at": "2025-11-03 10:30:00",
+  "ends_at": "2025-11-03 12:30:00",
+  "is_composite": true,
+  "segments": [
+    {
+      "start": "2025-11-03 10:30:00",
+      "end": "2025-11-03 11:15:00",
+      "label": "Färben Phase 1",
+      "type": "work",
+      "order": 1,
+      "duration_minutes": 45
+    },
+    {
+      "start": "2025-11-03 11:15:00",
+      "end": "2025-11-03 11:45:00",
+      "label": "Einwirkzeit",
+      "type": "break",
+      "order": 2,
+      "duration_minutes": 30
+    },
+    {
+      "start": "2025-11-03 11:45:00",
+      "end": "2025-11-03 12:05:00",
+      "label": "Auswaschen Phase 2",
+      "type": "work",
+      "order": 3,
+      "duration_minutes": 20
+    },
+    {
+      "start": "2025-11-03 12:05:00",
+      "end": "2025-11-03 12:30:00",
+      "label": "Föhnen Phase 3",
+      "type": "work",
+      "order": 4,
+      "duration_minutes": 25
+    }
+  ]
+}
+```
+
+### Validierungsregeln
+
+**Segment-Validierung (Composite Appointments):**
+1. ✅ **Keine Überlappungen**: Segmente dürfen sich zeitlich nicht überlappen
+2. ⚠️ **Lücken erlaubt**: Zeitliche Lücken zwischen Segmenten sind zulässig (Warnung)
+3. ✅ **Aufsteigende Reihenfolge**: `order`-Index muss aufsteigend sein (1, 2, 3, ...)
+4. ✅ **Chronologische Reihenfolge**: `start`/`end` Zeiten müssen monoton steigend sein
+5. ✅ **Aggregierte Zeitspanne**:
+   - `appointment.starts_at = min(segment.start)`
+   - `appointment.ends_at = max(segment.end)`
+
+**Status-Übergänge:**
+
+```
+Scheduled → InProgress → Completed
+         ↓             ↓
+         Cancelled     Paused → InProgress
+                      ↓
+                      Cancelled
+```
+
+- **Scheduled**: Termin erstellt, noch nicht begonnen
+- **InProgress**: Termin läuft (bei Composite: aktuelles WORK-Segment)
+- **Paused**: Nur bei Composite Appointments (BREAK-Segment aktiv)
+- **Completed**: Termin erfolgreich abgeschlossen
+- **Cancelled**: Termin storniert
+
+### Datenbank-Schema
+
+**Tabelle: appointments**
+
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | uuid | Primary Key |
+| company_id | uuid | FK zu companies (Multi-Tenant) |
+| branch_id | uuid | FK zu branches |
+| service_id | uuid | FK zu services |
+| customer_id | uuid | FK zu customers |
+| staff_id | uuid | FK zu staff |
+| title | string | Terminbezeichnung |
+| starts_at | datetime | Startzeit (aggregiert bei Composite) |
+| ends_at | datetime | Endzeit (aggregiert bei Composite) |
+| is_composite | boolean | Simple (false) vs. Composite (true) |
+| segments | json | NULL bei Simple, Array bei Composite |
+| composite_group_uid | string | NULL oder Gruppierungs-ID |
+| status | enum | scheduled/in_progress/paused/completed/cancelled |
+| created_at | datetime | Erstellungszeitpunkt |
+| updated_at | datetime | Letzte Änderung |
+| deleted_at | datetime | Soft Delete |
+
+**Implementierung:**
+- Keine separate `appointment_segments` Tabelle
+- Segmente als JSON im `segments`-Feld
+- Vorteil: Atomare Updates, keine JOIN-Komplexität
+- Nachteil: Keine direkte SQL-Abfrage auf Segmente
+
+### API-Beispiele
+
+**Composite Appointment erstellen:**
+
+```php
+$appointment = Appointment::create([
+    'title' => 'Komplette Färbung',
+    'is_composite' => true,
+    'segments' => [
+        ['start' => '10:30', 'end' => '11:15', 'label' => 'Färben', 'type' => 'work', 'order' => 1],
+        ['start' => '11:15', 'end' => '11:45', 'label' => 'Einwirkzeit', 'type' => 'break', 'order' => 2],
+        ['start' => '11:45', 'end' => '12:05', 'label' => 'Auswaschen', 'type' => 'work', 'order' => 3],
+        ['start' => '12:05', 'end' => '12:30', 'label' => 'Föhnen', 'type' => 'work', 'order' => 4],
+    ],
+    'starts_at' => '2025-11-03 10:30:00',
+    'ends_at' => '2025-11-03 12:30:00',
+]);
+```
+
+**Segmente abrufen:**
+
+```php
+if ($appointment->isComposite()) {
+    $segments = $appointment->getSegments();
+    foreach ($segments as $segment) {
+        echo "{$segment['label']}: {$segment['duration_minutes']}min ({$segment['type']})\n";
+    }
+}
+```
+
+**Composite Appointments filtern:**
+
+```php
+$compositeAppointments = Appointment::composite()->get();
+$simpleAppointments = Appointment::simple()->get();
+```
 
 ---
 

@@ -56,7 +56,7 @@ bash curl.sh
 
 ```
 docs/e2e/
-├── index.html              # Interaktives Dashboard mit 10 Mermaid-Diagrammen
+├── index.html              # Interaktives Dashboard mit 17 Mermaid-Diagrammen
 ├── e2e.md                  # Vollständige technische Spezifikation
 ├── config.sample.yaml      # Konfigurations-Template
 ├── curl.sh                 # API-Testskript (5 Szenarien)
@@ -169,6 +169,30 @@ Datenmodell: Company → Branch → Service → Staff → Customer → Appointme
 - Datenbankschema-Verständnis
 - Migration-Planning
 - API-Design
+
+### K. Terminarten (Simple vs. Composite)
+Unterschiedliche Appointment-Typen mit Segment-Strukturen.
+
+**5 Diagramme:**
+1. **Taxonomie & Datenmodell**: Class Diagram für Appointment-Hierarchie
+2. **Zeitachse mit Pausen**: Gantt Chart für Simple vs. Composite
+3. **Validierungs-Flow**: Flowchart für Erstellung und Validierung
+4. **State Machine**: Laufzeit-Zustände mit Pause/Resume
+5. **Datenbank-Schema**: ER Diagram mit JSON-Segment-Struktur
+
+**Verwendung:**
+- Verständnis von mehrteiligen Terminen (z.B. Färben mit Einwirkzeit)
+- Implementierung von Composite Services
+- Validierung von Segment-Zeitplänen
+- API-Design für komplexe Terminbuchungen
+- Datenbankschema-Design
+
+**Key Concepts:**
+- Simple Appointments: Einzelne durchgehende Zeitblöcke
+- Composite Appointments: Mehrere Segmente (WORK/BREAK)
+- Segmente als JSON im `segments`-Feld (keine separate Tabelle)
+- Validierung: Keine Überlappungen, Lücken erlaubt
+- Status: Scheduled → InProgress → Paused → Completed/Cancelled
 
 ---
 
