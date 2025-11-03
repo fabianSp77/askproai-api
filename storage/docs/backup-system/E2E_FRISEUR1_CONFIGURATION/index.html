@@ -669,5 +669,39 @@ branchSelect.addEventListener('change', (e) => {
 });
 </script>
 
+<script>
+// Initialize Mermaid with theme based on dark mode
+const isDark = document.body.classList.contains('dark');
+mermaid.initialize({
+  startOnLoad: true,
+  theme: isDark ? 'dark' : 'default',
+  securityLevel: 'loose',
+  fontFamily: 'system-ui, -apple-system, sans-serif'
+});
+
+// Re-render diagrams when dark mode toggles
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === 'class') {
+      const isDarkNow = document.body.classList.contains('dark');
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: isDarkNow ? 'dark' : 'default',
+        securityLevel: 'loose',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      });
+      // Re-render all diagrams
+      document.querySelectorAll('.mermaid').forEach((el) => {
+        const code = el.getAttribute('data-processed') ? el.textContent : el.textContent;
+        el.removeAttribute('data-processed');
+        el.innerHTML = code;
+      });
+      mermaid.init(undefined, '.mermaid');
+    }
+  });
+});
+observer.observe(document.body, { attributes: true });
+</script>
+
 </body>
 </html>
