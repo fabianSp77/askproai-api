@@ -1,0 +1,304 @@
+# E2E Gaps für Friseur 1 (Company ID 1)
+# Erstellt: 2025-11-03
+# Basierend auf: audit/report.md
+
+gaps:
+  - id: GAP-001
+    system: company
+    severity: major
+    title: "Company Settings inkorrekt konfiguriert"
+    description: |
+      Company Settings zeigen 'call_center' und 'telefonie_service' statt 'hair_salon'.
+      Appointment Booking ist deaktiviert (needs_appointment_booking: false).
+      Timezone, Locale, Currency fehlen.
+    owner: "DevOps Team"
+    eta_h: 1
+    fix_plan: |
+      1. php artisan tinker ausführen
+      2. Company ID 1 laden
+      3. Settings aktualisieren:
+         - needs_appointment_booking: true
+         - service_type: appointment_booking
+         - business_type: hair_salon
+         - calcom_team_id: 34209
+         - retell_agent_id: agent_b36ecd3927a81834b6d56ab07b
+         - timezone: Europe/Berlin
+         - locale: de
+         - currency: EUR
+      4. Speichern
+    unblocker: "Keine"
+
+  - id: GAP-002
+    system: branches
+    severity: blocker
+    title: "Nur 1 Branch (Zweigstelle fehlt)"
+    description: |
+      E2E-Spezifikation erwartet 2 Branches (Zentrale + Zweigstelle).
+      Aktuell existiert nur 'Friseur 1 Zentrale'.
+      Zweigstelle fehlt komplett.
+    owner: "DevOps Team"
+    eta_h: 2
+    fix_plan: |
+      1. Entscheidung: Brauchen wir wirklich 2 Branches?
+         → Wenn JA: Branch anlegen
+         → Wenn NEIN: E2E-Spezifikation auf 1 Branch reduzieren
+
+      2. Falls Branch anlegen:
+         php artisan tinker:
+         $company = \App\Models\Company::find(1);
+         $branch = $company->branches()->create([
+           'name' => 'Friseur 1 Zweigstelle',
+           'settings' => [
+             'needs_appointment_booking' => true,
+             'calcom_team_id' => 34209,  // Oder eigenes Team?
+             'service_type' => 'appointment_booking',
+             'service_hours' => 'Mo-Fr 09:00-18:00'
+           ]
+         ]);
+
+      3. Telefonnummer für Zweigstelle bei Retell.ai registrieren
+      4. PhoneNumber-Eintrag erstellen
+    unblocker: "Business-Entscheidung: 1 oder 2 Branches?"
+
+  - id: GAP-003
+    system: services
+    severity: blocker
+    title: "Services ohne Cal.com Event IDs"
+    description: |
+      Alle 3 Services haben settings->calcom_event_type_id = NULL.
+      Ohne Event IDs können keine Buchungen über Cal.com erfolgen.
+      GATE 0 schlägt fehl: verify-ids.sh findet keine Event IDs.
+    owner: "Backend Team"
+    eta_h: 8
+    fix_plan: |
+      1. Cal.com Team 34209 prüfen:
+         curl "https://api.cal.com/v2/teams/34209/event-types" \
+           -H "Authorization: Bearer $CALCOM_API_KEY"
+
+      2. Event Types erstellen (16 Friseur-Services):
+         - Via Cal.com UI: teams/34209/event-types/new
+         - Oder via API: POST /event-types
+         - Für jeden Service: Name, Duration, Team 34209
+
+      3. Event IDs in Laravel speichern:
+         foreach ($services as $service) {
+           $service->settings = array_merge($service->settings ?? [], [
+             'calcom_event_type_id' => $eventId
+           ]);
+           $service->save();
+         }
+
+      4. verify-ids.sh erneut ausführen → sollte grün sein
+    unblocker: "Cal.com API-Zugriff + Event Type IDs"
+
+  - id: GAP-004
+    system: services
+    severity: major
+    title: "Nur 3 statt 16 Friseur-Services"
+    description: |
+      Aktuell nur 3 Services:
+      - Premium Hair Treatment
+      - Comprehensive Therapy Session
+      - Medical Examination Series
+
+      Service-Namen passen nicht zu Friseur.
+      Erwartet: 16 Services (siehe config.sample.yaml)
+    owner: "Backend Team"
+    eta_h: 4
+    fix_plan: |
+      1. Bestehende 3 Services löschen oder umbenennen
+      2. 16 Friseur-Services anlegen (siehe config.sample.yaml):
+         - Kinderhaarschnitt (30 Min, €20.50)
+         - Trockenschnitt (30 Min, €25.00)
+         - Waschen & Styling (45 Min, €40.00)
+         - Waschen, schneiden, föhnen (60 Min, €45.00)
+         - Haarspende (30 Min, €80.00)
+         - Beratung (30 Min, €30.00)
+         - Hairdetox (15 Min, €12.50)
+         - Rebuild Treatment Olaplex (15 Min, €15.50)
+         - Intensiv Pflege Maria Nila (15 Min, €15.50)
+         - Gloss (30 Min, €45.00)
+         - Ansatzfärbung, waschen, schneiden, föhnen (120 Min, €85.00)
+         - Ansatz, Längenausgleich, waschen, schneiden, föhnen (120 Min, €85.00)
+         - Klassisches Strähnen-Paket (120 Min, €125.00)
+         - Globale Blondierung (120 Min, €185.00)
+         - Strähnentechnik Balayage (180 Min, €255.00)
+         - Faceframe (180 Min, €225.00)
+      3. Event IDs mappen (nach GAP-003)
+    unblocker: "GAP-003 (Event Types müssen existieren)"
+
+  - id: GAP-005
+    system: staff
+    severity: minor
+    title: "Staff Emails @demo.com statt @friseur1.de"
+    description: |
+      Alle Staff-Emails (außer Fabian) verwenden @demo.com:
+      - emma.williams@demo.com
+      - david.martinez@demo.com
+      - michael.chen@demo.com
+      - sarah.johnson@demo.com
+
+      Fabian: fabian@askproai.de (internes Email)
+
+      Soll: @friseur1.de oder real emails
+    owner: "Backend Team"
+    eta_h: 0.5
+    fix_plan: |
+      1. Entscheidung: Real Emails oder weiter Demo-Emails?
+      2. Falls Real: Emails korrigieren
+         UPDATE staff SET email = 'emma.williams@friseur1.de' WHERE name = 'Emma Williams';
+      3. Falls Demo: Als TODO für Go-Live markieren
+    unblocker: "Business-Entscheidung: Demo oder Real Emails?"
+
+  - id: GAP-006
+    system: policies
+    severity: major
+    title: "Keine Policies konfiguriert"
+    description: |
+      Tabelle policy_configurations hat keine Einträge für Company 1.
+      Keine Storno-/Umbuchungs-Policies definiert.
+      Policy-Engine kann nicht validieren (canCancel, canReschedule).
+    owner: "Backend Team"
+    eta_h: 2
+    fix_plan: |
+      1. Policy-Configuration erstellen für Company 1:
+         php artisan tinker:
+         \App\Models\PolicyConfiguration::create([
+           'configurable_type' => 'App\\Models\\Company',
+           'configurable_id' => 1,
+           'policy_type' => 'cancellation',
+           'config' => [
+             'enabled' => true,
+             'minimum_notice_hours' => 24,
+             'allowed_by' => ['customer', 'staff'],
+             'fee_applies' => false
+           ]
+         ]);
+
+         \App\Models\PolicyConfiguration::create([
+           'configurable_type' => 'App\\Models\\Company',
+           'configurable_id' => 1,
+           'policy_type' => 'reschedule',
+           'config' => [
+             'enabled' => true,
+             'minimum_notice_hours' => 24,
+             'max_reschedules_per_appointment' => 3
+           ]
+         ]);
+
+      2. AppointmentPolicyEngine testen
+      3. curl.sh Tests ausführen (GATE 4)
+    unblocker: "Keine"
+
+  - id: GAP-007
+    system: components
+    severity: major
+    title: "Komponenten-Services nicht implementiert"
+    description: |
+      Backend unterstützt keine segmentierten Services (z.B. Färben mit Einwirkzeit).
+      service_components Tabelle existiert nicht.
+      Scheduler kann Gaps nicht handhaben.
+      staff_reuse_allowed Feature fehlt.
+    owner: "Backend Team"
+    eta_h: 16
+    fix_plan: |
+      1. Migration erstellen: create_service_components_table
+         Fields: service_id, name, duration_minutes, requires_staff,
+                 staff_reuse_allowed, min_gap, max_gap, order
+
+      2. Service Model erweitern: hasMany('components')
+
+      3. Scheduler-Logic implementieren:
+         - Invariante I1: Staff-Lock nur bei requires_staff=true
+         - Invariante I2: Gap validation (min_gap ≤ actual ≤ max_gap)
+         - Invariante I3: staff_reuse_allowed → Parallel booking erlaubt
+         - Invariante I4: Alle Segmente in gleicher Branch
+
+      4. Filament UI: Komponenten-Editor (Repeater)
+
+      5. Cal.com Integration: Segment-Bookings als Series?
+
+      6. Tests: Component Scheduling mit Gap validation
+    unblocker: "Keine (großes Feature, kann parallel zu anderen Gaps)"
+
+  - id: GAP-008
+    system: billing
+    severity: major
+    title: "Billing/Prepaid System nicht sichtbar"
+    description: |
+      Keine Kostenberechnung in Calls-Tabelle ersichtlich.
+      Prepaid Balance System nicht implementiert (GAP-006 aus Research).
+      Stripe Webhook fehlt.
+      Invoice-Generierung fehlt.
+    owner: "Billing Team"
+    eta_h: 12
+    fix_plan: |
+      1. CostCalculator Service prüfen:
+         - Existiert app/Services/CostCalculator.php?
+         - Formel korrekt? (sekundengenau mit Rundung)
+
+      2. Prepaid Balance System:
+         - Migration: create_prepaid_balances_table
+         - Stripe Checkout Session für Top-Up
+         - Webhook: successful payment → add to balance
+         - Deduction bei jedem Call
+
+      3. Invoice-Generierung:
+         - Migration: create_invoices_table
+         - Monatliche Batch-Job
+         - PDF-Generierung (LaTeX oder HTML→PDF)
+
+      4. Tests: Kostenberechnung (GATE 5)
+    unblocker: "Stripe Account + Webhook Setup"
+
+  - id: GAP-009
+    system: calcom
+    severity: minor
+    title: "Cal.com Team ID in Branch Settings fehlt"
+    description: |
+      Branch 'Friseur 1 Zentrale' hat kein calcom_team_id in settings.
+      verify-ids.sh meldet NULL für Branch→Team Mapping.
+    owner: "DevOps Team"
+    eta_h: 0.5
+    fix_plan: |
+      1. php artisan tinker:
+         $branch = \App\Models\Branch::find('34c4d48e-4753-4715-9c30-c55843a943e8');
+         $settings = $branch->settings ?? [];
+         $settings['calcom_team_id'] = 34209;
+         $branch->settings = $settings;
+         $branch->save();
+
+      2. verify-ids.sh erneut → Branch→Team sollte grün sein
+    unblocker: "Keine"
+
+# Summary
+total_gaps: 9
+by_severity:
+  blocker: 2  # GAP-002, GAP-003
+  major: 5    # GAP-001, GAP-004, GAP-006, GAP-007, GAP-008
+  minor: 2    # GAP-005, GAP-009
+
+total_effort_hours: 46
+critical_path_hours: 18  # GAP-002 + GAP-003 + GAP-001 + GAP-006 + GAP-009
+
+# Priority Order
+priority:
+  immediate:  # Blocker - ohne diese kein GATE 0
+    - GAP-003  # Services ohne Event IDs (8h)
+    - GAP-002  # Zweigstelle fehlt (2h)
+
+  sprint_1:  # Kritische Features für MVP
+    - GAP-001  # Company Settings (1h)
+    - GAP-006  # Policies (2h)
+    - GAP-009  # Branch Team ID (0.5h)
+    - GAP-004  # 16 Services anlegen (4h, nach GAP-003)
+
+  sprint_2:  # Nice-to-Have
+    - GAP-005  # Staff Emails (0.5h)
+    - GAP-007  # Komponenten-Services (16h)
+    - GAP-008  # Billing/Prepaid (12h)
+
+# Changelog
+# 2025-11-03: Initial gaps basierend auf audit/report.md
+# Company ID korrigiert: 5 → 1
+# Staff Cal.com User IDs sind gesetzt (1001-1005) - kein GAP mehr
