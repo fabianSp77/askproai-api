@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>E2E Dokumentation: Friseur 1</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="assets/mermaid.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+aside { position: fixed; top: 0; bottom: 0; left: 0; width: 280px; padding: 20px; overflow: auto; background: #1a1a1a; color: #eee; border-right: 1px solid #333; }
+aside h3 { margin-top: 0; font-size: 18px; color: #4CAF50; }
+aside input, aside select { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: #eee; font-size: 13px; }
+aside nav ul { list-style: none; padding: 0; margin: 16px 0; }
+aside nav li { margin: 8px 0; }
+aside nav a { color: #81C784; text-decoration: none; display: block; padding: 4px 0; }
+aside nav a:hover { color: #A5D6A7; text-decoration: underline; }
+aside label { display: block; margin-top: 16px; font-size: 13px; cursor: pointer; }
+aside label input { width: auto; margin-right: 6px; }
+main { margin-left: 280px; padding: 32px; max-width: 1400px; }
+main section { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid #e0e0e0; }
+main section:last-child { border-bottom: none; }
+h2 { display: flex; gap: 12px; align-items: center; color: #2E7D32; font-size: 24px; margin-top: 0; }
+.chip { font-size: 11px; border: 1px solid #4CAF50; color: #4CAF50; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
+.mermaid { margin: 20px 0; padding: 16px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; overflow-x: auto; }
+section p { color: #555; line-height: 1.6; }
+section a { color: #1976D2; text-decoration: none; font-weight: 500; }
+section a:hover { text-decoration: underline; }
+.copy-btn { background: #4CAF50; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.copy-btn:hover { background: #45a049; }
+body.dark { background: #121212; color: #e0e0e0; }
+body.dark main section { border-bottom-color: #333; }
+body.dark .mermaid { background: #1e1e1e; border-color: #333; }
+body.dark section p { color: #b0b0b0; }
+</style>
+</head>
+<body>
+<aside>
+  <h3>📊 E2E Dashboard</h3>
+  <input id="q" placeholder="🔍 Filter Diagramme..." type="search">
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <select id="branch">
+      <option value="">Alle Filialen</option>
+      <option value="zentrale">Zentrale</option>
+      <option value="zweigstelle">Zweigstelle</option>
+    </select>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="#c4">🏗️ A. C4-Kontext</a></li>
+      <li><a href="#happy">✅ B. E2E Happy Path</a></li>
+      <li><a href="#alts">🔀 C. Alternativen</a></li>
+      <li><a href="#conv">💬 D. Conversational</a></li>
+      <li><a href="#mw">⚙️ E. Orchestrierung</a></li>
+      <li><a href="#cal">📅 F. Cal.com Sequence</a></li>
+      <li><a href="#bill">💳 G. Billing</a></li>
+      <li><a href="#obs">📊 H. Telemetrie</a></li>
+      <li><a href="#state">🔄 I. Zustände</a></li>
+      <li><a href="#erd">🗄️ J. ERD</a></li>
+    </ul>
+  </nav>
+  <label><input type="checkbox" id="dark"> 🌙 Dark Mode</label>
+</aside>
+
+<main>
+<h1>End-to-End Dokumentation: Friseur 1</h1>
+<p><strong>Company:</strong> Friseur 1 (ID: 1) | <strong>Branches:</strong> 1 | <strong>Services:</strong> 3 | <strong>Staff:</strong> 5</p>
+<p>Diese Dokumentation beschreibt den vollständigen E2E-Prozess von Inbound-Calls über Retell.ai, Middleware, Cal.com bis zur Buchungsbestätigung. <a href="e2e.md">→ Vollständige Spezifikation</a> | <a href="audit/report.md">📊 Audit-Report</a> | <a href="audit/gaps.yaml">⚠️  Gaps</a></p>
+
+<section id="c4">
+  <h2>A. C4-Kontextdiagramm <span class="chip">System Overview</span></h2>
+  <p>Zeigt alle beteiligten Systeme und deren Kommunikation: Customer, Retell.ai, Middleware, Cal.com, Frontend, Billing, Database.</p>
+  <div class="mermaid">
+graph LR
+  CUS[👤 Customer]
+  RAI["🤖 Retell.ai<br/>Agent: ...b6d56ab07b"]
+  MW["⚙️ Middleware<br/>Laravel API"]
+  CAL["📅 Cal.com<br/>Team: 34209"]
+  FE["🖥️ Frontend<br/>Filament"]
+  BILL["💳 Billing<br/>Stripe"]
+  DB[("🗄️ Database<br/>PostgreSQL")]
+
+  CUS -->|"Inbound Call<br/>+493033081738"| RAI
+  RAI -->|Webhook| MW
+  MW -->|"Booking API"| CAL
+  MW -->|Read/Write| DB
+  MW -->|UI| FE
+  MW -->|Charges| BILL
+  CAL -->|Webhook| MW
+
+  style CUS fill:#E3F2FD
+  style RAI fill:#FFF3E0
+  style MW fill:#E8F5E9
+  style CAL fill:#F3E5F5
+  style FE fill:#E0F2F1
+  style BILL fill:#FCE4EC
+  style DB fill:#F1F8E9
+  </div>
+  <p><a href="e2e.md#c4-context">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="happy">
+  <h2>B. E2E Happy Path <span class="chip">Main Flow</span></h2>
+  <p>Erfolgreicher Buchungspfad: Anruf → Intent-Erkennung → Policy-Check → Verfügbarkeitsabfrage → Buchung → Bestätigung → Logging.</p>
+  <div class="mermaid">
+flowchart TB
+  subgraph CUS["👤 Customer"]
+    A["Anruf: +493033081738"]
+  end
+
+  subgraph RAI["🤖 Retell.ai"]
+    B["Greet: 'Guten Tag bei Friseur 1'"]
+    C{"Known<br/>Customer?"}
+    D[collect_appointment_info]
+    E[check_availability]
+  end
+
+  subgraph MW["⚙️ Middleware"]
+    F["PolicyEngine:<br/>canBook?"]
+    G["CalcomService:<br/>getSlots"]
+    H{"Slot<br/>found?"}
+    I[Create Appointment]
+    J[Log Call + Costs]
+  end
+
+  subgraph CAL["📅 Cal.com"]
+    K["Query Availability<br/>Team 34209"]
+    L["POST /bookings"]
+    M[("Booking DB")]
+  end
+
+  subgraph FE["🖥️ Frontend"]
+    N["Display in<br/>Call Log"]
+    O["Show Transcript"]
+  end
+
+  A --> B --> C
+  C -->|"Phone Lookup"| F
+  C -->|Yes| D --> E
+  F -->|"Policy OK"| G
+  G --> K
+  K -->|"Slots Available"| H
+  H -->|Yes| I
+  I --> L --> M
+  M -->|"Webhook Confirm"| I
+  I --> J
+  J --> N --> O
+  H -->|No| D
+  F -->|"Policy Block"| J
+
+  style A fill:#E3F2FD
+  style B fill:#FFF3E0
+  style C fill:#FFE0B2
+  style F fill:#C8E6C9
+  style H fill:#C8E6C9
+  style I fill:#C8E6C9
+  style K fill:#E1BEE7
+  style M fill:#F1F8E9
+  </div>
+  <p><a href="e2e.md#happy-path">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="alts">
+  <h2>C. Alternativpfade <span class="chip">Error Handling</span></h2>
+  <p>Umgang mit Sonderfällen: Umbuchung, Stornierung, Policy-Blockierung, No-Show, Nummernunterdrückung, Eskalation.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Call Eingang"]
+
+  subgraph "Erfolgreiche Pfade"
+    BOOK["✅ Neu-Buchung"]
+    RESC["✅ Umbuchung"]
+  end
+
+  subgraph "Fehler-Pfade"
+    CANCEL["Stornierung"]
+    POLICY["❌ Policy-Block"]
+    NOSHOW["No-Show"]
+    CLIR["🔒 Nummer unterdrückt"]
+    HUMAN["👤 Eskalation Mensch"]
+  end
+
+  START --> BOOK
+  START --> RESC
+  START --> CANCEL
+  START --> CLIR
+
+  CANCEL -->|"nach Cutoff"| POLICY
+  RESC -->|"3x überschritten"| POLICY
+  POLICY -->|"Log + Info"| END["Call Ende"]
+  CLIR -->|Fallback| HUMAN
+  BOOK -->|"15min später"| NOSHOW
+  NOSHOW -->|"Auto-Mark"| LOG["Log No-Show"]
+
+  style BOOK fill:#C8E6C9
+  style RESC fill:#C8E6C9
+  style POLICY fill:#FFCDD2
+  style NOSHOW fill:#FFECB3
+  style CLIR fill:#E1BEE7
+  </div>
+  <p><a href="e2e.md#alternative-paths">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="conv">
+  <h2>D. Conversational Decision Tree <span class="chip">Intent Recognition</span></h2>
+  <p>Intent-Erkennung, Required Slots, Disambiguation, NLU-Fallback-Strategien.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Greet Customer"]
+  INTENT{"Intent<br/>erkannt?"}
+
+  BOOK["Intent: book_appointment"]
+  CANCEL["Intent: cancel_appointment"]
+  RESC["Intent: reschedule_appointment"]
+  INFO["Intent: get_info"]
+  UNK["Intent: unknown"]
+
+  START --> INTENT
+  INTENT -->|book| BOOK
+  INTENT -->|cancel| CANCEL
+  INTENT -->|reschedule| RESC
+  INTENT -->|info| INFO
+  INTENT -->|unclear| UNK
+
+  BOOK --> SLOTS["Required Slots:<br/>service, date, time"]
+  SLOTS --> DISAMB{"All<br/>filled?"}
+  DISAMB -->|No| ASK["Ask missing info"]
+  ASK --> SLOTS
+  DISAMB -->|Yes| CONFIRM["Confirm & Book"]
+
+  UNK --> FALLBACK["NLU Fallback:<br/>Rephrase question"]
+  FALLBACK --> INTENT
+
+  style START fill:#E3F2FD
+  style INTENT fill:#FFF3E0
+  style BOOK fill:#C8E6C9
+  style CONFIRM fill:#C8E6C9
+  style UNK fill:#FFCDD2
+  style FALLBACK fill:#FFE0B2
+  </div>
+  <p><a href="e2e.md#conversational-flow">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="mw">
+  <h2>E. Middleware-Orchestrierung <span class="chip">Integration Layer</span></h2>
+  <p>Webhook-Verarbeitung, Idempotenz, Retry-Logic, Mapping (TeamID↔Filiale, EventID↔Service), Timezone-Handling.</p>
+  <div class="mermaid">
+flowchart TB
+  subgraph "Webhook Empfang"
+    W1["Retell Webhook<br/>/api/webhooks/retell"]
+    W2["Cal.com Webhook<br/>/api/calcom/webhook"]
+  end
+
+  subgraph "Idempotenz"
+    ID1["Check:<br/>retell_call_id exists?"]
+    ID2["Check:<br/>calcom_booking_uid exists?"]
+  end
+
+  subgraph "Verarbeitung"
+    MAP["Mapping:<br/>TeamID↔Branch<br/>EventID↔Service<br/>StaffID↔User"]
+    POL["Policy Check<br/>canBook/canCancel"]
+    RETRY["Retry Logic<br/>Circuit Breaker"]
+  end
+
+  subgraph "Persistence"
+    DB[("Database<br/>PostgreSQL")]
+    CACHE[("Redis Cache<br/>5min TTL")]
+  end
+
+  W1 --> ID1
+  W2 --> ID2
+  ID1 -->|New| MAP
+  ID2 -->|New| MAP
+  ID1 -->|Duplicate| SKIP["Return cached"]
+  ID2 -->|Duplicate| SKIP
+  MAP --> POL
+  POL --> RETRY
+  RETRY --> DB
+  DB --> CACHE
+
+  style ID1 fill:#FFF3E0
+  style ID2 fill:#FFF3E0
+  style MAP fill:#E1BEE7
+  style POL fill:#FFE0B2
+  style SKIP fill:#C8E6C9
+  </div>
+  <p><a href="e2e.md#middleware-orchestration">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="cal">
+  <h2>F. Cal.com Sequence <span class="chip">Booking API</span></h2>
+  <p>Sequenzdiagramm der Cal.com API-Integration: Availability → Slot Selection → Booking Creation → Webhook Callback.</p>
+  <div class="mermaid">
+sequenceDiagram
+  participant MW as Middleware
+  participant CAL as Cal.com API<br/>Team 34209
+
+  Note over MW,CAL: Availability Check
+  MW->>CAL: GET /slots/available<br/>eventTypeId=???<br/>startTime=2025-11-04
+  CAL-->>MW: {slots: [...]}
+
+  Note over MW,CAL: Booking Creation
+  MW->>CAL: POST /bookings<br/>{eventTypeId, start, attendee}
+  CAL-->>MW: {uid, id, status: "accepted"}
+  MW->>MW: Store calcom_booking_id
+
+  Note over MW,CAL: Webhook Callback
+  CAL->>MW: POST /api/calcom/webhook<br/>{triggerEvent: "BOOKING_CREATED"}
+  MW-->>CAL: 200 OK
+
+  Note over MW,CAL: Rescheduling
+  MW->>CAL: PATCH /bookings/{uid}<br/>{start: new_time}
+  CAL-->>MW: {uid, status: "rescheduled"}
+  CAL->>MW: Webhook: BOOKING_RESCHEDULED
+
+  Note over MW,CAL: Cancellation
+  MW->>CAL: DELETE /bookings/{uid}
+  CAL-->>MW: 204 No Content
+  CAL->>MW: Webhook: BOOKING_CANCELLED
+  </div>
+  <p><a href="e2e.md#calcom-sequence">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="bill">
+  <h2>G. Billing Flow <span class="chip">Cost Calculation</span></h2>
+  <p>Sekundengenaue Kostenberechnung: Retell.ai Cost → Platform Markup → Currency Conversion → Rounding → Balance/Invoice.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Call ends"]
+  DUR["Duration:<br/>per_second"]
+
+  COST["Retell Cost:<br/>seconds × $0.020/60"]
+  MARKUP["Markup:<br/>× 30%"]
+  EXCH["Convert:<br/>USD → EUR"]
+  ROUND["Round:<br/>ceil(cents)"]
+
+  BAL{"Prepaid<br/>Balance?"}
+  DEDUCT["Deduct from Balance"]
+  TOPUP["Stripe Top-Up<br/>required"]
+  INV["Add to Invoice"]
+
+  START --> DUR --> COST
+  COST --> MARKUP --> EXCH --> ROUND
+  ROUND --> BAL
+  BAL -->|Sufficient| DEDUCT
+  BAL -->|Low| TOPUP
+  DEDUCT --> INV
+  TOPUP --> INV
+
+  style START fill:#E3F2FD
+  style COST fill:#FFE0B2
+  style BAL fill:#FFF3E0
+  style DEDUCT fill:#C8E6C9
+  style TOPUP fill:#FFCDD2
+  </div>
+  <p><a href="e2e.md#billing-flow">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="obs">
+  <h2>H. Telemetrie & Logging <span class="chip">Observability</span></h2>
+  <p>Call-ID-Korrelation, Metriken (Duration, Cost, Sentiment), Transcript-Speicherung, Privacy (PII Redaction).</p>
+  <div class="mermaid">
+flowchart LR
+  subgraph "Correlation"
+    CALL["Call ID<br/>retell_call_id"]
+    BOOK["Booking ID<br/>calcom_booking_id"]
+    CUS["Customer ID"]
+  end
+
+  subgraph "Metrics"
+    DUR["Duration<br/>(seconds)"]
+    COST["Cost<br/>(cents)"]
+    SENT["Sentiment<br/>(-1 to 1)"]
+    INTENT["Intent<br/>(book/cancel/...)"]
+  end
+
+  subgraph "Logs"
+    TRANS["Transcript<br/>(TEXT)"]
+    AUDIO["Audio URL<br/>(30 days)"]
+    META["Metadata JSON"]
+  end
+
+  subgraph "Privacy"
+    ANON["PII Redaction<br/>after 365d"]
+    DEL["Auto-Delete<br/>after 90d"]
+  end
+
+  CALL --> BOOK
+  CALL --> CUS
+  CALL --> DUR
+  CALL --> COST
+  CALL --> SENT
+  CALL --> INTENT
+  CALL --> TRANS
+  CALL --> AUDIO
+  CALL --> META
+  TRANS --> ANON --> DEL
+
+  style CALL fill:#E3F2FD
+  style BOOK fill:#E1BEE7
+  style TRANS fill:#FFF3E0
+  style ANON fill:#FFCDD2
+  </div>
+  <p><a href="e2e.md#telemetry-logging">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="state">
+  <h2>I. Zustandsautomat <span class="chip">State Machine</span></h2>
+  <p>Lifecycle eines Leads/Kunden: Unknown → Known → In Gespräch → Slot gesucht → Gebucht → Verschoben/Storniert/Completed/NoShow.</p>
+  <div class="mermaid">
+stateDiagram-v2
+  [*] --> Unknown: First Contact
+  Unknown --> Known: Phone Lookup Success
+  Unknown --> Lead: New Customer Created
+
+  Known --> InGespraech: Call Connected
+  Lead --> InGespraech: Call Connected
+
+  InGespraech --> SlotGesucht: Intent Book
+  InGespraech --> Abgebrochen: Hang Up
+
+  SlotGesucht --> Gebucht: Slot Found and Confirmed
+  SlotGesucht --> KeineSlots: No Availability
+
+  KeineSlots --> SlotGesucht: Try Different Time
+  KeineSlots --> Abgebrochen: Give Up
+
+  Gebucht --> Bestaetigt: Confirmation Sent
+  Bestaetigt --> Verschoben: Reschedule Request
+  Bestaetigt --> Storniert: Cancel Request
+  Bestaetigt --> Completed: Appointment Occurred
+  Bestaetigt --> NoShow: Customer Absent 15min
+
+  Verschoben --> Bestaetigt: New Time Confirmed
+
+  Completed --> [*]
+  Storniert --> [*]
+  NoShow --> [*]
+  Abgebrochen --> [*]
+  </div>
+  <p><a href="e2e.md#state-machine">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="erd">
+  <h2>J. ER-Diagramm <span class="chip">Data Model</span></h2>
+  <p>Datenmodell: Company → Branch → Service (+ Components) → Staff → Customer → Appointment → Call → Transcript → Charge.</p>
+  <div class="mermaid">
+erDiagram
+  COMPANY ||--o{ BRANCH : "has"
+  COMPANY ||--o{ POLICY_CONFIGURATION : "defines"
+  COMPANY ||--o{ SERVICE : "offers"
+
+  BRANCH ||--o{ PHONE_NUMBER : "has"
+  BRANCH ||--o{ STAFF : "employs"
+  BRANCH ||--o{ APPOINTMENT : "hosts"
+
+  SERVICE ||--o{ SERVICE_COMPONENT : "contains (TODO)"
+  SERVICE }o--o{ STAFF : "via service_staff"
+
+  STAFF }o--|| BRANCH : "works_in"
+  STAFF ||--o{ APPOINTMENT : "performs"
+
+  CUSTOMER ||--o{ APPOINTMENT : "books"
+  CUSTOMER ||--o{ CALL : "makes"
+
+  APPOINTMENT }o--|| SERVICE : "for"
+  APPOINTMENT }o--|| STAFF : "with"
+  APPOINTMENT }o--|| BRANCH : "at"
+
+  CALL ||--o| CUSTOMER : "made_by"
+  CALL ||--o| APPOINTMENT : "creates"
+  CALL ||--o{ TRANSCRIPT : "has"
+  CALL ||--|| CHARGE : "incurs"
+
+  COMPANY ||--o{ PREPAID_BALANCE : "maintains (TODO)"
+
+  COMPANY {
+    uuid id PK
+    string name "Friseur 1"
+    json settings "business_type: hair_salon"
+  }
+
+  BRANCH {
+    uuid id PK
+    uuid company_id FK
+    string name "Zentrale/Zweigstelle"
+    json settings "calcom_team_id: 34209"
+  }
+
+  SERVICE {
+    uuid id PK
+    string name "Service name"
+    int duration_minutes "30-180"
+    json settings "calcom_event_type_id: ???"
+  }
+
+  SERVICE_COMPONENT {
+    uuid id PK "NOT IMPLEMENTED"
+    uuid service_id FK
+    string name
+    int duration_minutes
+    bool requires_staff
+    bool staff_reuse_allowed
+  }
+
+  STAFF {
+    uuid id PK
+    string name
+    string email
+    int calcom_user_id "1001-1005"
+  }
+
+  PHONE_NUMBER {
+    string phone_number "+493033081738"
+    string retell_agent_id "agent_b36ecd..."
+    uuid branch_id FK
+  }
+  </div>
+  <p><a href="e2e.md#entity-relationship">📖 Details in e2e.md</a></p>
+</section>
+
+</main>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  securityLevel: 'loose',
+  theme: 'default',
+  flowchart: { curve: 'basis' }
+});
+
+// Dark Mode Toggle
+const darkToggle = document.getElementById('dark');
+darkToggle.addEventListener('change', (e) => {
+  document.body.classList.toggle('dark', e.target.checked);
+  localStorage.setItem('darkMode', e.target.checked);
+});
+// Load saved preference
+if (localStorage.getItem('darkMode') === 'true') {
+  darkToggle.checked = true;
+  document.body.classList.add('dark');
+}
+
+// Search Filter
+const searchInput = document.getElementById('q');
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  document.querySelectorAll('main section').forEach(section => {
+    const text = section.textContent.toLowerCase();
+    section.style.display = text.includes(query) ? 'block' : 'none';
+  });
+});
+
+// Branch Filter
+const branchSelect = document.getElementById('branch');
+branchSelect.addEventListener('change', (e) => {
+  const branch = e.target.value;
+  if (!branch) {
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'block');
+    return;
+  }
+  console.log('Filter by branch:', branch);
+});
+</script>
+
+</body>
+</html>

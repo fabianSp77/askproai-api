@@ -1,0 +1,238 @@
+{
+  "audit_date": "2025-11-03",
+  "company_id": 1,
+  "company_name": "Friseur 1",
+  "overall_status": "partial",
+  "completion_percentage": 34,
+  "critical_blockers": 2,
+  "major_issues": 5,
+  "minor_issues": 2,
+
+  "systems": {
+    "company": {
+      "status": "warning",
+      "completion": 50,
+      "issues": [
+        {
+          "severity": "major",
+          "message": "Company settings show 'call_center' instead of 'hair_salon'",
+          "field": "settings.business_type",
+          "expected": "hair_salon",
+          "actual": "telefonie_service"
+        },
+        {
+          "severity": "major",
+          "message": "Appointment booking disabled",
+          "field": "settings.needs_appointment_booking",
+          "expected": true,
+          "actual": false
+        }
+      ]
+    },
+
+    "branches": {
+      "status": "error",
+      "completion": 50,
+      "issues": [
+        {
+          "severity": "blocker",
+          "message": "Only 1 branch found, expected 2 (Zentrale + Zweigstelle)",
+          "expected_count": 2,
+          "actual_count": 1,
+          "gap_id": "GAP-002"
+        },
+        {
+          "severity": "minor",
+          "message": "Branch missing Cal.com Team ID in settings",
+          "branch_id": "34c4d48e-4753-4715-9c30-c55843a943e8",
+          "gap_id": "GAP-009"
+        }
+      ]
+    },
+
+    "services": {
+      "status": "error",
+      "completion": 20,
+      "issues": [
+        {
+          "severity": "blocker",
+          "message": "All services missing Cal.com Event Type IDs",
+          "affected_count": 3,
+          "gap_id": "GAP-003"
+        },
+        {
+          "severity": "major",
+          "message": "Only 3 services instead of 16 Friseur services",
+          "expected_count": 16,
+          "actual_count": 3,
+          "gap_id": "GAP-004"
+        }
+      ]
+    },
+
+    "staff": {
+      "status": "ok",
+      "completion": 100,
+      "issues": [
+        {
+          "severity": "minor",
+          "message": "Staff emails use @demo.com instead of @friseur1.de",
+          "affected_count": 4,
+          "gap_id": "GAP-005"
+        }
+      ],
+      "notes": "Cal.com User IDs already set (1001-1005), needs verification against Cal.com API"
+    },
+
+    "phone_numbers": {
+      "status": "ok",
+      "completion": 100,
+      "issues": [],
+      "notes": "1 phone number correctly mapped to agent and branch"
+    },
+
+    "policies": {
+      "status": "error",
+      "completion": 0,
+      "issues": [
+        {
+          "severity": "major",
+          "message": "No policies configured for Company 1",
+          "gap_id": "GAP-006"
+        }
+      ]
+    },
+
+    "components": {
+      "status": "error",
+      "completion": 0,
+      "issues": [
+        {
+          "severity": "major",
+          "message": "Component services not implemented",
+          "gap_id": "GAP-007"
+        }
+      ]
+    },
+
+    "billing": {
+      "status": "error",
+      "completion": 0,
+      "issues": [
+        {
+          "severity": "major",
+          "message": "Billing/Prepaid system not visible",
+          "gap_id": "GAP-008"
+        }
+      ]
+    },
+
+    "retellai": {
+      "status": "warning",
+      "completion": 80,
+      "issues": [
+        {
+          "severity": "info",
+          "message": "Webhook URL not verified",
+          "expected": "https://api.askproai.de/api/webhooks/retell",
+          "actual": "unknown"
+        }
+      ],
+      "agent_id": "agent_b36ecd3927a81834b6d56ab07b",
+      "phone_number": "+493033081738"
+    },
+
+    "calcom": {
+      "status": "error",
+      "completion": 0,
+      "issues": [
+        {
+          "severity": "blocker",
+          "message": "No Event Types configured (all service event_ids are NULL)",
+          "gap_id": "GAP-003"
+        }
+      ],
+      "team_id": 34209
+    }
+  },
+
+  "id_mappings": {
+    "phone_to_agent": {
+      "status": "ok",
+      "count": 1,
+      "items": [
+        {
+          "phone": "+493033081738",
+          "agent_id": "agent_b36ecd3927a81834b6d56ab07b",
+          "branch_id": "34c4d48e-4753-4715-9c30-c55843a943e8"
+        }
+      ]
+    },
+
+    "service_to_event": {
+      "status": "error",
+      "count": 0,
+      "total_services": 3,
+      "mapped_services": 0,
+      "gap_id": "GAP-003"
+    },
+
+    "staff_to_calcom_user": {
+      "status": "warning",
+      "count": 5,
+      "items": [
+        {"name": "Emma Williams", "calcom_user_id": 1001},
+        {"name": "Fabian Spitzer", "calcom_user_id": 1002},
+        {"name": "David Martinez", "calcom_user_id": 1003},
+        {"name": "Michael Chen", "calcom_user_id": 1004},
+        {"name": "Dr. Sarah Johnson", "calcom_user_id": 1005}
+      ],
+      "notes": "User IDs look like test data (1001-1005), needs verification"
+    },
+
+    "branch_to_team": {
+      "status": "error",
+      "count": 0,
+      "total_branches": 1,
+      "mapped_branches": 0,
+      "gap_id": "GAP-009"
+    }
+  },
+
+  "gate_0_status": {
+    "passed": false,
+    "checks": {
+      "phone_to_agent": true,
+      "service_to_event": false,
+      "staff_to_calcom_user": true,
+      "branch_to_team": false
+    },
+    "blockers": ["GAP-003", "GAP-009"]
+  },
+
+  "recommendations": {
+    "immediate": [
+      "Fix GAP-003: Create Cal.com Event Types and map to services (8h)",
+      "Fix GAP-002: Create second branch 'Zweigstelle' or adjust spec to 1 branch (2h)"
+    ],
+    "sprint_1": [
+      "Fix GAP-001: Correct company settings to hair_salon (1h)",
+      "Fix GAP-006: Configure cancellation/reschedule policies (2h)",
+      "Fix GAP-009: Add Cal.com Team ID to branch settings (0.5h)",
+      "Fix GAP-004: Create 16 Friseur services (4h, after GAP-003)"
+    ],
+    "sprint_2": [
+      "Fix GAP-005: Update staff emails to @friseur1.de (0.5h)",
+      "Fix GAP-007: Implement component services with gap scheduling (16h)",
+      "Fix GAP-008: Implement billing/prepaid system with Stripe (12h)"
+    ]
+  },
+
+  "effort_estimate": {
+    "blockers_hours": 10,
+    "sprint_1_hours": 7.5,
+    "sprint_2_hours": 28.5,
+    "total_hours": 46,
+    "critical_path_hours": 18
+  }
+}
