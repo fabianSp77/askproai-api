@@ -100,6 +100,44 @@ Route::prefix('docs/backup-system')->middleware('docs.nocache')->group(function 
         ->name('docs.backup-system.logout');
 
     // Static assets (CSS, JS, images) - no auth required so browser can load them
+    // Supports both root-level (/assets/...) and subdirectory assets (.../assets/...)
+    Route::get('/{path}/assets/{asset}', function ($path, $asset) {
+        // Only allow static assets
+        $allowedExtensions = ['css', 'js', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'];
+        $extension = strtolower(pathinfo($asset, PATHINFO_EXTENSION));
+
+        if (!in_array($extension, $allowedExtensions)) {
+            abort(404);
+        }
+
+        // Security: Prevent path traversal
+        if (str_contains($path, '..') || str_contains($asset, '..') || str_contains($path, '\\') || str_contains($asset, '\\')) {
+            abort(403, 'Invalid file path');
+        }
+
+        $basePath = storage_path('docs/backup-system');
+        $filePath = $basePath . '/' . $path . '/assets/' . $asset;
+
+        // Ensure the resolved path is within the base directory
+        $realBasePath = realpath($basePath);
+        $realFilePath = realpath($filePath);
+
+        if (!$realFilePath || !str_starts_with($realFilePath, $realBasePath . DIRECTORY_SEPARATOR)) {
+            abort(403, 'Access denied');
+        }
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            abort(404, 'Asset not found');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => mime_content_type($filePath),
+            'Cache-Control' => 'public, max-age=31536000', // 1 year cache for static assets
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    })->where('path', '.+')->name('docs.backup-system.subdirectory-assets');
+
+    // Root-level assets (backward compatibility)
     Route::get('/assets/{asset}', function ($asset) {
         // Only allow static assets
         $allowedExtensions = ['css', 'js', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'];
