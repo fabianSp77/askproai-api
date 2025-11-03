@@ -337,10 +337,10 @@ stateDiagram-v2
   Known --> InGespraech: Call Connected
   Lead --> InGespraech: Call Connected
 
-  InGespraech --> SlotGesucht: Intent: Book
+  InGespraech --> SlotGesucht: Intent Book
   InGespraech --> Abgebrochen: Hang Up
 
-  SlotGesucht --> Gebucht: Slot Found & Confirmed
+  SlotGesucht --> Gebucht: Slot Found and Confirmed
   SlotGesucht --> KeineSlots: No Availability
 
   KeineSlots --> SlotGesucht: Try Different Time
@@ -350,7 +350,7 @@ stateDiagram-v2
   Bestaetigt --> Verschoben: Reschedule Request
   Bestaetigt --> Storniert: Cancel Request
   Bestaetigt --> Completed: Appointment Occurred
-  Bestaetigt --> NoShow: Customer Absent (15min)
+  Bestaetigt --> NoShow: Customer Absent 15min
 
   Verschoben --> Bestaetigt: New Time Confirmed
 
