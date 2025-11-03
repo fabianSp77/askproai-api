@@ -10,7 +10,7 @@ name: Build Artifacts
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
     branches: [develop, main]
   workflow_dispatch:
