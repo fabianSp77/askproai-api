@@ -173,8 +173,11 @@ jobs:
               --branch "${{ github.ref_name }}" \
               --json databaseId,headSha,status,conclusion \
               --limit 20 | jq -r --arg sha "$SHA" \
-              '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
-            [ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+              '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId // empty')
+            if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+              echo "❌ No successful Build Artifacts run found for SHA ${SHA:0:8}"
+              exit 1
+            fi
             BUILD_SHA="$SHA"
           fi
           echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV

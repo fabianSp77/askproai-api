@@ -10,7 +10,7 @@ name: Build Artifacts
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
     branches: [develop, main]
   workflow_dispatch:
@@ -30,39 +30,40 @@ jobs:
 
     steps:
       - name: Checkout Code
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install Dependencies
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: npm ci --prefer-offline
 
       - name: Build Frontend
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: npm run build
 
-      - name: Verify Build Output
-        if: github.event_name == 'push'
+      - name: Verify Vite output exists (manifest)
+        if: github.event_name != 'pull_request'
         run: |
+          test -f public/build/manifest.json || \
+            (echo "❌ public/build/manifest.json fehlt – Frontend-Build hat nichts erzeugt" && exit 1)
+          echo "✅ manifest.json verified"
           ls -lh public/build/manifest.json
-          if [ ! -f "public/build/manifest.json" ]; then
-            echo "❌ Build failed: manifest.json not found"
-            exit 1
-          fi
 
       - name: Upload Frontend Build Artifact
-        if: github.event_name == 'push'
+        if: success() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build-${{ github.sha }}
-          path: public/build/
+          path: |
+            public/build/**
+          if-no-files-found: error
           retention-days: 7
 
       - name: PR Safe Check (No Build)
@@ -79,11 +80,11 @@ jobs:
 
     steps:
       - name: Checkout Code
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
 
       - name: Setup PHP
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
@@ -91,18 +92,18 @@ jobs:
           coverage: none
 
       - name: Validate Composer
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: composer validate --strict
 
       - name: Create Vite Manifest (Workaround)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p public/build/assets
           echo '{"resources/js/app-admin.js":{"file":"assets/app-admin.js","isEntry":true}}' > public/build/manifest.json
           touch public/build/assets/app-admin.js
 
       - name: Install Dependencies
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           composer install \
             --no-dev \
@@ -111,17 +112,18 @@ jobs:
             --optimize-autoloader
 
       - name: Verify Vendor
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           ls -lah vendor/ | head -10
           du -sh vendor/
 
       - name: Upload Backend Vendor Artifact
-        if: github.event_name == 'push'
+        if: success() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: backend-vendor-${{ github.sha }}
           path: vendor/
+          if-no-files-found: error
           retention-days: 7
 
       - name: PR Safe Check (No Build)
@@ -138,11 +140,11 @@ jobs:
 
     steps:
       - name: Checkout Code
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
 
       - name: Setup PHP
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
@@ -150,18 +152,18 @@ jobs:
           coverage: none
 
       - name: Create Vite Manifest (Workaround)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p public/build/assets
           echo '{"resources/js/app-admin.js":{"file":"assets/app-admin.js","isEntry":true}}' > public/build/manifest.json
           touch public/build/assets/app-admin.js
 
       - name: Install Dependencies
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: composer install --no-interaction --prefer-dist
 
       - name: Run PHPStan
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: vendor/bin/phpstan analyse app/ --level=5 --no-progress || echo "⚠️ PHPStan issues found"
         continue-on-error: true
 
@@ -189,11 +191,11 @@ jobs:
 
     steps:
       - name: Checkout Code
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
 
       - name: Setup PHP
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
@@ -201,18 +203,18 @@ jobs:
           coverage: none
 
       - name: Create Vite Manifest (Workaround)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p public/build/assets
           echo '{"resources/js/app-admin.js":{"file":"assets/app-admin.js","isEntry":true}}' > public/build/manifest.json
           touch public/build/assets/app-admin.js
 
       - name: Install Dependencies
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: composer install --no-interaction --prefer-dist
 
       - name: Setup Environment
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p storage/framework/{cache,sessions,testing,views}
           mkdir -p storage/logs
@@ -220,7 +222,7 @@ jobs:
           php artisan key:generate --env=testing
 
       - name: Run Tests
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: vendor/bin/pest --testdox
         continue-on-error: true
 
@@ -247,6 +249,13 @@ jobs:
         with:
           name: frontend-build-${{ github.sha }}
           path: public/build
+
+      - name: Sanity check - manifest after download
+        run: |
+          test -f public/build/manifest.json || \
+            (echo "❌ Frontend-Artifact geladen, aber manifest.json fehlt am Zielpfad" && exit 1)
+          echo "✅ Frontend artifact verified - manifest.json present"
+          ls -lh public/build/manifest.json
 
       - name: Download Backend Vendor Artifact
         uses: actions/download-artifact@v4
@@ -368,3 +377,11 @@ jobs:
             ${{ env.BUNDLE }}
             ${{ env.BUNDLE }}.sha256
           retention-days: 30
+
+      - name: Debug - list artifacts for this run
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📋 Artifacts for run ${{ github.run_id }}:"
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[] | "  - \(.name) (\(.size_in_bytes) bytes, expired: \(.expired))"'

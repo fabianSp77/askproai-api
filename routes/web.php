@@ -98,6 +98,72 @@ Route::prefix('docs/backup-system')->middleware('docs.nocache')->group(function 
     // Logout (no auth required)
     Route::post('/logout', [\App\Http\Controllers\DocsAuthController::class, 'logout'])
         ->name('docs.backup-system.logout');
+
+    // Static assets (CSS, JS, images) - no auth required so browser can load them
+    // Supports both root-level (/assets/...) and subdirectory assets (.../assets/...)
+    Route::get('/{path}/assets/{asset}', function ($path, $asset) {
+        // Only allow static assets
+        $allowedExtensions = ['css', 'js', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'];
+        $extension = strtolower(pathinfo($asset, PATHINFO_EXTENSION));
+
+        if (!in_array($extension, $allowedExtensions)) {
+            abort(404);
+        }
+
+        // Security: Prevent path traversal
+        if (str_contains($path, '..') || str_contains($asset, '..') || str_contains($path, '\\') || str_contains($asset, '\\')) {
+            abort(403, 'Invalid file path');
+        }
+
+        $basePath = storage_path('docs/backup-system');
+        $filePath = $basePath . '/' . $path . '/assets/' . $asset;
+
+        // Ensure the resolved path is within the base directory
+        $realBasePath = realpath($basePath);
+        $realFilePath = realpath($filePath);
+
+        if (!$realFilePath || !str_starts_with($realFilePath, $realBasePath . DIRECTORY_SEPARATOR)) {
+            abort(403, 'Access denied');
+        }
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            abort(404, 'Asset not found');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => mime_content_type($filePath),
+            'Cache-Control' => 'public, max-age=31536000', // 1 year cache for static assets
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    })->where('path', '.+')->name('docs.backup-system.subdirectory-assets');
+
+    // Root-level assets (backward compatibility)
+    Route::get('/assets/{asset}', function ($asset) {
+        // Only allow static assets
+        $allowedExtensions = ['css', 'js', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'];
+        $extension = strtolower(pathinfo($asset, PATHINFO_EXTENSION));
+
+        if (!in_array($extension, $allowedExtensions)) {
+            abort(404);
+        }
+
+        // Security: Prevent path traversal
+        if (str_contains($asset, '..') || str_contains($asset, '/') || str_contains($asset, '\\')) {
+            abort(403, 'Invalid file path');
+        }
+
+        $filePath = storage_path('docs/backup-system/' . $asset);
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            abort(404, 'Asset not found');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => mime_content_type($filePath),
+            'Cache-Control' => 'public, max-age=31536000', // 1 year cache for static assets
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    })->name('docs.backup-system.assets');
 });
 
 // Backup System Documentation Hub - Protected Routes (Laravel Session Auth)
@@ -187,7 +253,7 @@ Route::prefix('docs/backup-system')->middleware(['docs.nocache', 'docs.auth'])->
 
         return response($html, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
-            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:;",
+            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net;",
             'X-Frame-Options' => 'DENY',
             'X-Robots-Tag' => 'noindex, nofollow',
             'X-Content-Type-Options' => 'nosniff',
@@ -326,21 +392,30 @@ Route::prefix('docs/backup-system')->middleware(['docs.nocache', 'docs.auth'])->
         ]);
     })->name('docs.backup-system.incidents.show');
 
-    // Serve individual documentation files
+    // Serve individual documentation files (supports subdirectories)
     Route::get('/{file}', function ($file) {
         // Security: Prevent path traversal
-        if (str_contains($file, '..') || str_contains($file, '/') || str_contains($file, '\\')) {
+        if (str_contains($file, '..') || str_contains($file, '\\')) {
             abort(403, 'Invalid file path');
         }
 
-        $filePath = storage_path('docs/backup-system/' . $file);
+        $basePath = storage_path('docs/backup-system');
+        $filePath = $basePath . '/' . $file;
+
+        // Ensure the resolved path is within the base directory
+        $realBasePath = realpath($basePath);
+        $realFilePath = realpath($filePath);
+
+        if (!$realFilePath || !str_starts_with($realFilePath, $realBasePath . DIRECTORY_SEPARATOR)) {
+            abort(403, 'Access denied');
+        }
 
         if (!file_exists($filePath) || !is_file($filePath)) {
             abort(404, 'File not found');
         }
 
         // Only allow specific file types
-        $allowedExtensions = ['html', 'pdf', 'json', 'md', 'css', 'js', 'png', 'jpg', 'svg'];
+        $allowedExtensions = ['html', 'pdf', 'json', 'md', 'css', 'js', 'png', 'jpg', 'svg', 'yaml'];
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
         if (!in_array($extension, $allowedExtensions)) {
@@ -348,12 +423,12 @@ Route::prefix('docs/backup-system')->middleware(['docs.nocache', 'docs.auth'])->
         }
 
         return response()->file($filePath, [
-            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
+            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net;",
             'X-Frame-Options' => 'DENY',
             'X-Robots-Tag' => 'noindex, nofollow',
             'X-Content-Type-Options' => 'nosniff',
         ]);
-    })->name('docs.backup-system.file')->where('file', '[^/]+');
+    })->name('docs.backup-system.file')->where('file', '.+');
 });
 
 // Conversation Flow Routes
