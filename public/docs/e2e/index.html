@@ -60,6 +60,7 @@ body.dark section p { color: #b0b0b0; }
       <li><a href="#obs">📊 H. Telemetrie</a></li>
       <li><a href="#state">🔄 I. Zustände</a></li>
       <li><a href="#erd">🗄️ J. ERD</a></li>
+      <li><a href="#appointment-types">📋 K. Terminarten</a></li>
     </ul>
   </nav>
   <label><input type="checkbox" id="dark"> 🌙 Dark Mode</label>
@@ -623,6 +624,203 @@ erDiagram
   }
   </div>
   <p><a href="e2e.md#entity-relationship">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="appointment-types">
+  <h2>K. Terminarten <span class="chip">Simple vs. Composite</span></h2>
+  <p>
+    <strong>Simple Appointments:</strong> Einfache Termine mit einem durchgehenden Zeitraum (z.B. Beratungsgespräch 60min).<br>
+    <strong>Composite Appointments:</strong> Mehrteilige Termine mit Arbeitsphasen und optionalen Pausen (z.B. Färben mit Einwirkzeit).
+  </p>
+
+  <h3>K.1 Taxonomie & Datenmodell</h3>
+  <div class="mermaid">
+classDiagram
+  direction TB
+  class Appointment {
+    +uuid id
+    +string title
+    +datetime starts_at
+    +datetime ends_at
+    +boolean is_composite
+    +json segments
+    +string composite_group_uid
+    +isComposite() bool
+    +getSegments() array
+  }
+
+  class SimpleAppointment {
+    +is_composite = false
+    +segments = null
+  }
+
+  class CompositeAppointment {
+    +is_composite = true
+    +segments = [...Segment]
+  }
+
+  class Segment {
+    +datetime start
+    +datetime end
+    +string label
+    +string type "work|break"
+    +int order
+    +int duration_minutes
+  }
+
+  Appointment <|-- SimpleAppointment
+  Appointment <|-- CompositeAppointment
+  CompositeAppointment "1" *-- "1..n" Segment : contains in JSON
+
+  note for CompositeAppointment "Segmente als JSON-Array gespeichert:\n[\n  {start, end, label, type, order},\n  ...\n]"
+  </div>
+  <p>
+    <strong>Implementierung:</strong> Composite Appointments speichern ihre Segmente als JSON-Array im <code>segments</code>-Feld.
+    Keine separate Tabelle nötig. <code>starts_at/ends_at</code> umfassen die gesamte Zeitspanne (min/max aller Segmente).
+  </p>
+
+  <h3>K.2 Zeitachse mit Pausen</h3>
+  <div class="mermaid">
+gantt
+  title Terminarten im Vergleich (Beispiel 03.11.2025)
+  dateFormat HH:mm
+  axisFormat %H:%M
+
+  section Simple Appointment
+  Beratungsgespräch (60min)  :done, s1, 09:00, 60m
+
+  section Composite Appointment
+  Färben Phase 1 (45min)     :active, c1, 10:30, 45m
+  Einwirkzeit PAUSE (30min)  :crit, c2, after c1, 30m
+  Auswaschen Phase 2 (20min) :active, c3, after c2, 20m
+  Föhnen Phase 3 (25min)     :active, c4, after c3, 25m
+  </div>
+  <p>
+    <strong>Beispiel:</strong> Ein Färbe-Termin besteht aus 4 Segmenten (3× WORK, 1× BREAK).
+    Gesamtdauer: 120min. Pausen sind explizit als eigene Segmente modelliert.
+  </p>
+
+  <h3>K.3 Validierungs-Flow</h3>
+  <div class="mermaid">
+flowchart TB
+  START([Termin erstellen])
+
+  START --> TYPE{Terminart?}
+
+  TYPE -->|Simple| SIMPLE[is_composite = false<br/>segments = null]
+  SIMPLE --> VALIDATE_SIMPLE[Start/End validieren]
+  VALIDATE_SIMPLE --> SAVE
+
+  TYPE -->|Composite| COMPOSITE[is_composite = true]
+  COMPOSITE --> SEGMENTS[Segmente definieren]
+  SEGMENTS --> PAUSE{Pausen benötigt?}
+
+  PAUSE -->|Ja| ADD_BREAKS[BREAK-Segmente einfügen<br/>type: 'break']
+  PAUSE -->|Nein| ORDER
+  ADD_BREAKS --> ORDER
+
+  ORDER[Segmente sortieren<br/>order: 1, 2, 3...]
+  ORDER --> VALIDATE_SEG[Validierung]
+
+  VALIDATE_SEG --> CHECK1{Überlappungen?}
+  CHECK1 -->|Ja| ERROR1[❌ Fehler]
+  CHECK1 -->|Nein| CHECK2{Lücken?}
+
+  CHECK2 -->|Ja| WARN[⚠️ Warnung]
+  CHECK2 -->|Nein| CALC
+  WARN --> CALC
+
+  CALC[starts_at = min Segment start<br/>ends_at = max Segment end]
+  CALC --> SAVE
+
+  SAVE[(Appointment speichern)]
+  ERROR1 --> END([Ende])
+  SAVE --> END
+
+  style SIMPLE fill:#C8E6C9
+  style COMPOSITE fill:#E1BEE7
+  style ADD_BREAKS fill:#FFE0B2
+  style ERROR1 fill:#FFCDD2
+  style WARN fill:#FFF9C4
+  style SAVE fill:#C8E6C9
+  </div>
+  <p>
+    <strong>Validierungsregeln:</strong>
+  </p>
+  <ul>
+    <li>✅ Segmente dürfen sich nicht überlappen</li>
+    <li>⚠️ Lücken zwischen Segmenten sind erlaubt (Warnung)</li>
+    <li>✅ <code>order</code>-Index muss aufsteigend sein</li>
+    <li>✅ <code>starts_at/ends_at</code> des Appointments = min/max der Segmente</li>
+  </ul>
+
+  <h3>K.4 State Machine (Laufzeit)</h3>
+  <div class="mermaid">
+stateDiagram-v2
+  [*] --> Scheduled: Termin erstellt
+
+  Scheduled --> InProgress: start()
+  Scheduled --> Cancelled: cancel()
+
+  InProgress --> Paused: pause()<br/>(bei BREAK-Segment)
+  InProgress --> Completed: finish()
+  InProgress --> Cancelled: cancel()
+
+  Paused --> InProgress: resume()<br/>(nächstes WORK-Segment)
+  Paused --> Cancelled: cancel()
+
+  Completed --> [*]
+  Cancelled --> [*]
+
+  note right of Paused
+    Bei Composite Appointments:
+    Pause = BREAK-Segment aktiv
+  end note
+
+  note right of InProgress
+    Aktuelles Segment wird
+    verarbeitet (WORK)
+  end note
+  </div>
+  <p>
+    <strong>Hinweis:</strong> Bei Composite Appointments steuern <code>pause()</code> und <code>resume()</code>
+    den Übergang zwischen WORK- und BREAK-Segmenten.
+  </p>
+
+  <h3>K.5 Datenbank-Schema</h3>
+  <div class="mermaid">
+erDiagram
+  APPOINTMENT {
+    uuid id PK
+    uuid company_id FK
+    uuid branch_id FK
+    uuid service_id FK
+    uuid customer_id FK
+    uuid staff_id FK
+    string title
+    datetime starts_at
+    datetime ends_at
+    boolean is_composite
+    json segments "NULL bei Simple"
+    string composite_group_uid "NULL bei Simple"
+    string status "scheduled|in_progress|completed|cancelled"
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+
+  SERVICE ||--o{ APPOINTMENT : "für"
+  CUSTOMER ||--o{ APPOINTMENT : "bucht"
+  STAFF ||--o{ APPOINTMENT : "führt durch"
+  BRANCH ||--o{ APPOINTMENT : "in"
+  COMPANY ||--o{ APPOINTMENT : "gehört zu"
+
+  note for APPOINTMENT "segments JSON-Struktur:\n[\n  {\n    start: '2025-11-03 10:30:00',\n    end: '2025-11-03 11:15:00',\n    label: 'Färben Phase 1',\n    type: 'work',\n    order: 1,\n    duration_minutes: 45\n  },\n  {\n    start: '2025-11-03 11:15:00',\n    end: '2025-11-03 11:45:00',\n    label: 'Einwirkzeit',\n    type: 'break',\n    order: 2,\n    duration_minutes: 30\n  },\n  ...\n]"
+  </div>
+  <p>
+    <strong>Persistenz:</strong> Alle Appointment-Daten in einer Tabelle. Segmente als JSON.
+    <code>composite_group_uid</code> erlaubt Gruppierung mehrerer Termine (z.B. für komplexe Behandlungen).
+  </p>
 </section>
 
 </main>
