@@ -2,7 +2,13 @@
 
 ## Schnellstart
 
-### 1. Lokale Anzeige
+### 1. Production URL
+
+Die Dokumentation ist live verfügbar unter:
+
+**🌐 https://api.askproai.de/docs/e2e/index.html**
+
+### 2. Lokale Anzeige
 
 Die Dokumentation ist vollständig offline-fähig (keine CDN-Abhängigkeiten):
 
