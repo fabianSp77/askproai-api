@@ -47,7 +47,10 @@ body.dark section p { color: #b0b0b0; }
   </div>
   <nav>
     <ul>
-      <li><a href="#c4">🏗️ A. C4-Kontext</a></li>
+      <li><a href="#product-overview">📱 Produkt-Übersicht</a></li>
+      <li><a href="#provider-view">🏢 0a. Anbieter</a></li>
+      <li><a href="#customer-value">💈 0b. Endkunden</a></li>
+      <li style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #444;"><a href="#c4">🏗️ A. C4-Kontext</a></li>
       <li><a href="#happy">✅ B. E2E Happy Path</a></li>
       <li><a href="#alts">🔀 C. Alternativen</a></li>
       <li><a href="#conv">💬 D. Conversational</a></li>
@@ -66,6 +69,109 @@ body.dark section p { color: #b0b0b0; }
 <h1>End-to-End Dokumentation: Friseur 1</h1>
 <p><strong>Company:</strong> Friseur 1 (ID: 1) | <strong>Branches:</strong> 1 | <strong>Services:</strong> 3 | <strong>Staff:</strong> 5</p>
 <p>Diese Dokumentation beschreibt den vollständigen E2E-Prozess von Inbound-Calls über Retell.ai, Middleware, Cal.com bis zur Buchungsbestätigung. <a href="e2e.md">→ Vollständige Spezifikation</a> | <a href="audit/report.md">📊 Audit-Report</a> | <a href="audit/gaps.yaml">⚠️  Gaps</a></p>
+
+<!-- PRODUCT OVERVIEW -->
+<section id="product-overview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 32px; border: none;">
+  <h2 style="color: white; margin-top: 0;">📱 AskPro AI - Produkt-Übersicht</h2>
+  <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 0;">
+    <strong>Voice AI Platform für automatische Terminbuchungen</strong><br>
+    Multi-Tenant SaaS-Lösung mit KI-gestütztem Telefon-Agent für Friseursalons, Arztpraxen, und Service-Unternehmen.
+  </p>
+</section>
+
+<section id="provider-view">
+  <h2>0a. Anbieter-Perspektive <span class="chip">AskPro AI</span></h2>
+  <p>Was bietet AskPro AI als Plattform-Anbieter: Multi-Tenant SaaS, Voice AI Integration, Kalender-Synchronisation, Automatisches Billing.</p>
+  <div class="mermaid">
+graph TB
+  subgraph "🏢 AskPro AI Platform"
+    PLATFORM["⚙️ Laravel Middleware<br/>(Multi-Tenant Core)"]
+    ADMIN["🖥️ Filament Admin<br/>(Company Management)"]
+    BILLING["💳 Stripe Billing<br/>(Usage-Based)"]
+    DB[("🗄️ PostgreSQL<br/>(Shared Database)")]
+  end
+
+  subgraph "🔌 Externe Integrationen"
+    RETELL["🤖 Retell.ai<br/>(Voice AI Platform)"]
+    CALCOM["📅 Cal.com<br/>(Booking System)"]
+  end
+
+  subgraph "👥 Endkunden (Mandanten)"
+    FRISEUR["💈 Friseur 1<br/>(2 Filialen, 5 Mitarbeiter)"]
+    ARZT["🏥 Arztpraxis<br/>(Terminbuchung)"]
+    SERVICE["🔧 Service-Betrieb<br/>(Auftragsannahme)"]
+  end
+
+  PLATFORM --> DB
+  ADMIN --> PLATFORM
+  PLATFORM --> BILLING
+
+  PLATFORM <--> RETELL
+  PLATFORM <--> CALCOM
+
+  FRISEUR --> RETELL
+  ARZT --> RETELL
+  SERVICE --> RETELL
+
+  PLATFORM -.->|"Mandant 1"| FRISEUR
+  PLATFORM -.->|"Mandant 2"| ARZT
+  PLATFORM -.->|"Mandant 3"| SERVICE
+
+  style PLATFORM fill:#E8F5E9
+  style ADMIN fill:#E0F2F1
+  style BILLING fill:#FCE4EC
+  style DB fill:#F1F8E9
+  style RETELL fill:#FFF3E0
+  style CALCOM fill:#F3E5F5
+  style FRISEUR fill:#E3F2FD
+  style ARZT fill:#E3F2FD
+  style SERVICE fill:#E3F2FD
+  </div>
+  <p><strong>Kernfunktionen:</strong> Multi-Tenancy (Company Scoping), Voice AI Integration (Retell.ai), Kalender-Sync (Cal.com), Usage-Based Billing (Stripe), Admin-Portal (Filament).</p>
+</section>
+
+<section id="customer-value">
+  <h2>0b. Endkunden-Perspektive <span class="chip">Value Proposition</span></h2>
+  <p>Was erhält ein Endkunde wie "Friseur 1": 24/7 Telefon-Agent, Automatische Buchungen, Keine manuelle Verwaltung, Integration mit bestehendem Kalender.</p>
+  <div class="mermaid">
+graph LR
+  subgraph "😊 Kunde (Anrufer)"
+    CALL["📞 Anruf bei<br/>+493033081738"]
+  end
+
+  subgraph "🤖 AskPro AI Service"
+    AGENT["🎙️ KI-Agent<br/>spricht Deutsch<br/>versteht Intent"]
+    BOOK["📅 Automatische<br/>Terminbuchung<br/>24/7 verfügbar"]
+  end
+
+  subgraph "💈 Friseur 1 (Ihr Unternehmen)"
+    CAL["📆 Ihr Kalender<br/>(Cal.com)<br/>bleibt immer aktuell"]
+    TEAM["👥 Ihr Team<br/>keine manuelle<br/>Eingabe nötig"]
+    CONFIRM["✅ Bestätigung<br/>per E-Mail/SMS<br/>an Kunden"]
+  end
+
+  CALL --> AGENT
+  AGENT -->|"Termin gefunden"| BOOK
+  BOOK --> CAL
+  CAL --> TEAM
+  BOOK --> CONFIRM
+
+  style CALL fill:#E3F2FD
+  style AGENT fill:#FFF3E0
+  style BOOK fill:#C8E6C9
+  style CAL fill:#F3E5F5
+  style TEAM fill:#E0F2F1
+  style CONFIRM fill:#C8E6C9
+  </div>
+  <p>
+    <strong>Vorteile für Friseur 1:</strong><br>
+    ✅ Keine verpassten Anrufe (24/7 Erreichbarkeit)<br>
+    ✅ Automatische Buchung ohne Personal (Kosteneinsparung)<br>
+    ✅ Integration mit bestehendem Kalender (keine Doppelbuchungen)<br>
+    ✅ Natürliche Sprachverarbeitung (Kunden merken kaum einen Unterschied)<br>
+    ✅ Transparente Abrechnung (nutzungsbasiert, keine Fixkosten)
+  </p>
+</section>
 
 <section id="c4">
   <h2>A. C4-Kontextdiagramm <span class="chip">System Overview</span></h2>
