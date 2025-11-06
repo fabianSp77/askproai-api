@@ -378,7 +378,7 @@ class CallResource extends Resource
                                     $formattedPrice = number_format($price, 0, ',', '.');
                                     $lines[] = '<div class="mb-2">' .
                                               '<div class="font-medium text-gray-900 break-words">' . htmlspecialchars($name) . '</div>' .
-                                              '<div class="text-xs text-green-600 mt-1">💰 ' . $formattedPrice . '€</div>' .
+                                              '<div class="text-xs text-green-600 mt-1">' . $formattedPrice . '€</div>' .
                                               '</div>';
                                 } else {
                                     $lines[] = '<div class="mb-2">' .
@@ -429,14 +429,7 @@ class CallResource extends Resource
                             return 'Fehler beim Laden';
                         }
                     })
-                    ->color(function ($state): string {
-                        if (strip_tags($state) === '-') return 'gray';
-                        return 'success';
-                    })
-                    ->icon(function ($state): ?string {
-                        if (strip_tags($state) === '-') return null;  // No icon for empty state
-                        return 'heroicon-m-calendar-days';
-                    })
+                    // ✅ Icons entfernt 2025-11-06: Kalender- und Geld-Icon nehmen unnötig Platz weg
                     // ⚠️ CRITICAL FIX 2025-11-06: REMOVED ->limit(150) - was breaking HTML tag structure
                     // Applying limit() to ->html() columns truncates mid-tag, causing DOM overflow
                     // This caused summary_audio content to bleed into service_type column
@@ -788,16 +781,9 @@ class CallResource extends Resource
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
                         ->label('Anzeigen'),
-                    Tables\Actions\EditAction::make()
-                        ->label('Bearbeiten'),
 
-                    Tables\Actions\Action::make('playRecording')
-                        ->label('Aufnahme abspielen')
-                        ->icon('heroicon-o-play')
-                        ->color('info')
-                        ->url(fn ($record) => $record->recording_url)
-                        ->openUrlInNewTab()
-                        ->visible(fn ($record) => !empty($record->recording_url)),
+                    // ❌ REMOVED 2025-11-06: EditAction - Bearbeiten macht man in Anzeigen
+                    // ❌ REMOVED 2025-11-06: playRecording - Aufnahme ist bereits in Spalte "Zusammenfassung & Audio"
 
                     Tables\Actions\Action::make('createAppointment')
                         ->label('Termin erstellen')
