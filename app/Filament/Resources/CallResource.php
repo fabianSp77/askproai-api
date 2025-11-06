@@ -197,24 +197,32 @@ class CallResource extends Resource
             // 🚀 PERFORMANCE: Eager load relationships to prevent N+1 queries
             ->modifyQueryUsing(function (Builder $query) {
                 return $query
-                    // ❌ SKIPPED: appointmentWishes (table missing from DB backup)
-                    // ->with('appointmentWishes', function ($q) {
-                    //     $q->where('status', 'pending')->latest();
-                    // })
-                    // ❌ SKIPPED: appointments (call_id foreign key missing from appointments table)
-                    // ->with('appointments', function ($q) {
-                    //     $q->with('service');
-                    // })
-                    ->with('customer')
-                    ->with('company')
-                    ->with('branch')
-                    ->with('phoneNumber');
+                    // ✅ REGRESSION FIX 2025-11-06: Re-enable eager loading
+                    // VERIFICATION: call_id column EXISTS in appointments table
+                    // Previous comment was INCORRECT - column exists and works
+                    ->with([
+                        'customer',
+                        'company',
+                        'branch',
+                        'phoneNumber',
+                        // ✅ Load appointment with nested relationships (service, staff)
+                        'appointment' => function ($q) {
+                            $q->with(['service', 'staff']);
+                        },
+                        // ✅ Load all appointments for multi-appointment calls (with latest first)
+                        'appointments' => function ($q) {
+                            $q->with(['service', 'staff'])
+                              ->latest('created_at');
+                        },
+                    ]);
+                    // ❌ SKIPPED: appointmentWishes (table actually missing - verified)
             })
             ->columns([
                 // 🟢 PREMIUM: Status / Zeit / Dauer Column (3-LINE LAYOUT)
                 Tables\Columns\ViewColumn::make('status_time_duration')
                     ->label('Status / Zeit / Dauer')
                     ->view('filament.columns.status-time-duration')
+                    ->width('150px')  // ✅ Kompakter gemacht
                     ->sortable(query: fn($query, $direction) =>
                         $query
                             ->orderByRaw("CASE
@@ -226,37 +234,9 @@ class CallResource extends Resource
                             ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
                     ),
 
-                // 🆕 BOOKING STATUS: Now embedded in Status/Zeit/Dauer column
-                // (Separate column kept for backwards compatibility but hidden)
-                Tables\Columns\TextColumn::make('booking_status')
-                    ->label('Buchung')
-                    ->getStateUsing(function (Call $record) {
-                        if ($record->appointment && $record->appointment->starts_at) {
-                            return '✅ Gebucht';
-                        }
-                        // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
-                        // } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
-                        //     return '⏰ Wunsch';
-                        // }
-                        return '❓ Offen';
-                    })
-                    ->badge()
-                    ->color(function ($state) {
-                        return match($state) {
-                            '✅ Gebucht' => 'success',
-                            '⏰ Wunsch' => 'warning',
-                            '❓ Offen' => 'danger',
-                            default => 'gray',
-                        };
-                    })
-                    ->sortable(query: fn($query, $direction) =>
-                        $query->orderByRaw("CASE
-                            WHEN appointments.starts_at IS NOT NULL THEN 0
-                            ELSE 1
-                            END {$direction}")
-                            ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
-                    )
-                    ->hidden(),  // 🚫 Hidden - now integrated into Status/Zeit/Dauer column
+                // ❌ REMOVED 2025-11-06: booking_status column caused column mismatch
+                // This hidden column shifted all subsequent column contents
+                // Status is now shown in Status/Zeit/Dauer column instead
 
                 // Company/Branch column with Phone number
                 Tables\Columns\ViewColumn::make('company_phone_display')
@@ -291,43 +271,39 @@ class CallResource extends Resource
                         $appointment = $record->appointment;
 
                         if (!$appointment || !$appointment->starts_at) {
-                            // No appointment - check for pending wishes
-                            // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
-                            // try {
-                            //     $unresolvedWish = $record->appointmentWishes()
-                            //         ->where('status', 'pending')
-                            //         ->latest()
-                            //         ->first();
-                            //
-                            //     if ($unresolvedWish && $unresolvedWish->desired_date) {
-                            //         $wishDate = \Carbon\Carbon::parse($unresolvedWish->desired_date);
-                            //         return new HtmlString(
-                            //             '<span class="text-xs text-orange-600">⏰ ' .
-                            //             $wishDate->locale('de')->isoFormat('ddd DD.MM') .
-                            //             '</span>'
-                            //         );
-                            //     }
-                            // } catch (\Exception $e) {
-                            //     // silently ignore if table missing
-                            // }
-
                             return new HtmlString('<span class="text-xs text-gray-400">-</span>');
                         }
 
-                        // Format: Mi 22.10 14:00 → Mitarbeiter
+                        // ✅ OPTIMIERT 2025-11-06: Zweizeiliges Layout mit Pfeil HORIZONTAL
+                        // Zeile 1: Datum + Uhrzeit + Dauer
+                        // Zeile 2: → Mitarbeiter (Pfeil horizontal in der Zeile)
+
                         $startDate = \Carbon\Carbon::parse($appointment->starts_at);
                         $dateTime = $startDate->locale('de')->isoFormat('ddd DD.MM HH:mm');
+
+                        // Berechne Dauer
+                        $duration = '';
+                        if ($appointment->ends_at) {
+                            $endDate = \Carbon\Carbon::parse($appointment->ends_at);
+                            $durationMinutes = $startDate->diffInMinutes($endDate);
+                            $duration = " <span class='text-gray-500'>({$durationMinutes} Min.)</span>";
+                        } elseif ($appointment->service && $appointment->service->duration) {
+                            $durationMinutes = $appointment->service->duration;
+                            $duration = " <span class='text-gray-500'>({$durationMinutes} Min.)</span>";
+                        }
 
                         $staffName = $appointment->staff?->name ?? 'Unzugewiesen';
                         $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
 
                         return new HtmlString(
-                            '<span class="text-xs ' . $staffColor . ' font-medium">' .
-                            $dateTime . ' → ' . $staffName .
-                            '</span>'
+                            '<div class="text-xs leading-relaxed">' .
+                            '<div class="font-medium text-blue-600">' . $dateTime . $duration . '</div>' .
+                            '<div class="' . $staffColor . ' mt-1 flex items-center gap-1"><span>→</span><span>' . $staffName . '</span></div>' .
+                            '</div>'
                         );
                     })
                     ->html()
+                    ->width('200px')  // ✅ Breiter für bessere Lesbarkeit
                     ->sortable(query: fn($query, $direction) =>
                         $query->orderBy('appointments.starts_at', $direction)
                             ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
@@ -358,76 +334,16 @@ class CallResource extends Resource
                         return implode("\n", $parts);
                     }),
 
-                // Staff column - DEPRECATED but kept for backwards compatibility (hidden)
-                Tables\Columns\TextColumn::make('appointment_staff')
-                    ->label('Mitarbeiter:in')
-                    ->getStateUsing(function (Call $record) {
-                        // Smart accessor automatically loads appointment
-                        $appointment = $record->appointment;
-
-                        if (!$appointment) {
-                            return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
-                        }
-
-                        // Load appointment relationships if needed
-                        if (!$appointment->relationLoaded('service')) {
-                            $appointment->load(['service', 'staff']);
-                        }
-
-                        $output = [];
-
-                        // Show staff member prominently
-                        if ($appointment->staff) {
-                            $output[] = '<span class="text-xs font-medium text-blue-600">' . $appointment->staff->name . '</span>';
-                        } else {
-                            $output[] = '<span class="text-xs text-gray-400">Nicht zugewiesen</span>';
-                        }
-
-                        // Add service as secondary info (smaller, gray)
-                        if ($appointment->service) {
-                            $serviceName = \Str::limit($appointment->service->name, 20);
-                            $output[] = '<span class="text-xs text-gray-500">' . $serviceName . '</span>';
-                        }
-
-                        return new HtmlString(
-                            '<div class="flex flex-col gap-0.5">' .
-                            implode('', $output) .
-                            '</div>'
-                        );
-                    })
-                    ->html()
-                    ->tooltip(function (Call $record) {
-                        if (!$record->appointment) {
-                            return null;
-                        }
-
-                        $appointment = $record->appointment;
-
-                        $tooltip = "Mitarbeiter:innen-Details:\n";
-                        $tooltip .= "━━━━━━━━━━━━━━━━━━━\n";
-
-                        if ($appointment->staff) {
-                            $tooltip .= "Zuständige:r Mitarbeiter:in: " . $appointment->staff->name . "\n";
-                        } else {
-                            $tooltip .= "Status: Noch nicht zugewiesen\n";
-                        }
-
-                        if ($appointment->service) {
-                            $tooltip .= "\nService: " . $appointment->service->name . "\n";
-                            if ($appointment->service->duration) {
-                                $tooltip .= "Standard-Dauer: " . $appointment->service->duration . " Min\n";
-                            }
-                        }
-
-                        return $tooltip;
-                    })
-                    ->toggleable()
-                    ->hidden(),  // 🚫 Hidden in favor of combined appointment_summary column
+                // ❌ REMOVED 2025-11-06: appointment_staff column caused column mismatch
+                // This hidden column shifted all subsequent column contents
+                // Staff is now shown in appointment_summary column instead
 
                 // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service / Preis')
                     ->html()
+                    ->width('250px')  // ✅ OPTIMIERT 2025-11-06: Breiter für bessere Lesbarkeit
+                    ->wrap()  // ✅ Text-Wrapping aktivieren
                     ->getStateUsing(function ($record) {
                         try {
                             // Use already-loaded appointments (eager-loaded on line 201)
@@ -455,15 +371,20 @@ class CallResource extends Resource
                                     : $appt->service->name;
                                 $price = $appt->service->price;
 
+                                // ✅ OPTIMIERT: Service-Name nicht mehr kürzen, wrappen stattdessen
                                 if ($price && $price > 0) {
                                     // Price is stored as decimal(10,2) in EUR, not cents
                                     // Display as full euros only (no cents)
                                     $formattedPrice = number_format($price, 0, ',', '.');
-                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
-                                              '<span class="text-xs text-green-600">💰 ' . $formattedPrice . '€</span>';
+                                    $lines[] = '<div class="mb-2">' .
+                                              '<div class="font-medium text-gray-900 break-words">' . htmlspecialchars($name) . '</div>' .
+                                              '<div class="text-xs text-green-600 mt-1">💰 ' . $formattedPrice . '€</div>' .
+                                              '</div>';
                                 } else {
-                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
-                                              '<span class="text-xs text-gray-400">Kein Preis</span>';
+                                    $lines[] = '<div class="mb-2">' .
+                                              '<div class="font-medium text-gray-900 break-words">' . htmlspecialchars($name) . '</div>' .
+                                              '<div class="text-xs text-gray-400 mt-1">Kein Preis</div>' .
+                                              '</div>';
                                 }
                             }
 
@@ -471,13 +392,7 @@ class CallResource extends Resource
                                 return '<span class="text-gray-400 text-xs">-</span>';
                             }
 
-                            $text = implode('<br><br>', $lines);
-                            // Limit display length (increased for better readability)
-                            if (mb_strlen(strip_tags($text)) > 100) {
-                                $text = mb_substr(strip_tags($text), 0, 100) . '...';
-                            }
-
-                            return '<div class="text-xs space-y-1 w-full">' . $text . '</div>';
+                            return '<div class="text-xs w-full">' . implode('', $lines) . '</div>';
                         } catch (\Throwable $e) {
                             return '<span class="text-gray-400 text-xs">-</span>';
                         }
@@ -522,11 +437,13 @@ class CallResource extends Resource
                         if (strip_tags($state) === '-') return null;  // No icon for empty state
                         return 'heroicon-m-calendar-days';
                     })
-                    ->limit(150)
-                    ->wrap()
+                    // ⚠️ CRITICAL FIX 2025-11-06: REMOVED ->limit(150) - was breaking HTML tag structure
+                    // Applying limit() to ->html() columns truncates mid-tag, causing DOM overflow
+                    // This caused summary_audio content to bleed into service_type column
                     ->searchable()
-                    ->sortable()
-                    ->toggleable(),
+                    ->sortable(),
+                    // ✅ FIX 2025-11-06: Toggleable entfernt - Spalte IMMER sichtbar
+                    // Problem: User hatte Spalte ausgeblendet → Spalten-Inhalte verschoben
 
                 // 🎙️ Combined: Summary + Audio Player (State of the Art)
                 Tables\Columns\TextColumn::make('summary_audio')
