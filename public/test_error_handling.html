@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Error Handling Flow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body style="background: #1a1a2e; color: white; padding: 40px;">
+    <h1>Error Handling Flow - Isolated Test</h1>
+
+    <pre class="mermaid">
+graph TD
+    Start["Function Call"]
+    Validate["Input Validation"]
+    CallID["Call ID Resolution"]
+    TenantCheck["Tenant Isolation Check"]
+    BusinessLogic["Business Logic"]
+    ExternalAPI["External API Call"]
+    CircuitBreaker{"Circuit Open?"}
+    Retry{"Retry less than 5?"}
+    Success["Success Response"]
+    Error["Error Response"]
+    Fallback["Fallback Logic"]
+
+    Start --> Validate
+    Validate -->|Invalid| Error
+    Validate -->|Valid| CallID
+    CallID -->|Not Found| Error
+    CallID -->|Found| TenantCheck
+    TenantCheck -->|Unauthorized| Error
+    TenantCheck -->|Authorized| BusinessLogic
+    BusinessLogic --> ExternalAPI
+    ExternalAPI --> CircuitBreaker
+    CircuitBreaker -->|Yes| Fallback
+    CircuitBreaker -->|No| Retry
+    Retry -->|Yes| ExternalAPI
+    Retry -->|No| Error
+    ExternalAPI -->|Success| Success
+    Fallback --> Success
+
+    style Start fill:#667eea,color:#fff
+    style Success fill:#10b981,color:#fff
+    style Error fill:#ef4444,color:#fff
+    style Fallback fill:#f59e0b,color:#fff
+    </pre>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        let errorCount = 0;
+        window.onerror = function(msg) {
+            if (msg.includes('translate')) {
+                errorCount++;
+                console.error(`Error ${errorCount}: ${msg}`);
+            }
+            return false;
+        };
+
+        setTimeout(() => {
+            console.log(`Total errors: ${errorCount}`);
+            if (errorCount === 0) {
+                console.log("✅ PASSED");
+            } else {
+                console.log("❌ FAILED");
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

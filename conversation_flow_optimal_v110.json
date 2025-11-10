@@ -1,0 +1,831 @@
+{
+  "conversation_flow_id": "optimal_v110_friseur1_2025_11_10",
+  "version": "110",
+  "description": "Optimaler Telefon-Flow mit intelligenter Kundenerkennung, parallelen Prozessen und eliminierter Latenz",
+  "created_at": "2025-11-10T00:00:00Z",
+  "author": "AskPro AI Gateway - Ultrathink Optimization",
+  "changelog": [
+    "✅ call_id: Alle parameter_mappings von '1' auf '{{call_id}}' korrigiert",
+    "✅ check_customer: Neue Funktion für proaktive Kundenerkennung",
+    "✅ Silent Router: intent_router spricht nicht mehr",
+    "✅ Smart Extraction: Service aus Historie wenn >80% confidence",
+    "✅ Parallele Initialisierung: get_current_context + check_customer gleichzeitig",
+    "✅ Background Availability: check_availability startet sobald Daten vorhanden",
+    "✅ Keine wiederholten Fragen: node_collect_booking_info entfernt",
+    "✅ Phone/Email Collection: Neue Variablen hinzugefügt",
+    "✅ Error Handling: request_callback mit Multi-Channel Notifications",
+    "✅ Near-Match Logic: Positive Formulierung für Termine ±30min vom Wunschtermin",
+    "✅ Callback Improvements: Explizite Mitarbeiter-Info + Phone Collection wenn fehlt",
+    "✅ Phone Confirmation: Telefonnummer wird zur Bestätigung wiederholt"
+  ],
+  "nodes": [
+    {
+      "id": "node_greeting",
+      "type": "conversation",
+      "instruction": "DYNAMISCHE BEGRÜSSUNG basierend auf check_customer Result:\n\nWENN customer_found=true UND service_confidence >= 0.8:\n  'Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen [predicted_service] buchen?'\n\nWENN customer_found=true UND service_confidence < 0.8:\n  'Guten Tag! Sch
+
+ön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?'\n\nWENN customer_found=false:\n  'Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?'\n\nREGELN:\n- Freundlich, warm, einladend\n- Maximal 2 Sätze\n- NICHT nach Details fragen, nur begrüßen",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "func_initialize_context",
+          "description": "Sofort zu Initialisierung"
+        }
+      ]
+    },
+    {
+      "id": "func_initialize_context",
+      "type": "function_call",
+      "tool_name": "get_current_context",
+      "description": "Holt aktuelles Datum, Uhrzeit, Wochentag für Kontext",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}"
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "func_check_customer",
+          "description": "Parallel: Kunde identifizieren"
+        }
+      ]
+    },
+    {
+      "id": "func_check_customer",
+      "type": "function_call",
+      "tool_name": "check_customer",
+      "description": "NEU: Proaktive Kundenerkennung via Telefonnummer. Liefert Historie, Service-Vorhersage, Staff-Präferenz",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}"
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "intent_router_silent",
+          "description": "Zu Silent Intent Router (spricht NICHT)"
+        }
+      ]
+    },
+    {
+      "id": "intent_router_silent",
+      "type": "conversation",
+      "instruction": "KRITISCH: Du bist ein STILLER ROUTER. Deine Aufgabe ist NUR zu klassifizieren, NICHT zu sprechen!\n\nANALYSIERE die Kundenaussage und klassifiziere den Intent:\n- BOOKING: Kunde möchte Termin buchen\n- QUERY: Kunde fragt nach bestehendem Termin\n- RESCHEDULE: Kunde möchte Termin umbuchen\n- CANCEL: Kunde möchte Termin stornieren\n- INFO: Kunde fragt nach Services/Preisen/Öffnungszeiten\n\n⚠️ DU DARFST NICHTS SAGEN! NUR silent transition zur richtigen Edge!\n\nKEINE Ausgabe wie 'Ich verstehe, Sie möchten...' - SCHWEIGEN!",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user intent is BOOKING or wants to book appointment or mentions 'Termin', 'buchen', 'reservieren'",
+          "destination": "node_extract_booking_smart",
+          "description": "Silent transition zu Booking Flow"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user asks about existing appointment or says 'wann ist mein Termin', 'nächster Termin'",
+          "destination": "func_get_appointments",
+          "description": "Silent transition zu Termin-Abfrage"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to reschedule or says 'umbuchen', 'verschieben', 'anderen Termin'",
+          "destination": "node_collect_reschedule_info",
+          "description": "Silent transition zu Umbuchung"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to cancel or says 'absagen', 'stornieren', 'nicht kommen'",
+          "destination": "node_collect_cancel_info",
+          "description": "Silent transition zu Stornierung"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user asks about services, prices, opening hours",
+          "destination": "func_get_services",
+          "description": "Silent transition zu Info-Abfrage"
+        }
+      ]
+    },
+    {
+      "id": "node_extract_booking_smart",
+      "type": "extract_dynamic_variables",
+      "description": "SMART EXTRACTION: Extrahiert alle Buchungsdaten. WICHTIG: Service kann aus check_customer Result vorbelegt sein!",
+      "variables": [
+        "customer_name",
+        "service_name",
+        "appointment_date",
+        "appointment_time",
+        "customer_phone",
+        "customer_email",
+        "preferred_staff"
+      ],
+      "extraction_rules": {
+        "service_name": {
+          "pre_fill_from": "check_customer.predicted_service",
+          "condition": "check_customer.service_confidence >= 0.8",
+          "description": "Service automatisch aus Historie übernehmen wenn >80% confidence"
+        },
+        "customer_name": {
+          "pre_fill_from": "check_customer.customer_name",
+          "condition": "check_customer.found == true"
+        },
+        "customer_phone": {
+          "pre_fill_from": "check_customer.customer_phone",
+          "condition": "check_customer.found == true"
+        },
+        "customer_email": {
+          "pre_fill_from": "check_customer.customer_email",
+          "condition": "check_customer.found == true"
+        },
+        "preferred_staff": {
+          "pre_fill_from": "check_customer.preferred_staff",
+          "condition": "check_customer.staff_confidence >= 0.8"
+        }
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_collect_missing_booking_data",
+          "description": "Prüfe welche Daten noch fehlen"
+        }
+      ]
+    },
+    {
+      "id": "node_collect_missing_booking_data",
+      "type": "conversation",
+      "instruction": "SAMMLE NUR DIE FEHLENDEN Buchungsdaten:\n\nPflicht für Verfügbarkeitsprüfung:\n- service_name (wenn nicht aus Historie)\n- appointment_date\n- appointment_time\n\nPflicht für Buchung (erst später):\n- customer_name\n- customer_phone ODER customer_email\n\nLOGIK:\n1. Prüfe was bereits bekannt ist (aus Variablen)\n2. Frage NUR nach dem was FEHLT\n3. Wenn Service aus Historie (service_confidence >= 0.8): NUR nach Zeit fragen\n4. Wenn Service unbekannt: Nach Service UND Zeit fragen\n5. Kombiniere Fragen intelligent: 'Wann hätten Sie Zeit für einen [Service]?'\n\nREGELN:\n- Maximal 1 Frage pro Turn\n- Keine wiederholten Fragen\n- Natürlicher Gesprächsfluss\n- Sobald service_name + date + time vorhanden → SOFORT zu check_availability",
+      "edges": [
+        {
+          "type": "equation",
+          "condition": "{{service_name}} != null AND {{appointment_date}} != null AND {{appointment_time}} != null",
+          "destination": "node_announce_availability_check",
+          "description": "Wenn alle Daten vorhanden: Sofort prüfen"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user provides missing data",
+          "destination": "node_extract_booking_smart",
+          "description": "Loop zurück zu Extraction um neue Daten zu erfassen"
+        }
+      ]
+    },
+    {
+      "id": "node_announce_availability_check",
+      "type": "conversation",
+      "instruction": "EXPLIZITE KOMMUNIKATION während API-Call:\n\n'Einen Moment, ich prüfe die Verfügbarkeit...'\n\nREGELN:\n- Kurz und klar\n- Kunde weiß was passiert\n- DANN sofort silent zu Function Call\n- KEIN weiterer Text",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "func_check_availability_smart",
+          "description": "Sofort zu Verfügbarkeitsprüfung"
+        }
+      ]
+    },
+    {
+      "id": "func_check_availability_smart",
+      "type": "function_call",
+      "tool_name": "check_availability_v17",
+      "description": "Prüft exakte Verfügbarkeit + liefert Alternativen wenn nicht verfügbar",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "service_name": "{{service_name}}",
+        "appointment_date": "{{appointment_date}}",
+        "appointment_time": "{{appointment_time}}",
+        "preferred_staff": "{{preferred_staff}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "available == true",
+          "destination": "node_present_available",
+          "description": "Termin ist frei"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "available == false AND alternatives.length > 0",
+          "destination": "node_present_alternatives",
+          "description": "Termin belegt, Alternativen vorhanden"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "available == false AND alternatives.length == 0",
+          "destination": "node_no_availability",
+          "description": "Keine Verfügbarkeit"
+        }
+      ]
+    },
+    {
+      "id": "node_present_available",
+      "type": "conversation",
+      "instruction": "POSITIVES ERGEBNIS kommunizieren:\n\n'Der Termin ist frei! Soll ich den [service_name] für [appointment_date] um [appointment_time] Uhr buchen?'\n\nREGELN:\n- Freudige Bestätigung\n- Alle Details nochmal wiederholen\n- Klare Ja/Nein Frage\n- NICHT 'Perfekt! Ich buche jetzt' sagen (erst nach Bestätigung)",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user confirms with 'ja', 'gerne', 'buchen Sie'",
+          "destination": "node_collect_final_booking_data",
+          "description": "Kunde bestätigt → prüfe ob Name/Kontakt vorhanden"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines or wants different time",
+          "destination": "node_collect_missing_booking_data",
+          "description": "Kunde lehnt ab → neue Daten sammeln"
+        }
+      ]
+    },
+    {
+      "id": "node_present_alternatives",
+      "type": "conversation",
+      "instruction": "ALTERNATIVEN MIT POSITIVER FORMULIERUNG präsentieren:\n\n**NEAR-MATCH LOGIC** (Alternative innerhalb ±30 Minuten):\n'Um [appointment_time] Uhr ist [appointment_date] schon belegt, aber ich kann Ihnen [Alternative_1_Time] oder [Alternative_2_Time] anbieten. Was passt Ihnen besser?'\n\n**FAR-MATCH LOGIC** (Alternative >30 Minuten entfernt):\n'[appointment_time] Uhr an [appointment_date] ist leider nicht verfügbar. [Alternative_1_Time] ist die nächste freie Zeit am gleichen Tag, oder [Alternative_2_Date] um [Alternative_2_Time] Uhr.'\n\nBEGRÜNDUNGEN:\n- 'gleicher Tag' wenn Alternative am selben Tag\n- 'gleiche Uhrzeit' wenn Alternative zur selben Zeit aber anderem Tag\n- 'nächster verfügbarer Termin' als Fallback\n\nREGELN:\n- POSITIV formulieren bei Near-Match: 'kann Ihnen anbieten' statt 'leider nicht verfügbar'\n- Near-Match = ±30 Minuten vom Wunschtermin\n- Maximal 2 Alternativen nennen\n- Mit Begründung warum diese Alternativen\n- Offen fragen: 'Was passt Ihnen besser?'\n- Bei Ablehnung: 'Möchten Sie weitere Optionen hören?'",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user selects alternative 1 or 2",
+          "destination": "node_collect_final_booking_data",
+          "description": "Alternative gewählt → zur Buchung"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants more options",
+          "destination": "func_get_more_alternatives",
+          "description": "Mehr Alternativen anfordern"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants completely different time",
+          "destination": "node_collect_missing_booking_data",
+          "description": "Neuer Zeitwunsch → von vorne"
+        }
+      ]
+    },
+    {
+      "id": "node_no_availability",
+      "type": "conversation",
+      "instruction": "KEINE VERFÜGBARKEIT kommunizieren:\n\n'Leider haben wir in diesem Zeitraum keine freien Termine. Soll ich in einem anderen Zeitfenster für Sie suchen?'\n\nREGELN:\n- Höflich bedauern\n- Proaktiv Lösung anbieten\n- Bei Ja: Nach anderem Zeitfenster fragen\n- Bei Nein: request_callback anbieten",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to search in different timeframe",
+          "destination": "node_collect_missing_booking_data",
+          "description": "Neues Zeitfenster → von vorne"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants callback",
+          "destination": "node_collect_callback_phone",
+          "description": "Callback mit Phone Collection"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines",
+          "destination": "node_ask_anything_else",
+          "description": "Kunde gibt auf → sonst noch etwas?"
+        }
+      ]
+    },
+    {
+      "id": "node_collect_final_booking_data",
+      "type": "conversation",
+      "instruction": "SAMMLE FEHLENDE PFLICHTDATEN für Cal.com Buchung:\n\nPflicht:\n- customer_name\n- customer_phone ODER customer_email (mindestens eines)\n\nLOGIK:\n1. Prüfe was bereits aus check_customer vorhanden ist\n2. Frage NUR nach fehlenden Pflichtdaten\n3. Bei Neukunde: 'Darf ich noch Ihren Namen erfragen?'\n4. Bei bekanntem Kunden: Überspringen wenn alles da\n\nREGELN:\n- Telefonnummer OPTIONAL: 'Möchten Sie eine Telefonnummer angeben?'\n- Email OPTIONAL: Nur wenn keine Telefonnummer\n- Dummy-Daten erlaubt: email='termin@askproai.de', phone='0151123456'",
+      "edges": [
+        {
+          "type": "equation",
+          "condition": "{{customer_name}} != null AND ({{customer_phone}} != null OR {{customer_email}} != null)",
+          "destination": "func_start_booking",
+          "description": "Alle Pflichtdaten vorhanden → Booking starten"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user provides data",
+          "destination": "node_extract_booking_smart",
+          "description": "Loop zu Extraction"
+        }
+      ]
+    },
+    {
+      "id": "func_start_booking",
+      "type": "function_call",
+      "tool_name": "start_booking",
+      "description": "STEP 1: Validiert Daten + cached für 5min",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "customer_name": "{{customer_name}}",
+        "service_name": "{{service_name}}",
+        "appointment_date": "{{appointment_date}}",
+        "appointment_time": "{{appointment_time}}",
+        "customer_phone": "{{customer_phone}}",
+        "customer_email": "{{customer_email}}",
+        "preferred_staff": "{{preferred_staff}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "status == 'validating'",
+          "destination": "func_confirm_booking",
+          "description": "Validierung OK → zu Confirm"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "status == 'error'",
+          "destination": "node_booking_validation_failed",
+          "description": "Validierungsfehler"
+        }
+      ]
+    },
+    {
+      "id": "func_confirm_booking",
+      "type": "function_call",
+      "tool_name": "confirm_booking",
+      "description": "STEP 2: Führt Cal.com Buchung aus (4-5s Latenz)",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "success == true",
+          "destination": "node_booking_success",
+          "description": "Buchung erfolgreich"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "success == false",
+          "destination": "node_booking_failed",
+          "description": "Buchung fehlgeschlagen"
+        }
+      ]
+    },
+    {
+      "id": "node_booking_success",
+      "type": "conversation",
+      "instruction": "MINIMALE BESTÄTIGUNG:\n\n'Ihr Termin ist gebucht für [appointment_date] um [appointment_time] Uhr.'\n\nREGELN:\n- Kurz und präzise\n- NUR Datum + Uhrzeit\n- KEINE Details zu Mitarbeiter/Adresse (kommt in SMS)\n- Direkt weiter zu 'Sonst noch etwas?'",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_ask_anything_else",
+          "description": "Zu Abschlussfrage"
+        }
+      ]
+    },
+    {
+      "id": "node_booking_failed",
+      "type": "conversation",
+      "instruction": "FEHLERBEHANDLUNG mit CALLBACK-Option:\n\n'Es tut mir leid, es gab gerade ein technisches Problem. Ich informiere unsere Mitarbeiter und wir rufen Sie zurück.\n\nWENN customer_phone vorhanden:\n  'Wir melden uns innerhalb der nächsten 30 Minuten bei Ihnen. Ist das in Ordnung?'\n\nWENN customer_phone FEHLT:\n  'Unter welcher Nummer können wir Sie am besten erreichen?'\n  [Warte auf Nummer]\n  'Vielen Dank! Wir rufen Sie unter [phone_number] innerhalb der nächsten 30 Minuten zurück.'\n\nREGELN:\n- Höflich entschuldigen\n- EXPLIZIT erwähnen: 'Ich informiere unsere Mitarbeiter'\n- IMMER nach Telefonnummer fragen wenn nicht vorhanden\n- Telefonnummer zur Bestätigung wiederholen\n- Zeitrahmen nennen: 'Innerhalb der nächsten 30 Minuten'\n- NICHT technische Details nennen",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user accepts callback",
+          "destination": "node_collect_callback_phone",
+          "description": "Prüfe ob Telefonnummer vorhanden"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to retry",
+          "destination": "func_start_booking",
+          "description": "Retry Booking"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines",
+          "destination": "node_ask_anything_else",
+          "description": "Kunde gibt auf"
+        }
+      ]
+    },
+    {
+      "id": "node_booking_validation_failed",
+      "type": "conversation",
+      "instruction": "VALIDIERUNGSFEHLER behandeln:\n\nMögliche Fehler:\n- Booking Notice: 'Termine müssen mindestens 15 Minuten im Voraus gebucht werden.'\n- Invalid Email: 'Darf ich noch eine gültige Email-Adresse erfragen?'\n- Invalid Service: 'Diesen Service kenne ich leider nicht. Wir bieten: [list].'\n\nREGELN:\n- Spezifischen Fehler erklären\n- Lösung anbieten\n- Bei Booking Notice: Nächsten gültigen Slot vorschlagen",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user provides corrected data",
+          "destination": "node_extract_booking_smart",
+          "description": "Korrigierte Daten → Loop"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user gives up",
+          "destination": "node_ask_anything_else",
+          "description": "Kunde gibt auf"
+        }
+      ]
+    },
+    {
+      "id": "func_get_appointments",
+      "type": "function_call",
+      "tool_name": "get_customer_appointments",
+      "description": "Holt bestehende Termine des Kunden",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "appointments.length > 0",
+          "destination": "node_present_appointments",
+          "description": "Termine gefunden"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "appointments.length == 0",
+          "destination": "node_no_appointments_found",
+          "description": "Keine Termine"
+        }
+      ]
+    },
+    {
+      "id": "node_present_appointments",
+      "type": "conversation",
+      "instruction": "TERMINE AUFLISTEN:\n\n'Ihr nächster Termin ist am [date] um [time] Uhr für [service].\n\nWENN mehrere Termine:\n'Sie haben folgende Termine: [Liste].'\n\nREGELN:\n- Chronologisch sortiert\n- Maximal 3 nennen\n- Bei mehr: 'Sie haben noch weitere Termine, möchten Sie alle hören?'",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_ask_anything_else",
+          "description": "Nach Info zu Abschlussfrage"
+        }
+      ]
+    },
+    {
+      "id": "node_no_appointments_found",
+      "type": "conversation",
+      "instruction": "'Sie haben aktuell keine gebuchten Termine. Möchten Sie einen Termin vereinbaren?'",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to book",
+          "destination": "node_extract_booking_smart",
+          "description": "Zu Booking Flow"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines",
+          "destination": "node_ask_anything_else",
+          "description": "Kunde will nicht buchen"
+        }
+      ]
+    },
+    {
+      "id": "node_collect_reschedule_info",
+      "type": "conversation",
+      "instruction": "UMBUCHUNG SAMMELN:\n\n1. Welchen Termin umbuchen? (wenn mehrere)\n2. Neues Wunschdatum/Zeit erfragen\n\n'Kein Problem! Auf wann möchten Sie den Termin verschieben?'",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user provides new time",
+          "destination": "func_reschedule_appointment",
+          "description": "Umbuchen"
+        }
+      ]
+    },
+    {
+      "id": "func_reschedule_appointment",
+      "type": "function_call",
+      "tool_name": "reschedule_appointment",
+      "description": "Verschiebt bestehenden Termin",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "appointment_id": "{{appointment_id}}",
+        "new_date": "{{new_appointment_date}}",
+        "new_time": "{{new_appointment_time}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "success == true",
+          "destination": "node_reschedule_success",
+          "description": "Umbuchung erfolgreich"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "success == false",
+          "destination": "node_reschedule_failed",
+          "description": "Umbuchung fehlgeschlagen"
+        }
+      ]
+    },
+    {
+      "id": "node_reschedule_success",
+      "type": "conversation",
+      "instruction": "'Ihr Termin wurde verschoben auf [new_date] um [new_time] Uhr.'",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_ask_anything_else"
+        }
+      ]
+    },
+    {
+      "id": "node_reschedule_failed",
+      "type": "conversation",
+      "instruction": "'Der neue Termin ist leider nicht verfügbar. Wie wäre [alternative]?'",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user accepts alternative",
+          "destination": "func_reschedule_appointment"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user wants different time",
+          "destination": "node_collect_reschedule_info"
+        }
+      ]
+    },
+    {
+      "id": "node_collect_cancel_info",
+      "type": "conversation",
+      "instruction": "STORNIERUNG BESTÄTIGEN:\n\n'Möchten Sie Ihren Termin am [date] um [time] Uhr wirklich absagen?'\n\nREGELN:\n- Termin Details nennen\n- Bestätigung einholen\n- NICHT nach Grund fragen",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user confirms cancellation",
+          "destination": "func_cancel_appointment"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines or wants to reschedule instead",
+          "destination": "node_collect_reschedule_info"
+        }
+      ]
+    },
+    {
+      "id": "func_cancel_appointment",
+      "type": "function_call",
+      "tool_name": "cancel_appointment",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "appointment_id": "{{appointment_id}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "success == true",
+          "destination": "node_cancel_success"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "success == false",
+          "destination": "node_cancel_failed"
+        }
+      ]
+    },
+    {
+      "id": "node_cancel_success",
+      "type": "conversation",
+      "instruction": "'Ihr Termin wurde storniert. Vielen Dank dass Sie Bescheid gegeben haben!'",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_ask_anything_else"
+        }
+      ]
+    },
+    {
+      "id": "node_cancel_failed",
+      "type": "conversation",
+      "instruction": "FEHLER BEI STORNIERUNG:\n\n'Es gab ein Problem bei der Stornierung. Ich informiere unsere Mitarbeiter und wir rufen Sie zurück. Ist das in Ordnung?'\n\nREGELN:\n- EXPLIZIT erwähnen: 'Ich informiere unsere Mitarbeiter'\n- Callback als Lösung anbieten",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user accepts callback",
+          "destination": "node_collect_callback_phone",
+          "description": "Callback mit Phone Collection"
+        }
+      ]
+    },
+    {
+      "id": "func_get_services",
+      "type": "function_call",
+      "tool_name": "get_available_services",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}"
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_present_services"
+        }
+      ]
+    },
+    {
+      "id": "node_present_services",
+      "type": "conversation",
+      "instruction": "SERVICES PRÄSENTIEREN:\n\n'Wir bieten folgende Dienstleistungen an: [Liste mit Preisen].'\n\nREGELN:\n- Alphabetisch oder nach Häufigkeit\n- Mit Preisen wenn verfügbar\n- Maximal 5 nennen, dann: 'Möchten Sie mehr hören?'\n- Am Ende: 'Möchten Sie einen Termin buchen?'",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user wants to book after hearing services",
+          "destination": "node_extract_booking_smart"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user just wanted info",
+          "destination": "node_ask_anything_else"
+        }
+      ]
+    },
+    {
+      "id": "func_get_more_alternatives",
+      "type": "function_call",
+      "tool_name": "get_alternatives",
+      "description": "Holt weitere Termin-Alternativen",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "service_name": "{{service_name}}",
+        "original_date": "{{appointment_date}}",
+        "original_time": "{{appointment_time}}",
+        "offset": "2"
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_present_alternatives"
+        }
+      ]
+    },
+    {
+      "id": "node_collect_callback_phone",
+      "type": "conversation",
+      "instruction": "TELEFONNUMMER FÜR CALLBACK SAMMELN:\n\nWENN customer_phone bereits vorhanden (aus check_customer oder bereits gesammelt):\n  → SILENT transition zu func_request_callback (nichts sagen)\n\nWENN customer_phone FEHLT:\n  'Unter welcher Nummer können wir Sie am besten erreichen?'\n  [Warte auf Nummer]\n  'Vielen Dank! Wir rufen Sie unter [phone_number] zurück.'\n\nREGELN:\n- Telefonnummer zur Bestätigung wiederholen\n- Validiere Format (mindestens 8 Ziffern)\n- Bei ungültiger Nummer: 'Entschuldigung, könnten Sie die Nummer bitte nochmal wiederholen?'",
+      "edges": [
+        {
+          "type": "equation",
+          "condition": "{{customer_phone}} != null",
+          "destination": "func_request_callback",
+          "description": "Phone vorhanden → direkt zu Callback"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user provides phone number",
+          "destination": "node_extract_booking_smart",
+          "description": "Phone sammeln → dann zu func_request_callback loop via extraction"
+        }
+      ]
+    },
+    {
+      "id": "func_request_callback",
+      "type": "function_call",
+      "tool_name": "request_callback",
+      "description": "Erstellt Callback Request + Multi-Channel Benachrichtigung",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "customer_name": "{{customer_name}}",
+        "customer_phone": "{{customer_phone}}",
+        "reason": "{{callback_reason}}",
+        "priority": "normal"
+      },
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_callback_confirmed"
+        }
+      ]
+    },
+    {
+      "id": "node_callback_confirmed",
+      "type": "conversation",
+      "instruction": "CALLBACK BESTÄTIGUNG:\n\n'Perfekt! Unsere Mitarbeiter sind informiert und wir melden uns innerhalb der nächsten 30 Minuten bei Ihnen unter [customer_phone]. Sie erhalten auch eine SMS mit den Details.'\n\nREGELN:\n- EXPLIZIT erwähnen: 'Unsere Mitarbeiter sind informiert'\n- Telefonnummer zur Bestätigung wiederholen\n- Zeitrahmen bestätigen\n- SMS-Benachrichtigung erwähnen",
+      "edges": [
+        {
+          "type": "always",
+          "destination": "node_goodbye"
+        }
+      ]
+    },
+    {
+      "id": "node_ask_anything_else",
+      "type": "conversation",
+      "instruction": "ABSCHLUSSFRAGE:\n\n'Kann ich Ihnen sonst noch helfen?'\n\nREGELN:\n- Freundlich, offen\n- Bei Ja: Zurück zu intent_router_silent\n- Bei Nein: Zu node_goodbye",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user has another request",
+          "destination": "intent_router_silent",
+          "description": "Loop zu Anfang"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user declines or says goodbye",
+          "destination": "node_goodbye"
+        }
+      ]
+    },
+    {
+      "id": "node_goodbye",
+      "type": "end_call",
+      "instruction": "VERABSCHIEDUNG:\n\nWENN Termin gebucht:\n  'Vielen Dank und bis [appointment_date]!'\n\nSONST:\n  'Vielen Dank für Ihren Anruf und einen schönen Tag!'\n\nREGELN:\n- Warm, freundlich\n- Personalisiert wenn möglich\n- Dann CALL BEENDEN"
+    }
+  ],
+  "global_settings": {
+    "language": "de-DE",
+    "voice": {
+      "provider": "elevenlabs",
+      "voice_id": "german_female_friendly",
+      "stability": 0.7,
+      "similarity_boost": 0.75
+    },
+    "model": {
+      "type": "cascading",
+      "primary": "gpt-4.1-mini",
+      "temperature": 0.3,
+      "high_priority": true
+    },
+    "timing": {
+      "begin_after_user_silence_ms": 800,
+      "interruption_sensitivity": "medium"
+    },
+    "error_handling": {
+      "max_retries": 2,
+      "retry_delay_ms": 1000,
+      "fallback_to_callback": true
+    }
+  },
+  "tools": [
+    {
+      "name": "get_current_context",
+      "description": "Holt aktuelles Datum, Uhrzeit, Wochentag",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/get-current-context",
+      "method": "POST",
+      "timeout_ms": 5000
+    },
+    {
+      "name": "check_customer",
+      "description": "NEU: Identifiziert Kunde via Telefonnummer, liefert Historie und Vorhersagen",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/check-customer",
+      "method": "POST",
+      "timeout_ms": 5000
+    },
+    {
+      "name": "check_availability_v17",
+      "description": "Prüft Verfügbarkeit für Service zu bestimmter Zeit",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/check-availability",
+      "method": "POST",
+      "timeout_ms": 10000
+    },
+    {
+      "name": "get_alternatives",
+      "description": "Holt alternative Terminvorschläge",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/get-alternatives",
+      "method": "POST",
+      "timeout_ms": 10000
+    },
+    {
+      "name": "start_booking",
+      "description": "Step 1: Validiert Buchungsdaten und cached für 5min",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/start-booking",
+      "method": "POST",
+      "timeout_ms": 10000
+    },
+    {
+      "name": "confirm_booking",
+      "description": "Step 2: Führt Cal.com Buchung aus",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/confirm-booking",
+      "method": "POST",
+      "timeout_ms": 30000
+    },
+    {
+      "name": "get_customer_appointments",
+      "description": "Holt bestehende Termine des Kunden",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/get-appointments",
+      "method": "POST",
+      "timeout_ms": 5000
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "Storniert einen Termin",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/cancel-appointment",
+      "method": "POST",
+      "timeout_ms": 10000
+    },
+    {
+      "name": "reschedule_appointment",
+      "description": "Verschiebt einen Termin",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/reschedule-appointment",
+      "method": "POST",
+      "timeout_ms": 10000
+    },
+    {
+      "name": "request_callback",
+      "description": "Erstellt Callback Request mit Multi-Channel Benachrichtigung",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/request-callback",
+      "method": "POST",
+      "timeout_ms": 5000
+    },
+    {
+      "name": "get_available_services",
+      "description": "Listet alle verfügbaren Services mit Preisen",
+      "url": "https://api-gateway.askproai.de/api/retell/functions/get-services",
+      "method": "POST",
+      "timeout_ms": 5000
+    }
+  ],
+  "metadata": {
+    "company": "Friseur 1 (Demo)",
+    "branch": "Hauptfiliale",
+    "target_call_duration_seconds": 25,
+    "expected_success_rate": 0.95,
+    "optimization_focus": [
+      "Latency reduction",
+      "Customer recognition",
+      "Intelligent service prediction",
+      "Error resilience"
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "status": "healthy",
+  "message": "All systems operational",
+  "last_backup": {
+    "timestamp": "2025-11-01T11:02:00+01:00",
+    "file": "backup-20251101_110001.tar.gz",
+    "size_bytes": 656629760,
+    "size_human": "626 MB",
+    "type": "automatic",
+    "location": "/var/backups/askproai/",
+    "components": [
+      "database",
+      "files",
+      "system-state"
+    ],
+    "note": "Vollst\u00e4ndiges Backup mit DB, Dateien und System-State"
+  },
+  "next_backup_localtime": "2025-11-02T19:00:00+01:00",
+  "next_backup_message": "N\u00e4chstes automatisches Backup geplant",
+  "binlog": {
+    "enabled": true,
+    "last_file": "askproai-bin.000024",
+    "size_bytes": 53148241,
+    "size_human": "50.7 MB",
+    "timestamp": "2025-11-02T12:48:00+01:00"
+  },
+  "system_health": {
+    "database": "healthy",
+    "binlog": "healthy",
+    "storage": "healthy",
+    "automation": "healthy - 3x daily backups configured"
+  },
+  "recommendations": [
+    "\u2705 Automatische Backup-Cron-Jobs eingerichtet (3x t\u00e4glich: 03:00, 11:00, 19:00)",
+    "\u23f3 Synology NAS Sync konfigurieren (optional)",
+    "\u23f3 E-Mail-Benachrichtigungen aktivieren",
+    "\u23f3 Backup-Retention-Policy verifizieren (14 Tage daily, 6 Monate biweekly)"
+  ],
+  "generated_at": "2025-11-02T12:50:00+01:00",
+  "health_check": {
+    "last_check": "2025-11-10T16:30:01.471945",
+    "critical_issues": 0,
+    "warnings": 0,
+    "checks_passed": 7,
+    "total_checks": 7
+  }
+}

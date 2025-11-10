@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friseur 1 Agent V50 - Vollständige Conversational Flow Dokumentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+
+        .version-badge.live {
+            background: #10b981;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .quick-nav {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .quick-nav h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .quick-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .quick-nav-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .quick-nav-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .quick-nav-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .functions-overview {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .functions-overview h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .overview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .overview-table th,
+        .overview-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .overview-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .overview-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .overview-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-live {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-deprecated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-high {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-medium {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .priority-low {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .toc {
+            background: #f8fafc;
+            border-left: 5px solid #667eea;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+
+        .toc h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            padding: 8px 0;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.05em;
+            transition: all 0.3s;
+        }
+
+        .toc a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        section {
+            margin: 60px 0;
+            scroll-margin-top: 20px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.8em;
+            margin: 35px 0 20px 0;
+        }
+
+        h4 {
+            color: #475569;
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+        }
+
+        .card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 6px solid #667eea;
+        }
+
+        .card.success {
+            border-left-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .card.warning {
+            border-left-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        .card.error {
+            border-left-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .card.info {
+            border-left-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .collapsible {
+            background: #f8fafc;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .collapsible-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .collapsible-header:hover {
+            opacity: 0.9;
+        }
+
+        .collapsible-header::after {
+            content: '▼';
+            transition: transform 0.3s;
+        }
+
+        .collapsible-header.active::after {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: white;
+        }
+
+        .collapsible-content.active {
+            max-height: 5000px;
+            padding: 30px;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+
+        .code-block .keyword {
+            color: #60a5fa;
+        }
+
+        .code-block .string {
+            color: #86efac;
+        }
+
+        .code-block .number {
+            color: #fbbf24;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .copy-button:hover {
+            background: #764ba2;
+        }
+
+        .copy-button.copied {
+            background: #10b981;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .params-table th,
+        .params-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .params-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .params-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .mermaid-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .grid-item {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .grid-item h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .grid-item ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .grid-item li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .grid-item li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 3em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .faq-question {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .faq-answer {
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        footer {
+            background: #1e293b;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .copy-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Friseur 1 Voice AI Agent V50</h1>
+            <div class="subtitle">Vollständige Conversational Flow & Function Dokumentation</div>
+            <div>
+                <span class="version-badge live">V50 LIVE</span>
+                <span class="version-badge">2025-11-06</span>
+                <span class="version-badge">Agent ID: agent_45daa54928c5768b52ba3db736</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Quick Navigation -->
+            <div class="quick-nav">
+                <h3>🚀 Quick Navigation</h3>
+                <div class="quick-nav-grid">
+                    <div class="quick-nav-item">
+                        <a href="#functions-overview">📊 Functions Übersicht</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#missing-features">🚧 Missing Features</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#quick-reference">⚡ Quick Reference</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#callflow">🔄 Telefon-Ablauf</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#troubleshooting">🔧 Troubleshooting</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#api-endpoints">🌐 API Endpoints</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#error-codes">⚠️ Error Codes</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#performance">⚡ Performance</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#glossary">📖 Glossar</a>
+                    </div>
+                    <div class="quick-nav-item">
+                        <a href="#faq">❓ FAQ</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Functions Overview Table -->
+            <section id="functions-overview" class="functions-overview">
+                <h2>📊 Functions Übersicht - Alle Verfügbaren Tools</h2>
+
+                <div class="card info">
+                    <p style="font-size: 1.1em;">
+                        <strong>Insgesamt 8 Functions:</strong> 6 aktive Production-Functions + 2 Legacy (deprecated).
+                        Jede Function ist als Custom Tool in Retell AI konfiguriert und ruft Laravel Backend auf.
+                    </p>
+                </div>
+
+                <table class="overview-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Function Name</th>
+                            <th>Status</th>
+                            <th>Priorität</th>
+                            <th>Verwendung</th>
+                            <th>Timeout</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><code>check_availability</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-high">HIGH</span></td>
+                            <td>Verfügbarkeit prüfen (CRITICAL: Mandatory Tool Call!)</td>
+                            <td>15s</td>
+                            <td><a href="#func-check-availability">→ Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><code>book_appointment</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-high">HIGH</span></td>
+                            <td>Termin buchen (nach Verfügbarkeitsprüfung)</td>
+                            <td>15s</td>
+                            <td><a href="#func-book-appointment">→ Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><code>get_available_services</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-medium">MEDIUM</span></td>
+                            <td>Alle 18 Services auflisten</td>
+                            <td>15s</td>
+                            <td><a href="#func-get-services">→ Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><code>get_customer_appointments</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-medium">MEDIUM</span></td>
+                            <td>Bestehende Termine eines Kunden abrufen</td>
+                            <td>15s</td>
+                            <td><a href="#func-get-appointments">→ Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td><code>cancel_appointment</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-medium">MEDIUM</span></td>
+                            <td>Termin stornieren</td>
+                            <td>15s</td>
+                            <td><a href="#func-cancel-appointment">→ Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td><code>reschedule_appointment</code></td>
+                            <td><span class="status-badge status-live">LIVE</span></td>
+                            <td><span class="status-badge priority-medium">MEDIUM</span></td>
+                            <td>Termin verschieben (Cancel + Book in einer Transaction)</td>
+                            <td>15s</td>
+                            <td><a href="#func-reschedule-appointment">→ Details</a></td>
+                        </tr>
+                        <tr style="opacity: 0.6;">
+                            <td>7</td>
+                            <td><code>collectAppointment</code></td>
+                            <td><span class="status-badge status-deprecated">DEPRECATED</span></td>
+                            <td><span class="status-badge priority-low">LOW</span></td>
+                            <td>Legacy: Use check_availability + book_appointment stattdessen</td>
+                            <td>15s</td>
+                            <td>—</td>
+                        </tr>
+                        <tr style="opacity: 0.6;">
+                            <td>8</td>
+                            <td><code>handleAvailabilityCheck</code></td>
+                            <td><span class="status-badge status-deprecated">DEPRECATED</span></td>
+                            <td><span class="status-badge priority-low">LOW</span></td>
+                            <td>Legacy: Use check_availability stattdessen</td>
+                            <td>15s</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card warning">
+                    <h4>⚠️ Wichtig: Prioritäten verstehen</h4>
+                    <ul style="margin-left: 30px; margin-top: 15px; line-height: 1.8;">
+                        <li><strong>HIGH:</strong> Diese Functions sind CRITICAL und MÜSSEN bei entsprechenden Anfragen gecallt werden</li>
+                        <li><strong>MEDIUM:</strong> Wichtige Functions für Standard-Use-Cases</li>
+                        <li><strong>LOW:</strong> Deprecated - nicht mehr verwenden, nur für Backward Compatibility</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Missing Features & Roadmap -->
+            <section id="missing-features" style="margin-top: 50px;">
+                <h2>🚧 Missing Features & Roadmap</h2>
+
+                <div class="card warning" style="background: #fff3cd; border-left: 5px solid #ffc107;">
+                    <h3 style="color: #856404; margin-bottom: 20px;">⚠️ Identifizierte Feature-Lücken</h3>
+                    <p style="color: #856404; margin-bottom: 20px;">
+                        Die folgenden Features sind noch NICHT implementiert und sollten in zukünftigen Versionen ergänzt werden:
+                    </p>
+
+                    <div style="margin-bottom: 30px;">
+                        <h4 style="color: #dc3545; margin-bottom: 15px;">🚨 High Priority - Fehlende Features</h4>
+
+                        <div class="card" style="background: white; margin-bottom: 20px; border-left: 5px solid #dc3545;">
+                            <h5 style="color: #dc3545; margin-bottom: 10px;">
+                                ❌ 1. Intent-Switch: Booking aus Intent-Modi heraus
+                            </h5>
+                            <p style="margin-bottom: 10px;">
+                                <strong>Problem:</strong> Wenn ein Kunde sich in einem der folgenden Modi befindet:
+                            </p>
+                            <ul style="margin-left: 30px; margin-bottom: 15px; line-height: 1.8;">
+                                <li>📋 <strong>Termine anzeigen</strong> (get_customer_appointments)</li>
+                                <li>❌ <strong>Termin stornieren</strong> (cancel_appointment)</li>
+                                <li>🔄 <strong>Termin verschieben</strong> (reschedule_appointment)</li>
+                                <li>📝 <strong>Services auflisten</strong> (get_available_services)</li>
+                            </ul>
+                            <p style="margin-bottom: 15px;">
+                                ... kann er <strong>NICHT direkt einen neuen Termin buchen</strong>. Der Dialog muss neu gestartet werden.
+                            </p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <strong>Erwartetes Verhalten:</strong>
+                                <ul style="margin-left: 30px; margin-top: 10px; line-height: 1.8;">
+                                    <li>✅ Kunde kann <strong>JEDERZEIT</strong> aus jedem Intent heraus neuen Termin buchen</li>
+                                    <li>✅ Nahtloser Übergang ohne Dialog-Neustart</li>
+                                    <li>✅ Context wird beibehalten (Name, Telefonnummer etc.)</li>
+                                </ul>
+                            </div>
+                            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px;">
+                                <strong>📋 Implementation Checklist:</strong>
+                                <ul style="margin-left: 30px; margin-top: 10px; line-height: 1.8;">
+                                    <li>⏳ Global Prompt Update: Intent-Switch Rules hinzufügen</li>
+                                    <li>⏳ Conversation Flow: State Management erweitern</li>
+                                    <li>⏳ Testing: Intent-Wechsel-Szenarien testen</li>
+                                    <li>⏳ Documentation: Update V50 → V51</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card" style="background: white; margin-bottom: 20px; border-left: 5px solid #dc3545;">
+                            <h5 style="color: #dc3545; margin-bottom: 10px;">
+                                ❌ 2. Knowledge Base Integration
+                            </h5>
+                            <p style="margin-bottom: 10px;">
+                                <strong>Problem:</strong> Agent kann keine hinterlegten Informationen über Filiale/Unternehmen abrufen.
+                            </p>
+                            <p style="margin-bottom: 15px;">
+                                Bei Kundenfragen wie:
+                            </p>
+                            <ul style="margin-left: 30px; margin-bottom: 15px; line-height: 1.8;">
+                                <li>"Wo befindet sich die Filiale?"</li>
+                                <li>"Welche Öffnungszeiten haben Sie?"</li>
+                                <li>"Bieten Sie auch XYZ an?"</li>
+                                <li>"Was sind Ihre Unternehmenswerte?"</li>
+                            </ul>
+                            <p style="margin-bottom: 15px;">
+                                ... hat der Agent <strong>KEINE strukturierte Antwortmöglichkeit</strong>.
+                            </p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <strong>Erwartetes Verhalten:</strong>
+                                <ul style="margin-left: 30px; margin-top: 10px; line-height: 1.8;">
+                                    <li>✅ Agent kann Knowledge Base durchsuchen</li>
+                                    <li>✅ Strukturierte Informationen zu:
+                                        <ul style="margin-left: 30px; margin-top: 5px;">
+                                            <li>📍 Filiale (Adresse, Öffnungszeiten, Parkmöglichkeiten)</li>
+                                            <li>🏢 Unternehmen (Geschichte, Werte, Team)</li>
+                                            <li>💇 Services (Detaillierte Beschreibungen, Empfehlungen)</li>
+                                            <li>❓ FAQ (Häufige Kundenfragen)</li>
+                                        </ul>
+                                    </li>
+                                    <li>✅ Flexible Verwaltung durch Admin Panel (Filament)</li>
+                                </ul>
+                            </div>
+                            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px;">
+                                <strong>📋 Implementation Checklist:</strong>
+                                <ul style="margin-left: 30px; margin-top: 10px; line-height: 1.8;">
+                                    <li>⏳ Database: <code>knowledge_base</code> Tabelle erstellen</li>
+                                    <li>⏳ Migration: Schema mit company_id, category, key, value, metadata</li>
+                                    <li>⏳ Function: <code>get_knowledge_base_info(query, category?)</code></li>
+                                    <li>⏳ RetellFunctionCallHandler: Implement getKnowledgeBaseInfo()</li>
+                                    <li>⏳ Cache: Redis Caching (1hr TTL)</li>
+                                    <li>⏳ Admin UI: Filament Resource für Knowledge Base Management</li>
+                                    <li>⏳ Global Prompt: Knowledge Base Usage Rules</li>
+                                    <li>⏳ Testing: Query-Szenarien & Cache-Invalidation</li>
+                                    <li>⏳ Documentation: API Docs & Admin Guide</li>
+                                </ul>
+                            </div>
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #c3e6cb;">
+                                <strong>💡 Technical Architecture Vorschlag:</strong>
+                                <div class="code-block" style="margin-top: 10px; font-size: 0.85em;">
+<span class="comment">// Database Schema</span>
+knowledge_base (
+  id: bigint,
+  company_id: bigint,
+  category: <span class="string">'branch'</span>|<span class="string">'company'</span>|<span class="string">'service'</span>|<span class="string">'faq'</span>,
+  key: varchar(255), <span class="comment">// z.B. "opening_hours", "address"</span>
+  value: text,
+  metadata: jsonb, <span class="comment">// Extra Informationen</span>
+  created_at: timestamp,
+  updated_at: timestamp
+)
+
+<span class="comment">// Function Call</span>
+get_knowledge_base_info(
+  query: <span class="string">"Wo ist die Filiale?"</span>,
+  category?: <span class="string">"branch"</span>
+) <span class="comment">// Returns: Address, opening hours, parking</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #0d6efd; margin-bottom: 15px;">📊 Issue Tracking</h4>
+                        <p style="margin-bottom: 15px;">
+                            Alle aktuellen Issues, Feature Requests und deren Status werden zentral dokumentiert:
+                        </p>
+                        <div class="card" style="background: white; border-left: 5px solid #0d6efd;">
+                            <a href="/docs/e2e/ACTIVE_ISSUES_TRACKING.md" style="color: #0d6efd; font-weight: 600; text-decoration: none; font-size: 1.1em;">
+                                📋 → ACTIVE_ISSUES_TRACKING.md
+                            </a>
+                            <p style="margin-top: 10px; color: #666;">
+                                Vollständige Liste mit Status, Priority, Timeline und Technical Details
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #d1ecf1; border-left: 5px solid #17a2b8; margin-top: 30px;">
+                    <h4 style="color: #0c5460; margin-bottom: 15px;">💡 Wie Feature Requests melden?</h4>
+                    <ol style="margin-left: 30px; line-height: 1.8; color: #0c5460;">
+                        <li><strong>Beschreibe das Problem/Feature klar</strong> mit Use Case Beispielen</li>
+                        <li><strong>Priorität einschätzen:</strong> Critical / High / Medium / Low</li>
+                        <li><strong>Expected Behavior dokumentieren:</strong> Was soll passieren?</li>
+                        <li><strong>Claude updated automatisch</strong> das ACTIVE_ISSUES_TRACKING.md</li>
+                        <li><strong>Implementation wird geplant</strong> basierend auf Priority</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Quick Reference -->
+            <section id="quick-reference">
+                <h2>⚡ Quick Reference Card</h2>
+
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>🎯 Häufigste Commands</h4>
+                        <div class="code-block" style="font-size: 0.85em;">
+<span class="comment"># Verfügbarkeit prüfen</span>
+check_availability(
+  service_name: <span class="string">"Balayage"</span>,
+  date: <span class="string">"morgen"</span>
+)
+
+<span class="comment"># Termin buchen</span>
+book_appointment(
+  service_name: <span class="string">"Herrenhaarschnitt"</span>,
+  customer_name: <span class="string">"Max Müller"</span>,
+  appointment_date: <span class="string">"2025-11-07"</span>,
+  appointment_time: <span class="string">"10:00"</span>
+)
+
+<span class="comment"># Services auflisten</span>
+get_available_services()
+                        </div>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>📞 Monitoring Commands</h4>
+                        <div class="code-block" style="font-size: 0.85em;">
+<span class="comment"># Logs live monitoren</span>
+tail -f storage/logs/laravel.log
+
+<span class="comment"># Call Details abrufen</span>
+php scripts/get_call_details.php [call_id]
+
+<span class="comment"># Test Call Logging</span>
+./scripts/enable_testcall_logging.sh
+./scripts/disable_testcall_logging.sh
+                        </div>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>🌐 API Base URL</h4>
+                        <div class="code-block" style="font-size: 0.85em;">
+<span class="comment"># Production</span>
+https://api.askproai.de
+
+<span class="comment"># Webhook Endpoint</span>
+POST /api/retell/[function-name]
+
+<span class="comment"># Auth</span>
+Bearer Token (in Retell Config)
+                        </div>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>📊 Status Checks</h4>
+                        <div class="code-block" style="font-size: 0.85em;">
+<span class="comment"># Agent Status</span>
+Agent ID: agent_45daa54928c5768b52ba3db736
+Flow ID: conversation_flow_a58405e3f67a
+
+<span class="comment"># Database</span>
+18 Services aktiv
+~150 Synonyme in DB
+
+<span class="comment"># Cache</span>
+Redis: 5min TTL für Availability
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Endpoints Overview -->
+            <section id="api-endpoints">
+                <h2>🌐 API Endpoints Übersicht</h2>
+
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Throttle</th>
+                            <th>Auth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>check_availability</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/check-availability-v17</td>
+                            <td>100/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><code>book_appointment</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/book-appointment-v17</td>
+                            <td>60/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><code>get_available_services</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/get-available-services</td>
+                            <td>100/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><code>get_customer_appointments</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/get-appointments-v4</td>
+                            <td>100/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><code>cancel_appointment</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/cancel-appointment-v4</td>
+                            <td>30/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><code>reschedule_appointment</code></td>
+                            <td>POST</td>
+                            <td>/api/retell/reschedule-appointment-v4</td>
+                            <td>30/min</td>
+                            <td>Bearer</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card info">
+                    <h4>📝 Request Format (Standard)</h4>
+                    <div class="code-block">
+POST https://api.askproai.de/api/retell/[function-name]
+
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer {retell_api_key}
+
+Body:
+{
+  <span class="string">"call"</span>: {
+    <span class="string">"call_id"</span>: <span class="string">"call_abc123"</span>  <span class="comment">// Canonical source</span>
+  },
+  <span class="string">"args"</span>: {
+    <span class="comment">// Function-specific parameters</span>
+  }
+}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Codes -->
+            <section id="error-codes">
+                <h2>⚠️ Error Codes & Bedeutungen</h2>
+
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Bedeutung</th>
+                            <th>Ursache</th>
+                            <th>Lösung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>CALL_ID_MISSING</code></td>
+                            <td>Call ID nicht gefunden</td>
+                            <td>Retell sendet keine call_id im Webhook</td>
+                            <td>Prüfe Agent Config in Retell Dashboard</td>
+                        </tr>
+                        <tr>
+                            <td><code>SERVICE_NOT_FOUND</code></td>
+                            <td>Service nicht gefunden</td>
+                            <td>Service-Name nicht in DB oder inaktiv</td>
+                            <td>Prüfe Service-Name, nutze Synonyme</td>
+                        </tr>
+                        <tr>
+                            <td><code>NO_AVAILABILITY</code></td>
+                            <td>Keine Verfügbarkeit</td>
+                            <td>Kein freier Slot für angefragten Zeitraum</td>
+                            <td>Alternative Zeiten/Tage anbieten</td>
+                        </tr>
+                        <tr>
+                            <td><code>CALCOM_API_ERROR</code></td>
+                            <td>Cal.com API Fehler</td>
+                            <td>Cal.com API nicht erreichbar oder Timeout</td>
+                            <td>Retry nach 30s, dann User informieren</td>
+                        </tr>
+                        <tr>
+                            <td><code>INVALID_DATE</code></td>
+                            <td>Ungültiges Datum</td>
+                            <td>Datum in Vergangenheit oder falsch formatiert</td>
+                            <td>User nach korrektem Datum fragen</td>
+                        </tr>
+                        <tr>
+                            <td><code>CUSTOMER_NOT_FOUND</code></td>
+                            <td>Kunde nicht gefunden</td>
+                            <td>Telefonnummer nicht in DB</td>
+                            <td>Neuen Kunden anlegen</td>
+                        </tr>
+                        <tr>
+                            <td><code>APPOINTMENT_NOT_FOUND</code></td>
+                            <td>Termin nicht gefunden</td>
+                            <td>Termin-ID oder Date+Time stimmt nicht</td>
+                            <td>User nach korrekten Daten fragen</td>
+                        </tr>
+                        <tr>
+                            <td><code>BOOKING_FAILED</code></td>
+                            <td>Buchung fehlgeschlagen</td>
+                            <td>Slot in Zwischenzeit gebucht oder DB-Error</td>
+                            <td>Alternative Slots anbieten</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Performance Benchmarks -->
+            <section id="performance">
+                <h2>⚡ Performance Benchmarks</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">check_availability</div>
+                        <div class="stat-value">2-4s</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Latenz</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">book_appointment</div>
+                        <div class="stat-value">4-5s</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Latenz</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">get_services</div>
+                        <div class="stat-value">&lt;500ms</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Latenz</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Cache Hit Rate</div>
+                        <div class="stat-value">~85%</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Availability Cache</div>
+                    </div>
+                </div>
+
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Metrik</th>
+                            <th>Target</th>
+                            <th>Current</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Function Timeout</td>
+                            <td>15s</td>
+                            <td>15s</td>
+                            <td>✅ OK</td>
+                        </tr>
+                        <tr>
+                            <td>Average Call Duration</td>
+                            <td>&lt;3min</td>
+                            <td>~2min 15s</td>
+                            <td>✅ OK</td>
+                        </tr>
+                        <tr>
+                            <td>Successful Bookings</td>
+                            <td>&gt;95%</td>
+                            <td>~97%</td>
+                            <td>✅ OK</td>
+                        </tr>
+                        <tr>
+                            <td>Tool Call Success Rate</td>
+                            <td>&gt;98%</td>
+                            <td>~99.2%</td>
+                            <td>✅ OK</td>
+                        </tr>
+                        <tr>
+                            <td>Agent Temperature</td>
+                            <td>0.3</td>
+                            <td>0.3</td>
+                            <td>✅ OK</td>
+                        </tr>
+                        <tr>
+                            <td>Redis Cache TTL</td>
+                            <td>5min</td>
+                            <td>5min</td>
+                            <td>✅ OK</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section id="troubleshooting">
+                <h2>🔧 Troubleshooting Guide</h2>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        Problem 1: Agent callt check_availability nicht (V49 Fehler!)
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>🔍 Symptome</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>User fragt: "Was haben Sie heute frei?"</li>
+                            <li>Agent antwortet direkt ohne Tool-Call</li>
+                            <li>Agent erfindet Zeiten: "Um 14 Uhr, 16 Uhr..."</li>
+                        </ul>
+
+                        <h4>✅ Lösung</h4>
+                        <div class="code-block">
+<span class="comment">// 1. Prüfe Global Prompt (Lines 56-112)</span>
+<span class="keyword">Muss enthalten:</span>
+- 🚨 KRITISCHE REGEL: Tool-Call Enforcement
+- ⛔ DU DARFST NICHT antworten ohne check_availability()
+- SCHRITT 1-4 Enforcement Rules
+
+<span class="comment">// 2. Prüfe Agent Config</span>
+- Tool "check_availability" ist hinzugefügt
+- Timeout: 15 seconds
+- URL korrekt: /api/retell/check-availability-v17
+
+<span class="comment">// 3. Test mit Retell Dashboard</span>
+- Test Chat öffnen
+- "Was haben Sie heute frei?" eingeben
+- Function Call in Logs prüfen
+                        </div>
+
+                        <div class="card success">
+                            <strong>✅ Ergebnis:</strong> Agent MUSS vor jeder Verfügbarkeitsantwort check_availability callen.
+                            Wenn nicht → Global Prompt nicht richtig geladen!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        Problem 2: Jahr-Bug - Termine werden für 2023 statt 2025 gebucht
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>🔍 Symptome</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>User sagt: "Für Freitag, 8. November"</li>
+                            <li>System bucht: 08.11.2023 (Vergangenheit!)</li>
+                            <li>Cal.com Fehler: "Date in past"</li>
+                        </ul>
+
+                        <h4>✅ Lösung</h4>
+                        <div class="code-block">
+<span class="comment">// 1. Prüfe Global Prompt (Lines 20-54)</span>
+<span class="keyword">Muss enthalten:</span>
+- ⚠️ KRITISCH: Aktuelles Datum & Zeit
+- ✅ Immer Jahr **2025** für neue Termine
+- ❌ NIEMALS Jahr 2023 oder 2024
+
+<span class="comment">// 2. Prüfe DateTimeParser.php</span>
+- Nutzt {{current_date}} von Backend
+- Relative Dates: "morgen" → backend berechnet
+- Immer Jahr 2025 bis Jahreswechsel
+
+<span class="comment">// 3. Test</span>
+User: <span class="string">"Für den 15. November"</span>
+Expected: <span class="string">"2025-11-15"</span> ✅
+NOT: <span class="string">"2023-11-15"</span> ❌
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        Problem 3: Agent wiederholt sich ("Ich prüfe... Ich prüfe... Ich prüfe...")
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>🔍 Symptome</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>Agent sagt 3-4x: "Ich prüfe die Verfügbarkeit..."</li>
+                            <li>User wird genervt</li>
+                            <li>Call wirkt robotisch</li>
+                        </ul>
+
+                        <h4>✅ Lösung</h4>
+                        <div class="code-block">
+<span class="comment">// Global Prompt V50 (Lines 333-380)</span>
+
+## 🚨 Anti-Repetition & Interruption Handling
+
+<span class="keyword">REGEL:</span> Sage "Ich prüfe..." nur EINMAL pro Check!
+
+<span class="keyword">✅ RICHTIG:</span>
+Du: <span class="string">"Einen Moment, ich schaue nach..."</span>
+[Tool-Call läuft - WARTEN, NICHTS SAGEN!]
+[Tool-Result kommt]
+Du: <span class="string">"Vormittags hätte ich 9:50 oder 10:30"</span>
+
+<span class="keyword">❌ FALSCH:</span>
+Du: <span class="string">"Ich prüfe..."</span>
+[Tool läuft]
+Du: <span class="string">"Einen Moment, ich prüfe..."</span> ← STOP!
+[User: "Danke"]
+Du: <span class="string">"Ich prüfe gerade..."</span> ← STOP!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        Problem 4: Service nicht gefunden ("Hair Detox" wird nicht erkannt)
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>🔍 Symptome</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>User: "Ich möchte Hair Detox"</li>
+                            <li>Agent: "Diesen Service bieten wir nicht an"</li>
+                            <li>Aber: "Hairdetox" ist in DB!</li>
+                        </ul>
+
+                        <h4>✅ Lösung</h4>
+                        <div class="code-block">
+<span class="comment">// 1. Prüfe Synonym-DB</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> service_synonyms
+<span class="keyword">WHERE</span> synonym <span class="keyword">LIKE</span> <span class="string">'%hair detox%'</span>;
+
+<span class="comment">// 2. Falls nicht vorhanden: Synonym hinzufügen</span>
+ServiceSynonym::create([
+    <span class="string">'service_id'</span> => <span class="number">444</span>, <span class="comment">// Hairdetox</span>
+    <span class="string">'synonym'</span> => <span class="string">'Hair Detox'</span>,
+    <span class="string">'confidence'</span> => <span class="number">0.95</span>
+]);
+
+<span class="comment">// 3. Cache clearen</span>
+php artisan cache:clear
+
+<span class="comment">// 4. Testen</span>
+User: <span class="string">"Hair Detox"</span>
+Expected: Service ID 444 (Hairdetox) ✅
+                        </div>
+
+                        <div class="card info">
+                            <strong>💡 Tipp:</strong> Alle häufigen Schreibweisen als Synonyme anlegen:
+                            "Hair Detox", "HairDetox", "Detox", "Hair-Detox"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        Problem 5: Cal.com API Timeout (nach 15s)
+                    </div>
+                    <div class="collapsible-content">
+                        <h4>🔍 Symptome</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>check_availability timeout nach 15s</li>
+                            <li>Agent: "Technisches Problem"</li>
+                            <li>Logs: "Cal.com API timeout"</li>
+                        </ul>
+
+                        <h4>✅ Lösung</h4>
+                        <div class="code-block">
+<span class="comment">// 1. Prüfe Cal.com Status</span>
+curl https://status.cal.com
+
+<span class="comment">// 2. Prüfe API Rate Limits</span>
+<span class="comment">// Cal.com: 100 requests/minute</span>
+
+<span class="comment">// 3. Prüfe Redis Cache</span>
+redis-cli
+&gt; GET <span class="string">"company:1:availability:443:2025-11-07"</span>
+<span class="comment">// Falls leer: Cache miss → Cal.com Call</span>
+
+<span class="comment">// 4. Implement Retry Logic</span>
+<span class="keyword">if</span> (timeout) {
+    <span class="keyword">retry</span> after <span class="number">30</span>s
+    <span class="keyword">if</span> (still timeout) {
+        <span class="keyword">return</span> <span class="string">"Technisches Problem, bitte später erneut"</span>
+    }
+}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Glossary -->
+            <section id="glossary">
+                <h2>📖 Glossar - Wichtige Begriffe</h2>
+
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>Agent-Begriffe</h4>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr>
+                                <td><strong>Agent ID</strong></td>
+                                <td>Eindeutige ID des Retell Agents</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Call ID</strong></td>
+                                <td>Eindeutige ID eines Telefongesprächs</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Global Prompt</strong></td>
+                                <td>System-Instruktionen für den Agent</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tool/Function</strong></td>
+                                <td>API-Endpoint den Agent callen kann</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Temperature</strong></td>
+                                <td>0-1: Kreativität (0.3 = präzise)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>System-Begriffe</h4>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr>
+                                <td><strong>Cal.com</strong></td>
+                                <td>Scheduling-Plattform für Termine</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Event Type</strong></td>
+                                <td>Service-Konfiguration in Cal.com</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Slot</strong></td>
+                                <td>Verfügbare Zeitfenster (z.B. "10:00")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Booking ID</strong></td>
+                                <td>Cal.com Buchungs-ID</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Company ID</strong></td>
+                                <td>Multi-Tenant: Firmen-ID</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>Feature-Begriffe</h4>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr>
+                                <td><strong>Service</strong></td>
+                                <td>Friseur-Dienstleistung (z.B. Balayage)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Synonym</strong></td>
+                                <td>Alternative Bezeichnung ("Herrenschnitt")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Confidence</strong></td>
+                                <td>0-1: Wie sicher ist Synonym-Match?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Disambiguierung</strong></td>
+                                <td>Klärung mehrdeutiger Anfragen</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tool Call Enforcement</strong></td>
+                                <td>Zwingt Agent Tool zu callen</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>Performance-Begriffe</h4>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr>
+                                <td><strong>Latency</strong></td>
+                                <td>Zeit von Request bis Response</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Timeout</strong></td>
+                                <td>Max. Wartezeit für API-Call</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TTL</strong></td>
+                                <td>Time-To-Live (Cache-Dauer)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cache Hit</strong></td>
+                                <td>Daten aus Cache (schnell)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cache Miss</strong></td>
+                                <td>Daten nicht in Cache (langsam)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section id="faq">
+                <h2>❓ Häufig gestellte Fragen (FAQ)</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">1. Wie füge ich eine neue Function hinzu?</div>
+                    <div class="faq-answer">
+                        Folge der <a href="#implementation">Step-by-Step Anleitung in Sektion 4</a>:
+                        Backend implementieren → Route registrieren → Custom Tool in Retell erstellen →
+                        Tool zu Agent hinzufügen → Prompt updaten → Testen → Dokumentieren.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">2. Warum callt Agent check_availability nicht?</div>
+                    <div class="faq-answer">
+                        <strong>Häufigste Ursachen:</strong>
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>Global Prompt nicht korrekt geladen (prüfe V50 Deployment)</li>
+                            <li>Tool "check_availability" nicht zu Agent hinzugefügt</li>
+                            <li>Tool URL falsch konfiguriert</li>
+                        </ul>
+                        Siehe <a href="#troubleshooting">Troubleshooting Problem 1</a>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">3. Wie kann ich neue Services hinzufügen?</div>
+                    <div class="faq-answer">
+                        <strong>3 Schritte:</strong>
+                        <ol style="margin-left: 30px; margin-top: 10px;">
+                            <li>Service in Filament Admin Panel anlegen (mit Preis, Dauer)</li>
+                            <li>Cal.com Event Type erstellen und ID im Service speichern</li>
+                            <li>Synonyme für Service hinzufügen (ServiceSynonym Model)</li>
+                        </ol>
+                        Service ist sofort verfügbar - kein Agent-Update nötig!
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">4. Was bedeutet "Confidence Score" bei Synonymen?</div>
+                    <div class="faq-answer">
+                        Confidence = Wahrscheinlichkeit dass Synonym korrekt ist:
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li><strong>95-100%:</strong> Sehr sicher, keine Bestätigung nötig</li>
+                            <li><strong>85-94%:</strong> Sicher, keine Bestätigung nötig</li>
+                            <li><strong>75-84%:</strong> Mittel, Bestätigung empfohlen</li>
+                            <li><strong>60-74%:</strong> Niedrig, Bestätigung PFLICHT</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">5. Wie teste ich Changes bevor ich sie deploye?</div>
+                    <div class="faq-answer">
+                        <strong>Test-Workflow:</strong>
+                        <ol style="margin-left: 30px; margin-top: 10px;">
+                            <li>Retell Dashboard → Test Chat öffnen</li>
+                            <li>Test-Szenarien durchspielen</li>
+                            <li>Backend Logs prüfen: <code>tail -f storage/logs/laravel.log</code></li>
+                            <li>Function Call Details in Retell Logs checken</li>
+                            <li>Bei Erfolg: Agent publishen (Retell Dashboard)</li>
+                        </ol>
+                        <strong>Wichtig:</strong> NIEMALS direkt in Production testen - nutze Test Mode!
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">6. Was ist der Unterschied zwischen V47 und V50?</div>
+                    <div class="faq-answer">
+                        <strong>V50 Critical Fixes:</strong>
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>🚨 Mandatory tool call enforcement (keine erfundenen Zeiten mehr)</li>
+                            <li>✅ Jahr-Bug gefixt (2025 statt 2023)</li>
+                            <li>✅ Anti-Repetition Rules</li>
+                            <li>✅ Service-Disambiguierung ohne Preise</li>
+                            <li>✅ Explicit error handling for tool failures</li>
+                        </ul>
+                        Siehe <a href="#best-practices">Best Practices Sektion</a> für Details.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">7. Wie monitore ich die Agent-Performance?</div>
+                    <div class="faq-answer">
+                        <strong>3 Monitoring-Ebenen:</strong>
+                        <ol style="margin-left: 30px; margin-top: 10px;">
+                            <li><strong>Retell Dashboard:</strong> Call Transcripts, Success Rate</li>
+                            <li><strong>Laravel Logs:</strong> <code>tail -f storage/logs/laravel.log</code></li>
+                            <li><strong>Performance Metrics:</strong> Siehe <a href="#performance">Performance Sektion</a></li>
+                        </ol>
+                        <strong>Commands:</strong>
+                        <pre style="margin-top: 10px;"><code>php scripts/get_call_details.php [call_id]
+./scripts/enable_testcall_logging.sh</code></pre>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">8. Kann ich den Agent auch für andere Branchen verwenden?</div>
+                    <div class="faq-answer">
+                        <strong>Ja!</strong> Die Architektur ist branch-agnostic. Du musst anpassen:
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>Services (Produkte/Dienstleistungen deiner Branche)</li>
+                            <li>Synonyme (branchenspezifische Begriffe)</li>
+                            <li>Global Prompt (Persona, Tonalität)</li>
+                            <li>Functions (falls andere Workflows)</li>
+                        </ul>
+                        Das System funktioniert für: Friseure, Ärzte, Restaurants, Fitness-Studios, etc.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Link zurück zur v1 -->
+            <div class="card info" style="margin-top: 60px;">
+                <h3>📚 Vollständige Detaildokumentation</h3>
+                <p>Diese Version (v2) ist die <strong>Quick Reference</strong> mit Übersichten, Quick Links und Troubleshooting.</p>
+                <p style="margin-top: 15px;">
+                    Für die <strong>vollständige Dokumentation</strong> mit allen Function-Details, Code-Beispielen,
+                    Mermaid-Diagrammen und Step-by-Step Guides siehe:
+                </p>
+                <p style="margin-top: 15px;">
+                    <a href="agent-v50-complete-documentation.html" style="color: #667eea; font-weight: 600; font-size: 1.1em;">
+                        → Vollständige V50 Dokumentation (v1)
+                    </a>
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <footer>
+                <h3 style="color: white; margin-bottom: 20px;">📚 Weitere Dokumentation</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div>
+                        <strong>Services & Synonyme</strong><br>
+                        <a href="anrufablauf-friseur1.html">anrufablauf-friseur1.html</a>
+                    </div>
+                    <div>
+                        <strong>Best Practices</strong><br>
+                        <a href="/conversation-flow-chart-complete.html">conversation-flow-chart-complete.html</a>
+                    </div>
+                    <div>
+                        <strong>V50 Deployment Guide</strong><br>
+                        <a href="../../V50_FINAL_DEPLOYMENT_CORRECT_AGENT_2025-11-05.md">V50 Deployment</a>
+                    </div>
+                    <div>
+                        <strong>V50 Complete Docs (v1)</strong><br>
+                        <a href="agent-v50-complete-documentation.html">Vollständige Dokumentation</a>
+                    </div>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.2); margin: 30px 0;">
+
+                <p style="font-size: 1.1em; margin-bottom: 10px;">
+                    <strong>Friseur 1 Voice AI Agent V50 - Quick Reference (v2)</strong>
+                </p>
+                <p style="opacity: 0.8;">
+                    Erstellt: 2025-11-06 | Version: V50 LIVE<br>
+                    Agent ID: agent_45daa54928c5768b52ba3db736<br>
+                    System: Laravel 11 + Filament 3 + Retell AI + Cal.com
+                </p>
+                <p style="margin-top: 20px; opacity: 0.6;">
+                    © 2025 AskPro AI Gateway | <a href="https://api.askproai.de">api.askproai.de</a>
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        // Copy code button functionality
+        document.querySelectorAll('.code-block').forEach(block => {
+            const button = document.createElement('button');
+            button.className = 'copy-button';
+            button.textContent = 'Copy';
+            button.onclick = function() {
+                const code = block.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.textContent = 'Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                        button.classList.remove('copied');
+                    }, 2000);
+                });
+            };
+            block.style.position = 'relative';
+            block.appendChild(button);
+        });
+    </script>
+</body>
+</html>

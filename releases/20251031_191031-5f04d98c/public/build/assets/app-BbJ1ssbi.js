@@ -1,0 +1,1 @@
+import{a as t}from"./echo-B7B9LvGZ.js";window.axios=t;window.axios.defaults.headers.common["X-Requested-With"]="XMLHttpRequest";var e;window.Laravel={user:window.authUser||null,csrfToken:(e=document.querySelector('meta[name="csrf-token"]'))==null?void 0:e.getAttribute("content")};

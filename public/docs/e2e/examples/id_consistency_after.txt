@@ -1,0 +1,50 @@
+E2E GATE 0: ID-Konsistenz NACHHER
+=====================================
+Datum: 2025-11-03 12:48 CET
+Scope: Friseur 1 (Company ID: 1)
+Änderungen: Branch calcom_team_id gesetzt
+
+1. Phone ↔ Agent ↔ Branch
+   Phone: +493033081738
+   Agent ID: agent_b36ecd3927a81834b6d56ab07b
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Status: ✅ 1:1 konsistent (unverändert)
+
+2. Branch ↔ Cal.com Team
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Branch Name: Friseur 1 Zentrale
+   calcom_team_id in Settings: 34209 ✅ (GEÄNDERT)
+   Cal.com Team: 34209 "Friseur" (existiert)
+   Status: ✅ Gemappt
+
+3. Service ↔ EventType
+   Platform Services: 3
+     - ID 41: Premium Hair Treatment (120 min) - calcom_event_type_id: NULL ❌
+     - ID 42: Comprehensive Therapy Session (150 min) - calcom_event_type_id: NULL ❌
+     - ID 43: Medical Examination Series (180 min) - calcom_event_type_id: NULL ❌
+
+   Cal.com EventTypes: 46 (Team 34209)
+   Status: ❌ Keine Mappings vorhanden (unverändert)
+
+   Grund: Services passen nicht zu Friseur-Branche. Keine Namen-Übereinstimmung
+   mit Cal.com EventTypes. Außerhalb GATE 0 Scope (erfordert GAP-004 Fix).
+
+4. Staff ↔ Cal.com User
+   Platform Staff: 5 (alle ohne calcom_user_id) ❌
+   Cal.com Team Members: 2 (beide Fabian Spitzer)
+
+   Status: ❌ Keine Mappings vorhanden (unverändert)
+
+   Grund: Nur 2 von 5 Staff-Mitgliedern existieren im Cal.com Team.
+   E-Mail-Adressen stimmen nicht überein (fabian@askproai.de vs.
+   fabhandy@googlemail.com / fabianspitzer@icloud.com).
+   Außerhalb GATE 0 Scope (erfordert Cal.com Team-Setup + GAP-005 Fix).
+
+GATE 0 Nachher-Bewertung: ❌ FEHLGESCHLAGEN (teilweise verbessert)
+Begründung:
+- Prüfpunkt 1 (Phone↔Agent↔Branch): ✅ Erfüllt
+- Prüfpunkt 2 (Branch↔Team): ✅ Erfüllt (durch calcom_team_id=34209)
+- Prüfpunkt 3 (Service↔EventType): ❌ Nicht erfüllt (Blocker: falsche Demo-Services)
+- Prüfpunkt 4 (Staff↔User): ❌ Nicht erfüllt (Blocker: fehlende Cal.com Members)
+
+Fortschritt: 2 von 4 Prüfpunkten erfüllt (50%)

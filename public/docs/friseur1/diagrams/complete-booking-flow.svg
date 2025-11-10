@@ -1,0 +1,190 @@
+<svg viewBox="0 0 1200 1600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="1600" fill="#1a1a2e"/>
+
+  <!-- Title -->
+  <text x="600" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">Complete Booking Flow</text>
+
+  <!-- Participants -->
+  <!-- Customer -->
+  <rect x="50" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="125" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Customer</text>
+
+  <!-- Twilio -->
+  <rect x="250" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="325" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Twilio</text>
+
+  <!-- Retell -->
+  <rect x="450" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="525" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Retell</text>
+
+  <!-- Backend -->
+  <rect x="650" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="725" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Backend</text>
+
+  <!-- CalCom -->
+  <rect x="850" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="925" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Cal.com</text>
+
+  <!-- Database -->
+  <rect x="1050" y="80" width="150" height="60" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="1125" y="115" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Database</text>
+
+  <!-- Vertical Lines -->
+  <line x1="125" y1="140" x2="125" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="325" y1="140" x2="325" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="525" y1="140" x2="525" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="725" y1="140" x2="725" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="925" y1="140" x2="925" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="1125" y1="140" x2="1125" y2="1550" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- Flow Steps -->
+  <!-- 1. Anruf -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <line x1="125" y1="180" x2="315" y2="180" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="220" y="170" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Anruf</text>
+
+  <!-- 2. SIP Call -->
+  <line x1="325" y1="220" x2="515" y2="220" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="420" y="210" font-family="Arial, sans-serif" font-size="13" fill="#10b981">SIP Call</text>
+
+  <!-- 3. Webhook: call_inbound -->
+  <line x1="525" y1="260" x2="715" y2="260" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="600" y="250" font-family="Arial, sans-serif" font-size="13" fill="#10b981">call_inbound</text>
+
+  <!-- 4. Create Call Record -->
+  <line x1="725" y1="300" x2="1115" y2="300" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="290" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Create Call Record</text>
+
+  <!-- 5. Resolve phone_number_id -->
+  <line x1="725" y1="340" x2="1115" y2="340" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="850" y="330" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Resolve phone_number_id</text>
+
+  <!-- 6. 200 OK -->
+  <line x1="715" y1="380" x2="525" y2="380" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="620" y="370" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">200 OK</text>
+
+  <!-- 7. call_started -->
+  <line x1="525" y1="420" x2="715" y2="420" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="600" y="410" font-family="Arial, sans-serif" font-size="13" fill="#10b981">call_started</text>
+
+  <!-- 8. Inject date/time context -->
+  <ellipse cx="725" cy="460" rx="80" ry="25" fill="#f59e0b" opacity="0.3"/>
+  <text x="725" y="465" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" text-anchor="middle">Process</text>
+
+  <!-- 9. 200 OK + Context -->
+  <line x1="715" y1="500" x2="525" y2="500" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="590" y="490" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">200 OK + Context</text>
+
+  <!-- 10. initialize_call() -->
+  <line x1="525" y1="540" x2="715" y2="540" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="590" y="530" font-family="Arial, sans-serif" font-size="13" fill="#10b981">initialize_call()</text>
+
+  <!-- 11. Load customer data -->
+  <line x1="725" y1="580" x2="1115" y2="580" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="570" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Load customer data</text>
+
+  <!-- 12. Load policies -->
+  <line x1="725" y1="620" x2="1115" y2="620" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="610" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Load policies</text>
+
+  <!-- 13. Return data -->
+  <line x1="715" y1="660" x2="525" y2="660" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="570" y="650" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Customer + Policies</text>
+
+  <!-- 14. check_availability() -->
+  <line x1="525" y1="700" x2="715" y2="700" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="560" y="690" font-family="Arial, sans-serif" font-size="13" fill="#10b981">check_availability()</text>
+
+  <!-- 15. GET /slots -->
+  <line x1="725" y1="740" x2="915" y2="740" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="795" y="730" font-family="Arial, sans-serif" font-size="13" fill="#10b981">GET /slots</text>
+
+  <!-- 16. Available slots -->
+  <line x1="915" y1="780" x2="725" y2="780" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="800" y="770" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Available slots</text>
+
+  <!-- 17. Cache slots -->
+  <line x1="725" y1="820" x2="1115" y2="820" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="810" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Cache (Redis, 5min)</text>
+
+  <!-- 18. Return times -->
+  <line x1="715" y1="860" x2="525" y2="860" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="600" y="850" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Available times</text>
+
+  <!-- 19. User confirms time -->
+  <line x1="125" y1="900" x2="515" y2="900" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="280" y="890" font-family="Arial, sans-serif" font-size="13" fill="#10b981">"10 Uhr bitte"</text>
+
+  <!-- 20. start_booking() -->
+  <line x1="525" y1="940" x2="715" y2="940" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="590" y="930" font-family="Arial, sans-serif" font-size="13" fill="#10b981">start_booking(...)</text>
+
+  <!-- 21. Validate -->
+  <ellipse cx="725" cy="980" rx="80" ry="25" fill="#f59e0b" opacity="0.3"/>
+  <text x="725" y="985" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" text-anchor="middle">Validate</text>
+
+  <!-- 22. Check slot -->
+  <line x1="725" y1="1020" x2="915" y2="1020" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="790" y="1010" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Check slot</text>
+
+  <!-- 23. Still available -->
+  <line x1="915" y1="1060" x2="725" y2="1060" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="790" y="1050" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Still available</text>
+
+  <!-- 24. Create temp booking -->
+  <line x1="725" y1="1100" x2="1115" y2="1100" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="1090" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Create temp booking</text>
+
+  <!-- 25. Confirmation request -->
+  <line x1="715" y1="1140" x2="525" y2="1140" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="570" y="1130" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Confirmation request</text>
+
+  <!-- 26. User confirms -->
+  <line x1="125" y1="1180" x2="515" y2="1180" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="280" y="1170" font-family="Arial, sans-serif" font-size="13" fill="#10b981">"Ja, buchen"</text>
+
+  <!-- 27. confirm_booking() -->
+  <line x1="525" y1="1220" x2="715" y2="1220" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="580" y="1210" font-family="Arial, sans-serif" font-size="13" fill="#10b981">confirm_booking()</text>
+
+  <!-- 28. POST /bookings -->
+  <line x1="725" y1="1260" x2="915" y2="1260" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="785" y="1250" font-family="Arial, sans-serif" font-size="13" fill="#10b981">POST /bookings</text>
+
+  <!-- 29. Booking created -->
+  <line x1="915" y1="1300" x2="725" y2="1300" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="790" y="1290" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Booking created</text>
+
+  <!-- 30. Update appointment -->
+  <line x1="725" y1="1340" x2="1115" y2="1340" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="1330" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Update appointment</text>
+
+  <!-- 31. Invalidate cache -->
+  <line x1="725" y1="1380" x2="1115" y2="1380" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="1370" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Invalidate cache</text>
+
+  <!-- 32. Success message -->
+  <line x1="715" y1="1420" x2="525" y2="1420" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  <text x="590" y="1410" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Success message</text>
+
+  <!-- 33. call_ended -->
+  <line x1="525" y1="1460" x2="715" y2="1460" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="600" y="1450" font-family="Arial, sans-serif" font-size="13" fill="#10b981">call_ended</text>
+
+  <!-- 34. Store stats -->
+  <line x1="725" y1="1500" x2="1115" y2="1500" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="870" y="1490" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Update call stats</text>
+
+  <!-- Legend -->
+  <rect x="50" y="1560" width="300" height="30" fill="#1a1a2e" stroke="#667eea" stroke-width="1"/>
+  <line x1="60" y1="1575" x2="100" y2="1575" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="110" y="1580" font-family="Arial, sans-serif" font-size="12" fill="#ffffff">Request</text>
+  <line x1="180" y1="1575" x2="220" y2="1575" stroke="#3b82f6" stroke-width="3" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="230" y="1580" font-family="Arial, sans-serif" font-size="12" fill="#ffffff">Response</text>
+</svg>

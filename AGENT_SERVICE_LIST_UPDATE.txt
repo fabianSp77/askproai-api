@@ -1,0 +1,32 @@
+**VERFÜGBARE DIENSTLEISTUNGEN:**
+
+- **Ansatz + Längenausgleich** (85.00 EUR, 155 Minuten)
+- **Ansatzfärbung** (58.00 EUR, 135 Minuten)
+- **Balayage/Ombré** (110.00 EUR, 150 Minuten)
+- **Damenhaarschnitt** (45.00 EUR, 45 Minuten)
+- **Dauerwelle** (78.00 EUR, 135 Minuten)
+- **Föhnen & Styling Damen** (32.00 EUR, 30 Minuten)
+- **Föhnen & Styling Herren** (20.00 EUR, 20 Minuten)
+- **Gloss** (38.00 EUR, 30 Minuten)
+- **Haarspende** (28.00 EUR, 30 Minuten)
+- **Hairdetox** (22.00 EUR, 15 Minuten)
+- **Herrenhaarschnitt** (32.00 EUR, 55 Minuten)
+- **Intensiv Pflege Maria Nila** (28.00 EUR, 15 Minuten)
+- **Kinderhaarschnitt** (20.00 EUR, 30 Minuten)
+- **Komplette Umfärbung (Blondierung)** (145.00 EUR, 180 Minuten)
+- **Rebuild Treatment Olaplex** (42.00 EUR, 15 Minuten)
+- **Trockenschnitt** (30.00 EUR, 30 Minuten)
+- **Waschen & Styling** (28.00 EUR, 45 Minuten)
+- **Waschen, schneiden, föhnen** (55.00 EUR, 60 Minuten)
+
+**WICHTIG:** Dies sind ALLE verfügbaren Dienstleistungen. Sage NIEMALS 'Wir bieten [X] nicht an', ohne vorher diese Liste geprüft oder das Backend gefragt zu haben. Bei unklaren Service-Namen: Frage das Backend über die Function Calls oder biete ähnliche Services aus dieser Liste an.
+
+**SYNONYME & VARIANTEN:** Kunden verwenden oft alternative Bezeichnungen:
+- 'Hair Detox' oder 'Detox' → Hairdetox
+- 'Herrenschnitt' oder 'Männerhaarschnitt' → Herrenhaarschnitt
+- 'Strähnchen' oder 'Highlights' → Balayage/Ombré
+- 'Locken' → Dauerwelle
+- 'Blondierung' → Komplette Umfärbung (Blondierung)
+- 'Olaplex' → Rebuild Treatment Olaplex
+
+Bei unsicheren Service-Namen: Nutze check_availability_v17 oder frage nach, welcher Service gemeint ist.

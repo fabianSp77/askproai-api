@@ -37,7 +37,9 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/exchange-rates.log'))
             ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
 
-        // Cal.com Event Type sync - runs every 30 minutes as backup for webhooks
+        // Cal.com Event Type sync - FIXED 2025-11-04
+        // Now uses team endpoint (/v2/teams/34209/event-types) to get correct event types
+        // Services will NOT be deactivated incorrectly anymore
         $schedule->command('calcom:sync-services')
             ->everyThirtyMinutes()
             ->withoutOverlapping()

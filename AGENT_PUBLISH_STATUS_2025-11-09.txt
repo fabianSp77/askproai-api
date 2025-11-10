@@ -1,0 +1,72 @@
+=== COMPREHENSIVE PUBLISH STATUS CHECK ===
+
+1. Checking Agent Status...
+Agent ID: agent_9a8202a740cd3120d96fcfda1e
+Agent Name: Friseur 1 Agent V50 - CRITICAL Tool Enforcement
+Response Model: N/A
+
+2. Checking Flow Status...
+Flow ID: conversation_flow_a58405e3f67a
+Flow Version: 98
+Flow Published: ❌ NO
+
+⚠️ CRITICAL: Flow is NOT published!
+   This means the Agent is NOT using this version yet.
+   You MUST click 'Publish' in the Retell Dashboard!
+
+3. Checking all Flow versions...
+Found flow in list:
+  ID: conversation_flow_a58405e3f67a
+  Version: 12
+  Published: ✅ YES
+  Last Modified: N/A
+
+=== SUMMARY ===
+
+❌ Flow V98 IS NOT PUBLISHED!
+
+ACTION REQUIRED:
+1. Go to https://app.retellai.com/
+2. Navigate to Conversation Flows
+3. Find flow: conversation_flow_a58405e3f67a
+4. Click the 'Publish' button
+5. Verify status changes to 'Published'
+6. Then run this script again to verify
+
+=== END CHECK ===
+=== COMPREHENSIVE PUBLISH STATUS CHECK ===
+
+1. Checking Agent Status...
+Agent ID: agent_9a8202a740cd3120d96fcfda1e
+Agent Name: Friseur 1 Agent V50 - CRITICAL Tool Enforcement
+Response Model: N/A
+
+2. Checking Flow Status...
+Flow ID: conversation_flow_a58405e3f67a
+Flow Version: 99
+Flow Published: ❌ NO
+
+⚠️ CRITICAL: Flow is NOT published!
+   This means the Agent is NOT using this version yet.
+   You MUST click 'Publish' in the Retell Dashboard!
+
+3. Checking all Flow versions...
+Found flow in list:
+  ID: conversation_flow_a58405e3f67a
+  Version: 12
+  Published: ✅ YES
+  Last Modified: N/A
+
+=== SUMMARY ===
+
+❌ Flow V99 IS NOT PUBLISHED!
+
+ACTION REQUIRED:
+1. Go to https://app.retellai.com/
+2. Navigate to Conversation Flows
+3. Find flow: conversation_flow_a58405e3f67a
+4. Click the 'Publish' button
+5. Verify status changes to 'Published'
+6. Then run this script again to verify
+
+=== END CHECK ===

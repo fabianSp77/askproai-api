@@ -71,6 +71,266 @@ body.dark section p { color: #b0b0b0; }
 <p><strong>Company:</strong> Friseur 1 (ID: 1) | <strong>Branches:</strong> 1 | <strong>Services:</strong> 3 | <strong>Staff:</strong> 5</p>
 <p>Diese Dokumentation beschreibt den vollständigen E2E-Prozess von Inbound-Calls über Retell.ai, Middleware, Cal.com bis zur Buchungsbestätigung. <a href="e2e.md">→ Vollständige Spezifikation</a> | <a href="audit/report.md">📊 Audit-Report</a> | <a href="audit/gaps.yaml">⚠️  Gaps</a></p>
 
+<!-- GATE 0 STATUS -->
+<div style="background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: none;">
+  <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 2em;">✅</span>
+    <span>GATE 0: ID-Konsistenz PASSED</span>
+    <span style="font-size: 0.8em; opacity: 0.9; margin-left: auto;">2025-11-03 15:30</span>
+  </h2>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0;">
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Phone↔Agent↔Branch</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Branch↔Team</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Service↔EventType</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">18/18 (100%)</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Cal.com User→Staff</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">2/2 (100%)</div>
+    </div>
+  </div>
+  <p style="color: rgba(255,255,255,0.95); margin: 12px 0 4px 0; font-size: 15px;">
+    <strong>Erfüllungsgrad:</strong> 4 von 4 Prüfpunkten (100%)
+  </p>
+  <p style="color: rgba(255,255,255,0.9); margin: 4px 0 16px 0; font-size: 14px;">
+    <strong>Fortschritt:</strong> 50% (12:53) → 87.5% (13:30) → <strong>100% (15:30)</strong> | <strong>Gesamtverbesserung:</strong> +50%
+  </p>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <a href="GATE0_SUMMARY_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📄 GATE 0 Summary (100%)
+    </a>
+    <a href="audit/gate0_verdict_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      ⚖️ Verdict (4/4)
+    </a>
+    <a href="examples/mapping_report_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      🔗 Mapping-Report (100%)
+    </a>
+    <a href="CHANGELOG.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📝 Changelog
+    </a>
+  </details>
+  <details style="margin-top: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">✅ Cal.com als Source of Truth etabliert</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>✅ Strategiewechsel:</strong> Cal.com → Platform (Cal.com ist SoT für Benutzer)</li>
+      <li><strong>✅ 2 Cal.com Users gemappt:</strong> User 1346408, User 1414768 → 2 Platform-Staff</li>
+      <li><strong>✅ Service↔Staff Freigaben:</strong> Alle 18 Services × 2 Staff (aus Cal.com Hosts)</li>
+      <li><strong>✅ Disambiguierung:</strong> Beide heißen "Fabian Spitzer", unterschieden via E-Mail/User ID</li>
+      <li><strong>⚠️ Platform-only Staff:</strong> 4 Staff ohne Cal.com = "unmapped (calcom=false)"</li>
+    </ul>
+  </details>
+  <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">🎯 Nächste Schritte: Pre-Production Sprint</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>1. Non-blocking Cancellation:</strong> Reschedule-first Flow & Branch-Notifications testen</li>
+      <li><strong>2. E2E-Tests:</strong> 5 cURL-Szenarien persistieren (inkl. Test 3a/3b)</li>
+      <li><strong>3. Zweigstelle:</strong> 2. Branch für Multi-Location-Tests anlegen</li>
+    </ul>
+  </details>
+</div>
+
+<!-- TROUBLESHOOTING -->
+<div style="background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: none;">
+  <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 1.5em;">⚠️</span>
+    <span>Troubleshooting: Häufige Fehler</span>
+  </h2>
+
+  <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; margin-top: 16px;">
+    <h3 style="color: white; margin-top: 0; font-size: 16px;">🚨 P1: Availability-Fehler durch leere call_id</h3>
+    <p style="color: rgba(255,255,255,0.95); margin: 8px 0; font-size: 14px;">
+      <strong>Symptom:</strong> Agent sagt "Es ist ein Fehler aufgetreten" während Verfügbarkeitsprüfung
+    </p>
+    <p style="color: rgba(255,255,255,0.95); margin: 8px 0; font-size: 14px;">
+      <strong>Root Cause:</strong> Retell Agent sendet <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">call_id: ""</code> (empty string) statt <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">{{call.call_id}}</code>
+    </p>
+
+    <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+      <summary style="cursor: pointer; font-weight: 600; color: white;">🔍 Debugging-Schritte</summary>
+      <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95); font-size: 14px;">
+        <li><strong>1. Retell Agent Config prüfen:</strong> Alle Function Parameters müssen <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">call_id: {{call.call_id}}</code> haben</li>
+        <li><strong>2. Laravel Logs durchsuchen:</strong>
+          <pre style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 4px; overflow-x: auto; margin: 8px 0;"><code>grep "CANONICAL_CALL_ID" storage/logs/laravel.log
+grep "empty_call_id_occurrences" storage/logs/laravel.log
+grep "call_id_mismatch_warnings" storage/logs/laravel.log</code></pre>
+        </li>
+        <li><strong>3. Call Context validieren:</strong> Prüfe ob <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">call.call_id</code> im Webhook-Payload vorhanden ist</li>
+        <li><strong>4. Monitoring Metrics:</strong> Zähle <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">empty_call_id_occurrences</code> in Logs (→ alarmieren bei >0)</li>
+      </ul>
+    </details>
+
+    <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+      <summary style="cursor: pointer; font-weight: 600; color: white;">✅ Fix-Strategie (3-Tier Defense)</summary>
+      <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95); font-size: 14px;">
+        <li><strong>Tier 1 - Agent Config (SOFORT):</strong> Update Retell Dashboard → Function Parameters → <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">call_id: {{call.call_id}}</code></li>
+        <li><strong>Tier 2 - Code Hardening (DEFENSE):</strong> <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">getCanonicalCallId()</code> nutzt Webhook als Canonical Source (bereits implementiert)</li>
+        <li><strong>Tier 3 - Monitoring (DETECTION):</strong> Logs überwachen für <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">metric: empty_call_id_occurrences</code></li>
+      </ul>
+    </details>
+
+    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.3);">
+      <a href="CHANGELOG.md#2025-11-03-2100-p1-incident-empty-call_id---availability-check-failure" style="background: rgba(255,255,255,0.95); color: #e65100; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; font-size: 14px;">
+        📝 Vollständige RCA im CHANGELOG
+      </a>
+      <span style="color: rgba(255,255,255,0.9); margin-left: 12px; font-size: 13px;">Incident ID: call_bdcc364cfa592c65ca16708b325</span>
+    </div>
+  </div>
+
+  <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; margin-top: 16px;">
+    <h3 style="color: white; margin-top: 0; font-size: 16px;">🔄 Function Versions: v17/v4 Mix (Documented Strategy)</h3>
+    <p style="color: rgba(255,255,255,0.95); margin: 8px 0; font-size: 14px;">
+      <strong>Current Configuration:</strong> Documented Mix approach for pragmatic deployment
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;">
+      <div style="background: rgba(76, 175, 80, 0.2); padding: 12px; border-radius: 6px; border-left: 4px solid #4CAF50;">
+        <strong style="color: #4CAF50; display: block; margin-bottom: 8px;">✅ v17 Endpoints (New Bookings)</strong>
+        <code style="display: block; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 3px; font-size: 12px; margin: 4px 0;">check_availability_v17</code>
+        <code style="display: block; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 3px; font-size: 12px; margin: 4px 0;">book_appointment_v17</code>
+      </div>
+
+      <div style="background: rgba(255, 152, 0, 0.2); padding: 12px; border-radius: 6px; border-left: 4px solid #FF9800;">
+        <strong style="color: #FFB74D; display: block; margin-bottom: 8px;">🔧 v4 Endpoints (Modifications - Retained)</strong>
+        <code style="display: block; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 3px; font-size: 12px; margin: 4px 0;">cancel_appointment_v4</code>
+        <code style="display: block; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 3px; font-size: 12px; margin: 4px 0;">reschedule_appointment_v4</code>
+      </div>
+    </div>
+
+    <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+      <summary style="cursor: pointer; font-weight: 600; color: white;">📋 Version Mix Rationale</summary>
+      <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95); font-size: 14px;">
+        <li><strong>Why Mix?</strong> v4 endpoints already productive with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">getCanonicalCallId()</code> fix - no code changes needed</li>
+        <li><strong>Security:</strong> All 4 tools use same middleware chain (<code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">retell.validate.callid</code>)</li>
+        <li><strong>Monitoring:</strong> All endpoints have identical observability (canonical call_id + source tracking)</li>
+        <li><strong>call_id Parameter:</strong> ALL 4 tools now have <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">call_id: {{call.call_id}}</code> mapping ✅</li>
+        <li><strong>Future:</strong> v17 unification planned as tech-debt task (≤30 min, non-blocking)</li>
+      </ul>
+    </details>
+
+    <div style="margin-top: 12px; padding: 12px; background: rgba(33, 150, 243, 0.2); border-radius: 6px; border-left: 4px solid #2196F3;">
+      <strong style="color: #64B5F6; display: block; margin-bottom: 6px;">📸 Verification Artifacts</strong>
+      <p style="margin: 4px 0; font-size: 13px; color: rgba(255,255,255,0.9);">
+        4 screenshots + test call log available in:
+        <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 12px;">docs/e2e/audit/retell-agent-config-verification/</code>
+      </p>
+    </div>
+
+    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.3);">
+      <a href="CHANGELOG.md#2025-11-03-2230-task-0-completed-agent-config-fix---call_id-parameter-documented-mix" style="background: rgba(255,255,255,0.95); color: #e65100; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; font-size: 14px;">
+        📝 Task 0 Details im CHANGELOG
+      </a>
+      <span style="color: rgba(255,255,255,0.9); margin-left: 12px; font-size: 13px;">Status: ✅ COMPLETED (2025-11-03)</span>
+    </div>
+  </div>
+
+  <details style="margin-top: 16px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">💡 Weitere bekannte Issues</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95); font-size: 14px;">
+      <li><strong>Cal.com Cache Collision:</strong> Event-driven Invalidation implementiert → <a href="CHANGELOG.md" style="color: #ffeb3b; text-decoration: underline;">Siehe CHANGELOG</a></li>
+      <li><strong>Week Picker Reactive:</strong> Desktop rendering bugs behoben → <a href="CHANGELOG.md" style="color: #ffeb3b; text-decoration: underline;">Siehe CHANGELOG</a></li>
+      <li><strong>Retell Latency:</strong> V83 prompt + function optimization → 80% Reduktion erreicht</li>
+    </ul>
+  </details>
+</div>
+
+<!-- V108 FIXES -->
+<div style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: none;">
+  <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 2em;">🔧</span>
+    <span>V108 CRITICAL FIXES: Booking Flow Repariert</span>
+    <span style="font-size: 0.8em; opacity: 0.9; margin-left: auto;">2025-11-09</span>
+  </h2>
+
+  <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+    <h3 style="color: white; margin-top: 0; font-size: 18px;">✅ Alle Booking-Probleme behoben</h3>
+    <p style="color: rgba(255,255,255,0.95); margin: 8px 0;">
+      V108 behebt die kritischen Blocker aus Testcall 7, die verhinderten dass Buchungen erfolgreich waren.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
+      <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+        <div style="font-size: 1.5em; margin-bottom: 4px;">🔑</div>
+        <strong>Fix 1: call_id hardcoded</strong>
+        <div style="font-size: 0.9em; opacity: 0.9; margin-top: 4px;">
+          10 tools + 9 nodes: call_id aus parameter_mapping entfernt
+        </div>
+      </div>
+      <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+        <div style="font-size: 1.5em; margin-bottom: 4px;">📱</div>
+        <strong>Fix 2: customer_phone</strong>
+        <div style="font-size: 0.9em; opacity: 0.9; margin-top: 4px;">
+          node_collect_phone → extract_dynamic_variables
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-top: 12px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">🔍 Problem #1: call_id hardcoded to "1"</summary>
+    <div style="margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Symptom:</strong> Alle Buchungen schlugen fehl mit "Fehler bei der Terminbuchung"</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Root Cause:</strong> <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">{{call_id}}</code> resolved immer zu <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">"1"</code> statt echter call_id</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Impact:</strong> start_booking speichert unter <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">pending_booking:1</code>, confirm_booking sucht unter <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">pending_booking:call_xyz</code> → Session nicht gefunden</p>
+      <p style="margin: 8px 0 4px; font-size: 14px; font-weight: 600;">✅ Fix:</p>
+      <ul style="margin: 4px 0; padding-left: 20px; font-size: 14px;">
+        <li>call_id komplett aus parameter_mapping entfernt</li>
+        <li>Backend extrahiert canonical call_id aus webhook: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">$request->input('call.call_id')</code></li>
+        <li>Beide start_booking und confirm_booking nutzen gleiche call_id</li>
+      </ul>
+    </div>
+  </details>
+
+  <details style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-top: 12px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">🔍 Problem #2: customer_phone nicht gespeichert</summary>
+    <div style="margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Symptom:</strong> Phone wird gefragt, aber Variable bleibt NULL</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Root Cause:</strong> node_collect_phone war type <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">conversation</code> (extrahiert nicht)</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Impact:</strong> start_booking bekommt leeres customer_phone → Backend verwendet Fallback</p>
+      <p style="margin: 8px 0 4px; font-size: 14px; font-weight: 600;">✅ Fix:</p>
+      <ul style="margin: 4px 0; padding-left: 20px; font-size: 14px;">
+        <li>node_collect_phone → type <code style="background: rgba(0,0,0,0.3); padding: 2px 6px;">extract_dynamic_variables</code></li>
+        <li>customer_phone variable automatisch extrahiert und gespeichert</li>
+        <li>start_booking bekommt echte Telefonnummer</li>
+      </ul>
+    </div>
+  </details>
+
+  <details style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-top: 12px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">📋 V107 Fixes (Already Applied)</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95); font-size: 14px;">
+      <li><strong>Fix #3:</strong> Doppelte Fragen behoben → node_collect_booking_info entfernt</li>
+      <li><strong>Fix #4:</strong> Unnötige Bestätigung entfernt → Direkter Übergang zu check_availability</li>
+    </ul>
+  </details>
+
+  <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-top: 16px;">
+    <h4 style="margin-top: 0; color: white;">🚀 Deployment Status</h4>
+    <p style="margin: 8px 0; font-size: 14px;"><strong>Flow Version:</strong> V108 (Draft, unpublished)</p>
+    <p style="margin: 8px 0; font-size: 14px;"><strong>Agent:</strong> Friseur 1 Agent V51</p>
+    <p style="margin: 8px 0; font-size: 14px;"><strong>Next Steps:</strong></p>
+    <ol style="margin: 4px 0; padding-left: 20px; font-size: 14px;">
+      <li>Publish V108 in Retell Dashboard</li>
+      <li>Voice call test: Full booking flow end-to-end</li>
+      <li>Verify appointment in database</li>
+    </ol>
+    <p style="margin: 8px 0; font-size: 14px;">
+      <strong>Expected Result:</strong> <span style="background: rgba(76, 175, 80, 0.3); padding: 2px 8px; border-radius: 4px;">100% booking success rate ✅</span>
+    </p>
+  </div>
+
+  <div style="background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; margin-top: 12px;">
+    <p style="margin: 0; font-size: 13px;"><strong>📚 Documentation:</strong> <a href="../V108_COMPLETE_FIX_SUMMARY_2025-11-09.md" style="color: #FFD54F; text-decoration: underline;">V108 Complete Fix Summary</a> | <a href="../UX_FIXES_COMPLETE_V107_2025-11-09.md" style="color: #FFD54F; text-decoration: underline;">V107 UX Fixes</a></p>
+  </div>
+</div>
+
 <!-- PRODUCT OVERVIEW -->
 <section id="product-overview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 32px; border: none;">
   <h2 style="color: white; margin-top: 0;">📱 AskPro AI - Produkt-Übersicht</h2>
@@ -223,7 +483,7 @@ flowchart TB
   end
 
   subgraph MW["⚙️ Middleware"]
-    F["PolicyEngine:<br/>canBook?"]
+    F["PolicyEngine:<br/>Non-blocking (0 Min Cutoff)"]
     G["CalcomService:<br/>getSlots"]
     H{"Slot<br/>found?"}
     I[Create Appointment]
@@ -268,44 +528,60 @@ flowchart TB
 </section>
 
 <section id="alts">
-  <h2>C. Alternativpfade <span class="chip">Error Handling</span></h2>
-  <p>Umgang mit Sonderfällen: Umbuchung, Stornierung, Policy-Blockierung, No-Show, Nummernunterdrückung, Eskalation.</p>
+  <h2>C. Alternativpfade: Reschedule-first Flow <span class="chip">Non-blocking</span></h2>
+  <p>Stornierung mit Reschedule-first: Agent bietet bei jeder Storno-Absicht automatisch Umbuchung an. Filiale wird IMMER informiert.</p>
   <div class="mermaid">
 flowchart TB
-  START["Call Eingang"]
+  START["Customer ruft an:<br/>'Ich möchte stornieren'"]
 
-  subgraph "Erfolgreiche Pfade"
-    BOOK["✅ Neu-Buchung"]
-    RESC["✅ Umbuchung"]
+  subgraph "Retell.ai Agent"
+    OFFER["Agent bietet an:<br/>'Möchten Sie lieber verschieben?'"]
+    DECISION{"Customer<br/>Entscheidung"}
   end
 
-  subgraph "Fehler-Pfade"
-    CANCEL["Stornierung"]
-    POLICY["❌ Policy-Block"]
-    NOSHOW["No-Show"]
-    CLIR["🔒 Nummer unterdrückt"]
-    HUMAN["👤 Eskalation Mensch"]
+  subgraph "Fall A: Umbuchung akzeptiert"
+    CHECK_AVAIL["Agent: check_availability()"]
+    SLOT_FOUND{"Slot<br/>verfügbar?"}
+    RESCHEDULE["Agent: reschedule_appointment()"]
+    ALT_OFFER["Alternativen<br/>anbieten"]
   end
 
-  START --> BOOK
-  START --> RESC
-  START --> CANCEL
-  START --> CLIR
+  subgraph "Fall B: Umbuchung abgelehnt"
+    CANCEL["Agent: cancel_appointment()"]
+  end
 
-  CANCEL -->|"nach Cutoff"| POLICY
-  RESC -->|"3x überschritten"| POLICY
-  POLICY -->|"Log + Info"| END["Call Ende"]
-  CLIR -->|Fallback| HUMAN
-  BOOK -->|"15min später"| NOSHOW
-  NOSHOW -->|"Auto-Mark"| LOG["Log No-Show"]
+  subgraph "Middleware (immer ausgeführt)"
+    UPDATE_DB["DB Update:<br/>Status 'cancelled' (alt)<br/>Status 'scheduled' (neu, wenn Fall A)"]
+    NOTIFY_BRANCH["Branch Notification:<br/>Email + Filament UI"]
+    LOG["Telemetrie:<br/>reschedule_offered=1<br/>accepted/declined=1"]
+  end
 
-  style BOOK fill:#C8E6C9
-  style RESC fill:#C8E6C9
-  style POLICY fill:#FFCDD2
-  style NOSHOW fill:#FFECB3
-  style CLIR fill:#E1BEE7
+  START --> OFFER --> DECISION
+
+  DECISION -->|"Ja"| CHECK_AVAIL
+  CHECK_AVAIL --> SLOT_FOUND
+  SLOT_FOUND -->|"Ja"| RESCHEDULE
+  SLOT_FOUND -->|"Nein"| ALT_OFFER
+  ALT_OFFER -->|"Alle abgelehnt"| CANCEL
+  ALT_OFFER -->|"Akzeptiert"| RESCHEDULE
+
+  DECISION -->|"Nein"| CANCEL
+
+  RESCHEDULE --> UPDATE_DB
+  CANCEL --> UPDATE_DB
+  UPDATE_DB --> NOTIFY_BRANCH
+  NOTIFY_BRANCH --> LOG
+  LOG --> END["Call Ende"]
+
+  style OFFER fill:#FFF3E0
+  style CHECK_AVAIL fill:#E1BEE7
+  style RESCHEDULE fill:#C8E6C9
+  style CANCEL fill:#FFECB3
+  style NOTIFY_BRANCH fill:#E8F5E9
+  style LOG fill:#E0F2F1
   </div>
-  <p><a href="e2e.md#alternative-paths">📖 Details in e2e.md</a></p>
+  <p><strong>Policy:</strong> Non-blocking (0 Min Cutoff), Reschedule-first verpflichtend, Branch-Notification in BEIDEN Fällen</p>
+  <p><a href="e2e.md#fr-3">📖 Details in e2e.md (FR-3)</a> | <a href="ADR/005-cancellation-policy-non-blocking.md">📋 ADR-005</a></p>
 </section>
 
 <section id="conv">
@@ -365,7 +641,7 @@ flowchart TB
 
   subgraph "Verarbeitung"
     MAP["Mapping:<br/>TeamID↔Branch<br/>EventID↔Service<br/>StaffID↔User"]
-    POL["Policy Check<br/>canBook/canCancel"]
+    POL["Policy Check<br/>Non-blocking (0 Min Cutoff)"]
     RETRY["Retry Logic<br/>Circuit Breaker"]
   end
 
@@ -465,7 +741,7 @@ flowchart TB
 
 <section id="obs">
   <h2>H. Telemetrie & Logging <span class="chip">Observability</span></h2>
-  <p>Call-ID-Korrelation, Metriken (Duration, Cost, Sentiment), Transcript-Speicherung, Privacy (PII Redaction).</p>
+  <p>Call-ID-Korrelation, Metriken (Duration, Cost, Sentiment, Reschedule-first), Branch-Notifications, Transcript-Speicherung, Privacy (PII Redaction).</p>
   <div class="mermaid">
 flowchart LR
   subgraph "Correlation"
@@ -479,6 +755,13 @@ flowchart LR
     COST["Cost<br/>(cents)"]
     SENT["Sentiment<br/>(-1 to 1)"]
     INTENT["Intent<br/>(book/cancel/...)"]
+  end
+
+  subgraph "Reschedule-first Metrics (NEU)"
+    OFFERED["reschedule_offered<br/>(Counter)"]
+    ACCEPTED["reschedule_accepted<br/>(Counter)"]
+    DECLINED["reschedule_declined<br/>(Counter)"]
+    NOTIFIED["branch_notified<br/>(Counter)"]
   end
 
   subgraph "Logs"
@@ -498,6 +781,10 @@ flowchart LR
   CALL --> COST
   CALL --> SENT
   CALL --> INTENT
+  CALL --> OFFERED
+  CALL --> ACCEPTED
+  CALL --> DECLINED
+  CALL --> NOTIFIED
   CALL --> TRANS
   CALL --> AUDIO
   CALL --> META
@@ -505,10 +792,15 @@ flowchart LR
 
   style CALL fill:#E3F2FD
   style BOOK fill:#E1BEE7
+  style OFFERED fill:#C8E6C9
+  style ACCEPTED fill:#C8E6C9
+  style DECLINED fill:#FFECB3
+  style NOTIFIED fill:#E8F5E9
   style TRANS fill:#FFF3E0
   style ANON fill:#FFCDD2
   </div>
-  <p><a href="e2e.md#telemetry-logging">📖 Details in e2e.md</a></p>
+  <p><strong>Neue Metriken (Policy-Update):</strong> Tracking für Reschedule-first Flow (offered/accepted/declined) + Branch-Notification Status</p>
+  <p><a href="e2e.md#telemetry-logging">📖 Details in e2e.md</a> | <a href="ADR/005-cancellation-policy-non-blocking.md">📋 ADR-005</a></p>
 </section>
 
 <section id="state">

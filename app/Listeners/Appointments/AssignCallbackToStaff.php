@@ -87,17 +87,26 @@ class AssignCallbackToStaff implements ShouldQueue
     private function findBestStaff($callbackRequest, ?string $topic): ?Staff
     {
         $customer = $callbackRequest->customer;
-        $branch = $customer->branch ?? $customer->company->branches()->first();
+
+        // 🔧 FIX 2025-11-06: Handle null customer (test mode, walk-ins)
+        if (!$customer) {
+            // Use branch from callback request directly
+            $branch = $callbackRequest->branch;
+        } else {
+            $branch = $customer->branch ?? $customer->company->branches()->first();
+        }
 
         if (!$branch) {
             return null;
         }
 
-        // Strategy 1: Staff who previously served this customer
-        $previousStaff = $this->findPreviousStaff($customer, $branch);
-        if ($previousStaff && $this->isStaffAvailable($previousStaff)) {
-            $previousStaff->assignment_method = 'previous_relationship';
-            return $previousStaff;
+        // Strategy 1: Staff who previously served this customer (skip if no customer)
+        if ($customer) {
+            $previousStaff = $this->findPreviousStaff($customer, $branch);
+            if ($previousStaff && $this->isStaffAvailable($previousStaff)) {
+                $previousStaff->assignment_method = 'previous_relationship';
+                return $previousStaff;
+            }
         }
 
         // Strategy 2: Staff with topic expertise

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "data": {
+    "hideBookATeamMember": false,
+    "timeZone": "Europe/London",
+    "weekStart": "Sunday",
+    "id": 34209,
+    "parentId": null,
+    "name": "Friseur",
+    "slug": "friseur",
+    "logoUrl": null,
+    "calVideoLogo": null,
+    "appLogo": null,
+    "appIconLogo": null,
+    "bio": null,
+    "hideBranding": true,
+    "isOrganization": false,
+    "isPrivate": false,
+    "metadata": {
+      "paymentId": "cs_live_b1DDt8L5811RRC2rV04VvXt2LnhNYjUuNJhlI3VkOXX7hDGdalxnvW2CVg",
+      "subscriptionId": "sub_1QvGvHH8UDiwIftkBBqfCi1u",
+      "subscriptionItemId": "si_RoukF8kDtCL9vg"
+    },
+    "theme": null,
+    "brandColor": "#292929",
+    "darkBrandColor": "#fafafa",
+    "bannerUrl": null,
+    "timeFormat": null
+  }
+}

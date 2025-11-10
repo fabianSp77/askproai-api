@@ -15,7 +15,8 @@ class BranchPolicy
      */
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole('super_admin')) {
+        // FIX 2025-11-05: Check all variations of super_admin role name
+        if ($user->hasAnyRole(['super_admin', 'Super Admin', 'super-admin'])) {
             return true;
         }
 
@@ -25,15 +26,22 @@ class BranchPolicy
     /**
      * Determine whether the user can view any models.
      *
+     * FIX 2025-11-05: Added super_admin and Admin (capitalized) variants
+     * to fix missing menu items for Super Admin users
+     *
      * Dual-Role Support:
-     * - Admin Panel: admin, manager, staff, receptionist
+     * - Admin Panel: super_admin, admin, manager, staff, receptionist
      * - Customer Portal: company_owner, company_admin, company_manager
      */
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole([
+            // Super Admin variants (FIX 2025-11-05)
+            'super_admin',     // super_admin variant
+            'Super Admin',     // Super Admin variant (with space)
             // Admin Panel roles
-            'admin',
+            'admin',           // admin variant
+            'Admin',           // Admin variant (capitalized)
             'manager',
             'staff',
             'receptionist',

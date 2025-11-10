@@ -1,0 +1,24 @@
+// SECURITY ENHANCEMENT: Rate Limiting for Documentation Login
+// Apply this patch to routes/web.php around line 95
+
+// Original (VULNERABLE):
+Route::post('/login', [\App\Http\Controllers\DocsAuthController::class, 'login'])
+    ->name('docs.backup-system.login.submit');
+
+// Fixed (SECURE):
+Route::post('/login', [\App\Http\Controllers\DocsAuthController::class, 'login'])
+    ->middleware('throttle:5,1') // 5 attempts per minute per IP
+    ->name('docs.backup-system.login.submit');
+
+/*
+ * Rate Limiting Configuration:
+ * - 5 attempts per minute per IP address
+ * - Prevents brute force attacks
+ * - Returns 429 Too Many Requests after threshold
+ * - Automatically resets after 1 minute
+ *
+ * Alternative configurations:
+ * - 'throttle:10,1'  → 10 attempts per minute (more lenient)
+ * - 'throttle:3,5'   → 3 attempts per 5 minutes (more strict)
+ * - 'throttle:login' → Custom rate limiter defined in RouteServiceProvider
+ */

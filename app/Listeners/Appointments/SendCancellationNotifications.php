@@ -71,10 +71,8 @@ class SendCancellationNotifications implements ShouldQueue
                 );
             }
 
-            // Send to branch managers if policy violation or fee charged
-            if (!$event->withinPolicy || $event->fee > 0) {
-                $this->notifyBranchManagers($appointment, $data);
-            }
+            // ADR-005: ALWAYS notify branch (non-blocking policy, but branch needs to know)
+            $this->notifyBranch($appointment, $data);
 
             Log::info('✅ Cancellation notifications sent successfully', [
                 'appointment_id' => $appointment->id,
@@ -93,15 +91,45 @@ class SendCancellationNotifications implements ShouldQueue
     }
 
     /**
-     * Notify branch managers of cancellation
+     * Notify branch of cancellation (ADR-005: Always notify, dual channel)
+     *
+     * Channels: Email + Filament UI
+     * Idempotent: Per (booking_id, action, time-bucket)
      */
-    private function notifyBranchManagers($appointment, array $data): void
+    private function notifyBranch($appointment, array $data): void
     {
         if (!$appointment->branch) {
+            Log::warning('Cannot notify branch - no branch assigned', [
+                'appointment_id' => $appointment->id
+            ]);
             return;
         }
 
-        $managers = $appointment->branch
+        $branch = $appointment->branch;
+
+        // Idempotency check: Prevent duplicate notifications within same hour
+        $timeBucket = now()->format('YmdH'); // e.g., 2025110314 for 2025-11-03 14:00
+        $idempotencyKey = sprintf(
+            'branch_notif_cancel_%s_%s_%s',
+            $branch->id,
+            $appointment->id,
+            $timeBucket
+        );
+
+        if (\Illuminate\Support\Facades\Cache::has($idempotencyKey)) {
+            Log::info('⏭️ Skipping duplicate branch notification (idempotent)', [
+                'appointment_id' => $appointment->id,
+                'branch_id' => $branch->id,
+                'idempotency_key' => $idempotencyKey
+            ]);
+            return;
+        }
+
+        // Mark as sent (1-hour TTL)
+        \Illuminate\Support\Facades\Cache::put($idempotencyKey, true, now()->addHour());
+
+        // Channel 1: Email to branch managers
+        $managers = $branch
             ->staff()
             ->where('role', 'manager')
             ->orWhere('role', 'admin')
@@ -113,13 +141,45 @@ class SendCancellationNotifications implements ShouldQueue
                     manager: $manager,
                     appointmentData: $data
                 );
+                Log::info('📧 Email notification sent to manager', [
+                    'manager_id' => $manager->id,
+                    'manager_email' => $manager->email
+                ]);
             } catch (\Exception $e) {
-                Log::warning('Failed to notify manager', [
+                Log::warning('Failed to send email to manager', [
                     'manager_id' => $manager->id,
                     'error' => $e->getMessage(),
                 ]);
                 // Continue with other managers
             }
+        }
+
+        // Channel 2: Filament UI notification
+        try {
+            \Filament\Notifications\Notification::make()
+                ->title('Termin storniert')
+                ->body(sprintf(
+                    '%s hat den Termin am %s um %s Uhr storniert. Service: %s',
+                    $data['customer_name'],
+                    $data['appointment_date'],
+                    $data['appointment_time'],
+                    $data['service_name'] ?? 'Unbekannt'
+                ))
+                ->icon('heroicon-o-x-circle')
+                ->iconColor('danger')
+                ->sendToDatabase(\App\Models\User::whereHas('staff', function($q) use ($branch) {
+                    $q->where('branch_id', $branch->id);
+                })->get());
+
+            Log::info('🔔 Filament UI notification sent', [
+                'branch_id' => $branch->id,
+                'appointment_id' => $appointment->id
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send Filament UI notification', [
+                'branch_id' => $branch->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

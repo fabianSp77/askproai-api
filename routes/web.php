@@ -83,6 +83,11 @@ Route::middleware(['auth'])->prefix('docs')->group(function () {
     Route::get('/claudedocs/{path}', [\App\Http\Controllers\DocsController::class, 'show'])
         ->name('docs.show')
         ->where('path', '.*');
+
+    // API Testing Interface
+    Route::get('/api-testing', function () {
+        return view('docs.api-testing');
+    })->name('docs.api-testing');
 });
 
 // Backup System Documentation Hub - Login Routes (NO AUTH)
@@ -464,6 +469,33 @@ Route::get('/api/health-check', function (Illuminate\Http\Request $request) {
         'service' => 'api',
     ], 200);
 });
+
+// ---- Cal.com Atoms API Routes (React Components) -------------------------------------------
+// Purpose: API endpoints for Cal.com Atoms React components in Filament admin panel
+// Note: In web.php (not api.php) because they need session-based authentication
+Route::middleware(['auth', 'companyscope'])->prefix('api/calcom-atoms')->group(function () {
+    // Get current user's Cal.com configuration
+    Route::get('/config', [\App\Http\Controllers\Api\CalcomAtomsController::class, 'config'])
+        ->name('api.calcom-atoms.config');
+
+    // Get specific branch configuration
+    Route::get('/branch/{branch}/config', [\App\Http\Controllers\Api\CalcomAtomsController::class, 'branchConfig'])
+        ->name('api.calcom-atoms.branch.config');
+
+    // Booking callback from Cal.com Atoms (logging only, webhook handles sync)
+    Route::post('/booking-created', [\App\Http\Controllers\Api\CalcomAtomsController::class, 'bookingCreated'])
+        ->name('api.calcom-atoms.booking.created')
+        ->middleware('throttle:60,1');
+});
+
+// ---- Cal.com API Proxy (for BookerEmbed widget) --------------------------------------------
+// Purpose: Proxy requests from Cal.com Atoms BookerEmbed component to Cal.com API
+// Note: BookerEmbed makes requests to /atoms/..., /slots/..., /timezones, /bookings directly (no /api prefix)
+//       So this route MUST be in web.php (not api.php) to catch root-level requests
+// Matches: atoms, slots, timezones, bookings, calendars, schedules, event-types
+Route::any('{calcom_path}', [\App\Http\Controllers\Api\CalcomAtomsProxyController::class, 'proxyAll'])
+    ->where('calcom_path', '(atoms|slots|timezones|bookings|calendars|schedules|event-types)(\/.*)?')
+    ->name('calcom.api.proxy');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/web-test.php';

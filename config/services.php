@@ -67,6 +67,12 @@ return [
         'log_webhooks' => env('RETELLAI_LOG_WEBHOOKS', true),
         'function_secret' => env('RETELLAI_FUNCTION_SECRET'),
         'allow_unsigned_webhooks' => env('RETELLAI_ALLOW_UNSIGNED_WEBHOOKS', false),
+
+        // 🔧 FIX 2025-11-05: Test Mode Fallback Configuration
+        // When Test Mode calls don't have call context (not synced to DB),
+        // use these default values for company/branch resolution
+        'test_mode_company_id' => env('RETELLAI_TEST_MODE_COMPANY_ID', 1),
+        'test_mode_branch_id' => env('RETELLAI_TEST_MODE_BRANCH_ID', null),
     ],
 
     'firebase' => [

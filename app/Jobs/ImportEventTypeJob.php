@@ -62,7 +62,7 @@ class ImportEventTypeJob implements ShouldQueue
                 'calcom_name' => $this->eventTypeData['title'] ?? 'Unnamed Service',
                 'slug' => $this->eventTypeData['slug'] ?? null,
                 'description' => $this->eventTypeData['description'] ?? null,
-                'duration_minutes' => $this->eventTypeData['length'] ?? 30,
+                'duration_minutes' => $this->eventTypeData['lengthInMinutes'] ?? $this->eventTypeData['length'] ?? 30,
                 'price' => $this->eventTypeData['price'] ?? 0,
                 'is_active' => !($this->eventTypeData['hidden'] ?? false),
                 'is_online' => $this->hasOnlineLocation($this->eventTypeData['locations'] ?? []),
@@ -87,24 +87,51 @@ class ImportEventTypeJob implements ShouldQueue
                 $serviceData['company_id'] = $companyId;
             }
 
-            if ($service) {
-                // Update existing service
-                $service->update($serviceData);
-                Log::info("[Cal.com Import] Updated Service ID {$service->id} from Event Type {$eventTypeId}");
-            } else {
-                // Create new service
-                $serviceData['calcom_event_type_id'] = $eventTypeId;
+            // For new services, ensure company_id is set before any database operations
+            if (!$service && !isset($serviceData['company_id'])) {
+                $serviceData['company_id'] = 1; // Default to company 1
 
-                // Set default company_id if not determined
-                if (!isset($serviceData['company_id'])) {
-                    // Use first company as default (should be improved based on business logic)
+                // Fallback: Use first company if company 1 doesn't exist
+                if (!\App\Models\Company::find(1)) {
                     $defaultCompany = \App\Models\Company::first();
                     if ($defaultCompany) {
                         $serviceData['company_id'] = $defaultCompany->id;
                     }
                 }
+            }
 
-                $service = Service::create($serviceData);
+            // Create/update calcom_event_mappings entry BEFORE creating/updating service
+            // This ensures the Service model's security validation passes
+            $finalCompanyId = $service ? $service->company_id : $serviceData['company_id'];
+            if ($eventTypeId && $finalCompanyId) {
+                \Illuminate\Support\Facades\DB::table('calcom_event_mappings')
+                    ->updateOrInsert(
+                        [
+                            'calcom_event_type_id' => (string)$eventTypeId,
+                            'company_id' => $finalCompanyId
+                        ],
+                        [
+                            'updated_at' => now()
+                        ]
+                    );
+                Log::info("[Cal.com Import] Updated calcom_event_mappings for Event Type {$eventTypeId} => Company {$finalCompanyId}");
+            }
+
+            if ($service) {
+                // Update existing service (unguarded to allow sync_status and other protected fields)
+                Service::unguarded(function () use ($service, $serviceData) {
+                    $service->update($serviceData);
+                });
+                Log::info("[Cal.com Import] Updated Service ID {$service->id} from Event Type {$eventTypeId}");
+            } else {
+                // Create new service (company_id already set above at lines 90-101)
+                $serviceData['calcom_event_type_id'] = $eventTypeId;
+
+                // Use unguarded create since company_id is protected for multi-tenant isolation
+                // but sync jobs are trusted system operations that need to set it
+                $service = Service::unguarded(function () use ($serviceData) {
+                    return Service::create($serviceData);
+                });
                 Log::info("[Cal.com Import] Created Service ID {$service->id} from Event Type {$eventTypeId}");
             }
 

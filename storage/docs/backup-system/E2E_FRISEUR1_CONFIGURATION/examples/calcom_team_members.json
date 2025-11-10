@@ -1,0 +1,44 @@
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 494580,
+      "userId": 1346408,
+      "teamId": 34209,
+      "accepted": true,
+      "role": "OWNER",
+      "disableImpersonation": false,
+      "user": {
+        "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c",
+        "username": "fabianspitzer",
+        "name": "Fabian Spitzer",
+        "email": "fabhandy@googlemail.com",
+        "bio": "",
+        "metadata": {
+          "stripeCustomerId": "cus_RfVDTQJgvwsxoj"
+        }
+      }
+    },
+    {
+      "id": 515780,
+      "userId": 1414768,
+      "teamId": 34209,
+      "accepted": true,
+      "role": "OWNER",
+      "disableImpersonation": false,
+      "user": {
+        "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c",
+        "username": "askproai",
+        "name": "Fabian Spitzer",
+        "email": "fabianspitzer@icloud.com",
+        "bio": "",
+        "metadata": {
+          "stripeCustomerId": "cus_Rtm8vl06tnD88L",
+          "defaultConferencingApp": {
+            "appSlug": "google-meet"
+          }
+        }
+      }
+    }
+  ]
+}

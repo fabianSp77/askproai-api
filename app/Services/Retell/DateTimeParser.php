@@ -103,8 +103,20 @@ class DateTimeParser
         }
 
         // Handle specific date if provided
-        if (isset($params['date']) && isset($params['time'])) {
-            $parsed = Carbon::parse($params['date'] . ' ' . $params['time']);
+        // 🔧 CRITICAL FIX 2025-11-04: Bug #5 - Use extracted variables, not original param keys
+        // BEFORE: checked isset($params['date']) but Retell sends 'datum'
+        // AFTER: check extracted $date and $time variables
+        if ($date && $time) {
+            // Translate German relative dates to Y-m-d format first
+            // "heute" → "2025-11-04", "morgen" → "2025-11-05", etc.
+            $dateString = $this->parseDateString($date);
+
+            if (!$dateString) {
+                // If parseDateString fails, fall back to using date as-is
+                $dateString = $date;
+            }
+
+            $parsed = Carbon::parse($dateString . ' ' . $time);
 
             // 🔧 CRITICAL FIX 2025-10-20: ANY past time is invalid, not just >30 days
             // User says "14:00 Uhr today" but it's already 14:00 → REJECT and suggest alternative
@@ -132,6 +144,14 @@ class DateTimeParser
                     return $suggestedTime;
                 }
             }
+
+            Log::info('✅ parseDateTime SUCCESS', [
+                'input_date' => $date,
+                'input_time' => $time,
+                'parsed_date' => $dateString,
+                'result' => $parsed->format('Y-m-d H:i:s'),
+                'params' => $params
+            ]);
 
             return $parsed;
         }
@@ -306,6 +326,27 @@ class DateTimeParser
     public function parseDateString(?string $dateString): ?string
     {
         if (empty($dateString)) {
+            return null;
+        }
+
+        // 🔧 FIX 2025-11-08: CRITICAL - Validate year presence for ambiguous formats
+        // BUG: Agent extracted "10.11." instead of "10.11.2025" → Backend parsed as wrong date
+        // TEST CASE: "10.11." was interpreted as "2025-11-09 00:00" instead of "2025-11-10"
+        // SOLUTION: Require year for German date formats, fail gracefully for incomplete dates
+        $trimmedDate = trim($dateString);
+
+        // Check if format LOOKS like German date (has dots) but MISSING year
+        // Pattern: "DD.MM." or "D.M." (with or without trailing dot, but NO 4-digit year)
+        if (preg_match('/^\d{1,2}\.\d{1,2}\.?$/', $trimmedDate) && !preg_match('/\d{4}/', $trimmedDate)) {
+            Log::error('❌ INCOMPLETE DATE FORMAT: Missing year in date string', [
+                'input' => $dateString,
+                'pattern' => 'DD.MM without year',
+                'reason' => 'ambiguous_date_without_year',
+                'fix_version' => '2025-11-08',
+                'required_format' => 'DD.MM.YYYY'
+            ]);
+
+            // Return null to force error - do NOT guess the year
             return null;
         }
 
@@ -557,21 +598,31 @@ class DateTimeParser
             try {
                 $carbon = Carbon::createFromFormat('d.m.Y', $dateString);
 
-                // 🔍 SMART YEAR INFERENCE (Bug Fix: Call 778)
-                // Apply year adjustment for German format dates too!
+                // 🔧 FIX 2025-11-04: ROBUST YEAR CORRECTION
+                // Bug: Agent was sending year 2023 instead of 2025
+                // Old logic: Only added 1 year → 2023 becomes 2024 (still in past!)
+                // New logic: Set to current year, then check if still past
                 if ($carbon->isPast() && $carbon->diffInDays(now(), true) > 7) {
-                    $nextYear = $carbon->copy()->addYear();
+                    $now = Carbon::now('Europe/Berlin');
+                    $originalYear = $carbon->year;
 
-                    // Only adjust if future date is reasonable (within next 365 days)
-                    if ($nextYear->isFuture() && $nextYear->diffInDays(now()) < 365) {
-                        Log::info('📅 Adjusted date year to future occurrence (German format)', [
-                            'original' => $carbon->format('Y-m-d'),
-                            'adjusted' => $nextYear->format('Y-m-d'),
-                            'input' => $dateString,
-                            'reason' => 'past_date_detected'
-                        ]);
-                        $carbon = $nextYear;
+                    // Step 1: Set to current year
+                    $carbon->setYear($now->year);
+
+                    // Step 2: If STILL in past (e.g., 05.11.2025 but today is 06.11.2025), add 1 year
+                    if ($carbon->isPast()) {
+                        $carbon->addYear();
                     }
+
+                    Log::info('📅 YEAR CORRECTION: Adjusted date to current/next year (German format)', [
+                        'original_date' => $dateString,
+                        'original_year' => $originalYear,
+                        'corrected_date' => $carbon->format('Y-m-d'),
+                        'corrected_year' => $carbon->year,
+                        'years_adjusted' => $carbon->year - $originalYear,
+                        'reason' => 'past_date_auto_correction',
+                        'fix_version' => '2025-11-04'
+                    ]);
                 }
 
                 return $carbon->format('Y-m-d');
@@ -587,22 +638,31 @@ class DateTimeParser
         try {
             $carbon = Carbon::parse($dateString);
 
-            // 🔍 SMART YEAR INFERENCE (Bug Fix: Call 776, Fixed in Call 778)
-            // If parsed date is significantly in the past (>7 days), assume user meant next occurrence
-            // Bug Fix: Use absolute value (true) not signed value (false) for past date comparison
+            // 🔧 FIX 2025-11-04: ROBUST YEAR CORRECTION (ISO and general formats)
+            // Bug: Agent was sending year 2023 instead of 2025
+            // Old logic: Only added 1 year → 2023 becomes 2024 (still in past!)
+            // New logic: Set to current year, then check if still past
             if ($carbon->isPast() && $carbon->diffInDays(now(), true) > 7) {
-                $nextYear = $carbon->copy()->addYear();
+                $now = Carbon::now('Europe/Berlin');
+                $originalYear = $carbon->year;
 
-                // Only adjust if future date is reasonable (within next 365 days)
-                if ($nextYear->isFuture() && $nextYear->diffInDays(now()) < 365) {
-                    Log::info('📅 Adjusted date year to future occurrence', [
-                        'original' => $carbon->format('Y-m-d'),
-                        'adjusted' => $nextYear->format('Y-m-d'),
-                        'input' => $dateString,
-                        'reason' => 'past_date_detected'
-                    ]);
-                    $carbon = $nextYear;
+                // Step 1: Set to current year
+                $carbon->setYear($now->year);
+
+                // Step 2: If STILL in past (e.g., 05.11.2025 but today is 06.11.2025), add 1 year
+                if ($carbon->isPast()) {
+                    $carbon->addYear();
                 }
+
+                Log::info('📅 YEAR CORRECTION: Adjusted date to current/next year (ISO/general format)', [
+                    'original_date' => $dateString,
+                    'original_year' => $originalYear,
+                    'corrected_date' => $carbon->format('Y-m-d'),
+                    'corrected_year' => $carbon->year,
+                    'years_adjusted' => $carbon->year - $originalYear,
+                    'reason' => 'past_date_auto_correction',
+                    'fix_version' => '2025-11-04'
+                ]);
             }
 
             return $carbon->format('Y-m-d');
@@ -941,5 +1001,133 @@ class DateTimeParser
         ]);
 
         return $result;
+    }
+
+    /**
+     * Format datetime as natural spoken German
+     *
+     * FIX 2025-11-05: Natural date/time for voice AI
+     * User feedback: "Jahr nicht nennen, Wochentag hinzufügen, Zeit umgangssprachlich"
+     *
+     * Before: "am 11.11.2025, 15:20 Uhr"
+     * After:  "am Montag, den 11. November um 15 Uhr 20"
+     *
+     * Special time formats:
+     * - 15:00 → "15 Uhr"
+     * - 15:15 → "Viertel nach drei" (optional, can be "15 Uhr 15")
+     * - 15:30 → "halb vier" (optional, can be "15 Uhr 30")
+     * - 15:45 → "Viertel vor vier" (optional, can be "15 Uhr 45")
+     * - 15:20 → "15 Uhr 20"
+     *
+     * @param string|Carbon $datetime DateTime to format
+     * @param bool $useColloquialTime Use "Viertel nach", "halb" (default: false for clarity)
+     * @return string Natural German spoken format
+     */
+    public function formatSpokenDateTime($datetime, bool $useColloquialTime = false): string
+    {
+        if (is_string($datetime)) {
+            $carbon = Carbon::parse($datetime);
+        } else {
+            $carbon = $datetime;
+        }
+
+        // Ensure Berlin timezone
+        $carbon->timezone('Europe/Berlin');
+
+        // 🔧 FIX 2025-11-07: Use "heute"/"morgen" for same-day/tomorrow
+        // PROBLEM: User says "heute Nachmittag", agent responds "am Freitag 14:45"
+        //          → User confused: "Freitag" sounds like different day even though today IS Friday
+        // SOLUTION: Detect same-day/tomorrow and use natural language
+        $now = $this->getCachedBerlinTime();
+        $isToday = $carbon->isSameDay($now);
+        $isTomorrow = $carbon->copy()->startOfDay()->eq($now->copy()->addDay()->startOfDay());
+
+        // Weekday in German (only used if not today/tomorrow)
+        $weekday = $carbon->locale('de')->isoFormat('dddd');
+
+        // Date - full month name, no year (implicitly current year)
+        $day = $carbon->day;
+        $month = $carbon->locale('de')->isoFormat('MMMM');
+
+        // Time - natural format
+        $hour = $carbon->hour;
+        $minute = $carbon->minute;
+
+        if ($minute === 0) {
+            // "15 Uhr"
+            $timeSpoken = "{$hour} Uhr";
+        } elseif ($useColloquialTime) {
+            // Colloquial formats (optional, can be confusing for AI)
+            if ($minute === 15) {
+                $timeSpoken = "Viertel nach {$hour}";
+            } elseif ($minute === 30) {
+                $timeSpoken = "halb " . ($hour + 1);
+            } elseif ($minute === 45) {
+                $timeSpoken = "Viertel vor " . ($hour + 1);
+            } else {
+                $timeSpoken = "{$hour} Uhr {$minute}";
+            }
+        } else {
+            // Clear numeric format (recommended for AI)
+            $timeSpoken = "{$hour} Uhr {$minute}";
+        }
+
+        // 🔧 FIX 2025-11-07: Natural date reference
+        // - Same day: "heute um 14 Uhr 45"
+        // - Tomorrow: "morgen um 14 Uhr 45"
+        // - Other: "am Montag, den 11. November um 15 Uhr 20"
+        if ($isToday) {
+            return "heute um {$timeSpoken}";
+        } elseif ($isTomorrow) {
+            return "morgen um {$timeSpoken}";
+        } else {
+            return "am {$weekday}, den {$day}. {$month} um {$timeSpoken}";
+        }
+    }
+
+    /**
+     * Format datetime as compact spoken German (without weekday)
+     *
+     * FIX 2025-11-05: Shorter variant for confirmation messages
+     *
+     * Format: "den 11. November um 15 Uhr 20"
+     *
+     * @param string|Carbon $datetime DateTime to format
+     * @param bool $useColloquialTime Use "Viertel nach", "halb"
+     * @return string Compact German spoken format
+     */
+    public function formatSpokenDateTimeCompact($datetime, bool $useColloquialTime = false): string
+    {
+        if (is_string($datetime)) {
+            $carbon = Carbon::parse($datetime);
+        } else {
+            $carbon = $datetime;
+        }
+
+        $carbon->timezone('Europe/Berlin');
+
+        $day = $carbon->day;
+        $month = $carbon->locale('de')->isoFormat('MMMM');
+
+        $hour = $carbon->hour;
+        $minute = $carbon->minute;
+
+        if ($minute === 0) {
+            $timeSpoken = "{$hour} Uhr";
+        } elseif ($useColloquialTime) {
+            if ($minute === 15) {
+                $timeSpoken = "Viertel nach {$hour}";
+            } elseif ($minute === 30) {
+                $timeSpoken = "halb " . ($hour + 1);
+            } elseif ($minute === 45) {
+                $timeSpoken = "Viertel vor " . ($hour + 1);
+            } else {
+                $timeSpoken = "{$hour} Uhr {$minute}";
+            }
+        } else {
+            $timeSpoken = "{$hour} Uhr {$minute}";
+        }
+
+        return "den {$day}. {$month} um {$timeSpoken}";
     }
 }

@@ -22,18 +22,20 @@ class AppointmentModificationResource extends Resource
     protected static ?string $model = AppointmentModification::class;
 
     /**
-     * Resource disabled - appointment_modifications table doesn't exist in Sept 21 database backup
-     * TODO: Re-enable when database is fully restored
+     * GAP-010: Re-enabled for Appointment Modification Audit Trail
+     * Required for tracking cancel/reschedule modifications with reschedule-first flow
+     * Database fully restored - appointment_modifications table exists and operational
+     *
+     * Access control handled by AppointmentModificationPolicy:
+     * - super_admin: Full access (via before() method)
+     * - admin/manager: Can view their company's modifications
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return true; // Re-enabled for GAP-010 (2025-11-03)
     }
 
-    public static function canViewAny(): bool
-    {
-        return false; // Prevents all access to this resource
-    }
+    // Removed canViewAny() override - let Filament use the Policy automatically
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
@@ -501,18 +503,18 @@ class AppointmentModificationResource extends Resource
                                 Infolists\Components\TextEntry::make('created_at')
                                     ->label('Erstellt am')
                                     ->dateTime('d.m.Y H:i')
-                                    ->description(fn (AppointmentModification $record): string =>
+                                    ->icon('heroicon-o-calendar')
+                                    ->hint(fn (AppointmentModification $record): string =>
                                         $record->created_at->diffForHumans()
-                                    )
-                                    ->icon('heroicon-o-calendar'),
+                                    ),
 
                                 Infolists\Components\TextEntry::make('updated_at')
                                     ->label('Aktualisiert am')
                                     ->dateTime('d.m.Y H:i')
-                                    ->description(fn (AppointmentModification $record): string =>
+                                    ->icon('heroicon-o-calendar')
+                                    ->hint(fn (AppointmentModification $record): string =>
                                         $record->updated_at->diffForHumans()
-                                    )
-                                    ->icon('heroicon-o-calendar'),
+                                    ),
                             ]),
                     ]),
             ]);

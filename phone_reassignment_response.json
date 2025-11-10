@@ -1,0 +1,6 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    56    0     0  100    56      0    121 --:--:-- --:--:-- --:--:--   121100   521  100   465  100    56    936    112 --:--:-- --:--:-- --:--:--  1048
+{"phone_number":"+493033081738","phone_number_type":"custom","phone_number_pretty":"+493033081738","nickname":"+493033081738 Friseur 1 V110 (Customer Recognition)","inbound_agent_id":"agent_b9dd70fe509b12e031f9298854","last_modification_timestamp":1762776504939,"custom_sms_enabled":false,"creation_timestamp":1753033819733,"sip_outbound_trunk_config":{"termination_uri":"askproai-retell.pstn.frankfurt.twilio.com","transport":"AUTO","auth_username":"retell_user"}}curl: (3) URL using bad/illegal format or missing URL
+curl: (3) URL using bad/illegal format or missing URL
+curl: (3) URL using bad/illegal format or missing URL

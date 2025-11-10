@@ -46,6 +46,7 @@ class Kernel extends HttpKernel
         'retell.function' => \App\Http\Middleware\VerifyRetellFunctionSignature::class,
         'retell.function.whitelist' => \App\Http\Middleware\VerifyRetellFunctionSignatureWithWhitelist::class,
         'retell.call.ratelimit' => \App\Http\Middleware\RetellCallRateLimiter::class,
+        'retell.validate.callid' => \App\Http\Middleware\ValidateRetellCallId::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth'              => \App\Http\Middleware\Authenticate::class,

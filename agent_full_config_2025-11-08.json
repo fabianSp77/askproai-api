@@ -1,0 +1,36 @@
+{
+    "agent_id": "agent_45daa54928c5768b52ba3db736",
+    "channel": "voice",
+    "last_modification_timestamp": 1762708273552,
+    "agent_name": "Friseur 1 Agent V51 - Complete with All Features",
+    "response_engine": {
+        "type": "conversation-flow",
+        "version": 107,
+        "conversation_flow_id": "conversation_flow_a58405e3f67a"
+    },
+    "webhook_url": "https:\/\/api.askproai.de\/api\/webhooks\/retell",
+    "language": "de-DE",
+    "data_storage_setting": "everything",
+    "opt_in_signed_url": false,
+    "end_call_after_silence_ms": 60000,
+    "version": 107,
+    "is_published": false,
+    "version_title": "",
+    "post_call_analysis_model": "gpt-4.1-mini",
+    "pii_config": {
+        "mode": "post_call",
+        "categories": []
+    },
+    "voice_id": "cartesia-Lina",
+    "voice_temperature": 0.02,
+    "voice_speed": 1,
+    "volume": 1,
+    "enable_backchannel": true,
+    "reminder_trigger_ms": 10000,
+    "reminder_max_count": 2,
+    "max_call_duration_ms": 1800000,
+    "interruption_sensitivity": 1,
+    "responsiveness": 1,
+    "allow_user_dtmf": true,
+    "user_dtmf_options": []
+}

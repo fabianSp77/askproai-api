@@ -18,6 +18,7 @@ use Illuminate\Support\HtmlString;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -424,9 +425,9 @@ class ServiceResource extends Resource
                                 $totalGaps = 0;
 
                                 foreach ($segments as $index => $segment) {
-                                    $totalActive += (int)($segment['duration'] ?? 0);
+                                    $totalActive += (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
                                     if ($index < count($segments) - 1) {
-                                        $totalGaps += (int)($segment['gap_after'] ?? 0);
+                                        $totalGaps += (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
                                     }
                                 }
 
@@ -715,97 +716,133 @@ class ServiceResource extends Resource
                     'staff as staff_count'
                 ])
             )
+            ->heading(function () {
+                // Get current company from tenant context
+                $company = \Illuminate\Support\Facades\Auth::user()?->company;
+                return $company ? "Dienstleistungen - {$company->name}" : 'Dienstleistungen';
+            })
             ->columns([
-                Tables\Columns\TextColumn::make('company.name')
-                    ->label('Unternehmen')
-                    ->sortable()
-                    ->searchable()
-                    ->weight('bold')
-                    ->color(fn ($record) => $record->assignment_method ? 'primary' : 'danger')
-                    ->description(function ($record) {
-                        $parts = [];
-
-                        // Show assignment method
-                        if ($record->assignment_method) {
-                            $parts[] = "Method: {$record->assignment_method}";
-                        } else {
-                            $parts[] = 'Not assigned';
-                        }
-
-                        // Show Team ID if exists
-                        if ($record->company?->calcom_team_id) {
-                            $parts[] = "Team ID: {$record->company->calcom_team_id}";
-                        }
-
-                        return implode(' | ', $parts);
-                    })
-                    ->tooltip(function ($record) {
-                        if (!$record->company) return null;
-
-                        $parts = [
-                            "ID: {$record->company_id}",
-                        ];
-
-                        if ($record->company->calcom_team_id) {
-                            $parts[] = "Cal.com Team: {$record->company->calcom_team_id}";
-                        }
-
-                        // Check mapping consistency
-                        if ($record->calcom_event_type_id) {
-                            $mapping = \Illuminate\Support\Facades\DB::table('calcom_event_mappings')
-                                ->where('calcom_event_type_id', $record->calcom_event_type_id)
-                                ->first();
-
-                            if ($mapping && $mapping->calcom_team_id != $record->company->calcom_team_id) {
-                                $parts[] = "⚠️ WARNUNG: Team ID Mismatch!";
-                                $parts[] = "Service Event Type Team: {$mapping->calcom_team_id}";
-                                $parts[] = "Company Team: {$record->company->calcom_team_id}";
-                            }
-                        }
-
-                        return implode("\n", $parts);
-                    }),
-
                 Tables\Columns\TextColumn::make('display_name')
                     ->label('Dienstleistung')
                     ->getStateUsing(fn ($record) => $record->display_name ?? $record->name)
                     ->searchable()
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->wrap()
-                    ->lineClamp(2)
+                    ->lineClamp(3)
+                    ->badge(fn ($record) => $record->composite)
+                    ->color(fn ($record) => $record->composite ? 'info' : null)
+                    ->icon(fn ($record) => $record->composite ? 'heroicon-o-squares-2x2' : null)
+                    ->iconPosition('after')
+                    ->formatStateUsing(function ($state, $record) {
+                        // Status-Indikator vor dem Namen
+                        $statusIcon = $record->is_active
+                            ? '<span style="color: rgb(34, 197, 94); font-weight: bold;">● </span>'
+                            : '<span style="color: rgb(239, 68, 68); font-weight: bold;">● </span>';
+
+                        return $statusIcon . $state;
+                    })
+                    ->html()
                     ->tooltip(function ($record) {
                         $builder = TooltipBuilder::make();
 
-                        // Section 1: IDs
+                        // Section 1: IDs & Basic Info
                         $idContent = $builder->keyValue('Service ID', $record->id, true);
                         if ($record->calcom_event_type_id) {
                             $idContent .= '<br>' . $builder->keyValue('Cal.com Event Type', $record->calcom_event_type_id, true);
                         }
+                        if ($record->composite) {
+                            $idContent .= '<br>' . $builder->badge('Komposit-Service', 'info');
+                        }
                         $builder->section('🆔 Identifiers', $idContent);
 
-                        // Section 2: Pausen (only if composite service)
+                        // Section 2: Status Info
+                        $statusContent = '';
+                        if ($record->is_active) {
+                            $statusContent .= $builder->badge('Aktiv', 'success');
+                        } else {
+                            $statusContent .= $builder->badge('Inaktiv', 'gray');
+                        }
+                        $statusContent .= ' ';
+                        if ($record->is_online) {
+                            $statusContent .= $builder->badge('Online-Buchung', 'info');
+                        }
+                        $builder->section('🎯 Status', $statusContent);
+
+                        // Section 3: Composite Segments (only if composite service)
                         if ($record->composite && !empty($record->segments)) {
                             $segments = is_string($record->segments)
                                 ? json_decode($record->segments, true)
                                 : $record->segments;
 
-                            if (is_array($segments)) {
-                                $pauseItems = [];
+                            if (is_array($segments) && !empty($segments)) {
+                                // Calculate totals
+                                $totalActive = 0;
+                                $totalGaps = 0;
+                                foreach ($segments as $segment) {
+                                    $totalActive += (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
+                                    $totalGaps += (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
+                                }
+                                $totalTime = $totalActive + $totalGaps;
+
+                                // Summary at top
+                                $summaryContent = sprintf(
+                                    '<div class="grid grid-cols-3 gap-2 mb-3">
+                                        <div class="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                                            <div class="text-xs text-blue-600 dark:text-blue-400">Gesamt</div>
+                                            <div class="text-lg font-bold text-blue-900 dark:text-blue-100">%d min</div>
+                                        </div>
+                                        <div class="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded">
+                                            <div class="text-xs text-green-600 dark:text-green-400">Aktiv</div>
+                                            <div class="text-lg font-bold text-green-900 dark:text-green-100">%d min</div>
+                                        </div>
+                                        <div class="text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded">
+                                            <div class="text-xs text-amber-600 dark:text-amber-400">Pausen</div>
+                                            <div class="text-lg font-bold text-amber-900 dark:text-amber-100">%d min</div>
+                                        </div>
+                                    </div>',
+                                    $totalTime,
+                                    $totalActive,
+                                    $totalGaps
+                                );
+
+                                // Segment list
+                                $segmentList = '';
                                 foreach ($segments as $index => $segment) {
-                                    $gap = (int)($segment['gap_after'] ?? 0);
-                                    if ($gap > 0 && $index < count($segments) - 1) {
-                                        $segmentName = $segment['name'] ?? "Schritt " . ($index + 1);
-                                        $pauseItems[] = "{$segmentName}: <strong>+{$gap} min</strong>";
+                                    $duration = (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
+                                    $gap = (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
+                                    $name = $segment['name'] ?? "Schritt " . ($index + 1);
+                                    $key = $segment['key'] ?? chr(65 + $index); // A, B, C, D...
+
+                                    // Segment card with key badge
+                                    $segmentList .= sprintf(
+                                        '<div class="flex items-start gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded mb-2">
+                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs">%s</div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">%s</div>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">⏱ %d min</span>
+                                                    %s
+                                                </div>
+                                            </div>
+                                        </div>',
+                                        $key,
+                                        htmlspecialchars($name),
+                                        $duration,
+                                        $gap > 0 ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200">💤 +' . $gap . ' min</span>' : ''
+                                    );
+
+                                    // Arrow between segments (except last)
+                                    if ($index < count($segments) - 1) {
+                                        $segmentList .= '<div class="text-center text-gray-400 text-xs">↓</div>';
                                     }
                                 }
 
-                                if (!empty($pauseItems)) {
-                                    $builder->section('⏱️ Pausen (Einwirkzeiten)', $builder->list($pauseItems));
-                                }
+                                $builder->section('🔢 Behandlungsablauf (' . count($segments) . ' Schritte)', $summaryContent . $segmentList);
                             }
                         }
 
-                        // Section 3: Availability Policy
+                        // Section 4: Availability Policy
                         $policy = $record->availability_gap_policy ?? 'blocked';
                         $policyBadge = match($policy) {
                             'free' => $builder->badge('FREI buchbar', 'success'),
@@ -826,101 +863,37 @@ class ServiceResource extends Resource
 
                         return $builder->build();
                     })
-                    ->description(fn ($record) =>
-                        ($record->calcom_name && $record->display_name ?
-                            "Cal.com: " . Str::limit($record->calcom_name, 40, '...') : '') .
-                        ($record->category ? " | {$record->category}" : ''))
+                    ->description(function ($record) {
+                        $parts = [];
+
+                        // Status-Indikator als Text (kein HTML)
+                        if ($record->is_active) {
+                            $parts[] = '✓ Aktiv';
+                        } else {
+                            $parts[] = '⨯ Inaktiv';
+                        }
+
+                        // Cal.com Name
+                        if ($record->calcom_name && $record->display_name) {
+                            $parts[] = "Cal.com: " . Str::limit($record->calcom_name, 35, '...');
+                        }
+
+                        // Kategorie
+                        if ($record->category) {
+                            $parts[] = $record->category;
+                        }
+
+                        return implode(' | ', $parts);
+                    })
+                    ->width('280px')
                     ->extraAttributes([
-                        'style' => 'max-width: 300px; word-wrap: break-word;'
+                        'class' => 'break-words'
                     ]),
-
-                Tables\Columns\TextColumn::make('assignment_confidence')
-                    ->label('Konfidenz')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => $state ? "{$state}%" : '-')
-                    ->colors([
-                        'success' => fn ($state) => $state >= 80,
-                        'warning' => fn ($state) => $state >= 60 && $state < 80,
-                        'danger' => fn ($state) => $state > 0 && $state < 60,
-                    ]),
-
-                Tables\Columns\TextColumn::make('sync_status')
-                    ->label('Synchronisierungsstatus')
-                    ->badge()
-                    ->formatStateUsing(function (string $state, $record) {
-                        if ($state === 'synced' && $record->last_calcom_sync) {
-                            return "✓ Sync (" . $record->last_calcom_sync->diffForHumans() . ")";
-                        }
-                        return match($state) {
-                            'synced' => '✓ Synchronisiert',
-                            'pending' => 'Ausstehend',
-                            'error' => 'Fehler',
-                            'never' => 'Nie synchronisiert',
-                            default => $state,
-                        };
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'synced' => 'success',
-                        'pending' => 'warning',
-                        'error' => 'danger',
-                        'never' => 'gray',
-                        default => 'gray',
-                    })
-                    ->icon(fn (string $state): ?string => match($state) {
-                        'synced' => 'heroicon-o-check-circle',
-                        'pending' => 'heroicon-o-clock',
-                        'error' => 'heroicon-o-x-circle',
-                        'never' => 'heroicon-o-minus-circle',
-                        default => null,
-                    })
-                    ->tooltip(function ($record): ?string {
-                        $builder = TooltipBuilder::make();
-
-                        // Event Type ID
-                        if ($record->calcom_event_type_id) {
-                            $eventContent = $builder->keyValue('Event Type ID', $record->calcom_event_type_id, true);
-                            $builder->section('🆔 Cal.com Verbindung', $eventContent);
-                        }
-
-                        // Last Sync Info
-                        if ($record->last_calcom_sync) {
-                            $syncContent = $builder->keyValue('Letzter Sync', $record->last_calcom_sync->format('d.m.Y H:i'));
-                            $syncContent .= '<br><span class="text-xs text-gray-500 dark:text-gray-400">' . $record->last_calcom_sync->diffForHumans() . '</span>';
-                            $builder->section('🔄 Synchronisation', $syncContent);
-                        }
-
-                        // Error Info
-                        if ($record->sync_error) {
-                            $errorContent = '<div class="text-sm text-red-600 dark:text-red-400">' . htmlspecialchars(Str::limit($record->sync_error, 150)) . '</div>';
-                            $builder->section('⚠️ Fehler', $errorContent);
-                        }
-
-                        // No sync info
-                        if (!$record->calcom_event_type_id && !$record->last_calcom_sync) {
-                            return TooltipBuilder::simple('Keine Cal.com Synchronisation konfiguriert', '📅');
-                        }
-
-                        return $builder->build();
-                    })
-                    ->searchable(query: function ($query, $search) {
-                        return $query->where('calcom_event_type_id', 'like', "%{$search}%");
-                    })
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('formatted_sync_status')
-                    ->label('Letzte Synchronisation')
-                    ->getStateUsing(fn ($record) => $record->formatted_sync_status)
-                    ->description(fn ($record) =>
-                        $record->sync_error ?
-                        Str::limit($record->sync_error, 50) : null
-                    )
-                    ->color(fn ($state) =>
-                        str_contains($state, '✅') ? 'success' :
-                        (str_contains($state, '❌') ? 'danger' : 'warning')
-                    ),
 
                 Tables\Columns\TextColumn::make('duration_minutes')
                     ->label('Dauer')
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->width('100px')
                     ->formatStateUsing(function ($state, $record) {
                         if ($record->composite && !empty($record->segments)) {
                             $totalActive = 0;
@@ -931,13 +904,13 @@ class ServiceResource extends Resource
 
                             if (is_array($segments)) {
                                 foreach ($segments as $index => $segment) {
-                                    $totalActive += (int)($segment['duration'] ?? 0);
+                                    $totalActive += (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
                                     if ($index < count($segments) - 1) {
-                                        $totalGaps += (int)($segment['gap_after'] ?? 0);
+                                        $totalGaps += (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
                                     }
                                 }
                                 $total = $totalActive + $totalGaps;
-                                return "{$total} min (📋 {$totalActive}+{$totalGaps})";
+                                return "{$total} min";
                             }
                         }
                         return $state . ' min';
@@ -958,9 +931,9 @@ class ServiceResource extends Resource
 
                             if (is_array($segments)) {
                                 foreach ($segments as $index => $segment) {
-                                    $activeDuration += (int)($segment['duration'] ?? 0);
+                                    $activeDuration += (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
                                     if ($index < count($segments) - 1) {
-                                        $gapDuration += (int)($segment['gap_after'] ?? 0);
+                                        $gapDuration += (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
                                     }
                                 }
                             }
@@ -979,57 +952,68 @@ class ServiceResource extends Resource
                         $activePercent = $totalDuration > 0 ? round(($activeDuration / $totalDuration) * 100) : 0;
                         $gapPercent = $totalDuration > 0 ? round(($gapDuration / $totalDuration) * 100) : 0;
 
-                        // Build breakdown
-                        $breakdown = sprintf(
-                            '<div class="space-y-3">
-                                <div>
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⚡ Aktive Behandlung</span>
-                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
-                                    </div>
-                                    %s
-                                </div>
-                                <div>
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💤 Einwirkzeit</span>
-                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
-                                    </div>
-                                    %s
-                                </div>
-                                <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">⏱️ Gesamtzeit</span>
-                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
-                                    </div>
-                                </div>
-                            </div>',
-                            $activeDuration,
-                            $builder->progressBar($activePercent, 'success'),
-                            $gapDuration,
-                            $builder->progressBar($gapPercent, 'warning'),
-                            $totalDuration
-                        );
-
-                        $builder->section('🔢 Gesamtdauer Breakdown', $breakdown);
-
+                        // Build breakdown based on whether there are gaps
                         if ($gapDuration > 0) {
+                            // Composite service with gaps - show full breakdown
+                            $breakdown = sprintf(
+                                '<div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⚡ Aktive Behandlung</span>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                        </div>
+                                        %s
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💤 Einwirkzeit</span>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                        </div>
+                                        %s
+                                    </div>
+                                    <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <div class="flex justify-between">
+                                            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">⏱️ Gesamtzeit</span>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                        </div>
+                                    </div>
+                                </div>',
+                                $activeDuration,
+                                $builder->progressBar($activePercent, 'success'),
+                                $gapDuration,
+                                $builder->progressBar($gapPercent, 'warning'),
+                                $totalDuration
+                            );
+
+                            $builder->section('🔢 Dauer Breakdown', $breakdown);
                             $builder->section('ℹ️ Info',
                                 '<div class="text-xs text-gray-600 dark:text-gray-400">Einwirkzeit = Wartezeit zwischen Behandlungsschritten</div>');
+                        } else {
+                            // Standard service without gaps - simple display
+                            $breakdown = sprintf(
+                                '<div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⚡ Behandlungsdauer</span>
+                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">%d min</span>
+                                    </div>
+                                    %s
+                                </div>',
+                                $activeDuration,
+                                $builder->progressBar(100, 'success')
+                            );
+
+                            $builder->section('⏱️ Dauer', $breakdown);
                         }
 
                         return $builder->build();
                     }),
 
-                Tables\Columns\IconColumn::make('composite')
-                    ->label('Komposit')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-squares-2x2')
-                    ->falseIcon('heroicon-o-stop')
-                    ->trueColor('info')
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('pricing')
                     ->label('Preis')
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->weight('bold')
+                    ->size('md')
+                    ->width('120px')
                     ->getStateUsing(function ($record) {
                         // Hauptanzeige: NUR volle Euro (ohne Cent)
                         $price = number_format($record->price, 0, ',', '.') . ' €';
@@ -1074,133 +1058,32 @@ class ServiceResource extends Resource
                         $query->orderBy('price', $direction);
                     }),
 
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean()
-                    ->sortable(),
-
-                Tables\Columns\IconColumn::make('is_online')
-                    ->label('Online')
-                    ->boolean()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('appointment_stats')
-                    ->label('Termine & Umsatz')
-                    ->getStateUsing(function ($record) {
-                        $count = $record->appointments()->count();
-                        // Calculate revenue: completed appointments * service price
-                        $completedCount = $record->appointments()
-                            ->where('status', 'completed')
-                            ->count();
-                        $revenue = $completedCount * ($record->price ?? 0);
-
-                        return "{$count} Termine • " . number_format($revenue, 0) . " €";
-                    })
-                    ->badge()
-                    ->color(function ($record) {
-                        $count = $record->appointments()->count();
-                        return $count > 10 ? 'success' : ($count > 0 ? 'info' : 'gray');
-                    })
-                    ->description(function ($record) {
-                        $recent = $record->appointments()
-                            ->where('created_at', '>=', now()->subDays(30))
-                            ->count();
-
-                        return $recent > 0 ? "📈 {$recent} neue (30 Tage)" : null;
-                    })
-                    ->tooltip(function ($record) {
-                        $builder = TooltipBuilder::make();
-
-                        // Get statistics
-                        $total = $record->appointments()->count();
-                        $completed = $record->appointments()->where('status', 'completed')->count();
-                        $cancelled = $record->appointments()->where('status', 'cancelled')->count();
-                        $scheduled = $record->appointments()->where('status', 'scheduled')->count();
-                        $revenue = $completed * ($record->price ?? 0);
-
-                        // Stats list
-                        $stats = $builder->keyValue('Gesamt', $total);
-                        $stats .= '<br>' . $builder->keyValue('Abgeschlossen', $completed) . ' ' . $builder->badge($completed, 'success');
-                        $stats .= '<br>' . $builder->keyValue('Geplant', $scheduled) . ' ' . $builder->badge($scheduled, 'info');
-                        if ($cancelled > 0) {
-                            $stats .= '<br>' . $builder->keyValue('Storniert', $cancelled) . ' ' . $builder->badge($cancelled, 'error');
-                        }
-
-                        $builder->section('📊 Termine', $stats);
-
-                        // Revenue section
-                        $revenueContent = $builder->keyValue('Gesamtumsatz', number_format($revenue, 2) . ' €', true);
-                        if ($completed > 0) {
-                            $avgRevenue = $revenue / $completed;
-                            $revenueContent .= '<br>' . $builder->keyValue('Ø pro Termin', number_format($avgRevenue, 2) . ' €', true);
-                        }
-                        $builder->section('💰 Umsatz', $revenueContent);
-
-                        return $builder->build();
-                    })
-                    ->sortable(query: function ($query, $direction) {
-                        $query->withCount('appointments')
-                            ->orderBy('appointments_count', $direction);
-                    })
-                    ->alignCenter(),
-
-                Tables\Columns\TextColumn::make('staff_assignment')
+                Tables\Columns\TextColumn::make('staff')
                     ->label('Mitarbeiter')
-                    ->getStateUsing(function ($record) {
-                        $staff = $record->allowedStaff;
-
-                        if ($staff->isEmpty()) {
-                            return '👥 Keine zugewiesen';
-                        }
-
-                        $count = $staff->count();
-                        if ($count > 3) {
-                            $first = $staff->take(3)->pluck('name')->join(', ');
-                            return "{$first} (+" . ($count - 3) . " weitere)";
-                        }
-
-                        return $staff->pluck('name')->join(', ');
-                    })
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md')
+                    ->width('120px')
                     ->badge()
-                    ->color(fn ($record) =>
-                        $record->allowedStaff->isEmpty() ? 'gray' : 'success'
-                    )
+                    ->getStateUsing(fn ($record) => $record->staff_count ?? 0)
+                    ->formatStateUsing(fn ($state) => $state)
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
+                    ->icon(fn ($state) => $state > 0 ? 'heroicon-o-user-group' : 'heroicon-o-user-minus')
                     ->tooltip(function ($record) {
-                        $staff = $record->allowedStaff;
+                        $staff = $record->staff;
 
                         if ($staff->isEmpty()) {
-                            return TooltipBuilder::simple('Keine Mitarbeiter für diesen Service zugewiesen', '👥');
+                            return TooltipBuilder::simple('Keine Mitarbeiter zugewiesen', '👥');
                         }
 
                         $builder = TooltipBuilder::make();
                         $staffList = '';
 
                         foreach ($staff as $member) {
-                            $badges = [];
-
-                            // PRIMARY badge (green)
-                            if ($member->pivot->is_primary) {
-                                $badges[] = $builder->badge('⭐ PRIMARY', 'success');
-                            }
-
-                            // Bookable status (blue/gray)
-                            if ($member->pivot->can_book) {
-                                $badges[] = $builder->badge('✓ Buchbar', 'info');
-                            } else {
-                                $badges[] = $builder->badge('Nicht buchbar', 'gray');
-                            }
-
-                            // Build staff member card
                             $staffList .= sprintf(
-                                '<div class="flex flex-col gap-1.5 py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                                '<div class="py-1.5 border-b border-gray-200 dark:border-gray-700 last:border-0">
                                     <div class="font-medium text-gray-900 dark:text-gray-100">%s</div>
-                                    <div class="flex flex-wrap items-center gap-1.5">%s</div>
-                                    %s
                                 </div>',
-                                htmlspecialchars($member->name),
-                                implode(' ', $badges),
-                                $member->calcom_user_id
-                                    ? '<div class="text-xs text-gray-500 dark:text-gray-400 font-mono">Cal.com ID: ' . htmlspecialchars($member->calcom_user_id) . '</div>'
-                                    : ''
+                                htmlspecialchars($member->name)
                             );
                         }
 
@@ -1208,16 +1091,56 @@ class ServiceResource extends Resource
                         return $builder->build();
                     })
                     ->sortable(query: function ($query, $direction) {
-                        $query->withCount('allowedStaff')
-                            ->orderBy('allowed_staff_count', $direction);
+                        $query->orderBy('staff_count', $direction);
                     })
-                    ->searchable(query: function ($query, string $search) {
-                        $query->whereHas('allowedStaff', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
-                        });
-                    }),
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('statistics')
+                    ->label('Statistiken')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('lg')
+                    ->width('150px')
+                    ->icon('heroicon-o-chart-bar')
+                    ->getStateUsing(fn ($record) => $record->total_appointments ?? 0)
+                    ->suffix(' Termine')
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
+                    ->alignCenter()
+                    ->tooltip(function ($record) {
+                        $builder = TooltipBuilder::make();
+
+                        // Get counts (already loaded via withCount)
+                        $total = $record->total_appointments ?? 0;
+                        $upcoming = $record->upcoming_appointments ?? 0;
+                        $completed = $record->completed_appointments ?? 0;
+                        $cancelled = $record->cancelled_appointments ?? 0;
+
+                        // Calculate revenue
+                        $revenue = $completed * ($record->price ?? 0);
+
+                        // Appointment statistics
+                        $stats = $builder->keyValue('Total Termine', $total);
+                        $stats .= '<br>' . $builder->keyValue('Kommende', $upcoming) . ' ' . $builder->badge($upcoming, 'info');
+                        $stats .= '<br>' . $builder->keyValue('Abgeschlossen', $completed) . ' ' . $builder->badge($completed, 'success');
+                        if ($cancelled > 0) {
+                            $stats .= '<br>' . $builder->keyValue('Storniert', $cancelled) . ' ' . $builder->badge($cancelled, 'error');
+                        }
+
+                        $builder->section('📊 Termine', $stats);
+
+                        // Revenue section
+                        $revenueContent = $builder->keyValue('Gesamtumsatz', number_format($revenue, 0, ',', '.') . ' €', true);
+                        if ($completed > 0) {
+                            $avgRevenue = $revenue / $completed;
+                            $revenueContent .= '<br>' . $builder->keyValue('Ø pro Termin', number_format($avgRevenue, 0, ',', '.') . ' €');
+                        }
+                        $builder->section('💰 Umsatz', $revenueContent);
+
+                        return $builder->build();
+                    })
+                    ->alignCenter(),
             ])
-            ->defaultSort('company.name')
+            ->defaultSort('display_name')
             ->filters([
                 Filter::make('advanced_search')
                     ->form([
@@ -1334,14 +1257,38 @@ class ServiceResource extends Resource
             ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
             ->filtersFormColumns(5)
             ->persistFiltersInSession()
+            ->recordClasses(fn ($record) => $record->composite ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : null)
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->iconButton(),
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Anzeigen')
+                        ->icon('heroicon-o-eye'),
 
-                Tables\Actions\EditAction::make()
-                    ->iconButton(),
+                    Tables\Actions\EditAction::make()
+                        ->label('Bearbeiten')
+                        ->icon('heroicon-o-pencil'),
 
-                Action::make('sync')
+                    Action::make('duplicate')
+                        ->label('Duplizieren')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->requiresConfirmation()
+                        ->modalHeading('Service duplizieren')
+                        ->modalDescription('Möchten Sie diesen Service wirklich duplizieren?')
+                        ->action(function ($record) {
+                            $newService = $record->replicate();
+                            $newService->name = $record->name . ' (Kopie)';
+                            $newService->calcom_event_type_id = null;
+                            $newService->sync_status = null;
+                            $newService->save();
+
+                            Notification::make()
+                                ->title('Service dupliziert')
+                                ->body("'{$newService->name}' wurde erfolgreich erstellt")
+                                ->success()
+                                ->send();
+                        }),
+
+                    Action::make('sync')
                     ->label('Synchronisieren')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
@@ -1592,6 +1539,11 @@ class ServiceResource extends Resource
                                 ->send();
                         }
                     }),
+                ])
+                ->icon('heroicon-o-ellipsis-vertical')
+                ->tooltip('Aktionen')
+                ->button()
+                ->color('gray'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -2030,10 +1982,11 @@ class ServiceResource extends Resource
             ->groups([
                 Tables\Grouping\Group::make('company.name')
                     ->label('Unternehmen')
-                    ->collapsible(),
+                    ->collapsible()
+                    ->titlePrefixedWithLabel(false),
 
                 Tables\Grouping\Group::make('category')
-                    ->label('Category')
+                    ->label('Kategorie')
                     ->collapsible(),
             ])
             ->defaultGroup('company.name')
@@ -2241,6 +2194,147 @@ class ServiceResource extends Resource
                         ]),
                     ]),
 
+                // Composite Service Segments
+                InfoSection::make('Service-Segmente')
+                    ->description('Mehrteilige Behandlungsabläufe mit Pausen')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->collapsible()
+                    ->visible(fn ($record) => $record->composite && !empty($record->segments))
+                    ->schema([
+                        TextEntry::make('composite_overview')
+                            ->label('Übersicht')
+                            ->html()
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                if (!$record->composite || empty($record->segments)) {
+                                    return null;
+                                }
+
+                                $segments = is_string($record->segments)
+                                    ? json_decode($record->segments, true)
+                                    : $record->segments;
+
+                                if (!is_array($segments) || empty($segments)) {
+                                    return null;
+                                }
+
+                                $totalActive = 0;
+                                $totalGaps = 0;
+                                foreach ($segments as $index => $segment) {
+                                    $totalActive += (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
+                                    if ($index < count($segments) - 1) {
+                                        $totalGaps += (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
+                                    }
+                                }
+                                $totalTime = $totalActive + $totalGaps;
+
+                                $html = '<div class="space-y-4">';
+
+                                // Summary Cards
+                                $html .= '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">';
+
+                                // Total Time Card
+                                $html .= '<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">';
+                                $html .= '<div class="flex items-center gap-2 mb-2">';
+                                $html .= '<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                                $html .= '<span class="text-sm font-medium text-blue-900 dark:text-blue-100">Gesamtdauer</span>';
+                                $html .= '</div>';
+                                $html .= '<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">' . $totalTime . ' min</div>';
+                                $html .= '</div>';
+
+                                // Active Time Card
+                                $html .= '<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">';
+                                $html .= '<div class="flex items-center gap-2 mb-2">';
+                                $html .= '<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
+                                $html .= '<span class="text-sm font-medium text-green-900 dark:text-green-100">Aktive Behandlung</span>';
+                                $html .= '</div>';
+                                $html .= '<div class="text-2xl font-bold text-green-600 dark:text-green-400">' . $totalActive . ' min</div>';
+                                $html .= '</div>';
+
+                                // Gap Time Card
+                                $html .= '<div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">';
+                                $html .= '<div class="flex items-center gap-2 mb-2">';
+                                $html .= '<svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                                $html .= '<span class="text-sm font-medium text-amber-900 dark:text-amber-100">Pausen</span>';
+                                $html .= '</div>';
+                                $html .= '<div class="text-2xl font-bold text-amber-600 dark:text-amber-400">' . $totalGaps . ' min</div>';
+                                $html .= '</div>';
+
+                                $html .= '</div>';
+
+                                // Segment Cards
+                                foreach ($segments as $index => $segment) {
+                                    $key = $segment['key'] ?? ($index + 1);
+                                    $name = $segment['name'] ?? 'Unbenanntes Segment';
+                                    $duration = (int)($segment['durationMin'] ?? $segment['duration'] ?? 0);
+                                    $gap = (int)($segment['gapAfterMin'] ?? $segment['gap_after'] ?? 0);
+                                    $hasGap = $gap > 0 && $index < count($segments) - 1;
+
+                                    // Segment Card
+                                    $html .= '<div class="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow">';
+
+                                    // Card Header
+                                    $html .= '<div class="flex items-start justify-between mb-3">';
+                                    $html .= '<div class="flex items-center gap-3">';
+                                    $html .= '<div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-bold text-lg">' . htmlspecialchars($key) . '</div>';
+                                    $html .= '<div>';
+                                    $html .= '<h4 class="font-semibold text-gray-900 dark:text-gray-100 text-base">' . htmlspecialchars($name) . '</h4>';
+                                    $html .= '<span class="text-xs text-gray-500 dark:text-gray-400">Segment ' . ($index + 1) . ' von ' . count($segments) . '</span>';
+                                    $html .= '</div>';
+                                    $html .= '</div>';
+                                    $html .= '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">';
+                                    $html .= '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                                    $html .= $duration . ' min';
+                                    $html .= '</span>';
+                                    $html .= '</div>';
+
+                                    // Progress Bar
+                                    $html .= '<div class="mb-3">';
+                                    $html .= '<div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">';
+                                    $html .= '<div class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" style="width: 100%"></div>';
+                                    $html .= '</div>';
+                                    $html .= '</div>';
+
+                                    // Gap Indicator
+                                    if ($hasGap) {
+                                        $html .= '<div class="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">';
+                                        $html .= '<svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                                        $html .= '<span class="text-sm text-amber-900 dark:text-amber-100"><strong>' . $gap . ' min</strong> Pause danach</span>';
+                                        $html .= '</div>';
+                                    }
+
+                                    $html .= '</div>';
+
+                                    // Arrow between segments
+                                    if ($index < count($segments) - 1) {
+                                        $html .= '<div class="flex justify-center my-4">';
+                                        $html .= '<svg class="w-6 h-6 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>';
+                                        $html .= '</div>';
+                                    }
+                                }
+
+                                $html .= '</div>';
+
+                                return new \Illuminate\Support\HtmlString($html);
+                            }),
+
+                        TextEntry::make('pause_bookable_policy')
+                            ->label('Pause-Buchungsregel')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => match($state) {
+                                'free' => '✅ Mitarbeiter frei während Pausen',
+                                'blocked' => '🔒 Mitarbeiter blockiert während Pausen',
+                                'flexible' => '🔄 Flexibel je nach Verfügbarkeit',
+                                default => '❓ Nicht definiert'
+                            })
+                            ->color(fn ($state) => match($state) {
+                                'free' => 'success',
+                                'blocked' => 'danger',
+                                'flexible' => 'warning',
+                                default => 'gray'
+                            }),
+                    ]),
+
                 // Cal.com Integration
                 InfoSection::make('Cal.com Integration')
                     ->description('Synchronisationsstatus und Einstellungen')
@@ -2438,6 +2532,7 @@ class ServiceResource extends Resource
         return [
             RelationManagers\AppointmentsRelationManager::class,
             RelationManagers\StaffRelationManager::class,
+            RelationManagers\SynonymsRelationManager::class,
         ];
     }
 

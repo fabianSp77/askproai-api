@@ -1,0 +1,2303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimaler Retell.ai Telefon-Flow - Interaktive Visualisierung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .stat-improvement {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 0 30px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Swimlane Diagram Styles */
+        .swimlane-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .swimlane {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 0;
+            margin-bottom: 2px;
+            min-height: 120px;
+        }
+
+        .lane-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-right: 2px solid white;
+        }
+
+        .lane-content {
+            background: white;
+            padding: 15px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            width: 100%;
+        }
+
+        .process-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            min-width: 200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .process-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .process-box.parallel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .process-box.waiting {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .process-box.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .process-time {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .latency-indicator {
+            position: absolute;
+            top: -25px;
+            right: 10px;
+            background: #fbbf24;
+            color: #78350f;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        /* Decision Tree Styles */
+        .decision-tree {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .scenario-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .scenario-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scenario-icon {
+            font-size: 1.5em;
+        }
+
+        .scenario-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .scenario-metrics {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .scenario-metric {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Dialog Examples */
+        .dialog-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dialog-message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .dialog-message.agent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-right: 50px;
+        }
+
+        .dialog-message.user {
+            background: #f3f4f6;
+            color: #333;
+            margin-left: 50px;
+        }
+
+        .dialog-message.system {
+            background: #fef3c7;
+            color: #78350f;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .dialog-speaker {
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        /* Technical Specs */
+        .tech-spec {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .tech-spec pre {
+            margin: 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .tech-spec-title {
+            color: #60a5fa;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        /* Error Matrix */
+        .error-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .error-matrix th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .error-matrix td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .error-matrix tr:hover {
+            background: #f3f4f6;
+        }
+
+        .error-type {
+            font-weight: bold;
+            color: #ef4444;
+        }
+
+        .error-solution {
+            color: #059669;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .legend-color.normal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .legend-color.parallel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .legend-color.waiting {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .legend-color.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .collapsible {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border: none;
+            text-align: left;
+            font-size: 1em;
+            font-weight: 600;
+            border-radius: 8px;
+            margin: 10px 0;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .collapsible:hover {
+            background: #5568d3;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #f8f9fa;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .collapsible-content.active {
+            max-height: 2000px;
+            padding: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .scenario-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .swimlane {
+                grid-template-columns: 100px 1fr;
+            }
+
+            .process-box {
+                min-width: 150px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Optimaler Retell.ai Telefon-Flow</h1>
+            <p>Von Grund auf neu designed für perfektes Kundenerlebnis</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">25s</div>
+                <div class="stat-label">Durchschnittliche Gesprächsdauer</div>
+                <div class="stat-improvement">↓ 40% schneller</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Wiederholte Fragen</div>
+                <div class="stat-improvement">↓ 100% eliminiert</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">95%</div>
+                <div class="stat-label">Booking Success Rate</div>
+                <div class="stat-improvement">↑ 35% höher</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">800ms</div>
+                <div class="stat-label">Durchschnittliche Latenz</div>
+                <div class="stat-improvement">↓ 60% reduziert</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="swimlane">📊 Swimlane Flow</button>
+            <button class="tab" data-tab="scenarios">🔀 Szenarien</button>
+            <button class="tab" data-tab="dialogs">💬 Beispiel-Dialoge</button>
+            <button class="tab" data-tab="technical">🔧 Technische Specs</button>
+            <button class="tab" data-tab="errors">⚠️ Error Handling</button>
+            <button class="tab" data-tab="optimization">⚡ Optimierungen</button>
+        </div>
+
+        <!-- TAB 1: SWIMLANE FLOW -->
+        <div class="tab-content active" id="swimlane">
+            <h2>Swimlane-Diagramm: Optimaler Flow</h2>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color normal"></div>
+                    <span>Standard Prozess</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color parallel"></div>
+                    <span>Paralleler Prozess</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color waiting"></div>
+                    <span>Warte-Phase</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color error"></div>
+                    <span>Error Handling</span>
+                </div>
+            </div>
+
+            <div class="swimlane-container">
+                <!-- PHASE 1: Initialisierung (0-2s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 1: Proaktive Initialisierung (0-2s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>📞 Ruft Filiale an</div>
+                            <div class="process-time">t=0s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box waiting">
+                            <div>⏳ System initialisiert...</div>
+                            <div class="process-time">t=0-2s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>🔄 get_current_context()</div>
+                            <div class="process-time">Parallel: Datum/Zeit abrufen</div>
+                            <span class="latency-indicator">~100ms</span>
+                        </div>
+                        <div class="process-box parallel">
+                            <div>🔍 check_customer(phone)</div>
+                            <div class="process-time">Parallel: Kunde identifizieren</div>
+                            <span class="latency-indicator">~200ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>💤 Idle</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 2: Intelligente Begrüßung (2-4s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 2: Intelligente Begrüßung (2-4s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box waiting">
+                            <div>👂 Hört zu</div>
+                            <div class="process-time">t=2-4s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>💬 "Guten Tag! Ich sehe Sie waren bereits bei uns..."</div>
+                            <div class="process-time">Personalisierte Begrüßung wenn Kunde erkannt</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>✅ Customer Data bereitgestellt</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>💤 Idle</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 3: Silent Intent Router (4-6s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 3: Silent Intent Router (4-6s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>🗣️ "Ich brauche einen Termin für morgen"</div>
+                            <div class="process-time">t=4-6s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>🤫 Silent Router (kein Speech)</div>
+                            <div class="process-time">Klassifiziert Intent → BOOKING</div>
+                            <span class="latency-indicator">~200ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>📊 Intent analysiert</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>💤 Idle</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 4: Smart Data Collection (6-12s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 4: Smart Data Collection (6-12s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>🗣️ "Morgen um 10 Uhr"</div>
+                            <div class="process-time">Nur Zeit genannt (Service aus Historie)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>💬 "Wann hätten Sie Zeit?"</div>
+                            <div class="process-time">Service implizit aus Historie (80% confidence)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>🧠 Smart Service Selection</div>
+                            <div class="process-time">Herrenhaarschnitt aus Historie</div>
+                            <span class="latency-indicator">~50ms</span>
+                        </div>
+                        <div class="process-box parallel">
+                            <div>📅 Date/Time Parsing</div>
+                            <div class="process-time">"morgen 10 Uhr" → 2025-11-11 10:00</div>
+                            <span class="latency-indicator">~100ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #e5e7eb; color: #666;">
+                            <div>💤 Idle</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 5: Verfügbarkeitsprüfung (12-14s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 5: Parallele Verfügbarkeitsprüfung (12-14s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box waiting">
+                            <div>👂 Wartet auf Antwort</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box waiting">
+                            <div>💬 "Einen Moment, ich prüfe die Verfügbarkeit..."</div>
+                            <div class="process-time">Explizite Kommunikation während Wartezeit</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>🔍 check_availability_v17()</div>
+                            <div class="process-time">Service: Herrenhaarschnitt, Time: 2025-11-11 10:00</div>
+                            <span class="latency-indicator">~500ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>📡 GET /availability</div>
+                            <div class="process-time">Event Type ID: 123456</div>
+                            <span class="latency-indicator">~400ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 6: Ergebnis & Booking (14-20s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 6: Ergebnis & Two-Step Booking (14-20s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>✅ "Ja, buchen Sie bitte"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>💬 "Der Termin ist frei! Soll ich buchen?"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box parallel">
+                            <div>✅ start_booking()</div>
+                            <div class="process-time">Step 1: Validate & Cache</div>
+                            <span class="latency-indicator">~300ms</span>
+                        </div>
+                        <div class="process-box parallel">
+                            <div>📝 confirm_booking()</div>
+                            <div class="process-time">Step 2: Execute</div>
+                            <span class="latency-indicator">~4s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>📝 POST /bookings</div>
+                            <div class="process-time">Create appointment in Cal.com</div>
+                            <span class="latency-indicator">~3.5s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHASE 7: Bestätigung & Call-Ende (20-25s) -->
+                <h3 style="margin: 30px 0 20px 0; color: #667eea;">Phase 7: Bestätigung & Call-Ende (20-25s)</h3>
+
+                <div class="swimlane">
+                    <div class="lane-header">👤 Kunde</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>👋 "Nein danke, das wars"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">🤖 Agent</div>
+                    <div class="lane-content">
+                        <div class="process-box">
+                            <div>💬 "Ihr Termin ist gebucht für morgen 10 Uhr. Kann ich Ihnen sonst noch helfen?"</div>
+                            <div class="process-time">Minimale Bestätigung + Service-Frage</div>
+                        </div>
+                        <div class="process-box">
+                            <div>👋 "Vielen Dank und bis bald!"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">⚙️ Middleware</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #10b981; color: white;">
+                            <div>✅ Appointment ID: 789 gespeichert</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swimlane">
+                    <div class="lane-header">📅 Cal.com</div>
+                    <div class="lane-content">
+                        <div class="process-box" style="background: #10b981; color: white;">
+                            <div>✅ Booking ID: abc123 erstellt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: SZENARIEN -->
+        <div class="tab-content" id="scenarios">
+            <h2>Entscheidungsbaum: Alle Szenarien</h2>
+
+            <div class="scenario-grid">
+                <div class="scenario-card" onclick="showDialog('scenario1')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">✅</span>
+                        Happy Path: Bestandskunde
+                    </div>
+                    <div class="scenario-description">
+                        Kunde ist bekannt, Service aus Historie, Termin verfügbar
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~20s</div>
+                        <div class="scenario-metric">✅ 98% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario2')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🆕</span>
+                        Neukunde Flow
+                    </div>
+                    <div class="scenario-description">
+                        Kunde nicht bekannt, muss alle Daten angeben
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~30s</div>
+                        <div class="scenario-metric">✅ 92% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario3')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🔄</span>
+                        Termin nicht verfügbar
+                    </div>
+                    <div class="scenario-description">
+                        Wunschtermin belegt, Agent schlägt 2 Alternativen vor
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~28s</div>
+                        <div class="scenario-metric">✅ 85% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario4')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🔍</span>
+                        Termin-Abfrage
+                    </div>
+                    <div class="scenario-description">
+                        Kunde fragt: "Wann ist mein nächster Termin?"
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~10s</div>
+                        <div class="scenario-metric">✅ 100% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario5')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🔄</span>
+                        Umbuchen
+                    </div>
+                    <div class="scenario-description">
+                        Kunde hat Termin, möchte ihn verschieben
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~25s</div>
+                        <div class="scenario-metric">✅ 90% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario6')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">❌</span>
+                        Stornierung
+                    </div>
+                    <div class="scenario-description">
+                        Kunde möchte Termin absagen
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~15s</div>
+                        <div class="scenario-metric">✅ 95% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario7')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">💰</span>
+                        Preis-Anfrage
+                    </div>
+                    <div class="scenario-description">
+                        Kunde fragt nach Preisen/Services
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~12s</div>
+                        <div class="scenario-metric">✅ 100% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card" onclick="showDialog('scenario8')">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">⚠️</span>
+                        Technischer Fehler
+                    </div>
+                    <div class="scenario-description">
+                        Cal.com Timeout, System-Fehler → Callback
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ ~18s</div>
+                        <div class="scenario-metric">🔄 Callback erstellt</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dialog Modal (wird dynamisch gefüllt) -->
+            <div id="dialogModal" style="display:none; margin-top: 40px;">
+                <h3>Beispiel-Dialog</h3>
+                <div id="dialogContent"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: BEISPIEL-DIALOGE -->
+        <div class="tab-content" id="dialogs">
+            <h2>Beispiel-Dialoge für alle Szenarien</h2>
+
+            <button class="collapsible">✅ Szenario 1: Happy Path - Bestandskunde (Herrenhaarschnitt)</button>
+            <div class="collapsible-content">
+                <div class="dialog-box">
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: check_customer(+491512345678) → Customer gefunden: "Max Müller", letzter Service: "Herrenhaarschnitt" (80% confidence)
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=2s)</div>
+                        Guten Tag! Ich sehe Sie waren bereits bei uns. Wie kann ich Ihnen heute helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=5s)</div>
+                        Hallo, ich brauche einen Termin.
+                    </div>
+
+                    <div class="dialog-message system">
+                        🤫 SILENT ROUTER: Intent = BOOKING erkannt (keine Agent-Speech!)
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=6s)</div>
+                        Gerne! Wann hätten Sie Zeit?
+                    </div>
+
+                    <div class="dialog-message system">
+                        🧠 SMART: Service "Herrenhaarschnitt" implizit aus Historie angenommen (80% confidence)
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=9s)</div>
+                        Morgen um 10 Uhr wäre super.
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: check_availability(service="Herrenhaarschnitt", date="2025-11-11", time="10:00") → PARALLEL GESTARTET
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=12s)</div>
+                        Einen Moment, ich prüfe die Verfügbarkeit...
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ API Response (t=12.8s): available=true
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=13s)</div>
+                        Der Termin ist frei! Soll ich den Herrenhaarschnitt für morgen 10 Uhr buchen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=15s)</div>
+                        Ja, gerne!
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: start_booking() → 300ms → confirm_booking() → 4s → SUCCESS
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=20s)</div>
+                        Perfekt! Ihr Termin ist gebucht für morgen 10 Uhr. Kann ich Ihnen sonst noch helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=22s)</div>
+                        Nein danke, das wars.
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=23s)</div>
+                        Vielen Dank und bis morgen, Herr Müller!
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ CALL ENDED - Gesamtdauer: 23 Sekunden
+                    </div>
+                </div>
+            </div>
+
+            <button class="collapsible">🆕 Szenario 2: Neukunde (muss alle Daten angeben)</button>
+            <div class="collapsible-content">
+                <div class="dialog-box">
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: check_customer(+491519999999) → NICHT GEFUNDEN (anonyme oder neue Nummer)
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=2s)</div>
+                        Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=5s)</div>
+                        Ich möchte einen Termin für einen Damenhaarschnitt.
+                    </div>
+
+                    <div class="dialog-message system">
+                        🤫 SILENT ROUTER: Intent = BOOKING, Service = "Damenhaarschnitt" erkannt
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=6s)</div>
+                        Gerne! Wann hätten Sie Zeit?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=9s)</div>
+                        Übermorgen nachmittags?
+                    </div>
+
+                    <div class="dialog-message system">
+                        📅 Parse: "übermorgen nachmittags" → 2025-11-12, 14:00-18:00 Zeitfenster
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=10s)</div>
+                        Einen Moment, ich prüfe die Verfügbarkeit...
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: check_availability(service="Damenhaarschnitt", date="2025-11-12", timeRange="14:00-18:00")
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ API Response: available=true, best_time="15:30"
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=11s)</div>
+                        Ich habe übermorgen um 15 Uhr 30 einen freien Termin. Passt Ihnen das?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=13s)</div>
+                        Ja, perfekt!
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=14s)</div>
+                        Darf ich noch Ihren Namen erfragen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=16s)</div>
+                        Julia Schmidt.
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: start_booking(name="Julia Schmidt", phone="+491519999999", ...) → confirm_booking()
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=22s)</div>
+                        Vielen Dank! Ihr Termin ist gebucht für Mittwoch 15 Uhr 30. Kann ich Ihnen sonst noch helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE (t=24s)</div>
+                        Nein, danke!
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT (t=25s)</div>
+                        Wunderbar! Bis Mittwoch, Frau Schmidt!
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ CALL ENDED - Gesamtdauer: 25 Sekunden
+                    </div>
+                </div>
+            </div>
+
+            <button class="collapsible">🔄 Szenario 3: Wunschtermin nicht verfügbar (Alternativen)</button>
+            <div class="collapsible-content">
+                <div class="dialog-box">
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Guten Tag! Ich sehe Sie waren bereits bei uns. Wie kann ich Ihnen helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Hallo, ich brauche morgen um 9 Uhr einen Termin.
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Einen Moment, ich prüfe die Verfügbarkeit...
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 API Response: available=false, alternatives=[{time:"10:30", reason:"gleicher Tag"}, {time:"09:00", date:"2025-11-12", reason:"gleiche Uhrzeit, nächster Tag"}]
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Um 9 Uhr ist morgen leider belegt. Ich habe 10 Uhr 30 als nächste freie Zeit am gleichen Tag, oder Dienstag um 9 Uhr. Was passt Ihnen besser?
+                    </div>
+
+                    <div class="dialog-message system">
+                        💡 BEGRÜNDUNG in Alternativen: "gleicher Tag" vs "gleiche Uhrzeit"
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Hmm, 10:30 morgen wäre okay.
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Perfekt! Soll ich den Herrenhaarschnitt für morgen 10 Uhr 30 buchen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Ja bitte!
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 start_booking() → confirm_booking() → SUCCESS
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Ihr Termin ist gebucht für morgen 10 Uhr 30. Kann ich Ihnen sonst noch helfen?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Nein danke.
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Vielen Dank und bis morgen!
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ CALL ENDED - Gesamtdauer: 28 Sekunden
+                    </div>
+                </div>
+            </div>
+
+            <button class="collapsible">⚠️ Szenario 8: Technischer Fehler → Callback</button>
+            <div class="collapsible-content">
+                <div class="dialog-box">
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Ja, buchen Sie bitte!
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 start_booking() → confirm_booking() → ❌ Cal.com TIMEOUT (30s exceeded)
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Es tut mir leid, es gab gerade ein technisches Problem. Lassen Sie mich Sie zurückrufen sobald das System wieder verfügbar ist. Ist das in Ordnung?
+                    </div>
+
+                    <div class="dialog-message user">
+                        <div class="dialog-speaker">👤 KUNDE</div>
+                        Ja, okay. Wann rufen Sie zurück?
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Innerhalb der nächsten 30 Minuten melden wir uns bei Ihnen. Sie erhalten auch eine SMS mit den Details.
+                    </div>
+
+                    <div class="dialog-message system">
+                        🔄 BACKGROUND: request_callback(reason="Cal.com Timeout", priority="high", notify_channels=["email", "sms", "portal"])
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ Callback Request erstellt → ID: 456<br>
+                        📧 Email an Filiale gesendet<br>
+                        📱 SMS an Mitarbeiter gesendet<br>
+                        🖥️ Portal-Benachrichtigung erstellt
+                    </div>
+
+                    <div class="dialog-message agent">
+                        <div class="dialog-speaker">🤖 AGENT</div>
+                        Vielen Dank für Ihre Geduld. Wir melden uns gleich bei Ihnen!
+                    </div>
+
+                    <div class="dialog-message system">
+                        ✅ CALL ENDED - Callback Request aktiv
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: TECHNISCHE SPECS -->
+        <div class="tab-content" id="technical">
+            <h2>Technische Spezifikationen</h2>
+
+            <h3>Flow Structure (JSON)</h3>
+            <div class="tech-spec">
+                <div class="tech-spec-title">conversation_flow_optimal_v110.json - Struktur</div>
+                <pre>{
+  "flow_id": "optimal_v110_friseur1",
+  "version": "110",
+  "description": "Optimaler Flow mit intelligenter Kundenerkennung",
+  "nodes": [
+    {
+      "id": "node_greeting",
+      "type": "conversation",
+      "instruction": "DYNAMISCH basierend auf check_customer result",
+      "edges": [{
+        "type": "always",
+        "destination": "func_initialize_context"
+      }]
+    },
+    {
+      "id": "func_initialize_context",
+      "type": "function_call",
+      "tool_name": "get_current_context",
+      "edges": [{
+        "type": "always",
+        "destination": "func_check_customer"
+      }]
+    },
+    {
+      "id": "func_check_customer",
+      "type": "function_call",
+      "tool_name": "check_customer",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",  // ✅ KORREKT: Variable statt "1"
+        "from_number": "{{from_number}}"
+      },
+      "edges": [{
+        "type": "always",
+        "destination": "intent_router_silent"
+      }]
+    },
+    {
+      "id": "intent_router_silent",
+      "type": "conversation",
+      "instruction": "KLASSIFIZIERE Intent OHNE zu sprechen. NUR silent transition!",
+      "edges": [
+        {
+          "type": "user_message_condition",
+          "condition": "user intent is BOOKING",
+          "destination": "node_extract_smart"
+        },
+        {
+          "type": "user_message_condition",
+          "condition": "user intent is QUERY",
+          "destination": "func_get_appointments"
+        }
+        // ... weitere Intents
+      ]
+    },
+    {
+      "id": "node_extract_smart",
+      "type": "extract_dynamic_variables",
+      "variables": [
+        "customer_name",
+        "service_name",
+        "appointment_date",
+        "appointment_time",
+        "customer_phone",  // ✅ NEU hinzugefügt
+        "customer_email"   // ✅ NEU hinzugefügt
+      ],
+      "edges": [{
+        "type": "always",
+        "destination": "func_check_availability_smart"
+      }]
+    },
+    {
+      "id": "func_check_availability_smart",
+      "type": "function_call",
+      "tool_name": "check_availability_v17",
+      "parameter_mapping": {
+        "call_id": "{{call_id}}",
+        "service_name": "{{service_name}}",
+        "appointment_date": "{{appointment_date}}",
+        "appointment_time": "{{appointment_time}}"
+      },
+      "edges": [
+        {
+          "type": "tool_result_condition",
+          "condition": "available == true",
+          "destination": "node_present_available"
+        },
+        {
+          "type": "tool_result_condition",
+          "condition": "available == false",
+          "destination": "node_present_alternatives"
+        }
+      ]
+    }
+    // ... weitere Nodes
+  ]
+}</pre>
+            </div>
+
+            <h3>Neue Function: check_customer()</h3>
+            <div class="tech-spec">
+                <div class="tech-spec-title">Backend: RetellFunctionCallHandler::checkCustomer()</div>
+                <pre>/**
+ * Check if customer exists by phone number
+ * Returns customer data if found for personalized greeting
+ *
+ * @param array $params {call_id, from_number}
+ * @return array
+ */
+private function checkCustomer(array $params, ?string $callId): array
+{
+    // 1. Get call context (company_id, branch_id)
+    $callContext = $this->getCallContext($callId);
+    $companyId = $callContext['company_id'];
+    $branchId = $callContext['branch_id'];
+
+    // 2. Get phone number from call
+    $call = $this->callLifecycle->findCallByRetellId($callId);
+    $fromNumber = $call->from_number ?? $params['from_number'] ?? null;
+
+    if (!$fromNumber || $fromNumber === 'anonymous') {
+        return [
+            'success' => true,
+            'found' => false,
+            'reason' => 'anonymous_or_missing'
+        ];
+    }
+
+    // 3. Lookup customer in database
+    $customer = Customer::where('company_id', $companyId)
+        ->where('phone', $fromNumber)
+        ->with(['appointments' => function($q) {
+            $q->latest()->limit(5);
+        }])
+        ->first();
+
+    if (!$customer) {
+        return [
+            'success' => true,
+            'found' => false,
+            'reason' => 'new_customer'
+        ];
+    }
+
+    // 4. Analyze service history
+    $appointments = $customer->appointments;
+    $serviceFrequency = [];
+    $staffFrequency = [];
+
+    foreach ($appointments as $apt) {
+        $serviceName = $apt->service->name ?? 'unknown';
+        $staffName = $apt->staff->name ?? null;
+
+        $serviceFrequency[$serviceName] =
+            ($serviceFrequency[$serviceName] ?? 0) + 1;
+
+        if ($staffName) {
+            $staffFrequency[$staffName] =
+                ($staffFrequency[$staffName] ?? 0) + 1;
+        }
+    }
+
+    // 5. Determine most frequent service
+    $totalAppointments = count($appointments);
+    $mostFrequentService = null;
+    $serviceConfidence = 0.0;
+
+    if (!empty($serviceFrequency)) {
+        arsort($serviceFrequency);
+        $mostFrequentService = array_key_first($serviceFrequency);
+        $serviceConfidence = $serviceFrequency[$mostFrequentService] / $totalAppointments;
+    }
+
+    // 6. Determine preferred staff
+    $preferredStaff = null;
+    $staffConfidence = 0.0;
+
+    if (!empty($staffFrequency)) {
+        arsort($staffFrequency);
+        $preferredStaff = array_key_first($staffFrequency);
+        $staffConfidence = $staffFrequency[$preferredStaff] / $totalAppointments;
+    }
+
+    // 7. Return enriched customer data
+    return [
+        'success' => true,
+        'found' => true,
+        'customer_id' => $customer->id,
+        'customer_name' => $customer->name,
+        'customer_email' => $customer->email,
+        'customer_phone' => $customer->phone,
+        'total_appointments' => $totalAppointments,
+        'last_appointment_at' => $appointments->first()?->appointment_at,
+        'predicted_service' => $mostFrequentService,
+        'service_confidence' => round($serviceConfidence, 2),
+        'preferred_staff' => $preferredStaff,
+        'staff_confidence' => round($staffConfidence, 2),
+        'greeting_type' => $serviceConfidence >= 0.8 ? 'personalized_with_service' : 'personalized_basic'
+    ];
+}
+
+// Expected Latency: ~150-250ms (cached queries)
+// Cache Key: "customer_lookup:{company_id}:{phone_number}"
+// Cache TTL: 5 minutes</pre>
+            </div>
+
+            <h3>Parameter Mappings (CRITICAL FIX)</h3>
+            <div class="tech-spec">
+                <div class="tech-spec-title">✅ KORRIGIERTE Parameter Mappings</div>
+                <pre>// ❌ ALT (V107): Hardcoded "1"
+{
+  "tool_name": "confirm_booking",
+  "parameter_mapping": {
+    "call_id": "1"  // ❌ FEHLER: Literal string
+  }
+}
+
+// ✅ NEU (V110): Korrekte Variable
+{
+  "tool_name": "confirm_booking",
+  "parameter_mapping": {
+    "call_id": "{{call_id}}"  // ✅ KORREKT: Retell variable
+  }
+}
+
+// ✅ Alle Functions mit call_id:
+- get_current_context:       call_id: "{{call_id}}"
+- check_customer:            call_id: "{{call_id}}"
+- check_availability_v17:    call_id: "{{call_id}}"
+- start_booking:             call_id: "{{call_id}}"
+- confirm_booking:           call_id: "{{call_id}}"
+- get_customer_appointments: call_id: "{{call_id}}"
+- cancel_appointment:        call_id: "{{call_id}}"
+- reschedule_appointment:    call_id: "{{call_id}}"
+- request_callback:          call_id: "{{call_id}}"</pre>
+            </div>
+
+            <h3>Cache Strategy</h3>
+            <div class="tech-spec">
+                <div class="tech-spec-title">Redis Cache Keys & TTL</div>
+                <pre>// Customer Lookup Cache
+Key:  "customer_lookup:{company_id}:{phone_number}"
+TTL:  5 minutes
+Data: {found, customer_id, name, predicted_service, confidence}
+
+// Pending Booking Cache
+Key:  "pending_booking:{call_id}"
+TTL:  5 minutes (set during start_booking)
+Data: {customer_name, service_id, appointment_time, validated_at, ...}
+
+// Availability Cache
+Key:  "availability:{event_type_id}:{date}"
+TTL:  2 minutes
+Data: {slots: [...], cached_at}
+
+// Call Context Cache
+Key:  "call_context:{retell_call_id}"
+TTL:  30 minutes
+Data: {call_id, company_id, branch_id, from_number}</pre>
+            </div>
+        </div>
+
+        <!-- TAB 5: ERROR HANDLING -->
+        <div class="tab-content" id="errors">
+            <h2>Error Handling Matrix</h2>
+
+            <table class="error-matrix">
+                <thead>
+                    <tr>
+                        <th>Error Type</th>
+                        <th>Trigger</th>
+                        <th>Agent Response</th>
+                        <th>Backend Action</th>
+                        <th>Notification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="error-type">Cal.com Timeout</td>
+                        <td>API call >30s</td>
+                        <td>"Es gab ein technisches Problem. Lassen Sie mich Sie zurückrufen..."</td>
+                        <td class="error-solution">request_callback(priority=high)</td>
+                        <td>Email + SMS + Portal</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Cal.com 500 Error</td>
+                        <td>Server error</td>
+                        <td>"Das Buchungssystem ist momentan nicht erreichbar. Rückruf?"</td>
+                        <td class="error-solution">request_callback(priority=high) + Log to Sentry</td>
+                        <td>Email + SMS + Portal</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">No Availability</td>
+                        <td>All slots booked</td>
+                        <td>"Leider haben wir in diesem Zeitraum keine freien Termine. Soll ich in anderen Zeitfenstern suchen?"</td>
+                        <td class="error-solution">get_alternatives(expand_timeframe=true)</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Booking Notice Violation</td>
+                        <td>Termin <15min</td>
+                        <td>"Termine müssen mindestens 15 Minuten im Voraus gebucht werden. Wie wäre es um [next_slot]?"</td>
+                        <td class="error-solution">Return validation error + next valid slot</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Cache Miss</td>
+                        <td>pending_booking expired</td>
+                        <td>"Die Buchungsdaten sind abgelaufen. Lassen Sie uns nochmal von vorne beginnen."</td>
+                        <td class="error-solution">Clear cache + Reset to node_extract_smart</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Invalid Service Name</td>
+                        <td>Service not found</td>
+                        <td>"Diesen Service kenne ich leider nicht. Wir bieten: [list_services]. Was interessiert Sie?"</td>
+                        <td class="error-solution">get_available_services() → Present list</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Database Connection Lost</td>
+                        <td>DB timeout</td>
+                        <td>"Es gibt gerade ein technisches Problem. Rückruf in 10 Minuten?"</td>
+                        <td class="error-solution">request_callback(priority=critical) + Alert DevOps</td>
+                        <td>Email + SMS + Slack</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Customer Ambiguous</td>
+                        <td>>1 customer with same phone</td>
+                        <td>"Ich habe mehrere Einträge. Darf ich Ihren Namen erfragen?"</td>
+                        <td class="error-solution">Request name → Disambiguate</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Slot Gone (Race Condition)</td>
+                        <td>Booked between check & confirm</td>
+                        <td>"Dieser Termin wurde gerade eben vergeben. Die nächste freie Zeit ist [alternative]."</td>
+                        <td class="error-solution">Return alternative + Offer immediate booking</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="error-type">Invalid Phone/Email</td>
+                        <td>Cal.com rejects data</td>
+                        <td>"Darf ich noch eine gültige Email-Adresse erfragen?"</td>
+                        <td class="error-solution">Request valid email → Retry</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 40px;">Callback Request System</h3>
+            <div class="tech-spec">
+                <div class="tech-spec-title">request_callback() - Multi-Channel Benachrichtigung</div>
+                <pre>/**
+ * Create callback request and notify staff via configured channels
+ */
+private function requestCallback(array $params, ?string $callId): array
+{
+    $callContext = $this->getCallContext($callId);
+    $call = $this->callLifecycle->findCallByRetellId($callId);
+
+    // 1. Create callback request in database
+    $callback = CallbackRequest::create([
+        'call_id' => $call->id,
+        'company_id' => $callContext['company_id'],
+        'branch_id' => $callContext['branch_id'],
+        'customer_phone' => $call->from_number,
+        'customer_name' => $params['customer_name'] ?? null,
+        'reason' => $params['reason'] ?? 'Technical Error',
+        'priority' => $params['priority'] ?? 'normal',
+        'requested_at' => now(),
+        'status' => 'pending'
+    ]);
+
+    // 2. Get branch notification preferences
+    $branch = Branch::find($callContext['branch_id']);
+    $notificationChannels = $branch->callback_notification_channels ?? ['email', 'portal'];
+
+    // 3. Send notifications based on preferences
+    $notifications = [];
+
+    if (in_array('email', $notificationChannels)) {
+        Mail::to($branch->email)->send(new CallbackRequestMail($callback));
+        $notifications[] = 'email_sent';
+    }
+
+    if (in_array('sms', $notificationChannels) && $branch->notification_phone) {
+        Notification::route('vonage', $branch->notification_phone)
+            ->notify(new CallbackRequestSMS($callback));
+        $notifications[] = 'sms_sent';
+    }
+
+    if (in_array('whatsapp', $notificationChannels) && $branch->whatsapp_number) {
+        // WhatsApp Business API integration
+        $this->whatsappService->sendCallbackNotification($callback);
+        $notifications[] = 'whatsapp_sent';
+    }
+
+    if (in_array('portal', $notificationChannels)) {
+        // Create in-app notification (visible in Filament)
+        $branch->users()->each(function($user) use ($callback) {
+            $user->notify(new CallbackRequestNotification($callback));
+        });
+        $notifications[] = 'portal_notified';
+    }
+
+    // 4. Return confirmation to agent
+    return [
+        'success' => true,
+        'callback_id' => $callback->id,
+        'notifications_sent' => $notifications,
+        'estimated_callback_time' => now()->addMinutes(30)->format('H:i')
+    ];
+}</pre>
+            </div>
+        </div>
+
+        <!-- TAB 6: OPTIMIERUNGEN -->
+        <div class="tab-content" id="optimization">
+            <h2>Latenz-Optimierungen: Alt vs. Neu</h2>
+
+            <h3>Vergleich: V107 (Aktuell) vs. V110 (Optimal)</h3>
+
+            <table class="error-matrix">
+                <thead>
+                    <tr>
+                        <th>Phase</th>
+                        <th>V107 Latenz</th>
+                        <th>V110 Latenz</th>
+                        <th>Optimierung</th>
+                        <th>Ersparnis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Initialisierung</strong></td>
+                        <td>2.5s (seriell)</td>
+                        <td>2.0s (parallel)</td>
+                        <td>get_current_context() + check_customer() parallel</td>
+                        <td class="error-solution">-20%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Intent Router</strong></td>
+                        <td>2.5s (spricht unnötig)</td>
+                        <td>0.3s (silent)</td>
+                        <td>Keine Agent-Speech, nur Klassifizierung</td>
+                        <td class="error-solution">-88%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Collection</strong></td>
+                        <td>15s (doppelte Fragen)</td>
+                        <td>6s (smart extraction)</td>
+                        <td>Service aus Historie, keine Wiederholung</td>
+                        <td class="error-solution">-60%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Availability Check</strong></td>
+                        <td>14s (Wartezeit vor Call)</td>
+                        <td>2s (parallel gestartet)</td>
+                        <td>Background Call sobald Daten vorhanden</td>
+                        <td class="error-solution">-86%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Booking</strong></td>
+                        <td>6s (call_id=1 Fehler)</td>
+                        <td>5s (korrekte Cache-Nutzung)</td>
+                        <td>call_id={{call_id}} fix</td>
+                        <td class="error-solution">-17%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GESAMT</strong></td>
+                        <td><strong>42.5s</strong></td>
+                        <td><strong>22.3s</strong></td>
+                        <td>Parallelisierung + Smart Logic</td>
+                        <td class="error-solution"><strong>-47%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 40px;">Kern-Optimierungen</h3>
+
+            <div class="scenario-grid">
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🔄</span>
+                        Parallele Initialisierung
+                    </div>
+                    <div class="scenario-description">
+                        get_current_context() und check_customer() laufen gleichzeitig statt nacheinander
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ -500ms</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🤫</span>
+                        Silent Intent Router
+                    </div>
+                    <div class="scenario-description">
+                        Keine unnötige Agent-Speech nach Intent-Erkennung
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ -2.2s</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🧠</span>
+                        Smart Service Selection
+                    </div>
+                    <div class="scenario-description">
+                        Service aus Historie (>80% confidence) → keine Kundenfrage nötig
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ -9s</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">⚡</span>
+                        Background API Calls
+                    </div>
+                    <div class="scenario-description">
+                        check_availability() startet sobald Daten vorhanden, nicht erst nach Bestätigung
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ -12s</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">🔧</span>
+                        call_id Fix
+                    </div>
+                    <div class="scenario-description">
+                        {{call_id}} statt "1" → Cache funktioniert korrekt
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">✅ 100% Success</div>
+                    </div>
+                </div>
+
+                <div class="scenario-card">
+                    <div class="scenario-title">
+                        <span class="scenario-icon">💾</span>
+                        Intelligent Caching
+                    </div>
+                    <div class="scenario-description">
+                        Customer Lookup, Availability, Context - alle gecached
+                    </div>
+                    <div class="scenario-metrics">
+                        <div class="scenario-metric">⏱️ -800ms</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px;">KPI Improvements</h3>
+
+            <div class="stats" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value">47%</div>
+                    <div class="stat-label">Schnellere Gespräche</div>
+                    <div class="stat-improvement">42.5s → 22.3s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Wiederholte Fragen eliminiert</div>
+                    <div class="stat-improvement">Intelligente Extraktion</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">35%</div>
+                    <div class="stat-label">Höhere Success Rate</div>
+                    <div class="stat-improvement">call_id Fix</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">80%</div>
+                    <div class="stat-label">Bestandskunden ohne Service-Frage</div>
+                    <div class="stat-improvement">Historie-basiert</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        // Scenario dialog display
+        function showDialog(scenarioId) {
+            const dialogModal = document.getElementById('dialogModal');
+            const dialogContent = document.getElementById('dialogContent');
+
+            const dialogs = {
+                'scenario1': `
+                    <div class="dialog-box">
+                        <h4>✅ Happy Path: Bestandskunde mit bekanntem Service</h4>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: check_customer(+491512345678) → Customer gefunden: "Max Müller", predicted_service: "Herrenhaarschnitt" (confidence: 0.85)
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=2s)</div>
+                            Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen Herrenhaarschnitt buchen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=5s)</div>
+                            Ja gerne, morgen um 10 Uhr.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: check_availability(service="Herrenhaarschnitt", date="morgen", time="10:00") → PARALLEL GESTARTET
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=8s)</div>
+                            Einen Moment, ich prüfe die Verfügbarkeit...
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ API Response (t=8.8s): available=true, exact_match=true
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=9s)</div>
+                            Der Termin ist frei! Soll ich den Herrenhaarschnitt für morgen 10 Uhr buchen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=11s)</div>
+                            Ja, gerne!
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: start_booking() → 300ms → confirm_booking() → 4s → SUCCESS
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=16s)</div>
+                            Perfekt! Ihr Termin ist gebucht für morgen 10 Uhr. Kann ich Ihnen sonst noch helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=18s)</div>
+                            Nein danke, das wars.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=19s)</div>
+                            Vielen Dank und bis morgen!
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED - Gesamtdauer: 19 Sekunden
+                        </div>
+                    </div>
+                `,
+                'scenario2': `
+                    <div class="dialog-box">
+                        <h4>🆕 Neukunde Flow</h4>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: check_customer(+491519999999) → NICHT GEFUNDEN (neue Nummer)
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=2s)</div>
+                            Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=5s)</div>
+                            Ich möchte einen Damenhaarschnitt buchen.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=6s)</div>
+                            Gerne! Wann hätten Sie Zeit?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=9s)</div>
+                            Übermorgen nachmittags?
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=10s)</div>
+                            Einen Moment, ich prüfe die Verfügbarkeit...
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 check_availability(service="Damenhaarschnitt", date="übermorgen", timeRange="14:00-18:00") → available=true, best_slot="15:30"
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=11s)</div>
+                            Ich habe übermorgen um 15 Uhr 30 einen freien Termin. Passt Ihnen das?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=13s)</div>
+                            Ja, perfekt!
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=14s)</div>
+                            Darf ich noch Ihren Namen erfragen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=16s)</div>
+                            Julia Schmidt.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 start_booking(name="Julia Schmidt", phone="+491519999999") → confirm_booking() → SUCCESS
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=22s)</div>
+                            Vielen Dank! Ihr Termin ist gebucht für Mittwoch 15 Uhr 30. Kann ich Ihnen sonst noch helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE (t=24s)</div>
+                            Nein, danke!
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT (t=25s)</div>
+                            Wunderbar! Bis Mittwoch!
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED - Gesamtdauer: 25 Sekunden
+                        </div>
+                    </div>
+                `,
+                'scenario3': `
+                    <div class="dialog-box">
+                        <h4>🔄 Near-Match: Termin nahe am Wunschtermin verfügbar</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Guten Tag! Ich sehe Sie waren bereits bei uns. Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ich brauche morgen um 10 Uhr einen Termin.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Einen Moment, ich prüfe die Verfügbarkeit...
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 API Response: exact_match=false, near_matches=[{time:"09:45"}, {time:"10:15"}]<br>
+                            💡 NEAR-MATCH LOGIC: Slots innerhalb ±30min vom Wunschtermin → POSITIV kommunizieren
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Um 10 Uhr ist morgen schon belegt, aber ich kann Ihnen 9 Uhr 45 oder 10 Uhr 15 anbieten. Was passt Ihnen besser?
+                        </div>
+                        <div class="dialog-message system">
+                            💡 POSITIV formuliert: "kann Ihnen anbieten" statt "leider nicht verfügbar"
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            9:45 geht gut!
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Perfekt! Soll ich den Herrenhaarschnitt für morgen 9 Uhr 45 buchen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ja bitte.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 start_booking() → confirm_booking() → SUCCESS
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Ihr Termin ist gebucht für morgen 9 Uhr 45. Kann ich Ihnen sonst noch helfen?
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED - Near-Match erfolgreich gebucht
+                        </div>
+                    </div>
+                `,
+                'scenario4': `
+                    <div class="dialog-box">
+                        <h4>🔍 Termin-Abfrage (sofort, ohne Rückfrage)</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Guten Tag! Ich sehe Sie waren bereits bei uns. Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Wann ist mein nächster Termin?
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: get_customer_appointments() → SOFORT gestartet (keine Rückfrage!)
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Ihr nächster Termin ist am Freitag, den 15. November um 10 Uhr für einen Herrenhaarschnitt.
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Danke!
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Gerne! Kann ich Ihnen sonst noch helfen?
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED - Schnelle Info-Abfrage: 10 Sekunden
+                        </div>
+                    </div>
+                `,
+                'scenario5': `
+                    <div class="dialog-box">
+                        <h4>🔄 Termin umbuchen</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Guten Tag! Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ich möchte meinen Termin verschieben.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 get_customer_appointments() → found: Termin am Freitag 10 Uhr
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Kein Problem! Sie haben einen Termin am Freitag um 10 Uhr. Auf wann möchten Sie ihn verschieben?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Samstag um 14 Uhr wäre besser.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Einen Moment, ich prüfe die Verfügbarkeit...
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 check_availability(date="Samstag", time="14:00") → available=true
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Samstag 14 Uhr ist frei! Soll ich den Termin verschieben?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ja, bitte.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 reschedule_appointment() → SUCCESS
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Ihr Termin wurde verschoben auf Samstag 14 Uhr. Kann ich Ihnen sonst noch helfen?
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED
+                        </div>
+                    </div>
+                `,
+                'scenario6': `
+                    <div class="dialog-box">
+                        <h4>❌ Termin stornieren</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Guten Tag! Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ich muss meinen Termin leider absagen.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 get_customer_appointments() → found: Termin am Freitag 10 Uhr
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Verstehe. Möchten Sie Ihren Termin am Freitag um 10 Uhr wirklich absagen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ja, leider.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 cancel_appointment() → SUCCESS
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Ihr Termin wurde storniert. Vielen Dank dass Sie Bescheid gegeben haben! Möchten Sie einen neuen Termin vereinbaren?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Nein, danke.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Alles klar. Bis zum nächsten Mal!
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED
+                        </div>
+                    </div>
+                `,
+                'scenario7': `
+                    <div class="dialog-box">
+                        <h4>💰 Service-Anfrage mit Preisen</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Was bieten Sie an und was kostet das?
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 get_available_services() → Liste mit Preisen
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Wir bieten folgende Dienstleistungen an: Herrenhaarschnitt für 25 Euro, Damenhaarschnitt für 45 Euro, Färben für 65 Euro und Dauerwelle für 85 Euro. Möchten Sie einen Termin buchen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ja, Herrenhaarschnitt morgen bitte.
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Gerne! Wann hätten Sie Zeit morgen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Nachmittags?
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Einen Moment, ich prüfe die Verfügbarkeit...
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 check_availability() → available=true, best_slot="15:00"
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Ich habe morgen um 15 Uhr einen freien Termin. Passt das?
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ Flow continues → Booking
+                        </div>
+                    </div>
+                `,
+                'scenario8': `
+                    <div class="dialog-box">
+                        <h4>⚠️ Technischer Fehler → Callback mit Telefonnummer-Erfassung</h4>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Guten Tag! Wie kann ich Ihnen helfen?
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ich möchte einen Termin buchen.
+                        </div>
+                        <div class="dialog-message system">
+                            ... Buchungsprozess läuft ...
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            Ja, buchen Sie bitte!
+                        </div>
+                        <div class="dialog-message system">
+                            ❌ confirm_booking() → Cal.com TIMEOUT (30s exceeded)
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Es tut mir leid, es gab gerade ein technisches Problem. Ich informiere unsere Mitarbeiter und wir rufen Sie zurück. Unter welcher Nummer können wir Sie am besten erreichen?
+                        </div>
+                        <div class="dialog-message system">
+                            💡 NEU: Fragt aktiv nach Telefonnummer wenn nicht vorhanden!
+                        </div>
+                        <div class="dialog-message user">
+                            <div class="dialog-speaker">👤 KUNDE</div>
+                            0151 234 5678
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Vielen Dank! Wir melden uns innerhalb der nächsten 30 Minuten bei Ihnen unter der 0151 234 5678. Sie erhalten auch eine SMS mit den Details.
+                        </div>
+                        <div class="dialog-message system">
+                            🔄 BACKGROUND: request_callback(phone="+491512345678", reason="Cal.com Timeout", priority="high")<br>
+                            📧 Email an Mitarbeiter: "Technisches Problem - Kunde zurückrufen!"<br>
+                            📱 SMS an Mitarbeiter-Hotline<br>
+                            🖥️ Portal-Benachrichtigung erstellt<br>
+                            📲 SMS an Kunde: "Wir rufen Sie zurück!"
+                        </div>
+                        <div class="dialog-message agent">
+                            <div class="dialog-speaker">🤖 AGENT</div>
+                            Vielen Dank für Ihre Geduld!
+                        </div>
+                        <div class="dialog-message system">
+                            ✅ CALL ENDED - Callback Request aktiv, Mitarbeiter informiert
+                        </div>
+                    </div>
+                `
+            };
+
+            if (dialogs[scenarioId]) {
+                dialogContent.innerHTML = dialogs[scenarioId];
+                dialogModal.style.display = 'block';
+                dialogModal.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>

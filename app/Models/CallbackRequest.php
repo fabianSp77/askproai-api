@@ -83,6 +83,7 @@ class CallbackRequest extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'company_id',        // 🔧 FIX 2025-11-06: Add for API context (BelongsToCompany trait only works with Auth)
         'customer_id',
         'branch_id',
         'service_id',

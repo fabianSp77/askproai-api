@@ -1,0 +1,112 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#1a1a2e"/>
+
+  <!-- Title -->
+  <text x="600" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">Multi-Tenant Architecture</text>
+
+  <!-- Definitions for arrows -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#10b981"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- Center: Company (Core) -->
+  <rect x="500" y="350" width="200" height="100" fill="#10b981" stroke="#ffffff" stroke-width="3" rx="12"/>
+  <text x="600" y="395" font-family="Arial, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle" font-weight="bold">Company</text>
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" opacity="0.8">Tenant Root</text>
+
+  <!-- Top Left: Call Record -->
+  <rect x="100" y="100" width="180" height="80" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="190" y="145" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Call Record</text>
+
+  <!-- Top Center: PhoneNumber -->
+  <rect x="350" y="100" width="180" height="80" fill="#667eea" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="440" y="145" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">PhoneNumber</text>
+
+  <!-- Top Right: Branch -->
+  <rect x="670" y="100" width="180" height="80" fill="#3b82f6" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="760" y="145" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Branch</text>
+
+  <!-- Right: Staff -->
+  <rect x="950" y="200" width="180" height="80" fill="#3b82f6" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="1040" y="245" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Staff</text>
+
+  <!-- Right: Service -->
+  <rect x="950" y="350" width="180" height="80" fill="#3b82f6" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="1040" y="395" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Service</text>
+
+  <!-- Right Bottom: Cal.com Team -->
+  <rect x="950" y="500" width="180" height="80" fill="#8b5cf6" stroke="#ffffff" stroke-width="2" rx="8"/>
+  <text x="1040" y="540" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Cal.com</text>
+  <text x="1040" y="560" font-family="Arial, sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" opacity="0.8">Team</text>
+
+  <!-- Bottom: Appointment -->
+  <rect x="500" y="620" width="200" height="100" fill="#f59e0b" stroke="#ffffff" stroke-width="3" rx="12"/>
+  <text x="600" y="665" font-family="Arial, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle" font-weight="bold">Appointment</text>
+  <text x="600" y="690" font-family="Arial, sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" opacity="0.8">Booking Entity</text>
+
+  <!-- Arrows -->
+  <!-- Call -> PhoneNumber -->
+  <line x1="280" y1="140" x2="340" y2="140" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="310" y="130" font-family="Arial, sans-serif" font-size="12" fill="#3b82f6" text-anchor="middle" font-weight="bold">phone_number_id</text>
+
+  <!-- PhoneNumber -> Company -->
+  <path d="M 440 180 Q 470 260 540 350" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+  <text x="460" y="260" font-family="Arial, sans-serif" font-size="12" fill="#10b981" font-weight="bold">company_id</text>
+
+  <!-- PhoneNumber -> Branch -->
+  <path d="M 530 140 Q 600 140 660 140" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrow-blue)"/>
+  <text x="590" y="130" font-family="Arial, sans-serif" font-size="12" fill="#3b82f6" text-anchor="middle" font-weight="bold">branch_id</text>
+
+  <!-- Branch -> Staff -->
+  <path d="M 850 180 Q 900 190 940 215" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrow-blue)"/>
+  <text x="890" y="180" font-family="Arial, sans-serif" font-size="12" fill="#3b82f6" font-weight="bold">has many</text>
+
+  <!-- Branch -> Service -->
+  <path d="M 850 140 Q 900 245 940 365" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrow-blue)"/>
+  <text x="890" y="260" font-family="Arial, sans-serif" font-size="12" fill="#3b82f6" font-weight="bold">has many</text>
+
+  <!-- Branch -> Cal.com -->
+  <path d="M 850 140 Q 900 320 940 525" stroke="#8b5cf6" stroke-width="3" fill="none" marker-end="url(#arrow-blue)" stroke-dasharray="5,5"/>
+  <text x="890" y="340" font-family="Arial, sans-serif" font-size="12" fill="#8b5cf6" font-weight="bold">maps to</text>
+
+  <!-- Appointment -> Company -->
+  <path d="M 590 620 Q 590 480 590 450" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+  <text x="550" y="540" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" font-weight="bold">belongs to</text>
+
+  <!-- Appointment -> Branch -->
+  <path d="M 690 650 Q 780 500 760 180" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+  <text x="750" y="420" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" font-weight="bold">belongs to</text>
+
+  <!-- Appointment -> Staff -->
+  <path d="M 700 650 Q 900 550 940 270" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+  <text x="820" y="470" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" font-weight="bold">belongs to</text>
+
+  <!-- Appointment -> Service -->
+  <path d="M 700 670 Q 850 580 940 410" stroke="#f59e0b" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+  <text x="820" y="550" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" font-weight="bold">belongs to</text>
+
+  <!-- Legend -->
+  <rect x="50" y="650" width="350" height="100" fill="#1a1a2e" stroke="#667eea" stroke-width="2" rx="8"/>
+  <text x="225" y="675" font-family="Arial, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="bold">Legende</text>
+
+  <line x1="70" y1="700" x2="120" y2="700" stroke="#10b981" stroke-width="3" marker-end="url(#arrow-green)"/>
+  <text x="130" y="705" font-family="Arial, sans-serif" font-size="13" fill="#10b981">Company Relations</text>
+
+  <line x1="70" y1="725" x2="120" y2="725" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="130" y="730" font-family="Arial, sans-serif" font-size="13" fill="#3b82f6">Branch Relations</text>
+
+  <line x1="250" y1="700" x2="300" y2="700" stroke="#f59e0b" stroke-width="3" marker-end="url(#arrow-orange)"/>
+  <text x="310" y="705" font-family="Arial, sans-serif" font-size="13" fill="#f59e0b">Appointment Relations</text>
+
+  <line x1="250" y1="725" x2="300" y2="725" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="5,5"/>
+  <text x="310" y="730" font-family="Arial, sans-serif" font-size="13" fill="#8b5cf6">External Mapping</text>
+</svg>

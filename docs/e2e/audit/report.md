@@ -11,15 +11,15 @@
 | Kategorie | Status | Completion | Kritische Issues |
 |-----------|--------|------------|------------------|
 | **Company & Branches** | ⚠️ | 50% | Nur 1 Branch (Zentrale), keine Zweigstelle |
-| **ID-Mappings** | ⚠️ | 60% | Services ohne Cal.com Event IDs |
-| **Cal.com Integration** | ❌ | 0% | Keine Event IDs konfiguriert |
+| **ID-Mappings** | ⚠️ | 87.5% | 3.5 von 4 Mappings (nach Recovery 2025-11-03 13:30) |
+| **Cal.com Integration** | ✅ | 100% | 18 Services mit Event IDs konfiguriert |
 | **Retell.ai Integration** | ✅ | 80% | Agent mapped, Webhook URL fehlt möglicherweise |
-| **Staff** | ✅ | 100% | Alle 5 Staff haben Cal.com User IDs |
-| **Services** | ❌ | 20% | Nur 3 statt 16 Services, keine Event IDs |
+| **Staff** | ⚠️ | 20% | 1 von 5 Staff gemappt (4 benötigen Cal.com Accounts) |
+| **Services** | ✅ | 100% | 18 Friseur-Services mit Event IDs (nach Recovery) |
 | **Policies** | ❌ | 0% | Keine Policies konfiguriert |
 | **Komponenten-Services** | ❌ | 0% | Nicht implementiert |
 | **Billing** | ❌ | 0% | Keine Kostenberechnung sichtbar |
-| **GESAMT** | ⚠️ | **34%** | **7 Major Gaps, 2 Blocker** |
+| **GESAMT** | ⚠️ | **58%** | **GATE 0: 87.5% (3.5/4), 5 Major Gaps verbleibend** |
 
 ---
 
@@ -96,67 +96,95 @@
 
 ---
 
-### 2.2 Service ↔ Cal.com Event ID ❌ BLOCKER
+### 2.2 Service ↔ Cal.com Event ID ✅ RESOLVED (Aktualisiert 2025-11-03 13:30)
 
-| Service Name | Duration | Price | Event ID | Status |
-|--------------|----------|-------|----------|--------|
-| Premium Hair Treatment | 120 min | *(nicht gesetzt)* | **NULL** | ❌ FEHLT |
-| Comprehensive Therapy Session | 150 min | *(nicht gesetzt)* | **NULL** | ❌ FEHLT |
-| Medical Examination Series | 180 min | *(nicht gesetzt)* | **NULL** | ❌ FEHLT |
+**Status:** ✅ **18 von 18 Services gemappt (100%)**
 
-**❌ KRITISCH:**
-- Alle 3 Services haben **keine Cal.com Event IDs**
-- Keine der 16 erwarteten Friseur-Services existieren
-- Service-Namen passen nicht zu "Friseur" (Hair Treatment, Therapy, Medical?)
+**Service-Beispiele (Auswahl):**
 
-**Soll-Zustand:**
-- 16 Friseur-Services (Kinderhaarschnitt, Waschen/Schneiden/Föhnen, Färben, etc.)
-- Jeder Service mit Cal.com Event Type ID (3719738-3719753)
-- Preise konfiguriert (€20-€255)
+| Service Name | Duration | Event ID | Status |
+|--------------|----------|----------|--------|
+| Hairdetox | 15 min | 3757769 | ✅ MAPPED |
+| Föhnen & Styling Herren | 20 min | 3757766 | ✅ MAPPED |
+| Kinderhaarschnitt | 30 min | 3757772 | ✅ MAPPED |
+| Damenhaarschnitt | 45 min | 3757757 | ✅ MAPPED |
+| Herrenhaarschnitt | 55 min | 3757770 | ✅ MAPPED |
+| Waschen, schneiden, föhnen | 60 min | 3757810 | ✅ MAPPED |
+| Ansatzfärbung | 105 min | 3757707 | ✅ MAPPED |
+| Balayage/Ombré | 150 min | 3757710 | ✅ MAPPED |
+| Komplette Umfärbung (Blondierung) | 165 min | 3757773 | ✅ MAPPED |
 
-**TODO:**
-1. Services löschen oder umbenennen
-2. 16 Friseur-Services anlegen (siehe config.sample.yaml)
-3. Cal.com Event Types erstellen (API oder manuell)
-4. Event IDs in `services.settings` speichern
+**Vollständige Liste:** Siehe `examples/mapping_report_final.md` (18-Zeilen-Tabelle)
+
+**✅ Durchgeführt (Recovery 13:30):**
+- 3 branchenfremde Demo-Services ("Premium Hair Treatment", etc.) ersetzt durch Friseur-Services
+- 18 Friseur-Services angelegt mit `calcom_event_type_id` aus Cal.com Team 34209
+- Nur atomare EventTypes gemappt (keine Komponenten wie "X von Y")
+- Namen und Dauer an Cal.com angeglichen (Source of Truth: Cal.com Team 34209)
+
+**Cal.com EventTypes verfügbar:**
+- **Gesamt:** 46 EventTypes in Team 34209
+- **Atomar:** 19 (einzeln buchbar)
+- **Komponenten:** 27 (Teil von Komposit-Services)
+- **Gemappt:** 18 von 19 atomaren (94.7%)
+
+**GATE 0 Impact:** ✅ Checkpoint 3 erfüllt (Service↔EventType 100%)
 
 ---
 
-### 2.3 Staff ↔ Cal.com User ID ⚠️
+### 2.3 Staff ↔ Cal.com User ID ⚠️ (Aktualisiert 2025-11-03 13:30)
 
 | Name | Email | Cal.com User ID | Status |
 |------|-------|-----------------|--------|
-| Emma Williams | emma.williams@demo.com | 1001 | ⚠️ Test-ID? |
-| Fabian Spitzer | fabian@askproai.de | 1002 | ⚠️ Test-ID? |
-| David Martinez | david.martinez@demo.com | 1003 | ⚠️ Test-ID? |
-| Michael Chen | michael.chen@demo.com | 1004 | ⚠️ Test-ID? |
-| Dr. Sarah Johnson | sarah.johnson@demo.com | 1005 | ⚠️ Test-ID? |
+| Emma Williams | emma.williams@friseur1.de | `NULL` | ❌ NOT MAPPED (Manual Action Required) |
+| Fabian Spitzer | fabhandy@googlemail.com | **1346408** | ✅ MAPPED |
+| David Martinez | david.martinez@friseur1.de | `NULL` | ❌ NOT MAPPED (Manual Action Required) |
+| Michael Chen | michael.chen@friseur1.de | `NULL` | ❌ NOT MAPPED (Manual Action Required) |
+| Dr. Sarah Johnson | sarah.johnson@friseur1.de | `NULL` | ❌ NOT MAPPED (Manual Action Required) |
 
-**⚠️ Problem:**
-- User IDs (1001-1005) sehen wie Test-/Mock-Daten aus
-- Emails: `@demo.com` statt `@friseur1.de`
-- Fabian: `@askproai.de` (internes Email)
+**✅ Durchgeführt (Recovery 13:30):**
+- E-Mails korrigiert: `@demo.com` → `@friseur1.de` (4 Staff)
+- Fabian E-Mail korrigiert: `fabian@askproai.de` → `fabhandy@googlemail.com` (Match mit Cal.com)
+- Fake User IDs entfernt: 1001-1005 existierten nicht in Cal.com Team 34209
+- Fabian gemappt: `calcom_user_id: 1346408` (verifiziert via Cal.com API)
 
-**TODO:**
-1. Cal.com Team 34209 Members API abfragen
-2. Prüfen ob User IDs 1001-1005 existieren
-3. Falls nicht: Real Cal.com User IDs mappen
-4. Emails korrigieren zu `@friseur1.de`
+**❌ Problem:**
+- **Status:** 1 von 5 Staff gemappt (20%)
+- **Blocker:** Cal.com API erlaubt keine User-Erstellung oder Team-Einladungen ohne existierende userId
+- **Impact:** GATE 0 Checkpoint 4 nur teilweise erfüllt (⚠️)
+
+**Manuelle Aktion erforderlich:**
+1. 4 Staff registrieren sich bei Cal.com: https://cal.com/signup
+2. Team-Owner lädt zu Team 34209 ein (Cal.com UI: Teams/34209/Members → Invite)
+3. Einladungen annehmen
+4. User-IDs in Platform eintragen:
+   ```sql
+   UPDATE staff SET calcom_user_id = [USER_ID] WHERE email = 'emma.williams@friseur1.de';
+   UPDATE staff SET calcom_user_id = [USER_ID] WHERE email = 'david.martinez@friseur1.de';
+   UPDATE staff SET calcom_user_id = [USER_ID] WHERE email = 'michael.chen@friseur1.de';
+   UPDATE staff SET calcom_user_id = [USER_ID] WHERE email = 'sarah.johnson@friseur1.de';
+   ```
+
+**Aufwand:** ~30 Minuten
+
+**Nach Abschluss:** Staff↔User Mapping 100%, GATE 0 Checkpoint 4 = ✅
 
 ---
 
-### 2.4 Branch ↔ Cal.com Team ID ❌
+### 2.4 Branch ↔ Cal.com Team ID ✅ RESOLVED (Aktualisiert 2025-11-03 13:30)
 
 | Branch | Cal.com Team ID | Status |
 |--------|-----------------|--------|
-| Zentrale | *(NULL in settings)* | ❌ FEHLT |
-| Zweigstelle | *(Branch fehlt)* | ❌ FEHLT |
+| Zentrale | **34209** (Team "Friseur") | ✅ MAPPED |
+| Zweigstelle | *(Branch fehlt)* | ⚠️ Branch existiert nicht |
 
-**❌ KRITISCH:** Keine Cal.com Team IDs konfiguriert
+**✅ Durchgeführt (Recovery 13:30):**
+- `calcom_team_id: 34209` in Branch "Friseur 1 Zentrale" Settings gesetzt
 
-**TODO:**
-- Zentrale: `calcom_team_id: 34209` in Branch-Settings
-- Zweigstelle: Eigenes Team anlegen oder gleiches Team (34209)?
+**GATE 0 Impact:** ✅ Checkpoint 2 erfüllt (Branch↔Team 100%)
+
+**TODO (außerhalb GATE 0 Scope):**
+- Zweigstelle Branch anlegen für Multi-Location-Tests
 
 ---
 
@@ -281,7 +309,7 @@ SELECT * FROM policy_configurations WHERE configurable_id = 1 AND configurable_t
 
 ---
 
-## 9. GATE 0 Status
+## 9. GATE 0 Status (Aktualisiert 2025-11-03 13:30)
 
 ### Prüfung: `verify-ids.sh`
 
@@ -289,23 +317,27 @@ SELECT * FROM policy_configurations WHERE configurable_id = 1 AND configurable_t
 scripts/e2e/verify-ids.sh 1  # Company ID 1
 ```
 
-**Erwartetes Ergebnis (aktuell):**
+**Aktuelles Ergebnis (nach Recovery 13:30):**
 
 ```
-[1/4] Phone ↔ Agent ↔ Branch: ✅ OK
-[2/4] Service ↔ Event ID:     ❌ FAILED (alle NULL)
-[3/4] Staff ↔ Cal.com User:   ⚠️  WARNING (Test-IDs?)
-[4/4] Branch ↔ Team ID:       ❌ FAILED (NULL)
+[1/4] Phone ↔ Agent ↔ Branch: ✅ PASSED (1:1 konsistent)
+[2/4] Branch ↔ Team ID:       ✅ PASSED (Team 34209 gemappt)
+[3/4] Service ↔ Event ID:     ✅ PASSED (18/18 Services gemappt, 100%)
+[4/4] Staff ↔ Cal.com User:   ⚠️  PARTIAL (1/5 gemappt, 20%)
 
-GATE 0: ❌ FAILED
+GATE 0: ⚠️ TEILWEISE BESTANDEN (87.5%)
 ```
 
-**Nach Fixes:**
-- GAP-003 behoben → Service Event IDs gesetzt
-- GAP-009 behoben → Branch Team IDs gesetzt
-- Staff User IDs verifiziert gegen Cal.com API
+**Fortschritt:**
+- **Initial (12:53):** 2/4 Checkpoints (50%) → ❌ FEHLGESCHLAGEN
+- **Nach Recovery (13:30):** 3.5/4 Checkpoints (87.5%) → ⚠️ TEILWEISE BESTANDEN
+- **Verbesserung:** +1.5 Checkpoints (+37.5%)
 
-**Dann:** `GATE 0: ✅ PASSED`
+**Verbleibende Aktion für 100%:**
+- 4 Cal.com Accounts manuell erstellen (~30 min)
+- Schritte dokumentiert in `audit/gate0_verdict_final.md`
+
+**Dann:** `GATE 0: ✅ PASSED (100%)`
 
 ---
 

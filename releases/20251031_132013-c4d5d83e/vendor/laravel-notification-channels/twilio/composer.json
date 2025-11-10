@@ -1,0 +1,76 @@
+{
+    "name": "laravel-notification-channels/twilio",
+    "description": "Provides Twilio notification channel for Laravel",
+    "keywords": [
+        "laravel",
+        "twilio",
+        "notification",
+        "sms",
+        "call",
+        "mms"
+    ],
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/laravel-notification-channels/twilio/issues",
+        "source": "https://github.com/laravel-notification-channels/twilio"
+    },
+    "authors": [
+        {
+            "name": "Philip Iezzi",
+            "email": "pipo@onlime.ch",
+            "homepage": "https://github.com/onlime",
+            "role": "Developer"
+        },
+        {
+            "name": "Gregorio Hernández Caso",
+            "email": "gregoriohc@gmail.com",
+            "homepage": "https://github.com/gregoriohc",
+            "role": "Developer"
+        },
+        {
+            "name": "atymic",
+            "email": "atymicq@gmail.com",
+            "homepage": "https://atymic.dev",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "twilio/sdk": "^7.16 || ^8.3",
+        "illuminate/notifications": "^11.0 || ^12.0",
+        "illuminate/support": "^11.0 || ^12.0",
+        "illuminate/events": "^11.0 || ^12.0",
+        "illuminate/queue": "^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.21",
+        "mockery/mockery": "^1.0",
+        "orchestra/testbench": "^9.0 || ^10.0",
+        "phpunit/phpunit": "^10.5 || ^11.5.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "NotificationChannels\\Twilio\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NotificationChannels\\Twilio\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test:unit": "phpunit --testsuite Unit",
+        "test:integration": "phpunit --testsuite Integration"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NotificationChannels\\Twilio\\TwilioProvider"
+            ]
+        }
+    }
+}

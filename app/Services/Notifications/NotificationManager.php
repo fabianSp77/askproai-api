@@ -1138,4 +1138,49 @@ class NotificationManager
             options: ['immediate' => true]
         );
     }
+
+    /**
+     * Send appointment rescheduled notification to customer
+     * ADR-005: Part of branch notification system
+     */
+    public function sendAppointmentRescheduled($customer, array $appointmentData, string $channel = 'email'): array
+    {
+        return $this->send(
+            notifiable: $customer,
+            type: 'appointment_rescheduled',
+            data: $appointmentData,
+            channels: [$channel],
+            options: ['immediate' => true]
+        );
+    }
+
+    /**
+     * Notify staff member of appointment reschedule
+     * ADR-005: Part of branch notification system
+     */
+    public function notifyStaffOfReschedule($staff, array $appointmentData): array
+    {
+        return $this->send(
+            notifiable: $staff,
+            type: 'staff_appointment_rescheduled',
+            data: $appointmentData,
+            channels: ['email'],
+            options: ['immediate' => true]
+        );
+    }
+
+    /**
+     * Notify manager of appointment reschedule
+     * ADR-005: Part of branch notification system
+     */
+    public function notifyManagerOfReschedule($manager, array $appointmentData): array
+    {
+        return $this->send(
+            notifiable: $manager,
+            type: 'manager_appointment_rescheduled',
+            data: $appointmentData,
+            channels: ['email'],
+            options: ['immediate' => true]
+        );
+    }
 }

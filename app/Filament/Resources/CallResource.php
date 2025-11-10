@@ -1031,6 +1031,26 @@ class CallResource extends Resource
                                     ])
                                     ->columnSpanFull(),
 
+                                // System Performance - Real durations between systems
+                                Grid::make(1)
+                                    ->extraAttributes(['class' => '!max-w-full w-full'])
+                                    ->schema([
+                                        InfoSection::make('System Performance')
+                                            ->icon('heroicon-m-bolt')
+                                            ->description('Echte Zeitdauern zwischen den Systemen')
+                                            ->extraAttributes(['class' => '!max-w-full w-full'])
+                                            ->schema([
+                                                TextEntry::make('system_duration_breakdown')
+                                                    ->label('Verarbeitungszeiten')
+                                                    ->html()
+                                                    ->placeholder('Keine Daten verfügbar')
+                                                    ->columnSpanFull(),
+                                            ])
+                                            ->collapsed(false)
+                                            ->visible(fn ($record) => $record->system_duration_breakdown !== null),
+                                    ])
+                                    ->columnSpanFull(),
+
                                 // Termin Details - Promoted to full width for prominence (Grid-wrapped + CSS Override)
                                 Grid::make(1)
                                     ->extraAttributes(['class' => '!max-w-full w-full'])

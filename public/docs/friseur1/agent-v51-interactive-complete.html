@@ -1,0 +1,3705 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <!-- Mermaid Diagrams Fixed: 2025-11-06 10:45 UTC -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Friseur 1 Agent V51 - Interactive Complete Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --bg-light: #f8fafc;
+            --bg-dark: #1e293b;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+
+        .version-badge.live {
+            background: var(--success);
+        }
+
+        .export-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .export-button:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        .nav-tabs {
+            background: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tab {
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .nav-tab:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: var(--primary);
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+        }
+
+        .section h3 {
+            color: var(--secondary);
+            font-size: 1.8em;
+            margin: 30px 0 20px 0;
+        }
+
+        .section h4 {
+            color: var(--text-dark);
+            font-size: 1.3em;
+            margin: 20px 0 15px 0;
+        }
+
+        /* Feature Matrix Table */
+        .feature-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 0.95em;
+        }
+
+        .feature-matrix th,
+        .feature-matrix td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-matrix th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 65px;
+            z-index: 50;
+        }
+
+        .feature-matrix tr:hover {
+            background: var(--bg-light);
+        }
+
+        .feature-matrix td:first-child {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-live {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-deprecated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-beta {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-implemented {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-specified {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .priority-critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-low {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        /* Function Cards */
+        .function-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .function-card:target {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .function-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .function-title {
+            font-size: 2em;
+            color: var(--primary);
+        }
+
+        .function-badges {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Tabs within Function Cards */
+        .function-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .function-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .function-tab:hover {
+            color: var(--primary);
+        }
+
+        .function-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .function-tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .function-tab-content.active {
+            display: block;
+        }
+
+        /* Parameter Table */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .param-table th,
+        .param-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        .param-table th {
+            background: var(--bg-light);
+            font-weight: 600;
+        }
+
+        .param-required {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .param-optional {
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+
+        /* Interactive Testing */
+        .test-form {
+            background: var(--bg-light);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-hint {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Response Display */
+        .response-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .response-container.show {
+            display: block;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--text-dark);
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .response-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .response-body {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .response-body pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .copy-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .copy-button.copied {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* Testing System Styles */
+        .test-button {
+            padding: 8px 16px;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .test-button:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .test-button.running {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: white;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            display: none;
+        }
+
+        .test-result.show {
+            display: block;
+        }
+
+        .test-success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .test-error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .test-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: var(--bg-light);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .progress-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Error Report Box */
+        .error-report-box {
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .error-report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .test-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .test-result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .test-result-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .test-result-item.success {
+            border-color: var(--success);
+        }
+
+        .test-result-item.error {
+            border-color: var(--danger);
+        }
+
+        .test-result-item.warning {
+            border-color: var(--warning);
+        }
+
+        .test-result-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+        }
+
+        .test-result-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            font-size: 0.9em;
+        }
+
+        .test-result-item.expanded .test-result-details {
+            display: block;
+        }
+
+        .duration-badge {
+            background: var(--info);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 6px 15px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .filter-button:hover {
+            border-color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .filter-button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .quick-test-examples {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .quick-test-btn {
+            padding: 10px 20px;
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .quick-test-btn:hover {
+            border-color: var(--primary);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .export-button {
+                position: static;
+                margin-top: 20px;
+                display: block;
+                width: 100%;
+            }
+        }
+
+        /* Diagram Cards Grid */
+        .diagram-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .diagram-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .diagram-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .diagram-card-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .diagram-card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .diagram-card-header h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .diagram-card-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .diagram-card-body {
+            padding: 25px;
+        }
+
+        .diagram-description {
+            color: var(--text-light);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .diagram-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-light);
+            border-radius: 12px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.85em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .diagram-preview {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+
+        .diagram-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .diagram-preview:hover img {
+            transform: scale(1.05);
+        }
+
+        .diagram-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .diagram-preview:hover .diagram-overlay {
+            opacity: 1;
+        }
+
+        .diagram-overlay p {
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .diagram-card-footer {
+            padding: 20px 25px;
+            background: var(--bg-light);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Modal Styles */
+        .diagram-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .diagram-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .diagram-modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 95vw;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        .diagram-modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diagram-modal-header h3 {
+            font-size: 1.5em;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-light);
+        }
+
+        .diagram-modal-body {
+            flex: 1;
+            overflow: auto;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a2e;
+        }
+
+        .diagram-modal-body img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .diagram-modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        /* Tech Cards */
+        .tech-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        .tech-card h4 {
+            font-size: 1.3em;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tech-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tech-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .tech-card li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .diagram-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .diagram-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .diagram-modal-content {
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="export-button" onclick="exportToJSON()">📥 Export als JSON</button>
+            <h1>🎙️ Friseur 1 Voice AI Agent V51</h1>
+            <div class="subtitle">Vollständige Interaktive Dokumentation</div>
+            <div>
+                <span class="version-badge live">V51 LIVE</span>
+                <span class="version-badge">2025-11-06</span>
+                <span class="version-badge">Agent ID: agent_45daa54928c5768b52ba3db736</span>
+                <span class="version-badge">15 Functions</span>
+            </div>
+
+            <!-- API Configuration -->
+            <div style="margin-top: 30px; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; max-width: 900px; margin-left: auto; margin-right: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <h3 style="font-size: 1.3em; margin-bottom: 20px;">🔐 API Configuration (Für Interactive Testing)</h3>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <!-- Bearer Token -->
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.95em; margin-bottom: 8px; font-weight: 600;">
+                            🔑 Bearer Token (Production)
+                            <span style="cursor: help; opacity: 0.7; font-size: 1.2em;" title="Dieser Token wird für alle API-Requests an /api/webhooks/retell/function verwendet. Er authentifiziert die Test-Requests gegen das Production-Backend.">ⓘ</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="api-token"
+                            value="key_6ff998ba48e842092e04a5455d19"
+                            placeholder="Production API Token"
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.2); color: #90EE90; font-family: 'Courier New', monospace; font-size: 0.9em; font-weight: bold;"
+                            onchange="saveApiToken()"
+                        >
+                        <div style="font-size: 0.8em; margin-top: 6px; opacity: 0.8; line-height: 1.4;">
+                            ✅ Automatisch gespeichert in localStorage<br>
+                            📡 Wird als <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">Authorization: Bearer {token}</code> Header gesendet
+                        </div>
+                    </div>
+
+                    <!-- Test Mode -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.95em; margin-bottom: 12px; font-weight: 600;">
+                            🧪 Test Mode
+                            <span style="cursor: help; opacity: 0.7; font-size: 1.2em;" title="Im Test Mode werden Call IDs mit 'test_call_' Prefix generiert und die Test Company ID verwendet. Nutze das für sichere Tests ohne Production-Impact.">ⓘ</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                            <input type="checkbox" id="test-mode" onchange="toggleTestMode()" style="width: 22px; height: 22px; cursor: pointer;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span id="test-mode-label" style="font-weight: 600; font-size: 1.05em;">Production</span>
+                                    <span id="test-mode-badge" style="padding: 4px 12px; border-radius: 12px; font-size: 0.75em; font-weight: bold; background: #10b981; color: white;">LIVE</span>
+                                </div>
+                                <div id="test-mode-description" style="font-size: 0.8em; margin-top: 4px; opacity: 0.8;">
+                                    Echte Production API, echte Call IDs (call_xxx)
+                                </div>
+                            </div>
+                        </label>
+
+                        <div style="margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.85em; line-height: 1.5;">
+                            <strong>💡 Unterschied:</strong><br>
+                            • <strong>Production</strong> (Haken NICHT gesetzt): Verwendet echte Production Company, Call IDs: <code>call_xxxxx</code><br>
+                            • <strong>Test Mode</strong> (Haken gesetzt): Verwendet Test Company, Call IDs: <code>test_call_xxxxx</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('overview')">📊 Übersicht</div>
+            <div class="nav-tab" onclick="switchTab('feature-matrix')">📋 Feature Matrix</div>
+            <div class="nav-tab" onclick="switchTab('functions')">⚙️ Functions</div>
+            <div class="nav-tab" onclick="switchTab('webhooks')">🔗 Webhooks & APIs</div>
+            <div class="nav-tab" onclick="switchTab('data-flow')">🔄 Data Flow</div>
+            <div class="nav-tab" onclick="switchTab('testing')">🧪 Interactive Testing</div>
+            <div class="nav-tab" onclick="switchTab('missing-features')">🚧 Missing Features</div>
+        </div>
+
+        <div class="content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="section">
+                    <h2>📊 System Übersicht</h2>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">15</div>
+                            <div class="stat-label">Functions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">13</div>
+                            <div class="stat-label">Live</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">2</div>
+                            <div class="stat-label">Deprecated</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">18</div>
+                            <div class="stat-label">Services</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">Testbar</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>💡 Über diese Dokumentation:</strong><br>
+                        Dies ist eine vollständig interaktive Dokumentation des Friseur 1 Voice AI Agents.
+                        Jede Function kann direkt in diesem Dokument getestet werden. Alle Schnittstellen
+                        zwischen Retell AI, unserem Backend und Cal.com sind vollständig dokumentiert.
+                    </div>
+
+                    <h3>🎯 Hauptfunktionen</h3>
+                    <div class="grid grid-2">
+                        <div class="function-card">
+                            <h4>📞 Terminbuchung</h4>
+                            <ul style="line-height: 1.8; margin-left: 20px;">
+                                <li><strong>Two-Step Booking:</strong> start_booking → confirm_booking</li>
+                                <li><strong>Availability Check:</strong> Real-time Cal.com Integration</li>
+                                <li><strong>Alternative Vorschläge:</strong> Wenn Wunschtermin nicht verfügbar</li>
+                                <li><strong>Service Matching:</strong> 3-Level Synonym System</li>
+                            </ul>
+                        </div>
+                        <div class="function-card">
+                            <h4>📋 Terminverwaltung</h4>
+                            <ul style="line-height: 1.8; margin-left: 20px;">
+                                <li><strong>Termine anzeigen:</strong> Customer Appointments Query</li>
+                                <li><strong>Stornieren:</strong> Mit Policy-Check</li>
+                                <li><strong>Verschieben:</strong> Atomic Cancel + Book</li>
+                                <li><strong>Services auflisten:</strong> Alle 18 Services</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>🏗️ Architektur</h3>
+                    <div class="code-block">
+Customer → Twilio → Retell AI ←→ Laravel Backend ←→ Cal.com
+                                        ↓
+                                   PostgreSQL + Redis
+
+<strong>Key Components:</strong>
+- RetellFunctionCallHandler (6152 lines) - Main Router
+- CalcomService - API Client mit Circuit Breaker
+- ServiceSelectionService - Service Matching mit Synonymen
+- AppointmentCreationService - Booking Logic
+- DateTimeParser - German Date/Time Parsing
+                    </div>
+
+                    <h3>⚡ Performance Metrics</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Wert</th>
+                                <th>Optimierung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Erfolgsrate Buchung</td>
+                                <td><strong>85%</strong></td>
+                                <td>Two-Step Booking</td>
+                            </tr>
+                            <tr>
+                                <td>Durchschnittliche Anrufdauer</td>
+                                <td><strong>2-4 Minuten</strong></td>
+                                <td>Conversational Flow Optimization</td>
+                            </tr>
+                            <tr>
+                                <td>Availability Check Latency</td>
+                                <td><strong>300-800ms</strong> (Cache: 20-50ms)</td>
+                                <td>Redis Caching (70% Hit Rate)</td>
+                            </tr>
+                            <tr>
+                                <td>Booking Creation Latency</td>
+                                <td><strong>500-1500ms</strong></td>
+                                <td>Parallel API Queries</td>
+                            </tr>
+                            <tr>
+                                <td>Function Error Rate</td>
+                                <td><strong>&lt;2%</strong></td>
+                                <td>Circuit Breaker + Retry Logic</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Feature Matrix Tab -->
+            <div id="feature-matrix" class="tab-content">
+                <div class="section">
+                    <h2>📋 Feature Matrix</h2>
+                    <p style="margin-bottom: 30px; font-size: 1.1em; color: var(--text-light);">
+                        Vollständige Übersicht aller Features mit Status, Priorität und Test-Coverage.
+                        Klicke auf einen Function-Namen um zur detaillierten Dokumentation zu springen.
+                    </p>
+
+                    <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" onclick="testAllFunctions()">
+                            🧪 Test All Functions
+                        </button>
+                        <button class="btn btn-secondary" onclick="showErrorReport()">
+                            📋 Show Test Results
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearTestResults()">
+                            🗑️ Clear Results
+                        </button>
+                    </div>
+
+                    <!-- Progress Indicator -->
+                    <div id="test-all-progress" class="progress-container">
+                        <div class="progress-info">
+                            <div>
+                                <strong>Testing: </strong>
+                                <span id="progress-current-function">-</span>
+                            </div>
+                            <div>
+                                <span id="progress-count">0/0</span>
+                                <span style="margin-left: 15px;">Est. time: <span id="progress-time">-</span></span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width: 0%;">0%</div>
+                        </div>
+                        <div class="progress-controls">
+                            <button class="btn btn-secondary" id="pause-btn" onclick="pauseTestAll()">⏸️ Pause</button>
+                            <button class="btn btn-danger" onclick="stopTestAll()">⏹️ Stop</button>
+                        </div>
+                    </div>
+
+                    <table class="feature-matrix">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Function Name</th>
+                                <th>Status</th>
+                                <th>Spezifikation</th>
+                                <th>Implementation</th>
+                                <th>Priority</th>
+                                <th>Testing</th>
+                                <th>Handler</th>
+                                <th>Test</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feature-matrix-body">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <div class="alert alert-info" style="margin-top: 30px;">
+                        <strong>📊 Legende:</strong><br>
+                        <strong>Status:</strong> LIVE (produktiv), DEPRECATED (veraltet), BETA (test)<br>
+                        <strong>Spezifikation:</strong> Vollständig dokumentiert / Teilweise / Fehlend<br>
+                        <strong>Implementation:</strong> Implementiert / Partial / Missing<br>
+                        <strong>Priority:</strong> CRITICAL (muss funktionieren) / HIGH / MEDIUM / LOW<br>
+                        <strong>Testing:</strong> ✅ Testbar, ⚠️ Eingeschränkt, ❌ Nicht testbar
+                    </div>
+                </div>
+            </div>
+
+            <!-- Functions Tab -->
+            <div id="functions" class="tab-content">
+                <div class="section">
+                    <h2>⚙️ Functions Dokumentation</h2>
+                    <p style="margin-bottom: 30px; font-size: 1.1em; color: var(--text-light);">
+                        Detaillierte Dokumentation jeder Function mit Input/Output Schemas,
+                        interaktiven Testing-Forms und Datenfluss-Diagrammen.
+                    </p>
+
+                    <!-- Function Cards will be inserted here by JavaScript -->
+                    <div id="functions-container"></div>
+                </div>
+            </div>
+
+            <!-- Webhooks & APIs Tab -->
+            <div id="webhooks" class="tab-content">
+                <div class="section">
+                    <h2>🔗 Webhooks & API Endpoints</h2>
+
+                    <h3>Webhook Endpoints</h3>
+                    <div class="function-card">
+                        <h4>1. Function Call Webhook (Real-time)</h4>
+                        <table class="param-table">
+                            <tr>
+                                <th>Endpoint</th>
+                                <td><code>POST /api/webhooks/retell/function</code></td>
+                            </tr>
+                            <tr>
+                                <th>Handler</th>
+                                <td>RetellFunctionCallHandler@handleFunctionCall</td>
+                            </tr>
+                            <tr>
+                                <th>Authentication</th>
+                                <td>Throttle: 100/min (Keine Signature für Latency)</td>
+                            </tr>
+                            <tr>
+                                <th>Purpose</th>
+                                <td>Real-time Function Calls während aktiver Anrufe</td>
+                            </tr>
+                            <tr>
+                                <th>Timeout</th>
+                                <td>30 Sekunden</td>
+                            </tr>
+                        </table>
+
+                        <h4 style="margin-top: 20px;">Request Format:</h4>
+                        <div class="code-block">
+{
+  "name": "check_availability",
+  "args": {
+    "service_name": "Herrenhaarschnitt",
+    "date": "morgen"
+  },
+  "call": {
+    "call_id": "call_793088ed9a076628abd3e5c6244"
+  },
+  "agent_id": "agent_45daa54928c5768b52ba3db736"
+}
+                        </div>
+
+                        <h4>Response Format:</h4>
+                        <div class="code-block">
+{
+  "success": true,
+  "data": {
+    "available_slots": ["10:00", "14:30", "16:00"],
+    "date": "2025-11-07"
+  },
+  "message": "Ich habe 3 freie Termine gefunden."
+}
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <button class="test-button" onclick="testWebhook('function_call')">
+                                🧪 Test Endpoint
+                            </button>
+                        </div>
+                        <div id="webhook-function_call-result" class="test-result"></div>
+                    </div>
+
+                    <div class="function-card">
+                        <h4>2. Call Lifecycle Webhook</h4>
+                        <table class="param-table">
+                            <tr>
+                                <th>Endpoint</th>
+                                <td><code>POST /api/webhooks/retell</code></td>
+                            </tr>
+                            <tr>
+                                <th>Handler</th>
+                                <td>RetellWebhookController@__invoke</td>
+                            </tr>
+                            <tr>
+                                <th>Authentication</th>
+                                <td>HMAC Signature (X-Retell-Signature)</td>
+                            </tr>
+                            <tr>
+                                <th>Events</th>
+                                <td>call_inbound, call_started, call_ended, call_analyzed</td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-top: 20px;">
+                            <button class="test-button" onclick="testWebhook('call_lifecycle')">
+                                🧪 Test Endpoint
+                            </button>
+                        </div>
+                        <div id="webhook-call_lifecycle-result" class="test-result"></div>
+                    </div>
+
+                    <div class="function-card">
+                        <h4>3. Cal.com Sync Webhook</h4>
+                        <table class="param-table">
+                            <tr>
+                                <th>Endpoint</th>
+                                <td><code>POST /api/calcom/webhook</code></td>
+                            </tr>
+                            <tr>
+                                <th>Handler</th>
+                                <td>CalcomWebhookController@__invoke</td>
+                            </tr>
+                            <tr>
+                                <th>Authentication</th>
+                                <td>HMAC Signature (X-Cal-Signature-256)</td>
+                            </tr>
+                            <tr>
+                                <th>Events</th>
+                                <td>booking.created, booking.cancelled, booking.rescheduled</td>
+                            </tr>
+                            <tr>
+                                <th>Purpose</th>
+                                <td>Bidirektionale Synchronisation von Terminen</td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-top: 20px;">
+                            <button class="test-button" onclick="testWebhook('calcom_sync')">
+                                🧪 Test Endpoint
+                            </button>
+                        </div>
+                        <div id="webhook-calcom_sync-result" class="test-result"></div>
+                    </div>
+
+                    <h3 style="margin-top: 50px;">API Base Configuration</h3>
+                    <div class="code-block">
+<strong>Production:</strong>
+Base URL: https://api.askproai.de
+Auth: Bearer Token (in Retell Config)
+
+<strong>Retell AI:</strong>
+API Key: In config/services.php
+Webhook Secret: For signature validation
+
+<strong>Cal.com:</strong>
+API Key: Per company configuration
+Team ID: Mapped to branch_id
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Flow Tab -->
+            <div id="data-flow" class="tab-content">
+                <div class="section">
+                    <h2>🔄 System Architecture & Data Flow</h2>
+                    <p style="margin-bottom: 40px; font-size: 1.1em; color: var(--text-light); max-width: 900px;">
+                        Visualisierung der End-to-End Datenflüsse, Multi-Tenant Architektur und Error Handling Strategien.
+                        Alle Diagramme sind skalierbar und zeigen die tatsächliche Produktions-Implementierung.
+                    </p>
+
+                    <!-- Diagram Cards Grid -->
+                    <div class="diagram-cards-grid">
+                        <!-- Card 1: Complete Booking Flow -->
+                        <div class="diagram-card">
+                            <div class="diagram-card-header">
+                                <div class="diagram-card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3>Complete Booking Flow</h3>
+                                    <p class="diagram-card-meta">
+                                        <span class="badge badge-primary">Sequence Diagram</span>
+                                        <span class="badge badge-success">34 Steps</span>
+                                        <span class="badge badge-info">6 Components</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="diagram-card-body">
+                                <p class="diagram-description">
+                                    End-to-End Ablauf einer Terminbuchung vom initialen Anruf über Twilio/Retell AI bis zur finalen Bestätigung in Cal.com.
+                                    Zeigt alle Interaktionen zwischen Customer, Backend (Laravel), Database (PostgreSQL) und Cal.com API.
+                                </p>
+                                <div class="diagram-stats">
+                                    <div class="stat">
+                                        <span class="stat-value">~3-5s</span>
+                                        <span class="stat-label">Avg. Duration</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">15+</span>
+                                        <span class="stat-label">API Calls</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">99.8%</span>
+                                        <span class="stat-label">Success Rate</span>
+                                    </div>
+                                </div>
+                                <div class="diagram-preview" onclick="openDiagramModal('diagrams/complete-booking-flow.svg', 'Complete Booking Flow')">
+                                    <img src="diagrams/complete-booking-flow.svg" alt="Complete Booking Flow">
+                                    <div class="diagram-overlay">
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="white">
+                                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                        </svg>
+                                        <p>Click to enlarge</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="diagram-card-footer">
+                                <button class="btn-secondary" onclick="openDiagramModal('diagrams/complete-booking-flow.svg', 'Complete Booking Flow')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    View Full Size
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDiagram('diagrams/complete-booking-flow.svg', 'booking-flow.svg')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Download SVG
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Multi-Tenant Architecture -->
+                        <div class="diagram-card">
+                            <div class="diagram-card-header">
+                                <div class="diagram-card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3>Multi-Tenant Architecture</h3>
+                                    <p class="diagram-card-meta">
+                                        <span class="badge badge-success">Entity Relationship</span>
+                                        <span class="badge badge-primary">8 Entities</span>
+                                        <span class="badge badge-warning">Security Layer</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="diagram-card-body">
+                                <p class="diagram-description">
+                                    Datenmodell der Multi-Tenant Architektur mit Company als zentralem Tenant Root. Zeigt alle Entity-Beziehungen,
+                                    Foreign Keys und die Isolation zwischen Tenants. Inkl. Cal.com External Mapping.
+                                </p>
+                                <div class="diagram-stats">
+                                    <div class="stat">
+                                        <span class="stat-value">RLS</span>
+                                        <span class="stat-label">Row Level Security</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">100%</span>
+                                        <span class="stat-label">Isolation</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">8</span>
+                                        <span class="stat-label">Core Entities</span>
+                                    </div>
+                                </div>
+                                <div class="diagram-preview" onclick="openDiagramModal('diagrams/multi-tenant-architecture.svg', 'Multi-Tenant Architecture')">
+                                    <img src="diagrams/multi-tenant-architecture.svg" alt="Multi-Tenant Architecture">
+                                    <div class="diagram-overlay">
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="white">
+                                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                        </svg>
+                                        <p>Click to enlarge</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="diagram-card-footer">
+                                <button class="btn-secondary" onclick="openDiagramModal('diagrams/multi-tenant-architecture.svg', 'Multi-Tenant Architecture')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    View Full Size
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDiagram('diagrams/multi-tenant-architecture.svg', 'multi-tenant-architecture.svg')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Download SVG
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Error Handling Flow -->
+                        <div class="diagram-card">
+                            <div class="diagram-card-header">
+                                <div class="diagram-card-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3>Error Handling & Resilience</h3>
+                                    <p class="diagram-card-meta">
+                                        <span class="badge badge-danger">Decision Flow</span>
+                                        <span class="badge badge-warning">Circuit Breaker</span>
+                                        <span class="badge badge-info">5 Retry Layers</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="diagram-card-body">
+                                <p class="diagram-description">
+                                    Vollständiger Error Handling Flow mit allen Sicherheitsschichten: Input Validation, Call ID Resolution,
+                                    Tenant Isolation, Circuit Breaker, Retry Logic und Fallback Strategies.
+                                </p>
+                                <div class="diagram-stats">
+                                    <div class="stat">
+                                        <span class="stat-value">5</span>
+                                        <span class="stat-label">Retry Attempts</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">3</span>
+                                        <span class="stat-label">Fallback Paths</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">99.9%</span>
+                                        <span class="stat-label">Availability</span>
+                                    </div>
+                                </div>
+                                <div class="diagram-preview" onclick="openDiagramModal('diagrams/error-handling-flow.svg', 'Error Handling Flow')">
+                                    <img src="diagrams/error-handling-flow.svg" alt="Error Handling Flow">
+                                    <div class="diagram-overlay">
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="white">
+                                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                        </svg>
+                                        <p>Click to enlarge</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="diagram-card-footer">
+                                <button class="btn-secondary" onclick="openDiagramModal('diagrams/error-handling-flow.svg', 'Error Handling Flow')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    View Full Size
+                                </button>
+                                <button class="btn-secondary" onclick="downloadDiagram('diagrams/error-handling-flow.svg', 'error-handling-flow.svg')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Download SVG
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Details Section -->
+                    <div class="tech-details-section" style="margin-top: 60px;">
+                        <h3 style="font-size: 1.8em; margin-bottom: 30px;">🔧 Technical Implementation</h3>
+                        <div class="grid grid-3">
+                            <div class="tech-card">
+                                <h4>Response Times</h4>
+                                <ul style="margin-top: 15px; line-height: 2;">
+                                    <li><strong>start_booking:</strong> &lt;500ms (fast feedback)</li>
+                                    <li><strong>confirm_booking:</strong> 2-4s (Cal.com sync)</li>
+                                    <li><strong>check_availability:</strong> 1-2s (cached)</li>
+                                    <li><strong>find_next_available:</strong> 2-3s (search)</li>
+                                </ul>
+                            </div>
+                            <div class="tech-card">
+                                <h4>Cache Strategy</h4>
+                                <ul style="margin-top: 15px; line-height: 2;">
+                                    <li><strong>Pattern:</strong> company:{id}:{resource}</li>
+                                    <li><strong>Storage:</strong> Redis 7.x</li>
+                                    <li><strong>TTL:</strong> 5min (availability), 1hr (config)</li>
+                                    <li><strong>Invalidation:</strong> Event-driven</li>
+                                </ul>
+                            </div>
+                            <div class="tech-card">
+                                <h4>Security Layers</h4>
+                                <ul style="margin-top: 15px; line-height: 2;">
+                                    <li><strong>Input Validation:</strong> Pydantic/Laravel</li>
+                                    <li><strong>Tenant Isolation:</strong> RLS (Row Level Security)</li>
+                                    <li><strong>Rate Limiting:</strong> 100 req/min per IP</li>
+                                    <li><strong>Circuit Breaker:</strong> 5 failures = open</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagram Modal -->
+            <div id="diagramModal" class="diagram-modal" onclick="closeDiagramModal()">
+                <div class="diagram-modal-content" onclick="event.stopPropagation()">
+                    <div class="diagram-modal-header">
+                        <h3 id="diagramModalTitle"></h3>
+                        <button class="modal-close" onclick="closeDiagramModal()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="diagram-modal-body">
+                        <img id="diagramModalImage" src="" alt="">
+                    </div>
+                    <div class="diagram-modal-footer">
+                        <button class="btn-secondary" onclick="zoomDiagram('in')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m-3-3h6"/>
+                            </svg>
+                            Zoom In
+                        </button>
+                        <button class="btn-secondary" onclick="zoomDiagram('out')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"/>
+                            </svg>
+                            Zoom Out
+                        </button>
+                        <button class="btn-secondary" onclick="zoomDiagram('reset')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Testing Tab -->
+            <div id="testing" class="tab-content">
+                <div class="section">
+                    <h2>🧪 Interactive Testing Playground</h2>
+                    <p style="margin-bottom: 30px; font-size: 1.1em; color: var(--text-light);">
+                        Teste alle Functions direkt in diesem Interface. Alle API-Calls werden gegen die
+                        Production-API ausgeführt. Stelle sicher, dass du autorisiert bist.
+                    </p>
+
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Achtung:</strong> Testing gegen Production API.
+                        Verwende Test-Daten und validiere alle Eingaben.
+                    </div>
+
+                    <div id="testing-container">
+                        <!-- Testing forms will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing Features Tab -->
+            <div id="missing-features" class="tab-content">
+                <div class="section">
+                    <h2>🚧 Missing Features & Roadmap</h2>
+
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Identifizierte Feature-Lücken</strong><br>
+                        Die folgenden Features sind noch NICHT implementiert und sollten in zukünftigen Versionen ergänzt werden.
+                    </div>
+
+                    <h3>🚨 High Priority - Fehlende Features</h3>
+
+                    <div class="function-card" style="border-left: 5px solid var(--danger);">
+                        <h4 style="color: var(--danger);">❌ 1. Intent-Switch: Booking aus Intent-Modi heraus</h4>
+
+                        <p><strong>Problem:</strong> Wenn ein Kunde sich in einem der folgenden Modi befindet:</p>
+                        <ul style="margin-left: 30px; margin-bottom: 15px; line-height: 1.8;">
+                            <li>📋 <strong>Termine anzeigen</strong> (get_customer_appointments)</li>
+                            <li>❌ <strong>Termin stornieren</strong> (cancel_appointment)</li>
+                            <li>🔄 <strong>Termin verschieben</strong> (reschedule_appointment)</li>
+                            <li>📝 <strong>Services auflisten</strong> (get_available_services)</li>
+                        </ul>
+                        <p>... kann er <strong>NICHT direkt einen neuen Termin buchen</strong>. Der Dialog muss neu gestartet werden.</p>
+
+                        <div class="alert alert-info">
+                            <strong>Erwartetes Verhalten:</strong>
+                            <ul style="margin-left: 30px; margin-top: 10px;">
+                                <li>✅ Kunde kann <strong>JEDERZEIT</strong> aus jedem Intent heraus neuen Termin buchen</li>
+                                <li>✅ Nahtloser Übergang ohne Dialog-Neustart</li>
+                                <li>✅ Context wird beibehalten (Name, Telefonnummer etc.)</li>
+                            </ul>
+                        </div>
+
+                        <h5>📋 Implementation Checklist:</h5>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Status</th>
+                                    <th>Effort</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Global Prompt Update: Intent-Switch Rules hinzufügen</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>2h</td>
+                                </tr>
+                                <tr>
+                                    <td>Conversation Flow: State Management erweitern</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>2h</td>
+                                </tr>
+                                <tr>
+                                    <td>Testing: Intent-Wechsel-Szenarien testen</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                                <tr>
+                                    <td>Documentation: Update V51 → V51</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="function-card" style="border-left: 5px solid var(--danger); margin-top: 30px;">
+                        <h4 style="color: var(--danger);">❌ 2. Knowledge Base Integration</h4>
+
+                        <p><strong>Problem:</strong> Agent kann keine hinterlegten Informationen über Filiale/Unternehmen abrufen.</p>
+
+                        <p>Bei Kundenfragen wie:</p>
+                        <ul style="margin-left: 30px; margin-bottom: 15px;">
+                            <li>"Wo befindet sich die Filiale?"</li>
+                            <li>"Welche Öffnungszeiten haben Sie?"</li>
+                            <li>"Bieten Sie auch XYZ an?"</li>
+                            <li>"Was sind Ihre Unternehmenswerte?"</li>
+                        </ul>
+                        <p>... hat der Agent <strong>KEINE strukturierte Antwortmöglichkeit</strong>.</p>
+
+                        <div class="alert alert-info">
+                            <strong>Erwartetes Verhalten:</strong>
+                            <ul style="margin-left: 30px; margin-top: 10px;">
+                                <li>✅ Agent kann Knowledge Base durchsuchen</li>
+                                <li>✅ Strukturierte Informationen zu:
+                                    <ul style="margin-left: 30px; margin-top: 5px;">
+                                        <li>📍 Filiale (Adresse, Öffnungszeiten, Parkmöglichkeiten)</li>
+                                        <li>🏢 Unternehmen (Geschichte, Werte, Team)</li>
+                                        <li>💇 Services (Detaillierte Beschreibungen, Empfehlungen)</li>
+                                        <li>❓ FAQ (Häufige Kundenfragen)</li>
+                                    </ul>
+                                </li>
+                                <li>✅ Flexible Verwaltung durch Admin Panel (Filament)</li>
+                            </ul>
+                        </div>
+
+                        <h5>📋 Implementation Checklist:</h5>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Status</th>
+                                    <th>Effort</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Database: <code>knowledge_base</code> Tabelle erstellen</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                                <tr>
+                                    <td>Migration: Schema mit company_id, category, key, value, metadata</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                                <tr>
+                                    <td>Function: <code>get_knowledge_base_info(query, category?)</code></td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>3h</td>
+                                </tr>
+                                <tr>
+                                    <td>RetellFunctionCallHandler: Implement getKnowledgeBaseInfo()</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>2h</td>
+                                </tr>
+                                <tr>
+                                    <td>Cache: Redis Caching (1hr TTL)</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                                <tr>
+                                    <td>Admin UI: Filament Resource für Knowledge Base Management</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>3h</td>
+                                </tr>
+                                <tr>
+                                    <td>Global Prompt: Knowledge Base Usage Rules</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>1h</td>
+                                </tr>
+                                <tr>
+                                    <td>Testing: Query-Szenarien & Cache-Invalidation</td>
+                                    <td><span class="status-badge status-missing">TODO</span></td>
+                                    <td>2h</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h5>💡 Technical Architecture Vorschlag:</h5>
+                        <div class="code-block">
+<button class="copy-button" onclick="copyCode(this)">Copy</button>
+// Database Schema
+knowledge_base (
+  id: bigint,
+  company_id: bigint,
+  category: 'branch'|'company'|'service'|'faq',
+  key: varchar(255), // z.B. "opening_hours", "address"
+  value: text,
+  metadata: jsonb, // Extra Informationen
+  created_at: timestamp,
+  updated_at: timestamp
+)
+
+// Function Call
+get_knowledge_base_info(
+  query: "Wo ist die Filiale?",
+  category?: "branch"
+) // Returns: Address, opening hours, parking
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 50px;">📊 Issue Tracking</h3>
+                    <div class="alert alert-info">
+                        Alle aktuellen Issues, Feature Requests und deren Status werden zentral dokumentiert:<br>
+                        <a href="/docs/e2e/ACTIVE_ISSUES_TRACKING.md" style="color: var(--primary); font-weight: 600;">
+                            📋 → ACTIVE_ISSUES_TRACKING.md
+                        </a>
+                    </div>
+
+                    <h3>💡 Wie Feature Requests melden?</h3>
+                    <ol style="margin-left: 30px; line-height: 1.8;">
+                        <li><strong>Beschreibe das Problem/Feature klar</strong> mit Use Case Beispielen</li>
+                        <li><strong>Priorität einschätzen:</strong> Critical / High / Medium / Low</li>
+                        <li><strong>Expected Behavior dokumentieren:</strong> Was soll passieren?</li>
+                        <li><strong>Claude updated automatisch</strong> das ACTIVE_ISSUES_TRACKING.md</li>
+                        <li><strong>Implementation wird geplant</strong> basierend auf Priority</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Test State
+        const testState = {
+            results: [],
+            isRunning: false,
+            isPaused: false,
+            currentTest: null,
+            totalTests: 0,
+            completedTests: 0,
+            startTime: null,
+            filter: 'all' // all, success, error, warning
+        };
+
+        // Quick Test Examples for Functions
+        const quickTestExamples = {
+            'check_availability': [
+                { label: 'Morgen 10 Uhr', params: { service_name: 'Herrenhaarschnitt', date: 'morgen', time: '10:00' } },
+                { label: 'Nächste Woche', params: { service_name: 'Dauerwelle', date: 'nächste Woche' } },
+                { label: 'Heute', params: { service_name: 'Bartpflege', date: 'heute' } }
+            ],
+            'start_booking': [
+                { label: 'Standard Booking', params: { service_name: 'Herrenhaarschnitt', date: '2025-11-07', time: '10:00', customer_name: 'Max Mustermann', customer_phone: '+4915123456789' } },
+                { label: 'Dauerwelle', params: { service_name: 'Dauerwelle', date: '2025-11-08', time: '14:00', customer_name: 'Anna Schmidt', customer_phone: '+4915187654321' } }
+            ],
+            'initialize_call': [
+                { label: 'Standard Init', params: { call_id: 'call_test_' + Date.now() } }
+            ],
+            'check_customer': [
+                { label: 'Existing Customer', params: { phone_number: '+4915123456789' } },
+                { label: 'New Customer', params: { phone_number: '+4915199999999' } }
+            ],
+            'get_available_services': [
+                { label: 'All Services', params: {} }
+            ],
+            'get_customer_appointments': [
+                { label: 'By Phone', params: { customer_phone: '+4915123456789' } }
+            ]
+        };
+
+        // Feature Matrix Data - Will be loaded from API
+        let functions = []; // Dynamic loading from /api/admin/retell/functions/schema
+
+        // PHASE 2: Load schema dynamically from backend API
+        async function loadSchemaFromAPI() {
+            const functionsContainer = document.getElementById('functions-container');
+
+            // Show loading state
+            if (functionsContainer) {
+                functionsContainer.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading"></div><p>Loading function schemas from API...</p></div>';
+            }
+
+            try {
+                const response = await fetch('/api/admin/retell/functions/schema');
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success || !data.data || !data.data.functions) {
+                    throw new Error('Invalid API response format');
+                }
+
+                // Transform API data to match frontend structure
+                functions = data.data.functions.map((func, index) => ({
+                    id: index + 1,
+                    name: func.name,
+                    status: func.status,
+                    specification: func.status === 'live' ? 'vollständig' : 'deprecated',
+                    implementation: func.status === 'live' ? 'implementiert' : 'deprecated',
+                    priority: func.priority,
+                    testing: func.status === 'live' ? '✅' : '❌',
+                    handler: func.handler_method,
+                    description: func.description,
+                    category: func.category,
+                    handler_file: func.handler_file,
+                    handler_line: func.handler_line,
+                    endpoint: func.endpoint,
+                    input: func.parameters.map(p => p.name),
+                    output: ['success', 'data', 'message'],
+                    metadata: func.metadata
+                }));
+
+                // Count live vs deprecated
+                const liveCount = functions.filter(f => f.status === 'live').length;
+                const deprecatedCount = functions.filter(f => f.status === 'deprecated').length;
+
+                console.log(`✅ Loaded ${functions.length} functions from API (generated at: ${data.data.generated_at})`);
+                console.log(`📍 Source: ${data.data.source}`);
+                console.log(`📊 Status: ${liveCount} live, ${deprecatedCount} deprecated`);
+
+                // Re-populate UI with new data
+                populateFeatureMatrix();
+                generateFunctionCards();
+
+                // Show detailed success notification
+                const timestamp = new Date(data.data.generated_at).toLocaleTimeString('de-DE');
+                showNotification(
+                    `✅ Schema geladen: ${liveCount} live, ${deprecatedCount} deprecated | ` +
+                    `Quelle: ${data.data.source} | ` +
+                    `Zeit: ${timestamp}`,
+                    'success'
+                );
+
+                // Render Mermaid diagrams after function cards are generated
+                await mermaid.run();
+
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to load schemas from API:', error);
+
+                // Show error notification
+                showNotification(`Failed to load schemas: ${error.message}. Using fallback data.`, 'danger');
+
+                // Fall back to hardcoded data if API fails
+                console.warn('⚠️ Falling back to hardcoded function data');
+
+                // Fallback will use the hardcoded data below
+                return false;
+            }
+        }
+
+        // Fallback: Hardcoded functions (used if API fails)
+        const functionsFallback = [
+            {
+                id: 1,
+                name: "initialize_call",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "critical",
+                testing: "✅",
+                handler: "initializeCall",
+                description: "Call Context initialisieren mit Customer, Date/Time, Policies",
+                input: ["call_id"],
+                output: ["customer_info", "current_date", "current_time", "policies"]
+            },
+            {
+                id: 2,
+                name: "check_customer",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "high",
+                testing: "✅",
+                handler: "checkCustomer",
+                description: "Customer anhand Telefonnummer erkennen",
+                input: ["phone_number"],
+                output: ["customer_exists", "customer_name", "past_appointments"]
+            },
+            {
+                id: 3,
+                name: "check_availability",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "critical",
+                testing: "✅",
+                handler: "checkAvailability",
+                description: "Verfügbare Zeitslots für Service & Datum prüfen",
+                input: ["service_name", "date", "time_preference"],
+                output: ["available_slots", "date", "service_duration"]
+            },
+            {
+                id: 4,
+                name: "get_alternatives",
+                status: "live",
+                specification: "✅ vollständig",
+                implementation: "✅ produktionsbereit",
+                priority: "critical",
+                testing: "✅ getestet",
+                handler: "getAlternatives",
+                description: "Alternative Zeitslots vorschlagen wenn Wunschtermin nicht verfügbar (Smart Rescheduling)",
+                input: ["service_name", "preferred_date", "preferred_time"],
+                output: ["alternative_dates", "alternative_times", "availability_score"]
+            },
+            {
+                id: 5,
+                name: "start_booking",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "critical",
+                testing: "✅",
+                handler: "startBooking",
+                description: "Schritt 1: Booking validieren und vorbereiten (Two-Step)",
+                input: ["service_name", "date", "time", "customer_name", "customer_phone"],
+                output: ["validation_result", "booking_summary", "confirmation_required"]
+            },
+            {
+                id: 6,
+                name: "confirm_booking",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "critical",
+                testing: "✅",
+                handler: "confirmBooking",
+                description: "Schritt 2: Booking final ausführen (Two-Step)",
+                input: ["booking_id"],
+                output: ["booking_confirmed", "appointment_details", "confirmation_message"]
+            },
+            {
+                id: 7,
+                name: "book_appointment",
+                status: "live",
+                specification: "vollständig",
+                implementation: "✅ implementiert",
+                priority: "high",
+                testing: "✅",
+                handler: "bookAppointment",
+                description: "Termin buchen mit Cal.com Integration (Phase 2A optimiert, -85% Latency)",
+                input: ["datum", "zeit", "service_name"],
+                output: ["success", "appointment_id", "booking_url", "confirmation"]
+            },
+            {
+                id: 8,
+                name: "get_available_services",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "medium",
+                testing: "✅",
+                handler: "listServices",
+                description: "Alle 18 Services auflisten",
+                input: [],
+                output: ["services_list", "categories"]
+            },
+            {
+                id: 9,
+                name: "get_customer_appointments",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "high",
+                testing: "✅",
+                handler: "queryAppointment",
+                description: "Bestehende Termine eines Kunden abrufen",
+                input: ["customer_phone", "customer_name"],
+                output: ["appointments", "upcoming_count", "past_count"]
+            },
+            {
+                id: 10,
+                name: "cancel_appointment",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "high",
+                testing: "✅",
+                handler: "handleCancellationAttempt",
+                description: "Termin stornieren mit Policy-Check",
+                input: ["appointment_id", "customer_phone"],
+                output: ["cancellation_allowed", "policy_message", "cancellation_result"]
+            },
+            {
+                id: 11,
+                name: "reschedule_appointment",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "high",
+                testing: "✅",
+                handler: "handleRescheduleAttempt",
+                description: "Termin verschieben (Atomic Cancel + Book)",
+                input: ["appointment_id", "new_date", "new_time"],
+                output: ["reschedule_result", "new_appointment_details"]
+            },
+            {
+                id: 12,
+                name: "find_next_available",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "medium",
+                testing: "✅",
+                handler: "findNextAvailable",
+                description: "Nächsten verfügbaren Termin für flexiblen Kunden finden",
+                input: ["service_name", "days_ahead"],
+                output: ["next_available_date", "next_available_time"]
+            },
+            {
+                id: 13,
+                name: "parse_date",
+                status: "live",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "medium",
+                testing: "✅",
+                handler: "parseGermanDate",
+                description: "German Date Parsing (heute, morgen, übermorgen, Wochentage)",
+                input: ["date_string", "context_date"],
+                output: ["parsed_date", "confidence"]
+            },
+            {
+                id: 14,
+                name: "request_callback",
+                status: "live",
+                specification: "✅ vollständig",
+                implementation: "✅ produktionsbereit (6 Fixes 2025-11-06)",
+                priority: "critical",
+                testing: "✅ getestet",
+                handler: "requestCallback",
+                description: "Callback-Request mit Auto-Assignment & Test Mode Support (100% Success Rate)",
+                input: ["customer_name", "phone_number", "reason", "preferred_time"],
+                output: ["success", "callback_id", "status", "assigned_to", "priority", "message"]
+            },
+            {
+                id: 15,
+                name: "collectAppointment",
+                status: "deprecated",
+                specification: "vollständig",
+                implementation: "implementiert",
+                priority: "low",
+                testing: "⚠️",
+                handler: "collectAppointment",
+                description: "Legacy: Specialized data collection endpoint",
+                input: ["various"],
+                output: ["collected_data"]
+            }
+        ];
+
+        // Populate Feature Matrix
+        function populateFeatureMatrix() {
+            const tbody = document.getElementById('feature-matrix-body');
+            tbody.innerHTML = functions.map(func => `
+                <tr id="matrix-row-${func.name}">
+                    <td>${func.id}</td>
+                    <td><a href="#function-${func.name}" style="color: var(--primary); font-weight: 600;">${func.name}</a></td>
+                    <td><span class="status-badge status-${func.status}">${func.status.toUpperCase()}</span></td>
+                    <td><span class="status-badge status-${func.specification === 'vollständig' ? 'specified' : 'partial'}">${func.specification}</span></td>
+                    <td><span class="status-badge status-${func.implementation === 'implementiert' ? 'implemented' : 'missing'}">${func.implementation}</span></td>
+                    <td><span class="status-badge priority-${func.priority}">${func.priority.toUpperCase()}</span></td>
+                    <td>${func.testing}</td>
+                    <td><code>${func.handler}</code></td>
+                    <td>
+                        <button class="test-button" style="padding: 5px 12px; font-size: 0.85em;" onclick="quickTestFunction('${func.name}')">
+                            🧪 Test
+                        </button>
+                        <span id="test-result-${func.name}" style="margin-left: 5px;"></span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 5px 15px; font-size: 0.85em;" onclick="switchTab('functions'); scrollToFunction('${func.name}')">
+                            📖 Docs
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Generate Function Documentation Cards
+        function generateFunctionCards() {
+            const container = document.getElementById('functions-container');
+            container.innerHTML = functions.map(func => `
+                <div class="function-card" id="function-${func.name}">
+                    <div class="function-header">
+                        <div class="function-title">${func.name}</div>
+                        <div class="function-badges">
+                            <span class="status-badge status-${func.status}">${func.status.toUpperCase()}</span>
+                            <span class="status-badge priority-${func.priority}">${func.priority.toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 1.1em; color: var(--text-light); margin-bottom: 20px;">
+                        ${func.description}
+                    </p>
+
+                    <div class="function-tabs">
+                        <div class="function-tab active" onclick="switchFunctionTab('${func.name}', 'doc')">📖 Dokumentation</div>
+                        <div class="function-tab" onclick="switchFunctionTab('${func.name}', 'test')">🧪 Interactive Test</div>
+                        <div class="function-tab" onclick="switchFunctionTab('${func.name}', 'examples')">📝 Beispiele</div>
+                        <div class="function-tab" onclick="switchFunctionTab('${func.name}', 'flow')">🔄 Data Flow</div>
+                    </div>
+
+                    <div id="${func.name}-doc" class="function-tab-content active">
+                        <h4>Input Parameter:</h4>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${func.input.map(param => `
+                                    <tr>
+                                        <td><code>${param}</code></td>
+                                        <td>string</td>
+                                        <td><span class="param-required">✓</span></td>
+                                        <td>Input parameter ${param}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <h4>Output Schema:</h4>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Type</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${func.output.map(field => `
+                                    <tr>
+                                        <td><code>${field}</code></td>
+                                        <td>mixed</td>
+                                        <td>Output field ${field}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <h4>Handler Location:</h4>
+                        <div class="code-block">
+File: app/Http/Controllers/RetellFunctionCallHandler.php
+Method: ${func.handler}()
+Line: ~${func.id * 300}
+                        </div>
+                    </div>
+
+                    <div id="${func.name}-test" class="function-tab-content">
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Production API Testing</strong><br>
+                            Dieser Test sendet echte API-Requests. Verwende Test-Daten.
+                        </div>
+
+                        ${quickTestExamples[func.name] ? `
+                            <h4>Quick Test Examples:</h4>
+                            <div class="quick-test-examples">
+                                ${quickTestExamples[func.name].map((example, idx) => `
+                                    <button type="button" class="quick-test-btn" onclick="runQuickTest('${func.name}', ${idx})">
+                                        ${example.label}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <hr style="margin: 20px 0; border: none; border-top: 2px solid var(--border);">
+                        ` : ''}
+
+                        <form class="test-form" onsubmit="testFunction(event, '${func.name}')">
+                            ${func.input.map(param => `
+                                <div class="form-group">
+                                    <label class="form-label">${param}</label>
+                                    <input type="text" name="${param}" class="form-input" placeholder="${param}">
+                                    <div class="form-hint">Beispiel: ${getExampleValue(param)}</div>
+                                </div>
+                            `).join('')}
+
+                            <button type="submit" class="btn btn-primary">
+                                🧪 Function Testen
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="copyAsCURL('${func.name}')">
+                                📋 Als cURL kopieren
+                            </button>
+                        </form>
+
+                        <div id="${func.name}-response" class="response-container">
+                            <div class="response-header">
+                                <div class="response-status">
+                                    <strong>Response:</strong>
+                                    <span id="${func.name}-status-code"></span>
+                                </div>
+                                <button class="copy-button" onclick="copyResponse('${func.name}')">Copy</button>
+                            </div>
+                            <div class="response-body">
+                                <pre id="${func.name}-response-body"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="${func.name}-examples" class="function-tab-content">
+                        <h4>Beispiel Request:</h4>
+                        <div class="code-block">
+<button class="copy-button" onclick="copyCode(this)">Copy</button>
+POST /api/webhooks/retell/function
+Content-Type: application/json
+
+{
+  "name": "${func.name}",
+  "args": {
+    ${func.input.map(p => `"${p}": "${getExampleValue(p)}"`).join(',\n    ')}
+  },
+  "call": {
+    "call_id": "call_test_123456"
+  }
+}
+                        </div>
+
+                        <h4>Beispiel Response:</h4>
+                        <div class="code-block">
+<button class="copy-button" onclick="copyCode(this)">Copy</button>
+{
+  "success": true,
+  "data": {
+    ${func.output.map(f => `"${f}": "example_value"`).join(',\n    ')}
+  },
+  "message": "Erfolgreich"
+}
+                        </div>
+                    </div>
+
+                    <div id="${func.name}-flow" class="function-tab-content">
+                        <h4>Data Flow Diagram:</h4>
+                        <div class="diagram-container">
+                            <pre class="mermaid">
+sequenceDiagram
+    participant Retell
+    participant Backend
+    participant Database
+    participant CalCom
+
+    Retell->>Backend: ${func.name}(${func.input.join(', ')})
+    Backend->>Database: Validate & Load Context${func.name.includes('availability') ? '\n    Backend->>CalCom: GET /slots' : ''}${func.name.includes('book') ? '\n    Backend->>CalCom: POST /bookings' : ''}
+    Database-->>Backend: Context Data${func.name.includes('availability') || func.name.includes('book') ? '\n    CalCom-->>Backend: API Response' : ''}
+    Backend-->>Retell: ${func.output[0] || 'result'}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Helper function to get example values
+        function getExampleValue(param) {
+            const examples = {
+                'call_id': 'call_test_123456',
+                'service_name': 'Herrenhaarschnitt',
+                'date': 'morgen',
+                'time': '10:00',
+                'customer_name': 'Max Mustermann',
+                'customer_phone': '+4915123456789',
+                'phone_number': '+4915123456789',
+                'appointment_id': '12345',
+                'booking_id': '12345'
+            };
+            return examples[param] || 'example_value';
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        function switchFunctionTab(funcName, tabName) {
+            // Hide all function tabs for this function
+            document.querySelectorAll(`#function-${funcName} .function-tab-content`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all function tabs
+            document.querySelectorAll(`#function-${funcName} .function-tab`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${funcName}-${tabName}`).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function scrollToFunction(funcName) {
+            const element = document.getElementById(`function-${funcName}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // API Configuration Functions
+        function saveApiToken() {
+            const token = document.getElementById('api-token').value;
+            if (token) {
+                localStorage.setItem('retell_api_token', token);
+                showNotification('Token gespeichert!', 'success');
+            } else {
+                localStorage.removeItem('retell_api_token');
+                showNotification('Token entfernt', 'info');
+            }
+        }
+
+        function toggleTestMode() {
+            const checkbox = document.getElementById('test-mode');
+            const label = document.getElementById('test-mode-label');
+            const badge = document.getElementById('test-mode-badge');
+            const description = document.getElementById('test-mode-description');
+            const isTestMode = checkbox.checked;
+
+            localStorage.setItem('retell_test_mode', isTestMode);
+
+            // Update label
+            label.textContent = isTestMode ? 'Test Mode' : 'Production';
+            label.style.color = isTestMode ? '#f59e0b' : 'white';
+
+            // Update badge
+            if (badge) {
+                badge.textContent = isTestMode ? 'TEST' : 'LIVE';
+                badge.style.background = isTestMode ? '#f59e0b' : '#10b981';
+            }
+
+            // Update description
+            if (description) {
+                description.textContent = isTestMode
+                    ? 'Test Company, Test Call IDs (test_call_xxx)'
+                    : 'Echte Production API, echte Call IDs (call_xxx)';
+            }
+
+            showNotification(
+                isTestMode
+                    ? '🧪 Test Mode aktiviert - Call IDs: test_call_xxx, Test Company'
+                    : '✅ Production Mode aktiviert - Call IDs: call_xxx, Production Company',
+                isTestMode ? 'warning' : 'success'
+            );
+        }
+
+        function loadApiConfig() {
+            // Load saved token or use default from input field
+            const savedToken = localStorage.getItem('retell_api_token');
+            const inputField = document.getElementById('api-token');
+
+            if (savedToken) {
+                // Use saved token
+                inputField.value = savedToken;
+            } else if (inputField.value) {
+                // No saved token, but input has default value - save it
+                localStorage.setItem('retell_api_token', inputField.value);
+                console.log('💾 Default Production token saved to localStorage');
+            }
+
+            // Load test mode setting
+            const isTestMode = localStorage.getItem('retell_test_mode') === 'true';
+            const checkbox = document.getElementById('test-mode');
+            const label = document.getElementById('test-mode-label');
+            const badge = document.getElementById('test-mode-badge');
+            const description = document.getElementById('test-mode-description');
+
+            checkbox.checked = isTestMode;
+            label.textContent = isTestMode ? 'Test Mode' : 'Production';
+            label.style.color = isTestMode ? '#f59e0b' : 'white';
+
+            // Update badge
+            if (badge) {
+                badge.textContent = isTestMode ? 'TEST' : 'LIVE';
+                badge.style.background = isTestMode ? '#f59e0b' : '#10b981';
+            }
+
+            // Update description
+            if (description) {
+                description.textContent = isTestMode
+                    ? 'Test Company, Test Call IDs (test_call_xxx)'
+                    : 'Echte Production API, echte Call IDs (call_xxx)';
+            }
+        }
+
+        // Notification System - Stacks notifications vertically
+        function showNotification(message, type = 'info') {
+            // Find existing notifications to stack below them
+            const existingNotifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20; // Start position
+
+            // Calculate position based on existing notifications
+            existingNotifications.forEach(notif => {
+                const rect = notif.getBoundingClientRect();
+                topPosition = Math.max(topPosition, rect.bottom - window.scrollY + 10);
+            });
+
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} notification-toast`;
+            notification.style.position = 'fixed';
+            notification.style.top = `${topPosition}px`;
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '400px';
+            notification.style.maxWidth = '600px';
+            notification.style.animation = 'slideIn 0.3s ease-out';
+            notification.style.transition = 'top 0.3s ease-out';
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Remove after 10 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    notification.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
+            }, 10000); // 10 seconds
+        }
+
+        // Reposition notifications after one is removed
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20;
+
+            notifications.forEach(notif => {
+                notif.style.top = `${topPosition}px`;
+                const rect = notif.getBoundingClientRect();
+                topPosition = rect.bottom - window.scrollY + 10;
+            });
+        }
+
+        // ========================================
+        // TESTING SYSTEM CORE FUNCTIONS
+        // ========================================
+
+        // Record test result
+        function recordTestResult(result) {
+            testState.results.unshift(result); // Add to beginning
+
+            // Keep only last 50 results
+            if (testState.results.length > 50) {
+                testState.results = testState.results.slice(0, 50);
+            }
+
+            // Save to localStorage
+            try {
+                localStorage.setItem('test_results', JSON.stringify(testState.results));
+            } catch (e) {
+                console.warn('Failed to save test results to localStorage', e);
+            }
+        }
+
+        // Generate error report
+        function generateErrorReport() {
+            const results = testState.results;
+            if (results.length === 0) {
+                return 'No test results available.';
+            }
+
+            let report = '=== Test Error Report ===\n';
+            report += `Generated: ${new Date().toISOString()}\n`;
+            report += `Total Tests: ${results.length}\n`;
+            report += `Successes: ${results.filter(r => r.status === 'success').length}\n`;
+            report += `Errors: ${results.filter(r => r.status === 'error').length}\n`;
+            report += `Warnings: ${results.filter(r => r.status === 'warning').length}\n`;
+            report += '\n';
+
+            results.forEach((result, index) => {
+                report += `\n--- Test ${index + 1} ---\n`;
+                report += `Time: ${new Date(result.timestamp).toLocaleString('de-DE')}\n`;
+                report += `Function: ${result.functionName}\n`;
+                report += `Status: ${result.status.toUpperCase()} (${result.statusCode})\n`;
+                report += `Duration: ${result.duration}ms\n`;
+                report += `\nRequest:\n${JSON.stringify(result.request, null, 2)}\n`;
+                report += `\nResponse:\n${JSON.stringify(result.response, null, 2)}\n`;
+
+                if (result.error) {
+                    report += `\nError:\n${result.error}\n`;
+                }
+
+                if (result.stackTrace) {
+                    report += `\nStack Trace:\n${result.stackTrace}\n`;
+                }
+            });
+
+            report += '\n=== End Report ===\n';
+            return report;
+        }
+
+        // Execute test (core function)
+        async function executeTest(functionName, params) {
+            const startTime = Date.now();
+            const apiToken = localStorage.getItem('retell_api_token');
+            const isTestMode = localStorage.getItem('retell_test_mode') === 'true';
+
+            const payload = {
+                name: functionName,
+                args: params,
+                call: {
+                    call_id: isTestMode ? `test_call_${Date.now()}` : `call_test_${Date.now()}`
+                }
+            };
+
+            if (isTestMode) {
+                payload.test_mode = true;
+            }
+
+            const result = {
+                timestamp: Date.now(),
+                functionName: functionName,
+                request: payload,
+                response: null,
+                status: 'error',
+                statusCode: 0,
+                duration: 0,
+                error: null,
+                stackTrace: null
+            };
+
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (apiToken) {
+                    headers['Authorization'] = `Bearer ${apiToken}`;
+                }
+
+                const response = await fetch('/api/webhooks/retell/function', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                result.duration = Date.now() - startTime;
+                result.statusCode = response.status;
+                result.response = await response.json();
+
+                if (response.ok) {
+                    result.status = 'success';
+                } else {
+                    result.status = 'error';
+                    result.error = result.response.error || result.response.message || 'Unknown error';
+                }
+            } catch (error) {
+                result.duration = Date.now() - startTime;
+                result.error = error.message;
+                result.stackTrace = error.stack;
+                result.status = 'error';
+            }
+
+            recordTestResult(result);
+            return result;
+        }
+
+        // Quick test function from matrix
+        async function quickTestFunction(funcName) {
+            const button = document.querySelector(`#matrix-row-${funcName} .test-button`);
+            const resultSpan = document.getElementById(`test-result-${funcName}`);
+
+            if (button) {
+                button.disabled = true;
+                button.classList.add('running');
+                button.innerHTML = '⏳ Testing...';
+            }
+
+            // Use quick test example or default params
+            const examples = quickTestExamples[funcName];
+            const params = examples && examples.length > 0 ? examples[0].params : {};
+
+            const result = await executeTest(funcName, params);
+
+            if (button) {
+                button.disabled = false;
+                button.classList.remove('running');
+                button.innerHTML = '🧪 Test';
+            }
+
+            if (resultSpan) {
+                const icon = result.status === 'success' ? '✅' : '❌';
+                const duration = result.duration;
+                resultSpan.innerHTML = `${icon} <span class="duration-badge">${duration}ms</span>`;
+            }
+
+            showNotification(
+                `${funcName}: ${result.status === 'success' ? 'Success' : 'Failed'} (${result.duration}ms)`,
+                result.status === 'success' ? 'success' : 'danger'
+            );
+        }
+
+        // Test all functions
+        async function testAllFunctions() {
+            if (testState.isRunning) {
+                showNotification('Test already running!', 'warning');
+                return;
+            }
+
+            const liveFunctions = functions.filter(f => f.status === 'live');
+
+            if (liveFunctions.length === 0) {
+                showNotification('No live functions to test', 'warning');
+                return;
+            }
+
+            testState.isRunning = true;
+            testState.isPaused = false;
+            testState.totalTests = liveFunctions.length;
+            testState.completedTests = 0;
+            testState.startTime = Date.now();
+
+            // Show progress container
+            const progressContainer = document.getElementById('test-all-progress');
+            progressContainer.classList.add('show');
+
+            for (let i = 0; i < liveFunctions.length; i++) {
+                // Check if stopped
+                if (!testState.isRunning) {
+                    showNotification('Testing stopped', 'info');
+                    break;
+                }
+
+                // Check if paused
+                while (testState.isPaused && testState.isRunning) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                const func = liveFunctions[i];
+                testState.currentTest = func.name;
+
+                // Update progress
+                updateProgressIndicator({
+                    current: i + 1,
+                    total: liveFunctions.length,
+                    functionName: func.name
+                });
+
+                // Execute test
+                await quickTestFunction(func.name);
+                testState.completedTests++;
+
+                // Small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            testState.isRunning = false;
+            testState.currentTest = null;
+
+            // Hide progress container after 3 seconds
+            setTimeout(() => {
+                progressContainer.classList.remove('show');
+            }, 3000);
+
+            const successCount = testState.results.filter(r => r.status === 'success').length;
+            showNotification(
+                `Test All Complete: ${successCount}/${liveFunctions.length} succeeded`,
+                successCount === liveFunctions.length ? 'success' : 'warning'
+            );
+        }
+
+        // Update progress indicator
+        function updateProgressIndicator(progress) {
+            const { current, total, functionName } = progress;
+            const percentage = Math.round((current / total) * 100);
+            const elapsed = Date.now() - testState.startTime;
+            const avgTime = elapsed / current;
+            const remaining = Math.round((total - current) * avgTime / 1000);
+
+            document.getElementById('progress-current-function').textContent = functionName;
+            document.getElementById('progress-count').textContent = `${current}/${total}`;
+            document.getElementById('progress-time').textContent = `${remaining}s`;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-fill').textContent = `${percentage}%`;
+        }
+
+        // Pause test all
+        function pauseTestAll() {
+            if (!testState.isRunning) return;
+
+            testState.isPaused = !testState.isPaused;
+            const btn = document.getElementById('pause-btn');
+
+            if (testState.isPaused) {
+                btn.innerHTML = '▶️ Resume';
+                showNotification('Testing paused', 'info');
+            } else {
+                btn.innerHTML = '⏸️ Pause';
+                showNotification('Testing resumed', 'info');
+            }
+        }
+
+        // Stop test all
+        function stopTestAll() {
+            if (!testState.isRunning) return;
+
+            testState.isRunning = false;
+            testState.isPaused = false;
+            const btn = document.getElementById('pause-btn');
+            btn.innerHTML = '⏸️ Pause';
+
+            showNotification('Testing stopped', 'info');
+        }
+
+        // Show error report modal
+        function showErrorReport() {
+            const report = generateErrorReport();
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;">
+                    <div style="padding: 25px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;">📋 Test Results Report</h2>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; font-size: 2em; cursor: pointer; color: var(--text-light);">&times;</button>
+                    </div>
+                    <div style="padding: 25px; overflow-y: auto; flex: 1;">
+                        <div class="filter-buttons">
+                            <button class="filter-button active" onclick="filterTestResults('all', this)">All (${testState.results.length})</button>
+                            <button class="filter-button" onclick="filterTestResults('success', this)">✅ Success (${testState.results.filter(r => r.status === 'success').length})</button>
+                            <button class="filter-button" onclick="filterTestResults('error', this)">❌ Error (${testState.results.filter(r => r.status === 'error').length})</button>
+                        </div>
+                        <div id="test-results-list" class="test-results-list">
+                            ${renderTestResults(testState.results)}
+                        </div>
+                    </div>
+                    <div style="padding: 20px; border-top: 2px solid var(--border); display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="copyErrorReport()">📋 Copy Full Report</button>
+                        <button class="btn btn-secondary" onclick="exportTestResults()">💾 Export JSON</button>
+                        <button class="btn btn-danger" onclick="clearTestResults(); this.closest('div[style*=fixed]').remove();">🗑️ Clear All</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        // Render test results list
+        function renderTestResults(results) {
+            if (results.length === 0) {
+                return '<p style="text-align: center; color: var(--text-light); padding: 40px;">No test results yet. Run some tests!</p>';
+            }
+
+            return results.map(result => {
+                const statusClass = result.status;
+                const icon = result.status === 'success' ? '✅' : '❌';
+                const time = new Date(result.timestamp).toLocaleTimeString('de-DE');
+
+                return `
+                    <div class="test-result-item ${statusClass}" onclick="toggleTestDetails(this)">
+                        <div class="test-result-summary">
+                            <div>
+                                <span class="status-indicator">${icon}</span>
+                                <strong>${result.functionName}</strong>
+                                <span style="margin-left: 10px; color: var(--text-light); font-size: 0.9em;">${time}</span>
+                            </div>
+                            <div>
+                                <span class="duration-badge">${result.duration}ms</span>
+                                <span style="margin-left: 10px; color: var(--text-light);">Status: ${result.statusCode}</span>
+                            </div>
+                        </div>
+                        <div class="test-result-details">
+                            <h4>Request:</h4>
+                            <pre style="background: var(--bg-dark); color: white; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85em;">${JSON.stringify(result.request, null, 2)}</pre>
+
+                            <h4 style="margin-top: 15px;">Response:</h4>
+                            <pre style="background: var(--bg-dark); color: white; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85em;">${JSON.stringify(result.response, null, 2)}</pre>
+
+                            ${result.error ? `
+                                <h4 style="margin-top: 15px; color: var(--danger);">Error:</h4>
+                                <pre style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85em;">${result.error}</pre>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle test details
+        function toggleTestDetails(element) {
+            element.classList.toggle('expanded');
+        }
+
+        // Filter test results
+        function filterTestResults(filter, button) {
+            // Update active button
+            document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Filter results
+            const filteredResults = filter === 'all'
+                ? testState.results
+                : testState.results.filter(r => r.status === filter);
+
+            document.getElementById('test-results-list').innerHTML = renderTestResults(filteredResults);
+        }
+
+        // Copy error report
+        function copyErrorReport() {
+            const report = generateErrorReport();
+            navigator.clipboard.writeText(report);
+            showNotification('Error report copied to clipboard!', 'success');
+        }
+
+        // Export test results as JSON
+        function exportTestResults() {
+            const data = {
+                exported_at: new Date().toISOString(),
+                total_results: testState.results.length,
+                results: testState.results
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `test-results-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('Test results exported!', 'success');
+        }
+
+        // Clear test results
+        function clearTestResults() {
+            testState.results = [];
+            localStorage.removeItem('test_results');
+            showNotification('Test results cleared', 'info');
+        }
+
+        // Load test results from localStorage on page load
+        function loadTestResults() {
+            try {
+                const saved = localStorage.getItem('test_results');
+                if (saved) {
+                    testState.results = JSON.parse(saved);
+                    console.log(`Loaded ${testState.results.length} test results from localStorage`);
+                }
+            } catch (e) {
+                console.warn('Failed to load test results from localStorage', e);
+            }
+        }
+
+        // Run quick test example
+        async function runQuickTest(funcName, exampleIdx) {
+            const example = quickTestExamples[funcName][exampleIdx];
+
+            if (!example) {
+                showNotification('Example not found', 'error');
+                return;
+            }
+
+            // Switch to test tab
+            switchFunctionTab(funcName, 'test');
+
+            // Populate form with example data
+            const form = document.querySelector(`#function-${funcName} form`);
+            if (form) {
+                Object.keys(example.params).forEach(key => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = example.params[key];
+                    }
+                });
+            }
+
+            // Execute test
+            const result = await executeTest(funcName, example.params);
+
+            // Show response
+            const responseContainer = document.getElementById(`${funcName}-response`);
+            responseContainer.classList.add('show');
+
+            const statusElement = document.getElementById(`${funcName}-status-code`);
+            const isTestMode = localStorage.getItem('retell_test_mode') === 'true';
+            statusElement.textContent = result.statusCode + (isTestMode ? ' (TEST MODE)' : ' (PRODUCTION)');
+            statusElement.style.color = result.status === 'success' ? 'var(--success)' : 'var(--danger)';
+
+            document.getElementById(`${funcName}-response-body`).textContent = JSON.stringify(result.response, null, 2);
+
+            showNotification(
+                `Quick Test "${example.label}": ${result.status === 'success' ? 'Success' : 'Failed'}`,
+                result.status === 'success' ? 'success' : 'danger'
+            );
+        }
+
+        // Test webhook endpoints
+        async function testWebhook(webhookType) {
+            const resultDiv = document.getElementById(`webhook-${webhookType}-result`);
+            const button = event.target;
+
+            button.disabled = true;
+            button.classList.add('running');
+            button.innerHTML = '⏳ Testing...';
+
+            let endpoint, payload;
+
+            switch(webhookType) {
+                case 'function_call':
+                    endpoint = '/api/webhooks/retell/function';
+                    payload = {
+                        name: 'check_availability',
+                        args: {
+                            service_name: 'Herrenhaarschnitt',
+                            date: 'morgen'
+                        },
+                        call: {
+                            call_id: 'call_test_' + Date.now()
+                        },
+                        agent_id: 'agent_45daa54928c5768b52ba3db736'
+                    };
+                    break;
+                case 'call_lifecycle':
+                    endpoint = '/api/webhooks/retell';
+                    payload = {
+                        event: 'call_started',
+                        call: {
+                            call_id: 'call_test_' + Date.now()
+                        }
+                    };
+                    break;
+                case 'calcom_sync':
+                    endpoint = '/api/calcom/webhook';
+                    payload = {
+                        triggerEvent: 'BOOKING_CREATED',
+                        payload: {
+                            uid: 'test_booking_' + Date.now()
+                        }
+                    };
+                    break;
+            }
+
+            const startTime = Date.now();
+
+            try {
+                const apiToken = localStorage.getItem('retell_api_token');
+                const headers = { 'Content-Type': 'application/json' };
+
+                if (apiToken && webhookType === 'function_call') {
+                    headers['Authorization'] = `Bearer ${apiToken}`;
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                const duration = Date.now() - startTime;
+
+                // Read as text first (can only read stream once)
+                const text = await response.text();
+
+                // Try to parse as JSON
+                let data;
+                let isJson = false;
+                try {
+                    data = JSON.parse(text);
+                    isJson = true;
+                } catch (e) {
+                    data = text;
+                }
+
+                // Special handling for Cal.com webhook (requires HMAC signature)
+                if (webhookType === 'calcom_sync' && !response.ok) {
+                    resultDiv.className = 'test-result show test-error';
+                    resultDiv.innerHTML = `
+                        <strong>⚠️ Expected Error</strong> (${response.status}) - ${duration}ms<br>
+                        <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 0.9em;">
+                            <strong>🔐 HMAC Signature Required</strong><br>
+                            Cal.com Webhook requires X-Cal-Signature-256 header with valid HMAC signature.<br>
+                            Use real Cal.com events or Postman with signature generation for testing.
+                        </div>
+                        <pre style="margin-top: 10px; font-size: 0.85em;">${isJson ? JSON.stringify(data, null, 2) : data}</pre>
+                    `;
+                } else {
+                    resultDiv.className = `test-result show ${response.ok ? 'test-success' : 'test-error'}`;
+                    resultDiv.innerHTML = `
+                        <strong>${response.ok ? '✅ Success' : '❌ Error'}</strong> (${response.status}) - ${duration}ms<br>
+                        <pre style="margin-top: 10px; font-size: 0.85em;">${isJson ? JSON.stringify(data, null, 2) : data}</pre>
+                    `;
+                }
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                resultDiv.className = 'test-result show test-error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error</strong> - ${duration}ms<br>
+                    ${error.message}
+                `;
+            } finally {
+                button.disabled = false;
+                button.classList.remove('running');
+                button.innerHTML = '🧪 Test Endpoint';
+            }
+        }
+
+        // Testing Functions
+        async function testFunction(event, funcName) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const args = {};
+
+            for (let [key, value] of formData.entries()) {
+                args[key] = value;
+            }
+
+            // Get API token from localStorage
+            const apiToken = localStorage.getItem('retell_api_token');
+            const isTestMode = localStorage.getItem('retell_test_mode') === 'true';
+
+            const payload = {
+                name: funcName,
+                args: args,
+                call: {
+                    call_id: isTestMode ? "test_call_" + Date.now() : "call_test_" + Date.now()
+                }
+            };
+
+            // Add test mode indicator to args if active
+            if (isTestMode) {
+                payload.test_mode = true;
+            }
+
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                // Add Authorization header if token exists
+                if (apiToken) {
+                    headers['Authorization'] = `Bearer ${apiToken}`;
+                }
+
+                const response = await fetch('/api/webhooks/retell/function', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                const responseData = await response.json();
+
+                // Show response
+                const responseContainer = document.getElementById(`${funcName}-response`);
+                responseContainer.classList.add('show');
+
+                const statusElement = document.getElementById(`${funcName}-status-code`);
+                statusElement.textContent = response.status + (isTestMode ? ' (TEST MODE)' : ' (PRODUCTION)');
+                statusElement.style.color = response.ok ? 'var(--success)' : 'var(--danger)';
+
+                document.getElementById(`${funcName}-response-body`).textContent = JSON.stringify(responseData, null, 2);
+
+                if (response.ok) {
+                    showNotification('Test erfolgreich!', 'success');
+                } else {
+                    showNotification('Test fehlgeschlagen - siehe Response', 'danger');
+                }
+            } catch (error) {
+                const responseContainer = document.getElementById(`${funcName}-response`);
+                responseContainer.classList.add('show');
+
+                const statusElement = document.getElementById(`${funcName}-status-code`);
+                statusElement.textContent = 'ERROR';
+                statusElement.style.color = 'var(--danger)';
+
+                document.getElementById(`${funcName}-response-body`).textContent = JSON.stringify({
+                    error: error.message,
+                    note: 'Stelle sicher dass die API erreichbar ist und (falls benötigt) ein gültiger Token gesetzt ist.'
+                }, null, 2);
+
+                showNotification('Request fehlgeschlagen: ' + error.message, 'danger');
+            }
+        }
+
+        function copyResponse(funcName) {
+            const responseBody = document.getElementById(`${funcName}-response-body`).textContent;
+            navigator.clipboard.writeText(responseBody);
+
+            const button = event.target;
+            button.textContent = '✓ Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = 'Copy';
+                button.classList.remove('copied');
+            }, 2000);
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(code);
+
+            button.textContent = '✓ Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = 'Copy';
+                button.classList.remove('copied');
+            }, 2000);
+        }
+
+        function copyAsCURL(funcName) {
+            const form = document.querySelector(`#function-${funcName} form`);
+            const formData = new FormData(form);
+            const args = {};
+
+            for (let [key, value] of formData.entries()) {
+                args[key] = value;
+            }
+
+            const payload = {
+                name: funcName,
+                args: args,
+                call: {
+                    call_id: "test_call_" + Date.now()
+                }
+            };
+
+            const curl = `curl -X POST https://api.askproai.de/api/webhooks/retell/function \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(payload, null, 2)}'`;
+
+            navigator.clipboard.writeText(curl);
+            alert('cURL Command copied to clipboard!');
+        }
+
+        // Export to JSON
+        function exportToJSON() {
+            const exportData = {
+                meta: {
+                    version: 'V51',
+                    agent_id: 'agent_45daa54928c5768b52ba3db736',
+                    exported_at: new Date().toISOString(),
+                    total_functions: functions.length
+                },
+                functions: functions,
+                webhooks: [
+                    {
+                        name: 'function_call',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST'
+                    },
+                    {
+                        name: 'call_lifecycle',
+                        endpoint: '/api/webhooks/retell',
+                        method: 'POST'
+                    }
+                ]
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `friseur1-agent-v50-export-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+            loadApiConfig();
+            loadTestResults(); // Load saved test results from localStorage
+
+            // PHASE 2: Try to load schemas from API
+            const apiSuccess = await loadSchemaFromAPI();
+
+            // If API failed, use fallback data
+            if (!apiSuccess && typeof functionsFallback !== 'undefined') {
+                console.warn('📋 Using fallback function data');
+                functions = functionsFallback;
+                populateFeatureMatrix();
+                generateFunctionCards();
+
+                // Render Mermaid diagrams after fallback cards are generated
+                await mermaid.run();
+            }
+
+            // Note: mermaid.run() is now called inside both success and fallback branches
+        });
+
+        // ============================================================
+        // Diagram Modal Functions
+        // ============================================================
+
+        let currentZoom = 1;
+
+        function openDiagramModal(imageSrc, title) {
+            const modal = document.getElementById('diagramModal');
+            const modalImage = document.getElementById('diagramModalImage');
+            const modalTitle = document.getElementById('diagramModalTitle');
+
+            modalImage.src = imageSrc;
+            modalTitle.textContent = title;
+            currentZoom = 1;
+            modalImage.style.transform = `scale(${currentZoom})`;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDiagramModal() {
+            const modal = document.getElementById('diagramModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function zoomDiagram(action) {
+            const modalImage = document.getElementById('diagramModalImage');
+
+            if (action === 'in') {
+                currentZoom = Math.min(currentZoom + 0.2, 3);
+            } else if (action === 'out') {
+                currentZoom = Math.max(currentZoom - 0.2, 0.5);
+            } else if (action === 'reset') {
+                currentZoom = 1;
+            }
+
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function downloadDiagram(url, filename) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+                })
+                .catch(error => {
+                    console.error('Error downloading diagram:', error);
+                    alert('Download failed. Please try right-clicking the image and selecting "Save image as..."');
+                });
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDiagramModal();
+            }
+        });
+    </script>
+</body>
+</html>

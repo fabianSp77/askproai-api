@@ -1,0 +1,2491 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E Deployment Rollout-Plan - AskPro AI Gateway</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.95;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        
+        .status-badge.plan {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Navigation */
+        .nav-container {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+            z-index: 1000;
+            margin-bottom: 2rem;
+        }
+        
+        .nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+        }
+        
+        .nav a {
+            color: var(--gray-700);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .nav a:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+        
+        /* Metadata Grid */
+        .metadata {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metadata h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .metadata-item {
+            padding: 1rem;
+            background: var(--gray-50);
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .metadata-item strong {
+            display: block;
+            color: var(--primary);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Alert Box */
+        .alert {
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+            border: 2px solid;
+        }
+        
+        .alert.danger {
+            background: #fef2f2;
+            border-color: var(--danger);
+            color: #991b1b;
+        }
+        
+        .alert h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .alert ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-header {
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-header .meta {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        /* Flowchart Container */
+        .flowchart-container {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+        
+        .flowchart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        
+        .flowchart-header h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        /* Mermaid Diagram */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        
+        table th {
+            background: var(--gray-100);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--gray-300);
+        }
+        
+        table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        table tr:hover {
+            background: var(--gray-50);
+        }
+        
+        /* Status Badges in Table */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge.p0 {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .badge.p1 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge.p2 {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge.ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        /* Code Block */
+        .code-container {
+            background: var(--gray-900);
+            border-radius: 0.75rem;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            background: var(--gray-800);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .code-header .lang {
+            color: var(--gray-300);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.375rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .copy-btn.copied {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        
+        pre {
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #e5e7eb;
+        }
+        
+        /* Markdown Download Section */
+        .markdown-download {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid var(--info);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .markdown-download h3 {
+            color: var(--info);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .markdown-preview {
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 1rem;
+        }
+        
+        .download-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--gray-50);
+        }
+        
+        /* Expand Button */
+        .expand-btn {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+            padding: 0.5rem 1rem;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .expand-btn:hover {
+            background: var(--gray-200);
+        }
+        
+        .markdown-preview.expanded {
+            max-height: none;
+        }
+        
+        /* Footer */
+        .footer {
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            padding: 2rem;
+            text-align: center;
+            color: var(--gray-600);
+            margin-top: 3rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+            
+            .metadata-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .download-actions {
+                flex-direction: column;
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            .nav-container,
+            .copy-btn,
+            .expand-btn,
+            .download-actions {
+                display: none;
+            }
+            
+            .markdown-preview {
+                max-height: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>🚀 E2E Deployment Rollout-Plan</h1>
+            <p class="subtitle">Staging ➜ Production | AskPro AI Gateway</p>
+            <div class="status-badge plan">
+                <span>🔴</span>
+                <span>PLAN-FIRST MODUS</span>
+                <span>•</span>
+                <span>NICHTS AUSGEFÜHRT</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-container">
+        <nav class="nav">
+            <a href="#metadata">📊 Metadaten</a>
+            <a href="#stop">⚠️ Stop-Bedingung</a>
+            <a href="#flowcharts">📈 Flowcharts</a>
+            <a href="#soll">📋 SOLL-Prozess</a>
+            <a href="#audit">🔍 Audits</a>
+            <a href="#delta">⚖️ Delta & Risiken</a>
+            <a href="#fixes">🔧 Fix-Plan</a>
+            <a href="#validation">✅ Validierung</a>
+            <a href="#download">⬇️ Download</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <!-- Metadata Section -->
+        <div id="metadata" class="metadata">
+            <h2>📊 Dokumentations-Metadaten</h2>
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <strong>Erstellt</strong>
+                    2025-11-02 19:00 UTC
+                </div>
+                <div class="metadata-item">
+                    <strong>Version</strong>
+                    2.0 (Reset & Complete Audit)
+                </div>
+                <div class="metadata-item">
+                    <strong>Modus</strong>
+                    PLAN-FIRST (Keine Ausführung)
+                </div>
+                <div class="metadata-item">
+                    <strong>Umgebungen</strong>
+                    Staging + Production
+                </div>
+                <div class="metadata-item">
+                    <strong>Server</strong>
+                    152.53.116.127
+                </div>
+                <div class="metadata-item">
+                    <strong>Repository</strong>
+                    fabianSp77/askproai-api
+                </div>
+                <div class="metadata-item">
+                    <strong>Branches</strong>
+                    develop (Staging) | main (Production)
+                </div>
+                <div class="metadata-item">
+                    <strong>Status</strong>
+                    NO-GO (4× P0 Blocker)
+                </div>
+            </div>
+        </div>
+
+        <!-- Stop Condition Alert -->
+        <div id="stop" class="alert danger">
+            <h3>⛔ STOP-BEDINGUNG</h3>
+            <p><strong>Dieser Report ist NUR ein Plan.</strong> NICHTS wird ausgeführt, bis eine Freigabe-Phrase gegeben wird:</p>
+            <ul>
+                <li><strong>"APPEND MISSING INFO"</strong> + Details → Report ergänzen</li>
+                <li><strong>"STAGING-TEST FREIGEGEBEN"</strong> → Staging-Validierung ausführen (nach P0+P1 Fixes!)</li>
+                <li><strong>"PROD-DEPLOY FREIGEGEBEN"</strong> → Production Deploy ausführen (nach Staging Success!)</li>
+                <li><strong>"PROD-FIX FREIGEGEBEN"</strong> → Spezifische Prod-Aktion ausführen</li>
+                <li><strong>"ABBRECHEN"</strong> → Stoppen, Status ausgeben</li>
+            </ul>
+        </div>
+
+        <!-- Flowcharts Section -->
+        <div id="flowcharts" class="section">
+            <div class="section-header">
+                <h2>📈 Deployment Flowcharts</h2>
+                <p class="meta">Visualisierung des vollständigen E2E-Deployment-Prozesses</p>
+            </div>
+
+            <!-- Main Deployment Flowchart -->
+            <div class="flowchart-container">
+                <div class="flowchart-header">
+                    <h3>Haupt-Deployment-Flow (Build → Staging → Production)</h3>
+                </div>
+                <div class="mermaid">
+flowchart TD
+  A([Merge to develop]) --> B[Build Artifacts\n9 Pre-Bundle Checks]
+  B --> C{Build success?}
+  C -- no --> X1[Stop & fix build]:::fail
+  C -- yes --> D[Wait for artifacts ready]
+  D --> E[[Deploy to Staging]]
+  subgraph STAGING
+    E --> F[Pre-switch gates\nindex.php, vendor/autoload.php, artisan]
+    F --> G[Run migrations]
+    G --> H[Switch symlink atomic]
+    H --> I[Post-switch cache clear\nconfig/route/view]
+    I --> J[Reload PHP-FPM OPcache & NGINX]
+    J --> K[Grace wait ~15s]
+    K --> L{Health 3/3 HTTP 200?\n/health Bearer, /api/health-check Bearer, /healthcheck.php}
+    L -- no --> RB[Auto-rollback → previous]:::fail --> X2[Stop & investigate]:::fail
+    L -- yes --> M[Optional: Staging Smoke 5/5]
+  end
+  M --> N{PROD-DEPLOY FREIGEGEBEN?}
+  N -- no --> O([Done: Staging validated])
+  N -- yes --> P[[Production Pre-Flight read-only]]
+  subgraph PRODUCTION
+    P --> Q{Pre-flight ok?}
+    Q -- no --> X3[Abort Prod]:::fail
+    Q -- yes --> R[Deploy to Production\nswitch symlink]
+    R --> S[Reload services + Grace]
+    S --> T{Prod health 2/2 200?\n/health + manifest}
+    T -- no --> RB2[Auto-rollback]:::fail
+    T -- yes --> U([Done: Prod live])
+  end
+  classDef fail fill:#FDE8E8,stroke:#E11D48,color:#7F1D1D;
+                </div>
+            </div>
+
+            <!-- Fix-Plan Flowchart -->
+            <div class="flowchart-container">
+                <div class="flowchart-header">
+                    <h3>Fix-Plan Flow (P0 → P1 → P2 → Validation)</h3>
+                </div>
+                <div class="mermaid">
+flowchart TD
+    START([Plan Erstellt]) --> CHECK{Alle Fixes<br/>angewendet?}
+    
+    CHECK -- nein --> P0_FIXES[P0 FIXES CRITICAL]
+    
+    subgraph P0 [P0 Blocker]
+        P0_FIXES --> P0A[A: Branch Protection main<br/>6 Required Checks]
+        P0A --> P0B[B: Branch Protection develop<br/>4 Required Checks]
+        P0B --> P0C[C: BUILD_RUN_ID Bug<br/>jq // empty + null check]
+        P0C --> P0D[D: Build für develop HEAD<br/>Trigger Workflow]
+    end
+    
+    P0D --> P1_FIXES[P1 FIXES HIGH]
+    
+    subgraph P1 [P1 High Priority]
+        P1_FIXES --> P1E[E: HEALTHCHECK_TOKEN<br/>Hash-Vergleich + Update]
+        P1E --> P1F[F: Staging Failures<br/>Root Cause Behebung]
+    end
+    
+    P1F --> P2_FIXES[P2 FIXES MEDIUM]
+    
+    subgraph P2 [P2 Medium Priority]
+        P2_FIXES --> P2G[G: Workflow-Konflikt<br/>Phantom Workflow disablen]
+        P2G --> P2H[H: docs/ Ownership<br/>chown deploy:www-data]
+    end
+    
+    P2H --> PREREQ{Vorbedingungen<br/>erfüllt?}
+    
+    PREREQ -- nein --> ABORT1[Abbruch]:::fail
+    PREREQ -- ja --> STAGING_E2E[STAGING E2E TEST]
+    
+    subgraph STAGING [Staging Validation]
+        STAGING_E2E --> SG1[Pre-Switch Gates 9/9]
+        SG1 --> SG2[Migrations]
+        SG2 --> SG3[Symlink Switch]
+        SG3 --> SG4[Post-Symlink Hardening]
+        SG4 --> SG5[Health Checks 3/3]
+        SG5 --> SG6{Success?}
+        SG6 -- fail --> ROLLBACK[Auto-Rollback]:::fail --> ABORT2[Investigate]:::fail
+        SG6 -- success --> REPORT_S[Staging Report]
+    end
+    
+    REPORT_S --> PROD_PREFLIGHT[PRODUCTION PRE-FLIGHT]
+    
+    subgraph PREFLIGHT [Pre-Flight Validation]
+        PROD_PREFLIGHT --> PF1[Staging Stable ≥1h]
+        PF1 --> PF2[Bundle Gates 9/9]
+        PF2 --> PF3[NGINX Config Check]
+        PF3 --> PF4{Pre-Flight OK?}
+        PF4 -- fail --> ABORT3[NO-GO Production]:::fail
+        PF4 -- success --> FREIGABE[Warte auf<br/>PROD-DEPLOY FREIGEGEBEN]
+    end
+    
+    FREIGABE --> PROD_DEPLOY[PRODUCTION DEPLOY]
+    
+    subgraph PRODUCTION [Production Deployment]
+        PROD_DEPLOY --> PD1[Pre-Deploy Backup]
+        PD1 --> PD2[Pre-Switch Gates 9/9]
+        PD2 --> PD3[Symlink Switch Atomic]
+        PD3 --> PD4[PHP-FPM Reload]
+        PD4 --> PD5[Health Checks 2/2]
+        PD5 --> PD6{Success?}
+        PD6 -- fail --> ROLLBACK2[Auto-Rollback]:::fail
+        PD6 -- success --> DONE([Production Live]):::success
+    end
+    
+    CHECK -- ja --> STAGING_E2E
+    
+    classDef fail fill:#FDE8E8,stroke:#E11D48,color:#7F1D1D
+    classDef success fill:#D1FAE5,stroke:#10B981,color:#065F46
+                </div>
+            </div>
+
+            <!-- Audit Flow -->
+            <div class="flowchart-container">
+                <div class="flowchart-header">
+                    <h3>Audit-Flow (GitHub + Server → Delta-Analyse)</h3>
+                </div>
+                <div class="mermaid">
+flowchart LR
+    START([Audit Start]) --> GITHUB[GitHub/CI Audit]
+    START --> SERVER[Server Audit]
+    
+    subgraph GITHUB_AUDIT [GitHub/CI Audit]
+        GITHUB --> BP[Branch Protection]
+        GITHUB --> WF[Workflows & Runs]
+        GITHUB --> ART[Artifacts & Build]
+        GITHUB --> SEC[Secrets & Token]
+    end
+    
+    subgraph SERVER_AUDIT [Server Audit]
+        SERVER --> STATE[Current State]
+        SERVER --> REL[Releases]
+        SERVER --> PERM[Permissions & Sudoers]
+        SERVER --> HEALTH[Health Endpoints]
+    end
+    
+    BP --> DELTA
+    WF --> DELTA
+    ART --> DELTA
+    SEC --> DELTA
+    STATE --> DELTA
+    REL --> DELTA
+    PERM --> DELTA
+    HEALTH --> DELTA
+    
+    DELTA[IST↔SOLL Delta-Analyse] --> RISK[Risikobewertung]
+    
+    RISK --> P0[4× P0 BLOCKER]:::critical
+    RISK --> P1[3× P1 HIGH]:::high
+    RISK --> P2[3× P2 MEDIUM]:::medium
+    RISK --> OK[6× OK]:::ok
+    
+    P0 --> DECISION{GO/NO-GO}
+    P1 --> DECISION
+    P2 --> DECISION
+    
+    DECISION -- P0 Blocker --> NOGO([NO-GO]):::fail
+    DECISION -- Alle OK --> GO([GO für Staging]):::success
+    
+    classDef critical fill:#FDE8E8,stroke:#E11D48,color:#7F1D1D
+    classDef high fill:#FEF3C7,stroke:#F59E0B,color:#92400E
+    classDef medium fill:#DBEAFE,stroke:#3B82F6,color:#1E40AF
+    classDef ok fill:#D1FAE5,stroke:#10B981,color:#065F46
+    classDef fail fill:#FDE8E8,stroke:#E11D48,color:#7F1D1D
+    classDef success fill:#D1FAE5,stroke:#10B981,color:#065F46
+                </div>
+            </div>
+        </div>
+
+        <!-- SOLL-Prozess Section -->
+        <div id="soll" class="section">
+            <div class="section-header">
+                <h2>📋 SOLL-Zusammenfassung (28 Schritte)</h2>
+                <p class="meta">Vollständiger Deployment-Prozess gemäß Dokumentation</p>
+            </div>
+
+            <h3>BUILD-PHASE (5 Schritte | 3-5 min)</h3>
+            <ol>
+                <li><strong>Trigger:</strong> Merge to develop → Auto-trigger Build Artifacts</li>
+                <li><strong>Frontend + Backend Build:</strong> Vite + Composer (--no-dev --optimize-autoloader)</li>
+                <li><strong>Static Analysis + Tests:</strong> PHPStan Level 5 + Pest + MariaDB</li>
+                <li><strong>PRE-BUNDLE GATES (Layer 1):</strong> 9 Checks (artisan, composer.json, public/index.php, vendor/autoload.php, etc.)</li>
+                <li><strong>Bundle Creation:</strong> deployment-bundle-{SHA}.tar.gz + SHA256 (30 Tage Retention)</li>
+            </ol>
+
+            <h3>STAGING-DEPLOY (15 Schritte | 2-3 min)</h3>
+            <ol start="6">
+                <li><strong>Trigger:</strong> Manual gh workflow run "Deploy to Staging"</li>
+                <li><strong>Pre-Deploy Health Check:</strong> Staging erreichbar?</li>
+                <li><strong>Pre-Deploy Backup:</strong> App + DB + SHA256 (~30s)</li>
+                <li><strong>Build Artifact Wait:</strong> Polling max 3 min (18 attempts @ 10s)</li>
+                <li><strong>Bundle Download + SHA256 Verify</strong></li>
+                <li><strong>Upload + Extract Bundle</strong> to /releases/{TIMESTAMP}-{SHA}</li>
+                <li><strong>PRE-SWITCH GATES (Layer 2):</strong> 9 Checks + PHP Tests VOR Migrations</li>
+                <li><strong>Run Migrations:</strong> php artisan migrate --force</li>
+                <li><strong>Clear Caches (Pre-Symlink):</strong> config, route, view, cache, optimize</li>
+                <li><strong>Switch Symlink (Atomic):</strong> ln -snf {RELEASE} current (< 1s)</li>
+                <li><strong>POST-SYMLINK Cache Clear:</strong> ALL caches NACH Symlink (~6-8s)</li>
+                <li><strong>Reload PHP-FPM (OPcache):</strong> sudo -n service php8.3-fpm reload (~4-5s)</li>
+                <li><strong>Grace Period:</strong> 15 Sekunden für Cache-Propagation</li>
+                <li><strong>Health Checks (Retry):</strong> 6 Attempts @ 5s → /health, /api/health-check, /healthcheck.php</li>
+                <li><strong>Vite Asset Validation:</strong> /build/manifest.json + Asset verfügbar</li>
+            </ol>
+
+            <h3>PRODUCTION-DEPLOY (8 Schritte | 2-3 min)</h3>
+            <ol start="21">
+                <li><strong>Trigger:</strong> Merge develop → main ODER Manual</li>
+                <li><strong>Staging Health Check:</strong> Staging seit ≥1h stabil?</li>
+                <li><strong>Pre-Deploy Backup (Production):</strong> App + DB + NGINX Config + SHA256 (~60s)</li>
+                <li><strong>PRE-SWITCH GATES (Layer 3):</strong> 9 Checks + PHP Tests VOR Symlink</li>
+                <li><strong>Switch Symlink (Atomic):</strong> ln -sfn {RELEASE} current (< 1s Zero-Downtime)</li>
+                <li><strong>Reload PHP-FPM:</strong> sudo systemctl reload php8.3-fpm</li>
+                <li><strong>Health Checks (Production):</strong> /health (HTTP 200) + /build/manifest.json</li>
+                <li><strong>Auto-Rollback:</strong> Bei Failure → Symlink zu previous + Verify rollback health</li>
+            </ol>
+        </div>
+
+        <!-- Audit Results Section -->
+        <div id="audit" class="section">
+            <div class="section-header">
+                <h2>🔍 Audit-Ergebnisse (IST-Zustand)</h2>
+                <p class="meta">GitHub/CI + Server Audit | Read-Only | 2025-11-02 19:00 UTC</p>
+            </div>
+
+            <h3>GitHub/CI Audit</h3>
+            
+            <h4>Branch Protection</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Branch</th>
+                        <th>Required Checks</th>
+                        <th>Enforce Admins</th>
+                        <th>Reviews</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>main</strong></td>
+                        <td>null</td>
+                        <td>null</td>
+                        <td>null</td>
+                        <td><span class="badge p0">❌ CRITICAL</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>develop</strong></td>
+                        <td>NOT CONFIGURED</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><span class="badge p0">❌ CRITICAL</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Recent Workflow Runs</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Workflow</th>
+                        <th>Run ID</th>
+                        <th>Status</th>
+                        <th>Head SHA</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Build Artifacts</strong></td>
+                        <td>19015290501</td>
+                        <td><span class="badge ok">✅ success</span></td>
+                        <td>62584375</td>
+                        <td>2025-11-02 16:52:41</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deploy to Staging</strong></td>
+                        <td>19013942449</td>
+                        <td><span class="badge p0">❌ failure</span></td>
+                        <td>f20993ee</td>
+                        <td>2025-11-02 14:54:51</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deploy to Staging</strong></td>
+                        <td>19013877383</td>
+                        <td><span class="badge p0">❌ failure</span></td>
+                        <td>f0959baf</td>
+                        <td>2025-11-02 14:48:20</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deploy to Staging</strong></td>
+                        <td>19013845846</td>
+                        <td><span class="badge p0">❌ failure</span></td>
+                        <td>f0959baf</td>
+                        <td>2025-11-02 14:45:12</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>BUILD_RUN_ID Bug (P0)</h4>
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="lang">YAML (deploy-staging.yml:171-177)</span>
+                </div>
+                <pre>BUILD_RUN_ID=$(gh run list \
+  --workflow "Build Artifacts" \
+  --branch "${{ github.ref_name }}" \
+  --json databaseId,headSha,status,conclusion \
+  --limit 20 | jq -r --arg sha "$SHA" \
+  '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+[ -z "$BUILD_RUN_ID" ] && { echo "No successful Build"; exit 1; }
+
+❌ BUG: jq returns string "null" instead of empty
+❌ IMPACT: [ -z ] check is FALSE for "null" string → Download fails</pre>
+            </div>
+
+            <h3>Server Audit (Staging)</h3>
+            
+            <h4>Current State</h4>
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="lang">Bash</span>
+                </div>
+                <pre>Current Symlink:  /var/www/api-gateway-staging/current
+Points To:        releases/20251102_154900-f0959baf
+
+Last 3 Releases:
+1. 20251102_155523-f20993ee (15:55) ← NEWEST but NOT active
+2. 20251102_154900-f0959baf (15:49) ← CURRENT (active)
+3. 20251102_154552-f0959baf (15:45)
+
+⚠️ ROLLBACK DETECTED: Newest release deployed but rolled back</pre>
+            </div>
+
+            <h4>Critical Files (9/9)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File/Directory</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>artisan</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>composer.json</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>public/index.php</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>vendor/autoload.php</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>public/build/manifest.json</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>bootstrap/</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>config/</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>routes/</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                    <tr><td>app/</td><td><span class="badge ok">✅ EXISTS</span></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Health Endpoints</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>HTTP Status</th>
+                        <th>Analysis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>/health</td>
+                        <td><span class="badge p1">401</span></td>
+                        <td>Unauthorized (requires Bearer)</td>
+                    </tr>
+                    <tr>
+                        <td>/api/health-check</td>
+                        <td><span class="badge p1">401</span></td>
+                        <td>Unauthorized (requires Bearer)</td>
+                    </tr>
+                    <tr>
+                        <td>/healthcheck.php</td>
+                        <td><span class="badge p1">403</span></td>
+                        <td>Forbidden (Bearer validation failing)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Delta & Risiken Section -->
+        <div id="delta" class="section">
+            <div class="section-header">
+                <h2>⚖️ IST↔SOLL Delta & Risikobewertung</h2>
+                <p class="meta">16 Punkte | 4× P0 | 3× P1 | 3× P2 | 6× OK</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Thema</th>
+                        <th>SOLL</th>
+                        <th>IST</th>
+                        <th>Impact</th>
+                        <th>Status</th>
+                        <th>Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Branch Protection (main)</strong></td>
+                        <td>6 Required Checks</td>
+                        <td>null</td>
+                        <td><span class="badge p0">P0</span></td>
+                        <td>❌ CRITICAL</td>
+                        <td>FIX A</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Branch Protection (develop)</strong></td>
+                        <td>≥4 Checks</td>
+                        <td>NOT CONFIGURED</td>
+                        <td><span class="badge p0">P0</span></td>
+                        <td>❌ CRITICAL</td>
+                        <td>FIX B</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>BUILD_RUN_ID Guard</strong></td>
+                        <td>jq // empty + null check</td>
+                        <td>nur [ -z ] Check</td>
+                        <td><span class="badge p0">P0</span></td>
+                        <td>❌ CRITICAL</td>
+                        <td>FIX C</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Current Develop Build</strong></td>
+                        <td>BUILD EXISTS</td>
+                        <td>NO BUILD (ad3cb8d3)</td>
+                        <td><span class="badge p0">P0</span></td>
+                        <td>❌ BLOCKER</td>
+                        <td>FIX D</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><strong>HEALTHCHECK_TOKEN</strong></td>
+                        <td>CI = .env (sha256)</td>
+                        <td>⏳ PENDING</td>
+                        <td><span class="badge p1">P1</span></td>
+                        <td>⚠️ PENDING</td>
+                        <td>FIX E</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td><strong>Staging Deployments</strong></td>
+                        <td>Last 3 success</td>
+                        <td>100% failure</td>
+                        <td><span class="badge p1">P1</span></td>
+                        <td>❌ HIGH</td>
+                        <td>FIX F</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td><strong>Health Endpoints</strong></td>
+                        <td>HTTP 200</td>
+                        <td>401/403</td>
+                        <td><span class="badge p1">P1</span></td>
+                        <td>❌ HIGH</td>
+                        <td>FIX E+F</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td><strong>Workflow Conflict</strong></td>
+                        <td>1 Prod Workflow</td>
+                        <td>2 Workflows</td>
+                        <td><span class="badge p2">P2</span></td>
+                        <td>⚠️ MEDIUM</td>
+                        <td>FIX G</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td><strong>docs/ Ownership</strong></td>
+                        <td>deploy:www-data</td>
+                        <td>root:root</td>
+                        <td><span class="badge p2">P2</span></td>
+                        <td>⚠️ MEDIUM</td>
+                        <td>FIX H</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td><strong>Rollback Event</strong></td>
+                        <td>Newest active</td>
+                        <td>Rolled back</td>
+                        <td><span class="badge p2">P2</span></td>
+                        <td>⚠️ INVESTIGATE</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>11-16</td>
+                        <td><strong>Hardening Features</strong></td>
+                        <td>Vorhanden</td>
+                        <td>✅ Alle vorhanden</td>
+                        <td><span class="badge ok">OK</span></td>
+                        <td>✅ OK</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>GO/NO-GO Decision</h3>
+            <div class="alert danger">
+                <h3>❌ NO-GO für BEIDE (Staging & Production)</h3>
+                <p><strong>Begründung:</strong></p>
+                <ul>
+                    <li>P0: Branch Protection fehlt komplett → Force-Pushes möglich</li>
+                    <li>P0: BUILD_RUN_ID Bug → Artifact-Download kann fehlschlagen</li>
+                    <li>P0: Kein Build für aktuellen develop HEAD → Deployment unmöglich</li>
+                    <li>P1: 100% Failure Rate bei letzten Staging Deployments</li>
+                    <li>P1: Health Endpoints schlagen fehl → Smoke Tests werden fehlschlagen</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fix-Plan Section -->
+        <div id="fixes" class="section">
+            <div class="section-header">
+                <h2>🔧 Fix-/Validierungsplan</h2>
+                <p class="meta">8 Fixes (A-H) | NICHT AUSGEFÜHRT | Bereit für Anwendung</p>
+            </div>
+
+            <h3>FIX A: P0 — Branch Protection (main)</h3>
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="lang">Bash (GitHub API - requires admin)</span>
+                    <button class="copy-btn" onclick="copyCode(this, 'fix-a')">Kopieren</button>
+                </div>
+                <pre id="fix-a">gh api repos/fabianSp77/askproai-api/branches/main/protection -X PUT --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "build-frontend",
+      "build-backend",
+      "static-analysis",
+      "run-tests",
+      "create-deployment-bundle",
+      "check-staging"
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true
+  },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF</pre>
+            </div>
+
+            <h3>FIX C: P0 — BUILD_RUN_ID Null-Guard</h3>
+            <p><strong>Datei:</strong> .github/workflows/deploy-staging.yml (Lines 171-178)</p>
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="lang">YAML (FIXED)</span>
+                    <button class="copy-btn" onclick="copyCode(this, 'fix-c')">Kopieren</button>
+                </div>
+                <pre id="fix-c">BUILD_RUN_ID=$(gh run list \
+  --workflow "Build Artifacts" \
+  --branch "${{ github.ref_name }}" \
+  --json databaseId,headSha,status,conclusion \
+  --limit 20 | jq -r --arg sha "$SHA" \
+  '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId // empty')
+if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+  echo "❌ No successful Build Artifacts run found for SHA: $SHA"
+  echo "Please ensure Build Artifacts workflow completed successfully first"
+  exit 1
+fi
+BUILD_SHA="$SHA"</pre>
+            </div>
+
+            <h3>FIX D: P0 — Build für develop HEAD</h3>
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="lang">Bash</span>
+                    <button class="copy-btn" onclick="copyCode(this, 'fix-d')">Kopieren</button>
+                </div>
+                <pre id="fix-d"># Trigger Build Artifacts für aktuellen develop HEAD
+gh workflow run "Build Artifacts" --ref develop
+
+# Wait for completion (3-5 min)
+gh run watch $(gh run list --workflow "Build Artifacts" --limit 1 --json databaseId --jq '.[0].databaseId')
+
+# Verify artifacts
+LATEST_RUN=$(gh run list --workflow "Build Artifacts" --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run view $LATEST_RUN --log | grep "deployment-bundle"</pre>
+            </div>
+
+            <p><em>Weitere Fixes (B, E, F, G, H) siehe vollständiger Report...</em></p>
+        </div>
+
+        <!-- Validation Plan Section -->
+        <div id="validation" class="section">
+            <div class="section-header">
+                <h2>✅ Validierungsplan (3 Phasen)</h2>
+                <p class="meta">Staging E2E → Prod Pre-Flight → Prod Deploy</p>
+            </div>
+
+            <h3>Phase 0: Vorbedingungen-Checkliste</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fix</th>
+                        <th>Beschreibung</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>FIX A</td><td>Branch Protection (main) aktiviert</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX B</td><td>Branch Protection (develop) aktiviert</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX C</td><td>BUILD_RUN_ID Bug gefixed</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX D</td><td>Build für develop HEAD vorhanden</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX E</td><td>HEALTHCHECK_TOKEN verifiziert</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX F</td><td>Staging Failures behoben</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX G</td><td>Workflow-Konflikt behoben</td><td>⏳ TODO</td></tr>
+                    <tr><td>FIX H</td><td>docs/ Ownership gefixed</td><td>⏳ TODO</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Phase 1: STAGING E2E (nach "STAGING-TEST FREIGEGEBEN")</h3>
+            <h4>Akzeptanzkriterien (10 Punkte):</h4>
+            <ul>
+                <li>✅ Pre-Switch Gates: 9/9 PASSED</li>
+                <li>✅ Migrations: No errors</li>
+                <li>✅ Symlink Switch: Atomic, successful</li>
+                <li>✅ Post-Symlink Cache Clear: Executed</li>
+                <li>✅ PHP-FPM Reload: Success</li>
+                <li>✅ Grace Period: 15s completed</li>
+                <li>✅ Health Checks: 3/3 HTTP 200 (within 6 attempts)</li>
+                <li>✅ Vite Assets: manifest.json + asset accessible</li>
+                <li>✅ No manual server intervention</li>
+                <li>✅ Vollständige Evidence gesammelt</li>
+            </ul>
+
+            <h3>Phase 2: PRODUCTION PRE-FLIGHT (Read-Only)</h3>
+            <h4>Akzeptanzkriterien (5 Punkte):</h4>
+            <ul>
+                <li>✅ Staging stabil seit ≥1h</li>
+                <li>✅ Pre-Flight Gates: 9/9 PASSED</li>
+                <li>✅ NGINX Config: Valid</li>
+                <li>✅ ENV Symlink: Correct</li>
+                <li>✅ KEINE Schreib-/Switch-Operationen</li>
+            </ul>
+
+            <h3>Phase 3: PRODUCTION DEPLOY (nach "PROD-DEPLOY FREIGEGEBEN")</h3>
+            <h4>Akzeptanzkriterien (6 Punkte):</h4>
+            <ul>
+                <li>✅ Pre-Flight: OK</li>
+                <li>✅ Pre-Switch Gates: 9/9 PASSED</li>
+                <li>✅ Symlink Switch: Atomic</li>
+                <li>✅ Health Checks: 2/2 HTTP 200</li>
+                <li>✅ Zero-Downtime: < 1s</li>
+                <li>✅ Keine Rollback erforderlich</li>
+            </ul>
+        </div>
+
+        <!-- Download Section -->
+        <div id="download" class="markdown-download">
+            <h3>⬇️ Markdown-Download</h3>
+            <p>Vollständiger Report als Markdown zum Kopieren oder Herunterladen für KI-Systeme</p>
+            
+            <div class="download-actions">
+                <button class="btn btn-primary" onclick="copyFullMarkdown()">
+                    📋 Gesamtes Markdown kopieren
+                </button>
+                <button class="btn btn-secondary" onclick="downloadMarkdown()">
+                    💾 Als .md Datei herunterladen
+                </button>
+                <button class="btn btn-secondary" onclick="togglePreview()">
+                    👁️ Vorschau umschalten
+                </button>
+            </div>
+            
+            <div class="markdown-preview" id="markdownPreview"># E2E DEPLOYMENT VALIDATION & ROLLOUT-PLAN — STAGING ➜ PRODUCTION
+
+**Version:** 2.0 (Reset & Complete Audit)
+**Erstellt:** 2025-11-02 19:00 UTC
+**Modus:** 🔴 **PLAN-FIRST** (NICHTS AUSGEFÜHRT)
+**Zweck:** Vollständiger Deployment-Prozess mit IST↔SOLL Abgleich, Blocker-Identifikation, Fix-Plan
+
+---
+
+## ⚠️ STOP-BEDINGUNG
+
+**Dieser Report ist NUR ein Plan.** NICHTS wird ausgeführt, bis eine Freigabe-Phrase gegeben wird:
+
+- **"APPEND MISSING INFO"** → Report ergänzen
+- **"STAGING-TEST FREIGEGEBEN"** → Staging-Validierung ausführen
+- **"PROD-DEPLOY FREIGEGEBEN"** → Production-Deployment ausführen
+- **"PROD-FIX FREIGEGEBEN"** → Spezifische Prod-Aktion ausführen
+- **"ABBRECHEN"** → Stoppen, Status ausgeben
+
+---
+
+## 1️⃣ SOLL-ZUSAMMENFASSUNG (DEPLOYMENT-PROZESS)
+
+Basierend auf:
+- [DEPLOYMENT_HANDBUCH_FUER_DRITTE.html](https://api.askproai.de/docs/backup-system/DEPLOYMENT_HANDBUCH_FUER_DRITTE.html)
+- [status-quo-deployment-prozess-2025-11-01.html](https://api.askproai.de/docs/backup-system/status-quo-deployment-prozess-2025-11-01.html)
+- [E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html](https://api.askproai.de/docs/backup-system/E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html)
+- `.github/workflows/build-artifacts.yml`, `deploy-staging.yml`, `deploy-production.yml`
+
+### **BUILD-PHASE** (3-5 min)
+
+1. **Trigger:** Merge to `develop` → Auto-trigger Build Artifacts Workflow
+   - **Quelle:** DEPLOYMENT_HANDBUCH Zeilen 94-117
+
+2. **Frontend Build (Vite)** + **Backend Build (Composer --no-dev --optimize-autoloader)**
+   - **Quelle:** build-artifacts.yml Jobs 1-2
+   - **Dauer:** ~3-5 Minuten
+   - **Abbruch bei:** Compilation error
+
+3. **Static Analysis (PHPStan Level 5)** + **Tests (Pest + MariaDB)**
+   - **Quelle:** build-artifacts.yml Jobs 3-4
+   - **Abbruch bei:** Analysis/Test failure
+
+4. **PRE-BUNDLE GATES (Layer 1) — 9 Checks:**
+   - artisan, composer.json, **public/index.php**, **vendor/autoload.php**, public/build/manifest.json, bootstrap/, config/, routes/, app/
+   - **Quelle:** build-artifacts.yml:321-350, PROD_FIX_BUNDLE_GATES.md
+   - **Abbruch bei:** Fehlende kritische Datei
+
+5. **Bundle Creation:** `deployment-bundle-{SHA}.tar.gz` + SHA256 Checksum
+   - **Retention:** 30 Tage
+   - **Quelle:** DEPLOYMENT_HANDBUCH Zeilen 113-117
+   - **Abbruch bei:** Upload error
+
+---
+
+### **STAGING-DEPLOY** (2-3 min)
+
+6. **Trigger:** Manual `gh workflow run "Deploy to Staging" --ref develop`
+   - **Quelle:** DEPLOYMENT_HANDBUCH Zeilen 120-131
+
+7. **Pre-Deploy Health Check:** Staging erreichbar?
+   - **Quelle:** deploy-staging.yml Job "check-health"
+   - **Abbruch bei:** Staging down
+
+8. **Pre-Deploy Backup:** App (tar.gz) + DB (mysqldump) + SHA256
+   - **Quelle:** deploy-staging.yml Job "backup-staging"
+   - **Dauer:** ~30 Sekunden
+
+9. **Build Artifact Wait:** Polling for successful build (max 3 min, 18 attempts @ 10s)
+   - **Quelle:** deploy-staging.yml:185-213, E2E_WORKFLOW_HARDENING Zeilen 195-200
+   - **Abbruch bei:** No build after 3 min
+
+10. **Bundle Download + SHA256 Verify**
+    - **Quelle:** deploy-staging.yml:215-234
+    - **Abbruch bei:** Checksum mismatch, Download failure
+
+11. **Upload + Extract Bundle** to `/releases/{TIMESTAMP}-{SHA}`
+    - **Quelle:** deploy-staging.yml:249-275
+    - **Abbruch bei:** Disk full, Extract error
+
+12. **PRE-SWITCH GATES (Layer 2) — 9 Checks + PHP Tests:**
+    - Checks VOR Migrations: 9 Struktur-Checks + `php -r "require 'vendor/autoload.php'"` + `php artisan --version`
+    - **Quelle:** deploy-staging.yml:277-329, PROD_FIX Zeilen 100-118
+    - **Abbruch bei:** Gate failure → Symlink NICHT gewechselt
+
+13. **Run Migrations:** `php artisan migrate --force`
+    - **Quelle:** deploy-staging.yml:331-339
+    - **Abbruch bei:** Migration error → Auto-Rollback
+
+14. **Clear Caches (Pre-Symlink):** config, route, view, cache, optimize
+    - **Quelle:** deploy-staging.yml:341-354
+    - **Abbruch bei:** Non-critical (continue)
+
+15. **Switch Symlink (Atomic):** `ln -snf {RELEASE} current`
+    - **Quelle:** deploy-staging.yml:359-369
+    - **Dauer:** &lt; 1 Sekunde
+    - **Abbruch bei:** Symlink error → Auto-Rollback
+
+16. **POST-SYMLINK Cache Clear:** Clear ALL caches NACH Symlink
+    - **Quelle:** deploy-staging.yml:371-387, E2E_WORKFLOW Zeilen 195-200
+    - **Dauer:** ~6-8 Sekunden
+
+17. **Reload PHP-FPM (OPcache):** `sudo -n service php8.3-fpm reload`
+    - **Quelle:** deploy-staging.yml:389-431, E2E_WORKFLOW Zeilen 200
+    - **Dauer:** ~4-5 Sekunden
+
+18. **Grace Period:** 15 Sekunden warten für Cache-Propagation
+    - **Quelle:** deploy-staging.yml:433-437
+
+19. **Health Checks (Retry Logic):** 6 Attempts, 5s Intervall
+    - `/health` (Bearer), `/api/health-check` (Bearer), `/healthcheck.php`
+    - **Quelle:** deploy-staging.yml:439-500, E2E_VALIDATION Zeilen 88-135
+    - **Abbruch bei:** All attempts fail → Auto-Rollback
+
+20. **Vite Asset Validation:** `/build/manifest.json` + Asset verfügbar?
+    - **Quelle:** deploy-staging.yml:502-525
+    - **Abbruch bei:** Missing assets
+
+---
+
+### **PRODUCTION-DEPLOY** (nach Freigabe, 2-3 min)
+
+21. **Trigger:** Merge `develop` → `main` ODER Manual
+    - **Quelle:** DEPLOYMENT_HANDBUCH Zeilen 197-218
+
+22. **Staging Health Check:** Staging seit ≥1h stabil?
+    - **Quelle:** deploy-production.yml:34-44
+    - **Abbruch bei:** Staging unhealthy
+
+23. **Pre-Deploy Backup (Production):** App + DB + **NGINX Config** + SHA256
+    - **Quelle:** deploy-production.yml:54-80
+    - **Dauer:** ~60 Sekunden
+
+24. **PRE-SWITCH GATES (Layer 3):** 9 Checks + PHP Tests VOR Symlink
+    - **Quelle:** deploy-production.yml:142-174, PROD_FIX Zeilen 125-143
+    - **Abbruch bei:** Gate failure → Production unverändert
+
+25. **Switch Symlink (Atomic):** `ln -sfn {RELEASE} current`
+    - **Quelle:** deploy-production.yml:185-187
+    - **Dauer:** &lt; 1 Sekunde (Zero-Downtime)
+
+26. **Reload PHP-FPM:** `sudo systemctl reload php8.3-fpm`
+    - **Quelle:** deploy-production.yml:189-192
+
+27. **Health Checks (Production):** `/health` (HTTP 200), `/build/manifest.json`
+    - **Quelle:** deploy-production.yml:208-230
+    - **Abbruch bei:** Health fail → Auto-Rollback
+
+28. **Auto-Rollback (bei Failure):** Symlink zu previous, Verify rollback health
+    - **Quelle:** deploy-production.yml:235-272, E2E_VALIDATION Zeilen 221-235
+
+---
+
+## 2️⃣ GITHUB-/CI AUDIT (IST-ZUSTAND)
+
+**Durchgeführt:** 2025-11-02 19:00 UTC
+**Methode:** Read-only API Queries + Workflow-Datei-Analyse
+
+### **Branch Protection**
+
+#### Main Branch
+```json
+{
+  "required_status_checks": null,
+  "enforce_admins": null,
+  "required_pull_request_reviews": null
+}
+```
+❌ **KRITISCH:** Main branch hat **KEINE** Branch Protection!
+
+**SOLL:** 6 Required Checks (build-frontend, build-backend, static-analysis, run-tests, create-deployment-bundle, check-staging)
+
+#### Develop Branch
+```
+Branch Protection: NOT CONFIGURED
+```
+❌ **KRITISCH:** Develop branch NICHT geschützt!
+
+**SOLL:** ≥4 Build-Checks, "Require up-to-date", ≥1 Review
+
+---
+
+### **Recent Workflow Runs**
+
+#### Build Artifacts (Letzte 3)
+| Run ID | Status | Head SHA | Created | Duration |
+|--------|--------|----------|---------|----------|
+| 19015290501 | ✅ success | 62584375 | 2025-11-02 16:52:41 | ~4 min |
+| 19015290114 | ✅ success | 62584375 | 2025-11-02 16:52:39 | ~4 min |
+| 19015263191 | ✅ success | c99bbb21 | 2025-11-02 16:49:58 | ~4 min |
+
+**Current Develop HEAD:** `ad3cb8d3` - ❌ **NO BUILD EXISTS**
+
+#### Deploy to Staging (Letzte 3)
+| Run ID | Status | Head SHA | Created | Actor |
+|--------|--------|----------|---------|-------|
+| 19013942449 | ❌ failure | f20993ee | 2025-11-02 14:54:51 | workflow_dispatch |
+| 19013877383 | ❌ failure | f0959baf | 2025-11-02 14:48:20 | workflow_dispatch |
+| 19013845846 | ❌ failure | f0959baf | 2025-11-02 14:45:12 | workflow_dispatch |
+
+⚠️ **ISSUE:** Letzten 3 Staging Deployments sind fehlgeschlagen (100% Failure Rate)!
+
+#### Deploy to Production
+```
+Workflow Naming Conflict Detected:
+- Legitimate: deploy-production.yml (ID: 202989778)
+- Phantom: check-staging-dummy.yml (ID: 202998568) - deleted file, still active in API
+```
+⚠️ **P2 ISSUE:** Zwei Workflows mit Namen "Deploy to Production"
+
+---
+
+### **Build→Deploy Artefakte-Kopplung**
+
+#### BUILD_RUN_ID Bug (P0)
+
+**Code:** `deploy-staging.yml:171-177`
+```yaml
+BUILD_RUN_ID=$(gh run list \
+  --workflow "Build Artifacts" \
+  --branch "${{ github.ref_name }}" \
+  --json databaseId,headSha,status,conclusion \
+  --limit 20 | jq -r --arg sha "$SHA" \
+  '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+[ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+```
+
+❌ **CONFIRMED BUG:**
+- **Issue:** `jq` returns string `"null"` when no match found (nicht empty string)
+- **Impact:** `[ -z "$BUILD_RUN_ID" ]` ist FALSE für `"null"` string → Download schlägt fehl
+- **Source:** E2E_WORKFLOW_HARDENING Zeilen 86-97
+
+**FIX REQUIRED:**
+```yaml
+# Line 176: Add fallback
+'...[0].databaseId // empty'
+# Line 177: Add null check
+[ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ] && { ... exit 1; }
+```
+
+#### Artifacts (Letzte erfolgreiche Build für SHA 62584375)
+| Artifact Name | Size | Expires In | Status |
+|---------------|------|------------|--------|
+| deployment-bundle-62584375 | 21 MB | 30 days | ✅ Available |
+| backend-vendor-62584375 | 27 MB | 7 days | ✅ Available |
+| frontend-build-62584375 | 85 KB | 7 days | ✅ Available |
+
+---
+
+### **Secrets & Configuration**
+
+#### HEALTHCHECK_TOKEN
+```
+GitHub Secret:        EXISTS (updated today)
+Staging .env Hash:    1ea22eac8f73552460a944cec7bb0abeea430eef01afc9620431a204cae863cd
+Comparison:           ⏳ PENDING (manual CI vs. staging hash verification needed)
+```
+
+✅ **Secret vorhanden**
+⚠️ **Hash-Vergleich:** Manual verification required (CI Secret SHA256 vs. Staging .env SHA256)
+
+---
+
+### **Workflow Hardening Features (Verified)**
+
+✅ **Post-Symlink Cache Clear:** 1 Vorkommen (deploy-staging.yml:371-387)
+✅ **PHP-FPM OPcache Reload:** 1 Vorkommen (deploy-staging.yml:389-431)
+✅ **Grace Period (15s):** 1 Vorkommen (deploy-staging.yml:433-437)
+✅ **Health Check Retry (6 attempts):** 1 Vorkommen (deploy-staging.yml:439-499)
+
+**Source:** E2E_WORKFLOW_HARDENING Zeilen 180-216
+
+---
+
+## 3️⃣ SERVER-AUDIT (IST-ZUSTAND)
+
+**Server:** 152.53.116.127 (staging.askproai.de)
+**Durchgeführt:** 2025-11-02 19:00 UTC
+**Methode:** Read-only SSH Queries
+
+### **Current State**
+
+**Current Symlink:**
+```
+/var/www/api-gateway-staging/current → releases/20251102_154900-f0959baf
+```
+
+**Last 3 Releases:**
+```
+1. 20251102_155523-f20993ee (15:55) ← NEWEST but NOT active
+2. 20251102_154900-f0959baf (15:49) ← CURRENT (active)
+3. 20251102_154552-f0959baf (15:45)
+```
+
+⚠️ **OBSERVATION:** Rollback detected! Newest release (f20993ee) deployed but symlink rolled back to f0959baf
+
+---
+
+### **Release Structure Verification**
+
+**Current Release:** `/var/www/api-gateway-staging/releases/20251102_154900-f0959baf`
+
+| File/Directory | Status |
+|----------------|--------|
+| artisan | ✅ EXISTS |
+| composer.json | ✅ EXISTS |
+| public/index.php | ✅ EXISTS |
+| vendor/autoload.php | ✅ EXISTS |
+| public/build/manifest.json | ✅ EXISTS |
+| bootstrap/ | ✅ EXISTS |
+| config/ | ✅ EXISTS |
+| routes/ | ✅ EXISTS |
+| app/ | ✅ EXISTS |
+
+✅ **All 9 critical files/directories present**
+
+---
+
+### **Environment Configuration**
+
+```
+.env Symlink:   /var/www/api-gateway-staging/current/.env
+Points To:      /var/www/api-gateway-staging/shared/.env/staging.env
+Status:         ✅ EXISTS
+APP_ENV:        staging
+```
+
+---
+
+### **Sudoers Configuration**
+
+```bash
+(root) NOPASSWD: /usr/bin/systemctl reload nginx
+(root) NOPASSWD: /usr/sbin/service nginx reload
+(root) NOPASSWD: /usr/sbin/service php*-fpm reload
+```
+
+✅ **Passwordless sudo für Service-Reloads korrekt konfiguriert**
+
+---
+
+### **Health Endpoints**
+
+| Endpoint | HTTP Status | Analysis |
+|----------|-------------|----------|
+| /health | 401 | Unauthorized (requires Bearer) |
+| /api/health-check | 401 | Unauthorized (requires Bearer) |
+| /healthcheck.php | 403 | Forbidden (Bearer validation failing) |
+
+⚠️ **ISSUE:** Health endpoints return 401/403 (HEALTHCHECK_TOKEN issue or Bearer not sent correctly)
+
+---
+
+### **Permission Issues**
+
+```
+Directory:    /var/www/api-gateway-staging/current/public/docs
+Owner:        root:root
+Permissions:  drwxrwxr-x (775)
+```
+
+⚠️ **ISSUE:** `public/docs/` owned by root instead of deploy:www-data
+
+**Impact:** May cause deployment failures when trying to modify this directory
+
+---
+
+## 4️⃣ IST↔SOLL DELTA & RISIKEN
+
+| # | Thema | SOLL | IST | Impact | Status | Empfohlener Fix | Quelle |
+|---|-------|------|-----|--------|--------|-----------------|--------|
+| 1 | **Branch Protection (main)** | 6 Required Checks | null (keine Protection) | **P0** | ❌ CRITICAL | Branch Protection aktivieren: build-frontend, build-backend, static-analysis, run-tests, create-deployment-bundle, check-staging | GitHub Audit |
+| 2 | **Branch Protection (develop)** | ≥4 Build-Checks, Reviews | NOT CONFIGURED | **P0** | ❌ CRITICAL | Copy main protection rules | GitHub Audit |
+| 3 | **BUILD_RUN_ID null-Guard** | `jq // empty` + null-Check | nur `[ -z ]` Check | **P0** | ❌ CRITICAL | Fix: `jq -r '...[0].databaseId // empty'` + `[ "$BUILD_RUN_ID" = "null" ]` check | deploy-staging.yml:176-177 |
+| 4 | **Current Develop Build** | BUILD EXISTS für HEAD | NO BUILD für ad3cb8d3 | **P0** | ❌ BLOCKER | Trigger Build Artifacts für ad3cb8d3 | GitHub Audit |
+| 5 | **HEALTHCHECK_TOKEN Match** | CI Secret = Staging .env (sha256) | ⏳ PENDING Manual Verify | **P1** | ⚠️ PENDING | Hash-Vergleich durchführen | GitHub Secrets + Server Audit |
+| 6 | **Staging Deployments** | Last 3 sollten success sein | Last 3 = 100% failure | **P1** | ❌ HIGH | Root Cause der Failures beheben | GitHub Workflow Runs |
+| 7 | **Health Endpoints** | HTTP 200 mit Bearer | 401/403 Unauthorized | **P1** | ❌ HIGH | Token verification + Bearer header fix | Server Health Checks |
+| 8 | **Production Workflow Conflict** | 1 eindeutiger Workflow | 2 Workflows ("deploy-production" + phantom) | **P2** | ⚠️ MEDIUM | Disable check-staging-dummy.yml via GitHub UI | GitHub Workflows |
+| 9 | **public/docs/ Ownership** | deploy:www-data | root:root | **P2** | ⚠️ MEDIUM | `sudo chown -R deploy:www-data public/docs/` | Server Permissions |
+| 10 | **Rollback Event** | Newest release active | f20993ee deployed but rolled back | **P2** | ⚠️ INVESTIGATE | Investigate rollback reason | Server Releases |
+| 11 | **Post-Symlink Cache Clear** | Vorhanden | ✅ Vorhanden (1x) | N/A | ✅ OK | - | deploy-staging.yml:371-387 |
+| 12 | **PHP-FPM OPcache Reload** | Vorhanden | ✅ Vorhanden (1x) | N/A | ✅ OK | - | deploy-staging.yml:389-431 |
+| 13 | **Grace Period (15s)** | Vorhanden | ✅ Vorhanden (1x) | N/A | ✅ OK | - | deploy-staging.yml:433-437 |
+| 14 | **Health Check Retry (6x)** | Vorhanden | ✅ Vorhanden (1x) | N/A | ✅ OK | - | deploy-staging.yml:439-499 |
+| 15 | **Sudoers (Staging)** | Passwordless reload | ✅ Konfiguriert | N/A | ✅ OK | - | Server Sudoers |
+| 16 | **Server File Structure** | 9 critical files | ✅ Alle vorhanden | N/A | ✅ OK | - | Server Release Structure |
+
+### **Kritikalitäts-Bewertung:**
+
+- **P0 (BLOCKER):** 4 Issues → Branch Protection (main + develop), BUILD_RUN_ID Bug, No Build for current HEAD
+- **P1 (HIGH):** 3 Issues → Token Match Pending, Staging Failures, Health Endpoints 401/403
+- **P2 (MEDIUM):** 3 Issues → Workflow Conflict, docs/ Ownership, Rollback Investigation
+
+### **GO/NO-GO Decision:**
+
+**❌ NO-GO für BEIDE (Staging & Production)**
+
+**Begründung:**
+1. **P0:** Branch Protection fehlt komplett → Force-Pushes möglich
+2. **P0:** BUILD_RUN_ID Bug → Artifact-Download kann fehlschlagen
+3. **P0:** Kein Build für aktuellen develop HEAD → Deployment unmöglich
+4. **P1:** 100% Failure Rate bei letzten Staging Deployments
+5. **P1:** Health Endpoints schlagen fehl → Smoke Tests werden fehlschlagen
+
+---
+
+## 5️⃣ FLOWCHART-VERIFIKATION
+
+**Datei:** `storage/docs/backup-system/DEPLOYMENT_FLOWCHART.md`
+**Status:** ✅ **KONSISTENT mit Workflows**
+
+**Verified Sections:**
+- Build Phase: 9 Pre-Bundle Checks ✅
+- Staging Phase: Pre-Switch Gates, Post-Symlink Hardening, Health Checks ✅
+- Production Phase: Pre-Flight, Pre-Switch Gates, Auto-Rollback ✅
+
+**Keine Updates erforderlich** - Flowchart ist aktuell und korrekt.
+
+---
+
+## 6️⃣ FIX-/VALIDIERUNGSPLAN (NICHT AUSFÜHREN BIS FREIGABE)
+
+### **PHASE 0: VORBEDINGUNGEN-CHECKLISTE**
+
+Alle müssen ✅ sein, sonst **ABBRUCH**:
+
+- [ ] **P0-Fix 1:** Branch Protection (main) aktiviert
+- [ ] **P0-Fix 2:** Branch Protection (develop) aktiviert
+- [ ] **P0-Fix 3:** BUILD_RUN_ID Bug gefixed
+- [ ] **P0-Fix 4:** Build für aktuellen develop HEAD vorhanden
+- [ ] **P1-Fix 1:** HEALTHCHECK_TOKEN Match verifiziert (SHA256)
+- [ ] **P1-Fix 2:** Staging Failures Root Cause behoben
+- [ ] **P2-Fix 1:** Workflow-Konflikt behoben
+- [ ] **P2-Fix 2:** public/docs/ Ownership gefixed
+
+---
+
+### **FIX A: P0 — Branch Protection (main)**
+
+**Typ:** GitHub Repository Settings (Repo Owner/Admin only)
+**Status:** ⏳ GEPLANT
+
+#### Required Checks (6):
+```bash
+# Via GitHub API (requires admin)
+gh api repos/fabianSp77/askproai-api/branches/main/protection -X PUT --input - &lt;&lt;'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "build-frontend",
+      "build-backend",
+      "static-analysis",
+      "run-tests",
+      "create-deployment-bundle",
+      "check-staging"
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false
+  },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+**Akzeptanzkriterium:** `gh api repos/fabianSp77/askproai-api/branches/main/protection` returns non-null required_status_checks
+
+---
+
+### **FIX B: P0 — Branch Protection (develop)**
+
+**Typ:** GitHub Repository Settings (Repo Owner/Admin only)
+**Status:** ⏳ GEPLANT
+
+```bash
+# Via GitHub API (requires admin)
+gh api repos/fabianSp77/askproai-api/branches/develop/protection -X PUT --input - &lt;&lt;'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "build-frontend",
+      "build-backend",
+      "static-analysis",
+      "run-tests"
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false
+  },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+**Akzeptanzkriterium:** `gh api repos/fabianSp77/askproai-api/branches/develop/protection` returns non-null required_status_checks
+
+---
+
+### **FIX C: P0 — BUILD_RUN_ID Null-Guard**
+
+**Typ:** Workflow Code-Fix
+**Datei:** `.github/workflows/deploy-staging.yml`
+**Status:** ⏳ GEPLANT
+
+#### Patch (Lines 171-178):
+
+**CURRENT:**
+```yaml
+BUILD_RUN_ID=$(gh run list \
+  --workflow "Build Artifacts" \
+  --branch "${{ github.ref_name }}" \
+  --json databaseId,headSha,status,conclusion \
+  --limit 20 | jq -r --arg sha "$SHA" \
+  '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId')
+[ -z "$BUILD_RUN_ID" ] && { echo "No successful Build Artifacts run for SHA"; exit 1; }
+BUILD_SHA="$SHA"
+```
+
+**FIXED:**
+```yaml
+BUILD_RUN_ID=$(gh run list \
+  --workflow "Build Artifacts" \
+  --branch "${{ github.ref_name }}" \
+  --json databaseId,headSha,status,conclusion \
+  --limit 20 | jq -r --arg sha "$SHA" \
+  '[.[] | select(.headSha==$sha and .status=="completed" and .conclusion=="success")][0].databaseId // empty')
+if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+  echo "❌ No successful Build Artifacts run found for SHA: $SHA"
+  echo "Please ensure Build Artifacts workflow completed successfully first"
+  exit 1
+fi
+BUILD_SHA="$SHA"
+```
+
+#### Commit Plan:
+```bash
+# Branch erstellen
+git checkout develop
+git pull origin develop
+git checkout -b fix/build-run-id-null-handling
+
+# Patch anwenden
+# (Manual edit: .github/workflows/deploy-staging.yml lines 171-178)
+
+# Commit
+git add .github/workflows/deploy-staging.yml
+git commit -m "fix(ci): Handle jq null return in BUILD_RUN_ID determination
+
+- Add // empty fallback to jq expression
+- Add explicit null string check
+- Improve error message with troubleshooting hint
+
+Fixes: P0 bug where jq returns string 'null' instead of empty,
+bypassing [ -z ] check and causing artifact download failures.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;"
+
+# Push + PR
+git push origin fix/build-run-id-null-handling
+gh pr create --title "fix(ci): Handle jq null return in BUILD_RUN_ID" \
+  --body "## Problem
+BUILD_RUN_ID determination fails when jq returns string 'null' instead of empty.
+
+## Solution
+- Add \`// empty\` fallback to jq
+- Add explicit null string check
+- Improve error messaging
+
+## Testing
+- [ ] Verify with manual dispatch (no matching build)
+- [ ] Verify with successful build
+- [ ] Check logs for proper error messages
+
+## Impact
+Prevents artifact download failures during deployments.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)" \
+  --base develop
+
+# Merge
+gh pr merge --squash --delete-branch
+```
+
+**Akzeptanzkriterium:**
+- PR merged to develop
+- Workflow re-run with no build → clean exit (not "null" bug)
+- Workflow re-run with successful build → proper BUILD_RUN_ID
+
+---
+
+### **FIX D: P0 — Build für aktuellen develop HEAD**
+
+**Typ:** Workflow Trigger
+**Status:** ⏳ GEPLANT
+
+```bash
+# Trigger Build Artifacts für aktuellen develop HEAD
+gh workflow run "Build Artifacts" --ref develop
+
+# Wait for completion (3-5 min)
+gh run watch $(gh run list --workflow "Build Artifacts" --limit 1 --json databaseId --jq '.[0].databaseId')
+
+# Verify artifacts
+LATEST_RUN=$(gh run list --workflow "Build Artifacts" --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run view $LATEST_RUN --log | grep "deployment-bundle"
+```
+
+**Akzeptanzkriterium:**
+- Build Artifacts workflow completes successfully
+- `deployment-bundle-{SHA}.tar.gz` artifact created (21 MB)
+- SHA matches current develop HEAD
+
+---
+
+### **FIX E: P1 — HEALTHCHECK_TOKEN Verification**
+
+**Typ:** Secret Verification + Update (if needed)
+**Status:** ⏳ GEPLANT
+
+#### Step 1: Hash-Vergleich
+```bash
+# Get staging .env hash (already have from audit)
+STAGING_HASH="1ea22eac8f73552460a944cec7bb0abeea430eef01afc9620431a204cae863cd"
+
+# Get CI secret (via test workflow run - log the hash only)
+# Create temp test workflow or use manual verification
+
+# Compare
+# If MATCH → ✅ OK
+# If NO-MATCH → Update GitHub Secret
+```
+
+#### Step 2: Update Secret (if mismatch)
+```bash
+# Get correct value from staging .env (SECURE - no logging)
+ssh deploy@152.53.116.127 "grep '^HEALTHCHECK_TOKEN=' /var/www/api-gateway-staging/shared/.env/staging.env | cut -d= -f2 | tr -d '\"'" &gt; /tmp/staging_token.txt
+
+# Update GitHub Secret
+gh secret set HEALTHCHECK_TOKEN &lt; /tmp/staging_token.txt
+
+# Cleanup
+rm /tmp/staging_token.txt
+
+# Verify
+gh secret list | grep HEALTHCHECK_TOKEN
+```
+
+**Akzeptanzkriterium:**
+- Hash-Vergleich zeigt MATCH
+- Test-Deployment: Health endpoints return HTTP 200 mit Bearer
+
+---
+
+### **FIX F: P1 — Staging Failures Root Cause**
+
+**Typ:** Investigation + Fix
+**Status:** ⏳ INVESTIGATION REQUIRED
+
+#### Investigation Steps:
+```bash
+# 1. Review last 3 failed runs
+gh run view 19013942449 --log &gt; /tmp/run1.log
+gh run view 19013877383 --log &gt; /tmp/run2.log
+gh run view 19013845846 --log &gt; /tmp/run3.log
+
+# 2. Look for common patterns
+grep -i "error\|fail\|abort" /tmp/run*.log
+
+# 3. Check if BUILD_RUN_ID bug present
+grep "BUILD_RUN_ID" /tmp/run*.log | grep -i "null"
+
+# 4. Check health check failures
+grep -i "health" /tmp/run*.log | grep -i "401\|403\|500"
+```
+
+**Expected Findings:**
+- Likely related to BUILD_RUN_ID bug (P0-Fix C)
+- Likely related to HEALTHCHECK_TOKEN issue (P1-Fix E)
+
+**Akzeptanzkriterium:** After P0+P1 fixes, staging deployment succeeds
+
+---
+
+### **FIX G: P2 — Workflow Naming Conflict**
+
+**Typ:** GitHub Workflow Disable
+**Status:** ⏳ GEPLANT
+
+#### Via GitHub UI:
+1. Navigate to: https://github.com/fabianSp77/askproai-api/actions
+2. Find workflow: "check-staging-dummy.yml" (ID: 202998568)
+3. Click "..." → "Disable workflow"
+
+**Alternative (if file still exists):**
+```bash
+# Check if file exists
+test -f .github/workflows/check-staging-dummy.yml && echo "EXISTS" || echo "DELETED"
+
+# If exists: Remove or rename
+git checkout develop
+git pull origin develop
+git checkout -b fix/remove-phantom-workflow
+git rm .github/workflows/check-staging-dummy.yml
+git commit -m "chore(ci): Remove phantom production workflow
+
+Resolves naming conflict where two workflows both named 'Deploy to Production'
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;"
+git push origin fix/remove-phantom-workflow
+gh pr create --title "chore: Remove phantom production workflow" --base develop
+gh pr merge --squash --delete-branch
+```
+
+**Akzeptanzkriterium:**
+- `gh workflow list | grep -i production` shows only 1 workflow
+- No naming conflicts
+
+---
+
+### **FIX H: P2 — public/docs/ Ownership**
+
+**Typ:** Server Permission Fix
+**Status:** ⏳ GEPLANT
+
+```bash
+ssh deploy@152.53.116.127 "sudo chown -R deploy:www-data /var/www/api-gateway-staging/current/public/docs"
+ssh deploy@152.53.116.127 "ls -ld /var/www/api-gateway-staging/current/public/docs"
+```
+
+**Expected Output:**
+```
+drwxrwxr-x 2 deploy www-data 4096 Nov  2 15:49 /var/www/api-gateway-staging/current/public/docs
+```
+
+**Akzeptanzkriterium:** Owner = deploy:www-data
+
+---
+
+## **PHASE 1: STAGING E2E VALIDATION** (NACH ALLEN FIXES)
+
+**Trigger-Phrase:** `"STAGING-TEST FREIGEGEBEN"`
+
+### Prerequisites (alle müssen ✅ sein):
+- [ ] FIX A: Branch Protection main aktiviert
+- [ ] FIX B: Branch Protection develop aktiviert
+- [ ] FIX C: BUILD_RUN_ID Bug gefixed + merged
+- [ ] FIX D: Build für develop HEAD vorhanden
+- [ ] FIX E: HEALTHCHECK_TOKEN verifiziert
+- [ ] FIX F: Staging Failures Root Cause behoben
+- [ ] FIX G: Workflow-Konflikt behoben
+- [ ] FIX H: docs/ Ownership gefixed
+
+### Execution Steps:
+
+#### 1. Dokumentiere aktuellen Zustand
+```bash
+BEFORE_SYMLINK=$(ssh deploy@152.53.116.127 "readlink -f /var/www/api-gateway-staging/current")
+BEFORE_RELEASES=$(ssh deploy@152.53.116.127 "ls -1dt /var/www/api-gateway-staging/releases/* | head -3")
+echo "BEFORE: $BEFORE_SYMLINK"
+echo "RELEASES: $BEFORE_RELEASES"
+```
+
+#### 2. Trigger Staging Deployment
+```bash
+gh workflow run "Deploy to Staging" --ref develop
+DEPLOY_RUN=$(gh run list --workflow "Deploy to Staging" --limit 1 --json databaseId --jq '.[0].databaseId')
+echo "Deployment Run: $DEPLOY_RUN"
+```
+
+#### 3. Live-Monitor
+```bash
+gh run watch $DEPLOY_RUN
+```
+
+#### 4. Collect Evidence
+
+**Expected Gates:**
+- Pre-Switch Gates: ✅ 9/9 PASSED
+- Migrations: ✅ Success
+- Symlink Switch: ✅ Atomic
+- Post-Symlink Cache Clear: ✅ Executed
+- PHP-FPM Reload: ✅ Success
+- Grace Period: ✅ 15s wait
+- Health Checks: ✅ 3/3 HTTP 200 (within 6 attempts)
+- Vite Assets: ✅ manifest.json + asset accessible
+
+**Collect:**
+```bash
+# Workflow logs
+gh run view $DEPLOY_RUN --log &gt; /tmp/staging_e2e_logs.txt
+
+# New symlink
+AFTER_SYMLINK=$(ssh deploy@152.53.116.127 "readlink -f /var/www/api-gateway-staging/current")
+echo "AFTER: $AFTER_SYMLINK"
+
+# Release name
+RELEASE_NAME=$(basename $AFTER_SYMLINK)
+echo "Release: $RELEASE_NAME"
+
+# Health check manual
+curl -H "Authorization: Bearer $HEALTHCHECK_TOKEN" https://staging.askproai.de/health
+curl -H "Authorization: Bearer $HEALTHCHECK_TOKEN" https://staging.askproai.de/api/health-check
+curl https://staging.askproai.de/healthcheck.php
+
+# Vite manifest
+curl https://staging.askproai.de/build/manifest.json
+```
+
+#### 5. Generate Report
+
+**File:** `storage/docs/backup-system/E2E_STAGING_VALIDATION_&lt;TIMESTAMP&gt;.md`
+
+**Sections:**
+1. Executive Summary (Success/Failure)
+2. Pre-Conditions (all fixes applied)
+3. Workflow Run Evidence (URL, logs)
+4. Gate Results (all 9/9, pass/fail)
+5. Health Checks (3/3 HTTP 200)
+6. Symlink Changes (before/after)
+7. Release Info (name, SHA, bundle hash)
+8. Acceptance Criteria (met/not met)
+9. Next Steps (Production Pre-Flight if success)
+
+### Akzeptanzkriterien (alle müssen ✅):
+
+- [ ] ✅ Pre-Switch Gates: 9/9 PASSED
+- [ ] ✅ Migrations: No errors
+- [ ] ✅ Symlink Switch: Atomic, successful
+- [ ] ✅ Post-Symlink Cache Clear: Executed
+- [ ] ✅ PHP-FPM Reload: Success
+- [ ] ✅ Grace Period: 15s completed
+- [ ] ✅ Health Checks: 3/3 HTTP 200 (within 6 attempts)
+- [ ] ✅ Vite Assets: manifest.json + asset accessible
+- [ ] ✅ No manual server intervention required
+- [ ] ✅ Vollständige Evidence gesammelt
+- [ ] ✅ Report erstellt und committed
+
+**Bei Failure:**
+- Auto-Rollback greift
+- Root Cause dokumentieren
+- **KEIN** Production Deploy bis Staging fix
+
+---
+
+## **PHASE 2: PRODUCTION PRE-FLIGHT** (READ-ONLY)
+
+**Trigger-Phrase:** Automatisch nach Staging Success ODER Manual Review
+
+### Execution Steps:
+
+#### 1. Staging Stability Check
+```bash
+# Staging muss seit ≥1h stabil sein
+curl -H "Authorization: Bearer $HEALTHCHECK_TOKEN" https://staging.askproai.de/health
+# HTTP 200 expected
+
+# Check Staging uptime (via last deployment)
+gh run list --workflow "Deploy to Staging" --limit 1 --json createdAt
+```
+
+#### 2. Production Pre-Flight (Dry-Run)
+```bash
+# Download bundle
+BUILD_SHA=$(git rev-parse develop)
+gh run download &lt;BUILD_RUN_ID&gt; -n "deployment-bundle-$BUILD_SHA"
+
+# Extract to temp
+mkdir -p /tmp/preflight-$(date +%s)
+tar -xzf deployment-bundle-$BUILD_SHA.tar.gz -C /tmp/preflight-*
+
+# Pre-Switch Gates (9 Checks)
+cd /tmp/preflight-*/
+test -f public/index.php || { echo "❌ index.php missing"; exit 1; }
+test -f vendor/autoload.php || { echo "❌ autoload.php missing"; exit 1; }
+php -r "require 'vendor/autoload.php'; echo 'autoload-ok';"
+php artisan --version
+
+# Cleanup
+cd -
+rm -rf /tmp/preflight-*
+```
+
+#### 3. NGINX Config Check
+```bash
+ssh deploy@152.53.116.127 "sudo nginx -t"
+# Expected: syntax is ok, test is successful
+```
+
+#### 4. ENV Symlink Check
+```bash
+ssh deploy@152.53.116.127 "test -L /var/www/api-gateway/current/.env && readlink -f /var/www/api-gateway/current/.env"
+# Expected: /var/www/api-gateway/shared/.env/production.env
+```
+
+### Akzeptanzkriterien:
+
+- [ ] ✅ Staging stabil seit ≥1h
+- [ ] ✅ Pre-Flight Gates: 9/9 PASSED
+- [ ] ✅ NGINX Config: Valid
+- [ ] ✅ ENV Symlink: Correct
+- [ ] ✅ KEINE Schreib-/Switch-Operationen
+
+**Bei Failure:**
+- **NO-GO** für Production
+- Dokumentiere Root Cause
+- Fix Staging first
+
+---
+
+## **PHASE 3: PRODUCTION DEPLOYMENT** (NACH FREIGABE)
+
+**Trigger-Phrase:** `"PROD-DEPLOY FREIGEGEBEN"`
+
+### Prerequisites:
+- [ ] ✅ Staging E2E: Success
+- [ ] ✅ Production Pre-Flight: Success
+- [ ] ✅ Staging stabil seit ≥1h
+- [ ] ✅ User-Freigabe vorhanden
+
+### Execution Steps:
+
+#### 1. Pre-Deploy Backup (Production)
+```bash
+ssh deploy@152.53.116.127 "/var/www/api-gateway/scripts/backup-run.sh --pre-deploy"
+# Expected: App + DB + NGINX Config + SHA256
+```
+
+#### 2. Merge develop → main (oder Manual Trigger)
+```bash
+git checkout main
+git pull origin main
+git merge develop --no-ff -m "chore: Production deployment $(date +%Y-%m-%d)"
+git push origin main
+# → Auto-triggers Production Deploy Workflow
+```
+
+**Alternative (Manual):**
+```bash
+gh workflow run "Deploy to Production" --ref main
+```
+
+#### 3. Live-Monitor
+```bash
+PROD_RUN=$(gh run list --workflow "Deploy to Production" --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run watch $PROD_RUN
+```
+
+#### 4. Collect Evidence
+
+**Expected Gates:**
+- Pre-Switch Gates (Layer 3): ✅ 9/9 PASSED
+- Symlink Switch: ✅ Atomic (&lt; 1s)
+- PHP-FPM Reload: ✅ Success
+- Health Checks: ✅ 2/2 HTTP 200 (/health + manifest)
+
+**Collect:**
+```bash
+# Workflow logs
+gh run view $PROD_RUN --log &gt; /tmp/prod_deployment_logs.txt
+
+# New symlink
+ssh deploy@152.53.116.127 "readlink -f /var/www/api-gateway/current"
+
+# Health check
+curl -H "Authorization: Bearer $HEALTHCHECK_TOKEN" https://api.askproai.de/health
+curl https://api.askproai.de/build/manifest.json
+
+# Rollback status (if applicable)
+grep -i "rollback" /tmp/prod_deployment_logs.txt
+```
+
+#### 5. Generate Report
+
+**File:** `storage/docs/backup-system/E2E_PRODUCTION_DEPLOYMENT_&lt;TIMESTAMP&gt;.md`
+
+**Sections:**
+1. Executive Summary
+2. Pre-Flight Results
+3. Deployment Run Evidence
+4. Gate Results (9/9)
+5. Health Checks (2/2)
+6. Zero-Downtime Verification (&lt; 1s)
+7. Rollback Status (none expected)
+8. Evidence Links
+
+### Akzeptanzkriterien:
+
+- [ ] ✅ Pre-Flight: OK
+- [ ] ✅ Pre-Switch Gates: 9/9 PASSED
+- [ ] ✅ Symlink Switch: Atomic
+- [ ] ✅ Health Checks: 2/2 HTTP 200
+- [ ] ✅ Zero-Downtime: &lt; 1s
+- [ ] ✅ Keine Rollback erforderlich
+- [ ] ✅ Vollständige Evidence
+
+**Bei Failure:**
+- Auto-Rollback zu previous release
+- Verify rollback: `/health` → HTTP 200
+- Document Root Cause
+- **STOP** Production deployments
+
+---
+
+## 7️⃣ AUSFÜHRUNGS-GUARDRAILS
+
+### **Sicherheitsregeln:**
+
+1. ✅ **Keine Ausführung ohne Freigabe-Phrase**
+2. ✅ **Keine Secrets im Klartext loggen** (nur SHA256)
+3. ✅ **Keine Files auf Server editieren** (außer Deploy-Steps)
+4. ✅ **Bei Gate-Fail: Sofortiger Abbruch** + Root Cause + Logs
+5. ✅ **Read-Only bei Audits** (keine Änderungen)
+6. ✅ **Atomic Operations** (Symlink, Migrations)
+7. ✅ **Auto-Rollback bei Health-Failure**
+
+### **Abbruchkriterien:**
+
+**Vor Staging E2E:**
+- P0 Fixes nicht implementiert → **ABBRUCH**
+- Token Hash mismatch → **ABBRUCH**
+- Kein Build für develop HEAD → **ABBRUCH**
+
+**Während Staging E2E:**
+- Pre-Switch Gate Failure → **AUTOMATISCHER ABBRUCH**
+- Health Checks 0/3 nach 6 Attempts → **AUTO-ROLLBACK**
+- Manual intervention benötigt → **ABBRUCH**
+
+**Vor Production Deploy:**
+- Staging nicht stabil (&lt; 1h) → **NO-GO**
+- Pre-Flight Gates Failure → **ABBRUCH**
+- Kein User-Freigabe → **ABBRUCH**
+
+**Während Production Deploy:**
+- Pre-Switch Gate Failure → **AUTOMATISCHER ABBRUCH**
+- Health Checks Failure → **AUTO-ROLLBACK**
+
+### **Verbotene Workarounds:**
+
+❌ **Keine** ad-hoc Server-Hotfixes (direktes Editing)
+❌ **Keine** manuellen Symlink-Switches ohne Workflow
+❌ **Keine** Production-Deployments bei bekannten Staging-Failures
+❌ **Keine** Skipping von Gates oder Health Checks
+❌ **Keine** Force-Pushes zu protected branches
+
+---
+
+## 8️⃣ ZUSAMMENFASSUNG & NÄCHSTE SCHRITTE
+
+### **Aktueller Status:**
+
+- ✅ **SOLL-Prozess dokumentiert** (28 Schritte)
+- ✅ **GitHub-Audit durchgeführt** (Branch Protection, Workflows, Secrets, Build-Kopplung)
+- ✅ **Server-Audit durchgeführt** (Staging State, Sudoers, Health, Permissions)
+- ✅ **IST↔SOLL Delta erstellt** (16 Punkte: 4x P0, 3x P1, 3x P2)
+- ✅ **Flowchart verifiziert** (konsistent, keine Updates nötig)
+- ✅ **Fix-Plan erstellt** (8 Fixes A-H mit Patches/Kommandos)
+- ✅ **Validierungsplan erstellt** (3 Phasen: Staging E2E, Prod Pre-Flight, Prod Deploy)
+- ✅ **Guardrails definiert** (Sicherheitsregeln, Abbruchkriterien)
+
+### **GO/NO-GO Decision:**
+
+**Staging E2E Test:** ❌ **NO-GO**
+**Production Deployment:** ❌ **NO-GO**
+
+**Grund:** 4x P0 Blocker + 3x P1 High + 3x P2 Medium
+
+### **Erforderliche Fixes (Reihenfolge):**
+
+**P0 (CRITICAL - must fix first):**
+1. ✅ FIX A: Branch Protection (main) → 6 Required Checks
+2. ✅ FIX B: Branch Protection (develop) → 4 Required Checks
+3. ✅ FIX C: BUILD_RUN_ID Bug → jq `// empty` + null check
+4. ✅ FIX D: Build für develop HEAD → Trigger Workflow
+
+**P1 (HIGH - fix before E2E):**
+5. ✅ FIX E: HEALTHCHECK_TOKEN → Hash-Vergleich + Update if needed
+6. ✅ FIX F: Staging Failures → Root Cause (wahrscheinlich P0-Fixes lösen es)
+
+**P2 (MEDIUM - fix before Production):**
+7. ✅ FIX G: Workflow-Konflikt → Disable phantom workflow
+8. ✅ FIX H: docs/ Ownership → Chown to deploy:www-data
+
+### **Freigabe-Phrasen (warten auf User):**
+
+- **"APPEND MISSING INFO"** + Details → Ergänze Report
+- **"STAGING-TEST FREIGEGEBEN"** → Führe Staging E2E aus (nach P0+P1 Fixes!)
+- **"PROD-DEPLOY FREIGEGEBEN"** → Führe Production Deploy aus (nach Staging Success!)
+- **"PROD-FIX FREIGEGEBEN"** → Führe nur spezifizierte Prod-Aktion aus
+- **"ABBRECHEN"** → Stoppe, liefere Status & Empfehlungen
+
+---
+
+## 📚 REFERENZEN
+
+### **Dokumentation (Doku-Hub):**
+
+- [DEPLOYMENT_HANDBUCH_FUER_DRITTE.html](https://api.askproai.de/docs/backup-system/DEPLOYMENT_HANDBUCH_FUER_DRITTE.html)
+- [status-quo-deployment-prozess-2025-11-01.html](https://api.askproai.de/docs/backup-system/status-quo-deployment-prozess-2025-11-01.html)
+- [E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html](https://api.askproai.de/docs/backup-system/E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html)
+- [E2E_WORKFLOW_HARDENING_VALIDATION_2025-11-02_1330.html](https://api.askproai.de/docs/backup-system/E2E_WORKFLOW_HARDENING_VALIDATION_2025-11-02_1330.html)
+- [DEPLOYMENT_FLOWCHART.md](https://github.com/fabianSp77/askproai-api/blob/develop/storage/docs/backup-system/DEPLOYMENT_FLOWCHART.md)
+
+### **Workflows:**
+
+- `.github/workflows/build-artifacts.yml` (13K)
+- `.github/workflows/deploy-staging.yml` (26K)
+- `.github/workflows/deploy-production.yml` (9.5K)
+- `.github/workflows/staging-smoke.yml` (6.1K)
+
+### **Audit-Reports:**
+
+- GitHub/CI Audit: Embedded in Section 2️⃣
+- Server Audit: Embedded in Section 3️⃣
+
+---
+
+**Report Metadata:**
+
+- **Erstellt:** 2025-11-02 19:00 UTC
+- **Autor:** Claude Code (E2E Planning & Audit)
+- **Version:** 2.0
+- **Format:** Markdown
+- **Status:** 🔴 **PLAN-FIRST — WARTET AUF FREIGABE**
+
+---
+
+**⛔ STOP: NICHTS WURDE AUSGEFÜHRT**
+
+Dieser Report ist **nur ein Plan**. Keine Workflows getriggert, keine Server-Änderungen, keine Deployments, keine Commits.
+
+**Warte auf Freigabe-Phrase vom User.**
+</div>
+            <button class="expand-btn" onclick="toggleExpandPreview()">Vollständig anzeigen ▼</button>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p><strong>E2E Deployment Rollout-Plan</strong></p>
+        <p>Generiert: 2025-11-02 20:59:25 UTC</p>
+        <p>AskPro AI Gateway | Server: 152.53.116.127</p>
+        <p>Repository: fabianSp77/askproai-api</p>
+        <p>© 2025 - State-of-the-Art Deployment Documentation</p>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Copy code to clipboard
+        function copyCode(button, elementId) {
+            const code = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Kopieren';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Copy full markdown
+        function copyFullMarkdown() {
+            const markdown = document.getElementById('markdownPreview').textContent;
+            navigator.clipboard.writeText(markdown).then(() => {
+                alert('✅ Vollständiges Markdown in Zwischenablage kopiert!');
+            });
+        }
+
+        // Download markdown as file
+        function downloadMarkdown() {
+            const markdown = document.getElementById('markdownPreview').textContent;
+            const blob = new Blob([markdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'E2E_DEPLOYMENT_ROLLOUT_PLAN_2025-11-02_1900.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Toggle preview visibility
+        function togglePreview() {
+            const preview = document.getElementById('markdownPreview');
+            preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Toggle expand preview
+        function toggleExpandPreview() {
+            const preview = document.getElementById('markdownPreview');
+            const btn = event.target;
+            preview.classList.toggle('expanded');
+            btn.textContent = preview.classList.contains('expanded') ? 'Einklappen ▲' : 'Vollständig anzeigen ▼';
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('.nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    </script>
+</body>
+</html>

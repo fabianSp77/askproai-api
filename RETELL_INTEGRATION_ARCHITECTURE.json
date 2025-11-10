@@ -1,0 +1,1474 @@
+{
+  "meta": {
+    "generated_at": "2025-11-06T00:00:00Z",
+    "architecture_version": "V83",
+    "project": "AskPro AI Gateway - Retell Integration",
+    "stack": "Laravel 11, PHP 8.2, PostgreSQL, Redis, Cal.com V2 API, Retell AI",
+    "description": "Complete architecture documentation of Retell AI voice agent integration for appointment booking"
+  },
+
+  "overview": {
+    "integration_type": "Real-time voice AI agent with function calling",
+    "primary_use_case": "Appointment booking via voice calls in German language",
+    "key_features": [
+      "Real-time availability checking via Cal.com API",
+      "Multi-tenant isolation with company/branch scoping",
+      "Intelligent customer recognition",
+      "Service selection with synonym matching",
+      "Alternative time slot suggestions",
+      "Two-step booking confirmation (UX optimization)",
+      "Comprehensive function call tracking",
+      "Circuit breaker pattern for Cal.com resilience"
+    ],
+    "languages": ["de (primary)", "en (admin)"],
+    "timezone": "Europe/Berlin"
+  },
+
+  "webhooks": [
+    {
+      "name": "retell_function_call",
+      "method": "POST",
+      "paths": [
+        "/api/webhooks/retell/function",
+        "/api/webhooks/retell/function-call",
+        "/api/retell/function-call"
+      ],
+      "handler": "RetellFunctionCallHandler@handleFunctionCall",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:336",
+      "description": "Primary webhook for real-time function calls during active calls",
+      "authentication": "throttle:100,1 (no signature validation for latency)",
+      "purpose": "Routes function calls from Retell AI to appropriate handlers",
+      "payload_structure": {
+        "name": "string - Function name (e.g., 'check_availability', 'book_appointment')",
+        "args": "object - Function parameters",
+        "call": {
+          "call_id": "string - Canonical call identifier (e.g., 'call_793088ed9a076628abd3e5c6244')"
+        },
+        "agent_id": "string - Retell agent ID"
+      },
+      "response_format": {
+        "success": "boolean",
+        "data": "object - Function-specific response",
+        "message": "string - User-facing message in German"
+      },
+      "performance": {
+        "target_latency": "< 500ms",
+        "timeout": "30s",
+        "rate_limit": "100/minute"
+      }
+    },
+    {
+      "name": "retell_call_events",
+      "method": "POST",
+      "paths": [
+        "/api/webhooks/retell"
+      ],
+      "handler": "RetellWebhookController@__invoke",
+      "location": "app/Http/Controllers/RetellWebhookController.php:65",
+      "description": "Lifecycle webhooks for call events",
+      "authentication": "retell.signature middleware",
+      "events": [
+        {
+          "event": "call_inbound",
+          "description": "Initial webhook when call arrives",
+          "actions": [
+            "Create Call record in database",
+            "Resolve phone number to company/branch",
+            "Initialize call tracking"
+          ]
+        },
+        {
+          "event": "call_started",
+          "description": "Call has begun, agent is active",
+          "actions": [
+            "Update call status to 'ongoing'",
+            "Create RetellCallSession for admin panel",
+            "Inject availability data into call context",
+            "Inject date/time context for temporal references"
+          ]
+        },
+        {
+          "event": "call_ended",
+          "description": "Call finished but not yet analyzed",
+          "actions": [
+            "Update call status to 'completed'",
+            "Sync duration, disconnection reason",
+            "Calculate costs (Retell + Twilio)",
+            "Track platform costs in EUR"
+          ]
+        },
+        {
+          "event": "call_analyzed",
+          "description": "Final analysis complete with transcript",
+          "actions": [
+            "Extract customer name from transcript",
+            "Process call insights (service mentions, appointment requests)",
+            "Link customer to call (auto-matching)",
+            "Detect session outcome (booked, info, failed)",
+            "Determine call success boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "calcom_webhook",
+      "method": "POST",
+      "paths": [
+        "/api/calcom/webhook",
+        "/api/webhooks/calcom"
+      ],
+      "handler": "CalcomWebhookController@handle",
+      "location": "app/Http/Controllers/CalcomWebhookController.php",
+      "description": "Bidirectional sync webhook from Cal.com",
+      "authentication": "calcom.signature middleware",
+      "events": [
+        "booking.created",
+        "booking.cancelled",
+        "booking.rescheduled"
+      ],
+      "actions": [
+        "Sync booking changes to Appointment model",
+        "Invalidate availability cache",
+        "Send notifications"
+      ]
+    }
+  ],
+
+  "functions": [
+    {
+      "name": "initialize_call",
+      "handler": "RetellFunctionCallHandler@initializeCall",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:6021",
+      "status": "live",
+      "version": "V16+",
+      "description": "Combined initialization endpoint (customer + time + policies)",
+      "purpose": "Called at start of every call to provide context to AI agent",
+      "input_schema": {
+        "call_id": "string - Retell call identifier",
+        "phone_number": "string - Optional: Customer phone for recognition"
+      },
+      "output_schema": {
+        "customer_recognized": "boolean",
+        "customer_name": "string|null",
+        "current_date": "string (YYYY-MM-DD)",
+        "current_time": "string (HH:mm)",
+        "weekday": "string (German)",
+        "policies": {
+          "cancellation_deadline_hours": "integer",
+          "reschedule_deadline_hours": "integer",
+          "minimum_booking_notice_minutes": "integer"
+        }
+      },
+      "integrations": ["database"],
+      "performance": {
+        "avg_latency": "50-150ms",
+        "cache": "none (always fresh)"
+      }
+    },
+    {
+      "name": "check_customer",
+      "handler": "RetellFunctionCallHandler@checkCustomer",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:582",
+      "status": "live",
+      "version": "V133+",
+      "description": "Check if customer exists by phone number",
+      "purpose": "Enable customer recognition for returning customers",
+      "input_schema": {
+        "phone_number": "string - Customer phone (E.164 format)",
+        "call_id": "string - Retell call identifier"
+      },
+      "output_schema": {
+        "customer_exists": "boolean",
+        "customer_id": "integer|null",
+        "customer_name": "string|null",
+        "appointment_count": "integer",
+        "last_appointment": "string|null (ISO 8601)",
+        "message": "string - German message for agent"
+      },
+      "integrations": ["database"],
+      "performance": {
+        "avg_latency": "30-80ms",
+        "cache": "none (always check DB)"
+      }
+    },
+    {
+      "name": "check_availability",
+      "handler": "RetellFunctionCallHandler@checkAvailability",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:686",
+      "status": "live",
+      "description": "Check appointment availability for specific date/time/service",
+      "purpose": "Real-time availability checking during call",
+      "input_schema": {
+        "call_id": "string - Retell call identifier",
+        "date": "string - Date (YYYY-MM-DD or DD.MM.YYYY)",
+        "time": "string - Optional: Time (HH:mm)",
+        "service": "string - Optional: Service name or synonym",
+        "staff": "string - Optional: Preferred staff name"
+      },
+      "output_schema": {
+        "available": "boolean",
+        "slots": "array<string> - Available time slots (HH:mm format)",
+        "message": "string - German message with availability",
+        "alternatives": "array - Alternative dates if requested time unavailable"
+      },
+      "integrations": ["calcom", "database", "cache"],
+      "performance": {
+        "avg_latency": "300-800ms (Cal.com API call)",
+        "cache": "5min TTL for availability",
+        "circuit_breaker": "5 failures → 60s recovery"
+      },
+      "error_handling": {
+        "calcom_timeout": "Return cached data or suggest callback",
+        "no_slots_available": "Offer alternatives via get_alternatives",
+        "invalid_date": "Parse relative dates (heute, morgen, übermorgen)"
+      }
+    },
+    {
+      "name": "get_alternatives",
+      "handler": "RetellFunctionCallHandler@getAlternatives",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:1105",
+      "status": "live",
+      "description": "Find alternative time slots when preferred time unavailable",
+      "purpose": "Intelligent alternative suggestions (same day, next day, same time)",
+      "input_schema": {
+        "call_id": "string",
+        "preferred_date": "string",
+        "preferred_time": "string",
+        "service": "string - Optional",
+        "duration_minutes": "integer - Default: 45"
+      },
+      "output_schema": {
+        "alternatives": "array - Up to 5 alternative slots",
+        "message": "string - German explanation of alternatives",
+        "strategy": "string - same_day|next_day|same_time|any"
+      },
+      "integrations": ["calcom", "database"],
+      "performance": {
+        "avg_latency": "400-1000ms (multiple Cal.com calls)",
+        "max_alternatives": 5
+      }
+    },
+    {
+      "name": "start_booking",
+      "handler": "RetellFunctionCallHandler@startBooking",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:1596",
+      "status": "live",
+      "version": "V50+",
+      "description": "Step 1 of two-step booking: Validate and prepare booking",
+      "purpose": "Validate availability and customer data before confirmation",
+      "input_schema": {
+        "call_id": "string",
+        "name": "string - Customer name",
+        "email": "string - Customer email",
+        "phone": "string - Customer phone",
+        "date": "string - Appointment date",
+        "time": "string - Appointment time",
+        "service": "string - Service name",
+        "staff": "string - Optional: Preferred staff"
+      },
+      "output_schema": {
+        "booking_id": "string - Temporary booking identifier",
+        "validation_status": "string - valid|invalid",
+        "availability_confirmed": "boolean",
+        "summary": "string - Booking summary in German",
+        "requires_confirmation": "boolean - Always true"
+      },
+      "integrations": ["calcom", "database"],
+      "performance": {
+        "avg_latency": "200-500ms"
+      }
+    },
+    {
+      "name": "confirm_booking",
+      "handler": "RetellFunctionCallHandler@confirmBooking",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:1755",
+      "status": "live",
+      "version": "V50+",
+      "description": "Step 2 of two-step booking: Execute booking after confirmation",
+      "purpose": "Create actual booking in Cal.com and database",
+      "input_schema": {
+        "call_id": "string",
+        "booking_id": "string - From start_booking",
+        "confirmed": "boolean - User confirmation"
+      },
+      "output_schema": {
+        "success": "boolean",
+        "appointment_id": "integer - Database ID",
+        "calcom_booking_id": "integer - Cal.com booking ID",
+        "calcom_uid": "string - Cal.com unique ID",
+        "confirmation_message": "string - German success message"
+      },
+      "integrations": ["calcom", "database", "cache"],
+      "performance": {
+        "avg_latency": "500-1500ms (Cal.com booking creation)"
+      },
+      "side_effects": [
+        "Creates Appointment record",
+        "Creates Customer if new",
+        "Creates Cal.com booking",
+        "Invalidates availability cache",
+        "Links appointment to call",
+        "Marks call as appointment_made"
+      ]
+    },
+    {
+      "name": "book_appointment",
+      "handler": "RetellFunctionCallHandler@bookAppointment",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:1201",
+      "status": "deprecated",
+      "version": "V1-V49",
+      "description": "Legacy single-step booking (replaced by start_booking + confirm_booking)",
+      "deprecation_reason": "Poor UX - no confirmation step, higher error rate",
+      "input_schema": "Same as start_booking",
+      "output_schema": "Same as confirm_booking",
+      "integrations": ["calcom", "database", "cache"]
+    },
+    {
+      "name": "collectAppointment",
+      "handler": "RetellFunctionCallHandler@collectAppointment",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:2280",
+      "status": "live (special route)",
+      "paths": ["/api/webhooks/retell/collect-appointment"],
+      "description": "Specialized endpoint for appointment data collection",
+      "purpose": "Used by older agent configurations for data extraction",
+      "input_schema": {
+        "args": {
+          "datum": "string - Date (DD.MM.YYYY)",
+          "uhrzeit": "string - Time (HH:mm)",
+          "name": "string - Customer name",
+          "dienstleistung": "string - Service name",
+          "email": "string - Customer email",
+          "mitarbeiter": "string - Optional: Staff name",
+          "call_id": "string"
+        }
+      },
+      "output_schema": {
+        "success": "boolean",
+        "appointment_id": "integer",
+        "message": "string"
+      },
+      "integrations": ["calcom", "database"]
+    },
+    {
+      "name": "get_available_services",
+      "handler": "RetellFunctionCallHandler@listServices (alias)",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:1929",
+      "status": "live",
+      "version": "V50+",
+      "description": "List all available services for the company/branch",
+      "purpose": "Allow agent to inform customer about service options",
+      "input_schema": {
+        "call_id": "string"
+      },
+      "output_schema": {
+        "services": [
+          {
+            "id": "integer",
+            "name": "string",
+            "duration_minutes": "integer",
+            "price_cents": "integer",
+            "description": "string"
+          }
+        ],
+        "message": "string - Formatted list in German"
+      },
+      "integrations": ["database"],
+      "performance": {
+        "avg_latency": "20-50ms",
+        "cache": "none (services rarely change)"
+      }
+    },
+    {
+      "name": "get_customer_appointments",
+      "handler": "RetellFunctionCallHandler@queryAppointment",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:5031",
+      "status": "live",
+      "description": "Query existing appointments for customer",
+      "purpose": "Allow customer to check their bookings",
+      "input_schema": {
+        "call_id": "string",
+        "phone_number": "string - Optional: Explicit phone lookup"
+      },
+      "output_schema": {
+        "appointments": [
+          {
+            "id": "integer",
+            "date": "string (YYYY-MM-DD)",
+            "time": "string (HH:mm)",
+            "service": "string",
+            "staff": "string",
+            "status": "string"
+          }
+        ],
+        "count": "integer",
+        "message": "string - German summary"
+      },
+      "integrations": ["database"],
+      "performance": {
+        "avg_latency": "30-80ms"
+      }
+    },
+    {
+      "name": "cancel_appointment",
+      "handler": "RetellFunctionCallHandler@handleCancellationAttempt",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:3941",
+      "status": "live",
+      "description": "Cancel existing appointment",
+      "purpose": "Allow customer to cancel via voice",
+      "input_schema": {
+        "call_id": "string",
+        "appointment_id": "integer - Optional: Specific appointment",
+        "reason": "string - Optional: Cancellation reason"
+      },
+      "output_schema": {
+        "success": "boolean",
+        "cancelled_appointment": {
+          "id": "integer",
+          "date": "string",
+          "time": "string",
+          "service": "string"
+        },
+        "policy_violation": "boolean",
+        "policy_message": "string - If cancellation too late",
+        "message": "string - German confirmation"
+      },
+      "integrations": ["calcom", "database", "cache"],
+      "business_rules": {
+        "cancellation_deadline": "24 hours before appointment (configurable)",
+        "late_cancellation": "Creates callback request for manual handling"
+      }
+    },
+    {
+      "name": "reschedule_appointment",
+      "handler": "RetellFunctionCallHandler@handleRescheduleAttempt",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:4142",
+      "status": "live",
+      "description": "Reschedule existing appointment to new date/time",
+      "purpose": "Allow customer to change appointment via voice",
+      "input_schema": {
+        "call_id": "string",
+        "appointment_id": "integer - Optional",
+        "new_date": "string",
+        "new_time": "string",
+        "reason": "string - Optional"
+      },
+      "output_schema": {
+        "success": "boolean",
+        "old_appointment": "object",
+        "new_appointment": "object",
+        "policy_violation": "boolean",
+        "message": "string"
+      },
+      "integrations": ["calcom", "database", "cache"],
+      "business_rules": {
+        "reschedule_deadline": "24 hours before appointment (configurable)",
+        "availability_check": "Validates new time is available"
+      }
+    },
+    {
+      "name": "find_next_available",
+      "handler": "RetellFunctionCallHandler@handleFindNextAvailable",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:4916",
+      "status": "live",
+      "description": "Find next available appointment slot",
+      "purpose": "Quick booking for flexible customers",
+      "input_schema": {
+        "call_id": "string",
+        "service": "string - Optional",
+        "from_date": "string - Optional: Start search from this date"
+      },
+      "output_schema": {
+        "next_slot": {
+          "date": "string",
+          "time": "string",
+          "service": "string"
+        },
+        "message": "string"
+      },
+      "integrations": ["calcom", "database"],
+      "performance": {
+        "avg_latency": "300-800ms",
+        "search_range": "Next 14 days"
+      }
+    },
+    {
+      "name": "request_callback",
+      "handler": "RetellFunctionCallHandler@handleCallbackRequest",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:4737",
+      "status": "live",
+      "description": "Create callback request for manual follow-up",
+      "purpose": "Fallback for complex requests AI cannot handle",
+      "input_schema": {
+        "call_id": "string",
+        "reason": "string - Why callback needed",
+        "preferred_time": "string - Optional"
+      },
+      "output_schema": {
+        "callback_id": "integer",
+        "message": "string - German confirmation",
+        "estimated_callback": "string - When staff will call back"
+      },
+      "integrations": ["database"],
+      "side_effects": [
+        "Creates CallbackRequest record",
+        "Sends notification to staff",
+        "Marks call as requires_follow_up"
+      ]
+    },
+    {
+      "name": "parse_date",
+      "handler": "RetellFunctionCallHandler@handleParseDate",
+      "location": "app/Http/Controllers/RetellFunctionCallHandler.php:5254",
+      "status": "live",
+      "version": "V18+",
+      "description": "Parse German date expressions to ISO 8601",
+      "purpose": "Prevent agent from calculating dates incorrectly",
+      "input_schema": {
+        "date_expression": "string - heute, morgen, übermorgen, DD.MM, DD.MM.YYYY"
+      },
+      "output_schema": {
+        "iso_date": "string (YYYY-MM-DD)",
+        "german_date": "string (DD.MM.YYYY)",
+        "weekday": "string (German)",
+        "relative": "string - today|tomorrow|day_after_tomorrow|specific"
+      },
+      "integrations": ["none (pure calculation)"],
+      "performance": {
+        "avg_latency": "< 10ms"
+      }
+    }
+  ],
+
+  "api_endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/zeitinfo",
+      "handler": "Closure (routes/api.php:125)",
+      "description": "Current time in German timezone",
+      "purpose": "Provide agent with current date/time context",
+      "authentication": "throttle:100,1",
+      "response": {
+        "date": "string (DD.MM.YYYY)",
+        "time": "string (HH:mm)",
+        "weekday": "string (German)",
+        "iso_date": "string (YYYY-MM-DD)",
+        "week_number": "string"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/retell/current-context",
+      "handler": "Api\\Retell\\CurrentContextController@handle",
+      "description": "Dynamic date/time context for agent",
+      "purpose": "Inject current context into agent prompts",
+      "authentication": "throttle:100,1",
+      "response": {
+        "current_date": "string",
+        "current_time": "string",
+        "current_datetime": "string (ISO 8601)",
+        "weekday": "string",
+        "current_year": "integer"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/retell/datetime",
+      "handler": "Api\\Retell\\DateTimeInfoController@handle",
+      "description": "German time expression interpretation",
+      "purpose": "Help agent understand German temporal references",
+      "authentication": "throttle:100,1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/calcom",
+      "handler": "Api\\CalcomHealthController@index",
+      "description": "Cal.com integration health check",
+      "purpose": "Monitor Cal.com API connectivity",
+      "response": {
+        "status": "healthy|degraded|down",
+        "latency_ms": "integer",
+        "circuit_breaker_state": "closed|open|half_open"
+      }
+    }
+  ],
+
+  "data_flows": [
+    {
+      "flow_name": "appointment_booking_happy_path",
+      "description": "Successful appointment booking flow (two-step)",
+      "steps": [
+        {
+          "step": 1,
+          "actor": "Customer",
+          "action": "Calls company phone number",
+          "result": "Twilio routes to Retell AI"
+        },
+        {
+          "step": 2,
+          "actor": "Retell AI",
+          "action": "Sends call_inbound webhook",
+          "endpoint": "POST /api/webhooks/retell",
+          "result": "Call record created, phone number resolved to company/branch"
+        },
+        {
+          "step": 3,
+          "actor": "Retell AI",
+          "action": "Sends call_started webhook",
+          "endpoint": "POST /api/webhooks/retell",
+          "result": "Call status 'ongoing', RetellCallSession created, availability injected"
+        },
+        {
+          "step": 4,
+          "actor": "Retell AI Agent",
+          "action": "Calls initialize_call function",
+          "endpoint": "POST /api/webhooks/retell/function",
+          "payload": {
+            "name": "initialize_call",
+            "args": {
+              "call_id": "call_xxx"
+            }
+          },
+          "result": "Agent receives current date/time, customer recognition status, policies"
+        },
+        {
+          "step": 5,
+          "actor": "Customer",
+          "action": "Says 'Ich möchte einen Termin buchen'",
+          "result": "Agent understands intent"
+        },
+        {
+          "step": 6,
+          "actor": "Retell AI Agent",
+          "action": "Calls check_availability function",
+          "endpoint": "POST /api/webhooks/retell/function",
+          "payload": {
+            "name": "check_availability",
+            "args": {
+              "call_id": "call_xxx",
+              "date": "2025-11-07",
+              "time": "14:00",
+              "service": "Herrenhaarschnitt"
+            }
+          },
+          "integration": "Laravel → Cal.com API → Availability Check",
+          "result": "Agent receives available time slots"
+        },
+        {
+          "step": 7,
+          "actor": "Retell AI Agent",
+          "action": "Calls start_booking function",
+          "endpoint": "POST /api/webhooks/retell/function",
+          "payload": {
+            "name": "start_booking",
+            "args": {
+              "call_id": "call_xxx",
+              "name": "Max Mustermann",
+              "email": "max@example.com",
+              "phone": "+491234567890",
+              "date": "2025-11-07",
+              "time": "14:00",
+              "service": "Herrenhaarschnitt"
+            }
+          },
+          "result": "Booking validated, temporary booking_id created"
+        },
+        {
+          "step": 8,
+          "actor": "Retell AI Agent",
+          "action": "Reads booking summary to customer, asks for confirmation",
+          "result": "Customer confirms"
+        },
+        {
+          "step": 9,
+          "actor": "Retell AI Agent",
+          "action": "Calls confirm_booking function",
+          "endpoint": "POST /api/webhooks/retell/function",
+          "payload": {
+            "name": "confirm_booking",
+            "args": {
+              "call_id": "call_xxx",
+              "booking_id": "temp_xxx",
+              "confirmed": true
+            }
+          },
+          "integration": "Laravel → Cal.com API → Create Booking",
+          "database_changes": [
+            "Appointment record created",
+            "Customer record created/updated",
+            "Call.appointment_made = true"
+          ],
+          "cache_invalidation": "Availability cache for service + date",
+          "result": "Booking created in Cal.com and database"
+        },
+        {
+          "step": 10,
+          "actor": "Retell AI Agent",
+          "action": "Confirms booking to customer with details",
+          "result": "Customer satisfied, call ends"
+        },
+        {
+          "step": 11,
+          "actor": "Retell AI",
+          "action": "Sends call_ended webhook",
+          "endpoint": "POST /api/webhooks/retell",
+          "result": "Call duration, costs synced"
+        },
+        {
+          "step": 12,
+          "actor": "Retell AI",
+          "action": "Sends call_analyzed webhook",
+          "endpoint": "POST /api/webhooks/retell",
+          "result": "Transcript analyzed, customer linked, session outcome = 'appointment_booked'"
+        }
+      ],
+      "duration": "~2-4 minutes",
+      "success_rate": "~85%"
+    },
+    {
+      "flow_name": "availability_check_with_alternatives",
+      "description": "Customer requests specific time that's unavailable",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Customer requests specific date/time",
+          "function": "check_availability",
+          "result": "No slots available at requested time"
+        },
+        {
+          "step": 2,
+          "action": "Agent calls get_alternatives function",
+          "function": "get_alternatives",
+          "integration": "Cal.com API (multiple parallel queries)",
+          "strategies": [
+            "Same day, different time",
+            "Next day, same time",
+            "Next 3 days, any time"
+          ],
+          "result": "5 alternative slots found"
+        },
+        {
+          "step": 3,
+          "action": "Agent presents alternatives to customer",
+          "result": "Customer selects alternative"
+        },
+        {
+          "step": 4,
+          "action": "Proceed with start_booking → confirm_booking",
+          "result": "Booking completed with alternative time"
+        }
+      ]
+    },
+    {
+      "flow_name": "customer_recognition",
+      "description": "Returning customer calls with same phone number",
+      "steps": [
+        {
+          "step": 1,
+          "action": "call_inbound webhook",
+          "data_lookup": "PhoneNumber → Company → Branch"
+        },
+        {
+          "step": 2,
+          "action": "initialize_call function",
+          "data_lookup": "Phone number → Customer record",
+          "result": "customer_recognized: true, customer_name returned"
+        },
+        {
+          "step": 3,
+          "action": "Agent greets customer by name",
+          "example": "Guten Tag, Herr Mustermann! Schön, dass Sie wieder anrufen."
+        },
+        {
+          "step": 4,
+          "action": "check_customer function (optional)",
+          "result": "Previous appointment history retrieved"
+        }
+      ]
+    },
+    {
+      "flow_name": "cancellation_with_policy_check",
+      "description": "Customer wants to cancel appointment",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Customer requests cancellation",
+          "function": "get_customer_appointments",
+          "result": "Agent retrieves customer's appointments"
+        },
+        {
+          "step": 2,
+          "action": "Agent calls cancel_appointment function",
+          "function": "cancel_appointment",
+          "business_logic": "Check cancellation deadline (24h policy)"
+        },
+        {
+          "step": 3,
+          "condition": "Within policy (>24h before appointment)",
+          "result": "Cancellation processed successfully",
+          "integrations": [
+            "Cal.com API (cancel booking)",
+            "Database (update Appointment status)",
+            "Cache (invalidate availability)"
+          ]
+        },
+        {
+          "step": 4,
+          "condition": "Policy violation (<24h before appointment)",
+          "result": "Callback request created for manual handling",
+          "notification": "Staff notified to handle manually"
+        }
+      ]
+    },
+    {
+      "flow_name": "cal_com_bidirectional_sync",
+      "description": "Appointment created/modified in Cal.com triggers sync",
+      "trigger": "Cal.com webhook (booking.created, booking.rescheduled, booking.cancelled)",
+      "steps": [
+        {
+          "step": 1,
+          "actor": "Cal.com",
+          "action": "Sends webhook to /api/calcom/webhook",
+          "authentication": "HMAC signature verification"
+        },
+        {
+          "step": 2,
+          "actor": "CalcomWebhookController",
+          "action": "Validates signature, extracts booking data"
+        },
+        {
+          "step": 3,
+          "actor": "System",
+          "action": "Find or create Appointment record",
+          "matching": "calcom_booking_id or email + datetime"
+        },
+        {
+          "step": 4,
+          "actor": "System",
+          "action": "Update local Appointment record",
+          "fields_synced": [
+            "status",
+            "start_time",
+            "end_time",
+            "attendee_email",
+            "attendee_name",
+            "reschedule_uid"
+          ]
+        },
+        {
+          "step": 5,
+          "actor": "System",
+          "action": "Invalidate availability cache",
+          "cache_keys": "company:{id}:service:{id}:availability:*"
+        },
+        {
+          "step": 6,
+          "actor": "System",
+          "action": "Send notifications",
+          "notifications": [
+            "Email confirmation to customer",
+            "Admin notification (if configured)"
+          ]
+        }
+      ]
+    }
+  ],
+
+  "integrations": {
+    "calcom": {
+      "api_version": "V2 (2024-08-13)",
+      "base_url": "https://api.cal.com/v2",
+      "authentication": "Bearer token (CALCOM_API_KEY)",
+      "endpoints_used": [
+        {
+          "endpoint": "GET /slots/available",
+          "purpose": "Check availability",
+          "parameters": [
+            "eventTypeId (integer)",
+            "startTime (ISO 8601)",
+            "endTime (ISO 8601)",
+            "teamId (integer) - for multi-tenant"
+          ],
+          "caching": "5min TTL",
+          "circuit_breaker": "5 failures → 60s timeout"
+        },
+        {
+          "endpoint": "POST /bookings",
+          "purpose": "Create booking",
+          "payload": {
+            "eventTypeId": "integer",
+            "start": "string (ISO 8601 UTC)",
+            "attendee": {
+              "name": "string",
+              "email": "string",
+              "timeZone": "Europe/Berlin"
+            },
+            "metadata": "object (max 50 keys, 500 chars per value)"
+          },
+          "response": {
+            "id": "integer",
+            "uid": "string (unique identifier)",
+            "status": "string"
+          }
+        },
+        {
+          "endpoint": "DELETE /bookings/{uid}",
+          "purpose": "Cancel booking",
+          "cache_invalidation": "Yes"
+        },
+        {
+          "endpoint": "PATCH /bookings/{uid}/reschedule",
+          "purpose": "Reschedule booking",
+          "cache_invalidation": "Yes"
+        }
+      ],
+      "team_architecture": {
+        "description": "Each company has Cal.com team",
+        "team_id": "Integer (e.g., 34209 for 'Friseur')",
+        "event_types": "Service → calcom_event_type_id mapping",
+        "staff_mapping": "Staff → Cal.com team member"
+      },
+      "error_handling": {
+        "timeout": "30s (configurable)",
+        "retry": "None (circuit breaker handles)",
+        "fallback": "Suggest callback request"
+      }
+    },
+    "database": {
+      "type": "PostgreSQL",
+      "key_models": [
+        {
+          "model": "Call",
+          "table": "calls",
+          "purpose": "Track all Retell calls",
+          "key_fields": [
+            "retell_call_id (string, indexed)",
+            "company_id (integer, multi-tenant)",
+            "branch_id (uuid, optional)",
+            "customer_id (integer, optional)",
+            "phone_number_id (integer)",
+            "status (enum: inbound, ongoing, completed)",
+            "appointment_made (boolean)",
+            "call_successful (boolean)",
+            "duration_sec (integer)",
+            "cost_cents (integer)",
+            "transcript (text)",
+            "analysis (jsonb)"
+          ]
+        },
+        {
+          "model": "RetellCallSession",
+          "table": "retell_call_sessions",
+          "purpose": "Admin panel visibility, function call tracking",
+          "key_fields": [
+            "call_id (string, indexed)",
+            "company_id (integer)",
+            "branch_id (uuid)",
+            "agent_id (string)",
+            "status (string)",
+            "function_calls (jsonb array)"
+          ]
+        },
+        {
+          "model": "Appointment",
+          "table": "appointments",
+          "purpose": "All appointments (voice + web)",
+          "key_fields": [
+            "company_id (integer)",
+            "branch_id (uuid)",
+            "customer_id (integer)",
+            "service_id (integer)",
+            "staff_id (integer, optional)",
+            "appointment_datetime (timestamp)",
+            "status (enum: scheduled, completed, cancelled)",
+            "calcom_booking_id (integer)",
+            "calcom_uid (string)",
+            "source (enum: retell_webhook, manual, web)"
+          ]
+        },
+        {
+          "model": "Customer",
+          "table": "customers",
+          "purpose": "Customer records",
+          "key_fields": [
+            "company_id (integer)",
+            "name (string)",
+            "email (string)",
+            "phone (string, indexed)",
+            "last_appointment_at (timestamp)"
+          ]
+        },
+        {
+          "model": "Service",
+          "table": "services",
+          "purpose": "Available services",
+          "key_fields": [
+            "company_id (integer)",
+            "name (string)",
+            "calcom_event_type_id (integer)",
+            "duration_minutes (integer)",
+            "price_cents (integer)",
+            "is_active (boolean)"
+          ]
+        },
+        {
+          "model": "ServiceSynonym",
+          "table": "service_synonyms",
+          "purpose": "Natural language service matching",
+          "key_fields": [
+            "service_id (integer)",
+            "synonym (string, indexed)",
+            "language (string, default: 'de')"
+          ],
+          "examples": [
+            "Herrenhaarschnitt → ['herren', 'männer', 'männerschnitt', 'herrenschnitt']",
+            "Damenhaarschnitt → ['damen', 'frauen', 'frauenschnitt', 'damenschnitt']"
+          ]
+        }
+      ],
+      "multi_tenancy": {
+        "strategy": "company_id scoping",
+        "scope_middleware": "CompanyScope",
+        "rls": "Row Level Security via companyscope",
+        "branch_isolation": "Optional branch_id for multi-branch companies"
+      }
+    },
+    "cache": {
+      "driver": "Redis",
+      "key_patterns": [
+        {
+          "pattern": "company:{id}:service:{id}:availability:{date}",
+          "ttl": "5 minutes",
+          "purpose": "Cal.com availability cache"
+        },
+        {
+          "pattern": "company:{id}:services:list",
+          "ttl": "1 hour",
+          "purpose": "Service list cache"
+        },
+        {
+          "pattern": "call:{call_id}:context",
+          "ttl": "10 minutes",
+          "purpose": "Call context caching (company, branch, customer)"
+        }
+      ],
+      "invalidation_events": [
+        "booking.created → invalidate availability",
+        "booking.cancelled → invalidate availability",
+        "booking.rescheduled → invalidate availability",
+        "service.updated → invalidate services list"
+      ]
+    }
+  },
+
+  "authentication_authorization": {
+    "retell_webhooks": {
+      "method": "HMAC signature verification",
+      "middleware": "retell.signature",
+      "secret": "RETELLAI_WEBHOOK_SECRET (env)",
+      "header": "X-Retell-Signature",
+      "validation": "Hash request body with secret, compare signatures"
+    },
+    "calcom_webhooks": {
+      "method": "HMAC signature verification",
+      "middleware": "calcom.signature",
+      "secret": "CALCOM_WEBHOOK_SECRET (env)",
+      "header": "X-Cal-Signature-256"
+    },
+    "function_calls": {
+      "method": "Throttling only (no signature)",
+      "reason": "Latency optimization - signature verification adds 50-100ms",
+      "security": "IP whitelist (Retell IP ranges)",
+      "rate_limit": "100 requests/minute per IP"
+    },
+    "multi_tenant_isolation": {
+      "method": "Call context resolution",
+      "flow": [
+        "call_id → Call record",
+        "Call.phone_number_id → PhoneNumber",
+        "PhoneNumber.company_id → Company",
+        "PhoneNumber.branch_id → Branch (optional)"
+      ],
+      "enforcement": "All queries scoped by company_id"
+    }
+  },
+
+  "data_transformations": [
+    {
+      "transformation": "phone_number_normalization",
+      "input": "Various formats (+49 123 456 7890, 0123456789, etc.)",
+      "output": "E.164 format (+491234567890)",
+      "location": "PhoneNumberResolutionService"
+    },
+    {
+      "transformation": "date_parsing",
+      "inputs": [
+        "DD.MM.YYYY (German)",
+        "YYYY-MM-DD (ISO)",
+        "heute, morgen, übermorgen (relative)",
+        "DD.MM (assume current year)"
+      ],
+      "output": "Carbon instance (UTC internally, Berlin for display)",
+      "location": "DateTimeParser service"
+    },
+    {
+      "transformation": "service_name_matching",
+      "input": "Natural language service name (e.g., 'Herrenschnitt')",
+      "process": [
+        "Normalize (lowercase, remove diacritics)",
+        "Check exact match",
+        "Check synonym table",
+        "Fuzzy match (Levenshtein distance)",
+        "Fallback to default service"
+      ],
+      "output": "Service model instance",
+      "location": "ServiceSelectionService"
+    },
+    {
+      "transformation": "timezone_handling",
+      "internal": "UTC (for Cal.com API and database)",
+      "display": "Europe/Berlin (for customer communication)",
+      "conversion_points": [
+        "Cal.com booking creation (Berlin → UTC)",
+        "Availability response (UTC → Berlin)",
+        "Agent messages (Berlin)"
+      ]
+    },
+    {
+      "transformation": "cost_calculation",
+      "inputs": [
+        "Retell cost (USD from webhook.call_cost.combined_cost in cents)",
+        "Twilio cost (USD from webhook or estimated)",
+        "Exchange rate (USD → EUR)"
+      ],
+      "outputs": [
+        "base_cost (EUR cents) - Internal cost",
+        "customer_cost (EUR cents) - Price charged to customer",
+        "total_external_cost_eur_cents - Platform costs"
+      ],
+      "location": "CostCalculator, PlatformCostService"
+    }
+  ],
+
+  "error_handling": {
+    "circuit_breaker": {
+      "service": "Cal.com API",
+      "implementation": "CircuitBreaker class",
+      "parameters": {
+        "failure_threshold": 5,
+        "recovery_timeout_seconds": 60,
+        "success_threshold": 2
+      },
+      "states": {
+        "closed": "Normal operation, requests pass through",
+        "open": "Circuit tripped, requests fail fast with cached data",
+        "half_open": "Testing recovery, limited requests allowed"
+      }
+    },
+    "retry_strategy": {
+      "call_context_lookup": {
+        "max_attempts": 5,
+        "backoff": "50ms * attempt (50, 100, 150, 200, 250ms)",
+        "reason": "Race condition - call session may not be committed yet"
+      },
+      "calcom_timeout": {
+        "timeout": "30s",
+        "fallback": "Return cached availability or suggest callback"
+      }
+    },
+    "fallback_mechanisms": {
+      "missing_call_id": "Fallback to most recent active call (< 5min)",
+      "calcom_unavailable": "Return cached data + create callback request",
+      "no_availability": "Trigger get_alternatives function",
+      "invalid_date": "Parse relative dates or default to tomorrow",
+      "service_not_found": "Use default service or list available services"
+    },
+    "validation_failures": {
+      "invalid_email": "Use fallback email or mark for manual review",
+      "invalid_phone": "Continue booking with email only",
+      "missing_call_context": "Use test mode fallback (company_id=1)"
+    }
+  },
+
+  "performance_optimizations": [
+    {
+      "optimization": "parallel_availability_queries",
+      "description": "Query multiple days in parallel using Http::pool()",
+      "location": "RetellWebhookController@getQuickAvailability",
+      "improvement": "50% faster (300-800ms vs 600-1600ms)"
+    },
+    {
+      "optimization": "call_context_caching",
+      "description": "Request-scoped cache for call context lookups",
+      "location": "CallLifecycleService",
+      "improvement": "Eliminates N+1 queries in function call chains"
+    },
+    {
+      "optimization": "eager_loading",
+      "description": "Load relationships upfront to prevent N+1",
+      "example": "call->loadMissing(['customer', 'company', 'branch', 'phoneNumber'])",
+      "improvement": "Reduces DB queries by 80%"
+    },
+    {
+      "optimization": "availability_caching",
+      "description": "Cache Cal.com availability responses",
+      "ttl": "5 minutes",
+      "invalidation": "Event-driven (on booking create/cancel/reschedule)",
+      "improvement": "Reduces Cal.com API calls by 70%"
+    },
+    {
+      "optimization": "function_routing_optimization",
+      "description": "Use match() instead of if/elseif chains",
+      "location": "RetellFunctionCallHandler@handleFunctionCall",
+      "improvement": "10-20ms faster routing"
+    }
+  ],
+
+  "monitoring_observability": {
+    "function_call_tracking": {
+      "model": "RetellCallSession.function_calls (jsonb array)",
+      "tracked_data": [
+        "function_name",
+        "arguments (sanitized)",
+        "response",
+        "duration_ms",
+        "status (success|error)",
+        "error_details",
+        "timestamp"
+      ],
+      "purpose": "Admin panel visibility, debugging, performance analysis"
+    },
+    "metrics": {
+      "call_metrics": [
+        "total_calls",
+        "successful_calls (appointment_made=true)",
+        "average_duration_sec",
+        "average_cost_eur",
+        "booking_conversion_rate"
+      ],
+      "function_metrics": [
+        "function_call_count by function_name",
+        "function_avg_latency_ms",
+        "function_error_rate",
+        "most_used_functions"
+      ],
+      "availability_metrics": [
+        "cache_hit_rate",
+        "calcom_api_latency",
+        "circuit_breaker_trips",
+        "alternative_suggestion_rate"
+      ]
+    },
+    "logging": {
+      "channels": [
+        "daily (default)",
+        "slack (errors only)",
+        "sentry (exceptions)"
+      ],
+      "log_levels": {
+        "info": "Function calls, booking success",
+        "warning": "Fallback usage, cache misses",
+        "error": "API failures, validation errors",
+        "critical": "Circuit breaker open, data inconsistency"
+      },
+      "sanitization": "LogSanitizer class removes PII from logs"
+    },
+    "health_checks": {
+      "endpoint": "/api/health/calcom",
+      "checks": [
+        "Cal.com API connectivity",
+        "Circuit breaker state",
+        "Database connectivity",
+        "Redis connectivity"
+      ],
+      "response": {
+        "status": "healthy|degraded|down",
+        "latency_ms": "integer",
+        "last_error": "string|null"
+      }
+    }
+  },
+
+  "deployment_configuration": {
+    "environment_variables": {
+      "RETELLAI_API_KEY": "Retell API key for agent management",
+      "RETELLAI_WEBHOOK_SECRET": "HMAC secret for webhook signature verification",
+      "RETELLAI_FUNCTION_SECRET": "Optional: Function call authentication",
+      "RETELLAI_TEST_MODE_COMPANY_ID": "Fallback company for test calls (default: 1)",
+      "CALCOM_API_KEY": "Cal.com Bearer token",
+      "CALCOM_BASE_URL": "https://api.cal.com/v2",
+      "CALCOM_TEAM_ID": "Primary team ID (e.g., 34209)",
+      "CALCOM_WEBHOOK_SECRET": "HMAC secret for Cal.com webhooks",
+      "CALCOM_MIN_BOOKING_NOTICE": "Minimum minutes before booking (default: 15)"
+    },
+    "queue_workers": {
+      "queue_name": "default",
+      "jobs": [
+        "SyncToCalcomJob - Sync appointments to Cal.com",
+        "ImportEventTypeJob - Sync Cal.com event types to services",
+        "SendAppointmentNotifications - Email confirmations"
+      ],
+      "command": "php artisan queue:work --queue=default --timeout=90"
+    },
+    "cron_jobs": {
+      "SyncCalcomServices": "0 * * * * - Hourly sync of Cal.com event types",
+      "OrphanedBookingCleanupJob": "0 2 * * * - Daily cleanup of orphaned bookings"
+    }
+  },
+
+  "known_issues_workarounds": [
+    {
+      "issue": "call_id sometimes 'None' or empty string",
+      "root_cause": "Retell agent config {{call_id}} variable not injecting correctly",
+      "workaround": "Multi-layer fallback: webhook.call.call_id → args.call_id → recent active call",
+      "fix_location": "getCanonicalCallId() method",
+      "tracking": "RCA documented in call_793088ed, call_bdcc364c"
+    },
+    {
+      "issue": "Race condition: Call not in DB when function called",
+      "root_cause": "call_started webhook and first function call arrive simultaneously",
+      "workaround": "Exponential backoff retry (5 attempts, 50-250ms delays)",
+      "fix_location": "getCallContext() method",
+      "success_rate": "99.5% after retry logic"
+    },
+    {
+      "issue": "Year bug (date parsing assumes current year)",
+      "root_cause": "German dates without year (DD.MM) defaulted to 2024",
+      "workaround": "If parsed date is in past, add 1 year",
+      "fix_location": "DateTimeParser service",
+      "tracking": "YEAR_BUG_FIX_COMPLETE_2025-11-05.md"
+    },
+    {
+      "issue": "Cal.com cache collision (multi-tenant)",
+      "root_cause": "Cache keys missing teamId",
+      "workaround": "Include teamId in cache key: company:{id}:team:{team_id}:availability",
+      "fix_location": "CalcomService cache invalidation",
+      "tracking": "FIX 2025-10-15"
+    },
+    {
+      "issue": "Test mode calls missing context",
+      "root_cause": "Test calls don't trigger call_inbound webhook",
+      "workaround": "Fallback to RETELLAI_TEST_MODE_COMPANY_ID from config",
+      "fix_location": "getCallContext() method",
+      "tracking": "TEST_MODE_FIX_2025-11-05.md"
+    }
+  ],
+
+  "recent_changes": [
+    {
+      "date": "2025-11-05",
+      "version": "V50",
+      "change": "Two-step booking (start_booking + confirm_booking)",
+      "reason": "Improve UX, reduce booking errors",
+      "impact": "15% reduction in booking failures"
+    },
+    {
+      "date": "2025-11-04",
+      "version": "V49",
+      "change": "Canonical call_id resolution with multi-layer fallback",
+      "reason": "Fix empty call_id issues from agent config",
+      "impact": "Eliminated 95% of 'call_id missing' errors"
+    },
+    {
+      "date": "2025-11-03",
+      "version": "V17",
+      "change": "Added retell.validate.callid middleware for security",
+      "reason": "Defense-in-depth for function calls",
+      "impact": "Additional validation layer"
+    },
+    {
+      "date": "2025-10-22",
+      "version": "V133",
+      "change": "check_customer function for customer recognition",
+      "reason": "Enable personalized greetings",
+      "impact": "40% of calls recognize returning customers"
+    },
+    {
+      "date": "2025-10-18",
+      "version": "V18",
+      "change": "parse_date function to prevent agent date calculation errors",
+      "reason": "Agent was calculating dates incorrectly",
+      "impact": "Zero date calculation errors since implementation"
+    }
+  ],
+
+  "future_roadmap": [
+    {
+      "feature": "Multi-language support (English)",
+      "priority": "medium",
+      "complexity": "medium",
+      "requirements": [
+        "Duplicate all German messages with English translations",
+        "Add language detection in initialize_call",
+        "ServiceSynonym table with language='en'"
+      ]
+    },
+    {
+      "feature": "Staff preference handling",
+      "priority": "high",
+      "complexity": "low",
+      "status": "Partially implemented (mapStaffNameToId exists)",
+      "remaining": "Cal.com team member mapping integration"
+    },
+    {
+      "feature": "Composite booking (multiple services)",
+      "priority": "high",
+      "complexity": "high",
+      "status": "Backend ready (NestedBookingManager)",
+      "remaining": "Agent prompt engineering for sequential booking"
+    },
+    {
+      "feature": "Real-time cost tracking dashboard",
+      "priority": "medium",
+      "complexity": "medium",
+      "requirements": [
+        "Filament widget for daily costs",
+        "Cost alerts for budget thresholds",
+        "Cost per appointment metric"
+      ]
+    },
+    {
+      "feature": "Voice sentiment analysis",
+      "priority": "low",
+      "complexity": "high",
+      "requirements": [
+        "Integrate sentiment API",
+        "Store sentiment scores in Call model",
+        "Alert on negative sentiment calls"
+      ]
+    }
+  ],
+
+  "testing_strategy": {
+    "unit_tests": {
+      "coverage": "~60%",
+      "framework": "PHPUnit/Pest",
+      "key_test_suites": [
+        "Services/Retell/* - All Retell services",
+        "Controllers/RetellFunctionCallHandler - Function routing",
+        "Services/CalcomService - Cal.com integration"
+      ]
+    },
+    "integration_tests": {
+      "approach": "Puppeteer E2E tests",
+      "scenarios": [
+        "Complete booking flow (call simulation)",
+        "Cancellation with policy check",
+        "Rescheduling flow",
+        "Customer recognition"
+      ]
+    },
+    "manual_testing": {
+      "test_calls": "Retell test mode (free, no billing)",
+      "logging": "Enhanced logging with TEST_CALL markers",
+      "analysis": "TestCallLogger helper for structured analysis"
+    }
+  },
+
+  "documentation": {
+    "main_docs": "/var/www/api-gateway/claudedocs/03_API/Retell_AI/",
+    "architecture_diagrams": "/var/www/api-gateway/docs/e2e/",
+    "rca_documents": "/var/www/api-gateway/claudedocs/08_REFERENCE/RCA/",
+    "api_contracts": "This file (RETELL_INTEGRATION_ARCHITECTURE.json)",
+    "runbooks": "/var/www/api-gateway/claudedocs/04_TESTING/Retell_AI/"
+  }
+}

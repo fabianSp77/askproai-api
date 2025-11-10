@@ -58,10 +58,14 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        // Widgets disabled until database is fully migrated
-        // Some widgets query tables that don't exist yet
-        // Will be re-enabled once all migrations are complete
-        return [];
+        // Widgets re-enabled for GAP-010 (2025-11-03)
+        // Database migrations complete, all widgets functional
+        return [
+            \App\Filament\Widgets\RescheduleFirstMetricsWidget::class,
+            \App\Filament\Widgets\CompanyOverview::class,
+            \App\Filament\Widgets\DashboardStats::class,
+            \App\Filament\Widgets\SystemStatus::class,
+        ];
     }
 
     protected function getViewData(): array

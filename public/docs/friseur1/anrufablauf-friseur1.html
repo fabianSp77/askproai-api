@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friseur 1 - Anrufablauf & Service-Dokumentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header {
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #1e40af;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
+        .toc {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border-left: 4px solid #2563eb;
+        }
+
+        .toc h2 {
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            margin: 8px 0;
+        }
+
+        .toc a {
+            color: #2563eb;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc a:hover {
+            color: #1e40af;
+            text-decoration: underline;
+        }
+
+        section {
+            margin: 50px 0;
+            scroll-margin-top: 20px;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        h3 {
+            color: #334155;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        h4 {
+            color: #475569;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+
+        .service-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            transition: box-shadow 0.2s;
+        }
+
+        .service-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .service-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        .service-price {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .service-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .detail-value {
+            color: #334155;
+        }
+
+        .synonyms-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .synonyms-title {
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .synonym-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .synonym-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .synonym-high {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .synonym-medium {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .synonym-low {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .synonym-very-low {
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Friseur 1 - Anrufablauf & Service-Dokumentation</h1>
+            <p class="subtitle">Komplette Übersicht aller Services, Synonyme und Telefonie-Integration</p>
+            <p class="subtitle">Stand: 2025-11-05 | Version 1.0</p>
+        </header>
+
+        <nav class="toc">
+            <h2>📋 Inhaltsverzeichnis</h2>
+            <ul>
+                <li><a href="#overview">1. Übersicht & Statistiken</a></li>
+                <li><a href="#services">2. Alle Services & Synonyme</a></li>
+                <li><a href="#matching">3. Service-Matching-System</a></li>
+                <li><a href="#callflow">4. Telefonie-Ablauf</a></li>
+                <li><a href="#confirmation">5. Bestätigungsmechanismus</a></li>
+                <li><a href="#testing">6. Testing & Deployment</a></li>
+            </ul>
+        </nav>
+
+        <!-- SECTION 1: OVERVIEW -->
+        <section id="overview">
+            <h2>1. Übersicht & Statistiken</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-label">Aktive Services</div>
+                    <div class="stat-value">18</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Gesamt Synonyme</div>
+                    <div class="stat-value">~150</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">Durchschnitt pro Service</div>
+                    <div class="stat-value">8.3</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>🎯 Zweck dieses Dokuments</h4>
+                <p>Diese Dokumentation zeigt alle Services von Friseur 1 mit ihren alternativen Bezeichnungen (Synonymen), die Kunden am Telefon verwenden könnten. Das KI-System nutzt diese Synonyme für intelligentes Service-Matching während Telefongesprächen.</p>
+            </div>
+
+            <h3>Service-Kategorien</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kategorie</th>
+                        <th>Anzahl Services</th>
+                        <th>Preisbereich</th>
+                        <th>Beispiele</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Haarschnitte</strong></td>
+                        <td>4</td>
+                        <td>20€ - 55€</td>
+                        <td>Herren-, Damen-, Kinderhaarschnitt</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Färbungen</strong></td>
+                        <td>5</td>
+                        <td>58€ - 145€</td>
+                        <td>Balayage, Ansatzfärbung, Blondierung</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Styling</strong></td>
+                        <td>4</td>
+                        <td>18€ - 55€</td>
+                        <td>Föhnen, Styling, Waschen</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Spezialbehandlungen</strong></td>
+                        <td>5</td>
+                        <td>30€ - 78€</td>
+                        <td>Dauerwelle, Olaplex, Gloss</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 2: SERVICES -->
+        <section id="services">
+            <h2>2. Alle Services & Synonyme</h2>
+
+            <p>Folgende 18 Services sind für Friseur 1 aktiv. Jeder Service hat alternative Bezeichnungen (Synonyme) mit Confidence-Scores, die angeben, wie wahrscheinlich ein Kunde diese Bezeichnung verwendet.</p>
+
+            <!-- Service 1: Herrenhaarschnitt -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Herrenhaarschnitt</div>
+                    <div class="service-price">32,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">55 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419968</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">438</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (10 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Herrenschnitt <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Männerhaarschnitt <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-high">Haarschnitt Herren <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-medium">Männerschnitt <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haarschnitt für Männer <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haare schneiden Mann <small>(80%)</small></span>
+                        <span class="synonym-badge synonym-medium">Kurzhaarschnitt Herren <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Herren Frisur <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Männer Frisur <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Schneiden Herren <small>(65%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 2: Damenhaarschnitt -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Damenhaarschnitt</div>
+                    <div class="service-price">45,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">45 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419966</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">436</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (10 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Damenschnitt <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Frauenhaarschnitt <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-high">Haarschnitt Damen <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-medium">Frauenschnitt <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haarschnitt für Frauen <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haare schneiden Frau <small>(80%)</small></span>
+                        <span class="synonym-badge synonym-low">Damen Frisur <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Frauen Frisur <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Schneiden Damen <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Langhaarschnitt <small>(60%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3: Kinderhaarschnitt -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Kinderhaarschnitt</div>
+                    <div class="service-price">20,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">30 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419965</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">434</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (7 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Kinderschnitt <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Haarschnitt Kinder <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haarschnitt für Kinder <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Haare schneiden Kind <small>(80%)</small></span>
+                        <span class="synonym-badge synonym-low">Kinder Frisur <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Babyhaarschnitt <small>(60%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Baby Frisur <small>(55%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 4: Waschen, schneiden, föhnen -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Waschen, schneiden, föhnen</div>
+                    <div class="service-price">55,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">60 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419969</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">439</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (8 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Waschen schneiden föhnen <small>(100%)</small></span>
+                        <span class="synonym-badge synonym-medium">Waschen und Schneiden <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-medium">Schneiden und Föhnen <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Komplett Paket <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Rundum Service <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Alles zusammen <small>(60%)</small></span>
+                        <span class="synonym-badge synonym-very-low">WaSch <small>(50%)</small></span>
+                        <span class="synonym-badge synonym-very-low">WSF <small>(50%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 5: Balayage/Ombré -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Balayage/Ombré</div>
+                    <div class="service-price">110,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">150 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419974</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">443</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (12 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Balayage <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Ombré <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Ombre <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-medium">Highlights <small>(80%)</small></span>
+                        <span class="synonym-badge synonym-medium">Strähnchen <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-medium">Strähnen <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Mèches <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Sombré <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Babylights <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-low">Foliensträhnen <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Farbeframing <small>(60%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Farbverlauf <small>(60%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 6: Komplette Umfärbung (Blondierung) -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Komplette Umfärbung (Blondierung)</div>
+                    <div class="service-price">145,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">180 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419975</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">444</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (9 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Blondierung <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Blond färben <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-medium">Komplettfärbung <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Komplett blond <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Umfärben <small>(80%)</small></span>
+                        <span class="synonym-badge synonym-medium">Aufhellen <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Bleichen <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Platinblond <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Hellblond <small>(60%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 7: Dauerwelle -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Dauerwelle</div>
+                    <div class="service-price">78,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">135 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419972</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">441</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (6 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Dauerwellen <small>(98%)</small></span>
+                        <span class="synonym-badge synonym-medium">Welle <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Locken <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Locken machen <small>(65%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Permanent <small>(60%)</small></span>
+                        <span class="synonym-badge synonym-very-low">Perm <small>(55%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 8: Ansatzfärbung -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-name">Ansatzfärbung</div>
+                    <div class="service-price">58,00 €</div>
+                </div>
+                <div class="service-details">
+                    <div class="detail-item">
+                        <span class="detail-label">⏱️ Dauer:</span>
+                        <span class="detail-value">135 Minuten</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🔗 Cal.com ID:</span>
+                        <span class="detail-value">1419970</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📊 Service ID:</span>
+                        <span class="detail-value">440</span>
+                    </div>
+                </div>
+                <div class="synonyms-section">
+                    <div class="synonyms-title">🗣️ Alternative Begriffe (6 Synonyme):</div>
+                    <div class="synonym-list">
+                        <span class="synonym-badge synonym-high">Ansatz färben <small>(95%)</small></span>
+                        <span class="synonym-badge synonym-high">Ansatzfarbe <small>(90%)</small></span>
+                        <span class="synonym-badge synonym-medium">Ansatz nachfärben <small>(85%)</small></span>
+                        <span class="synonym-badge synonym-medium">Ansatz <small>(75%)</small></span>
+                        <span class="synonym-badge synonym-low">Nachwachsen färben <small>(70%)</small></span>
+                        <span class="synonym-badge synonym-low">Ansatz auffrischen <small>(65%)</small></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>ℹ️ Weitere 10 Services</h4>
+                <p>Zusätzlich zu den oben gezeigten Hauptservices bietet Friseur 1 noch 10 weitere Services an:</p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Waschen & Styling</strong> - 18€ (25 Min)</li>
+                    <li><strong>Föhnen & Styling Herren</strong> - 25€ (15 Min)</li>
+                    <li><strong>Föhnen & Styling Damen</strong> - 30€ (30 Min)</li>
+                    <li><strong>Trockenschnitt</strong> - 35€ (25 Min)</li>
+                    <li><strong>Ansatz + Längenausgleich</strong> - 75€ (150 Min)</li>
+                    <li><strong>Gloss</strong> - 38€ (90 Min)</li>
+                    <li><strong>Haarspende</strong> - 0€ (60 Min)</li>
+                    <li><strong>Rebuild Treatment Olaplex</strong> - 35€ (45 Min)</li>
+                    <li><strong>Intensiv Pflege Maria Nila</strong> - 30€ (45 Min)</li>
+                    <li><strong>Hairdetox</strong> - 45€ (90 Min)</li>
+                </ul>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #64748b;">Jeder dieser Services hat ebenfalls 4-7 Synonyme im System hinterlegt.</p>
+            </div>
+        </section>
+
+        <!-- SECTION 3: MATCHING SYSTEM -->
+        <section id="matching">
+            <h2>3. Service-Matching-System</h2>
+
+            <p>Das System verwendet eine intelligente 3-Stufen-Strategie, um zu verstehen, welchen Service der Kunde meint:</p>
+
+            <div class="mermaid">
+graph TD
+    A[Kunde sagt Service-Name] --> B{1. Exact Match?}
+    B -->|Ja| C[✅ Service gefunden]
+    B -->|Nein| D{2. Synonym Match?}
+    D -->|Ja| E{Confidence >= 85%?}
+    E -->|Ja| C
+    E -->|Nein| F[Bestätigung einholen]
+    D -->|Nein| G{3. Fuzzy Match?}
+    G -->|Ja, >= 75%| F
+    G -->|Nein| H[❌ Alternativen anbieten]
+
+    F --> I{Kunde bestätigt?}
+    I -->|Ja| C
+    I -->|Nein| H
+            </div>
+
+            <h3>Stufe 1: Exact Match</h3>
+            <div class="success-box">
+                <p><strong>Beispiel:</strong> Kunde sagt "Herrenhaarschnitt"</p>
+                <p>✅ System findet Service direkt in <code>services.name</code></p>
+                <p>✅ Keine Bestätigung nötig - 100% Match</p>
+            </div>
+
+            <h3>Stufe 2: Synonym Match</h3>
+            <div class="success-box">
+                <p><strong>Beispiel:</strong> Kunde sagt "Herrenschnitt"</p>
+                <p>❌ Nicht in <code>services.name</code> gefunden</p>
+                <p>✅ In <code>service_synonyms</code> gefunden → Service ID 438 (Confidence: 95%)</p>
+                <p>✅ Confidence >= 85% → Keine Bestätigung nötig</p>
+            </div>
+
+            <div class="warning-box">
+                <p><strong>Beispiel mit niedriger Confidence:</strong> Kunde sagt "Locken"</p>
+                <p>✅ In <code>service_synonyms</code> gefunden → Service "Dauerwelle" (Confidence: 70%)</p>
+                <p>⚠️ Confidence < 85% → <strong>Bestätigung erforderlich!</strong></p>
+                <p>💬 Agent fragt: "Sie meinten Locken - meinten Sie damit eine Dauerwelle?"</p>
+            </div>
+
+            <h3>Stufe 3: Fuzzy Match</h3>
+            <div class="info-box">
+                <p><strong>Beispiel:</strong> Kunde sagt "Herrenschit" (Tippfehler in Sprach-zu-Text)</p>
+                <p>❌ Weder Exact noch Synonym Match</p>
+                <p>🔍 Fuzzy Matching (Levenshtein-Distanz):</p>
+                <ul style="margin-top: 5px; margin-left: 20px;">
+                    <li>"Herrenschit" vs "Herrenschnitt": 92% Ähnlichkeit</li>
+                    <li>Threshold: 75%</li>
+                    <li>✅ Match gefunden!</li>
+                </ul>
+                <p>⚠️ Immer Bestätigung einholen bei Fuzzy Match</p>
+            </div>
+
+            <h3>Confidence Score Bedeutung</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Score</th>
+                        <th>Bedeutung</th>
+                        <th>Aktion</th>
+                        <th>Beispiel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="synonym-badge synonym-high">95-100%</span></td>
+                        <td>Exaktes/Sehr häufiges Synonym</td>
+                        <td>✅ Direkt verwenden</td>
+                        <td>"Herrenschnitt" für "Herrenhaarschnitt"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="synonym-badge synonym-medium">85-94%</span></td>
+                        <td>Häufig verwendet</td>
+                        <td>✅ Direkt verwenden</td>
+                        <td>"Männerschnitt" für "Herrenhaarschnitt"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="synonym-badge synonym-low">75-84%</span></td>
+                        <td>Gelegentlich verwendet</td>
+                        <td>⚠️ Bestätigung einholen</td>
+                        <td>"Strähnchen" für "Balayage/Ombré"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="synonym-badge synonym-very-low">60-74%</span></td>
+                        <td>Selten verwendet</td>
+                        <td>⚠️ Bestätigung einholen</td>
+                        <td>"Locken" für "Dauerwelle"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 4: CALL FLOW -->
+        <section id="callflow">
+            <h2>4. Telefonie-Ablauf</h2>
+
+            <h3>Kompletter Anrufablauf mit Service-Matching</h3>
+
+            <div class="mermaid">
+sequenceDiagram
+    participant Kunde
+    participant Agent as Retell AI Agent
+    participant Backend as Laravel Backend
+    participant Cal as Cal.com API
+
+    Kunde->>Agent: "Ich möchte einen Herrenschnitt"
+
+    Note over Agent,Backend: SERVICE MATCHING
+    Agent->>Backend: collect_appointment_info(service="Herrenschnitt")
+    Backend->>Backend: 1. Exact Match? Nein
+    Backend->>Backend: 2. Synonym Match? Ja (95%)
+    Backend->>Backend: Service ID 438 gefunden
+    Backend->>Agent: ✅ Service: "Herrenhaarschnitt" (32€, 55 Min)
+
+    Agent->>Kunde: "Für wann möchten Sie den Termin?"
+    Kunde->>Agent: "Heute um 17:45 Uhr"
+
+    Note over Agent,Cal: AVAILABILITY CHECK
+    Agent->>Backend: check_availability_v17(service_id=438, date="2025-11-05", time="17:45")
+    Backend->>Cal: GET /v2/slots/available
+    Cal->>Backend: Available slots: [16:30, 18:15, 19:00]
+    Backend->>Agent: ❌ 17:45 nicht verfügbar, Alternativen: 16:30, 18:15, 19:00
+
+    Agent->>Kunde: "17:45 ist leider nicht frei. Passt Ihnen 18:15 Uhr?"
+    Kunde->>Agent: "Ja, 18:15 ist okay"
+
+    Note over Agent,Backend: BOOKING
+    Agent->>Backend: book_appointment_v17(service_id=438, slot="2025-11-05T18:15")
+    Backend->>Backend: Create Appointment in DB
+    Backend->>Cal: POST /v2/bookings
+    Cal->>Backend: ✅ Booking created (ID: xyz)
+    Backend->>Agent: ✅ success=true, booking_id=xyz
+
+    Agent->>Kunde: "Perfekt! Ihr Termin für einen Herrenhaarschnitt ist gebucht für heute um 18:15 Uhr."
+            </div>
+
+            <h3>Tool-Aufrufe im Detail</h3>
+
+            <h4>1. collect_appointment_info</h4>
+            <pre><code>{
+  "service_name": "Herrenschnitt",
+  "date": "heute",
+  "time": "17:45",
+  "customer_name": "Hans Schuster"
+}</code></pre>
+
+            <p><strong>Backend-Verarbeitung:</strong></p>
+            <ol>
+                <li>Service-Matching (3-Stufen)</li>
+                <li>Service-Details laden (Preis, Dauer, Cal.com ID)</li>
+                <li>Customer-Daten sammeln</li>
+            </ol>
+
+            <h4>2. check_availability_v17</h4>
+            <pre><code>{
+  "service_id": 438,
+  "date": "2025-11-05",
+  "time": "17:45",
+  "duration": 55
+}</code></pre>
+
+            <p><strong>Backend-Verarbeitung:</strong></p>
+            <ol>
+                <li>Cal.com Event Type ID ermitteln (1419968)</li>
+                <li>Cal.com API abfragen: <code>/v2/slots/available</code></li>
+                <li>Verfügbare Slots zurückgeben</li>
+                <li>Alternative Zeiten vorschlagen wenn Wunschzeit nicht frei</li>
+            </ol>
+
+            <h4>3. book_appointment_v17</h4>
+            <pre><code>{
+  "service_id": 438,
+  "start_time": "2025-11-05T18:15:00",
+  "customer_name": "Hans Schuster",
+  "customer_email": "hans.schuster@example.com",
+  "customer_phone": "+49123456789"
+}</code></pre>
+
+            <p><strong>Backend-Verarbeitung:</strong></p>
+            <ol>
+                <li>Appointment in Laravel DB erstellen</li>
+                <li>Cal.com Booking erstellen</li>
+                <li>Sync-Status aktualisieren</li>
+                <li>Erfolg zurückmelden</li>
+            </ol>
+        </section>
+
+        <!-- SECTION 5: CONFIRMATION -->
+        <section id="confirmation">
+            <h2>5. Bestätigungsmechanismus</h2>
+
+            <p>Bei unsicheren Service-Matches (Confidence < 85% oder Fuzzy Match) sollte der Agent rückfragen:</p>
+
+            <h3>Wann Bestätigung notwendig?</h3>
+            <ul style="margin-left: 20px; line-height: 2;">
+                <li>✅ Synonym mit Confidence < 85%</li>
+                <li>✅ Fuzzy Match (auch wenn >= 75%)</li>
+                <li>✅ Mehrere mögliche Services gefunden</li>
+                <li>❌ Exact Match - keine Bestätigung nötig</li>
+                <li>❌ Synonym mit Confidence >= 85% - keine Bestätigung nötig</li>
+            </ul>
+
+            <h3>Conversation Flow Konzept</h3>
+
+            <div class="mermaid">
+graph TD
+    A[Service erkannt] --> B{Confidence Score?}
+    B -->|>= 0.85| C[Direkt verwenden]
+    B -->|< 0.85| D[Bestätigung einholen]
+
+    D --> E["Agent: Meinten Sie damit X?"]
+    E --> F{Kunde Antwort}
+    F -->|"Ja, genau"| C
+    F -->|"Nein"| G[Alternativen anbieten]
+    F -->|Unklar| H[Nochmal fragen]
+
+    G --> I[Andere Services vorschlagen]
+    I --> J{Kunde wählt aus?}
+    J -->|Ja| C
+    J -->|Nein| K[Manuell erfragen]
+            </div>
+
+            <h3>Beispiel-Dialoge</h3>
+
+            <h4>Szenario 1: High Confidence - Keine Bestätigung</h4>
+            <div class="success-box">
+                <p><strong>👤 Kunde:</strong> "Ich möchte einen Herrenschnitt"</p>
+                <p><strong>🤖 Agent:</strong> "Gerne! Für einen Herrenhaarschnitt (55 Minuten, 32 Euro). Für wann möchten Sie den Termin?"</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #16a34a;"><strong>✅ Grund:</strong> Synonym "Herrenschnitt" hat 95% Confidence → Direkt verwenden</p>
+            </div>
+
+            <h4>Szenario 2: Medium Confidence - Bestätigung</h4>
+            <div class="warning-box">
+                <p><strong>👤 Kunde:</strong> "Ich möchte Strähnchen"</p>
+                <p><strong>🤖 Agent:</strong> "Sie möchten Strähnchen - meinten Sie damit eine Balayage/Ombré Behandlung?"</p>
+                <p><strong>👤 Kunde:</strong> "Ja, genau!"</p>
+                <p><strong>🤖 Agent:</strong> "Perfekt! Das dauert etwa 150 Minuten und kostet 110 Euro. Für wann möchten Sie den Termin?"</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #d97706;"><strong>⚠️ Grund:</strong> Synonym "Strähnchen" hat nur 75% Confidence → Bestätigung erforderlich</p>
+            </div>
+
+            <h4>Szenario 3: Low Confidence - Bestätigung mit Alternativen</h4>
+            <div class="warning-box">
+                <p><strong>👤 Kunde:</strong> "Ich möchte Locken"</p>
+                <p><strong>🤖 Agent:</strong> "Sie möchten Locken - meinten Sie damit eine Dauerwelle?"</p>
+                <p><strong>👤 Kunde:</strong> "Nein, ich möchte nur die Haare lockig föhnen"</p>
+                <p><strong>🤖 Agent:</strong> "Ah, verstehe! Dann wäre das 'Föhnen & Styling Damen' das Richtige für Sie. Das dauert 30 Minuten und kostet 30 Euro. Passt das?"</p>
+                <p><strong>👤 Kunde:</strong> "Ja, perfekt!"</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #d97706;"><strong>⚠️ Grund:</strong> Synonym "Locken" hat nur 70% Confidence → Bestätigung erforderlich + Alternative anbieten</p>
+            </div>
+
+            <h4>Szenario 4: Fuzzy Match - Immer Bestätigung</h4>
+            <div class="info-box">
+                <p><strong>👤 Kunde:</strong> "Ich möchte einen Damenhaarschnit" <em>(Tippfehler in Speech-to-Text)</em></p>
+                <p><strong>🤖 Agent:</strong> "Sie möchten einen Damenhaarschnitt - habe ich das richtig verstanden?"</p>
+                <p><strong>👤 Kunde:</strong> "Ja"</p>
+                <p><strong>🤖 Agent:</strong> "Gerne! Das dauert 45 Minuten und kostet 45 Euro. Für wann möchten Sie den Termin?"</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #2563eb;"><strong>ℹ️ Grund:</strong> Fuzzy Match mit 87% Ähnlichkeit → Immer bestätigen bei Fuzzy Matches</p>
+            </div>
+
+            <h3>Implementation im Retell Conversation Flow</h3>
+
+            <p>Im Retell Dashboard muss ein neuer Node "Service bestätigen" hinzugefügt werden:</p>
+
+            <pre><code>{
+  "id": "node_confirm_service",
+  "name": "Service bestätigen",
+  "instruction": {
+    "type": "prompt",
+    "text": "Sage: 'Sie meinten {{extracted_service_name}}, meinten Sie damit {{matched_service_name}}?'"
+  },
+  "edges": [
+    {
+      "destination_node_id": "node_service_confirmed",
+      "condition": {
+        "type": "prompt",
+        "prompt": "Customer confirmed (Ja, genau, richtig, stimmt, etc.)"
+      }
+    },
+    {
+      "destination_node_id": "node_service_clarify",
+      "condition": {
+        "type": "prompt",
+        "prompt": "Customer denied (Nein, nicht ganz, etwas anderes, etc.)"
+      }
+    }
+  ]
+}</code></pre>
+
+            <p><strong>Dynamische Variables:</strong></p>
+            <ul style="margin-left: 20px;">
+                <li><code>{{extracted_service_name}}</code> - Was der Kunde gesagt hat (z.B. "Strähnchen")</li>
+                <li><code>{{matched_service_name}}</code> - Was das System gefunden hat (z.B. "Balayage/Ombré")</li>
+                <li><code>{{confidence_score}}</code> - Matching Confidence (z.B. 0.75)</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 6: TESTING -->
+        <section id="testing">
+            <h2>6. Testing & Deployment</h2>
+
+            <h3>Deployment-Checkliste</h3>
+
+            <div class="info-box">
+                <h4>📋 Schritt-für-Schritt Deployment</h4>
+                <ol style="margin-left: 20px; line-height: 2;">
+                    <li><strong>✅ ERLEDIGT:</strong> ServiceSynonym Model erstellt</li>
+                    <li><strong>✅ ERLEDIGT:</strong> Service Model mit synonyms() Relationship erweitert</li>
+                    <li><strong>✅ ERLEDIGT:</strong> SynonymsRelationManager für Filament UI erstellt</li>
+                    <li><strong>✅ ERLEDIGT:</strong> RelationManager in ServiceResource registriert</li>
+                    <li><strong>⏳ TODO:</strong> Seeder ausführen (siehe unten)</li>
+                    <li><strong>⏳ TODO:</strong> In Filament testen: Service bearbeiten → Tab "Synonyme & Alternative Begriffe"</li>
+                    <li><strong>⏳ TODO:</strong> Telefon-Test durchführen (siehe Testfälle)</li>
+                    <li><strong>⏳ TODO:</strong> Conversation Flow Bestätigung im Retell Dashboard hinzufügen</li>
+                </ol>
+            </div>
+
+            <h3>Seeder ausführen</h3>
+
+            <div class="warning-box">
+                <p><strong>⚠️ WICHTIG: Production Environment</strong></p>
+                <p>Der Seeder muss mit <code>--force</code> Flag ausgeführt werden:</p>
+                <pre><code>php artisan db:seed --class=Friseur1ServiceSynonymsSeeder --force</code></pre>
+                <p style="margin-top: 10px;"><strong>Erwartetes Ergebnis:</strong> ~150 Synonyme werden in die Datenbank eingefügt.</p>
+            </div>
+
+            <h3>Test-Fälle</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Kunde sagt</th>
+                        <th>Erwartetes Ergebnis</th>
+                        <th>Bestätigung?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>"Herrenschnitt"</td>
+                        <td>✅ Herrenhaarschnitt (95%)</td>
+                        <td>❌ Nein</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>"Strähnchen"</td>
+                        <td>✅ Balayage/Ombré (75%)</td>
+                        <td>✅ Ja</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>"Locken"</td>
+                        <td>✅ Dauerwelle (70%)</td>
+                        <td>✅ Ja</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>"Blondierung"</td>
+                        <td>✅ Komplette Umfärbung (Blondierung) (95%)</td>
+                        <td>❌ Nein</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>"Kinderschnitt"</td>
+                        <td>✅ Kinderhaarschnitt (95%)</td>
+                        <td>❌ Nein</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>"Herrenhaarschnit" (Typo)</td>
+                        <td>✅ Herrenhaarschnitt (87% Fuzzy)</td>
+                        <td>✅ Ja (Fuzzy)</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>"Olaplex"</td>
+                        <td>✅ Rebuild Treatment Olaplex (95%)</td>
+                        <td>❌ Nein</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>"Highlights"</td>
+                        <td>✅ Balayage/Ombré (80%)</td>
+                        <td>❌ Nein</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Testing im Retell Dashboard</h3>
+
+            <div class="info-box">
+                <h4>📱 Test-Anleitung</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>Gehe zu: <a href="https://app.retellai.com/" target="_blank">https://app.retellai.com/</a></li>
+                    <li>Öffne Agent: "Friseur1 Fixed V2"</li>
+                    <li>Klicke auf "Test Chat"</li>
+                    <li>Teste einen der Testfälle von oben</li>
+                    <li>Prüfe, ob Service korrekt erkannt wird</li>
+                    <li>Prüfe, ob Bestätigung wie erwartet funktioniert</li>
+                    <li>Prüfe Logs: <code>tail -f storage/logs/laravel.log</code></li>
+                </ol>
+            </div>
+
+            <h3>Bekannte Probleme & Fixes</h3>
+
+            <h4>Problem 1: "Call context not available" in Test Mode ✅ GEFIXT</h4>
+            <div class="success-box">
+                <p><strong>Status:</strong> ✅ DEPLOYED 2025-11-05</p>
+                <p><strong>Fix:</strong> Test Mode Fallback verwendet automatisch company_id=1 wenn Call Context nicht verfügbar</p>
+                <p><strong>Betrifft:</strong> Alle Function Calls (check_availability, book_appointment, etc.)</p>
+            </div>
+
+            <h4>Problem 2: Agent sagt "erfolgreich gebucht" obwohl Fehler ❌ NICHT GEFIXT</h4>
+            <div class="warning-box">
+                <p><strong>Status:</strong> ⏳ TODO - Conversation Flow muss angepasst werden</p>
+                <p><strong>Grund:</strong> Keine Fehlerbehandlung im Conversation Flow</p>
+                <p><strong>Lösung:</strong> Zwei Ausgänge für "Termin buchen" Node:</p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li>Edge 1: <code>success == true</code> → "Buchung erfolgreich"</li>
+                    <li>Edge 2: <code>success == false</code> → "Buchung fehlgeschlagen"</li>
+                </ul>
+            </div>
+
+            <h4>Problem 3: "Verfügbare Termine von heute" funktioniert nicht ⏳ IN ANALYSE</h4>
+            <div class="info-box">
+                <p><strong>Status:</strong> ⏳ Weitere Informationen vom Benutzer erforderlich</p>
+                <p><strong>Benötigt:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Welcher Service wurde getestet?</li>
+                    <li>Was hat der Agent geantwortet?</li>
+                    <li>Zu welcher Uhrzeit wurde der Test durchgeführt?</li>
+                    <li>Logs prüfen: <code>tail -100 storage/logs/laravel.log | grep check_availability</code></li>
+                </ul>
+            </div>
+
+            <h3>Filament UI Testing</h3>
+
+            <p>Nach Deployment des Seeder kannst du die Synonyme in der Filament Admin-Oberfläche verwalten:</p>
+
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>Gehe zu: Services → Liste</li>
+                <li>Klicke auf einen Service (z.B. "Herrenhaarschnitt")</li>
+                <li>Wechsle zum Tab: <strong>"Synonyme & Alternative Begriffe"</strong></li>
+                <li>Du siehst alle 10 Synonyme mit Confidence-Scores</li>
+                <li>Du kannst neue Synonyme hinzufügen, bearbeiten oder löschen</li>
+                <li>Filter nach Confidence Level: 95-100%, 85-94%, etc.</li>
+                <li>Suche nach bestimmten Synonymen</li>
+            </ol>
+        </section>
+
+        <footer>
+            <p><strong>Friseur 1 - Service-Dokumentation</strong></p>
+            <p>Erstellt: 2025-11-05 | Version 1.0</p>
+            <p>System: AskPro AI Gateway | Laravel 11 + Filament 3 + Retell AI</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

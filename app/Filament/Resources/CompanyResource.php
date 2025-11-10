@@ -46,58 +46,67 @@ class CompanyResource extends Resource
         return null; // EMERGENCY: Disabled to prevent memory exhaustion
     }
 
+    /**
+     * FIX 2025-11-05: Changed auth()->guard('admin') to auth()
+     *
+     * Reason: AdminPanelProvider uses authGuard('web'), but these methods
+     * were checking auth()->guard('admin')->user() which is always NULL
+     * in Filament navigation context → Resources not visible!
+     *
+     * Solution: Use auth()->user() which respects the panel's configured guard
+     */
     public static function canViewAny(): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('viewAny', static::getModel());
     }
 
     public static function canCreate(): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('create', static::getModel());
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('update', $record);
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('delete', $record);
     }
 
     public static function canDeleteAny(): bool
     {
-        $user = auth()->guard('admin')->user();
-        return $user && $user->hasRole(['admin']);
+        $user = auth()->user();
+        return $user && $user->hasRole(['admin', 'Admin', 'super_admin', 'Super Admin']);
     }
 
     public static function canForceDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('forceDelete', $record);
     }
 
     public static function canForceDeleteAny(): bool
     {
-        $user = auth()->guard('admin')->user();
-        return $user && $user->hasRole(['super_admin']);
+        $user = auth()->user();
+        return $user && $user->hasRole(['super_admin', 'Super Admin']);
     }
 
     public static function canRestore(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $user = auth()->guard('admin')->user();
+        $user = auth()->user();
         return $user && $user->can('restore', $record);
     }
 
     public static function canRestoreAny(): bool
     {
-        $user = auth()->guard('admin')->user();
-        return $user && $user->hasRole(['admin']);
+        $user = auth()->user();
+        return $user && $user->hasRole(['admin', 'Admin', 'super_admin', 'Super Admin']);
     }
 
     public static function form(Form $form): Form

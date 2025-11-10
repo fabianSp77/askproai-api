@@ -46,6 +46,29 @@ class AdminPanelProvider extends PanelProvider
                 'panels::head.end',
                 fn (): string => '<script>console.log("🔍 Loading Tippy.js IIFE build...");</script><script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script><script src="https://unpkg.com/tippy.js@6/dist/tippy.umd.min.js" onload="console.log(\'✅ Tippy.js loaded:\', typeof window.tippy, window.tippy);"></script><link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />'
             )
+            // Cal.com Atoms Scripts Integration
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => \Illuminate\Support\Facades\Vite::useHotFile(public_path('hot'))
+                    ->useBuildDirectory('build')
+                    ->withEntryPoints(['resources/js/calcom-atoms.jsx', 'resources/css/calcom-atoms.css'])
+                    ->toHtml()
+            )
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => '<script>
+                    // Global Cal.com configuration
+                    window.CalcomConfig = {
+                        teamId: ' . config('calcom.team_id') . ',
+                        apiUrl: \'' . config('calcom.base_url') . '\',
+                        defaultBranchId: ' . (auth()->user()?->branch_id ? '"' . auth()->user()->branch_id . '"' : 'null') . ',
+                        companyId: ' . (auth()->user()?->company_id ?? 'null') . ',
+                        layout: \'MONTH_VIEW\',
+                        autoSelectSingleBranch: true,
+                    };
+                    console.log("✅ CalcomConfig loaded:", window.CalcomConfig);
+                </script>'
+            )
             ->renderHook(
                 'panels::body.end',
                 fn (): string => '<script>
@@ -159,9 +182,11 @@ function initTooltipPatch() {
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
 
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            // Widgets disabled until database fully migrated (some query missing tables)
-            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([])
+            // Widgets re-enabled for GAP-010 metrics (2025-11-03)
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->widgets([
+                \App\Filament\Widgets\RescheduleFirstMetricsWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -1,0 +1,48 @@
+E2E GATE 0: ID-Konsistenz VORHER
+====================================
+Datum: 2025-11-03 12:43 CET
+Scope: Friseur 1 (Company ID: 1)
+
+1. Phone ↔ Agent ↔ Branch
+   Phone: +493033081738
+   Agent ID: agent_b36ecd3927a81834b6d56ab07b
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Status: ✅ 1:1 konsistent
+
+2. Branch ↔ Cal.com Team
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Branch Name: Friseur 1 Zentrale
+   calcom_team_id in Settings: NULL ❌
+   Cal.com Team: 34209 "Friseur" (existiert)
+   Status: ❌ Nicht gemappt
+
+3. Service ↔ EventType
+   Platform Services: 3
+     - ID 41: Premium Hair Treatment (120 min) - calcom_event_type_id: NULL ❌
+     - ID 42: Comprehensive Therapy Session (150 min) - calcom_event_type_id: NULL ❌
+     - ID 43: Medical Examination Series (180 min) - calcom_event_type_id: NULL ❌
+
+   Cal.com EventTypes: 46 (Team 34209)
+   Status: ❌ Keine Mappings vorhanden
+
+   Diskrepanz: Platform Services passen nicht zu Friseur-Branche.
+   Cal.com hat bereits 46 EventTypes (inkl. Komponenten-basierte Services).
+
+4. Staff ↔ Cal.com User
+   Platform Staff: 5
+     - Emma Williams (emma.williams@demo.com) - calcom_user_id: NULL ❌
+     - Fabian Spitzer (fabian@askproai.de) - calcom_user_id: NULL ❌
+     - David Martinez (david.martinez@demo.com) - calcom_user_id: NULL ❌
+     - Michael Chen (michael.chen@demo.com) - calcom_user_id: NULL ❌
+     - Dr. Sarah Johnson (sarah.johnson@demo.com) - calcom_user_id: NULL ❌
+
+   Cal.com Team Members: 2
+     - User ID 1346408: Fabian Spitzer (fabhandy@googlemail.com)
+     - User ID 1414768: Fabian Spitzer (fabianspitzer@icloud.com)
+
+   Status: ❌ Keine Mappings vorhanden
+   E-Mail-Matches: Keine direkten Übereinstimmungen
+
+GATE 0 Vorher-Bewertung: ❌ FEHLGESCHLAGEN
+Begründung: Nur Prüfpunkt 1 erfüllt (Phone↔Agent↔Branch).
+Prüfpunkte 2, 3, 4 nicht erfüllt: Keine calcom_team_id, keine EventType-Mappings, keine User-Mappings.

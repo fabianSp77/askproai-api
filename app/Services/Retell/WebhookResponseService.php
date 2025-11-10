@@ -20,6 +20,12 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class WebhookResponseService implements WebhookResponseInterface
 {
+    protected DateTimeParser $dateTimeParser;
+
+    public function __construct(DateTimeParser $dateTimeParser)
+    {
+        $this->dateTimeParser = $dateTimeParser;
+    }
     /**
      * Create success response for Retell function calls
      *
@@ -51,9 +57,10 @@ class WebhookResponseService implements WebhookResponseInterface
      *
      * @param string $message Error message (user-friendly German)
      * @param array $context Optional error context for logging
+     * @param array $dateTimeContext Optional date/time context for agent temporal awareness
      * @return Response
      */
-    public function error(string $message, array $context = []): Response
+    public function error(string $message, array $context = [], array $dateTimeContext = []): Response
     {
         // Log error with context for debugging
         if (!empty($context)) {
@@ -64,10 +71,17 @@ class WebhookResponseService implements WebhookResponseInterface
             ]);
         }
 
-        return response()->json([
+        $response = [
             'success' => false,
             'error' => $message
-        ], 200); // Always 200 to not break the call
+        ];
+
+        // Add date/time context if provided (for agent temporal awareness)
+        if (!empty($dateTimeContext)) {
+            $response['context'] = $dateTimeContext;
+        }
+
+        return response()->json($response, 200); // Always 200 to not break the call
     }
 
     /**
@@ -246,8 +260,9 @@ class WebhookResponseService implements WebhookResponseInterface
         ];
 
         // Add custom data if provided (for AI context)
+        // IMPORTANT: Retell expects 'retell_llm_dynamic_variables' key, not 'custom_data'
         if (!empty($customData)) {
-            $response['custom_data'] = $customData;
+            $response['retell_llm_dynamic_variables'] = $customData;
         }
 
         // Add response data if provided (for AI instructions)
@@ -258,8 +273,109 @@ class WebhookResponseService implements WebhookResponseInterface
         Log::info('Call tracking response sent', [
             'call_id' => $callData['call_id'] ?? null,
             'has_custom_data' => !empty($customData),
+            'dynamic_variables_count' => !empty($customData) ? count($customData) : 0,
         ]);
 
         return response()->json($response, 200);
+    }
+
+    /**
+     * Format alternatives with natural spoken German datetime
+     *
+     * FIX 2025-11-05: Natural date/time formatting for voice AI
+     * User feedback: "Wochentag hinzufügen, Jahr weglassen, Zeit natürlich"
+     *
+     * Before: "am 11.11.2025, 15:20 Uhr"
+     * After:  "am Montag, den 11. November um 15 Uhr 20"
+     *
+     * @param array $alternatives Array of alternative slots with 'time' key
+     * @param bool $useColloquialTime Use "Viertel nach", "halb" (default: false)
+     * @return array Formatted alternatives with 'spoken' field
+     */
+    public function formatAlternativesSpoken(array $alternatives, bool $useColloquialTime = false): array
+    {
+        return array_map(function($alt) use ($useColloquialTime) {
+            // Keep original structure
+            $formatted = $alt;
+
+            // Add natural spoken format
+            if (isset($alt['time'])) {
+                $formatted['spoken'] = $this->dateTimeParser->formatSpokenDateTime(
+                    $alt['time'],
+                    $useColloquialTime
+                );
+            }
+
+            return $formatted;
+        }, $alternatives);
+    }
+
+    /**
+     * Format single datetime as natural spoken German
+     *
+     * FIX 2025-11-05: Helper for confirmation messages
+     *
+     * @param string $datetime DateTime to format
+     * @param bool $compact Use compact format (without weekday)
+     * @param bool $useColloquialTime Use "Viertel nach", "halb"
+     * @return string Natural German format
+     */
+    public function formatSpoken(string $datetime, bool $compact = false, bool $useColloquialTime = false): string
+    {
+        if ($compact) {
+            return $this->dateTimeParser->formatSpokenDateTimeCompact($datetime, $useColloquialTime);
+        }
+
+        return $this->dateTimeParser->formatSpokenDateTime($datetime, $useColloquialTime);
+    }
+
+    /**
+     * Create availability response with natural spoken alternatives
+     *
+     * FIX 2025-11-05: Enhanced availability response with spoken format
+     * Replaces old numeric format with natural German
+     *
+     * @param bool $available Whether requested time is available
+     * @param string $requestedTime Original requested time
+     * @param array $alternatives Alternative time slots
+     * @param string|null $message Custom message
+     * @return Response
+     */
+    public function availabilityWithAlternatives(
+        bool $available,
+        string $requestedTime,
+        array $alternatives = [],
+        ?string $message = null
+    ): Response {
+        // Format alternatives with spoken datetime
+        $formattedAlternatives = $this->formatAlternativesSpoken($alternatives);
+
+        // Build spoken message if not provided
+        if (!$message && !empty($formattedAlternatives)) {
+            $alternativesList = array_map(fn($alt) => $alt['spoken'], $formattedAlternatives);
+
+            if (count($alternativesList) === 1) {
+                $message = "Ich habe leider keinen Termin zu Ihrer gewünschten Zeit gefunden, " .
+                          "aber ich kann Ihnen folgende Alternative anbieten: " .
+                          $alternativesList[0] . ". Passt Ihnen dieser Termin?";
+            } else {
+                $lastAlternative = array_pop($alternativesList);
+                $message = "Ich habe leider keinen Termin zu Ihrer gewünschten Zeit gefunden, " .
+                          "aber ich kann Ihnen folgende Alternativen anbieten: " .
+                          implode(', ', $alternativesList) .
+                          " oder " . $lastAlternative .
+                          ". Welcher Termin würde Ihnen besser passen?";
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'available' => $available,
+                'message' => $message ?? 'Verfügbarkeit geprüft',
+                'requested_time' => $requestedTime,
+                'alternatives' => $formattedAlternatives,
+            ]
+        ], 200);
     }
 }

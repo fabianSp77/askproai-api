@@ -16,7 +16,8 @@ class CompanyPolicy
     public function before(User $user, string $ability): ?bool
     {
         // Super admins can do everything
-        if ($user->hasRole('super_admin')) {
+        // FIX 2025-11-05: Check all variations of super_admin role name
+        if ($user->hasAnyRole(['super_admin', 'Super Admin', 'super-admin'])) {
             return true;
         }
 
@@ -25,10 +26,20 @@ class CompanyPolicy
 
     /**
      * Determine whether the user can view any models.
+     *
+     * FIX 2025-11-05: Added super_admin and Admin (capitalized) variants
+     * to fix missing menu items for Super Admin users
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'manager', 'staff']);
+        return $user->hasAnyRole([
+            'super_admin',     // super_admin variant
+            'Super Admin',     // Super Admin variant (with space)
+            'admin',           // admin variant
+            'Admin',           // Admin variant (capitalized)
+            'manager',
+            'staff'
+        ]);
     }
 
     /**

@@ -1,0 +1,726 @@
+{
+  "name": "collect_appointment_info",
+  "version": "1.2.0",
+  "metadata": {
+    "title": "Collect Appointment Information",
+    "description": "Collects and validates appointment details from user conversation during voice call. This function is typically the first step in the appointment booking flow, gathering essential information before checking availability and creating the booking.",
+    "status": "implemented",
+    "priority": "critical",
+    "category": "booking",
+    "tags": ["appointment", "collection", "validation", "retell"],
+    "author": "AskPro Engineering Team",
+    "lastModified": "2025-11-06T00:00:00Z"
+  },
+  "endpoint": {
+    "method": "POST",
+    "path": "/api/retell/collect-appointment-info",
+    "baseUrl": "https://api.askpro.ai",
+    "timeout": 15000,
+    "retryable": false,
+    "authentication": {
+      "type": "bearer",
+      "required": true
+    }
+  },
+  "parameters": {
+    "required": [
+      {
+        "name": "call_id",
+        "type": "string",
+        "format": "uuid",
+        "description": "Unique identifier for the Retell call session. Used to track conversation state and link subsequent function calls.",
+        "example": "call_abc123xyz456",
+        "pattern": "^call_[a-zA-Z0-9]+$"
+      },
+      {
+        "name": "service_name",
+        "type": "string",
+        "description": "Name of the requested service. Must match an active service in the system. Supports synonym matching (e.g., 'Haarschnitt' matches 'Herrenhaarschnitt').",
+        "example": "Herrenhaarschnitt",
+        "minLength": 2,
+        "maxLength": 100
+      },
+      {
+        "name": "customer_phone",
+        "type": "string",
+        "format": "phone",
+        "description": "Customer's contact phone number in E.164 format. Used for identification and SMS notifications.",
+        "example": "+4915123456789",
+        "pattern": "^\\+\\d{10,15}$"
+      }
+    ],
+    "optional": [
+      {
+        "name": "customer_name",
+        "type": "string",
+        "description": "Customer's full name. If not provided during this call, will be requested in follow-up conversation.",
+        "example": "Max Mustermann",
+        "minLength": 2,
+        "maxLength": 255
+      },
+      {
+        "name": "customer_email",
+        "type": "string",
+        "format": "email",
+        "description": "Customer's email address for confirmation emails and appointment reminders.",
+        "example": "max.mustermann@example.com",
+        "maxLength": 255
+      },
+      {
+        "name": "preferred_date",
+        "type": "string",
+        "format": "date",
+        "description": "Preferred appointment date in YYYY-MM-DD format. Must be today or future date. Used for initial availability check.",
+        "example": "2025-11-15",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      {
+        "name": "preferred_time",
+        "type": "string",
+        "format": "time",
+        "description": "Preferred appointment time in HH:MM format (24-hour). Used to narrow availability search.",
+        "example": "14:30",
+        "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$"
+      },
+      {
+        "name": "notes",
+        "type": "string",
+        "description": "Additional notes or special requests from the customer. Stored with appointment for staff reference.",
+        "example": "Bitte mit Föhnen und Styling",
+        "maxLength": 1000
+      },
+      {
+        "name": "branch_name",
+        "type": "string",
+        "description": "Preferred branch location if multi-branch company. If not specified, uses default branch.",
+        "example": "Hauptfiliale München",
+        "maxLength": 255
+      }
+    ]
+  },
+  "validation": {
+    "rules": [
+      {
+        "field": "call_id",
+        "rule": "required|string|regex:/^call_[a-zA-Z0-9]+$/",
+        "message": "Call ID must be in format 'call_xxxxx'"
+      },
+      {
+        "field": "service_name",
+        "rule": "required|string|min:2|max:100",
+        "message": "Service name is required and must be between 2 and 100 characters"
+      },
+      {
+        "field": "customer_phone",
+        "rule": "required|string|regex:/^\\+\\d{10,15}$/",
+        "message": "Phone number must be in E.164 format (e.g., +4915123456789)"
+      },
+      {
+        "field": "customer_email",
+        "rule": "nullable|email|max:255",
+        "message": "Email must be a valid email address"
+      },
+      {
+        "field": "preferred_date",
+        "rule": "nullable|date|after_or_equal:today",
+        "message": "Preferred date must be today or in the future"
+      },
+      {
+        "field": "preferred_time",
+        "rule": "nullable|regex:/^([01]\\d|2[0-3]):([0-5]\\d)$/",
+        "message": "Time must be in HH:MM format (e.g., 14:30)"
+      },
+      {
+        "field": "notes",
+        "rule": "nullable|string|max:1000",
+        "message": "Notes cannot exceed 1000 characters"
+      }
+    ],
+    "custom": [
+      {
+        "name": "ServiceExists",
+        "description": "Validates that the service_name matches an active service in the database (including synonym matching)",
+        "implementation": "app/Services/Retell/ServiceValidation.php"
+      },
+      {
+        "name": "PhoneNumberUnique",
+        "description": "Checks if phone number is already associated with a pending appointment for the same call session",
+        "implementation": "app/Rules/UniquePhoneForCallSession.php"
+      },
+      {
+        "name": "BranchAccessible",
+        "description": "Validates that the specified branch belongs to the company and is accessible",
+        "implementation": "app/Rules/BranchBelongsToCompany.php"
+      }
+    ]
+  },
+  "responses": {
+    "success": {
+      "statusCode": 200,
+      "schema": {
+        "type": "object",
+        "required": ["success", "message", "data"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "required": ["appointment_id", "status", "collected_fields", "missing_fields"],
+            "properties": {
+              "appointment_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "ready_for_booking"]
+              },
+              "collected_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "missing_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "service": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "integer"
+                  },
+                  "price": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "example": {
+        "success": true,
+        "message": "Appointment information collected successfully",
+        "data": {
+          "appointment_id": "550e8400-e29b-41d4-a716-446655440000",
+          "status": "ready_for_booking",
+          "collected_fields": [
+            "service_name",
+            "customer_name",
+            "customer_phone",
+            "preferred_date",
+            "preferred_time"
+          ],
+          "missing_fields": [],
+          "service": {
+            "id": "660e8400-e29b-41d4-a716-446655440001",
+            "name": "Herrenhaarschnitt",
+            "duration": 30,
+            "price": 25.00
+          }
+        }
+      }
+    },
+    "errors": [
+      {
+        "statusCode": 400,
+        "type": "ValidationError",
+        "description": "Request validation failed. One or more parameters are invalid or missing.",
+        "schema": {
+          "type": "object",
+          "required": ["success", "message", "errors"],
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "const": false
+            },
+            "message": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "example": {
+          "success": false,
+          "message": "Validation failed",
+          "errors": {
+            "customer_phone": [
+              "The phone number format is invalid"
+            ],
+            "preferred_date": [
+              "The preferred date must be today or in the future"
+            ]
+          }
+        }
+      },
+      {
+        "statusCode": 404,
+        "type": "ServiceNotFound",
+        "description": "The requested service does not exist or is not active.",
+        "schema": {
+          "type": "object",
+          "required": ["success", "message"],
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "const": false
+            },
+            "message": {
+              "type": "string"
+            },
+            "suggestion": {
+              "type": "string",
+              "description": "Suggested alternative service name"
+            }
+          }
+        },
+        "example": {
+          "success": false,
+          "message": "Service 'Haarschnit' not found",
+          "suggestion": "Did you mean 'Haarschnitt'?"
+        }
+      },
+      {
+        "statusCode": 422,
+        "type": "UnprocessableEntity",
+        "description": "Request is valid but cannot be processed due to business logic constraints.",
+        "example": {
+          "success": false,
+          "message": "This phone number already has a pending appointment for this call session"
+        }
+      },
+      {
+        "statusCode": 500,
+        "type": "ServerError",
+        "description": "Internal server error occurred during processing.",
+        "example": {
+          "success": false,
+          "message": "An unexpected error occurred. Please try again.",
+          "error_id": "err_abc123xyz"
+        }
+      }
+    ]
+  },
+  "businessLogic": {
+    "description": "This function implements the first stage of the appointment booking flow. It validates user input, performs service lookup with synonym matching, creates a partial appointment record in pending state, and caches the session data for quick retrieval during subsequent function calls.",
+    "steps": [
+      {
+        "order": 1,
+        "description": "Validate all input parameters according to validation rules",
+        "component": "ValidationLayer",
+        "critical": true
+      },
+      {
+        "order": 2,
+        "description": "Lookup service by name with synonym matching support",
+        "component": "ServiceSelectionService",
+        "critical": true
+      },
+      {
+        "order": 3,
+        "description": "Check for existing pending appointment with same phone/call_id",
+        "component": "AppointmentRepository",
+        "critical": false
+      },
+      {
+        "order": 4,
+        "description": "Create partial appointment record in database with 'pending' status",
+        "component": "AppointmentCreationService",
+        "critical": true
+      },
+      {
+        "order": 5,
+        "description": "Cache appointment data with call_id as key (30min TTL)",
+        "component": "CacheService",
+        "critical": false
+      },
+      {
+        "order": 6,
+        "description": "Determine appointment readiness status based on collected fields",
+        "component": "AppointmentStatusEvaluator",
+        "critical": false
+      },
+      {
+        "order": 7,
+        "description": "Return structured response with appointment_id and status",
+        "component": "ResponseBuilder",
+        "critical": true
+      }
+    ],
+    "sideEffects": [
+      "Creates partial appointment record in database",
+      "Caches session data in Redis",
+      "Logs function call for monitoring",
+      "Tracks conversation state for Retell session"
+    ],
+    "integrations": [
+      {
+        "name": "PostgreSQL",
+        "purpose": "Store partial appointment data and query service information",
+        "fallback": "Return error if database unavailable"
+      },
+      {
+        "name": "Redis",
+        "purpose": "Cache session data for fast retrieval",
+        "fallback": "Continue without cache (slower but functional)"
+      }
+    ]
+  },
+  "dataFlow": {
+    "sequence": "sequenceDiagram\n    participant R as Retell.ai\n    participant V as Validator\n    participant S as ServiceSelector\n    participant DB as Database\n    participant C as Cache\n\n    R->>V: POST collect_appointment_info\n    Note over V: Validate all parameters\n\n    alt Validation Fails\n        V-->>R: 400 Validation Error\n    else Validation Passes\n        V->>S: Lookup Service\n        S->>DB: Query service by name\n\n        alt Service Not Found\n            DB-->>S: No Match\n            S->>DB: Query synonyms\n            alt Synonym Match\n                DB-->>S: Service via synonym\n            else No Match\n                S-->>R: 404 Service Not Found\n            end\n        end\n\n        S->>DB: Create Partial Appointment\n        DB-->>S: Appointment ID\n\n        S->>C: Cache Session Data\n        C-->>S: Cached (TTL: 30m)\n\n        S->>S: Evaluate Readiness\n\n        S-->>R: 200 Success\n    end",
+    "architecture": "graph TB\n    subgraph \"Request Layer\"\n        R[Retell.ai] -->|HTTP POST| MW[Middleware]\n        MW -->|CORS| MW\n        MW -->|Auth| MW\n        MW -->|Rate Limit| MW\n    end\n\n    subgraph \"Validation Layer\"\n        MW --> V[Request Validator]\n        V -->|Format Validation| VF[Format Rules]\n        V -->|Business Validation| VB[Business Rules]\n    end\n\n    subgraph \"Service Layer\"\n        V --> SS[ServiceSelectionService]\n        SS -->|Synonym Match| SYN[SynonymResolver]\n        V --> AC[AppointmentCreationService]\n    end\n\n    subgraph \"Data Layer\"\n        SS -->|Query| SVCDB[(Services Table)]\n        SYN -->|Query| SYNDB[(Synonyms Table)]\n        AC -->|Insert| APPTDB[(Appointments Table)]\n        AC -->|Cache| REDIS[(Redis Cache)]\n    end\n\n    subgraph \"Response Layer\"\n        AC --> RB[ResponseBuilder]\n        RB --> R\n    end\n\n    style R fill:#2563eb,color:#fff\n    style V fill:#10b981,color:#fff\n    style AC fill:#f59e0b,color:#000",
+    "errorHandling": "graph TD\n    FC[Function Call] --> V{Validation}\n    V -->|Pass| BL[Business Logic]\n    V -->|Fail| E1[Return 400 Validation Error]\n\n    BL --> SL{Service Lookup}\n    SL -->|Found| DB{Database Operation}\n    SL -->|Not Found| E2[Return 404 Service Not Found]\n\n    DB -->|Success| CACHE{Cache Operation}\n    DB -->|Fail| E3[Return 500 Database Error]\n\n    CACHE -->|Success| S[Success Response]\n    CACHE -->|Fail| LOG[Log Cache Failure]\n    LOG --> S\n\n    E1 --> MONITOR[Monitoring System]\n    E2 --> MONITOR\n    E3 --> MONITOR\n    MONITOR --> ALERT{Critical?}\n    ALERT -->|Yes| NOTIFY[Alert Team]\n    ALERT -->|No| TRACK[Track Metric]\n\n    style E1 fill:#ef4444,color:#fff\n    style E2 fill:#ef4444,color:#fff\n    style E3 fill:#ef4444,color:#fff\n    style S fill:#10b981,color:#fff"
+  },
+  "testing": {
+    "unit": {
+      "coverage": 92.5,
+      "testFiles": [
+        "tests/Unit/Services/Retell/AppointmentCreationServiceTest.php",
+        "tests/Unit/Services/Retell/ServiceSelectionServiceTest.php",
+        "tests/Unit/Rules/UniquePhoneForCallSessionTest.php"
+      ]
+    },
+    "integration": {
+      "scenarios": [
+        {
+          "name": "Minimal Required Fields",
+          "description": "Test with only required parameters",
+          "payload": {
+            "call_id": "call_test123",
+            "service_name": "Herrenhaarschnitt",
+            "customer_phone": "+4915123456789"
+          },
+          "expectedStatus": 200,
+          "expectedResponse": {
+            "success": true,
+            "data": {
+              "status": "pending",
+              "collected_fields": ["service_name", "customer_phone"],
+              "missing_fields": ["customer_name", "preferred_date", "preferred_time"]
+            }
+          }
+        },
+        {
+          "name": "Complete Appointment Information",
+          "description": "Test with all fields provided",
+          "payload": {
+            "call_id": "call_test123",
+            "service_name": "Damenhaarschnitt",
+            "customer_name": "Anna Schmidt",
+            "customer_phone": "+4915198765432",
+            "customer_email": "anna.schmidt@example.com",
+            "preferred_date": "2025-11-15",
+            "preferred_time": "14:30",
+            "notes": "Bitte mit Föhnen"
+          },
+          "expectedStatus": 200,
+          "expectedResponse": {
+            "success": true,
+            "data": {
+              "status": "ready_for_booking",
+              "collected_fields": [
+                "service_name",
+                "customer_name",
+                "customer_phone",
+                "customer_email",
+                "preferred_date",
+                "preferred_time",
+                "notes"
+              ],
+              "missing_fields": []
+            }
+          }
+        },
+        {
+          "name": "Invalid Phone Format",
+          "description": "Test validation error with invalid phone number",
+          "payload": {
+            "call_id": "call_test123",
+            "service_name": "Herrenhaarschnitt",
+            "customer_phone": "123456"
+          },
+          "expectedStatus": 400,
+          "expectedResponse": {
+            "success": false,
+            "message": "Validation failed",
+            "errors": {
+              "customer_phone": [
+                "The phone number format is invalid"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Service Not Found",
+          "description": "Test with non-existent service name",
+          "payload": {
+            "call_id": "call_test123",
+            "service_name": "NonExistentService",
+            "customer_phone": "+4915123456789"
+          },
+          "expectedStatus": 404,
+          "expectedResponse": {
+            "success": false,
+            "message": "Service 'NonExistentService' not found"
+          }
+        },
+        {
+          "name": "Synonym Matching",
+          "description": "Test service lookup with synonym",
+          "payload": {
+            "call_id": "call_test123",
+            "service_name": "Haarschnitt",
+            "customer_phone": "+4915123456789"
+          },
+          "expectedStatus": 200,
+          "expectedResponse": {
+            "success": true,
+            "data": {
+              "service": {
+                "name": "Herrenhaarschnitt"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "manual": {
+      "checklist": [
+        "Verify partial appointment is created in database",
+        "Confirm session data is cached in Redis with correct TTL",
+        "Test with various phone number formats",
+        "Verify synonym matching works for all configured synonyms",
+        "Test date/time validation edge cases (midnight, end of year, etc.)",
+        "Verify error messages are clear and actionable",
+        "Test concurrent calls with same call_id",
+        "Verify audit logging captures all function calls",
+        "Test with special characters in notes field",
+        "Verify multi-tenant isolation (company scoping)"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "name": "Minimal Required Fields",
+      "description": "Basic call with only required parameters. Customer name and preferences will be collected in follow-up conversation.",
+      "request": {
+        "payload": {
+          "call_id": "call_abc123xyz",
+          "service_name": "Herrenhaarschnitt",
+          "customer_phone": "+4915123456789"
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {token}"
+        },
+        "curl": "curl -X POST https://api.askpro.ai/api/retell/collect-appointment-info \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer {token}\" \\\n  -d '{\n    \"call_id\": \"call_abc123xyz\",\n    \"service_name\": \"Herrenhaarschnitt\",\n    \"customer_phone\": \"+4915123456789\"\n  }'"
+      },
+      "response": {
+        "statusCode": 200,
+        "body": {
+          "success": true,
+          "message": "Appointment information collected successfully",
+          "data": {
+            "appointment_id": "550e8400-e29b-41d4-a716-446655440000",
+            "status": "pending",
+            "collected_fields": ["service_name", "customer_phone"],
+            "missing_fields": ["customer_name", "preferred_date", "preferred_time"],
+            "service": {
+              "id": "660e8400-e29b-41d4-a716-446655440001",
+              "name": "Herrenhaarschnitt",
+              "duration": 30,
+              "price": 25.00
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Complete Appointment Information",
+      "description": "Full appointment details provided in first call. Ready for immediate availability check and booking.",
+      "request": {
+        "payload": {
+          "call_id": "call_abc123xyz",
+          "service_name": "Damenhaarschnitt",
+          "customer_name": "Anna Schmidt",
+          "customer_phone": "+4915198765432",
+          "customer_email": "anna.schmidt@example.com",
+          "preferred_date": "2025-11-15",
+          "preferred_time": "14:30",
+          "notes": "Bitte mit Föhnen und Styling"
+        },
+        "curl": "curl -X POST https://api.askpro.ai/api/retell/collect-appointment-info \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer {token}\" \\\n  -d '{\n    \"call_id\": \"call_abc123xyz\",\n    \"service_name\": \"Damenhaarschnitt\",\n    \"customer_name\": \"Anna Schmidt\",\n    \"customer_phone\": \"+4915198765432\",\n    \"customer_email\": \"anna.schmidt@example.com\",\n    \"preferred_date\": \"2025-11-15\",\n    \"preferred_time\": \"14:30\",\n    \"notes\": \"Bitte mit Föhnen und Styling\"\n  }'"
+      },
+      "response": {
+        "statusCode": 200,
+        "body": {
+          "success": true,
+          "message": "Appointment information collected successfully",
+          "data": {
+            "appointment_id": "660e8400-e29b-41d4-a716-446655440002",
+            "status": "ready_for_booking",
+            "collected_fields": [
+              "service_name",
+              "customer_name",
+              "customer_phone",
+              "customer_email",
+              "preferred_date",
+              "preferred_time",
+              "notes"
+            ],
+            "missing_fields": [],
+            "service": {
+              "id": "770e8400-e29b-41d4-a716-446655440003",
+              "name": "Damenhaarschnitt",
+              "duration": 45,
+              "price": 35.00
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Validation Error - Invalid Phone",
+      "description": "Example of validation failure with detailed error messages.",
+      "request": {
+        "payload": {
+          "call_id": "call_abc123xyz",
+          "service_name": "Herrenhaarschnitt",
+          "customer_phone": "invalid-phone"
+        }
+      },
+      "response": {
+        "statusCode": 400,
+        "body": {
+          "success": false,
+          "message": "Validation failed",
+          "errors": {
+            "customer_phone": [
+              "The phone number format is invalid"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Service Not Found with Suggestion",
+      "description": "Service lookup failure with helpful suggestion based on fuzzy matching.",
+      "request": {
+        "payload": {
+          "call_id": "call_abc123xyz",
+          "service_name": "Haarschnit",
+          "customer_phone": "+4915123456789"
+        }
+      },
+      "response": {
+        "statusCode": 404,
+        "body": {
+          "success": false,
+          "message": "Service 'Haarschnit' not found",
+          "suggestion": "Did you mean 'Haarschnitt'?"
+        }
+      }
+    }
+  ],
+  "performance": {
+    "expectedLatency": {
+      "p50": 150,
+      "p95": 300,
+      "p99": 500
+    },
+    "rateLimit": {
+      "requests": 100,
+      "period": "1m"
+    },
+    "caching": {
+      "enabled": true,
+      "ttl": 1800,
+      "keys": ["call_id", "appointment_id"]
+    }
+  },
+  "security": {
+    "authentication": true,
+    "authorization": {
+      "required": true,
+      "roles": ["retell-agent", "admin"]
+    },
+    "inputSanitization": ["notes", "customer_name"],
+    "sensitiveData": ["customer_phone", "customer_email"]
+  },
+  "dependencies": {
+    "services": [
+      "ServiceSelectionService",
+      "AppointmentCreationService",
+      "ValidationService"
+    ],
+    "external": [
+      {
+        "name": "PostgreSQL",
+        "type": "database",
+        "critical": true
+      },
+      {
+        "name": "Redis",
+        "type": "cache",
+        "critical": false
+      }
+    ]
+  },
+  "changelog": [
+    {
+      "version": "1.2.0",
+      "date": "2025-11-06",
+      "author": "Engineering Team",
+      "changes": [
+        "Added branch_name optional parameter for multi-branch support",
+        "Improved synonym matching with fuzzy search",
+        "Added suggestion in 404 responses",
+        "Increased cache TTL from 15 to 30 minutes"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2025-10-15",
+      "author": "Engineering Team",
+      "changes": [
+        "Added ready_for_booking status",
+        "Implemented session caching",
+        "Added custom validators for service and phone uniqueness"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-09-01",
+      "author": "Engineering Team",
+      "changes": [
+        "Initial implementation",
+        "Basic validation and service lookup",
+        "Database integration"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskPro AI - Telefonbuchungssystem Dokumentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--gray-700);
+        }
+
+        h4 {
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+        }
+
+        .lead {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.95);
+            max-width: 800px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .flow-diagram {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            margin: 2rem 0;
+            border: 2px solid var(--gray-200);
+        }
+
+        .step-box {
+            background: var(--gray-50);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .step-box h4 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .danger-box {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        code {
+            background: var(--gray-100);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--gray-900);
+            color: #10b981;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        .toc {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid var(--primary);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        @media print {
+            header {
+                background: var(--primary);
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid var(--gray-200);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="icon">📞</span> AskPro AI - Telefonbuchungssystem</h1>
+            <p class="lead">
+                Wie das intelligente Telefonbuchungssystem funktioniert: Von der Anrufannahme über die Dienstleistungsauswahl bis zur automatischen Terminbuchung im Kalender.
+            </p>
+            <div style="margin-top: 2rem;">
+                <span class="badge badge-info">Version 2.0</span>
+                <span class="badge badge-success">Produktiv</span>
+                <span class="badge badge-warning">Dokumentiert: 2025-11-05</span>
+            </div>
+        </header>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h2 style="margin-top: 0; border: none;">📋 Inhaltsverzeichnis</h2>
+            <ul>
+                <li><a href="#ueberblick">1. System-Überblick</a></li>
+                <li><a href="#komponenten">2. System-Komponenten</a></li>
+                <li><a href="#anrufablauf">3. Anrufablauf (Hauptprozess)</a></li>
+                <li><a href="#service-identifikation">4. Dienstleistungs-Identifikation</a></li>
+                <li><a href="#cal-integration">5. Kalender-Integration (Cal.com)</a></li>
+                <li><a href="#varianten">6. Anruf-Varianten</a></li>
+                <li><a href="#datenfluss">7. Datenfluss im System</a></li>
+                <li><a href="#bugs">8. Bekannte Probleme & Lösungen</a></li>
+                <li><a href="#technische-details">9. Technische Details</a></li>
+            </ul>
+        </div>
+
+        <!-- 1. System-Überblick -->
+        <section id="ueberblick">
+            <h2><span class="icon">🎯</span> 1. System-Überblick</h2>
+
+            <div class="card">
+                <h3>Was macht das System?</h3>
+                <p>
+                    Das AskPro AI Telefonbuchungssystem ermöglicht es Kunden, über einen Anruf vollautomatisch Termine zu buchen.
+                    Ein intelligenter Sprachassistent (KI) führt das Gespräch, fragt die notwendigen Informationen ab und bucht den Termin direkt im Kalender-System (Cal.com).
+                </p>
+
+                <div class="step-box">
+                    <h4>🎙️ Kundenansicht (Was der Kunde erlebt)</h4>
+                    <ol>
+                        <li>Kunde ruft Geschäftsnummer an</li>
+                        <li>KI-Assistent begrüßt und fragt nach gewünschter Dienstleistung</li>
+                        <li>Kunde nennt Dienstleistung (z.B. "Herrenhaarschnitt")</li>
+                        <li>KI fragt nach Wunschdatum und -uhrzeit</li>
+                        <li>System prüft Verfügbarkeit und zeigt ggf. Alternativen</li>
+                        <li>Kunde wählt Termin aus</li>
+                        <li>Termin wird automatisch gebucht</li>
+                        <li>Kunde erhält Bestätigung am Telefon</li>
+                    </ol>
+                </div>
+
+                <div class="step-box">
+                    <h4>⚙️ Systemansicht (Was im Hintergrund passiert)</h4>
+                    <ol>
+                        <li>Telefonnummer wird identifiziert → Geschäft/Filiale erkannt</li>
+                        <li>KI-Agent (Retell AI) startet Gesprächsfluss</li>
+                        <li>Dienstleistungs-Name wird erkannt und zugeordnet</li>
+                        <li>Datum/Uhrzeit werden analysiert und normalisiert</li>
+                        <li>Verfügbarkeit wird in Cal.com geprüft</li>
+                        <li>Termin wird in Datenbank UND Cal.com erstellt</li>
+                        <li>Bidirektionale Synchronisation ist aktiv</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. System-Komponenten -->
+        <section id="komponenten">
+            <h2><span class="icon">🧩</span> 2. System-Komponenten</h2>
+
+            <div class="card">
+                <h3>Die drei Hauptkomponenten</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Komponente</th>
+                            <th>Funktion</th>
+                            <th>Technologie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🤖 Retell AI</strong></td>
+                            <td>
+                                KI-Sprachassistent, führt das Gespräch mit dem Kunden,
+                                erkennt Absichten (Intents) und extrahiert Informationen
+                            </td>
+                            <td>Retell AI Platform (Cloud-Service)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🔧 Backend (AskPro API)</strong></td>
+                            <td>
+                                Zentrale Intelligenz: Dienstleistungs-Zuordnung, Verfügbarkeits-Prüfung,
+                                Termin-Verwaltung, Datenbank-Speicherung
+                            </td>
+                            <td>Laravel 11 (PHP), PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <td><strong>📅 Cal.com</strong></td>
+                            <td>
+                                Kalender-System: Verwaltet Verfügbarkeiten, Mitarbeiter-Zuordnung,
+                                Team-Kalender, Buchungs-Links
+                            </td>
+                            <td>Cal.com API v2 (Cloud-Service)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 2rem;">Wie die Komponenten zusammenarbeiten</h3>
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph LR
+    A[📞 Kunde ruft an] --> B[🤖 Retell AI<br/>Gesprächsführung]
+    B --> C[🔧 Backend API<br/>Intelligenz]
+    C --> D[📅 Cal.com<br/>Kalender]
+    D --> C
+    C --> B
+    B --> A
+
+    style A fill:#dbeafe
+    style B fill:#fef3c7
+    style C fill:#d1fae5
+    style D fill:#e0e7ff
+                    </pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Anrufablauf (Hauptprozess) -->
+        <section id="anrufablauf">
+            <h2><span class="icon">🔄</span> 3. Anrufablauf (Hauptprozess)</h2>
+
+            <div class="card">
+                <h3>Der komplette Prozess von Anfang bis Ende</h3>
+
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph TD
+    Start[📞 Anruf kommt an] --> InitWebhook[🔔 Webhook: call_inbound]
+    InitWebhook --> PhoneResolve[🔍 Telefonnummer auflösen]
+    PhoneResolve --> CompanyBranch[✅ Geschäft & Filiale identifiziert]
+
+    CompanyBranch --> DBCreate[💾 Call-Datensatz erstellen]
+    DBCreate --> StartConv[🎤 Conversation Flow startet]
+
+    StartConv --> Greeting[👋 Begrüßung]
+    Greeting --> AskService[❓ Welche Dienstleistung?]
+
+    AskService --> ExtractService[🧠 Dienstleistungs-Name extrahieren]
+    ExtractService --> MatchService{🎯 Service in DB finden}
+
+    MatchService -->|Gefunden| AskDateTime[📅 Wunschdatum & Zeit?]
+    MatchService -->|Nicht gefunden| ServiceError[❌ Service unbekannt]
+    ServiceError --> Fallback[🔄 Fallback zu Default-Service]
+    Fallback --> AskDateTime
+
+    AskDateTime --> ParseDateTime[🕐 Datum/Zeit normalisieren]
+    ParseDateTime --> CheckAvail[⚡ Verfügbarkeit prüfen<br/>check_availability_v17]
+
+    CheckAvail --> CalcomAPI[📡 Cal.com API Anfrage]
+    CalcomAPI --> HasSlots{Slots verfügbar?}
+
+    HasSlots -->|Ja| ShowSlots[✅ Verfügbare Zeiten zeigen]
+    HasSlots -->|Nein| NoSlots[❌ Keine Slots]
+
+    NoSlots --> FindAlternatives[🔍 Alternative Tage suchen]
+    FindAlternatives --> ShowAlternatives[📋 Alternativen anbieten]
+
+    ShowSlots --> CustomerChoose[🤔 Kunde wählt Zeit]
+    ShowAlternatives --> CustomerChoose
+
+    CustomerChoose --> ConfirmAlt[✅ Alternative bestätigen]
+    ConfirmAlt --> BookAppt[📝 Termin buchen<br/>book_appointment_v17]
+
+    BookAppt --> CreateDB[💾 Appointment in DB]
+    CreateDB --> SyncCalcom[🔄 Sync zu Cal.com]
+    SyncCalcom --> CalcomBooking[📅 Booking in Cal.com]
+
+    CalcomBooking --> Success[🎉 Bestätigung]
+    Success --> EndCall[👋 Anruf beendet]
+
+    EndCall --> EndWebhook[🔔 Webhook: call_ended]
+    EndWebhook --> Analysis[📊 Call-Analyse]
+    Analysis --> Complete[✅ Prozess abgeschlossen]
+
+    style Start fill:#dbeafe
+    style Complete fill:#d1fae5
+    style BookAppt fill:#fef3c7
+    style ServiceError fill:#fee2e2
+    style NoSlots fill:#fef3c7
+                    </pre>
+                </div>
+
+                <div class="info-box">
+                    <strong>💡 Wichtig:</strong> Der gesamte Prozess läuft vollautomatisch ab.
+                    Der KI-Assistent führt das Gespräch, das Backend übernimmt die Intelligenz,
+                    und Cal.com verwaltet die Kalender. Keine manuelle Intervention notwendig!
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Service-Identifikation -->
+        <section id="service-identifikation">
+            <h2><span class="icon">🎯</span> 4. Dienstleistungs-Identifikation</h2>
+
+            <div class="card">
+                <h3>Wie findet das System die richtige Dienstleistung?</h3>
+                <p>
+                    Eine der wichtigsten Funktionen: Der Kunde sagt "Herrenhaarschnitt" - aber wie findet das System den richtigen Eintrag in der Datenbank?
+                    Das System nutzt eine intelligente <strong>3-Stufen-Matching-Strategie</strong>.
+                </p>
+
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph TD
+    Input[🗣️ Kunde sagt: 'Herrenhaarschnitt'] --> Extract[🧠 ServiceNameExtractor]
+    Extract --> Normalize[📝 Text normalisieren<br/>Kleinbuchstaben, Leerzeichen entfernen]
+
+    Normalize --> Strategy1[🎯 Strategie 1: Exakte Übereinstimmung]
+    Strategy1 --> Check1{Gefunden?}
+
+    Check1 -->|Ja| Match1[✅ Herrenhaarschnitt<br/>ID: 123, Cal.com: 456789]
+    Check1 -->|Nein| Strategy2[📚 Strategie 2: Synonym-Suche]
+
+    Strategy2 --> SynonymDB[🗄️ Synonym-Tabelle durchsuchen]
+    SynonymDB --> Check2{Synonym gefunden?}
+
+    Check2 -->|Ja| Match2[✅ Synonym-Match<br/>Herrenhaarschnitt → Haarschnitt Herren]
+    Check2 -->|Nein| Strategy3[🔍 Strategie 3: Fuzzy Matching]
+
+    Strategy3 --> Levenshtein[📐 Levenshtein-Distanz berechnen]
+    Levenshtein --> Similarity[🎲 Ähnlichkeit: 87%]
+    Similarity --> Check3{> 75% ähnlich?}
+
+    Check3 -->|Ja| Match3[✅ Fuzzy-Match<br/>Herrenhaarschnitt ≈ Herrenschnitt]
+    Check3 -->|Nein| NoMatch[❌ Kein Match]
+
+    NoMatch --> Fallback[🔄 Fallback: Default-Service]
+
+    Match1 --> Validate[🔒 Security: Zugriff validieren]
+    Match2 --> Validate
+    Match3 --> Validate
+    Fallback --> Validate
+
+    Validate --> CompanyCheck{Gehört Service<br/>zu Geschäft?}
+    CompanyCheck -->|Ja| BranchCheck{Verfügbar in<br/>dieser Filiale?}
+    CompanyCheck -->|Nein| AccessDenied[❌ Zugriff verweigert]
+
+    BranchCheck -->|Ja| CalcomCheck{Cal.com Event<br/>Type vorhanden?}
+    BranchCheck -->|Nein| AccessDenied
+
+    CalcomCheck -->|Ja| Final[🎉 Service gefunden & validiert]
+    CalcomCheck -->|Nein| AccessDenied
+
+    style Input fill:#dbeafe
+    style Final fill:#d1fae5
+    style AccessDenied fill:#fee2e2
+    style Match1 fill:#d1fae5
+    style Match2 fill:#d1fae5
+    style Match3 fill:#fef3c7
+    style NoMatch fill:#fee2e2
+                    </pre>
+                </div>
+
+                <h3>Die drei Matching-Strategien im Detail</h3>
+
+                <div class="step-box">
+                    <h4>1️⃣ Strategie 1: Exakte Übereinstimmung (Exact Match)</h4>
+                    <p><strong>Wie es funktioniert:</strong></p>
+                    <ul>
+                        <li>Suche nach exakter Übereinstimmung in Spalte <code>name</code> oder <code>slug</code></li>
+                        <li>Case-insensitive (Groß-/Kleinschreibung egal)</li>
+                        <li>Schnellste Methode</li>
+                    </ul>
+                    <p><strong>Beispiel:</strong></p>
+                    <pre><code>Eingabe:    "Herrenhaarschnitt"
+DB-Eintrag: "Herrenhaarschnitt"
+Ergebnis:   ✅ Exakter Match</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>2️⃣ Strategie 2: Synonym-Suche</h4>
+                    <p><strong>Wie es funktioniert:</strong></p>
+                    <ul>
+                        <li>Suche in Tabelle <code>service_synonyms</code></li>
+                        <li>Jedes Synonym hat einen Confidence-Score (0.0 - 1.0)</li>
+                        <li>Höchster Confidence-Score gewinnt</li>
+                    </ul>
+                    <p><strong>Beispiel:</strong></p>
+                    <pre><code>Eingabe:       "Haarschnitt Männer"
+Synonym-DB:    "Haarschnitt Männer" → Service: "Herrenhaarschnitt" (Confidence: 0.95)
+Ergebnis:      ✅ Synonym-Match mit 95% Confidence</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>3️⃣ Strategie 3: Fuzzy Matching (Ähnlichkeitssuche)</h4>
+                    <p><strong>Wie es funktioniert:</strong></p>
+                    <ul>
+                        <li>Levenshtein-Distanz-Algorithmus</li>
+                        <li>Berechnet Ähnlichkeit zwischen zwei Strings (0% - 100%)</li>
+                        <li>Mindestens 75% Ähnlichkeit erforderlich</li>
+                    </ul>
+                    <p><strong>Beispiel:</strong></p>
+                    <pre><code>Eingabe:           "Herrenschnitt"
+DB-Eintrag:        "Herrenhaarschnitt"
+Ähnlichkeit:       87%
+Minimum:           75%
+Ergebnis:          ✅ Fuzzy-Match (87% > 75%)</code></pre>
+                </div>
+
+                <h3>Security-Validierung</h3>
+                <div class="warning-box">
+                    <strong>🔒 Wichtig:</strong> Auch wenn ein Service gefunden wurde, muss er drei Security-Checks bestehen:
+                    <ol>
+                        <li><strong>Company-Check:</strong> Gehört der Service zum richtigen Geschäft? (Verhindert Cross-Tenant-Zugriffe)</li>
+                        <li><strong>Branch-Check:</strong> Ist der Service in dieser Filiale verfügbar?</li>
+                        <li><strong>Cal.com-Check:</strong> Hat der Service eine gültige Cal.com Event Type ID?</li>
+                    </ol>
+                    Wenn auch nur einer dieser Checks fehlschlägt, wird der Service abgelehnt und ein Fallback verwendet.
+                </div>
+
+                <h3>Fallback-Mechanismus</h3>
+                <div class="info-box">
+                    <p><strong>Was passiert, wenn kein Service gefunden wird?</strong></p>
+                    <p>Das System nutzt einen <strong>Default-Service</strong>:</p>
+                    <ul>
+                        <li>Jedes Geschäft kann einen Standard-Service definieren (Spalte <code>is_default = true</code>)</li>
+                        <li>Falls kein Default vorhanden: Service mit höchster Priorität (niedrigster <code>priority</code>-Wert)</li>
+                        <li>Verhindert, dass Buchungen komplett fehlschlagen</li>
+                    </ul>
+                </div>
+
+                <h3>Service-Datenbank-Struktur</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feld</th>
+                            <th>Beschreibung</th>
+                            <th>Beispiel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>Eindeutige Service-ID (intern)</td>
+                            <td>123</td>
+                        </tr>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td>Anzeigename des Services</td>
+                            <td>"Herrenhaarschnitt"</td>
+                        </tr>
+                        <tr>
+                            <td><code>slug</code></td>
+                            <td>URL-freundlicher Identifier</td>
+                            <td>"herrenhaarschnitt"</td>
+                        </tr>
+                        <tr>
+                            <td><code>company_id</code></td>
+                            <td>Zugehöriges Geschäft</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td><code>branch_id</code></td>
+                            <td>Zugehörige Filiale (optional)</td>
+                            <td>null (= alle Filialen)</td>
+                        </tr>
+                        <tr>
+                            <td><code>calcom_event_type_id</code></td>
+                            <td>Verbindung zu Cal.com</td>
+                            <td>456789</td>
+                        </tr>
+                        <tr>
+                            <td><code>is_active</code></td>
+                            <td>Service buchbar?</td>
+                            <td>true</td>
+                        </tr>
+                        <tr>
+                            <td><code>is_default</code></td>
+                            <td>Standard-Service?</td>
+                            <td>false</td>
+                        </tr>
+                        <tr>
+                            <td><code>priority</code></td>
+                            <td>Sortier-Reihenfolge (niedriger = höher)</td>
+                            <td>10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. Cal.com Integration -->
+        <section id="cal-integration">
+            <h2><span class="icon">📅</span> 5. Kalender-Integration (Cal.com)</h2>
+
+            <div class="card">
+                <h3>Wie werden Services in Cal.com gespeichert und abgefragt?</h3>
+
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph TD
+    Service[📦 Service in AskPro DB] --> HasEventType{Hat Cal.com<br/>Event Type ID?}
+
+    HasEventType -->|Ja| EventType[🔗 Cal.com Event Type<br/>ID: 456789]
+    HasEventType -->|Nein| NoSync[❌ Nicht buchbar]
+
+    EventType --> CalcomAPI[📡 Cal.com API Anfrage]
+    CalcomAPI --> GetSlots[GET /v2/slots/available]
+
+    GetSlots --> Params[📋 Parameter übergeben]
+    Params --> P1[✅ eventTypeId: 456789]
+    Params --> P2[✅ startTime: 2025-11-06T10:00:00Z]
+    Params --> P3[✅ endTime: 2025-11-06T18:00:00Z]
+    Params --> P4[✅ timeZone: Europe/Berlin]
+
+    P1 --> APICall
+    P2 --> APICall
+    P3 --> APICall
+    P4 --> APICall[🚀 API-Aufruf]
+
+    APICall --> Response{Antwort?}
+
+    Response -->|Erfolg| Slots[✅ Verfügbare Slots]
+    Response -->|Fehler| Retry[🔄 Retry mit Circuit Breaker]
+    Response -->|Keine Slots| Empty[❌ Keine Verfügbarkeit]
+
+    Slots --> Cache[💾 Redis Cache speichern<br/>TTL: 5 Minuten]
+    Cache --> Return[📤 Slots zurückgeben]
+
+    Retry --> Backoff{< 5 Versuche?}
+    Backoff -->|Ja| APICall
+    Backoff -->|Nein| Failed[❌ Cal.com nicht erreichbar]
+
+    Empty --> CheckAlternatives[🔍 Alternative Tage suchen]
+    CheckAlternatives --> Loop[🔄 +1 Tag, max 14 Tage]
+    Loop --> GetSlots
+
+    Return --> Display[📋 Slots anzeigen im Call]
+
+    style Service fill:#dbeafe
+    style Display fill:#d1fae5
+    style NoSync fill:#fee2e2
+    style Failed fill:#fee2e2
+    style Empty fill:#fef3c7
+                    </pre>
+                </div>
+
+                <h3>Event Type Mapping</h3>
+                <div class="step-box">
+                    <h4>Was ist ein Cal.com Event Type?</h4>
+                    <p>
+                        Ein <strong>Event Type</strong> in Cal.com ist ein buchbarer Termin-Typ. Er definiert:
+                    </p>
+                    <ul>
+                        <li><strong>Dauer:</strong> Wie lange dauert der Termin? (z.B. 30 Minuten)</li>
+                        <li><strong>Verfügbarkeit:</strong> Wann ist der Termin buchbar? (Öffnungszeiten, Pausen)</li>
+                        <li><strong>Team-Mitglieder:</strong> Welche Mitarbeiter können den Termin durchführen?</li>
+                        <li><strong>Buffer-Zeiten:</strong> Puffer vor/nach dem Termin</li>
+                        <li><strong>Buchungs-Fenster:</strong> Wie weit im Voraus kann gebucht werden?</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>Mapping: AskPro Service → Cal.com Event Type</h4>
+                    <p>
+                        Jeder Service in der AskPro-Datenbank ist mit genau einem Cal.com Event Type verbunden:
+                    </p>
+                    <pre><code>AskPro Service:        "Herrenhaarschnitt" (ID: 123)
+                       ↓
+Spalte:                calcom_event_type_id = 456789
+                       ↓
+Cal.com Event Type:    "Herrenhaarschnitt" (ID: 456789)
+                       ↓
+Cal.com Team:          "Friseur Mustermann GmbH"
+                       ↓
+Team Members:          [Mitarbeiter A, Mitarbeiter B, ...]</code></pre>
+                </div>
+
+                <h3>Verfügbarkeits-Abfrage</h3>
+                <div class="step-box">
+                    <h4>Schritt 1: Service auflösen</h4>
+                    <pre><code>1. Kunde sagt: "Herrenhaarschnitt morgen 10 Uhr"
+2. System findet: Service "Herrenhaarschnitt" (ID: 123)
+3. Liest Cal.com Event Type ID: 456789</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>Schritt 2: Datum/Zeit normalisieren</h4>
+                    <pre><code>Eingabe:      "morgen 10 Uhr"
+Heute:        2025-11-05
+Morgen:       2025-11-06
+Uhrzeit:      10:00
+Zeitzone:     Europe/Berlin
+UTC:          2025-11-06T09:00:00Z (Zeitumrechnung!)</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>Schritt 3: Cal.com API Anfrage</h4>
+                    <pre><code>GET https://api.cal.com/v2/slots/available
+
+Query-Parameter:
+- eventTypeId: 456789
+- startTime: 2025-11-06T09:00:00Z
+- endTime: 2025-11-06T17:00:00Z (Geschäftszeiten-Ende)
+- timeZone: Europe/Berlin</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>Schritt 4: Antwort verarbeiten</h4>
+                    <pre><code>Antwort von Cal.com:
+{
+  "slots": [
+    { "time": "2025-11-06T09:00:00Z" },  // 10:00 Berlin
+    { "time": "2025-11-06T09:30:00Z" },  // 10:30 Berlin
+    { "time": "2025-11-06T10:00:00Z" },  // 11:00 Berlin
+    ...
+  ]
+}
+
+System zeigt:
+"Verfügbare Zeiten: 10:00, 10:30, 11:00, ..."</code></pre>
+                </div>
+
+                <h3>Bidirektionale Synchronisation</h3>
+                <div class="info-box">
+                    <p><strong>Was bedeutet "bidirektional"?</strong></p>
+                    <p>Änderungen werden in <strong>beide Richtungen</strong> synchronisiert:</p>
+                    <ul>
+                        <li><strong>AskPro → Cal.com:</strong> Termin über Telefon gebucht → wird in Cal.com erstellt</li>
+                        <li><strong>Cal.com → AskPro:</strong> Termin in Cal.com geändert/gelöscht → wird in AskPro aktualisiert</li>
+                    </ul>
+                </div>
+
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph LR
+    A[📞 Buchung via Telefon] --> B[💾 AskPro DB]
+    B --> C[🔄 SyncToCalcomJob]
+    C --> D[📅 Cal.com Booking]
+
+    D --> E[🔔 Cal.com Webhook]
+    E --> F[🔄 CalcomWebhookController]
+    F --> B
+
+    G[🌐 Buchung via Cal.com Website] --> D
+    D --> E
+
+    style A fill:#dbeafe
+    style G fill:#dbeafe
+    style B fill:#d1fae5
+    style D fill:#e0e7ff
+                    </pre>
+                </div>
+
+                <h3>Caching-Strategie</h3>
+                <div class="warning-box">
+                    <strong>⚡ Performance-Optimierung:</strong> Cal.com API-Anfragen werden gecached:
+                    <ul>
+                        <li><strong>Cache-Key:</strong> <code>company:{id}:availability:{eventTypeId}:{date}</code></li>
+                        <li><strong>TTL (Time To Live):</strong> 5 Minuten</li>
+                        <li><strong>Invalidierung:</strong> Bei jeder Buchung/Änderung/Löschung</li>
+                        <li><strong>Storage:</strong> Redis</li>
+                    </ul>
+                    <p><strong>Vorteil:</strong> Schnellere Antworten, weniger API-Calls, geringere Kosten</p>
+                </div>
+
+                <h3>Cal.com Team-Struktur</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ebene</th>
+                            <th>Cal.com</th>
+                            <th>AskPro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Organisation</strong></td>
+                            <td>Cal.com Team</td>
+                            <td>Company (Geschäft)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Standort</strong></td>
+                            <td>-</td>
+                            <td>Branch (Filiale)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mitarbeiter</strong></td>
+                            <td>Team Member</td>
+                            <td>Staff</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Termin-Typ</strong></td>
+                            <td>Event Type</td>
+                            <td>Service</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buchung</strong></td>
+                            <td>Booking</td>
+                            <td>Appointment</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 6. Anruf-Varianten -->
+        <section id="varianten">
+            <h2><span class="icon">🎭</span> 6. Anruf-Varianten</h2>
+
+            <div class="card">
+                <h3>Verschiedene Szenarien im Anrufablauf</h3>
+
+                <div class="step-box">
+                    <h4>✅ Variante 1: Idealer Fall - Alles verfügbar</h4>
+                    <p><strong>Ablauf:</strong></p>
+                    <ol>
+                        <li>Kunde: "Herrenhaarschnitt morgen 10 Uhr"</li>
+                        <li>System: Prüft Verfügbarkeit → 10:00 Uhr frei ✅</li>
+                        <li>System: "10:00 Uhr ist verfügbar. Soll ich buchen?"</li>
+                        <li>Kunde: "Ja"</li>
+                        <li>System: Bucht direkt</li>
+                    </ol>
+                    <p><strong>Dauer:</strong> ~60 Sekunden</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>🔄 Variante 2: Wunschzeit nicht verfügbar - Alternativen</h4>
+                    <p><strong>Ablauf:</strong></p>
+                    <ol>
+                        <li>Kunde: "Herrenhaarschnitt morgen 10 Uhr"</li>
+                        <li>System: Prüft Verfügbarkeit → 10:00 Uhr belegt ❌</li>
+                        <li>System: Findet Alternativen → 09:00, 11:00, 12:30 verfügbar</li>
+                        <li>System: "10:00 Uhr ist leider nicht verfügbar. Ich habe 09:00, 11:00 und 12:30 Uhr frei."</li>
+                        <li>Kunde: "11:00 Uhr passt"</li>
+                        <li>System: Bucht 11:00 Uhr</li>
+                    </ol>
+                    <p><strong>Dauer:</strong> ~90 Sekunden</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>📅 Variante 3: Ganzer Tag voll - Alternative Tage</h4>
+                    <p><strong>Ablauf:</strong></p>
+                    <ol>
+                        <li>Kunde: "Herrenhaarschnitt morgen"</li>
+                        <li>System: Prüft ganzen Tag → Keine Slots verfügbar ❌</li>
+                        <li>System: Sucht alternative Tage (bis 14 Tage voraus)</li>
+                        <li>System: "Morgen sind wir leider ausgebucht. Übermorgen hätte ich 10:00, 14:00 und 16:00 Uhr frei."</li>
+                        <li>Kunde: "Übermorgen 14:00"</li>
+                        <li>System: Bucht übermorgen 14:00 Uhr</li>
+                    </ol>
+                    <p><strong>Dauer:</strong> ~120 Sekunden</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>🔍 Variante 4: Service nicht erkannt - Fallback</h4>
+                    <p><strong>Ablauf:</strong></p>
+                    <ol>
+                        <li>Kunde: "Ich hätte gerne einen Kaktus-Schnitt" (unbekannter Service)</li>
+                        <li>System: Versucht Matching → Kein Match gefunden ❌</li>
+                        <li>System: Nutzt Default-Service (z.B. "Beratungsgespräch")</li>
+                        <li>System: "Für welchen Tag möchten Sie den Termin?"</li>
+                        <li>Buchung läuft mit Default-Service weiter</li>
+                    </ol>
+                    <p><strong>Hinweis:</strong> Mitarbeiter sieht in Cal.com "Beratungsgespräch" und kann beim Termin klären, was der Kunde wirklich wollte.</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>⏰ Variante 5: Relative Zeitangaben</h4>
+                    <p><strong>Beispiele für relative Zeitangaben:</strong></p>
+                    <ul>
+                        <li>"heute" → Aktuelles Datum</li>
+                        <li>"morgen" → Nächster Tag</li>
+                        <li>"übermorgen" → In 2 Tagen</li>
+                        <li>"nächsten Montag" → Kommender Montag</li>
+                        <li>"in einer Woche" → +7 Tage</li>
+                    </ul>
+                    <p><strong>System normalisiert automatisch:</strong></p>
+                    <pre><code>Eingabe:   "morgen 10 Uhr"
+Heute:     2025-11-05
+Ergebnis:  2025-11-06 10:00:00</code></pre>
+                </div>
+
+                <div class="danger-box">
+                    <h4>❌ Variante 6: Fehlerfall - Cal.com nicht erreichbar</h4>
+                    <p><strong>Ablauf:</strong></p>
+                    <ol>
+                        <li>Kunde: "Herrenhaarschnitt morgen 10 Uhr"</li>
+                        <li>System: Sendet API-Anfrage an Cal.com → Timeout/Error ❌</li>
+                        <li>System: Retry mit Circuit Breaker (max 5 Versuche)</li>
+                        <li>Alle Retries fehlschlagen → Circuit Breaker öffnet</li>
+                        <li>System: "Entschuldigung, ich kann gerade keine Verfügbarkeiten abrufen. Bitte versuchen Sie es später erneut."</li>
+                        <li>Call wird beendet, keine Buchung</li>
+                    </ol>
+                    <p><strong>Schutz:</strong> Circuit Breaker verhindert, dass das System bei Cal.com-Ausfall überlastet wird.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Datenfluss -->
+        <section id="datenfluss">
+            <h2><span class="icon">💾</span> 7. Datenfluss im System</h2>
+
+            <div class="card">
+                <h3>Welche Daten werden wo gespeichert?</h3>
+
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+graph TD
+    Call[📞 Anruf] --> CallDB[💾 calls-Tabelle]
+    CallDB --> C1[call_id: call_xxx]
+    CallDB --> C2[from_number: +49...]
+    CallDB --> C3[company_id: 5]
+    CallDB --> C4[branch_id: uuid]
+    CallDB --> C5[started_at: timestamp]
+
+    Service[🎯 Service-Auswahl] --> ServiceDB[💾 services-Tabelle]
+    ServiceDB --> S1[id: 123]
+    ServiceDB --> S2[name: Herrenhaarschnitt]
+    ServiceDB --> S3[calcom_event_type_id: 456789]
+    ServiceDB --> S4[company_id: 5]
+
+    Book[📝 Buchung] --> ApptDB[💾 appointments-Tabelle]
+    ApptDB --> A1[id: 789]
+    ApptDB --> A2[service_id: 123]
+    ApptDB --> A3[customer_id: 456]
+    ApptDB --> A4[appointment_date: 2025-11-06]
+    ApptDB --> A5[appointment_time: 10:00]
+    ApptDB --> A6[status: confirmed]
+    ApptDB --> A7[calcom_booking_id: 999888]
+
+    ApptDB --> Sync[🔄 Sync Job]
+    Sync --> CalcomDB[📅 Cal.com Bookings]
+    CalcomDB --> CB1[id: 999888]
+    CalcomDB --> CB2[eventTypeId: 456789]
+    CalcomDB --> CB3[startTime: 2025-11-06T09:00:00Z]
+    CalcomDB --> CB4[attendee: {...}]
+
+    CalcomDB --> Webhook[🔔 Cal.com Webhook]
+    Webhook --> ApptDB
+
+    style CallDB fill:#dbeafe
+    style ServiceDB fill:#fef3c7
+    style ApptDB fill:#d1fae5
+    style CalcomDB fill:#e0e7ff
+                    </pre>
+                </div>
+
+                <h3>Datenbank-Tabellen im Detail</h3>
+
+                <div class="step-box">
+                    <h4>📞 calls-Tabelle</h4>
+                    <p><strong>Zweck:</strong> Speichert alle Anruf-Daten für Analyse und Tracking</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Spalte</th>
+                                <th>Typ</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>call_id</code></td>
+                                <td>string</td>
+                                <td>Retell Call ID (z.B. "call_abc123")</td>
+                            </tr>
+                            <tr>
+                                <td><code>from_number</code></td>
+                                <td>string</td>
+                                <td>Anrufer-Telefonnummer</td>
+                            </tr>
+                            <tr>
+                                <td><code>to_number</code></td>
+                                <td>string</td>
+                                <td>Angerufene Geschäftsnummer</td>
+                            </tr>
+                            <tr>
+                                <td><code>company_id</code></td>
+                                <td>integer</td>
+                                <td>Zugehöriges Geschäft</td>
+                            </tr>
+                            <tr>
+                                <td><code>branch_id</code></td>
+                                <td>uuid</td>
+                                <td>Zugehörige Filiale</td>
+                            </tr>
+                            <tr>
+                                <td><code>started_at</code></td>
+                                <td>timestamp</td>
+                                <td>Anruf-Start</td>
+                            </tr>
+                            <tr>
+                                <td><code>ended_at</code></td>
+                                <td>timestamp</td>
+                                <td>Anruf-Ende</td>
+                            </tr>
+                            <tr>
+                                <td><code>has_appointment</code></td>
+                                <td>boolean</td>
+                                <td>Wurde Termin gebucht?</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-box">
+                    <h4>🎯 services-Tabelle</h4>
+                    <p><strong>Zweck:</strong> Definiert alle buchbaren Dienstleistungen</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Spalte</th>
+                                <th>Typ</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>id</code></td>
+                                <td>integer</td>
+                                <td>Eindeutige Service-ID</td>
+                            </tr>
+                            <tr>
+                                <td><code>name</code></td>
+                                <td>string</td>
+                                <td>Anzeigename (z.B. "Herrenhaarschnitt")</td>
+                            </tr>
+                            <tr>
+                                <td><code>calcom_event_type_id</code></td>
+                                <td>integer</td>
+                                <td>Verbindung zu Cal.com</td>
+                            </tr>
+                            <tr>
+                                <td><code>company_id</code></td>
+                                <td>integer</td>
+                                <td>Zugehöriges Geschäft</td>
+                            </tr>
+                            <tr>
+                                <td><code>branch_id</code></td>
+                                <td>uuid</td>
+                                <td>Zugehörige Filiale (null = alle)</td>
+                            </tr>
+                            <tr>
+                                <td><code>is_active</code></td>
+                                <td>boolean</td>
+                                <td>Buchbar?</td>
+                            </tr>
+                            <tr>
+                                <td><code>is_default</code></td>
+                                <td>boolean</td>
+                                <td>Standard-Service?</td>
+                            </tr>
+                            <tr>
+                                <td><code>priority</code></td>
+                                <td>integer</td>
+                                <td>Sortierung (niedriger = wichtiger)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-box">
+                    <h4>📝 appointments-Tabelle</h4>
+                    <p><strong>Zweck:</strong> Speichert alle gebuchten Termine</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Spalte</th>
+                                <th>Typ</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>id</code></td>
+                                <td>integer</td>
+                                <td>Eindeutige Termin-ID</td>
+                            </tr>
+                            <tr>
+                                <td><code>service_id</code></td>
+                                <td>integer</td>
+                                <td>Gebuchte Dienstleistung</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_id</code></td>
+                                <td>integer</td>
+                                <td>Kunde</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_date</code></td>
+                                <td>date</td>
+                                <td>Termin-Datum</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_time</code></td>
+                                <td>time</td>
+                                <td>Termin-Uhrzeit</td>
+                            </tr>
+                            <tr>
+                                <td><code>status</code></td>
+                                <td>enum</td>
+                                <td>confirmed/cancelled/completed</td>
+                            </tr>
+                            <tr>
+                                <td><code>calcom_booking_id</code></td>
+                                <td>integer</td>
+                                <td>Cal.com Booking ID (Sync)</td>
+                            </tr>
+                            <tr>
+                                <td><code>company_id</code></td>
+                                <td>integer</td>
+                                <td>Geschäft</td>
+                            </tr>
+                            <tr>
+                                <td><code>branch_id</code></td>
+                                <td>uuid</td>
+                                <td>Filiale</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Datenfluss-Diagramm: Von Anruf bis Buchung</h3>
+                <div class="flow-diagram">
+                    <pre class="mermaid">
+sequenceDiagram
+    participant K as 📞 Kunde
+    participant R as 🤖 Retell AI
+    participant B as 🔧 Backend
+    participant D as 💾 Datenbank
+    participant C as 📅 Cal.com
+
+    K->>R: Anruf startet
+    R->>B: Webhook: call_inbound
+    B->>D: INSERT INTO calls (call_id, from_number, ...)
+    D-->>B: Call-Datensatz erstellt
+
+    R->>K: "Welche Dienstleistung?"
+    K->>R: "Herrenhaarschnitt morgen 10 Uhr"
+
+    R->>B: check_availability_v17(dienstleistung, datum, uhrzeit)
+    B->>D: SELECT * FROM services WHERE name = 'Herrenhaarschnitt'
+    D-->>B: Service gefunden (id: 123, calcom_event_type_id: 456789)
+
+    B->>C: GET /v2/slots/available?eventTypeId=456789&startTime=...
+    C-->>B: { slots: [{ time: "09:00" }, { time: "10:00" }, ...] }
+
+    B-->>R: { available_times: ["09:00", "10:00", "11:00"] }
+    R->>K: "Verfügbar: 09:00, 10:00, 11:00 Uhr"
+
+    K->>R: "10:00 Uhr"
+    R->>B: book_appointment_v17(dienstleistung, datum, uhrzeit, name)
+
+    B->>D: INSERT INTO appointments (service_id, customer_id, date, time, ...)
+    D-->>B: Appointment erstellt (id: 789)
+
+    B->>C: POST /v2/bookings (eventTypeId, startTime, attendee, ...)
+    C-->>B: { id: 999888, status: "accepted" }
+
+    B->>D: UPDATE appointments SET calcom_booking_id = 999888
+    D-->>B: Updated
+
+    B-->>R: { success: true, booking_id: 999888 }
+    R->>K: "Ihr Termin ist gebucht!"
+                    </pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Bekannte Probleme -->
+        <section id="bugs">
+            <h2><span class="icon">🐛</span> 8. Bekannte Probleme & Lösungen</h2>
+
+            <div class="card">
+                <h3>Aktuelle Bugs und deren Status</h3>
+
+                <div class="danger-box">
+                    <h4>🔴 Bug #1: Conversation Flow Loop (BEHOBEN - Warten auf Deployment)</h4>
+                    <p><strong>Problem:</strong></p>
+                    <p>
+                        Wenn der Kunde eine Alternative auswählt (z.B. "Ich nehme 11:00 Uhr"),
+                        springt der Agent zurück zu "Verfügbarkeit prüfen" statt zu "Termin buchen".
+                        Dies führt zu einer Endlos-Schleife und Retell bricht den Anruf ab.
+                    </p>
+                    <p><strong>Root Cause:</strong></p>
+                    <pre><code>Node: "Alternative bestätigen" (node_confirm_alternative)
+Edge Destination: "func_check_availability" ❌ FALSCH
+Sollte sein:      "func_book_appointment" ✅ RICHTIG</code></pre>
+                    <p><strong>Status:</strong></p>
+                    <ul>
+                        <li>✅ Fix implementiert in Conversation Flow Version 32-36</li>
+                        <li>✅ Edge-Destination korrigiert</li>
+                        <li>✅ Timeouts erhöht (10s → 15s)</li>
+                        <li>⏳ <strong>WARTEN AUF DEPLOYMENT im Dashboard</strong></li>
+                    </ul>
+                    <p><strong>Auswirkung:</strong> 🔴 KRITISCH - Alternative-Buchungen funktionieren nicht</p>
+                    <p><strong>Dokumentation:</strong> <code>CONVERSATION_FLOW_LOOP_BUG_2025-11-05.md</code></p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🟡 Bug #2: Call Context Not Available (Test Mode)</h4>
+                    <p><strong>Problem:</strong></p>
+                    <p>
+                        Im Test Mode erscheint Fehler "Call context not available", weil Test-Calls nicht in die Datenbank synchronisiert werden.
+                    </p>
+                    <p><strong>Root Cause:</strong></p>
+                    <pre><code>Test Mode Call → call_inbound Webhook wird NICHT ausgelöst
+                        ↓
+Kein Eintrag in calls-Tabelle
+                        ↓
+getCallContext(call_id) findet nichts
+                        ↓
+Function Call schlägt fehl</code></pre>
+                    <p><strong>Lösungen:</strong></p>
+                    <ul>
+                        <li><strong>Option A (Quick):</strong> Fallback für Test Mode implementieren (Default Company/Branch verwenden)</li>
+                        <li><strong>Option B (Proper):</strong> Webhook-Konfiguration prüfen und sicherstellen, dass Test Mode Webhooks sendet</li>
+                    </ul>
+                    <p><strong>Status:</strong> ⏳ DOKUMENTIERT, NICHT KRITISCH (nur Test Mode betroffen)</p>
+                    <p><strong>Auswirkung:</strong> 🟡 NIEDRIG - Nur Test Mode, Produktion funktioniert normal</p>
+                </div>
+
+                <div class="success-box">
+                    <h4>✅ Gelöst: DateTimeParser relative Datumsangaben</h4>
+                    <p><strong>Problem (ursprünglich vermutet):</strong></p>
+                    <p>System könnte relative Datumsangaben wie "morgen", "übermorgen" nicht verarbeiten.</p>
+                    <p><strong>Ergebnis:</strong></p>
+                    <p>✅ Kein Bug! DateTimeParser hat bereits eine vollständige GERMAN_DATE_MAP implementiert und funktioniert perfekt.</p>
+                    <pre><code>Test: parseDateString("morgen")
+Ergebnis: "2025-11-06" ✅ KORREKT</code></pre>
+                </div>
+
+                <h3>System-Limitationen</h3>
+                <div class="info-box">
+                    <h4>⚠️ Bekannte Limitationen (nicht Bugs, sondern Design)</h4>
+                    <ul>
+                        <li>
+                            <strong>Cal.com API Rate Limit:</strong> Max 100 Anfragen/Minute pro Account
+                            <br><em>Lösung: Redis-Caching (5min TTL) reduziert API-Calls um ~80%</em>
+                        </li>
+                        <li>
+                            <strong>Alternative Tage-Suche:</strong> Max 14 Tage in die Zukunft
+                            <br><em>Grund: Performance - mehr Tage = längere Antwortzeit</em>
+                        </li>
+                        <li>
+                            <strong>Fuzzy Matching Threshold:</strong> Min 75% Ähnlichkeit erforderlich
+                            <br><em>Grund: Zu niedriger Threshold führt zu falschen Service-Matches</em>
+                        </li>
+                        <li>
+                            <strong>Function Call Timeout:</strong> 15 Sekunden (erhöht von 10s)
+                            <br><em>Grund: Cal.com API kann langsam sein, besonders bei großen Teams</em>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. Technische Details -->
+        <section id="technische-details">
+            <h2><span class="icon">⚙️</span> 9. Technische Details</h2>
+
+            <div class="card">
+                <h3>Für Entwickler und IT-Personal</h3>
+
+                <div class="step-box">
+                    <h4>🔧 Backend-Komponenten (Laravel)</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Komponente</th>
+                                <th>Datei</th>
+                                <th>Funktion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Webhook Handler</td>
+                                <td><code>RetellWebhookController.php</code></td>
+                                <td>Empfängt call_inbound, call_ended Events</td>
+                            </tr>
+                            <tr>
+                                <td>Function Call Handler</td>
+                                <td><code>RetellFunctionCallHandler.php</code></td>
+                                <td>check_availability_v17, book_appointment_v17</td>
+                            </tr>
+                            <tr>
+                                <td>Service Selection</td>
+                                <td><code>ServiceSelectionService.php</code></td>
+                                <td>3-Stufen-Matching, Validierung</td>
+                            </tr>
+                            <tr>
+                                <td>DateTime Parser</td>
+                                <td><code>DateTimeParser.php</code></td>
+                                <td>Normalisiert deutsche Datumsangaben</td>
+                            </tr>
+                            <tr>
+                                <td>Cal.com Integration</td>
+                                <td><code>CalcomService.php</code></td>
+                                <td>API-Wrapper, Caching, Circuit Breaker</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-box">
+                    <h4>🤖 Retell AI Konfiguration</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Element</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Agent ID</td>
+                                <td><code>agent_45daa54928c5768b52ba3db736</code></td>
+                            </tr>
+                            <tr>
+                                <td>Conversation Flow ID</td>
+                                <td><code>conversation_flow_a58405e3f67a</code></td>
+                            </tr>
+                            <tr>
+                                <td>Aktuelle Version (Draft)</td>
+                                <td>V36 (mit Loop Bug Fix)</td>
+                            </tr>
+                            <tr>
+                                <td>Published Version</td>
+                                <td>V0 (ALT - ohne Fix) ⏳ Deployment pending</td>
+                            </tr>
+                            <tr>
+                                <td>Function Endpoint</td>
+                                <td><code>POST https://api.askproai.de/api/webhooks/retell/function</code></td>
+                            </tr>
+                            <tr>
+                                <td>Webhook Endpoint</td>
+                                <td><code>POST https://api.askproai.de/api/webhooks/retell</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-box">
+                    <h4>📡 API Endpoints</h4>
+                    <pre><code>POST /api/webhooks/retell
+- Empfängt: call_inbound, call_ended, call_analyzed Events
+- Erstellt: Call-Datensatz in Datenbank
+- Response: 200 OK
+
+POST /api/webhooks/retell/function
+- Empfängt: check_availability_v17, book_appointment_v17
+- Prüft: Call Context, Service, Verfügbarkeit
+- Response: JSON mit verfügbaren Zeiten oder Buchungs-Bestätigung
+
+POST /api/webhooks/calcom
+- Empfängt: booking.created, booking.rescheduled, booking.cancelled
+- Synchronisiert: Appointments ← Cal.com
+- Response: 200 OK</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>💾 Datenbank-Schema</h4>
+                    <pre><code>PostgreSQL 14+
+
+Haupttabellen:
+- calls           (Anruf-Tracking)
+- companies       (Geschäfte/Tenants)
+- branches        (Filialen)
+- services        (Dienstleistungen)
+- appointments    (Termine)
+- customers       (Kunden)
+- service_synonyms (Service-Synonyme für Matching)
+
+Indizes:
+- calls: call_id (unique), company_id
+- services: company_id, calcom_event_type_id, is_active
+- appointments: company_id, appointment_date, status, calcom_booking_id (unique)</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>⚡ Performance-Optimierungen</h4>
+                    <ul>
+                        <li><strong>Redis Caching:</strong> Cal.com Verfügbarkeits-Anfragen (5min TTL)</li>
+                        <li><strong>Request-Scoped Cache:</strong> Service-Lookups während eines Requests</li>
+                        <li><strong>Circuit Breaker:</strong> Schutz vor Cal.com API-Ausfällen</li>
+                        <li><strong>Database Indexing:</strong> Optimierte Queries für Service-Matching</li>
+                        <li><strong>Eager Loading:</strong> Relationship-Queries vorgeladen</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>🔒 Security-Features</h4>
+                    <ul>
+                        <li><strong>Multi-Tenancy:</strong> Row-Level Security (company_id isolation)</li>
+                        <li><strong>Service Access Validation:</strong> 3-stufige Prüfung (Company, Branch, Cal.com Team)</li>
+                        <li><strong>Rate Limiting:</strong> API-Endpoint-Schutz</li>
+                        <li><strong>Mass Assignment Protection:</strong> $fillable/$guarded in Models</li>
+                        <li><strong>GDPR-Compliant Logging:</strong> Keine sensiblen Daten in Logs</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>📊 Monitoring & Observability</h4>
+                    <ul>
+                        <li><strong>Structured Logging:</strong> Laravel Log mit Context-IDs</li>
+                        <li><strong>Webhook Event Tracking:</strong> Tabelle webhook_events</li>
+                        <li><strong>Call Analytics:</strong> calls-Tabelle mit Metriken</li>
+                        <li><strong>Error Tracking:</strong> Exceptions mit Stack Traces</li>
+                        <li><strong>Performance Metrics:</strong> API Response Times in Logs</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="margin-top: 4rem; padding: 2rem; background: var(--gray-100); border-radius: 0.75rem; text-align: center;">
+            <p><strong>AskPro AI - Telefonbuchungssystem</strong></p>
+            <p>Version 2.0 | Dokumentiert: 2025-11-05</p>
+            <p style="margin-top: 1rem; color: var(--gray-700);">
+                <span class="badge badge-success">Produktiv</span>
+                <span class="badge badge-warning">Loop Bug Fix Pending Deployment</span>
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--gray-700);">
+                Für Fragen oder Feedback: Siehe <code>/var/www/api-gateway/claudedocs/</code>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                wrap: true
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Print button functionality
+        window.addEventListener('load', function() {
+            console.log('📄 Dokumentation geladen!');
+            console.log('🖨️ Zum Drucken: Ctrl+P / Cmd+P');
+        });
+    </script>
+</body>
+</html>

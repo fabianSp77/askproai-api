@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 0: Retell Agent Config Verification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+        .status {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .alert {
+            background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .alert h2 {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .section {
+            margin-bottom: 32px;
+        }
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        .file-list {
+            list-style: none;
+        }
+        .file-item {
+            background: #f5f5f5;
+            margin-bottom: 12px;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .file-item.primary {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .file-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .file-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .file-link:hover {
+            background: #5568d3;
+        }
+        .file-link.primary {
+            background: #4CAF50;
+        }
+        .file-link.primary:hover {
+            background: #45a049;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: white;
+        }
+        .card .number {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e91e63;
+        }
+        .footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Task 0: Retell Agent Config Verification</h1>
+        <span class="status">⏳ READY FOR MANUAL EXECUTION</span>
+
+        <div class="alert">
+            <h2>⚠️ P1 BLOCKER - Agent Configuration Missing</h2>
+            <p style="margin-bottom: 8px;">
+                <strong>Problem:</strong> Retell Agent tools fehlt der <code>call_id</code> Parameter, wodurch leere call_id Werte gesendet werden.
+            </p>
+            <p>
+                <strong>Solution:</strong> 4 Tools konfigurieren (5-8 Min) → Alle Tests unblocked
+            </p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Tools zu konfigurieren</h3>
+                <div class="number">4</div>
+            </div>
+            <div class="card">
+                <h3>Geschätzte Zeit</h3>
+                <div class="number">5-8 Min</div>
+            </div>
+            <div class="card">
+                <h3>Artefakte hochladen</h3>
+                <div class="number">5</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Dokumentation</h2>
+            <ul class="file-list">
+                <li class="file-item primary">
+                    <div class="file-name">⭐ MANUAL_CHECKLIST.md</div>
+                    <div class="file-desc">Interactive Schritt-für-Schritt Checkliste - NUTZE DIESE für die Ausführung</div>
+                    <a href="MANUAL_CHECKLIST.md" class="file-link primary" download>📥 Download Checklist</a>
+                </li>
+
+                <li class="file-item">
+                    <div class="file-name">QUICK_REFERENCE.md</div>
+                    <div class="file-desc">Schnellreferenz mit Decision Guide und Version Mix Rationale</div>
+                    <a href="QUICK_REFERENCE.md" class="file-link" download>📥 Download</a>
+                </li>
+
+                <li class="file-item">
+                    <div class="file-name">TASK0_MANUAL_GUIDE.md</div>
+                    <div class="file-desc">Vollständige Anleitung mit Screenshots-Template und Troubleshooting</div>
+                    <a href="TASK0_MANUAL_GUIDE.md" class="file-link" download>📥 Download</a>
+                </li>
+
+                <li class="file-item">
+                    <div class="file-name">TASK0_EXECUTION_SUMMARY.md</div>
+                    <div class="file-desc">Übersicht, Status und Go/No-Go Kriterien</div>
+                    <a href="TASK0_EXECUTION_SUMMARY.md" class="file-link" download>📥 Download</a>
+                </li>
+
+                <li class="file-item">
+                    <div class="file-name">README.md</div>
+                    <div class="file-desc">Artefakt Upload Tracker und Status Checklist</div>
+                    <a href="README.md" class="file-link" download>📥 Download</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Quick Start</h2>
+            <ol style="padding-left: 20px; line-height: 1.8;">
+                <li><strong>Download:</strong> MANUAL_CHECKLIST.md (oben, grüner Button)</li>
+                <li><strong>Öffne:</strong> Retell Dashboard → Agent "Friseur1 Fixed V2"</li>
+                <li><strong>Konfiguriere:</strong> 4 Tools (je <code>call_id</code> Parameter + Mapping)</li>
+                <li><strong>Test:</strong> "Herrenhaarschnitt, morgen 16 Uhr" (Call durchführen)</li>
+                <li><strong>Upload:</strong> 4 Screenshots + test_call_log.txt hierher</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>📦 Artefakte (nach Ausführung hochladen)</h2>
+            <ul style="padding-left: 20px; line-height: 1.8; color: #666;">
+                <li>01_check_availability_v17.png</li>
+                <li>02_book_appointment_v17.png</li>
+                <li>03_cancel_appointment_v4.png</li>
+                <li>04_reschedule_appointment_v4.png</li>
+                <li>test_call_log.txt</li>
+            </ul>
+            <p style="margin-top: 12px; color: #666; font-size: 14px;">
+                <strong>Upload-Pfad:</strong> <code>/var/www/api-gateway/docs/e2e/audit/retell-agent-config-verification/</code>
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Version Mix (Documented Strategy)</h2>
+            <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; margin-top: 12px;">
+                <p style="margin-bottom: 12px; color: #333;"><strong>Konfiguration:</strong></p>
+                <ul style="padding-left: 20px; line-height: 1.8; color: #666;">
+                    <li>✅ check_availability_v17 → v17 endpoint</li>
+                    <li>✅ book_appointment_v17 → v17 endpoint</li>
+                    <li>✅ cancel_appointment_v4 → v4 endpoint (retained)</li>
+                    <li>✅ reschedule_appointment_v4 → v4 endpoint (retained)</li>
+                </ul>
+                <p style="margin-top: 12px; color: #666; font-size: 14px;">
+                    <strong>Rationale:</strong> v4 bereits produktiv, keine Code-Änderungen nötig → 5-8 Min statt 30+ Min
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚦 Go/No-Go Kriterien</h2>
+            <div style="background: #e8f5e9; padding: 16px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                <p style="margin-bottom: 8px; color: #333;"><strong>Task 0 GRÜN wenn:</strong></p>
+                <ul style="padding-left: 20px; line-height: 1.8; color: #666;">
+                    <li>4 Screenshots + test_call_log.txt hochgeladen</li>
+                    <li>test_call_log.txt zeigt <code>call_id ≠ ""</code></li>
+                    <li>Laravel logs: <code>✅ CANONICAL_CALL_ID: Resolved</code></li>
+                    <li>0 <code>empty_call_id_occurrences</code> in 15 Min</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Aktueller Status</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                    <strong style="color: #4CAF50;">✅ Task 1</strong>
+                    <p style="color: #666; font-size: 13px; margin-top: 4px;">Middleware</p>
+                </div>
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                    <strong style="color: #4CAF50;">✅ Task 2</strong>
+                    <p style="color: #666; font-size: 13px; margin-top: 4px;">Unit Tests (10/10)</p>
+                </div>
+                <div style="background: #fff3e0; padding: 12px; border-radius: 6px; border-left: 4px solid #ff9800;">
+                    <strong style="color: #ff9800;">🔄 Task 0</strong>
+                    <p style="color: #666; font-size: 13px; margin-top: 4px;">Agent Config (in progress)</p>
+                </div>
+                <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; border-left: 4px solid #999;">
+                    <strong style="color: #999;">⏸️ Task 3+</strong>
+                    <p style="color: #666; font-size: 13px; margin-top: 4px;">Blocked by Task 0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated: 2025-11-03 22:30 | Status: Ready for Execution</p>
+            <p style="margin-top: 8px;">
+                <a href="../../index.html" style="color: #667eea; text-decoration: none;">← Zurück zur E2E Dokumentation</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

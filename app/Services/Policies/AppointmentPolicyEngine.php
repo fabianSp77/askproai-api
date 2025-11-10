@@ -20,11 +20,11 @@ class AppointmentPolicyEngine
     /**
      * Check if appointment can be cancelled
      *
-     * Business Rules:
-     * 1. Must meet hours_before deadline from policy
-     * 2. Must not exceed max_cancellations_per_month quota
-     * 3. For composite appointments, use strictest policy among segments
-     * 4. Fee calculated based on notice period
+     * Business Rules (ADR-005: Non-blocking Cancellation):
+     * - Always allow cancellation (no cutoff)
+     * - No quota limits
+     * - Return reschedule_first_enabled flag for agent guidance
+     * - No fees applied
      */
     public function canCancel(Appointment $appointment, ?Carbon $now = null): PolicyResult
     {
@@ -33,56 +33,17 @@ class AppointmentPolicyEngine
         // Get applicable policy
         $policy = $this->resolvePolicy($appointment, 'cancellation');
 
-        if (!$policy) {
-            // No policy = default allow with no fee
-            return PolicyResult::allow(fee: 0.0, details: ['policy' => 'default']);
-        }
-
         $hoursNotice = $now->diffInHours($appointment->starts_at, false);
 
-        // Check 1: Deadline
-        $requiredHours = $policy['hours_before'] ?? 0;
-        if ($hoursNotice < $requiredHours) {
-            $fee = $this->calculateFee($appointment, 'cancellation', $hoursNotice);
-            return PolicyResult::deny(
-                reason: "Cancellation requires {$requiredHours} hours notice. Only {$hoursNotice} hours remain.",
-                details: [
-                    'hours_notice' => $hoursNotice,
-                    'required_hours' => $requiredHours,
-                    'fee_if_forced' => $fee,
-                ]
-            );
-        }
-
-        // Check 2: Monthly quota
-        $maxPerMonth = $policy['max_cancellations_per_month'] ?? null;
-        if ($maxPerMonth !== null) {
-            $recentCount = $this->getModificationCount(
-                $appointment->customer_id,
-                'cancel',
-                30
-            );
-
-            if ($recentCount >= $maxPerMonth) {
-                return PolicyResult::deny(
-                    reason: "Monthly cancellation quota exceeded ({$recentCount}/{$maxPerMonth})",
-                    details: [
-                        'quota_used' => $recentCount,
-                        'quota_max' => $maxPerMonth,
-                    ]
-                );
-            }
-        }
-
-        // Calculate fee if applicable
-        $fee = $this->calculateFee($appointment, 'cancellation', $hoursNotice);
-
+        // Non-blocking: Always allow cancellation (ADR-005)
+        // Reschedule-first always enabled for non-blocking policy
         return PolicyResult::allow(
-            fee: $fee,
+            fee: 0.0,
             details: [
                 'hours_notice' => $hoursNotice,
-                'required_hours' => $requiredHours,
-                'policy' => $policy,
+                'required_hours' => 0, // Non-blocking
+                'policy' => $policy ?? 'default',
+                'reschedule_first_enabled' => true, // ADR-005: Always offer reschedule first
             ]
         );
     }
@@ -90,10 +51,11 @@ class AppointmentPolicyEngine
     /**
      * Check if appointment can be rescheduled
      *
-     * Business Rules:
-     * 1. Must meet hours_before deadline from policy
-     * 2. Must not exceed max_reschedules_per_appointment limit
-     * 3. Fee calculated based on notice period
+     * Business Rules (ADR-005: Non-blocking Cancellation):
+     * - Always allow reschedule (no cutoff)
+     * - No per-appointment limits
+     * - Return reschedule_first_enabled flag for agent guidance
+     * - No fees applied
      */
     public function canReschedule(Appointment $appointment, ?Carbon $now = null): PolicyResult
     {
@@ -102,54 +64,17 @@ class AppointmentPolicyEngine
         // Get applicable policy
         $policy = $this->resolvePolicy($appointment, 'reschedule');
 
-        if (!$policy) {
-            // No policy = default allow with no fee
-            return PolicyResult::allow(fee: 0.0, details: ['policy' => 'default']);
-        }
-
         $hoursNotice = $now->diffInHours($appointment->starts_at, false);
 
-        // Check 1: Deadline
-        $requiredHours = $policy['hours_before'] ?? 0;
-        if ($hoursNotice < $requiredHours) {
-            $fee = $this->calculateFee($appointment, 'reschedule', $hoursNotice);
-            return PolicyResult::deny(
-                reason: "Reschedule requires {$requiredHours} hours notice. Only {$hoursNotice} hours remain.",
-                details: [
-                    'hours_notice' => $hoursNotice,
-                    'required_hours' => $requiredHours,
-                    'fee_if_forced' => $fee,
-                ]
-            );
-        }
-
-        // Check 2: Per-appointment reschedule limit
-        $maxPerAppointment = $policy['max_reschedules_per_appointment'] ?? null;
-        if ($maxPerAppointment !== null) {
-            $rescheduleCount = AppointmentModification::where('appointment_id', $appointment->id)
-                ->where('modification_type', 'reschedule')
-                ->count();
-
-            if ($rescheduleCount >= $maxPerAppointment) {
-                return PolicyResult::deny(
-                    reason: "This appointment has been rescheduled {$rescheduleCount} times (max: {$maxPerAppointment})",
-                    details: [
-                        'reschedule_count' => $rescheduleCount,
-                        'max_allowed' => $maxPerAppointment,
-                    ]
-                );
-            }
-        }
-
-        // Calculate fee if applicable
-        $fee = $this->calculateFee($appointment, 'reschedule', $hoursNotice);
-
+        // Non-blocking: Always allow reschedule (ADR-005)
+        // Reschedule-first always enabled for non-blocking policy
         return PolicyResult::allow(
-            fee: $fee,
+            fee: 0.0,
             details: [
                 'hours_notice' => $hoursNotice,
-                'required_hours' => $requiredHours,
-                'policy' => $policy,
+                'required_hours' => 0, // Non-blocking
+                'policy' => $policy ?? 'default',
+                'reschedule_first_enabled' => true, // ADR-005: Always offer reschedule first
             ]
         );
     }

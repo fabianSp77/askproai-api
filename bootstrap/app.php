@@ -28,10 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(\App\Http\Middleware\PerformanceMonitoring::class);
         $middleware->append(\App\Http\Middleware\ErrorCatcher::class);
+        $middleware->append(\App\Http\Middleware\CorrelationMiddleware::class); // ✨ Correlation tracking
 
         // Rate limiting for specific routes
         $middleware->alias([
             /* ── Project-specific middleware ───────────────────── */
+            'correlation' => \App\Http\Middleware\CorrelationMiddleware::class, // ✨ Correlation tracking
             'rate.limit' => \App\Http\Middleware\RateLimiting::class,
             'stripe.webhook' => \App\Http\Middleware\VerifyStripeWebhookSignature::class,
             'retell.webhook' => \App\Http\Middleware\VerifyRetellWebhookSignature::class,
@@ -48,6 +50,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             /* 🎯 Feature flags - Customer Portal Security */
             'feature' => \App\Http\Middleware\CheckFeatureFlag::class,
+
+            /* 🏢 Company scoping - ensure user access only own company resources */
+            'companyscope' => \App\Http\Middleware\EnsureUserBelongsToCompany::class,
 
             /* 📚 Documentation authentication */
             'docs.auth' => \App\Http\Middleware\DocsAuthenticated::class,

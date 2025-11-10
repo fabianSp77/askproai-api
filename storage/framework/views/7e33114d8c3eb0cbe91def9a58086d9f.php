@@ -90,7 +90,7 @@ unset($__defined_vars); ?>
 
     </div>
 
-    <!--[if BLOCK]><![endif]--><?php if(! \Filament\Support\is_slot_empty($slot)): ?>
+    <?php if(! \Filament\Support\is_slot_empty($slot)): ?>
         <div
             x-cloak
             x-float<?php echo e($placement ? ".placement.{$placement}" : ''); ?><?php echo e($size ? '.size' : ''); ?><?php echo e($flip ? '.flip' : ''); ?><?php echo e($shift ? '.shift' : ''); ?><?php echo e($teleport ? '.teleport' : ''); ?><?php echo e($offset ? '.offset' : ''); ?>="{ offset: <?php echo e($offset); ?>, <?php echo e($size ? ('size: ' . $sizeConfig) : ''); ?> }"
@@ -128,6 +128,6 @@ unset($__defined_vars); ?>
             <?php echo e($slot); ?>
 
         </div>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </div>
 <?php /**PATH /var/www/api-gateway/vendor/filament/support/resources/views/components/dropdown/index.blade.php ENDPATH**/ ?>

@@ -438,11 +438,43 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'created_at' => now()->toIso8601String()
         ]);
 
+        // ✅ STAFF FIX 2025-11-06: Auto-select staff if not provided
+        // PROBLEM: 99.1% of appointments have staff_id: NULL
+        // SOLUTION: Select first available staff from service_staff pivot table
+        $staffId = null;
+        if (!empty($bookingDetails['staff_id'])) {
+            $staffId = $bookingDetails['staff_id'];
+            Log::info('📌 Staff provided in booking details', ['staff_id' => $staffId]);
+        } else {
+            // Auto-select from service's assigned staff
+            $availableStaff = $service->staff()
+                ->wherePivot('can_book', true)
+                ->first();
+
+            if ($availableStaff) {
+                $staffId = $availableStaff->id;
+                Log::info('✅ STAFF FIX: Auto-selected staff from service', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'staff_id' => $staffId,
+                    'staff_name' => $availableStaff->name,
+                    'selection_method' => 'service_staff_pivot',
+                ]);
+            } else {
+                Log::warning('⚠️ No staff available for service - appointment will have NULL staff_id', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'note' => 'Admin should assign staff to this service in service_staff table',
+                ]);
+            }
+        }
+
         $appointment->forceFill([
             'company_id' => $customer->company_id,  // Use customer's company_id (guaranteed match!)
             'customer_id' => $customer->id,
             'service_id' => $service->id,
             'branch_id' => $branchId,
+            'staff_id' => $staffId,  // ✅ STAFF FIX: Now auto-selected if available
             // REMOVED: 'tenant_id' - column doesn't exist in table!
             'starts_at' => $bookingDetails['starts_at'],
             'ends_at' => $bookingDetails['ends_at'],
@@ -463,10 +495,37 @@ class AppointmentCreationService implements AppointmentCreationInterface
         // to prevent orphaned bookings (CVSS 8.5 vulnerability)
         try {
             $appointment->save();
+
+            // ✅ REGRESSION FIX 2025-11-06: Bidirectional Call-Appointment Linking
+            // PROBLEM: Since Oct 1, 2025, appointments were created with call_id (forward link)
+            //          but calls were NOT updated with appointment_id (backward link missing)
+            // IMPACT: 99.88% of calls have no appointment data visible in admin UI
+            // SOLUTION: Update call with appointment_id immediately after appointment creation
+            if ($call && !$call->appointment_id) {
+                $call->update([
+                    'appointment_id' => $appointment->id,
+                    'staff_id' => $appointment->staff_id ?? $call->staff_id,  // Preserve existing or set from appointment
+                    'has_appointment' => true,
+                    'appointment_link_status' => 'linked',
+                    'appointment_linked_at' => now(),
+                ]);
+
+                Log::info('✅ REGRESSION FIX: Bidirectional call-appointment link created', [
+                    'call_id' => $call->id,
+                    'appointment_id' => $appointment->id,
+                    'staff_id' => $appointment->staff_id,
+                    'fix_date' => '2025-11-06',
+                    'regression_date' => '2025-10-01',
+                    'linking_restored' => true,
+                ]);
+            }
+
         } catch (\Exception $e) {
-            Log::error('❌ Failed to save appointment record to database', [
+            // 🔍 ENHANCED ERROR LOGGING: Diagnose DB save failure root cause
+            $errorDetails = [
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
+                'error_class' => get_class($e),
                 'customer_id' => $customer->id,
                 'service_id' => $service->id,
                 'branch_id' => $branchId,
@@ -474,7 +533,37 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 'calcom_booking_id' => $calcomBookingId,
                 'call_id' => $call?->id,
                 'trace' => $e->getTraceAsString()
-            ]);
+            ];
+
+            // Specific error diagnostics
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                $errorDetails['sql_state'] = $e->errorInfo[0] ?? null;
+                $errorDetails['sql_error_code'] = $e->errorInfo[1] ?? null;
+                $errorDetails['sql_error_message'] = $e->errorInfo[2] ?? null;
+                $errorDetails['query'] = $e->getSql() ?? 'unknown';
+                $errorDetails['bindings'] = $e->getBindings() ?? [];
+
+                // Diagnose specific SQL errors
+                $sqlErrorCode = $e->errorInfo[1] ?? null;
+                $errorDetails['diagnosis'] = $this->diagnoseSqlError($sqlErrorCode);
+            } elseif ($e instanceof \Illuminate\Validation\ValidationException) {
+                $errorDetails['validation_errors'] = $e->errors();
+                $errorDetails['diagnosis'] = 'Model validation failed';
+            } elseif ($e instanceof \PDOException) {
+                $errorDetails['pdo_code'] = $e->getCode();
+                $errorDetails['diagnosis'] = 'PDO/Database connection error';
+            }
+
+            // Check database connection status
+            try {
+                \DB::connection()->getPdo();
+                $errorDetails['db_connection_status'] = 'connected';
+            } catch (\Exception $connEx) {
+                $errorDetails['db_connection_status'] = 'disconnected';
+                $errorDetails['db_connection_error'] = $connEx->getMessage();
+            }
+
+            Log::error('❌ Failed to save appointment record to database', $errorDetails);
 
             // 🔄 COMPENSATION LOGIC: Rollback Cal.com booking if it was already created
             if ($calcomBookingId) {
@@ -508,8 +597,18 @@ class AppointmentCreationService implements AppointmentCreationInterface
                             'impact' => 'ORPHANED BOOKING - Manual intervention required'
                         ]);
 
-                        // TODO: Queue manual cleanup job
-                        // OrphanedBookingCleanupJob::dispatch($calcomBookingId);
+                        // Queue manual cleanup job with retry logic
+                        \App\Jobs\OrphanedBookingCleanupJob::dispatch(
+                            $calcomBookingId,
+                            $e->getMessage(),
+                            [
+                                'customer_id' => $customer->id,
+                                'service_id' => $service->id,
+                                'starts_at' => $bookingDetails['starts_at'],
+                                'failure_reason' => 'saga_compensation_failed',
+                                'cancel_status' => $cancelResponse->status()
+                            ]
+                        );
                     }
                 } catch (\Exception $cancelException) {
                     Log::error('❌ SAGA Compensation exception: Cal.com cancellation failed', [
@@ -519,8 +618,18 @@ class AppointmentCreationService implements AppointmentCreationInterface
                         'impact' => 'ORPHANED BOOKING - Manual intervention required'
                     ]);
 
-                    // TODO: Queue manual cleanup job
-                    // OrphanedBookingCleanupJob::dispatch($calcomBookingId);
+                    // Queue manual cleanup job with retry logic
+                    \App\Jobs\OrphanedBookingCleanupJob::dispatch(
+                        $calcomBookingId,
+                        $e->getMessage(),
+                        [
+                            'customer_id' => $customer->id,
+                            'service_id' => $service->id,
+                            'starts_at' => $bookingDetails['starts_at'],
+                            'failure_reason' => 'saga_compensation_exception',
+                            'cancel_exception' => $cancelException->getMessage()
+                        ]
+                    );
                 }
             }
 
@@ -826,6 +935,56 @@ class AppointmentCreationService implements AppointmentCreationInterface
         int $durationMinutes,
         ?Call $call = null
     ): ?array {
+        // 🔐 P0 FIX 2025-11-07: Validate customer data BEFORE booking attempt
+        // ROOT CAUSE: Agent V51 doesn't collect name/phone → booking fails with generic error
+        // FIX: Return specific error messages so agent can inform customer what's missing
+
+        // Validate customer name (must be complete, not 'Unknown' or 'Unbekannt')
+        $customerName = trim($customer->name ?? '');
+        if (empty($customerName) || in_array(strtolower($customerName), ['unknown', 'unbekannt', 'anonym'])) {
+            Log::warning('🚨 Booking rejected: Missing customer name', [
+                'customer_id' => $customer->id,
+                'name' => $customer->name,
+                'service_id' => $service->id,
+                'call_id' => $call?->id,
+                'error_code' => 'MISSING_CUSTOMER_NAME'
+            ]);
+
+            // Store error in call metadata for agent response
+            if ($call) {
+                $call->update([
+                    'metadata->last_booking_error' => 'MISSING_CUSTOMER_NAME',
+                    'metadata->last_booking_error_message' => 'Buchung nicht möglich: Vollständiger Name erforderlich. Bitte nennen Sie Ihren Vor- und Nachnamen.',
+                    'metadata->last_booking_error_time' => now()->toIso8601String()
+                ]);
+            }
+
+            return null;
+        }
+
+        // Validate customer phone (required for Cal.com bookings and confirmations)
+        $customerPhone = trim($customer->phone ?? '');
+        if (empty($customerPhone)) {
+            Log::warning('🚨 Booking rejected: Missing customer phone', [
+                'customer_id' => $customer->id,
+                'phone' => $customer->phone,
+                'service_id' => $service->id,
+                'call_id' => $call?->id,
+                'error_code' => 'MISSING_CUSTOMER_PHONE'
+            ]);
+
+            // Store error in call metadata for agent response
+            if ($call) {
+                $call->update([
+                    'metadata->last_booking_error' => 'MISSING_CUSTOMER_PHONE',
+                    'metadata->last_booking_error_message' => 'Buchung nicht möglich: Telefonnummer erforderlich für Rückfragen und Bestätigung.',
+                    'metadata->last_booking_error_time' => now()->toIso8601String()
+                ]);
+            }
+
+            return null;
+        }
+
         // 🔒 CRITICAL FIX 2025-10-23: Distributed lock BEFORE Cal.com API call
         // This prevents race condition where multiple concurrent requests book the same slot
         // Lock key: company_id + service_id + start_time ensures slot-level exclusivity
@@ -1331,5 +1490,33 @@ class AppointmentCreationService implements AppointmentCreationInterface
         }
 
         return $segments;
+    }
+
+    /**
+     * Diagnose SQL error codes to provide actionable insights
+     *
+     * @param int|null $sqlErrorCode MySQL error code
+     * @return string Diagnosis message
+     */
+    private function diagnoseSqlError(?int $sqlErrorCode): string
+    {
+        if (!$sqlErrorCode) {
+            return 'Unknown SQL error';
+        }
+
+        // Common MySQL error codes
+        return match ($sqlErrorCode) {
+            1062 => 'Duplicate entry - Unique constraint violation (check calcom_v2_booking_id uniqueness)',
+            1452 => 'Foreign key constraint failed - Referenced record does not exist',
+            1406 => 'Data too long for column - Check field length constraints',
+            1048 => 'Column cannot be null - Missing required field',
+            1213 => 'Deadlock detected - Transaction conflict with concurrent request',
+            2006 => 'MySQL server has gone away - Connection timeout or packet too large',
+            2013 => 'Lost connection to MySQL server during query',
+            1146 => 'Table does not exist - Migration not run',
+            1054 => 'Unknown column - Schema mismatch',
+            1364 => 'Field does not have a default value',
+            default => "MySQL Error Code {$sqlErrorCode} - Check MySQL documentation"
+        };
     }
 }

@@ -30,6 +30,7 @@ class ViewCall extends ViewRecord
             'staff',
             'phoneNumber',
             'branch',
+            'appointments', // For system duration calculations
             'latestAppointment.staff',
             'latestAppointment.service',
             'latestAppointment.customer',

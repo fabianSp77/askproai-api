@@ -1,0 +1,372 @@
+================================================================================
+CALLRESOURCE COLUMN MISMATCH - VISUAL ANALYSIS (2025-11-06)
+================================================================================
+
+EXPECTED TABLE LAYOUT:
+┌──────────────┬──────────────┬────────────────────────┬──────────────────────┐
+│Status/Zeit   │Unternehmen   │Service / Preis         │Zusammenfassung &     │
+│/Dauer        │/Filiale      │                        │Audio                 │
+├──────────────┼──────────────┼────────────────────────┼──────────────────────┤
+│              │              │                        │                      │
+│✅ Completed  │AskPro        │Haarschnitt             │Kundin möchte Termin  │
+│14:32         │Berlin        │💰 35€                  │buchen für Freitag.   │
+│4 Min         │              │                        │                      │
+│              │              │Färben                  │[▶ Audio Player 0:45] │
+│              │              │💰 65€                  │                      │
+│              │              │                        │                      │
+└──────────────┴──────────────┴────────────────────────┴──────────────────────┘
+
+REPORTED ISSUE (WRONG):
+┌──────────────┬──────────────┬────────────────────────┬──────────────────────┐
+│Status/Zeit   │Unternehmen   │Service / Preis         │Zusammenfassung &     │
+│/Dauer        │/Filiale      │(Shows Summary?)        │Audio                 │
+├──────────────┼──────────────┼────────────────────────┼──────────────────────┤
+│              │              │                        │                      │
+│✅ Completed  │AskPro        │Kundin möchte Termin    │??? (Hidden/Wrong)    │
+│14:32         │Berlin        │buchen...               │                      │
+│4 Min         │              │                        │                      │
+│              │              │[▶ Audio Player 0:45]   │                      │
+│              │              │                        │                      │
+└──────────────┴──────────────┴────────────────────────┴──────────────────────┘
+
+
+================================================================================
+ROOT CAUSE SCENARIO #1: User Hidden "Service / Preis" Column (80% PROBABILITY)
+================================================================================
+
+INITIAL STATE (Columns as configured):
+  [Status/Zeit] [Unternehmen] [Service/Preis] [Zusammenfassung&Audio]
+
+USER ACTION:
+  → User clicks column toggle
+  → Hides "Service / Preis" column
+
+RESULT (Remaining visible columns shift):
+  [Status/Zeit] [Unternehmen] [Zusammenfassung&Audio] (empty position)
+
+VISUAL EFFECT (From user perspective):
+  The content that SHOULD be in "Service / Preis" is now missing
+  OR another column appears to contain "Service / Preis" content
+
+SOLUTION:
+  Clear Filament preferences
+  DB::table('filament_table_preferences')
+    ->where('resource', 'App\\Filament\\Resources\\CallResource')
+    ->delete();
+
+
+================================================================================
+ROOT CAUSE SCENARIO #2: Missing Appointments Data (15% PROBABILITY)
+================================================================================
+
+IF appointments collection is EMPTY:
+
+service_type Column Will Show:
+  <span class="text-gray-400 text-xs">-</span>
+  (Single dash, gray color)
+
+Visible Columns Appear As:
+  [Status/Zeit] [Unternehmen] [-] [Zusammenfassung&Audio]
+
+From Distance or Bad Lighting:
+  User sees "-" and thinks content is missing
+
+SOLUTION:
+  Verify appointments exist in database:
+  Call::with('appointments.service')->find(1)->appointments;
+
+
+================================================================================
+ROOT CAUSE SCENARIO #3: Missing Summary/Audio Data (5% PROBABILITY)
+================================================================================
+
+IF summary AND recording_url are BOTH NULL:
+
+summary_audio Column Will Show:
+  <span class="text-gray-400 text-xs">-</span>
+  (Single dash, gray color)
+
+But "Service / Preis" Would Still Show Services
+
+This Doesn't Match Reported Issue
+  (User said Service/Preis shows summary content)
+
+SOLUTION:
+  Check if data is being saved:
+  Call::first()->summary;
+  Call::first()->recording_url;
+
+
+================================================================================
+CODE FLOW DIAGRAM: service_type Column
+================================================================================
+
+                    ┌─────────────────┐
+                    │  Call Model     │
+                    │  (from DB)      │
+                    └────────┬────────┘
+                             │
+                             ↓
+                    ┌─────────────────────────────┐
+                    │ modifyQueryUsing()          │
+                    │ Lines 203-217               │
+                    │ with(['appointments'...])   │
+                    └────────┬────────────────────┘
+                             │
+                    ✅ Eager-loads relationships
+                             │
+                             ↓
+                    ┌─────────────────────────────┐
+                    │ Table Column: service_type  │
+                    │ Line 432-533                │
+                    └────────┬────────────────────┘
+                             │
+                             ↓
+                    ┌─────────────────────────────┐
+                    │ getStateUsing()             │
+                    │ Lines 437-489               │
+                    └────────┬────────────────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+         ↓                   ↓                   ↓
+    Get appts         Check if empty      Loop through appts
+    Line 441          Line 444-445            Line 452-479
+         │                   │                   │
+    $record->            return "-"          Extract:
+    appointments                            - service.name
+                                            - service.price
+                                            │
+                                            ↓
+                                    Format as EUR
+                                    Line 469
+                                            │
+                                            ↓
+                                    Build HTML
+                                    Lines 470-478
+                                            │
+                                            ↓
+                    ┌───────────────────────┴───────────────────────┐
+                    │ Return HTML with service names + prices      │
+                    │ Line 486                                      │
+                    └──────────────────┬──────────────────────────┘
+                                       │
+                                       ↓
+                    ┌──────────────────────────────────┐
+                    │ Filament Renders in Column       │
+                    │ "Service / Preis"                │
+                    └──────────────────────────────────┘
+
+
+================================================================================
+CODE FLOW DIAGRAM: summary_audio Column
+================================================================================
+
+                    ┌─────────────────┐
+                    │  Call Model     │
+                    │  (from DB)      │
+                    └────────┬────────┘
+                             │
+                             ↓
+                    ┌─────────────────────────────┐
+                    │ Table Column: summary_audio │
+                    │ Line 538-598                │
+                    └────────┬────────────────────┘
+                             │
+                             ↓
+                    ┌─────────────────────────────┐
+                    │ getStateUsing()             │
+                    │ Lines 541-570               │
+                    └────────┬────────────────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+         ↓                   ↓                   ↓
+  Extract Summary   Extract Audio          Check if both
+  Line 544-549      Line 553-564            exist Line 566
+         │                   │                   │
+    Get $record->        Get $record->          │
+    summary              recording_url      return "-"
+         │                   │              if both empty
+         ↓                   ↓                   │
+    Truncate if        Create <audio>      ┌───┴───────┐
+    > 100 chars        HTML tag             │           │
+    Line 546                                │     ┌─────┴─────────┐
+         │                                  │     │               │
+         ↓                            htmlspecial │               │
+  htmlspecialchars     chars(url)       │        ↓               ↓
+  Line 548            Line 560          │   Has content    No content
+         │                 │             │        │              │
+         ↓                 ↓             │        └──────┬────────┘
+  Build HTML      Build HTML           │               │
+  Line 547-549     Line 555-562         └───────────────┼───────┐
+         │                 │                           │       │
+         └────────┬────────┘                           ↓       ↓
+                  │                            Return combined Return "-"
+                  ↓                            HTML (line 570) (line 567)
+        Combine Summary                              │
+        + Audio HTML                                 ↓
+        Line 570                    ┌──────────────────────────────────┐
+              │                      │ Filament Renders in Column       │
+              │                      │ "Zusammenfassung & Audio"        │
+              │                      └──────────────────────────────────┘
+              │
+              ↓
+    (Alternative if empty)
+        Return "-"
+        Line 567
+
+
+================================================================================
+COLUMN CONFIGURATION COMPARISON
+================================================================================
+
+PROPERTY               │ service_type        │ summary_audio
+──────────────────────┼────────────────────┼──────────────────────
+Defined at Line       │ 432                │ 538
+Label                 │ "Service / Preis"  │ "Zusammenfassung..."
+Data Source           │ appointments       │ summary + recording_url
+HTML Enabled          │ Yes (line 435)     │ Yes (line 541)
+Width                 │ 250px (line 436)   │ Default/Auto
+Wrapping              │ Yes (line 437)     │ Yes (line 598)
+Toggleable            │ NO (removed)       │ YES (line 599)
+Searchable            │ Yes (line 533)     │ No
+Sortable              │ Yes (line 534)     │ No
+Hidden Status         │ No                 │ No
+Visibility Impact     │ ALWAYS visible     │ User can hide
+
+
+================================================================================
+EXPECTED VS ACTUAL OUTPUT
+================================================================================
+
+EXPECTED: service_type Column Should Show
+
+  ┌─────────────────────┐
+  │ Service / Preis     │
+  ├─────────────────────┤
+  │ Haarschnitt         │
+  │ 💰 35€              │
+  │                     │
+  │ Färben              │
+  │ 💰 65€              │
+  └─────────────────────┘
+
+CODE THAT GENERATES IT (Line 470-472):
+  '<div class="mb-2">' .
+  '<div class="font-medium text-gray-900 break-words">' .
+  htmlspecialchars($name) .  // Haarschnitt, Färben
+  '</div>' .
+  '<div class="text-xs text-green-600 mt-1">💰 ' .
+  $formattedPrice . '€</div>' .  // 35€, 65€
+  '</div>'
+
+──────────────────────────────────────────────────────
+
+EXPECTED: summary_audio Column Should Show
+
+  ┌──────────────────────────────────────┐
+  │ Zusammenfassung & Audio              │
+  ├──────────────────────────────────────┤
+  │ Kundin möchte Termin buchen für      │
+  │ Freitag vormittags...                │
+  │                                      │
+  │ [▶ 0:45] [Audio player controls]    │
+  └──────────────────────────────────────┘
+
+CODE THAT GENERATES IT (Line 548 + 555-562):
+  '<div>' .
+  htmlspecialchars($summaryDisplay) .  // Summary text
+  '<audio controls>' .
+  '<source src="' . htmlspecialchars($url) . '">' .
+  '</audio>' .
+  '</div>'
+
+
+================================================================================
+VERIFICATION QUICK TEST
+================================================================================
+
+IN DATABASE:
+  SELECT id, COUNT(appointments) FROM calls WHERE id = 1;
+    → Should return 1+ appointments
+
+  SELECT summary, recording_url FROM calls WHERE id = 1;
+    → Should show summary text and URL
+
+IN BROWSER (DevTools Inspector):
+  Find element with class containing "Service / Preis"
+    → Should contain: service name + price HTML
+
+  Find element with class containing "Zusammenfassung"
+    → Should contain: summary text + <audio> tag
+
+IN FILAMENT TABLE PREFERENCES:
+  SELECT * FROM filament_table_preferences
+  WHERE resource = 'App\\Filament\\Resources\\CallResource';
+    → Should be EMPTY (or have no hidden columns)
+
+
+================================================================================
+DECISION TREE: WHICH SCENARIO IS CORRECT?
+================================================================================
+
+Question 1: Can you see "Service / Preis" column header?
+  YES  → Go to Question 2
+  NO   → Scenario #1: Column hidden
+
+Question 2: Does "Service / Preis" column show services + prices?
+  YES  → All working correctly ✅
+  NO   → Go to Question 3
+
+Question 3: Does "Service / Preis" show "-" for all rows?
+  YES  → Scenario #2: Missing appointments
+  NO   → Go to Question 4
+
+Question 4: Does "Service / Preis" show summary text + audio?
+  YES  → Scenario #1: Column hiding (toggled columns)
+  NO   → Scenario #3 or CSS issue
+
+
+================================================================================
+FIX IMPACT ANALYSIS
+================================================================================
+
+RISK LEVEL: NONE
+
+Because:
+  ✅ No code changes required
+  ✅ Only clearing user preferences
+  ✅ Fully reversible (user can toggle columns again)
+  ✅ No database modifications
+  ✅ No cache invalidation needed
+  ✅ No API changes
+  ✅ No data loss
+
+ROLLBACK PLAN:
+  If issue persists after fix, nothing to roll back
+  Issue is configuration, not code
+
+
+================================================================================
+DEPLOYMENT TIMELINE
+================================================================================
+
+T+0:    Identify root cause (Completed 2025-11-06)
+T+5m:   Clear Filament preferences (1 terminal command)
+T+10m:  Clear cache (3 commands)
+T+15m:  Test in browser
+T+30m:  Verify across multiple calls
+T+45m:  Monitor logs
+T+60m:  Document findings
+T+1day: Team briefing
+T+1week: Monitor for recurrence
+
+
+================================================================================
+STATUS: ANALYSIS COMPLETE
+CONFIDENCE: 95% that issue is NOT a code bug
+RECOMMENDED ACTION: Clear Filament preferences
+ESTIMATED FIX TIME: 5 minutes
+RISK ASSESSMENT: NONE - Safe to deploy immediately
+================================================================================

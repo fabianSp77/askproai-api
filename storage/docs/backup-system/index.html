@@ -1,1328 +1,1204 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Dokumentations-Hub - AskPro AI Gateway</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/docs/backup-system/assets/docs-hub.css">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<meta charset="utf-8">
+<title>E2E Dokumentation: Friseur 1</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="assets/mermaid.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+aside { position: fixed; top: 0; bottom: 0; left: 0; width: 280px; padding: 20px; overflow: auto; background: #1a1a1a; color: #eee; border-right: 1px solid #333; }
+aside h3 { margin-top: 0; font-size: 18px; color: #4CAF50; }
+aside input, aside select { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: #eee; font-size: 13px; }
+aside nav ul { list-style: none; padding: 0; margin: 16px 0; }
+aside nav li { margin: 8px 0; }
+aside nav a { color: #81C784; text-decoration: none; display: block; padding: 4px 0; }
+aside nav a:hover { color: #A5D6A7; text-decoration: underline; }
+aside label { display: block; margin-top: 16px; font-size: 13px; cursor: pointer; }
+aside label input { width: auto; margin-right: 6px; }
+main { margin-left: 280px; padding: 32px; max-width: 1400px; }
+main section { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid #e0e0e0; }
+main section:last-child { border-bottom: none; }
+h2 { display: flex; gap: 12px; align-items: center; color: #2E7D32; font-size: 24px; margin-top: 0; }
+.chip { font-size: 11px; border: 1px solid #4CAF50; color: #4CAF50; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
+.mermaid { margin: 20px 0; padding: 16px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; overflow-x: auto; }
+section p { color: #555; line-height: 1.6; }
+section a { color: #1976D2; text-decoration: none; font-weight: 500; }
+section a:hover { text-decoration: underline; }
+.copy-btn { background: #4CAF50; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.copy-btn:hover { background: #45a049; }
+body.dark { background: #121212; color: #e0e0e0; }
+body.dark main section { border-bottom-color: #333; }
+body.dark .mermaid { background: #1e1e1e; border-color: #333; }
+body.dark section p { color: #b0b0b0; }
+</style>
 </head>
 <body>
-    <!-- Skip to Content -->
-    <a href="#main-content" class="skip-to-content">Zum Inhalt springen</a>
+<aside>
+  <h3>📊 E2E Dashboard</h3>
+  <input id="q" placeholder="🔍 Filter Diagramme..." type="search">
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <select id="branch">
+      <option value="">Alle Filialen</option>
+      <option value="zentrale">Zentrale</option>
+      <option value="zweigstelle">Zweigstelle</option>
+    </select>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="#product-overview">📱 Produkt-Übersicht</a></li>
+      <li><a href="#provider-view">🏢 0a. Anbieter</a></li>
+      <li><a href="#customer-value">💈 0b. Endkunden</a></li>
+      <li style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #444;"><a href="#c4">🏗️ A. C4-Kontext</a></li>
+      <li><a href="#happy">✅ B. E2E Happy Path</a></li>
+      <li><a href="#alts">🔀 C. Alternativen</a></li>
+      <li><a href="#conv">💬 D. Conversational</a></li>
+      <li><a href="#mw">⚙️ E. Orchestrierung</a></li>
+      <li><a href="#cal">📅 F. Cal.com Sequence</a></li>
+      <li><a href="#bill">💳 G. Billing</a></li>
+      <li><a href="#obs">📊 H. Telemetrie</a></li>
+      <li><a href="#state">🔄 I. Zustände</a></li>
+      <li><a href="#erd">🗄️ J. ERD</a></li>
+      <li><a href="#test-3a-3b">🧪 K. E2E Tests (GAP-010)</a></li>
+      <li><a href="#appointment-types">📋 L. Terminarten</a></li>
+    </ul>
+  </nav>
+  <label><input type="checkbox" id="dark"> 🌙 Dark Mode</label>
+</aside>
 
-    <!-- Accessibility Bar -->
-    <div class="accessibility-bar" role="toolbar" aria-label="Barrierefreiheit">
-        <span style="font-weight: 600;">Ansicht:</span>
-        <button aria-label="Normale Schriftgröße" title="Normale Schriftgröße">A</button>
-        <button aria-label="Große Schriftgröße" title="Große Schriftgröße">A+</button>
-        <button aria-label="Sehr große Schriftgröße" title="Sehr große Schriftgröße">A++</button>
-        <button aria-label="Hoher Kontrast" title="Hohen Kontrast umschalten">◐</button>
-        <span class="keyboard-hint" style="margin-left: auto; font-size: 0.85em;">Tastatur: / = Suchen, Esc = Schließen</span>
-    </div><!-- accessibility-bar end -->
+<main>
+<h1>End-to-End Dokumentation: Friseur 1</h1>
+<p><strong>Company:</strong> Friseur 1 (ID: 1) | <strong>Branches:</strong> 1 | <strong>Services:</strong> 18 (Cal.com) | <strong>Staff:</strong> 2 (Cal.com) + 4 (unmapped)</p>
+<p>Diese Dokumentation beschreibt den vollständigen E2E-Prozess von Inbound-Calls über Retell.ai, Middleware, Cal.com bis zur Buchungsbestätigung. <a href="e2e.md">→ Vollständige Spezifikation</a> | <a href="audit/report.md">📊 Audit-Report</a> | <a href="audit/gaps.yaml">⚠️  Gaps</a></p>
 
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" aria-label="Menü öffnen/schließen">
-        <span class="icon">☰</span>
-    </button>
-
-    <!-- Mobile Backdrop -->
-    <div class="mobile-backdrop" id="mobileBackdrop" aria-hidden="true"></div>
-
-    <div class="layout">
-        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Hauptnavigation">
-            <div class="sidebar-header">
-                <h1>📚 Dokumentations-Hub</h1>
-                <p>AskPro AI Gateway</p>
-            </div>
-
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Dokumentation durchsuchen..." aria-label="Suche" />
-                <button class="search-clear" id="searchClear" aria-label="Suche löschen">✕</button>
-            </div>
-
-            <div class="search-results-count" id="searchResultsCount" role="status" aria-live="polite"></div>
-
-            <nav>
-                <div class="nav-section">
-                    <div class="nav-section-title">Schnellzugriff</div>
-                    <a href="#status" class="nav-link" data-section="status">
-                        <span class="icon">📊</span>
-                        <span>System-Status</span>
-                    </a>
-                    <a href="/docs/backup-system/documentation-index.html" class="nav-link">
-                        <span class="icon">📚</span>
-                        <span>Dokumentations-Index</span>
-                    </a>
-                    <a href="/docs/backup-system/E2E_DEPLOYMENT_ROLLOUT_PLAN_2025-11-02_1900.html" class="nav-link" target="_blank">
-                        <span class="icon">🚀</span>
-                        <span>E2E Deployment Rollout-Plan (State-of-the-Art)</span>
-                    </a>
-                    <a href="/docs/backup-system/E2E_DEPLOYMENT_COMPLETE_DOCUMENTATION.html" class="nav-link" target="_blank">
-                        <span class="icon">📚</span>
-                        <span>E2E Deployment - Alle Dokumente</span>
-                    </a>
-                    <a href="/docs/backup-system/E2E_FRISEUR1_CONFIGURATION/index.html" class="nav-link" target="_blank">
-                        <span class="icon">💈</span>
-                        <span>E2E Friseur 1 - Interaktives Dashboard</span>
-                    </a>
-                    <a href="/docs/backup-system/Zero-Loss-Backups-and-Deployment.pdf" class="nav-link" target="_blank">
-                        <span class="icon">📄</span>
-                        <span>Backup-Dokumentation (PDF)</span>
-                    </a>
-                </div>
-
-                <div class="nav-section">
-                    <div class="nav-section-title">Kategorien</div>
-                    <div id="navLinks"></div>
-                </div>
-            </nav>
-        </aside>
-
-        <main class="main-content" id="main-content" role="main">
-            <nav class="breadcrumbs" aria-label="Breadcrumb">
-                <a href="/">Start</a>
-                <span class="separator">›</span>
-                <a href="/docs/backup-system">Backup-System</a>
-                <span class="separator">›</span>
-                <span>Dokumentation</span>
-            </nav>
-
-            <div id="status" class="status-dashboard" role="region" aria-label="System-Status">
-                <div class="status-card healthy">
-                    <div class="status-icon">✅</div>
-                    <h3>System-Status</h3>
-                    <div class="status-value">Gesund</div>
-                    <div class="status-detail">Alle Systeme funktionieren normal</div>
-                </div>
-
-                <div class="status-card info">
-                    <div class="status-icon">💾</div>
-                    <h3>Letztes Backup</h3>
-                    <div class="status-value" id="lastBackupValue">Lädt...</div>
-                    <div class="status-detail" id="lastBackupDetail">-</div>
-                </div>
-
-                <div class="status-card upcoming">
-                    <div class="status-icon">📅</div>
-                    <h3>Nächstes Backup</h3>
-                    <div class="status-value" id="nextBackupValue">Lädt...</div>
-                    <div class="status-detail" id="nextBackupDetail">-</div>
-                </div>
-
-                <div class="status-card metric">
-                    <div class="status-icon">📊</div>
-                    <h3>Binlog-Status</h3>
-                    <div class="status-value" id="binlogValue">Lädt...</div>
-                    <div class="status-detail">Letztes Log-Eintrag</div>
-                </div>
-            </div>
-
-            <!-- Incident History Section -->
-            <div id="incidents-section" class="incidents-section" style="margin: 2rem 0; display: none;">
-                <h2 style="color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>🚨</span> Incident History
-                    <span id="incident-badge" class="incident-badge" style="display: none;"></span>
-                </h2>
-                <div id="incidents-container">
-                    <p style="color: var(--text-secondary);">Lade Incident-Historie...</p>
-                </div>
-            </div>
-
-            <div class="quick-actions">
-                <button class="quick-action-btn">
-                    <span>▼</span> Alle erweitern
-                </button>
-                <button class="quick-action-btn">
-                    <span>▲</span> Alle zuklappen
-                </button>
-                <button class="quick-action-btn">
-                    <span>🖨</span> Druckansicht
-                </button>
-            </div>
-
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>Dokumentation wird geladen...</p>
-            </div>
-
-            <!-- Latest Reports Section -->
-            <div id="latest-reports" style="display:none;">
-                <div class="section-header" style="margin-bottom: 1.5rem;">
-                    <h2 style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
-                        <span class="mdi mdi-clock-outline"></span>
-                        <span>Neueste Reports</span>
-                    </h2>
-                    <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: 0.5rem;">
-                        Die aktuellsten Dokumentationen und Validierungsberichte auf einen Blick
-                    </p>
-                </div>
-                <div id="latest-reports-grid" class="file-grid"></div>
-                <hr style="margin: 2rem 0; border: none; border-top: 2px solid var(--border);">
-            </div>
-
-            <div id="categories" style="display:none;"></div>
-        </main>
+<!-- GATE 0 STATUS -->
+<div style="background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: none;">
+  <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 2em;">✅</span>
+    <span>GATE 0: ID-Konsistenz PASSED</span>
+    <span style="font-size: 0.8em; opacity: 0.9; margin-left: auto;">2025-11-03 15:30</span>
+  </h2>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0;">
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Phone↔Agent↔Branch</div>
     </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Branch↔Team</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Service↔EventType</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">18/18 (100%)</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">Cal.com User→Staff</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">2/2 (100%)</div>
+    </div>
+  </div>
+  <p style="color: rgba(255,255,255,0.95); margin: 12px 0 4px 0; font-size: 15px;">
+    <strong>Erfüllungsgrad:</strong> 4 von 4 Prüfpunkten (100%)
+  </p>
+  <p style="color: rgba(255,255,255,0.9); margin: 4px 0 16px 0; font-size: 14px;">
+    <strong>Fortschritt:</strong> 50% (12:53) → 87.5% (13:30) → <strong>100% (15:30)</strong> | <strong>Gesamtverbesserung:</strong> +50%
+  </p>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <a href="GATE0_SUMMARY_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📄 GATE 0 Summary (100%)
+    </a>
+    <a href="audit/gate0_verdict_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      ⚖️ Verdict (4/4)
+    </a>
+    <a href="examples/mapping_report_100.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      🔗 Mapping-Report (100%)
+    </a>
+    <a href="CHANGELOG.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📝 Changelog
+    </a>
+  </details>
+  <details style="margin-top: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">✅ Cal.com als Source of Truth etabliert</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>✅ Strategiewechsel:</strong> Cal.com → Platform (Cal.com ist SoT für Benutzer)</li>
+      <li><strong>✅ 2 Cal.com Users gemappt:</strong> User 1346408, User 1414768 → 2 Platform-Staff</li>
+      <li><strong>✅ Service↔Staff Freigaben:</strong> Alle 18 Services × 2 Staff (aus Cal.com Hosts)</li>
+      <li><strong>✅ Disambiguierung:</strong> Beide heißen "Fabian Spitzer", unterschieden via E-Mail/User ID</li>
+      <li><strong>⚠️ Platform-only Staff:</strong> 4 Staff ohne Cal.com = "unmapped (calcom=false)"</li>
+    </ul>
+  </details>
+  <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">🎯 Nächste Schritte: Pre-Production Sprint</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>1. Non-blocking Cancellation:</strong> Reschedule-first Flow & Branch-Notifications testen</li>
+      <li><strong>2. E2E-Tests:</strong> 5 cURL-Szenarien persistieren (inkl. Test 3a/3b)</li>
+      <li><strong>3. Zweigstelle:</strong> 2. Branch für Multi-Location-Tests anlegen</li>
+    </ul>
+  </details>
+</div>
+
+<!-- GAP-010 STATUS -->
+<div style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: none;">
+  <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 2em;">✅</span>
+    <span>GAP-010: Non-blocking Cancellation COMPLETE</span>
+    <span style="font-size: 0.8em; opacity: 0.9; margin-left: auto;">2025-11-03 18:30</span>
+  </h2>
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin: 16px 0;">
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">AP1: Policy Engine</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">Non-blocking</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">AP2: Agent Dialog</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">Reschedule-first</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">AP3: Notifications</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">Email + UI</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">AP4: Telemetrie</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">4 Counter</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-size: 2em; margin-bottom: 4px;">✅</div>
+      <div style="font-weight: 600;">AP5: Verifikation</div>
+      <div style="font-size: 0.8em; margin-top: 4px;">Tests 3a/3b/3c</div>
+    </div>
+  </div>
+  <p style="color: rgba(255,255,255,0.95); margin: 12px 0 4px 0; font-size: 15px;">
+    <strong>Implementation:</strong> ADR-005 Non-blocking Cancellation Policy mit Reschedule-first Flow
+  </p>
+  <p style="color: rgba(255,255,255,0.9); margin: 4px 0 16px 0; font-size: 14px;">
+    <strong>Scope:</strong> Policy Engine (0 Min Cutoff) | Agent Dialog (Reschedule-first) | Branch Notifications (Email + Filament UI) | Telemetrie (4 Counter)
+  </p>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <a href="GAP-010_IMPLEMENTATION_SUMMARY.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📄 Implementation Summary
+    </a>
+    <a href="ADR/005-cancellation-policy-non-blocking.md" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      📋 ADR-005
+    </a>
+    <a href="#test-3a-3b" style="background: rgba(255,255,255,0.95); color: #2e7d32; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+      🧪 Tests 3a/3b/3c
+    </a>
+  </div>
+  <details style="margin-top: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">✅ Was wurde implementiert?</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>✅ Non-blocking Policy:</strong> canCancel/canReschedule → immer allowed, fee=0, cutoff=0</li>
+      <li><strong>✅ Reschedule-first:</strong> Agent bietet Umbuchung vor Stornierung (Flow A/B)</li>
+      <li><strong>✅ Branch Notifications:</strong> Dual-Channel (Email + Filament UI), idempotent (1h TTL)</li>
+      <li><strong>✅ Telemetrie:</strong> 4 Counter (offered/accepted/declined/notified) + Admin View</li>
+      <li><strong>✅ Tests dokumentiert:</strong> Test 3a (accepted), Test 3b (declined), Test 3c (idempotency)</li>
+    </ul>
+  </details>
+  <details style="margin-top: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600; color: white;">📊 Metrics Dashboard</summary>
+    <ul style="margin: 12px 0 0 0; padding-left: 20px; color: rgba(255,255,255,0.95);">
+      <li><strong>Widget:</strong> Filament Dashboard → 4 Stat Cards (offered/accepted/declined/notified)</li>
+      <li><strong>Page:</strong> Analytics → Reschedule Metriken (Detailansicht + Branch Breakdown)</li>
+      <li><strong>Correlation:</strong> call_id, appointment_id, branch_id, service_id, customer_id</li>
+    </ul>
+  </details>
+</div>
+
+<!-- PRODUCT OVERVIEW -->
+<section id="product-overview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 32px; border: none;">
+  <h2 style="color: white; margin-top: 0;">📱 AskPro AI - Produkt-Übersicht</h2>
+  <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 0;">
+    <strong>Voice AI Platform für automatische Terminbuchungen</strong><br>
+    Multi-Tenant SaaS-Lösung mit KI-gestütztem Telefon-Agent für Friseursalons, Arztpraxen, und Service-Unternehmen.
+  </p>
+</section>
+
+<section id="provider-view">
+  <h2>0a. Anbieter-Perspektive <span class="chip">AskPro AI</span></h2>
+  <p>Was bietet AskPro AI als Plattform-Anbieter: Multi-Tenant SaaS, Voice AI Integration, Kalender-Synchronisation, Automatisches Billing.</p>
+  <div class="mermaid">
+graph TB
+  subgraph "🏢 AskPro AI Platform"
+    PLATFORM["⚙️ Laravel Middleware<br/>(Multi-Tenant Core)"]
+    ADMIN["🖥️ Filament Admin<br/>(Company Management)"]
+    BILLING["💳 Stripe Billing<br/>(Usage-Based)"]
+    DB[("🗄️ PostgreSQL<br/>(Shared Database)")]
+  end
+
+  subgraph "🔌 Externe Integrationen"
+    RETELL["🤖 Retell.ai<br/>(Voice AI Platform)"]
+    CALCOM["📅 Cal.com<br/>(Booking System)"]
+  end
+
+  subgraph "👥 Endkunden (Mandanten)"
+    FRISEUR["💈 Friseur 1<br/>(2 Filialen, 5 Mitarbeiter)"]
+    ARZT["🏥 Arztpraxis<br/>(Terminbuchung)"]
+    SERVICE["🔧 Service-Betrieb<br/>(Auftragsannahme)"]
+  end
+
+  PLATFORM --> DB
+  ADMIN --> PLATFORM
+  PLATFORM --> BILLING
+
+  PLATFORM <--> RETELL
+  PLATFORM <--> CALCOM
+
+  FRISEUR --> RETELL
+  ARZT --> RETELL
+  SERVICE --> RETELL
+
+  PLATFORM -.->|"Mandant 1"| FRISEUR
+  PLATFORM -.->|"Mandant 2"| ARZT
+  PLATFORM -.->|"Mandant 3"| SERVICE
+
+  style PLATFORM fill:#E8F5E9
+  style ADMIN fill:#E0F2F1
+  style BILLING fill:#FCE4EC
+  style DB fill:#F1F8E9
+  style RETELL fill:#FFF3E0
+  style CALCOM fill:#F3E5F5
+  style FRISEUR fill:#E3F2FD
+  style ARZT fill:#E3F2FD
+  style SERVICE fill:#E3F2FD
+  </div>
+  <p><strong>Kernfunktionen:</strong> Multi-Tenancy (Company Scoping), Voice AI Integration (Retell.ai), Kalender-Sync (Cal.com), Usage-Based Billing (Stripe), Admin-Portal (Filament).</p>
+</section>
+
+<section id="customer-value">
+  <h2>0b. Endkunden-Perspektive <span class="chip">Value Proposition</span></h2>
+  <p>Was erhält ein Endkunde wie "Friseur 1": 24/7 Telefon-Agent, Automatische Buchungen, Keine manuelle Verwaltung, Integration mit bestehendem Kalender.</p>
+  <div class="mermaid">
+graph LR
+  subgraph "😊 Kunde (Anrufer)"
+    CALL["📞 Anruf bei<br/>+493033081738"]
+  end
+
+  subgraph "🤖 AskPro AI Service"
+    AGENT["🎙️ KI-Agent<br/>spricht Deutsch<br/>versteht Intent"]
+    BOOK["📅 Automatische<br/>Terminbuchung<br/>24/7 verfügbar"]
+  end
+
+  subgraph "💈 Friseur 1 (Ihr Unternehmen)"
+    CAL["📆 Ihr Kalender<br/>(Cal.com)<br/>bleibt immer aktuell"]
+    TEAM["👥 Ihr Team<br/>keine manuelle<br/>Eingabe nötig"]
+    CONFIRM["✅ Bestätigung<br/>per E-Mail/SMS<br/>an Kunden"]
+  end
+
+  CALL --> AGENT
+  AGENT -->|"Termin gefunden"| BOOK
+  BOOK --> CAL
+  CAL --> TEAM
+  BOOK --> CONFIRM
+
+  style CALL fill:#E3F2FD
+  style AGENT fill:#FFF3E0
+  style BOOK fill:#C8E6C9
+  style CAL fill:#F3E5F5
+  style TEAM fill:#E0F2F1
+  style CONFIRM fill:#C8E6C9
+  </div>
+  <p>
+    <strong>Vorteile für Friseur 1:</strong><br>
+    ✅ Keine verpassten Anrufe (24/7 Erreichbarkeit)<br>
+    ✅ Automatische Buchung ohne Personal (Kosteneinsparung)<br>
+    ✅ Integration mit bestehendem Kalender (keine Doppelbuchungen)<br>
+    ✅ Natürliche Sprachverarbeitung (Kunden merken kaum einen Unterschied)<br>
+    ✅ Transparente Abrechnung (nutzungsbasiert, keine Fixkosten)
+  </p>
+</section>
+
+<section id="c4">
+  <h2>A. C4-Kontextdiagramm <span class="chip">System Overview</span></h2>
+  <p>Zeigt alle beteiligten Systeme und deren Kommunikation: Customer, Retell.ai, Middleware, Cal.com, Frontend, Billing, Database.</p>
+  <div class="mermaid">
+graph LR
+  CUS[👤 Customer]
+  RAI["🤖 Retell.ai<br/>Agent: ...b6d56ab07b"]
+  MW["⚙️ Middleware<br/>Laravel API"]
+  CAL["📅 Cal.com<br/>Team: 34209"]
+  FE["🖥️ Frontend<br/>Filament"]
+  BILL["💳 Billing<br/>Stripe"]
+  DB[("🗄️ Database<br/>PostgreSQL")]
+
+  CUS -->|"Inbound Call<br/>+493033081738"| RAI
+  RAI -->|Webhook| MW
+  MW -->|"Booking API"| CAL
+  MW -->|Read/Write| DB
+  MW -->|UI| FE
+  MW -->|Charges| BILL
+  CAL -->|Webhook| MW
+
+  style CUS fill:#E3F2FD
+  style RAI fill:#FFF3E0
+  style MW fill:#E8F5E9
+  style CAL fill:#F3E5F5
+  style FE fill:#E0F2F1
+  style BILL fill:#FCE4EC
+  style DB fill:#F1F8E9
+  </div>
+  <p><a href="e2e.md#c4-context">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="happy">
+  <h2>B. E2E Happy Path <span class="chip">Main Flow</span></h2>
+  <p>Erfolgreicher Buchungspfad: Anruf → Intent-Erkennung → Policy-Check → Verfügbarkeitsabfrage → Buchung → Bestätigung → Logging.</p>
+  <div class="mermaid">
+flowchart TB
+  subgraph CUS["👤 Customer"]
+    A["Anruf: +493033081738"]
+  end
+
+  subgraph RAI["🤖 Retell.ai"]
+    B["Greet: 'Guten Tag bei Friseur 1'"]
+    C{"Known<br/>Customer?"}
+    D[collect_appointment_info]
+    E[check_availability]
+  end
+
+  subgraph MW["⚙️ Middleware"]
+    F["PolicyEngine:<br/>Non-blocking (0 Min Cutoff)"]
+    G["CalcomService:<br/>getSlots"]
+    H{"Slot<br/>found?"}
+    I[Create Appointment]
+    J[Log Call + Costs]
+  end
+
+  subgraph CAL["📅 Cal.com"]
+    K["Query Availability<br/>Team 34209"]
+    L["POST /bookings"]
+    M[("Booking DB")]
+  end
+
+  subgraph FE["🖥️ Frontend"]
+    N["Display in<br/>Call Log"]
+    O["Show Transcript"]
+  end
+
+  A --> B --> C
+  C -->|"Phone Lookup"| F
+  C -->|Yes| D --> E
+  F -->|"Always OK (Non-blocking)"| G
+  G --> K
+  K -->|"Slots Available"| H
+  H -->|Yes| I
+  I --> L --> M
+  M -->|"Webhook Confirm"| I
+  I --> J
+  J --> N --> O
+  H -->|No| D
+
+  style A fill:#E3F2FD
+  style B fill:#FFF3E0
+  style C fill:#FFE0B2
+  style F fill:#C8E6C9
+  style H fill:#C8E6C9
+  style I fill:#C8E6C9
+  style K fill:#E1BEE7
+  style M fill:#F1F8E9
+  </div>
+  <p><a href="e2e.md#happy-path">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="alts">
+  <h2>C. Alternativpfade: Reschedule-first Flow <span class="chip">Non-blocking</span></h2>
+  <p>Stornierung mit Reschedule-first: Agent bietet bei jeder Storno-Absicht automatisch Umbuchung an. Filiale wird IMMER informiert.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Customer ruft an:<br/>'Ich möchte stornieren'"]
+
+  subgraph "Retell.ai Agent"
+    OFFER["Agent bietet an:<br/>'Möchten Sie lieber verschieben?'"]
+    DECISION{"Customer<br/>Entscheidung"}
+  end
+
+  subgraph "Fall A: Umbuchung akzeptiert"
+    CHECK_AVAIL["Agent: check_availability()"]
+    SLOT_FOUND{"Slot<br/>verfügbar?"}
+    RESCHEDULE["Agent: reschedule_appointment()"]
+    ALT_OFFER["Alternativen<br/>anbieten"]
+  end
+
+  subgraph "Fall B: Umbuchung abgelehnt"
+    CANCEL["Agent: cancel_appointment()"]
+  end
+
+  subgraph "Middleware (immer ausgeführt)"
+    UPDATE_DB["DB Update:<br/>Status 'cancelled' (alt)<br/>Status 'scheduled' (neu, wenn Fall A)"]
+    NOTIFY_BRANCH["Branch Notification:<br/>Email + Filament UI"]
+    LOG["Telemetrie:<br/>reschedule_offered=1<br/>accepted/declined=1"]
+  end
+
+  START --> OFFER --> DECISION
+
+  DECISION -->|"Ja"| CHECK_AVAIL
+  CHECK_AVAIL --> SLOT_FOUND
+  SLOT_FOUND -->|"Ja"| RESCHEDULE
+  SLOT_FOUND -->|"Nein"| ALT_OFFER
+  ALT_OFFER -->|"Alle abgelehnt"| CANCEL
+  ALT_OFFER -->|"Akzeptiert"| RESCHEDULE
+
+  DECISION -->|"Nein"| CANCEL
+
+  RESCHEDULE --> UPDATE_DB
+  CANCEL --> UPDATE_DB
+  UPDATE_DB --> NOTIFY_BRANCH
+  NOTIFY_BRANCH --> LOG
+  LOG --> END["Call Ende"]
+
+  style OFFER fill:#FFF3E0
+  style CHECK_AVAIL fill:#E1BEE7
+  style RESCHEDULE fill:#C8E6C9
+  style CANCEL fill:#FFECB3
+  style NOTIFY_BRANCH fill:#E8F5E9
+  style LOG fill:#E0F2F1
+  </div>
+  <p><strong>Policy:</strong> Non-blocking (0 Min Cutoff), Reschedule-first verpflichtend, Branch-Notification in BEIDEN Fällen</p>
+  <p><a href="e2e.md#fr-3">📖 Details in e2e.md (FR-3)</a> | <a href="ADR/005-cancellation-policy-non-blocking.md">📋 ADR-005</a></p>
+</section>
+
+<section id="conv">
+  <h2>D. Conversational Decision Tree <span class="chip">Intent Recognition</span></h2>
+  <p>Intent-Erkennung, Required Slots, Disambiguation, NLU-Fallback-Strategien.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Greet Customer"]
+  INTENT{"Intent<br/>erkannt?"}
+
+  BOOK["Intent: book_appointment"]
+  CANCEL["Intent: cancel_appointment"]
+  RESC["Intent: reschedule_appointment"]
+  INFO["Intent: get_info"]
+  UNK["Intent: unknown"]
+
+  START --> INTENT
+  INTENT -->|book| BOOK
+  INTENT -->|cancel| CANCEL
+  INTENT -->|reschedule| RESC
+  INTENT -->|info| INFO
+  INTENT -->|unclear| UNK
+
+  BOOK --> SLOTS["Required Slots:<br/>service, date, time"]
+  SLOTS --> DISAMB{"All<br/>filled?"}
+  DISAMB -->|No| ASK["Ask missing info"]
+  ASK --> SLOTS
+  DISAMB -->|Yes| CONFIRM["Confirm & Book"]
+
+  UNK --> FALLBACK["NLU Fallback:<br/>Rephrase question"]
+  FALLBACK --> INTENT
+
+  style START fill:#E3F2FD
+  style INTENT fill:#FFF3E0
+  style BOOK fill:#C8E6C9
+  style CONFIRM fill:#C8E6C9
+  style UNK fill:#FFCDD2
+  style FALLBACK fill:#FFE0B2
+  </div>
+  <p><a href="e2e.md#conversational-flow">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="mw">
+  <h2>E. Middleware-Orchestrierung <span class="chip">Integration Layer</span></h2>
+  <p>Webhook-Verarbeitung, Idempotenz, Retry-Logic, Mapping (TeamID↔Filiale, EventID↔Service), Timezone-Handling.</p>
+  <div class="mermaid">
+flowchart TB
+  subgraph "Webhook Empfang"
+    W1["Retell Webhook<br/>/api/webhooks/retell"]
+    W2["Cal.com Webhook<br/>/api/calcom/webhook"]
+  end
+
+  subgraph "Idempotenz"
+    ID1["Check:<br/>retell_call_id exists?"]
+    ID2["Check:<br/>calcom_booking_uid exists?"]
+  end
+
+  subgraph "Verarbeitung"
+    MAP["Mapping:<br/>TeamID↔Branch<br/>EventID↔Service<br/>StaffID↔User"]
+    POL["Policy Check<br/>Non-blocking (0 Min Cutoff)"]
+    RETRY["Retry Logic<br/>Circuit Breaker"]
+  end
+
+  subgraph "Persistence"
+    DB[("Database<br/>PostgreSQL")]
+    CACHE[("Redis Cache<br/>5min TTL")]
+  end
+
+  W1 --> ID1
+  W2 --> ID2
+  ID1 -->|New| MAP
+  ID2 -->|New| MAP
+  ID1 -->|Duplicate| SKIP["Return cached"]
+  ID2 -->|Duplicate| SKIP
+  MAP --> POL
+  POL --> RETRY
+  RETRY --> DB
+  DB --> CACHE
+
+  style ID1 fill:#FFF3E0
+  style ID2 fill:#FFF3E0
+  style MAP fill:#E1BEE7
+  style POL fill:#FFE0B2
+  style SKIP fill:#C8E6C9
+  </div>
+  <p><a href="e2e.md#middleware-orchestration">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="cal">
+  <h2>F. Cal.com Sequence <span class="chip">Booking API</span></h2>
+  <p>Sequenzdiagramm der Cal.com API-Integration: Availability → Slot Selection → Booking Creation → Webhook Callback.</p>
+  <div class="mermaid">
+sequenceDiagram
+  participant MW as Middleware
+  participant CAL as Cal.com API<br/>Team 34209
+
+  Note over MW,CAL: Availability Check
+  MW->>CAL: GET /slots/available<br/>eventTypeId=3719741<br/>startTime=2025-11-04
+  CAL-->>MW: {slots: [...]}
+
+  Note over MW,CAL: Booking Creation
+  MW->>CAL: POST /bookings<br/>{eventTypeId: 3719741, start, attendee}
+  CAL-->>MW: {uid, id, status: "accepted"}
+  MW->>MW: Store calcom_booking_id
+
+  Note over MW,CAL: Webhook Callback
+  CAL->>MW: POST /api/calcom/webhook<br/>{triggerEvent: "BOOKING_CREATED"}
+  MW-->>CAL: 200 OK
+
+  Note over MW,CAL: Rescheduling
+  MW->>CAL: PATCH /bookings/{uid}<br/>{start: new_time}
+  CAL-->>MW: {uid, status: "rescheduled"}
+  CAL->>MW: Webhook: BOOKING_RESCHEDULED
+
+  Note over MW,CAL: Cancellation
+  MW->>CAL: DELETE /bookings/{uid}
+  CAL-->>MW: 204 No Content
+  CAL->>MW: Webhook: BOOKING_CANCELLED
+  </div>
+  <p><a href="e2e.md#calcom-sequence">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="bill">
+  <h2>G. Billing Flow <span class="chip">Cost Calculation</span></h2>
+  <p>Sekundengenaue Kostenberechnung: Retell.ai Cost → Platform Markup → Currency Conversion → Rounding → Balance/Invoice.</p>
+  <div class="mermaid">
+flowchart TB
+  START["Call ends"]
+  DUR["Duration:<br/>per_second"]
+
+  COST["Retell Cost:<br/>seconds × $0.020/60"]
+  MARKUP["Markup:<br/>× 30%"]
+  EXCH["Convert:<br/>USD → EUR"]
+  ROUND["Round:<br/>ceil(cents)"]
+
+  BAL{"Prepaid<br/>Balance?"}
+  DEDUCT["Deduct from Balance"]
+  TOPUP["Stripe Top-Up<br/>required"]
+  INV["Add to Invoice"]
+
+  START --> DUR --> COST
+  COST --> MARKUP --> EXCH --> ROUND
+  ROUND --> BAL
+  BAL -->|Sufficient| DEDUCT
+  BAL -->|Low| TOPUP
+  DEDUCT --> INV
+  TOPUP --> INV
+
+  style START fill:#E3F2FD
+  style COST fill:#FFE0B2
+  style BAL fill:#FFF3E0
+  style DEDUCT fill:#C8E6C9
+  style TOPUP fill:#FFCDD2
+  </div>
+  <p><a href="e2e.md#billing-flow">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="obs">
+  <h2>H. Telemetrie & Logging <span class="chip">Observability</span></h2>
+  <p>Call-ID-Korrelation, Metriken (Duration, Cost, Sentiment, Reschedule-first), Branch-Notifications, Transcript-Speicherung, Privacy (PII Redaction).</p>
+  <div class="mermaid">
+flowchart LR
+  subgraph "Correlation"
+    CALL["Call ID<br/>retell_call_id"]
+    BOOK["Booking ID<br/>calcom_booking_id"]
+    CUS["Customer ID"]
+  end
+
+  subgraph "Metrics"
+    DUR["Duration<br/>(seconds)"]
+    COST["Cost<br/>(cents)"]
+    SENT["Sentiment<br/>(-1 to 1)"]
+    INTENT["Intent<br/>(book/cancel/...)"]
+  end
+
+  subgraph "Reschedule-first Metrics (NEU)"
+    OFFERED["reschedule_offered<br/>(Counter)"]
+    ACCEPTED["reschedule_accepted<br/>(Counter)"]
+    DECLINED["reschedule_declined<br/>(Counter)"]
+    NOTIFIED["branch_notified<br/>(Counter)"]
+  end
+
+  subgraph "Logs"
+    TRANS["Transcript<br/>(TEXT)"]
+    AUDIO["Audio URL<br/>(30 days)"]
+    META["Metadata JSON"]
+  end
+
+  subgraph "Privacy"
+    ANON["PII Redaction<br/>after 365d"]
+    DEL["Auto-Delete<br/>after 90d"]
+  end
+
+  CALL --> BOOK
+  CALL --> CUS
+  CALL --> DUR
+  CALL --> COST
+  CALL --> SENT
+  CALL --> INTENT
+  CALL --> OFFERED
+  CALL --> ACCEPTED
+  CALL --> DECLINED
+  CALL --> NOTIFIED
+  CALL --> TRANS
+  CALL --> AUDIO
+  CALL --> META
+  TRANS --> ANON --> DEL
+
+  style CALL fill:#E3F2FD
+  style BOOK fill:#E1BEE7
+  style OFFERED fill:#C8E6C9
+  style ACCEPTED fill:#C8E6C9
+  style DECLINED fill:#FFECB3
+  style NOTIFIED fill:#E8F5E9
+  style TRANS fill:#FFF3E0
+  style ANON fill:#FFCDD2
+  </div>
+  <p><strong>Neue Metriken (Policy-Update):</strong> Tracking für Reschedule-first Flow (offered/accepted/declined) + Branch-Notification Status</p>
+  <p><a href="e2e.md#telemetry-logging">📖 Details in e2e.md</a> | <a href="ADR/005-cancellation-policy-non-blocking.md">📋 ADR-005</a></p>
+</section>
+
+<section id="state">
+  <h2>I. Zustandsautomat <span class="chip">State Machine</span></h2>
+  <p>Lifecycle eines Leads/Kunden: Unknown → Known → In Gespräch → Slot gesucht → Gebucht → Verschoben/Storniert/Completed/NoShow.</p>
+  <div class="mermaid">
+stateDiagram-v2
+  [*] --> Unknown: First Contact
+  Unknown --> Known: Phone Lookup Success
+  Unknown --> Lead: New Customer Created
+
+  Known --> InGespraech: Call Connected
+  Lead --> InGespraech: Call Connected
+
+  InGespraech --> SlotGesucht: Intent Book
+  InGespraech --> Abgebrochen: Hang Up
+
+  SlotGesucht --> Gebucht: Slot Found and Confirmed
+  SlotGesucht --> KeineSlots: No Availability
+
+  KeineSlots --> SlotGesucht: Try Different Time
+  KeineSlots --> Abgebrochen: Give Up
+
+  Gebucht --> Bestaetigt: Confirmation Sent
+  Bestaetigt --> Verschoben: Reschedule Request
+  Bestaetigt --> Storniert: Cancel Request
+  Bestaetigt --> Completed: Appointment Occurred
+  Bestaetigt --> NoShow: Customer Absent 15min
+
+  Verschoben --> Bestaetigt: New Time Confirmed
+
+  Completed --> [*]
+  Storniert --> [*]
+  NoShow --> [*]
+  Abgebrochen --> [*]
+  </div>
+  <p><a href="e2e.md#state-machine">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="erd">
+  <h2>J. ER-Diagramm <span class="chip">Data Model</span></h2>
+  <p>Datenmodell: Company → Branch → Service (+ Components) → Staff → Customer → Appointment → Call → Transcript → Charge.</p>
+  <div class="mermaid">
+erDiagram
+  COMPANY ||--o{ BRANCH : "has"
+  COMPANY ||--o{ POLICY_CONFIGURATION : "defines"
+  COMPANY ||--o{ SERVICE : "offers"
+
+  BRANCH ||--o{ PHONE_NUMBER : "has"
+  BRANCH ||--o{ STAFF : "employs"
+  BRANCH ||--o{ APPOINTMENT : "hosts"
+
+  SERVICE ||--o{ SERVICE_COMPONENT : "contains (TODO)"
+  SERVICE }o--o{ STAFF : "via service_staff"
+
+  STAFF }o--|| BRANCH : "works_in"
+  STAFF ||--o{ APPOINTMENT : "performs"
+
+  CUSTOMER ||--o{ APPOINTMENT : "books"
+  CUSTOMER ||--o{ CALL : "makes"
+
+  APPOINTMENT }o--|| SERVICE : "for"
+  APPOINTMENT }o--|| STAFF : "with"
+  APPOINTMENT }o--|| BRANCH : "at"
+
+  CALL ||--o| CUSTOMER : "made_by"
+  CALL ||--o| APPOINTMENT : "creates"
+  CALL ||--o{ TRANSCRIPT : "has"
+  CALL ||--|| CHARGE : "incurs"
+
+  COMPANY ||--o{ PREPAID_BALANCE : "maintains (TODO)"
+
+  COMPANY {
+    uuid id PK
+    string name "Friseur 1"
+    json settings "business_type: hair_salon"
+  }
+
+  BRANCH {
+    uuid id PK
+    uuid company_id FK
+    string name "Zentrale/Zweigstelle"
+    json settings "calcom_team_id: 34209"
+  }
+
+  SERVICE {
+    uuid id PK
+    string name "Service name"
+    int duration_minutes "30-180"
+    json settings "calcom_event_type_id: ???"
+  }
+
+  SERVICE_COMPONENT {
+    uuid id PK "NOT IMPLEMENTED"
+    uuid service_id FK
+    string name
+    int duration_minutes
+    bool requires_staff
+    bool staff_reuse_allowed
+  }
+
+  STAFF {
+    uuid id PK
+    string name
+    string email
+    int calcom_user_id "1001-1005"
+  }
+
+  PHONE_NUMBER {
+    string phone_number "+493033081738"
+    string retell_agent_id "agent_b36ecd..."
+    uuid branch_id FK
+  }
+  </div>
+  <p><a href="e2e.md#entity-relationship">📖 Details in e2e.md</a></p>
+</section>
+
+<section id="test-3a-3b">
+  <h2>K. E2E Tests: Reschedule-first Flow <span class="chip">GAP-010</span></h2>
+  <p>Drei Test-Szenarien zur Verifikation der Non-blocking Cancellation Policy mit Reschedule-first Flow.</p>
+
+  <h3>Test 3a: Reschedule Accepted (Flow A)</h3>
+  <div class="mermaid">
+sequenceDiagram
+    participant C as Customer
+    participant A as Retell Agent
+    participant M as Middleware
+    participant DB as Database
+    participant N as Notifications
+
+    C->>A: "Ich möchte meinen Termin stornieren"
+    A->>M: cancel_appointment(date: "2025-11-05")
+    M->>M: PolicyEngine.canCancel()<br/>(returns reschedule_first_enabled: true)
+    M-->>A: status: offer_reschedule
+    A->>C: "Möchten Sie den Termin<br/>lieber verschieben?"
+    C->>A: "Ja, gerne"
+    A->>M: check_availability(date: "2025-11-06")
+    M-->>A: Slots available
+    A->>M: reschedule_appointment(from_cancel_flow: true)
+    M->>DB: Update appointment<br/>(new date, metadata)
+    M->>N: Send notifications<br/>(Email + Filament UI)
+    M-->>A: success: rescheduled
+    A->>C: "Termin erfolgreich verschoben"
+  </div>
+  <p><strong>Erwartete Ergebnisse:</strong></p>
+  <ul>
+    <li>✅ Appointment rescheduled zu neuem Datum</li>
+    <li>✅ AppointmentModification: modification_type='reschedule', metadata.from_reschedule_first_flow=true</li>
+    <li>✅ Branch notification sent (Email + Filament UI)</li>
+    <li>✅ Metrics: reschedule_offered +1, reschedule_accepted +1, branch_notified +1</li>
+  </ul>
+
+  <h3>Test 3b: Reschedule Declined (Flow B)</h3>
+  <div class="mermaid">
+sequenceDiagram
+    participant C as Customer
+    participant A as Retell Agent
+    participant M as Middleware
+    participant DB as Database
+    participant N as Notifications
+
+    C->>A: "Ich möchte meinen Termin stornieren"
+    A->>M: cancel_appointment(date: "2025-11-05")
+    M->>M: PolicyEngine.canCancel()<br/>(returns reschedule_first_enabled: true)
+    M-->>A: status: offer_reschedule
+    A->>C: "Möchten Sie den Termin<br/>lieber verschieben?"
+    C->>A: "Nein, bitte stornieren"
+    A->>M: cancel_appointment(confirmed: true)
+    M->>DB: Update appointment<br/>(status: cancelled, metadata)
+    M->>N: Send notifications<br/>(Email + Filament UI)
+    M-->>A: success: cancelled
+    A->>C: "Termin erfolgreich storniert"
+  </div>
+  <p><strong>Erwartete Ergebnisse:</strong></p>
+  <ul>
+    <li>✅ Appointment cancelled (status='cancelled')</li>
+    <li>✅ AppointmentModification: modification_type='cancel', metadata.reschedule_offered=true, metadata.reschedule_declined=true</li>
+    <li>✅ Branch notification sent (Email + Filament UI)</li>
+    <li>✅ Metrics: reschedule_offered +1, reschedule_declined +1, branch_notified +1</li>
+  </ul>
+
+  <h3>Test 3c: Idempotency Check</h3>
+  <div class="mermaid">
+sequenceDiagram
+    participant E as Event System
+    participant L as Listener
+    participant C as Cache
+    participant N as Notifications
+
+    E->>L: AppointmentCancellationRequested<br/>(appointment_id: X, branch_id: Y)
+    L->>C: Check cache key:<br/>branch_notif_cancel_Y_X_2025110314
+    C-->>L: Key not found
+    L->>C: Set cache key (TTL: 1h)
+    L->>N: Send Email
+    L->>N: Send Filament UI notification
+    Note over L,N: First notification sent ✅
+
+    E->>L: AppointmentCancellationRequested<br/>(same appointment, within same hour)
+    L->>C: Check cache key:<br/>branch_notif_cancel_Y_X_2025110314
+    C-->>L: Key exists!
+    L->>L: Skip notification (idempotent)
+    Note over L: ⏭️ Skipping duplicate<br/>(logged, no action)
+  </div>
+  <p><strong>Erwartete Ergebnisse:</strong></p>
+  <ul>
+    <li>✅ First notification: Email sent + Filament UI notification sent</li>
+    <li>✅ Second notification (within same hour): Skipped with log "⏭️ Skipping duplicate branch notification (idempotent)"</li>
+    <li>✅ Cache key exists with 1-hour TTL</li>
+    <li>✅ No duplicate emails, no duplicate UI notifications</li>
+  </ul>
+
+  <p><strong>Verifikation:</strong></p>
+  <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto;">
+# Test 3a Query
+SELECT * FROM appointment_modifications
+WHERE modification_type = 'reschedule'
+AND JSON_EXTRACT(metadata, '$.from_reschedule_first_flow') = true
+ORDER BY created_at DESC LIMIT 1;
+
+# Test 3b Query
+SELECT * FROM appointment_modifications
+WHERE modification_type = 'cancel'
+AND JSON_EXTRACT(metadata, '$.reschedule_declined') = true
+ORDER BY created_at DESC LIMIT 1;
+
+# Test 3c Cache Check
+php artisan tinker
+$key = sprintf('branch_notif_cancel_%s_%s_%s', $branch_id, $appointment_id, now()->format('YmdH'));
+Cache::has($key); // → true after first notification
+  </pre>
+
+  <p><a href="GAP-010_IMPLEMENTATION_SUMMARY.md#test-scenarios">📖 Vollständige Test-Dokumentation</a> | <a href="ADR/005-cancellation-policy-non-blocking.md">📋 ADR-005</a></p>
+</section>
+
+<section id="appointment-types">
+  <h2>L. Terminarten <span class="chip">Simple vs. Composite</span></h2>
+  <p>
+    <strong>Simple Appointments:</strong> Einfache Termine mit einem durchgehenden Zeitraum (z.B. Beratungsgespräch 60min).<br>
+    <strong>Composite Appointments:</strong> Mehrteilige Termine mit Arbeitsphasen und optionalen Pausen (z.B. Färben mit Einwirkzeit).
+  </p>
+
+  <h3>K.1 Taxonomie & Datenmodell</h3>
+  <div class="mermaid">
+classDiagram
+  direction TB
+  class Appointment {
+    +uuid id
+    +string title
+    +datetime starts_at
+    +datetime ends_at
+    +boolean is_composite
+    +json segments
+    +string composite_group_uid
+    +isComposite() bool
+    +getSegments() array
+  }
+
+  class SimpleAppointment {
+    +is_composite = false
+    +segments = null
+  }
+
+  class CompositeAppointment {
+    +is_composite = true
+    +segments = [...Segment]
+  }
+
+  class Segment {
+    +datetime start
+    +datetime end
+    +string label
+    +string type "work|break"
+    +int order
+    +int duration_minutes
+  }
+
+  Appointment <|-- SimpleAppointment
+  Appointment <|-- CompositeAppointment
+  CompositeAppointment "1" *-- "1..n" Segment : contains in JSON
+
+  note for CompositeAppointment "Segmente als JSON-Array gespeichert:\n[\n  {start, end, label, type, order},\n  ...\n]"
+  </div>
+  <p>
+    <strong>Implementierung:</strong> Composite Appointments speichern ihre Segmente als JSON-Array im <code>segments</code>-Feld.
+    Keine separate Tabelle nötig. <code>starts_at/ends_at</code> umfassen die gesamte Zeitspanne (min/max aller Segmente).
+  </p>
+
+  <h3>K.2 Zeitachse mit Pausen</h3>
+  <div class="mermaid">
+gantt
+  title Terminarten im Vergleich (Beispiel 03.11.2025)
+  dateFormat HH:mm
+  axisFormat %H:%M
+
+  section Simple Appointment
+  Beratungsgespräch (60min)  :done, s1, 09:00, 60m
+
+  section Composite Appointment
+  Färben Phase 1 (45min)     :active, c1, 10:30, 45m
+  Einwirkzeit PAUSE (30min)  :crit, c2, after c1, 30m
+  Auswaschen Phase 2 (20min) :active, c3, after c2, 20m
+  Föhnen Phase 3 (25min)     :active, c4, after c3, 25m
+  </div>
+  <p>
+    <strong>Beispiel:</strong> Ein Färbe-Termin besteht aus 4 Segmenten (3× WORK, 1× BREAK).
+    Gesamtdauer: 120min. Pausen sind explizit als eigene Segmente modelliert.
+  </p>
+
+  <h3>K.3 Validierungs-Flow</h3>
+  <div class="mermaid">
+flowchart TB
+  START([Termin erstellen])
+
+  START --> TYPE{Terminart?}
+
+  TYPE -->|Simple| SIMPLE[is_composite = false<br/>segments = null]
+  SIMPLE --> VALIDATE_SIMPLE[Start/End validieren]
+  VALIDATE_SIMPLE --> SAVE
+
+  TYPE -->|Composite| COMPOSITE[is_composite = true]
+  COMPOSITE --> SEGMENTS[Segmente definieren]
+  SEGMENTS --> PAUSE{Pausen benötigt?}
+
+  PAUSE -->|Ja| ADD_BREAKS[BREAK-Segmente einfügen<br/>type: 'break']
+  PAUSE -->|Nein| ORDER
+  ADD_BREAKS --> ORDER
+
+  ORDER[Segmente sortieren<br/>order: 1, 2, 3...]
+  ORDER --> VALIDATE_SEG[Validierung]
+
+  VALIDATE_SEG --> CHECK1{Überlappungen?}
+  CHECK1 -->|Ja| ERROR1[❌ Fehler]
+  CHECK1 -->|Nein| CHECK2{Lücken?}
+
+  CHECK2 -->|Ja| WARN[⚠️ Warnung]
+  CHECK2 -->|Nein| CALC
+  WARN --> CALC
+
+  CALC[starts_at = min Segment start<br/>ends_at = max Segment end]
+  CALC --> SAVE
+
+  SAVE[(Appointment speichern)]
+  ERROR1 --> END([Ende])
+  SAVE --> END
+
+  style SIMPLE fill:#C8E6C9
+  style COMPOSITE fill:#E1BEE7
+  style ADD_BREAKS fill:#FFE0B2
+  style ERROR1 fill:#FFCDD2
+  style WARN fill:#FFF9C4
+  style SAVE fill:#C8E6C9
+  </div>
+  <p>
+    <strong>Validierungsregeln:</strong>
+  </p>
+  <ul>
+    <li>✅ Segmente dürfen sich nicht überlappen</li>
+    <li>⚠️ Lücken zwischen Segmenten sind erlaubt (Warnung)</li>
+    <li>✅ <code>order</code>-Index muss aufsteigend sein</li>
+    <li>✅ <code>starts_at/ends_at</code> des Appointments = min/max der Segmente</li>
+  </ul>
+
+  <h3>K.4 State Machine (Laufzeit)</h3>
+  <div class="mermaid">
+stateDiagram-v2
+  [*] --> Scheduled: Termin erstellt
+
+  Scheduled --> InProgress: start()
+  Scheduled --> Cancelled: cancel()
+
+  InProgress --> Paused: pause()<br/>(bei BREAK-Segment)
+  InProgress --> Completed: finish()
+  InProgress --> Cancelled: cancel()
+
+  Paused --> InProgress: resume()<br/>(nächstes WORK-Segment)
+  Paused --> Cancelled: cancel()
+
+  Completed --> [*]
+  Cancelled --> [*]
+
+  note right of Paused
+    Bei Composite Appointments:
+    Pause = BREAK-Segment aktiv
+  end note
+
+  note right of InProgress
+    Aktuelles Segment wird
+    verarbeitet (WORK)
+  end note
+  </div>
+  <p>
+    <strong>Hinweis:</strong> Bei Composite Appointments steuern <code>pause()</code> und <code>resume()</code>
+    den Übergang zwischen WORK- und BREAK-Segmenten.
+  </p>
+
+  <h3>K.5 Datenbank-Schema</h3>
+  <div class="mermaid">
+erDiagram
+  APPOINTMENT {
+    uuid id PK
+    uuid company_id FK
+    uuid branch_id FK
+    uuid service_id FK
+    uuid customer_id FK
+    uuid staff_id FK
+    string title
+    datetime starts_at
+    datetime ends_at
+    boolean is_composite
+    json segments
+    string composite_group_uid
+    string status
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+
+  SERVICE ||--o{ APPOINTMENT : fuer
+  CUSTOMER ||--o{ APPOINTMENT : bucht
+  STAFF ||--o{ APPOINTMENT : fuehrt_durch
+  BRANCH ||--o{ APPOINTMENT : in
+  COMPANY ||--o{ APPOINTMENT : gehoert_zu
+  </div>
+  <p>
+    <strong>Persistenz:</strong> Alle Appointment-Daten in einer Tabelle. Segmente als JSON im <code>segments</code>-Feld.
+    <code>composite_group_uid</code> erlaubt Gruppierung mehrerer Termine (z.B. für komplexe Behandlungen).
+  </p>
+  <p>
+    <strong>segments JSON-Struktur (Beispiel):</strong>
+  </p>
+  <pre><code>[
+  {
+    "start": "2025-11-03 10:30:00",
+    "end": "2025-11-03 11:15:00",
+    "label": "Färben Phase 1",
+    "type": "work",
+    "order": 1,
+    "duration_minutes": 45
+  },
+  {
+    "start": "2025-11-03 11:15:00",
+    "end": "2025-11-03 11:45:00",
+    "label": "Einwirkzeit",
+    "type": "break",
+    "order": 2,
+    "duration_minutes": 30
+  }
+]</code></pre>
+</section>
+
+</main>
+
+<script>
+// Dark Mode Toggle
+const darkToggle = document.getElementById('dark');
+darkToggle.addEventListener('change', (e) => {
+  document.body.classList.toggle('dark', e.target.checked);
+  localStorage.setItem('darkMode', e.target.checked);
+});
+// Load saved preference
+if (localStorage.getItem('darkMode') === 'true') {
+  darkToggle.checked = true;
+  document.body.classList.add('dark');
+}
+
+// Search Filter
+const searchInput = document.getElementById('q');
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  document.querySelectorAll('main section').forEach(section => {
+    const text = section.textContent.toLowerCase();
+    section.style.display = text.includes(query) ? 'block' : 'none';
+  });
+});
+
+// Branch Filter
+const branchSelect = document.getElementById('branch');
+branchSelect.addEventListener('change', (e) => {
+  const branch = e.target.value;
+  if (!branch) {
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'block');
+    return;
+  }
+  console.log('Filter by branch:', branch);
+});
+</script>
+
+<script>
+// Initialize Mermaid with theme based on dark mode
+const isDark = document.body.classList.contains('dark');
+mermaid.initialize({
+  startOnLoad: true,
+  theme: isDark ? 'dark' : 'default',
+  securityLevel: 'loose',
+  fontFamily: 'system-ui, -apple-system, sans-serif'
+});
+
+// Re-render diagrams when dark mode toggles
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === 'class') {
+      const isDarkNow = document.body.classList.contains('dark');
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: isDarkNow ? 'dark' : 'default',
+        securityLevel: 'loose',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      });
+      // Re-render all diagrams
+      document.querySelectorAll('.mermaid').forEach((el) => {
+        const code = el.getAttribute('data-processed') ? el.textContent : el.textContent;
+        el.removeAttribute('data-processed');
+        el.innerHTML = code;
+      });
+      mermaid.init(undefined, '.mermaid');
+    }
+  });
+});
+observer.observe(document.body, { attributes: true });
+</script>
 
-    <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop" aria-label="Nach oben">
-        ↑
-    </button>
-
-    <div class="copy-tooltip" id="copyTooltip" role="status" aria-live="polite">✓ Kopiert!</div>
-
-    <script>
-        // Initialize Mermaid
-        mermaid.initialize({ startOnLoad: true, theme: 'default' });
-
-        let allFiles = [];
-        let expandedCategories = new Set();
-
-        // German date/time formatter
-        function formatGermanDate(timestamp) {
-            const date = new Date(timestamp * 1000);
-            return new Intl.DateTimeFormat('de-DE', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Europe/Berlin'
-            }).format(date) + ' Uhr';
-        }
-
-        // Relative time in German
-        function formatRelativeTime(timestamp) {
-            const now = new Date();
-            const date = new Date(timestamp * 1000);
-            const diff = now - date;
-            const absDiff = Math.abs(diff);
-            const minutes = Math.floor(absDiff / 60000);
-            const hours = Math.floor(absDiff / 3600000);
-            const days = Math.floor(absDiff / 86400000);
-
-            // Future times (diff < 0)
-            if (diff < 0) {
-                if (minutes < 1) return 'in wenigen Sekunden';
-                if (minutes < 60) return `in ${minutes} ${minutes === 1 ? 'Minute' : 'Minuten'}`;
-                if (hours < 24) return `in ${hours} ${hours === 1 ? 'Stunde' : 'Stunden'}`;
-                if (days < 30) return `in ${days} ${days === 1 ? 'Tag' : 'Tagen'}`;
-                return formatGermanDate(timestamp);
-            }
-
-            // Past times (diff >= 0)
-            if (minutes < 1) return 'gerade eben';
-            if (minutes < 60) return `vor ${minutes} ${minutes === 1 ? 'Minute' : 'Minuten'}`;
-            if (hours < 24) return `vor ${hours} ${hours === 1 ? 'Stunde' : 'Stunden'}`;
-            if (days < 30) return `vor ${days} ${days === 1 ? 'Tag' : 'Tagen'}`;
-            return formatGermanDate(timestamp);
-        }
-
-        // Estimate reading time
-        function estimateReadingTime(size) {
-            const wordsPerMinute = 200;
-            const words = size / 5; // Rough estimate: 5 chars per word
-            const minutes = Math.ceil(words / wordsPerMinute);
-            return `${minutes} Min. Lesezeit`;
-        }
-
-        // Safe date parsing helper
-        function safeParseDate(dateString) {
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    console.error('Invalid date:', dateString);
-                    return null;
-                }
-                // Return Unix timestamp in seconds (not milliseconds) for consistency
-                return Math.floor(date.getTime() / 1000);
-            } catch (e) {
-                console.error('Date parsing error:', e, dateString);
-                return null;
-            }
-        }
-
-        // Load status from API
-        async function loadStatus() {
-            try {
-                const res = await fetch('/docs/backup-system/status.json', {
-                    credentials: 'include'
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-
-                // Parse last backup timestamp (ISO-8601 string)
-                if (data.last_backup?.timestamp) {
-                    const timestamp = safeParseDate(data.last_backup.timestamp);
-                    if (timestamp) {
-                        document.getElementById('lastBackupValue').textContent = formatRelativeTime(timestamp);
-                        document.getElementById('lastBackupDetail').textContent = formatGermanDate(timestamp);
-                    } else {
-                        document.getElementById('lastBackupValue').textContent = 'Fehler beim Laden';
-                        document.getElementById('lastBackupDetail').textContent = 'Ungültiges Datum';
-                    }
-                }
-
-                // Parse next backup timestamp (ISO-8601 string)
-                if (data.next_backup_localtime) {
-                    const timestamp = safeParseDate(data.next_backup_localtime);
-                    if (timestamp) {
-                        document.getElementById('nextBackupValue').textContent = formatRelativeTime(timestamp);
-                        document.getElementById('nextBackupDetail').textContent = formatGermanDate(timestamp);
-                    } else {
-                        document.getElementById('nextBackupValue').textContent = data.next_backup_localtime;
-                        document.getElementById('nextBackupDetail').textContent = 'Geplant';
-                    }
-                }
-
-                // Binlog status
-                if (data.binlog?.last_file) {
-                    document.getElementById('binlogValue').textContent = data.binlog.last_file;
-
-                    // Parse binlog timestamp if available
-                    if (data.binlog?.timestamp) {
-                        const timestamp = safeParseDate(data.binlog.timestamp);
-                        if (timestamp) {
-                            const detail = document.getElementById('binlogDetail');
-                            if (detail) {
-                                detail.textContent = formatGermanDate(timestamp);
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Status load error:', e);
-                document.getElementById('lastBackupValue').textContent = 'Nicht verfügbar';
-                document.getElementById('nextBackupValue').textContent = 'Nicht verfügbar';
-                document.getElementById('binlogValue').textContent = 'Nicht verfügbar';
-            }
-        }
-
-        // Load incidents from API
-        async function loadIncidents() {
-            try {
-                const res = await fetch('/docs/backup-system/api/incidents', {
-                    credentials: 'include'
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-
-                const container = document.getElementById('incidents-container');
-                const section = document.getElementById('incidents-section');
-                const badge = document.getElementById('incident-badge');
-
-                if (!data.incidents || data.incidents.length === 0) {
-                    container.innerHTML = '<p style="color: var(--success); padding: 2rem; text-align: center; font-size: 1.2em;">✅ Keine Incidents - System läuft stabil</p>';
-                    section.style.display = 'block';
-                    return;
-                }
-
-                // Separate open and resolved
-                const openIncidents = data.incidents.filter(i => i.status === 'open');
-                const resolvedIncidents = data.incidents.filter(i => i.status === 'resolved');
-
-                // Group by category
-                const groupByCategory = (incidents) => {
-                    const groups = {};
-                    incidents.forEach(inc => {
-                        if (!groups[inc.category]) groups[inc.category] = [];
-                        groups[inc.category].push(inc);
-                    });
-                    return groups;
-                };
-
-                // Sort by severity (Critical > High > Medium > Low > Info)
-                const severityOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
-                const sortBySeverity = (a, b) => severityOrder[a.severity] - severityOrder[b.severity];
-
-                let html = '';
-
-                // Stats
-                const stats = data.stats || {};
-                html += '<div class="incident-stats">';
-                html += `<div class="incident-stat"><div class="incident-stat-value">${openIncidents.length}</div><div class="incident-stat-label">🔴 Open</div></div>`;
-                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #dc2626;">${stats.critical || 0}</div><div class="incident-stat-label">Critical</div></div>`;
-                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #ea580c;">${stats.high || 0}</div><div class="incident-stat-label">High</div></div>`;
-                html += `<div class="incident-stat"><div class="incident-stat-value" style="color: #f59e0b;">${stats.medium || 0}</div><div class="incident-stat-label">Medium</div></div>`;
-                html += `<div class="incident-stat"><div class="incident-stat-value">${resolvedIncidents.length}</div><div class="incident-stat-label">✅ Resolved</div></div>`;
-                html += '</div>';
-
-                // Function to render incident card
-                const renderIncident = (inc) => {
-                    const timestamp = new Date(inc.timestamp);
-                    const severityIcon = {
-                        'critical': '🔴',
-                        'high': '🟠',
-                        'medium': '🟡',
-                        'low': '🔵',
-                        'info': '🟢'
-                    }[inc.severity] || '⚪';
-
-                    const statusBadge = inc.status === 'resolved'
-                        ? '<span class="incident-status-badge resolved">✅ RESOLVED</span>'
-                        : '<span class="incident-status-badge open">🔄 OPEN</span>';
-
-                    return `
-                        <div class="incident-card ${inc.severity} ${inc.status === 'resolved' ? 'resolved-incident' : 'open-incident'}">
-                            <div class="incident-header">
-                                <div class="incident-title">${severityIcon} ${inc.title}</div>
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    ${statusBadge}
-                                    <span class="incident-severity ${inc.severity}">${inc.severity}</span>
-                                </div>
-                            </div>
-                            <div class="incident-meta">
-                                <span>📅 ${formatGermanDate(Math.floor(timestamp.getTime() / 1000))}</span>
-                                <span>🏷️ ${inc.category}</span>
-                                <span>🆔 ${inc.id}</span>
-                            </div>
-                            <div class="incident-description">${inc.description}</div>
-                            ${inc.resolution ? `
-                                <div class="incident-resolution">
-                                    <strong>✅ Resolution:</strong> ${inc.resolution}
-                                </div>
-                            ` : ''}
-                            ${inc.verification ? `
-                                <div class="incident-verification">
-                                    <strong>🔍 Verification:</strong><br>
-                                    <code>${inc.verification}</code>
-                                </div>
-                            ` : ''}
-                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                                <a href="/docs/backup-system/incidents/${inc.id}.md" target="_blank" class="incident-md-link">
-                                    📄 Markdown für KI-Analyse
-                                </a>
-                                <span style="margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.85em;">
-                                    (Zum Kopieren & Teilen mit KI)
-                                </span>
-                            </div>
-                        </div>
-                    `;
-                };
-
-                // OPEN INCIDENTS - Prominent display
-                if (openIncidents.length > 0) {
-                    html += '<div class="incidents-section-header open-header">';
-                    html += '<h3>🚨 Active Incidents</h3>';
-                    html += `<span class="incident-count-badge open-badge">${openIncidents.length} Open</span>`;
-                    html += '</div>';
-
-                    // Group by category
-                    const openByCategory = groupByCategory(openIncidents);
-                    Object.keys(openByCategory).sort().forEach(category => {
-                        const categoryIncidents = openByCategory[category].sort(sortBySeverity);
-
-                        html += `<div class="incident-category-group">`;
-                        html += `<div class="category-badge">${category}</div>`;
-                        categoryIncidents.forEach(inc => {
-                            html += renderIncident(inc);
-                        });
-                        html += '</div>';
-                    });
-                } else {
-                    html += '<div class="no-incidents-message">';
-                    html += '<span style="font-size: 3em;">✅</span>';
-                    html += '<h3>Keine aktiven Probleme</h3>';
-                    html += '<p>Alle Systeme funktionieren normal</p>';
-                    html += '</div>';
-                }
-
-                // RESOLVED INCIDENTS - Collapsed by default
-                if (resolvedIncidents.length > 0) {
-                    html += '<div class="incidents-section-header resolved-header" style="margin-top: 2rem; cursor: pointer;">';
-                    html += '<h3>📋 Resolved Incidents</h3>';
-                    html += `<div style="display: flex; align-items: center; gap: 1rem;">`;
-                    html += `<span class="incident-count-badge resolved-badge">${resolvedIncidents.length} Resolved</span>`;
-                    html += '<span class="toggle-icon" id="resolved-toggle">▼</span>';
-                    html += '</div>';
-                    html += '</div>';
-
-                    html += '<div id="resolved-incidents" style="display: none; margin-top: 1rem;">';
-
-                    // Group by category
-                    const resolvedByCategory = groupByCategory(resolvedIncidents.slice(0, 20)); // Show last 20
-                    Object.keys(resolvedByCategory).sort().forEach(category => {
-                        const categoryIncidents = resolvedByCategory[category].sort(sortBySeverity);
-
-                        html += `<div class="incident-category-group">`;
-                        html += `<div class="category-badge resolved">${category}</div>`;
-                        categoryIncidents.forEach(inc => {
-                            html += renderIncident(inc);
-                        });
-                        html += '</div>';
-                    });
-
-                    html += '</div>';
-                }
-
-                container.innerHTML = html;
-
-                // Show badge for open critical/high incidents
-                const openCritical = openIncidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
-                if (openCritical > 0) {
-                    badge.textContent = `${openCritical} critical`;
-                    badge.style.display = 'inline-block';
-                }
-
-                section.style.display = 'block';
-            } catch (e) {
-                console.error('Incidents load error:', e);
-                const container = document.getElementById('incidents-container');
-                if (container) {
-                    container.innerHTML = '<p style="color: var(--danger);">Fehler beim Laden der Incident-Historie</p>';
-                }
-            }
-        }
-
-        // Toggle resolved incidents visibility
-        function toggleResolved() {
-            const resolvedSection = document.getElementById('resolved-incidents');
-            const toggleIcon = document.getElementById('resolved-toggle');
-
-            if (resolvedSection.style.display === 'none') {
-                resolvedSection.style.display = 'block';
-                toggleIcon.textContent = '▲';
-            } else {
-                resolvedSection.style.display = 'none';
-                toggleIcon.textContent = '▼';
-            }
-        }
-
-        // Load files from API
-        async function loadFiles() {
-            try {
-                const res = await fetch('/docs/backup-system/api/files', {
-                    credentials: 'include'
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                const data = await res.json();
-                allFiles = data.files;
-                renderLatestReports(allFiles);
-                renderCategories(allFiles);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('latest-reports').style.display = 'block';
-                document.getElementById('categories').style.display = 'block';
-
-                handleHashNavigation();
-                restoreExpandedState();
-            } catch (e) {
-                console.error('Files load error:', e);
-                document.getElementById('loading').innerHTML = `
-                    <p style="color:var(--danger);">Laden fehlgeschlagen: ${e.message}. Bitte Seite neu laden.</p>
-                `;
-            }
-        }
-
-        // Render latest reports section
-        function renderLatestReports(files) {
-            // Filter for actual documentation files (HTML/MD), exclude index and non-docs
-            const docFiles = files.filter(f =>
-                (f.type === 'html' || f.type === 'md') &&
-                !f.title.toLowerCase().includes('index') &&
-                f.category !== 'Hub & Index'
-            );
-
-            // Sort by modification time (newest first) and take top 8
-            const latestFiles = docFiles
-                .sort((a, b) => b.mtime - a.mtime)
-                .slice(0, 8);
-
-            if (latestFiles.length === 0) {
-                document.getElementById('latest-reports').style.display = 'none';
-                return;
-            }
-
-            const latestHtml = latestFiles.map(file => {
-                // Highlight E2E reports
-                const isE2E = file.category === 'E2E Validation Reports';
-                const cardClass = isE2E ? 'card-highlight' : '';
-
-                return renderCard(file, cardClass);
-            }).join('');
-
-            document.getElementById('latest-reports-grid').innerHTML = latestHtml;
-        }
-
-        // Render categories
-        function renderCategories(files) {
-            const cats = [...new Set(files.map(f => f.category))].sort();
-            const icons = {
-                'Hub & Index': '🏠',
-                'Executive / Management': '👔',
-                'E2E Validation Reports': '✅',
-                'Backup & PITR': '💾',
-                'Deployment & Gates': '🚀',
-                'Testing & Validation': '🧪',
-                'E-Mail & Notifications': '📧',
-                'Incident Reports & Fixes': '🔥',
-                'Security & Access': '🔒',
-                'UX & Documentation': '🎨',
-                'Validierung & Reports': '✅',
-                'Other': '📄'
-            };
-
-            const categoriesHtml = cats.map(cat => {
-                const catFiles = files.filter(f => f.category === cat);
-                const catId = categoryToId(cat);
-                const isExpanded = expandedCategories.has(catId);
-
-                return `
-                    <div class="category-section" id="cat-${catId}">
-                        <div class="category-header" data-category-id="${catId}" role="button" tabindex="0" aria-expanded="${isExpanded}">
-                            <h2>
-                                <span class="icon">${icons[cat] || '📄'}</span>
-                                <span>${cat}</span>
-                                <span class="badge">${catFiles.length}</span>
-                            </h2>
-                            <span class="toggle-icon ${isExpanded ? 'expanded' : ''}">▼</span>
-                        </div>
-                        <div class="category-content ${isExpanded ? 'expanded' : ''}" id="content-${catId}">
-                            <div class="file-grid">${catFiles.map(renderCard).join('')}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('categories').innerHTML = categoriesHtml;
-            updateNavLinks(cats, icons);
-        }
-
-        // Convert category name to valid ID
-        function categoryToId(cat) {
-            return cat.toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^a-z0-9-]/g, '')
-                .replace(/^-+|-+$/g, '');
-        }
-
-        // Update navigation links
-        function updateNavLinks(categories, icons) {
-            const navHtml = categories.map(cat => {
-                const catId = categoryToId(cat);
-                const catFiles = allFiles.filter(f => f.category === cat);
-
-                return `
-                    <a href="#${catId}" class="nav-link" data-section="${catId}">
-                        <span class="icon">${icons[cat] || '📄'}</span>
-                        <span>${cat}</span>
-                        <span class="count">${catFiles.length}</span>
-                    </a>
-                `;
-            }).join('');
-
-            document.getElementById('navLinks').innerHTML = navHtml;
-        }
-
-        // Format date for display (short German format)
-        function formatShortDate(timestamp) {
-            const date = new Date(timestamp * 1000);
-            return new Intl.DateTimeFormat('de-DE', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                timeZone: 'Europe/Berlin'
-            }).format(date);
-        }
-
-        // Get age badge based on days
-        function getAgeBadge(ageDays) {
-            if (ageDays <= 7) {
-                return '<span class="badge" style="background: var(--green);">🆕 Neu</span>';
-            } else if (ageDays > 90) {
-                return '<span class="badge" style="background: var(--warning); color: #333;">⚠️ Veraltet</span>';
-            }
-            return '';
-        }
-
-        // Render file card
-        function renderCard(f, additionalClass = '') {
-            const kb = (f.size / 1024).toFixed(1);
-            const modifiedDate = formatShortDate(f.mtime);
-            const createdDate = formatShortDate(f.ctime);
-            const relativeDate = formatRelativeTime(f.mtime);
-            const sha = f.sha256.substring(0, 12) + '...';
-            const fileIcon = getFileIcon(f.type);
-            const readingTime = estimateReadingTime(f.size);
-            const ageBadge = getAgeBadge(f.age_days);
-
-            // Determine which timestamp to show
-            const isHtml = f.type === 'html';
-            const timestampLabel = isHtml ? 'Erstellt' : 'Aktualisiert';
-            const timestampDate = isHtml ? createdDate : modifiedDate;
-            const fullDate = isHtml ? formatGermanDate(f.ctime) : formatGermanDate(f.mtime);
-
-            return `
-                <article class="file-card ${additionalClass}">
-                    <div class="file-card-header">
-                        <div class="file-card-badges">
-                            ${ageBadge}
-                        </div>
-                    </div>
-                    <h3 class="file-card-title">${fileIcon} ${f.title}</h3>
-                    <div class="file-card-meta">
-                        <span>📦 ${kb} KB</span>
-                        <span class="tooltip">
-                            📅 ${relativeDate}
-                            <span class="tooltip-text">${fullDate}</span>
-                        </span>
-                        <span class="reading-time">⏱️ ${readingTime}</span>
-                    </div>
-                    <div class="file-card-meta" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                        <span class="tooltip" style="font-weight: 500; color: var(--text-main);">
-                            📆 ${timestampLabel}: ${timestampDate}
-                            <span class="tooltip-text">${fullDate}</span>
-                        </span>
-                    </div>
-                    <div class="file-card-meta">
-                        <span class="tooltip" title="${f.sha256}">🔐 ${sha}</span>
-                    </div>
-                    <div class="file-card-actions">
-                        <a href="/docs/backup-system/${f.path}" class="btn btn-primary" target="_blank">
-                            📄 Öffnen
-                        </a>
-                        ${f.type === 'pdf' ? `
-                            <button class="btn btn-secondary" data-href="/docs/backup-system/${f.path}">
-                                📕 PDF anzeigen
-                            </button>
-                        ` : ''}
-                        <button class="btn btn-copy" data-copy-text="https://api.askproai.de/docs/backup-system/${f.path}" data-copy-message="URL kopiert!">
-                            📋 URL kopieren
-                        </button>
-                        <button class="btn btn-copy" data-copy-text="${f.sha256}" data-copy-message="SHA256 kopiert!">
-                            🔐 SHA256
-                        </button>
-                    </div>
-                </article>
-            `;
-        }
-
-        // Get file icon based on extension
-        function getFileIcon(ext) {
-            const icons = {
-                'pdf': '📕',
-                'md': '📝',
-                'html': '🌐',
-                'json': '📊',
-                'txt': '📄',
-                'log': '📋'
-            };
-            return icons[ext] || '📄';
-        }
-
-        // Toggle category
-        function toggleCategory(catId) {
-            const content = document.getElementById(`content-${catId}`);
-            const header = document.querySelector(`#cat-${catId} .category-header`);
-            const icon = document.querySelector(`#cat-${catId} .toggle-icon`);
-
-            if (content.classList.contains('expanded')) {
-                content.classList.remove('expanded');
-                icon.classList.remove('expanded');
-                header.setAttribute('aria-expanded', 'false');
-                expandedCategories.delete(catId);
-            } else {
-                content.classList.add('expanded');
-                icon.classList.add('expanded');
-                header.setAttribute('aria-expanded', 'true');
-                expandedCategories.add(catId);
-            }
-
-            saveExpandedState();
-        }
-
-        // Expand all categories
-        function expandAll() {
-            document.querySelectorAll('.category-content').forEach(content => {
-                content.classList.add('expanded');
-            });
-            document.querySelectorAll('.toggle-icon').forEach(icon => {
-                icon.classList.add('expanded');
-            });
-            document.querySelectorAll('.category-header').forEach(header => {
-                header.setAttribute('aria-expanded', 'true');
-            });
-
-            document.querySelectorAll('.category-section').forEach(section => {
-                const catId = section.id.replace('cat-', '');
-                expandedCategories.add(catId);
-            });
-
-            saveExpandedState();
-        }
-
-        // Collapse all categories
-        function collapseAll() {
-            document.querySelectorAll('.category-content').forEach(content => {
-                content.classList.remove('expanded');
-            });
-            document.querySelectorAll('.toggle-icon').forEach(icon => {
-                icon.classList.remove('expanded');
-            });
-            document.querySelectorAll('.category-header').forEach(header => {
-                header.setAttribute('aria-expanded', 'false');
-            });
-
-            expandedCategories.clear();
-            saveExpandedState();
-        }
-
-        // Save expanded state to sessionStorage
-        function saveExpandedState() {
-            sessionStorage.setItem('expandedCategories', JSON.stringify([...expandedCategories]));
-        }
-
-        // Restore expanded state from sessionStorage
-        function restoreExpandedState() {
-            try {
-                const saved = sessionStorage.getItem('expandedCategories');
-                if (saved) {
-                    expandedCategories = new Set(JSON.parse(saved));
-                }
-            } catch (e) {
-                console.error('Failed to restore expanded state:', e);
-            }
-        }
-
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', e => {
-            const q = e.target.value.toLowerCase().trim();
-            const clearBtn = document.getElementById('searchClear');
-            const resultsCount = document.getElementById('searchResultsCount');
-
-            if (q) {
-                clearBtn.classList.add('visible');
-            } else {
-                clearBtn.classList.remove('visible');
-            }
-
-            if (q) {
-                const filtered = allFiles.filter(f =>
-                    f.title.toLowerCase().includes(q) ||
-                    f.description.toLowerCase().includes(q) ||
-                    f.filename.toLowerCase().includes(q) ||
-                    f.category.toLowerCase().includes(q)
-                );
-
-                renderCategories(filtered);
-
-                resultsCount.textContent = `${filtered.length} ${filtered.length === 1 ? 'Ergebnis' : 'Ergebnisse'} gefunden`;
-                resultsCount.classList.add('visible');
-
-                if (filtered.length > 0) {
-                    setTimeout(expandAll, 100);
-                }
-            } else {
-                renderCategories(allFiles);
-                resultsCount.classList.remove('visible');
-            }
-        });
-
-        // Clear search
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchClear').classList.remove('visible');
-            document.getElementById('searchResultsCount').classList.remove('visible');
-            renderCategories(allFiles);
-        }
-
-        // Copy to clipboard with feedback
-        function copyText(text, event, message = 'Kopiert!') {
-            navigator.clipboard.writeText(text).then(() => {
-                const tooltip = document.getElementById('copyTooltip');
-                tooltip.textContent = message;
-                tooltip.style.left = event.pageX + 'px';
-                tooltip.style.top = (event.pageY - 40) + 'px';
-                tooltip.classList.add('show');
-                setTimeout(() => tooltip.classList.remove('show'), 2000);
-            }).catch(err => {
-                console.error('Copy failed:', err);
-                alert('Kopieren fehlgeschlagen');
-            });
-        }
-
-        // Smooth scroll to section
-        function scrollToSection(sectionId) {
-            const element = document.getElementById(`cat-${sectionId}`) || document.getElementById(sectionId);
-            if (element) {
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-
-                if (sectionId !== 'status') {
-                    const content = document.getElementById(`content-${sectionId}`);
-                    const icon = document.querySelector(`#cat-${sectionId} .toggle-icon`);
-                    const header = document.querySelector(`#cat-${sectionId} .category-header`);
-
-                    if (content && !content.classList.contains('expanded')) {
-                        content.classList.add('expanded');
-                        icon.classList.add('expanded');
-                        header.setAttribute('aria-expanded', 'true');
-                        expandedCategories.add(sectionId);
-                        saveExpandedState();
-                    }
-                }
-            }
-        }
-
-        // Handle hash navigation
-        function handleHashNavigation() {
-            const hash = window.location.hash.slice(1);
-            if (hash) {
-                setTimeout(() => scrollToSection(hash), 300);
-            }
-        }
-
-        // Update active nav link on scroll
-        function updateActiveNavLink() {
-            const sections = document.querySelectorAll('.category-section, #status');
-            let currentSection = '';
-
-            sections.forEach(section => {
-                const rect = section.getBoundingClientRect();
-                if (rect.top <= 200 && rect.bottom > 200) {
-                    currentSection = section.id.replace('cat-', '');
-                }
-            });
-
-            document.querySelectorAll('.nav-link').forEach(link => {
-                const section = link.dataset.section;
-                if (section === currentSection) {
-                    link.classList.add('active');
-                    link.setAttribute('aria-current', 'page');
-                } else {
-                    link.classList.remove('active');
-                    link.removeAttribute('aria-current');
-                }
-            });
-        }
-
-        // Back to top button
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Show/hide back to top button
-        window.addEventListener('scroll', () => {
-            const backToTop = document.getElementById('backToTop');
-            if (window.scrollY > 300) {
-                backToTop.classList.add('visible');
-            } else {
-                backToTop.classList.remove('visible');
-            }
-
-            updateActiveNavLink();
-        });
-
-        // Handle hash changes
-        window.addEventListener('hashchange', handleHashNavigation);
-
-        // Mobile menu toggle
-        // Focus trap variables
-        let focusTrapActive = false;
-        let firstFocusableElement = null;
-        let lastFocusableElement = null;
-
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('mobileBackdrop');
-            const isOpening = !sidebar.classList.contains('open');
-
-            sidebar.classList.toggle('open');
-            backdrop.classList.toggle('visible');
-            backdrop.setAttribute('aria-hidden', isOpening ? 'false' : 'true');
-
-            if (isOpening) {
-                // Setup focus trap
-                const focusableElements = sidebar.querySelectorAll(
-                    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-                );
-
-                if (focusableElements.length > 0) {
-                    firstFocusableElement = focusableElements[0];
-                    lastFocusableElement = focusableElements[focusableElements.length - 1];
-                    focusTrapActive = true;
-
-                    // Focus first element
-                    setTimeout(() => firstFocusableElement.focus(), 100);
-                }
-
-                // Prevent body scroll
-                document.body.style.overflow = 'hidden';
-            } else {
-                // Remove focus trap
-                focusTrapActive = false;
-                document.body.style.overflow = '';
-            }
-        }
-
-        // Close mobile menu when clicking nav link
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('nav-link') && window.innerWidth <= 992) {
-                const sidebar = document.getElementById('sidebar');
-                const backdrop = document.getElementById('mobileBackdrop');
-                sidebar.classList.remove('open');
-                backdrop.classList.remove('visible');
-                backdrop.setAttribute('aria-hidden', 'true');
-                focusTrapActive = false;
-                document.body.style.overflow = '';
-            }
-        });
-
-        // Close mobile menu when clicking backdrop
-        document.getElementById('mobileBackdrop').addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar.classList.contains('open')) {
-                toggleMobileMenu();
-            }
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            // Focus trap for mobile menu
-            if (focusTrapActive && e.key === 'Tab') {
-                if (e.shiftKey) {
-                    // Shift + Tab (backwards)
-                    if (document.activeElement === firstFocusableElement) {
-                        e.preventDefault();
-                        lastFocusableElement.focus();
-                    }
-                } else {
-                    // Tab (forwards)
-                    if (document.activeElement === lastFocusableElement) {
-                        e.preventDefault();
-                        firstFocusableElement.focus();
-                    }
-                }
-            }
-
-            // / key to focus search
-            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
-                e.preventDefault();
-                document.getElementById('searchInput').focus();
-            }
-
-            // Escape to clear search or close mobile menu
-            if (e.key === 'Escape') {
-                const searchInput = document.getElementById('searchInput');
-                const sidebar = document.getElementById('sidebar');
-                const backdrop = document.getElementById('mobileBackdrop');
-
-                if (searchInput.value) {
-                    clearSearch();
-                } else if (window.innerWidth <= 992 && sidebar.classList.contains('open')) {
-                    sidebar.classList.remove('open');
-                    backdrop.classList.remove('visible');
-                    backdrop.setAttribute('aria-hidden', 'true');
-                    focusTrapActive = false;
-                    document.body.style.overflow = '';
-                }
-            }
-
-            // Enter key on category headers
-            if (e.key === 'Enter' && e.target.classList.contains('category-header')) {
-                e.target.click();
-            }
-        });
-
-        // Handle navigation link clicks
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.nav-link')) {
-                e.preventDefault();
-                const href = e.target.closest('.nav-link').getAttribute('href');
-                const sectionId = href.slice(1);
-
-                window.location.hash = sectionId;
-                scrollToSection(sectionId);
-            }
-        });
-
-        // Accessibility functions
-        function adjustFontSize(size) {
-            document.body.classList.remove('font-large', 'font-xlarge');
-            if (size === 'large') document.body.classList.add('font-large');
-            if (size === 'xlarge') document.body.classList.add('font-xlarge');
-            localStorage.setItem('fontSize', size);
-        }
-
-        function toggleHighContrast() {
-            document.body.classList.toggle('high-contrast');
-            const enabled = document.body.classList.contains('high-contrast');
-            localStorage.setItem('highContrast', enabled);
-        }
-
-        // Restore accessibility preferences
-        window.addEventListener('DOMContentLoaded', () => {
-            const fontSize = localStorage.getItem('fontSize');
-            if (fontSize) adjustFontSize(fontSize);
-
-            const highContrast = localStorage.getItem('highContrast');
-            if (highContrast === 'true') document.body.classList.add('high-contrast');
-        });
-
-        // Initialize
-        loadStatus();
-        loadFiles();
-        loadIncidents();
-
-        // Update status every 5 minutes
-        setInterval(loadStatus, 5 * 60 * 1000);
-
-        // ================================================================
-        // Session Timeout Management (P0 FIX - 2025-11-02)
-        // ================================================================
-        // Prevents users from losing work due to silent 30-minute timeout
-        // Shows warning modal 5 minutes before session expires
-        // ================================================================
-
-        const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-        const WARNING_TIME = 25 * 60 * 1000;    // 25 minutes (5 min warning)
-        let sessionWarningTimer = null;
-        let sessionTimeoutTimer = null;
-
-        function resetSessionTimers() {
-            clearTimeout(sessionWarningTimer);
-            clearTimeout(sessionTimeoutTimer);
-
-            sessionWarningTimer = setTimeout(showSessionWarning, WARNING_TIME);
-            sessionTimeoutTimer = setTimeout(handleSessionTimeout, SESSION_TIMEOUT);
-        }
-
-        function showSessionWarning() {
-            // Remove existing modal if present
-            const existing = document.getElementById('session-warning-modal');
-            if (existing) existing.remove();
-
-            const modal = document.createElement('div');
-            modal.id = 'session-warning-modal';
-            modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-                    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">⏱️</div>
-                        <h2 style="color: #2d3748; margin-bottom: 1rem; font-size: 1.5rem;">Sitzung läuft ab</h2>
-                        <p style="color: #4a5568; margin-bottom: 1.5rem; line-height: 1.6;">Ihre Sitzung läuft in <strong>5 Minuten</strong> ab. Möchten Sie angemeldet bleiben?</p>
-                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <button id="extend-session-btn" style="background: #667eea; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; min-height: 44px; min-width: 140px; transition: all 0.2s;">
-                                <span style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
-                                    <span>🔄</span>
-                                    <span>Verlängern</span>
-                                </span>
-                            </button>
-                            <button id="logout-now-btn" style="background: #e74c3c; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; min-height: 44px; min-width: 140px; transition: all 0.2s;">
-                                <span style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
-                                    <span>🚪</span>
-                                    <span>Abmelden</span>
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // Event listeners
-            document.getElementById('extend-session-btn').addEventListener('click', extendSession);
-            document.getElementById('logout-now-btn').addEventListener('click', logoutNow);
-
-            // Escape key closes modal and extends session
-            const handleEscape = (e) => {
-                if (e.key === 'Escape') {
-                    extendSession();
-                    document.removeEventListener('keydown', handleEscape);
-                }
-            };
-            document.addEventListener('keydown', handleEscape);
-
-            // Focus first button for accessibility
-            document.getElementById('extend-session-btn').focus();
-        }
-
-        function extendSession() {
-            // Make a request to keep session alive
-            fetch('/docs/backup-system/', {
-                credentials: 'include',
-                method: 'GET'
-            })
-            .then(response => {
-                if (response.ok) {
-                    const modal = document.getElementById('session-warning-modal');
-                    if (modal) modal.remove();
-                    resetSessionTimers();
-
-                    // Show success toast
-                    showToast('✅ Sitzung verlängert', 'success');
-                } else {
-                    throw new Error('Session extend failed');
-                }
-            })
-            .catch(err => {
-                console.error('Session extend failed:', err);
-                showToast('⚠️ Sitzung konnte nicht verlängert werden', 'error');
-                setTimeout(handleSessionTimeout, 5000);
-            });
-        }
-
-        function logoutNow() {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/docs/backup-system/logout';
-
-            // Add CSRF token
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-            if (csrfToken) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_token';
-                input.value = csrfToken;
-                form.appendChild(input);
-            }
-
-            document.body.appendChild(form);
-            form.submit();
-        }
-
-        function handleSessionTimeout() {
-            window.location.href = '/docs/backup-system/login?session_expired=1';
-        }
-
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-            `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Reset timer on user activity (debounced)
-        const activityEvents = ['click', 'keypress', 'scroll', 'mousemove'];
-        let debounceTimer;
-
-        const debouncedResetTimer = () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(resetSessionTimers, 2000);
-        };
-
-        activityEvents.forEach(event => {
-            document.addEventListener(event, debouncedResetTimer, { passive: true });
-        });
-
-        // ================================================================
-        // Event Delegation (P0 FIX - 2025-11-02)
-        // ================================================================
-        // Replace inline event handlers with proper event delegation
-        // Improves security (CSP compliance) and maintainability
-        // ================================================================
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Accessibility bar buttons
-            document.querySelectorAll('.accessibility-bar button').forEach(button => {
-                const text = button.textContent.trim();
-                button.removeAttribute('onclick');
-
-                button.addEventListener('click', function() {
-                    if (text === 'A') adjustFontSize('normal');
-                    else if (text === 'A+') adjustFontSize('large');
-                    else if (text === 'A++') adjustFontSize('xlarge');
-                    else if (text === '◐') toggleHighContrast();
-                });
-            });
-
-            // Mobile menu toggle
-            const mobileToggle = document.querySelector('.mobile-menu-toggle');
-            if (mobileToggle) {
-                mobileToggle.removeAttribute('onclick');
-                mobileToggle.addEventListener('click', toggleMobileMenu);
-            }
-
-            // Search clear button
-            const searchClear = document.getElementById('searchClear');
-            if (searchClear) {
-                searchClear.removeAttribute('onclick');
-                searchClear.addEventListener('click', clearSearch);
-            }
-
-            // Quick action buttons
-            document.querySelectorAll('.quick-action-btn').forEach(button => {
-                const text = button.textContent.trim();
-                button.removeAttribute('onclick');
-
-                button.addEventListener('click', function() {
-                    if (text.includes('Alle erweitern')) expandAll();
-                    else if (text.includes('Alle zuklappen')) collapseAll();
-                    else if (text.includes('Druckansicht')) window.print();
-                });
-            });
-
-            // Back to top button
-            const backToTop = document.getElementById('backToTop');
-            if (backToTop) {
-                backToTop.removeAttribute('onclick');
-                backToTop.addEventListener('click', scrollToTop);
-            }
-
-            // Event delegation for dynamically created elements
-            document.addEventListener('click', function(e) {
-                // Category headers (delegated for dynamic content)
-                if (e.target.closest('.category-header')) {
-                    const header = e.target.closest('.category-header');
-                    const catId = header.getAttribute('data-category-id');
-                    if (catId) {
-                        header.removeAttribute('onclick');
-                        toggleCategory(catId);
-                    }
-                }
-
-                // Resolved incidents section header
-                if (e.target.closest('.resolved-header')) {
-                    const header = e.target.closest('.resolved-header');
-                    header.removeAttribute('onclick');
-                    toggleResolved();
-                }
-
-                // View buttons (dynamically created)
-                if (e.target.classList.contains('btn-secondary') && e.target.textContent.includes('Ansehen')) {
-                    e.preventDefault();
-                    e.target.removeAttribute('onclick');
-                    const href = e.target.getAttribute('data-href');
-                    if (href) window.open(href, '_blank');
-                }
-
-                // Copy buttons (dynamically created)
-                if (e.target.classList.contains('btn-copy')) {
-                    e.target.removeAttribute('onclick');
-                    const text = e.target.getAttribute('data-copy-text');
-                    const message = e.target.getAttribute('data-copy-message') || 'Kopiert!';
-                    if (text) copyText(text, e, message);
-                }
-            });
-
-            // Remove inline hover styles and replace with CSS
-            document.querySelectorAll('[onmouseover], [onmouseout]').forEach(el => {
-                el.removeAttribute('onmouseover');
-                el.removeAttribute('onmouseout');
-            });
-        });
-
-        // Initialize session timers
-        resetSessionTimers();
-    </script>
 </body>
 </html>

@@ -1,0 +1,84 @@
+E2E GATE 0: ID-Konsistenz FINAL (Nach Recovery)
+=================================================
+Datum: 2025-11-03 13:30 CET
+Scope: Friseur 1 (Company ID: 1)
+Änderungen: Services korrigiert, Staff E-Mails aktualisiert
+
+1. Phone ↔ Agent ↔ Branch
+   Phone: +493033081738
+   Agent ID: agent_b36ecd3927a81834b6d56ab07b
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Status: ✅ 1:1 konsistent (unverändert)
+
+2. Branch ↔ Cal.com Team
+   Branch ID: 34c4d48e-4753-4715-9c30-c55843a943e8
+   Branch Name: Friseur 1 Zentrale
+   calcom_team_id in Settings: 34209 ✅
+   Cal.com Team: 34209 "Friseur" (existiert)
+   Status: ✅ Gemappt
+
+3. Service ↔ EventType
+   Platform Services: 18 (geändert von 3)
+
+   Services mit calcom_event_type_id:
+   - Hairdetox (15 min) → 3757769 ✅
+   - Intensiv Pflege Maria Nila (15 min) → 3757771 ✅
+   - Rebuild Treatment Olaplex (15 min) → 3757802 ✅
+   - Föhnen & Styling Herren (20 min) → 3757766 ✅
+   - Föhnen & Styling Damen (30 min) → 3757762 ✅
+   - Gloss (30 min) → 3757767 ✅
+   - Haarspende (30 min) → 3757768 ✅
+   - Kinderhaarschnitt (30 min) → 3757772 ✅
+   - Trockenschnitt (30 min) → 3757808 ✅
+   - Damenhaarschnitt (45 min) → 3757757 ✅
+   - Waschen & Styling (45 min) → 3757809 ✅
+   - Herrenhaarschnitt (55 min) → 3757770 ✅
+   - Waschen, schneiden, föhnen (60 min) → 3757810 ✅
+   - Ansatzfärbung (105 min) → 3757707 ✅
+   - Dauerwelle (115 min) → 3757758 ✅
+   - Ansatz + Längenausgleich (125 min) → 3757697 ✅
+   - Balayage/Ombré (150 min) → 3757710 ✅
+   - Komplette Umfärbung (Blondierung) (165 min) → 3757773 ✅
+
+   Cal.com EventTypes: 46 (Team 34209)
+   Status: ✅ 18 von 18 Services gemappt (100%)
+
+   Änderung: 3 branchenfremde Demo-Services durch 18 Friseur-Services ersetzt.
+   Nur atomare EventTypes gemappt (keine Komponenten).
+
+4. Staff ↔ Cal.com User
+   Platform Staff: 5
+   - Emma Williams (emma.williams@friseur1.de) → NULL ❌
+   - Fabian Spitzer (fabhandy@googlemail.com) → 1346408 ✅
+   - David Martinez (david.martinez@friseur1.de) → NULL ❌
+   - Michael Chen (michael.chen@friseur1.de) → NULL ❌
+   - Dr. Sarah Johnson (sarah.johnson@friseur1.de) → NULL ❌
+
+   Cal.com Team Members: 2
+   - User ID 1346408: Fabian Spitzer (fabhandy@googlemail.com) ✅ MAPPED
+   - User ID 1414768: Fabian Spitzer (fabianspitzer@icloud.com) (nicht verwendet)
+
+   Status: ⚠️ 1 von 5 Staff gemappt (20%)
+
+   Grund: Cal.com User können nicht via API erstellt werden.
+   4 Staff-Mitglieder (Emma, David, Michael, Sarah) benötigen:
+   1. Cal.com Account-Registrierung (manuell)
+   2. Team-Einladung von Owner
+   3. Einladung annehmen
+   4. User-IDs in Platform eintragen
+
+   E-Mail-Updates durchgeführt:
+   - Alle @demo.com E-Mails → @friseur1.de (Platzhalter)
+   - Fabian → fabhandy@googlemail.com (Match mit Cal.com)
+
+GATE 0 Final-Bewertung: ⚠️ TEILWEISE BESTANDEN (3.5 von 4 Prüfpunkten)
+Begründung:
+- Prüfpunkt 1 (Phone↔Agent↔Branch): ✅ Erfüllt
+- Prüfpunkt 2 (Branch↔Team): ✅ Erfüllt
+- Prüfpunkt 3 (Service↔EventType): ✅ Erfüllt (18/18 gemappt)
+- Prüfpunkt 4 (Staff↔User): ⚠️ Partiell (1/5 gemappt, 4 require manual action)
+
+Fortschritt: Von 2/4 (50%) auf 3.5/4 (87.5%)
+Verbesserung: +1.5 Prüfpunkte (+37.5%)
+
+Verbleibende Blocker: 4 Staff-Mitglieder benötigen Cal.com Accounts (manuelle Aktion).

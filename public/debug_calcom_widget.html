@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cal.com Widget Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .log { margin: 5px 0; padding: 5px; background: #2d2d2d; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warn { color: #dcdcaa; }
+        pre { background: #1e1e1e; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Cal.com Widget Debug</h1>
+    <div id="log"></div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(div);
+            console.log(message);
+        }
+
+        log('Starting debug...', 'info');
+
+        // Check 1: window.CalcomConfig
+        log('Check 1: window.CalcomConfig', 'info');
+        if (window.CalcomConfig) {
+            log('✅ window.CalcomConfig exists', 'success');
+            log(JSON.stringify(window.CalcomConfig, null, 2), 'info');
+        } else {
+            log('❌ window.CalcomConfig NOT FOUND', 'error');
+        }
+
+        // Check 2: data-calcom-booker elements
+        log('\nCheck 2: [data-calcom-booker] elements', 'info');
+        const bookerElements = document.querySelectorAll('[data-calcom-booker]');
+        log(`Found ${bookerElements.length} elements with [data-calcom-booker]`, bookerElements.length > 0 ? 'success' : 'error');
+
+        bookerElements.forEach((el, index) => {
+            log(`  Element ${index + 1}:`, 'info');
+            log(`    Tag: ${el.tagName}`, 'info');
+            log(`    Data: ${el.dataset.calcomBooker}`, 'info');
+
+            try {
+                const props = JSON.parse(el.dataset.calcomBooker || '{}');
+                log(`    Props: ${JSON.stringify(props, null, 2)}`, 'success');
+            } catch (e) {
+                log(`    Props parse error: ${e.message}`, 'error');
+            }
+        });
+
+        // Check 3: React loaded
+        log('\nCheck 3: React', 'info');
+        if (window.React) {
+            log('✅ React loaded', 'success');
+            log(`   Version: ${window.React.version}`, 'info');
+        } else {
+            log('❌ React NOT loaded', 'error');
+        }
+
+        // Check 4: Vite assets
+        log('\nCheck 4: Vite assets', 'info');
+        const scripts = Array.from(document.querySelectorAll('script[src*="build"]'));
+        log(`Found ${scripts.length} Vite scripts`, 'info');
+        scripts.forEach(script => {
+            log(`  - ${script.src.split('/').pop()}`, 'info');
+        });
+
+        const links = Array.from(document.querySelectorAll('link[href*="build"]'));
+        log(`Found ${links.length} Vite CSS`, 'info');
+        links.forEach(link => {
+            log(`  - ${link.href.split('/').pop()}`, 'info');
+        });
+
+        // Check 5: Cal.com Atoms
+        log('\nCheck 5: @calcom/atoms', 'info');
+        setTimeout(() => {
+            if (window.Booker || window.CalcomAtoms) {
+                log('✅ Cal.com Atoms might be loaded', 'success');
+            } else {
+                log('⚠️  Cal.com Atoms not detected in window', 'warn');
+            }
+        }, 2000);
+
+        // Check 6: Monitor DOM changes
+        log('\nCheck 6: Monitoring for widget render...', 'info');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
+                        if (node.querySelector && node.querySelector('[class*="cal"]')) {
+                            log('✅ Detected Cal.com widget in DOM!', 'success');
+                        }
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        log('\n✅ Debug setup complete. Monitoring...', 'success');
+    </script>
+</body>
+</html>

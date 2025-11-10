@@ -121,6 +121,16 @@ class RequestCorrelationService
     }
 
     /**
+     * Generate new correlation ID (static method for backwards compatibility)
+     *
+     * @return string New correlation ID
+     */
+    public static function generateCorrelationId(): string
+    {
+        return Uuid::uuid4()->toString();
+    }
+
+    /**
      * Set parent correlation ID (for nested/chained requests)
      *
      * @param string $parentId Parent correlation ID

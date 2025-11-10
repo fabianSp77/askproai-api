@@ -1,0 +1,13 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "blank_line_before_statement": false,
+        "binary_operator_spaces": false,
+        "phpdoc_separation": false,
+        "modernize_strpos": true
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "cache-file": ".pint.cache.json"
+}

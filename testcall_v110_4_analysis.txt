@@ -1,0 +1,154 @@
+====================================================================================================
+ TESTANRUF V110.4 ANALYSE - call_d28fc14dc436b8641573afad343
+====================================================================================================
+
+📞 CALL METADATA
+----------------------------------------------------------------------------------------------------
+Agent: Friseur 1 Agent V110.4 - Critical Fixes (agent_c1d8dea0445f375857a55ffd61)
+Duration: 73.1s
+Status: ended / user_hangup
+
+📊 COLLECTED DYNAMIC VARIABLES
+----------------------------------------------------------------------------------------------------
+  selected_alternative_date           = morgen
+  previous_node                       = Buchung starten (Step 1)
+  appointment_time                    = 10 Uhr
+  current_node                        = Validierungsfehler
+  service_name                        = Herrenhaarschnitt
+  customer_email                      = 
+  customer_phone                      = 
+  appointment_date                    = morgen
+  customer_name                       = Hans Schuster
+  selected_alternative_time           = 9 Uhr 45
+
+💬 VOLLSTÄNDIGER VERLAUF
+====================================================================================================
+
+[0000.0s] 🤖 AGENT:
+   Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?
+
+[0000.0s] 👤 USER:
+   Ja, Hans Schuster mein Name. Ich habe gern einen Termin fürn Herrenhaarschnitt morgen um zehn Uhr.
+
+[0012.7s] ✅ TOOL RESULT:
+   {
+   "date": "2025-11-10",
+   "time": "15:33",
+   "day_of_week": "Montag",
+   "day_number": 10,
+   "month_name": "November",
+   "month_number": 11,
+   "year": 2025,
+   "week_number": 46,
+   "is_weekend": false,
+   "tomorrow": {
+      "date": "2025-11-11",
+      "day": "Dienstag"
+   },
+   "yesterday": {
+      "date": "2025-11-09",
+      "day": "Sonntag"
+   },
+   "formatted": "Montag, 10. November 2025",
+   "timezone": "Europe/Berlin",
+   "timestamp": 1762785236
+}
+
+[0015.4s] ✅ TOOL RESULT:
+   {
+   "found": false
+}
+
+[0000.0s] 🤖 AGENT:
+   Einen Moment, ich prüfe die Verfügbarkeit für morgen um 10 Uhr...
+
+[0000.0s] 👤 USER:
+   Danke.
+
+[0024.0s] ✅ TOOL RESULT:
+   {
+   "customer_name": "Hans Schuster",
+   "service_name": "Herrenhaarschnitt",
+   "appointment_date": "morgen",
+   "appointment_time": "10 Uhr",
+   "customer_phone": "",
+   "customer_email": ""
+}
+
+[0000.0s] 🤖 AGENT:
+   Einen Moment.
+
+[0028.2s] ✅ TOOL RESULT:
+   {
+   "success": true,
+   "data": {
+      "available": false,
+      "found": true,
+      "same_day_available": true,
+      "message": "Zur gewünschten Zeit nicht frei, aber am gleichen Tag habe ich noch: morgen um 9 Uhr 45 oder morgen um 8 Uhr 50. Was würde Ihnen passen?",
+      "requested_time": "2025-11-11 10:00",
+      "alternatives": [
+         {
+            "time": "2025-11-11 09:45",
+            "spoken": "morgen um 9 Uhr 45",
+            "available": true,
+            "type": "same_day_later"
+         },
+         {
+            "time": "2025-11-11 08:50",
+            "spoken": "morgen um 8 Uhr 50",
+            "available": true,
+            "type": "same_day_later"
+         }
+      ]
+   }
+}
+
+[0000.0s] 🤖 AGENT:
+   Um 10 Uhr morgen ist leider schon belegt, aber ich kann Ihnen 9 Uhr 45 oder 8 Uhr 50 anbieten. Was passt Ihnen besser?
+
+[0000.0s] 👤 USER:
+   Neun Uhr fünfundvierzig ist super.
+
+[0000.0s] 👤 USER:
+   Bitte buchen.
+
+[0042.1s] ✅ TOOL RESULT:
+   {
+   "selected_alternative_time": "9 Uhr 45",
+   "selected_alternative_date": "morgen"
+}
+
+[0000.0s] 🤖 AGENT:
+   Perfekt! Soll ich den Herrenhaarschnitt für morgen um 9 Uhr 45 buchen?
+
+[0000.0s] 👤 USER:
+   Ja.
+
+[0000.0s] 🤖 AGENT:
+   Ihr Termin ist gebucht für morgen um 9 Uhr 45. Möchten Sie noch eine Telefonnummer angeben?
+
+[0000.0s] 👤 USER:
+   Null eins fünf eins eins zwei drei vier fünf sechs.
+
+[0066.9s] ✅ TOOL RESULT:
+   {
+   "success": false,
+   "error": "Dieser Service ist leider nicht verfügbar",
+   "context": {
+      "current_date": "2025-11-10",
+      "current_time": "15:34",
+      "current_datetime": "2025-11-10T15:34:50+01:00",
+      "weekday": "Montag",
+      "weekday_english": "Montag",
+      "current_year": 2025,
+      "timezone": "Europe/Berlin"
+   }
+}
+
+[0000.0s] 🤖 AGENT:
+   Es tut mir leid, der Service Herrenhaarschnitt ist gerade nicht buchbar. Wir 
+
+====================================================================================================
+ ENDE
+====================================================================================================

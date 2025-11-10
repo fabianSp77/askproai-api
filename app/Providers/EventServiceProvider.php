@@ -76,7 +76,7 @@ class EventServiceProvider extends ServiceProvider
             UpdateModificationStats::class,
             AppointmentNotificationListener::class . '@handleRescheduled',
             // SyncToCalcomOnRescheduled::class,  // ⚠️ TEMPORARILY DISABLED - migration pending
-            // SendRescheduleNotifications::class, // TODO: Create this listener
+            \App\Listeners\Appointments\SendRescheduleNotifications::class, // ✅ ADR-005: Branch notifications
             InvalidateWeekCacheListener::class . '@handleRescheduled', // Clear week availability cache
         ],
 

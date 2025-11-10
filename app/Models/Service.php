@@ -130,10 +130,31 @@ class Service extends Model
 
     /**
      * Boot the model - Add Cal.com event type ownership validation
+     *
+     * 🔧 PERFORMANCE FIX 2025-11-06: Added cache invalidation on save/delete
      */
     protected static function boot()
     {
         parent::boot();
+
+        // Clear cache when service is saved
+        static::saved(function ($service) {
+            // Invalidate service list cache for this company/branch
+            \Illuminate\Support\Facades\Cache::forget("company:{$service->company_id}:services:available:{$service->branch_id}");
+            \Illuminate\Support\Facades\Cache::forget("company:{$service->company_id}:services:available:null");
+
+            \Illuminate\Support\Facades\Log::debug('Service cache cleared', [
+                'service_id' => $service->id,
+                'company_id' => $service->company_id,
+                'branch_id' => $service->branch_id
+            ]);
+        });
+
+        // Clear cache when service is deleted
+        static::deleted(function ($service) {
+            \Illuminate\Support\Facades\Cache::forget("company:{$service->company_id}:services:available:{$service->branch_id}");
+            \Illuminate\Support\Facades\Cache::forget("company:{$service->company_id}:services:available:null");
+        });
 
         static::saving(function ($service) {
             // Skip validation if calcom_event_mappings table doesn't exist or is not used
@@ -220,6 +241,15 @@ class Service extends Model
     public function allowedStaff(): BelongsToMany
     {
         return $this->staff();
+    }
+
+    /**
+     * Get synonyms for this service
+     * Alternative terms that customers might use to refer to this service
+     */
+    public function synonyms(): HasMany
+    {
+        return $this->hasMany(ServiceSynonym::class);
     }
 
     /**

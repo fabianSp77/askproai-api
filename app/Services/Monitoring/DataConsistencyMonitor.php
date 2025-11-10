@@ -314,9 +314,11 @@ class DataConsistencyMonitor
      */
     private function detectRecentFailures(): array
     {
+        // Find calls where appointment was requested but not confirmed (booking failed)
         $failures = DB::table('calls')
-            ->select('id', 'retell_call_id', 'booking_failed', 'booking_failure_reason', 'created_at')
-            ->where('booking_failed', true)
+            ->select('id', 'retell_call_id', 'booking_confirmed', 'appointment_requested', 'created_at', 'disconnect_reason')
+            ->where('appointment_requested', true)
+            ->where('booking_confirmed', false)
             ->where('created_at', '>=', now()->subHours(self::RECENT_HOURS))
             ->get();
 
@@ -325,7 +327,7 @@ class DataConsistencyMonitor
             $recentFailures[] = [
                 'call_id' => $failure->id,
                 'retell_call_id' => $failure->retell_call_id,
-                'reason' => $failure->booking_failure_reason,
+                'reason' => $failure->disconnect_reason ?? 'Unknown reason',
                 'created_at' => $failure->created_at,
                 'severity' => self::SEVERITY_INFO
             ];

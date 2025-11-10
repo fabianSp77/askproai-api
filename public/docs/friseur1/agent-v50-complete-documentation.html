@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friseur 1 Agent V50 - Vollständige Conversational Flow Dokumentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+
+        .version-badge.live {
+            background: #10b981;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .toc {
+            background: #f8fafc;
+            border-left: 5px solid #667eea;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+
+        .toc h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            padding: 8px 0;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.05em;
+            transition: all 0.3s;
+        }
+
+        .toc a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        section {
+            margin: 60px 0;
+            scroll-margin-top: 20px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.8em;
+            margin: 35px 0 20px 0;
+        }
+
+        h4 {
+            color: #475569;
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+        }
+
+        .card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 6px solid #667eea;
+        }
+
+        .card.success {
+            border-left-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .card.warning {
+            border-left-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        .card.error {
+            border-left-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .card.info {
+            border-left-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .function-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 6px solid #667eea;
+        }
+
+        .function-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .function-name {
+            font-size: 1.6em;
+            color: #667eea;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.live {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge.legacy {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+
+        .code-block .keyword {
+            color: #60a5fa;
+        }
+
+        .code-block .string {
+            color: #86efac;
+        }
+
+        .code-block .number {
+            color: #fbbf24;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .params-table th,
+        .params-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .params-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .params-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .mermaid-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .grid-item {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .grid-item h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .grid-item ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .grid-item li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .grid-item li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .example-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .example-box.good {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .example-box.bad {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .example-header {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .example-header.good {
+            color: #059669;
+        }
+
+        .example-header.bad {
+            color: #dc2626;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 3em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            margin: 30px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #667eea;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -48px;
+            top: 25px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 4px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+
+        .timeline-step {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            background: #1e293b;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Friseur 1 Voice AI Agent V50</h1>
+            <div class="subtitle">Vollständige Conversational Flow & Function Dokumentation</div>
+            <div>
+                <span class="version-badge live">V50 LIVE</span>
+                <span class="version-badge">2025-11-06</span>
+                <span class="version-badge">Agent ID: agent_45daa54928c5768b52ba3db736</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Table of Contents -->
+            <nav class="toc">
+                <h2>📋 Inhaltsverzeichnis</h2>
+                <ul>
+                    <li><a href="#overview">1. Übersicht & Executive Summary</a></li>
+                    <li><a href="#functions">2. Alle Verfügbaren Functions (8 Total)</a></li>
+                    <li><a href="#callflow">3. Kompletter Telefon-Ablauf (Mermaid)</a></li>
+                    <li><a href="#implementation">4. Neue Functions Hinzufügen</a></li>
+                    <li><a href="#services">5. Alle 18 Services & Synonyme</a></li>
+                    <li><a href="#best-practices">6. Best Practices & V50 Fixes</a></li>
+                    <li><a href="#testing">7. Testing & Deployment</a></li>
+                    <li><a href="#integration">8. Backend-Integration</a></li>
+                </ul>
+            </nav>
+
+            <!-- Section 1: Overview -->
+            <section id="overview">
+                <h2>1. Übersicht & Executive Summary</h2>
+
+                <div class="card info">
+                    <h4>📊 Was ist Agent V50?</h4>
+                    <p style="font-size: 1.1em; line-height: 1.8;">
+                        Agent V50 ist der produktive Voice AI Agent von Friseur 1. Er führt natürliche Telefongespräche auf Deutsch,
+                        bucht Termine, prüft Verfügbarkeit, storniert und verschiebt Termine. V50 behebt kritische Bugs aus V49
+                        (keine erfundenen Zeiten mehr!) und erzwingt Tool-Calls für alle Verfügbarkeitsanfragen.
+                    </p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Functions/Tools</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">Services</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">~150</div>
+                        <div class="stat-label">Synonyme</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Tool-Call Enforcement</div>
+                    </div>
+                </div>
+
+                <h3>Key Features V50</h3>
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>🚨 CRITICAL Fixes</h4>
+                        <ul>
+                            <li>Mandatory tool call für Verfügbarkeit</li>
+                            <li>KEINE erfundenen Zeiten mehr</li>
+                            <li>Explizite Fehlerbehandlung</li>
+                            <li>Jahr-Bug gefixt (2025 statt 2023)</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>💬 Natürliche Konversation</h4>
+                        <ul>
+                            <li>Kurze Antworten (max. 2 Sätze)</li>
+                            <li>Variierte Formulierungen</li>
+                            <li>Anti-Repetition Rules</li>
+                            <li>Interruption Handling</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>🎯 Service-Matching</h4>
+                        <ul>
+                            <li>3-Stufen System (Exact/Synonym/Fuzzy)</li>
+                            <li>~150 Synonyme in DB</li>
+                            <li>Disambiguierung ohne Preise</li>
+                            <li>Confidence-basierte Bestätigung</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>⚡ Performance</h4>
+                        <ul>
+                            <li>15s Timeout pro Tool</li>
+                            <li>Temperature 0.3 (präzise)</li>
+                            <li>Cascading Model (Fallback)</li>
+                            <li>11labs-Adrian Voice</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Functions -->
+            <section id="functions">
+                <h2>2. Alle Verfügbaren Functions</h2>
+
+                <div class="card warning">
+                    <strong>⚠️ Wichtig:</strong> Jede Function ist als Custom Tool in Retell AI konfiguriert und ruft ein
+                    Laravel Backend Endpoint auf. Die Functions werden während aktiver Telefongespräche in Echtzeit ausgeführt.
+                </div>
+
+                <!-- Function 1: check_availability -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">check_availability</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Prüft Verfügbarkeit bei Cal.com für einen bestimmten Service an einem Datum/Zeitfenster.
+                    Dies ist die HAUPTFUNKTION für Verfügbarkeitsanfragen und MUSS bei jeder Verfügbarkeitsfrage gecallt werden.</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Trigger: User fragt "Was ist heute frei?" oder "Haben Sie morgen Zeit?"</span>
+Agent: <span class="string">"Einen Moment, ich schaue nach..."</span>
+Agent: [<span class="keyword">CALL</span> check_availability(
+    service_id: <span class="number">443</span>,
+    service_name: <span class="string">"Balayage/Ombré"</span>,
+    date: <span class="string">"2025-11-07"</span>,
+    time_window: <span class="string">"09:00-12:00"</span> <span class="comment">// Optional</span>
+)]
+Backend → Returns: [<span class="string">"09:50"</span>, <span class="string">"10:30"</span>, <span class="string">"11:00"</span>]
+Agent: <span class="string">"Vormittags hätte ich 9 Uhr 50, 10 Uhr 30 oder 11 Uhr. Was passt?"</span>
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Typ</th>
+                                <th>Pflicht?</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>service_id</code></td>
+                                <td>integer</td>
+                                <td>❌ Optional</td>
+                                <td>Service ID aus Datenbank (z.B. 443 für Balayage)</td>
+                            </tr>
+                            <tr>
+                                <td><code>service_name</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Service-Name (Backend matched via Synonyme)</td>
+                            </tr>
+                            <tr>
+                                <td><code>date</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Datum: "heute", "morgen", "Freitag" oder "2025-11-07"</td>
+                            </tr>
+                            <tr>
+                                <td><code>time_window</code></td>
+                                <td>string</td>
+                                <td>❌ Optional</td>
+                                <td>Zeitfenster: "09:00-12:00" (Vormittag), "14:00-17:00" (Nachmittag)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>✅ Response Format</h4>
+                    <div class="code-block">
+<span class="comment">// Success - Verfügbar</span>
+{
+    <span class="string">"available"</span>: <span class="keyword">true</span>,
+    <span class="string">"slots"</span>: [<span class="string">"09:50"</span>, <span class="string">"10:30"</span>, <span class="string">"11:00"</span>],
+    <span class="string">"message"</span>: <span class="string">"Verfügbare Termine gefunden"</span>
+}
+
+<span class="comment">// Not Available - Keine Slots</span>
+{
+    <span class="string">"available"</span>: <span class="keyword">false</span>,
+    <span class="string">"slots"</span>: [],
+    <span class="string">"message"</span>: <span class="string">"Keine Verfügbarkeit an diesem Tag"</span>,
+    <span class="string">"alternatives"</span>: [
+        {<span class="string">"date"</span>: <span class="string">"2025-11-08"</span>, <span class="string">"time"</span>: <span class="string">"10:00"</span>},
+        {<span class="string">"date"</span>: <span class="string">"2025-11-09"</span>, <span class="string">"time"</span>: <span class="string">"14:00"</span>}
+    ]
+}
+
+<span class="comment">// Error - Tool Failed</span>
+{
+    <span class="string">"error"</span>: <span class="keyword">true</span>,
+    <span class="string">"message"</span>: <span class="string">"Technisches Problem bei Verfügbarkeitsprüfung"</span>
+}
+                    </div>
+
+                    <h4>🎯 Best Practices</h4>
+                    <div class="grid">
+                        <div class="example-box good">
+                            <div class="example-header good">✅ RICHTIG</div>
+                            <p><strong>User:</strong> "Haben Sie morgen Vormittag frei?"</p>
+                            <p><strong>Agent:</strong> [FIRST: call check_availability()]</p>
+                            <p><strong>Agent:</strong> [WAIT for response]</p>
+                            <p><strong>Agent:</strong> "Vormittags hätte ich 9:50 oder 10:30. Was passt?"</p>
+                        </div>
+                        <div class="example-box bad">
+                            <div class="example-header bad">❌ FALSCH (V49 Fehler!)</div>
+                            <p><strong>User:</strong> "Haben Sie morgen Vormittag frei?"</p>
+                            <p><strong>Agent:</strong> "Leider keinen Termin vormittags, aber 9:50 oder 10:30" ← OHNE Tool-Call!</p>
+                            <p style="color: #dc2626; margin-top: 10px;"><strong>Problem:</strong> Zeiten erfunden + Widerspruch (9:50 ist Vormittag!)</p>
+                        </div>
+                    </div>
+
+                    <h4>📂 Backend Implementation</h4>
+                    <div class="code-block">
+<span class="comment">// File: app/Http/Controllers/RetellFunctionCallHandler.php</span>
+<span class="keyword">public function</span> checkAvailabilityV17(CollectAppointmentRequest $request)
+{
+    <span class="comment">// 1. Extract service from request (name or ID)</span>
+    <span class="comment">// 2. Parse date (relative or absolute)</span>
+    <span class="comment">// 3. Call Cal.com API: GET /v2/slots/available</span>
+    <span class="comment">// 4. Filter by time_window if provided</span>
+    <span class="comment">// 5. Return slots or alternatives</span>
+}
+
+<span class="comment">// Route: POST /api/retell/check-availability-v17</span>
+<span class="comment">// Timeout: 15 seconds</span>
+<span class="comment">// Throttling: 100 requests/minute</span>
+                    </div>
+                </div>
+
+                <!-- Function 2: book_appointment -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">book_appointment</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Bucht einen Termin bei Cal.com nach erfolgreicher Verfügbarkeitsprüfung.
+                    Erstellt Appointment in Laravel DB und synct zu Cal.com.</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Nach Bestätigung durch User</span>
+User: <span class="string">"Ja, 9 Uhr 50 passt mir"</span>
+Agent: <span class="string">"Perfekt! Ich buche das für Sie..."</span>
+Agent: [<span class="keyword">CALL</span> book_appointment(
+    service_id: <span class="number">443</span>,
+    service_name: <span class="string">"Balayage/Ombré"</span>,
+    customer_name: <span class="string">"{{customer_name}}"</span>,
+    customer_phone: <span class="string">"{{customer_phone}}"</span>,
+    customer_email: <span class="string">"{{customer_email}}"</span>,
+    appointment_date: <span class="string">"2025-11-07"</span>,
+    appointment_time: <span class="string">"09:50"</span>
+)]
+Backend → Returns: { <span class="string">"success"</span>: <span class="keyword">true</span>, <span class="string">"booking_id"</span>: <span class="string">"bkg_xyz123"</span> }
+Agent: <span class="string">"Ihr Termin ist gebucht! Sie erhalten gleich eine Bestätigung per Email."</span>
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Typ</th>
+                                <th>Pflicht?</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>service_id</code></td>
+                                <td>integer</td>
+                                <td>❌ Optional</td>
+                                <td>Service ID (Backend kann aus Name ermitteln)</td>
+                            </tr>
+                            <tr>
+                                <td><code>service_name</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Service-Name</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_name</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Vor- und Nachname des Kunden</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_phone</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Telefonnummer</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_email</code></td>
+                                <td>string</td>
+                                <td>❌ Optional</td>
+                                <td>Email für Bestätigung</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_date</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Datum: "2025-11-07"</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_time</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Uhrzeit: "09:50" (aus check_availability)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>✅ Response Format</h4>
+                    <div class="code-block">
+<span class="comment">// Success</span>
+{
+    <span class="string">"success"</span>: <span class="keyword">true</span>,
+    <span class="string">"booking_id"</span>: <span class="string">"bkg_abc123"</span>,
+    <span class="string">"appointment_id"</span>: <span class="number">1234</span>,
+    <span class="string">"message"</span>: <span class="string">"Termin erfolgreich gebucht"</span>
+}
+
+<span class="comment">// Failure</span>
+{
+    <span class="string">"success"</span>: <span class="keyword">false</span>,
+    <span class="string">"error"</span>: <span class="string">"Slot nicht mehr verfügbar"</span>
+}
+                    </div>
+
+                    <h4>📂 Backend Implementation</h4>
+                    <div class="code-block">
+<span class="comment">// File: app/Http/Controllers/RetellFunctionCallHandler.php</span>
+<span class="keyword">public function</span> bookAppointmentV17(CollectAppointmentRequest $request)
+{
+    <span class="comment">// 1. Validate customer data</span>
+    <span class="comment">// 2. Find or create Customer record</span>
+    <span class="comment">// 3. Create Appointment in Laravel DB</span>
+    <span class="comment">// 4. Call Cal.com API: POST /v2/bookings</span>
+    <span class="comment">// 5. Save booking_id, mark as synced</span>
+    <span class="comment">// 6. Send confirmation email</span>
+    <span class="comment">// 7. Return success + IDs</span>
+}
+                    </div>
+                </div>
+
+                <!-- Function 3: get_available_services -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">get_available_services</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Gibt die vollständige Liste aller 18 verfügbaren Services zurück.
+                    Wird verwendet wenn Kunde fragt "Was bieten Sie an?" oder "Welche Services gibt es?"</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Trigger: User fragt nach Services</span>
+User: <span class="string">"Was haben Sie denn alles im Angebot?"</span>
+Agent: [<span class="keyword">CALL</span> get_available_services()]
+Backend → Returns: Array mit allen 18 Services + Preise + Dauer
+Agent: <span class="string">"Wir bieten Haarschnitte, Färbungen, Styling und Treatments an.
+        Zum Beispiel Herrenhaarschnitt für 32 Euro oder Balayage für 110 Euro.
+        Wofür interessieren Sie sich?"</span>
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <p>Keine Parameter erforderlich. Function gibt alle aktiven Services zurück.</p>
+
+                    <h4>✅ Response Format</h4>
+                    <div class="code-block">
+{
+    <span class="string">"services"</span>: [
+        {
+            <span class="string">"id"</span>: <span class="number">438</span>,
+            <span class="string">"name"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+            <span class="string">"price"</span>: <span class="number">32.00</span>,
+            <span class="string">"duration"</span>: <span class="number">55</span>,
+            <span class="string">"category"</span>: <span class="string">"Haarschnitte"</span>
+        },
+        <span class="comment">// ... weitere 17 Services</span>
+    ]
+}
+                    </div>
+
+                    <h4>📂 Backend Implementation</h4>
+                    <div class="code-block">
+<span class="comment">// File: app/Http/Controllers/RetellFunctionCallHandler.php</span>
+<span class="keyword">public function</span> getAvailableServices(Request $request)
+{
+    <span class="comment">// 1. Get company_id from call context</span>
+    <span class="comment">// 2. Query: Service::where('company_id', $company_id)->where('is_active', true)->get()</span>
+    <span class="comment">// 3. Return formatted service list</span>
+}
+
+<span class="comment">// Route: POST /api/retell/get-available-services</span>
+<span class="comment">// Alias: get_services_v4 (backward compatibility)</span>
+                    </div>
+                </div>
+
+                <!-- Function 4: get_customer_appointments -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">get_customer_appointments</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Ruft alle zukünftigen Termine eines Kunden ab (via Telefonnummer).
+                    Wird verwendet wenn Kunde fragt "Wann ist mein Termin?" oder "Welche Termine habe ich?"</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Trigger: User fragt nach bestehenden Terminen</span>
+User: <span class="string">"Wann ist mein Termin?"</span>
+Agent: <span class="string">"Darf ich Ihre Telefonnummer haben?"</span>
+User: <span class="string">"0176 12345678"</span>
+Agent: [<span class="keyword">CALL</span> get_customer_appointments(
+    customer_phone: <span class="string">"+4917612345678"</span>
+)]
+Backend → Returns: [Appointment 1, Appointment 2]
+Agent: <span class="string">"Sie haben zwei Termine:
+        1. Balayage am Donnerstag, 7. November um 9 Uhr 50
+        2. Herrenhaarschnitt am Montag, 11. November um 15 Uhr"</span>
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Typ</th>
+                                <th>Pflicht?</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>customer_phone</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Telefonnummer zur Identifikation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>✅ Response Format</h4>
+                    <div class="code-block">
+{
+    <span class="string">"appointments"</span>: [
+        {
+            <span class="string">"id"</span>: <span class="number">123</span>,
+            <span class="string">"service_name"</span>: <span class="string">"Balayage/Ombré"</span>,
+            <span class="string">"date"</span>: <span class="string">"2025-11-07"</span>,
+            <span class="string">"time"</span>: <span class="string">"09:50"</span>,
+            <span class="string">"status"</span>: <span class="string">"confirmed"</span>
+        }
+    ]
+}
+                    </div>
+                </div>
+
+                <!-- Function 5: cancel_appointment -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">cancel_appointment</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Storniert einen bestehenden Termin. Synct Stornierung zu Cal.com und sendet Bestätigung per Email.</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Trigger: User möchte stornieren</span>
+User: <span class="string">"Ich möchte meinen Termin am Donnerstag stornieren"</span>
+Agent: <span class="string">"Verstanden. Um welche Uhrzeit war der Termin?"</span>
+User: <span class="string">"9 Uhr 50"</span>
+Agent: [<span class="keyword">CALL</span> cancel_appointment(
+    customer_phone: <span class="string">"{{customer_phone}}"</span>,
+    appointment_date: <span class="string">"2025-11-07"</span>,
+    appointment_time: <span class="string">"09:50"</span>
+)]
+Backend → Returns: { <span class="string">"success"</span>: <span class="keyword">true</span> }
+Agent: <span class="string">"Ihr Termin am Donnerstag, 7. November um 9 Uhr 50 ist storniert.
+        Sie erhalten eine Bestätigung per Email."</span>
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Typ</th>
+                                <th>Pflicht?</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>appointment_id</code></td>
+                                <td>integer</td>
+                                <td>❌ Optional*</td>
+                                <td>Appointment ID (wenn bekannt)</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_phone</code></td>
+                                <td>string</td>
+                                <td>✅ Ja*</td>
+                                <td>Telefonnummer zur Identifikation</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_date</code></td>
+                                <td>string</td>
+                                <td>✅ Ja*</td>
+                                <td>Datum: "2025-11-07"</td>
+                            </tr>
+                            <tr>
+                                <td><code>appointment_time</code></td>
+                                <td>string</td>
+                                <td>✅ Ja*</td>
+                                <td>Uhrzeit: "09:50"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        * Entweder <code>appointment_id</code> ODER <code>customer_phone + date + time</code>
+                    </p>
+                </div>
+
+                <!-- Function 6: reschedule_appointment -->
+                <div class="function-card">
+                    <div class="function-header">
+                        <div class="function-name">reschedule_appointment</div>
+                        <span class="badge live">LIVE</span>
+                    </div>
+
+                    <h4>📝 Beschreibung</h4>
+                    <p>Verschiebt einen bestehenden Termin auf ein neues Datum/Uhrzeit.
+                    Kombiniert Cancel + Book in einer Transaction.</p>
+
+                    <h4>🔧 Verwendung im Prompt</h4>
+                    <div class="code-block">
+<span class="comment">// Trigger: User möchte verschieben</span>
+User: <span class="string">"Kann ich meinen Termin am Donnerstag verschieben?"</span>
+Agent: <span class="string">"Klar! Auf wann möchten Sie verschieben?"</span>
+User: <span class="string">"Lieber Freitag um 14 Uhr"</span>
+Agent: [<span class="keyword">CALL</span> reschedule_appointment(
+    old_date: <span class="string">"2025-11-07"</span>,
+    old_time: <span class="string">"09:50"</span>,
+    new_date: <span class="string">"2025-11-08"</span>,
+    new_time: <span class="string">"14:00"</span>,
+    customer_phone: <span class="string">"{{customer_phone}}"</span>
+)]
+                    </div>
+
+                    <h4>📋 Parameter</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Typ</th>
+                                <th>Pflicht?</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>old_date</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Altes Datum</td>
+                            </tr>
+                            <tr>
+                                <td><code>old_time</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Alte Uhrzeit</td>
+                            </tr>
+                            <tr>
+                                <td><code>new_date</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Neues Datum</td>
+                            </tr>
+                            <tr>
+                                <td><code>new_time</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Neue Uhrzeit</td>
+                            </tr>
+                            <tr>
+                                <td><code>customer_phone</code></td>
+                                <td>string</td>
+                                <td>✅ Ja</td>
+                                <td>Telefonnummer</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Function 7 & 8: Legacy -->
+                <div class="card warning">
+                    <h4>⚠️ Legacy Functions (Deprecated)</h4>
+                    <p>Die folgenden Functions sind noch verfügbar für Backward Compatibility, sollten aber nicht mehr verwendet werden:</p>
+                    <ul style="margin-left: 30px; margin-top: 15px;">
+                        <li><code>collectAppointment</code> → Use: <code>check_availability</code> + <code>book_appointment</code></li>
+                        <li><code>handleAvailabilityCheck</code> → Use: <code>check_availability</code></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 3: Call Flow -->
+            <section id="callflow">
+                <h2>3. Kompletter Telefon-Ablauf (Mermaid)</h2>
+
+                <div class="card info">
+                    <h4>📊 Übersicht</h4>
+                    <p>Dieser Ablauf zeigt den kompletten Weg von Anruf bis Terminbuchung.
+                    Jeder Node im Diagramm entspricht einem Conversation Flow Node in Retell AI.</p>
+                </div>
+
+                <div class="mermaid-container">
+                    <pre class="mermaid">
+graph TD
+    Start([📞 Anruf Start]) --> Greeting[🎙️ Begrüßung<br/>Willkommen bei Friseur 1]
+
+    Greeting --> Intent[🧠 Intent Erkennung<br/>Was möchte der Kunde?]
+
+    Intent -->|Termin buchen| CollectService[📋 Service erfassen<br/>Welcher Service?]
+    Intent -->|Termine anzeigen| GetAppts[📅 Tool: get_customer_appointments]
+    Intent -->|Termin stornieren| CancelFlow[🗑️ Tool: cancel_appointment]
+    Intent -->|Termin verschieben| RescheduleFlow[🔄 Tool: reschedule_appointment]
+    Intent -->|Services auflisten| ListServices[📝 Tool: get_available_services]
+
+    CollectService -->|Service mehrdeutig| Disambiguate{❓ Disambiguierung<br/>Herren oder Damen?}
+    CollectService -->|Service eindeutig| CollectData
+
+    Disambiguate -->|Kunde wählt| CollectData[📋 Daten sammeln<br/>Name, Datum, Uhrzeit]
+
+    CollectData -->|Alle Daten vorhanden| CheckAvail[🔍 Tool: check_availability<br/>Backend prüft Cal.com]
+
+    CheckAvail -->|Verfügbar| ConfirmSlot{✅ Bestätigung<br/>Slot verfügbar - buchen?}
+    CheckAvail -->|Nicht verfügbar| OfferAlts[💡 Alternativen anbieten<br/>Andere Zeiten/Tage]
+
+    OfferAlts -->|Kunde wählt Alternative| ConfirmSlot
+    OfferAlts -->|Keine passt| End
+
+    ConfirmSlot -->|Ja, buchen| BookAppt[✅ Tool: book_appointment<br/>Termin wird gebucht]
+    ConfirmSlot -->|Nein, abbrechen| End
+
+    BookAppt -->|Success| Success[✅ Erfolg<br/>Bestätigung + Email]
+    BookAppt -->|Error| ErrorHandle[❌ Fehler<br/>Entschuldigung + Hilfe]
+
+    GetAppts --> ShowAppts[📋 Termine vorlesen]
+    ShowAppts --> AskNext{Noch etwas?}
+
+    CancelFlow --> CancelSuccess[✅ Storniert]
+    CancelSuccess --> AskNext
+
+    RescheduleFlow --> RescheduleSuccess[✅ Verschoben]
+    RescheduleSuccess --> AskNext
+
+    ListServices --> ShowServices[📋 Services vorlesen]
+    ShowServices --> AskNext
+
+    AskNext -->|Ja| Intent
+    AskNext -->|Nein| End
+
+    Success --> AskNext
+    ErrorHandle --> AskNext
+
+    End([👋 Gespräch beendet])
+
+    style Start fill:#667eea,stroke:#764ba2,color:#fff
+    style Greeting fill:#e0f2fe,stroke:#3b82f6
+    style Intent fill:#f3e8ff,stroke:#8b5cf6
+    style CheckAvail fill:#fef3c7,stroke:#f59e0b
+    style BookAppt fill:#fef3c7,stroke:#f59e0b
+    style Success fill:#d1fae5,stroke:#10b981
+    style ErrorHandle fill:#fee2e2,stroke:#ef4444
+    style End fill:#e2e8f0,stroke:#64748b
+                    </pre>
+                </div>
+
+                <h3>Detaillierter Flow für Termin-Buchung</h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 1</span>
+                        <h4>Begrüßung & Intent Erkennung</h4>
+                        <p><strong>Agent:</strong> "Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?"</p>
+                        <p><strong>User:</strong> "Ich möchte einen Termin für ein Balayage buchen"</p>
+                        <p style="margin-top: 10px;"><strong>System:</strong> Intent = BOOK_APPOINTMENT erkannt</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 2</span>
+                        <h4>Service-Matching & Disambiguierung</h4>
+                        <div class="code-block">
+<span class="comment">// Backend matched "Balayage" → Service "Balayage/Ombré"</span>
+<span class="comment">// Confidence: 95% (High) → Keine Bestätigung nötig</span>
+{{service_name}} = <span class="string">"Balayage/Ombré"</span>
+{{service_id}} = <span class="number">443</span>
+                        </div>
+                        <p><strong>Agent:</strong> "Gerne! Für wann möchten Sie das Balayage buchen?"</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 3</span>
+                        <h4>Datensammlung (Context-Aware)</h4>
+                        <p><strong>User:</strong> "Morgen Vormittag wenn möglich"</p>
+                        <div class="code-block">
+<span class="comment">// Backend parst relative Zeit</span>
+{{current_date}} = <span class="string">"2025-11-06"</span>
+{{appointment_date}} = <span class="string">"2025-11-07"</span> <span class="comment">// Morgen</span>
+{{time_window}} = <span class="string">"09:00-12:00"</span> <span class="comment">// Vormittag</span>
+                        </div>
+                        <p><strong>Agent:</strong> "Verstanden. Darf ich noch Ihren Namen und Telefonnummer haben?"</p>
+                        <p><strong>User:</strong> "Max Müller, 0176 12345678"</p>
+                        <div class="code-block">
+{{customer_name}} = <span class="string">"Max Müller"</span>
+{{customer_phone}} = <span class="string">"+4917612345678"</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 4</span>
+                        <h4>Verfügbarkeitsprüfung (CRITICAL)</h4>
+                        <p><strong>Agent:</strong> "Einen Moment, ich schaue nach..."</p>
+                        <div class="code-block">
+[<span class="keyword">CALL</span> check_availability(
+    service_name: <span class="string">"Balayage/Ombré"</span>,
+    service_id: <span class="number">443</span>,
+    date: <span class="string">"2025-11-07"</span>,
+    time_window: <span class="string">"09:00-12:00"</span>
+)]
+
+<span class="comment">// Backend → Cal.com API</span>
+<span class="comment">// Cal.com returns: Available slots</span>
+
+Response: {
+    <span class="string">"available"</span>: <span class="keyword">true</span>,
+    <span class="string">"slots"</span>: [<span class="string">"09:50"</span>, <span class="string">"10:30"</span>, <span class="string">"11:00"</span>]
+}
+                        </div>
+                        <p><strong>Agent:</strong> "Vormittags hätte ich morgen um 9 Uhr 50, 10 Uhr 30 oder 11 Uhr frei. Was passt Ihnen am besten?"</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 5</span>
+                        <h4>Bestätigung & Buchung</h4>
+                        <p><strong>User:</strong> "9 Uhr 50 passt mir"</p>
+                        <p><strong>Agent:</strong> "Perfekt! Ich buche das für Sie..."</p>
+                        <div class="code-block">
+[<span class="keyword">CALL</span> book_appointment(
+    service_id: <span class="number">443</span>,
+    service_name: <span class="string">"Balayage/Ombré"</span>,
+    customer_name: <span class="string">"Max Müller"</span>,
+    customer_phone: <span class="string">"+4917612345678"</span>,
+    appointment_date: <span class="string">"2025-11-07"</span>,
+    appointment_time: <span class="string">"09:50"</span>
+)]
+
+<span class="comment">// Backend creates appointment + syncs to Cal.com</span>
+
+Response: {
+    <span class="string">"success"</span>: <span class="keyword">true</span>,
+    <span class="string">"booking_id"</span>: <span class="string">"bkg_abc123"</span>,
+    <span class="string">"appointment_id"</span>: <span class="number">1234</span>
+}
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">Schritt 6</span>
+                        <h4>Erfolgsbestätigung</h4>
+                        <p><strong>Agent:</strong> "Wunderbar! Ihr Termin für Balayage ist am Donnerstag, den 7. November um 9 Uhr 50 gebucht. Sie erhalten gleich eine Bestätigung per Email. Haben Sie noch Fragen zur Vorbereitung?"</p>
+                        <p><strong>User:</strong> "Nein, danke!"</p>
+                        <p><strong>Agent:</strong> "Perfekt! Bis Donnerstag dann. Auf Wiederhören!"</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Implementation -->
+            <section id="implementation">
+                <h2>4. Neue Functions Hinzufügen</h2>
+
+                <div class="card warning">
+                    <h4>⚠️ Wichtig</h4>
+                    <p>Neue Functions müssen an <strong>3 Stellen</strong> konfiguriert werden:
+                    Backend (Laravel), Retell AI Dashboard, und Agent Prompt.</p>
+                </div>
+
+                <h3>Schritt-für-Schritt Anleitung</h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="timeline-step">1</span>
+                        <h4>Backend Function implementieren</h4>
+                        <div class="code-block">
+<span class="comment">// File: app/Http/Controllers/RetellFunctionCallHandler.php</span>
+
+<span class="keyword">public function</span> meine_neue_function(Request $request)
+{
+    <span class="comment">// 1. Extract parameters</span>
+    $param1 = $request->input(<span class="string">'args.param1'</span>);
+
+    <span class="comment">// 2. Get call context (company_id etc.)</span>
+    $callId = $this->getCanonicalCallId($request);
+
+    <span class="comment">// 3. Business logic hier</span>
+
+    <span class="comment">// 4. Return JSON response</span>
+    <span class="keyword">return</span> response()->json([
+        <span class="string">'success'</span> => <span class="keyword">true</span>,
+        <span class="string">'data'</span> => $result
+    ]);
+}
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">2</span>
+                        <h4>Route registrieren</h4>
+                        <div class="code-block">
+<span class="comment">// File: routes/api.php</span>
+
+Route::post(<span class="string">'/retell/meine-neue-function'</span>, [
+    RetellFunctionCallHandler::<span class="keyword">class</span>,
+    <span class="string">'meine_neue_function'</span>
+])->middleware(<span class="string">'throttle:100,1'</span>);
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">3</span>
+                        <h4>Custom Tool in Retell AI erstellen</h4>
+                        <p>Gehe zu <a href="https://app.retellai.com/" target="_blank">Retell AI Dashboard</a> → Custom Tools → New Tool</p>
+                        <div class="code-block">
+{
+    <span class="string">"name"</span>: <span class="string">"meine_neue_function"</span>,
+    <span class="string">"description"</span>: <span class="string">"Beschreibung was die Function macht"</span>,
+    <span class="string">"url"</span>: <span class="string">"https://api.askproai.de/api/retell/meine-neue-function"</span>,
+    <span class="string">"method"</span>: <span class="string">"POST"</span>,
+    <span class="string">"timeout_ms"</span>: <span class="number">15000</span>,
+    <span class="string">"parameters"</span>: {
+        <span class="string">"type"</span>: <span class="string">"object"</span>,
+        <span class="string">"properties"</span>: {
+            <span class="string">"param1"</span>: {
+                <span class="string">"type"</span>: <span class="string">"string"</span>,
+                <span class="string">"description"</span>: <span class="string">"Parameter Beschreibung"</span>
+            }
+        },
+        <span class="string">"required"</span>: [<span class="string">"param1"</span>]
+    }
+}
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">4</span>
+                        <h4>Tool zu Agent hinzufügen</h4>
+                        <p>Retell AI Dashboard → Agent V50 → Tools → Add "meine_neue_function"</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">5</span>
+                        <h4>Agent Prompt updaten</h4>
+                        <div class="code-block">
+<span class="comment">// Add to: GLOBAL_PROMPT_V50_CRITICAL_ENFORCEMENT_2025.md</span>
+
+## 🎯 Neue Function: meine_neue_function
+
+**Verwendung:**
+- Trigger: Wenn User XYZ sagt
+- Parameter: param1 (string, required)
+- Response: { <span class="string">"success"</span>: <span class="keyword">true</span>, <span class="string">"data"</span>: ... }
+
+**Beispiel:**
+```
+User: <span class="string">"Ich möchte XYZ"</span>
+Agent: [<span class="keyword">CALL</span> meine_neue_function(param1: <span class="string">"value"</span>)]
+Agent: <span class="string">"Antwort basierend auf Response"</span>
+```
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">6</span>
+                        <h4>Testen</h4>
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>Retell Dashboard → Test Chat</li>
+                            <li>Trigger Function durch passende User-Aussage</li>
+                            <li>Backend Logs prüfen: <code>tail -f storage/logs/laravel.log</code></li>
+                            <li>Retell Call Logs prüfen für Function Call Details</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <span class="timeline-step">7</span>
+                        <h4>Diese Dokumentation updaten</h4>
+                        <p>Füge neue Function zu dieser HTML hinzu mit:</p>
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>Function Card (wie oben)</li>
+                            <li>Parameter Table</li>
+                            <li>Response Format</li>
+                            <li>Verwendungsbeispiele</li>
+                            <li>Backend Implementation</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Services -->
+            <section id="services">
+                <h2>5. Alle 18 Services & Synonyme</h2>
+
+                <div class="card info">
+                    <p>Vollständige Service-Liste mit Preisen, Dauer und Synonym-System.
+                    Für Details siehe: <a href="/docs/friseur1/anrufablauf-friseur1.html">Anrufablauf Dokumentation</a></p>
+                </div>
+
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>Haarschnitte (5)</h4>
+                        <ul>
+                            <li>Herrenhaarschnitt (32€, 55 Min)</li>
+                            <li>Damenhaarschnitt (45€, 45 Min)</li>
+                            <li>Kinderhaarschnitt (20€, 30 Min)</li>
+                            <li>Trockenschnitt (30€, 30 Min)</li>
+                            <li>Waschen, schneiden, föhnen (55€, 60 Min)</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>Färbungen (4)</h4>
+                        <ul>
+                            <li>Ansatzfärbung (58€, 135 Min)</li>
+                            <li>Ansatz + Längenausgleich (85€, 155 Min)</li>
+                            <li>Balayage/Ombré (110€, 150 Min)</li>
+                            <li>Komplette Umfärbung (145€, 180 Min)</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>Styling & Pflege (4)</h4>
+                        <ul>
+                            <li>Föhnen & Styling Damen (32€, 30 Min)</li>
+                            <li>Föhnen & Styling Herren (20€, 20 Min)</li>
+                            <li>Waschen & Styling (28€, 45 Min)</li>
+                            <li>Dauerwelle (78€, 135 Min)</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>Treatments (5)</h4>
+                        <ul>
+                            <li>Hairdetox (22€, 15 Min)</li>
+                            <li>Rebuild Treatment Olaplex (42€, 15 Min)</li>
+                            <li>Intensiv Pflege Maria Nila (28€, 15 Min)</li>
+                            <li>Gloss (38€, 30 Min)</li>
+                            <li>Haarspende (28€, 30 Min)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Häufige Synonyme</h3>
+                <div class="code-block">
+<span class="comment">// Haarschnitte</span>
+<span class="string">"Herrenschnitt"</span>, <span class="string">"Männerhaarschnitt"</span> → Herrenhaarschnitt
+<span class="string">"Damenschnitt"</span>, <span class="string">"Frauenhaarschnitt"</span> → Damenhaarschnitt
+<span class="string">"Kinderschnitt"</span> → Kinderhaarschnitt
+
+<span class="comment">// Färbungen</span>
+<span class="string">"Balaja"</span>, <span class="string">"Ballaya"</span>, <span class="string">"Ombré"</span> → Balayage/Ombré
+<span class="string">"Strähnchen"</span>, <span class="string">"Highlights"</span> → Balayage/Ombré (75% Confidence)
+<span class="string">"Blondierung"</span>, <span class="string">"Blond färben"</span> → Komplette Umfärbung
+<span class="string">"Ansatz färben"</span>, <span class="string">"Ansatzfarbe"</span> → Ansatzfärbung
+
+<span class="comment">// Treatments</span>
+<span class="string">"Hair Detox"</span>, <span class="string">"Detox"</span> → Hairdetox
+<span class="string">"Olaplex"</span> → Rebuild Treatment Olaplex
+<span class="string">"Maria Nila"</span> → Intensiv Pflege Maria Nila
+<span class="string">"Locken"</span> → Dauerwelle (70% Confidence)
+
+<span class="comment">// Weitere ~130 Synonyme in DB gespeichert!</span>
+                </div>
+            </section>
+
+            <!-- Section 6: Best Practices -->
+            <section id="best-practices">
+                <h2>6. Best Practices & V50 Fixes</h2>
+
+                <h3>🚨 CRITICAL Fixes in V50</h3>
+
+                <div class="function-card">
+                    <h4>1. Mandatory Tool Call Enforcement</h4>
+                    <div class="example-box bad">
+                        <div class="example-header bad">❌ V49 Problem</div>
+                        <p><strong>User:</strong> "Haben Sie morgen Vormittag frei?"</p>
+                        <p><strong>Agent V49:</strong> "Leider keinen Termin vormittags, aber ich kann 9:50 oder 10:30 anbieten"</p>
+                        <p style="margin-top: 10px; color: #dc2626;">
+                            <strong>Fehler:</strong> Kein check_availability gecallt! Zeiten erfunden! Widerspruch (9:50 ist Vormittag!)
+                        </p>
+                    </div>
+
+                    <div class="example-box good">
+                        <div class="example-header good">✅ V50 Lösung</div>
+                        <div class="code-block">
+<span class="comment">// Global Prompt V50 (Lines 56-112)</span>
+
+## 🚨 KRITISCHE REGEL: Tool-Call Enforcement
+
+**⛔ DU DARFST NICHT antworten ohne check_availability() zu callen!**
+
+<span class="keyword">SCHRITT 1:</span> Erkenne Verfügbarkeitsanfrage
+<span class="keyword">SCHRITT 2:</span> SOFORT Tool callen - KEINE Antwort vorher!
+<span class="keyword">SCHRITT 3:</span> Warte auf Tool-Response
+<span class="keyword">SCHRITT 4:</span> Antworte NUR mit Tool-Daten
+                        </div>
+                        <p><strong>User:</strong> "Haben Sie morgen Vormittag frei?"</p>
+                        <p><strong>Agent V50:</strong> [CALL check_availability(date="morgen", time_window="09:00-12:00")]</p>
+                        <p><strong>Agent V50:</strong> "Vormittags hätte ich 9:50 oder 10:30. Was passt?"</p>
+                    </div>
+                </div>
+
+                <div class="function-card">
+                    <h4>2. Jahr-Bug Fix (2023 → 2025)</h4>
+                    <div class="example-box bad">
+                        <div class="example-header bad">❌ V44 Problem</div>
+                        <p>Agent buchte Termine für <strong>2023</strong> statt 2025!</p>
+                    </div>
+
+                    <div class="example-box good">
+                        <div class="example-header good">✅ V50 Lösung</div>
+                        <div class="code-block">
+<span class="comment">// Global Prompt V50 (Lines 20-54)</span>
+
+## ⚠️ KRITISCH: Aktuelles Datum & Zeit
+
+**NIEMALS ein Datum hardcoden! Nutze IMMER:**
+
+### Option 1: Dynamic Variable (Preferred)
+{{current_date}} → Backend liefert aktuelles Datum
+
+### Datums-Regeln:
+<span class="number">1.</span> ✅ Immer Jahr **2025** für neue Termine
+<span class="number">2.</span> ❌ NIEMALS Termine in Vergangenheit
+<span class="number">3.</span> ❌ NIEMALS Jahr 2023 oder 2024
+                        </div>
+                    </div>
+                </div>
+
+                <div class="function-card">
+                    <h4>3. Anti-Repetition Rules</h4>
+                    <div class="example-box bad">
+                        <div class="example-header bad">❌ Problem</div>
+                        <p>Agent wiederholt sich 3-4 Mal: "Ich prüfe... Ich prüfe... Ich prüfe..."</p>
+                    </div>
+
+                    <div class="example-box good">
+                        <div class="example-header good">✅ V50 Lösung</div>
+                        <p><strong>Regel:</strong> Sage "Ich prüfe..." nur EINMAL pro Check!</p>
+                        <ul style="margin-left: 30px; margin-top: 10px;">
+                            <li>Vor Tool-Call: "Einen Moment"</li>
+                            <li>Nach Tool-Call: Direkt Ergebnis</li>
+                            <li>NICHT dazwischen nochmal "Ich prüfe..."</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="function-card">
+                    <h4>4. Service-Disambiguierung ohne Preise</h4>
+                    <div class="example-box bad">
+                        <div class="example-header bad">❌ V46 Problem</div>
+                        <p><strong>User:</strong> "Ich möchte einen Haarschnitt"</p>
+                        <p><strong>Agent V46:</strong> "Herrenhaarschnitt (32€, 55 Min) oder Damenhaarschnitt (45€, 45 Min)?"</p>
+                        <p style="color: #dc2626; margin-top: 10px;">
+                            <strong>Problem:</strong> User hat nicht nach Preisen gefragt - zu viele Infos!
+                        </p>
+                    </div>
+
+                    <div class="example-box good">
+                        <div class="example-header good">✅ V50 Lösung</div>
+                        <p><strong>User:</strong> "Ich möchte einen Haarschnitt"</p>
+                        <p><strong>Agent V50:</strong> "Herrenhaarschnitt oder Damenhaarschnitt?"</p>
+                        <p style="margin-top: 10px;">
+                            <strong>Preise NUR auf explizite Nachfrage!</strong>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 7: Testing -->
+            <section id="testing">
+                <h2>7. Testing & Deployment</h2>
+
+                <h3>Test-Szenarien V50</h3>
+
+                <div class="params-table" style="margin-top: 20px;">
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Szenario</th>
+                                <th>User Input</th>
+                                <th>Erwartetes Verhalten</th>
+                                <th>Success Criteria</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Tool Call Enforcement</td>
+                                <td>"Haben Sie morgen Vormittag frei?"</td>
+                                <td>Agent callt check_availability SOFORT</td>
+                                <td>✅ Tool gecallt<br>✅ Zeiten aus Response<br>❌ KEINE erfundenen Zeiten</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Service Disambiguierung</td>
+                                <td>"Ich möchte einen Haarschnitt"</td>
+                                <td>Agent fragt: "Herren oder Damen?"</td>
+                                <td>✅ Fragt nach<br>❌ KEINE Preise genannt</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Jahr Validierung</td>
+                                <td>"Für den 15. November bitte"</td>
+                                <td>Backend setzt Jahr = 2025</td>
+                                <td>✅ Jahr 2025<br>❌ NICHT 2023/2024</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Anti-Repetition</td>
+                                <td>"Was haben Sie heute frei?"</td>
+                                <td>"Einen Moment..." (NUR EINMAL)</td>
+                                <td>✅ Einmalige Ansage<br>❌ KEINE Wiederholungen</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Synonym-Matching</td>
+                                <td>"Hair Detox" / "Ballaya" / "Olaplex"</td>
+                                <td>Backend matched korrekt</td>
+                                <td>✅ Service gefunden<br>✅ Richtig zugeordnet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Deployment Checklist</h3>
+
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>✅ Pre-Deployment</h4>
+                        <ul>
+                            <li>Global Prompt V50 zu Retell uploaded</li>
+                            <li>Alle 8 Tools konfiguriert</li>
+                            <li>Backend Functions getestet</li>
+                            <li>Synonym-Seeder ausgeführt</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>✅ Deployment</h4>
+                        <ul>
+                            <li>Agent V50 zu Production published</li>
+                            <li>Phone Number zugewiesen</li>
+                            <li>Test Call durchgeführt</li>
+                            <li>Logs geprüft (keine Errors)</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>✅ Post-Deployment</h4>
+                        <ul>
+                            <li>48h Monitoring aktiviert</li>
+                            <li>Call Transcripts reviewen</li>
+                            <li>Performance Metriken tracken</li>
+                            <li>User Feedback sammeln</li>
+                        </ul>
+                    </div>
+                    <div class="grid-item">
+                        <h4>📊 Success Metrics</h4>
+                        <ul>
+                            <li>100% Tool Call bei Verfügbarkeit</li>
+                            <li>0% erfundene Zeiten</li>
+                            <li>95%+ erfolgreiche Buchungen</li>
+                            <li>&lt;3 Wiederholungen pro Call</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Monitoring & Logs</h3>
+
+                <div class="code-block">
+<span class="comment"># Live Logs monitoren</span>
+tail -f storage/logs/laravel.log | grep -E <span class="string">'(check_availability|book_appointment|RETELL)'</span>
+
+<span class="comment"># Retell Call Details abrufen</span>
+php scripts/get_call_details.php [call_id]
+
+<span class="comment"># Backend Performance prüfen</span>
+tail -f storage/logs/laravel.log | grep -E <span class="string">'(LATENCY|SLOW_QUERY)'</span>
+
+<span class="comment"># Test Call Log aktivieren</span>
+./scripts/enable_testcall_logging.sh
+
+<span class="comment"># Test Call Log deaktivieren</span>
+./scripts/disable_testcall_logging.sh
+                </div>
+            </section>
+
+            <!-- Section 8: Integration -->
+            <section id="integration">
+                <h2>8. Backend-Integration</h2>
+
+                <h3>System Architecture</h3>
+
+                <div class="mermaid-container">
+                    <pre class="mermaid">
+graph LR
+    Phone[📞 Telefon] --> Retell[Retell.ai<br/>Voice AI]
+    Retell -->|Webhook| Laravel[Laravel Backend<br/>RetellFunctionCallHandler]
+    Laravel -->|API Calls| Calcom[Cal.com<br/>Scheduling]
+    Laravel -->|Read/Write| DB[(PostgreSQL<br/>Database)]
+    Laravel -->|Cache| Redis[(Redis<br/>5min TTL)]
+    Laravel -->|Sync| Calcom
+    Calcom -->|Events| Laravel
+
+    style Phone fill:#667eea,stroke:#764ba2,color:#fff
+    style Retell fill:#f59e0b,stroke:#d97706,color:#fff
+    style Laravel fill:#10b981,stroke:#059669,color:#fff
+    style Calcom fill:#3b82f6,stroke:#2563eb,color:#fff
+    style DB fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style Redis fill:#ef4444,stroke:#dc2626,color:#fff
+                    </pre>
+                </div>
+
+                <h3>Data Flow</h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4>1. Inbound Call</h4>
+                        <p>Retell.ai empfängt Anruf → Agent V50 aktiviert → Global Prompt geladen</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>2. Function Call Webhook</h4>
+                        <div class="code-block">
+POST https://api.askproai.de/api/retell/check-availability-v17
+
+Headers:
+- Content-Type: application/json
+- Authorization: Bearer {retell_api_key}
+
+Body:
+{
+    <span class="string">"call"</span>: {
+        <span class="string">"call_id"</span>: <span class="string">"call_abc123"</span>
+    },
+    <span class="string">"args"</span>: {
+        <span class="string">"service_name"</span>: <span class="string">"Balayage"</span>,
+        <span class="string">"date"</span>: <span class="string">"morgen"</span>
+    }
+}
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>3. Backend Processing</h4>
+                        <ul style="margin-left: 30px;">
+                            <li>Extract canonical call_id from webhook</li>
+                            <li>Get company context (company_id from call)</li>
+                            <li>Parse date (relative → absolute)</li>
+                            <li>Match service (Synonyme-DB)</li>
+                            <li>Call Cal.com API</li>
+                            <li>Cache result (Redis, 5min)</li>
+                            <li>Return formatted response</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>4. Cal.com Integration</h4>
+                        <div class="code-block">
+<span class="comment">// Cal.com API V2</span>
+GET /v2/slots/available?eventTypeId=1419974&startTime=2025-11-07T00:00:00Z
+
+Response:
+{
+    <span class="string">"slots"</span>: {
+        <span class="string">"2025-11-07"</span>: [
+            {<span class="string">"time"</span>: <span class="string">"2025-11-07T09:50:00+01:00"</span>},
+            {<span class="string">"time"</span>: <span class="string">"2025-11-07T10:30:00+01:00"</span>}
+        ]
+    }
+}
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>5. Database Persistence</h4>
+                        <div class="code-block">
+<span class="comment">// Laravel Models</span>
+Appointment::create([
+    <span class="string">'customer_id'</span> => $customer->id,
+    <span class="string">'service_id'</span> => <span class="number">443</span>,
+    <span class="string">'branch_id'</span> => <span class="number">1</span>,
+    <span class="string">'start_time'</span> => <span class="string">'2025-11-07 09:50:00'</span>,
+    <span class="string">'calcom_booking_id'</span> => <span class="string">'bkg_abc123'</span>,
+    <span class="string">'status'</span> => <span class="string">'confirmed'</span>
+]);
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>6. Response to Agent</h4>
+                        <div class="code-block">
+{
+    <span class="string">"available"</span>: <span class="keyword">true</span>,
+    <span class="string">"slots"</span>: [<span class="string">"09:50"</span>, <span class="string">"10:30"</span>]
+}
+
+<span class="comment">// Agent spricht:</span>
+<span class="string">"Vormittags hätte ich 9 Uhr 50 oder 10 Uhr 30. Was passt?"</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Key Files</h3>
+
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Beschreibung</th>
+                            <th>Zeilen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>RetellFunctionCallHandler.php</code></td>
+                            <td>Main Function Call Handler (alle 8 Functions)</td>
+                            <td>~5900</td>
+                        </tr>
+                        <tr>
+                            <td><code>CalcomService.php</code></td>
+                            <td>Cal.com API Integration</td>
+                            <td>~800</td>
+                        </tr>
+                        <tr>
+                            <td><code>ServiceSelectionService.php</code></td>
+                            <td>Service Matching (Synonym-System)</td>
+                            <td>~400</td>
+                        </tr>
+                        <tr>
+                            <td><code>DateTimeParser.php</code></td>
+                            <td>Relative Date Parsing (heute, morgen, Freitag)</td>
+                            <td>~300</td>
+                        </tr>
+                        <tr>
+                            <td><code>GLOBAL_PROMPT_V50_*.md</code></td>
+                            <td>Agent Global Prompt (V50)</td>
+                            <td>439</td>
+                        </tr>
+                        <tr>
+                            <td><code>routes/api.php</code></td>
+                            <td>API Routes (Webhooks)</td>
+                            <td>~200</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Footer -->
+            <footer>
+                <h3 style="color: white; margin-bottom: 20px;">📚 Weitere Dokumentation</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div>
+                        <strong>Services & Synonyme</strong><br>
+                        <a href="/docs/friseur1/anrufablauf-friseur1.html">anrufablauf-friseur1.html</a>
+                    </div>
+                    <div>
+                        <strong>Best Practices</strong><br>
+                        <a href="/conversation-flow-chart-complete.html">conversation-flow-chart-complete.html</a>
+                    </div>
+                    <div>
+                        <strong>Agent V50 Deployment</strong><br>
+                        <a href="../V50_FINAL_DEPLOYMENT_CORRECT_AGENT_2025-11-05.md">V50 Deployment Guide</a>
+                    </div>
+                    <div>
+                        <strong>V49 RCA (Lessons Learned)</strong><br>
+                        <a href="../V49_TEST_CALL_RCA_2025-11-05.md">V49 Root Cause Analysis</a>
+                    </div>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.2); margin: 30px 0;">
+
+                <p style="font-size: 1.1em; margin-bottom: 10px;">
+                    <strong>Friseur 1 Voice AI Agent V50</strong>
+                </p>
+                <p style="opacity: 0.8;">
+                    Erstellt: 2025-11-06 | Version: V50 LIVE<br>
+                    Agent ID: agent_45daa54928c5768b52ba3db736<br>
+                    Flow ID: conversation_flow_a58405e3f67a<br>
+                    System: Laravel 11 + Filament 3 + Retell AI + Cal.com
+                </p>
+                <p style="margin-top: 20px; opacity: 0.6;">
+                    © 2025 AskPro AI Gateway | <a href="https://api.askproai.de">api.askproai.de</a>
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

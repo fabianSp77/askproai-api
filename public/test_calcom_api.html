@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Cal.com API Debug Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2d2d2d;
+            border-left: 4px solid #007acc;
+        }
+        .success { border-left-color: #4ec9b0; }
+        .error { border-left-color: #f48771; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007acc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover { background: #005a9e; }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            overflow-x: auto;
+            border: 1px solid #3e3e3e;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Cal.com API Debug Test</h1>
+    <p>Dieser Test prüft die Cal.com Atoms API-Endpunkte direkt.</p>
+
+    <div>
+        <button onclick="testConfigEndpoint()">Test 1: /api/calcom-atoms/config</button>
+        <button onclick="testBranchEndpoint()">Test 2: /api/calcom-atoms/branch/{id}/config</button>
+        <button onclick="testAllEndpoints()">Test All</button>
+        <button onclick="clearResults()">Clear</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testConfigEndpoint() {
+            log('📡 Testing GET /api/calcom-atoms/config...', 'info');
+
+            try {
+                const response = await fetch('/api/calcom-atoms/config', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                log(`Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(`✅ SUCCESS`, 'success');
+                    log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+
+                    // Store branch ID for next test
+                    if (data.branches && data.branches.length > 0) {
+                        window.testBranchId = data.branches[0].id;
+                        log(`📝 Gespeicherte Branch ID für Test 2: ${window.testBranchId}`, 'info');
+                    }
+                } else {
+                    log(`❌ FAIL: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ EXCEPTION: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testBranchEndpoint() {
+            const branchId = window.testBranchId || '34c4d48e-4753-4715-9c30-c55843a943e8';
+
+            log(`📡 Testing GET /api/calcom-atoms/branch/${branchId}/config...`, 'info');
+
+            try {
+                const response = await fetch(`/api/calcom-atoms/branch/${branchId}/config`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                log(`Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(`✅ SUCCESS`, 'success');
+                    log(`Branch: ${data.branch_name}`, 'success');
+                    log(`Event Types: ${data.event_types ? data.event_types.length : 0}`, 'success');
+                    log(`Default Event Type: ${data.default_event_type}`, 'success');
+                    log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    log(`❌ FAIL: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ EXCEPTION: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testAllEndpoints() {
+            clearResults();
+            await testConfigEndpoint();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testBranchEndpoint();
+        }
+
+        // Auto-run on load if logged in
+        window.addEventListener('load', () => {
+            log('🚀 Page loaded. Click buttons to test API endpoints.', 'info');
+        });
+    </script>
+</body>
+</html>

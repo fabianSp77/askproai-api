@@ -271,15 +271,63 @@ gaps:
       2. verify-ids.sh erneut → Branch→Team sollte grün sein
     unblocker: "Keine"
 
+  - id: GAP-010
+    system: policies
+    severity: major
+    title: "Non-blocking Cancellation Policy - Code-Implementierung ausstehend"
+    description: |
+      Dokumentation für Non-blocking Cancellation Policy (ADR-005) ist fertig.
+      Code-Implementierung fehlt noch:
+      - PolicyEngine.canCancel() aktuell mit 24h-Cutoff (sollte: immer true)
+      - PolicyEngine.canReschedule() aktuell mit 24h-Cutoff (sollte: immer true)
+      - Reschedule-first Flow im Retell Agent Prompt fehlt
+      - Branch-Notification Jobs (SendBranchEmailJob, CreateFilamentNotificationJob) fehlen
+      - Telemetrie-Counter (reschedule_offered, accepted, declined, branch_notified) fehlen
+    owner: "Backend Team + Retell Team"
+    eta_h: 8
+    fix_plan: |
+      1. PolicyEngine.php aktualisieren:
+         - canCancel(): Entferne 24h-Check, return true
+         - canReschedule(): Entferne 24h-Check, return true
+
+      2. Retell Agent Prompt erweitern:
+         - cancel_appointment Function: Vor Stornierung Umbuchung anbieten
+         - Dialogflow: "Möchten Sie den Termin lieber verschieben?"
+         - Fall A: reschedule_appointment() aufrufen
+         - Fall B: cancel_appointment() durchführen
+
+      3. Branch-Notification Jobs erstellen:
+         - SendBranchEmailJob.php
+         - CreateFilamentNotificationJob.php
+         - Templates: "Direkt neu gebucht am {{date}}" vs "Ohne Umbuchung"
+
+      4. Telemetrie-Counter hinzufügen:
+         - DB: appointment_modifications Tabelle erweitern (oder neue Metriken-Tabelle)
+         - Counter: reschedule_offered, reschedule_accepted, reschedule_declined, branch_notified
+         - Dashboard: Counter in Filament anzeigen
+
+      5. E2E-Tests (Test 3a/3b):
+         - Reschedule accepted testen
+         - Reschedule declined testen
+         - Branch-Notifications validieren
+         - Telemetrie-Counter prüfen
+
+      6. Update config/policies.php (falls nötig):
+         - reschedule_cutoff_minutes: 0
+         - cancel_cutoff_minutes: 0
+         - reschedule_first_enabled: true
+
+    unblocker: "Dokumentation fertig (ADR-005, e2e.md, index.html, config.sample.yaml)"
+
 # Summary
-total_gaps: 9
+total_gaps: 10
 by_severity:
   blocker: 2  # GAP-002, GAP-003
-  major: 5    # GAP-001, GAP-004, GAP-006, GAP-007, GAP-008
+  major: 6    # GAP-001, GAP-004, GAP-006, GAP-007, GAP-008, GAP-010
   minor: 2    # GAP-005, GAP-009
 
-total_effort_hours: 46
-critical_path_hours: 18  # GAP-002 + GAP-003 + GAP-001 + GAP-006 + GAP-009
+total_effort_hours: 54
+critical_path_hours: 26  # GAP-002 + GAP-003 + GAP-001 + GAP-006 + GAP-009 + GAP-010
 
 # Priority Order
 priority:
@@ -292,6 +340,7 @@ priority:
     - GAP-006  # Policies (2h)
     - GAP-009  # Branch Team ID (0.5h)
     - GAP-004  # 16 Services anlegen (4h, nach GAP-003)
+    - GAP-010  # Non-blocking Cancellation Code (8h)
 
   sprint_2:  # Nice-to-Have
     - GAP-005  # Staff Emails (0.5h)
@@ -302,3 +351,4 @@ priority:
 # 2025-11-03: Initial gaps basierend auf audit/report.md
 # Company ID korrigiert: 5 → 1
 # Staff Cal.com User IDs sind gesetzt (1001-1005) - kein GAP mehr
+# 2025-11-03 17:00: GAP-010 hinzugefügt - Non-blocking Cancellation Code-Implementierung (8h, major)

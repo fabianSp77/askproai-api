@@ -1,0 +1,419 @@
+# E2E Configuration: Friseur 1
+# Dieses File dient als Template für neue Unternehmen
+
+company:
+  id: "{{COMPANY_ID}}"  # TODO: Real UUID nach DB-Query
+  name: "Friseur 1"
+  timezone: "Europe/Berlin"
+  locale: "de"
+  currency: "EUR"
+
+# Single Source of Truth: platform (Laravel DB) oder calcom
+source_of_truth: platform
+
+branches:
+  - id: "{{BRANCH_ZENTRALE_UUID}}"  # TODO: 34c4d48e-4753-4715-9c30-c55843a943e8
+    name: "Filiale A (Zentrale)"
+    retell:
+      agent_id: "agent_b36ecd3927a81834b6d56ab07b"  # Production Agent
+      inbound_numbers:
+        - "+493033081738"
+      webhook_url: "https://api.askproai.de/api/webhooks/retell"
+    calcom:
+      team_id: 34209
+      team_slug: "friseur1"
+    policies:
+      allowed_actions:
+        - book
+        - reschedule
+        - cancel
+      # NON-BLOCKING POLICY (ADR-005)
+      reschedule_cutoff_minutes: 0     # Jederzeit erlaubt
+      cancel_cutoff_minutes: 0         # Jederzeit erlaubt
+      reschedule_first_enabled: true   # Agent bietet Umbuchung vor Stornierung an
+      branch_notification:
+        enabled: true
+        channels:
+          - email
+          - filament_ui
+        message_templates:
+          reschedule_accepted: "Direkt neu gebucht am {{new_date}}"
+          reschedule_declined: "Storniert ohne Umbuchung"
+      no_show_rules:
+        grace_period_minutes: 15
+        fee_amount: 0
+        fee_currency: "EUR"
+        policy_text: "Bei wiederholtem Nichterscheinen behalten wir uns vor, zukünftige Buchungen abzulehnen."
+      max_reschedules_per_appointment: null  # Keine Limits mehr
+
+  - id: "{{BRANCH_ZWEIGSTELLE_UUID}}"  # TODO: c335705a-435b-42a0-8305-5cf44a99602b
+    name: "Filiale B (Zweigstelle)"
+    retell:
+      agent_id: "agent_b36ecd3927a81834b6d56ab07b"  # Gleicher Agent
+      inbound_numbers:
+        - "{{PHONE_ZWEIGSTELLE}}"  # TODO: Bei Retell.ai registrieren
+      webhook_url: "https://api.askproai.de/api/webhooks/retell"
+    calcom:
+      team_id: 34209  # TODO: Eigenes Team für Filiale B? Oder gleich?
+      team_slug: "friseur1"
+    policies:
+      # TODO: GAP-003 - Unterschiedliche Policies für Filiale B?
+      # NON-BLOCKING POLICY (ADR-005) - Same as Filiale A
+      allowed_actions: [book, reschedule, cancel]
+      reschedule_cutoff_minutes: 0  # Jederzeit erlaubt
+      cancel_cutoff_minutes: 0      # Jederzeit erlaubt
+      reschedule_first_enabled: true
+      branch_notification:
+        enabled: true
+        channels: [email, filament_ui]
+      no_show_rules: {grace_period_minutes: 15, fee_amount: 0}
+      max_reschedules_per_appointment: null  # Keine Limits
+
+pricing:
+  retellai_cost_per_min_usd: 0.020  # Retell.ai Pricing
+  platform_markup_percent: 30       # AskProAI Markup
+  client_minute_rate_eur: 0.25      # Kundenseitiger Preis
+  billing_unit: "per_second"        # Sekundengenaue Abrechnung
+  currency: "EUR"
+  exchange_rate_usd_to_eur: 0.95    # TODO: Live-Rate via API
+
+services:
+  # Einfache Services (ohne Komponenten)
+  - key: KINDER_30
+    name: "Kinderhaarschnitt"
+    event_id: 3719738
+    duration_minutes: 30
+    price: 20.50
+    category: "Schnitt"
+    skill: "cut_children"
+    components: []
+
+  - key: TROCKEN_30
+    name: "Trockenschnitt"
+    event_id: 3719739
+    duration_minutes: 30
+    price: 25.00
+    category: "Schnitt"
+    skill: "cut_men"
+    components: []
+
+  - key: WASH_STYLE_45
+    name: "Waschen & Styling"
+    event_id: 3719740
+    duration_minutes: 45
+    price: 40.00
+    category: "Styling"
+    skill: "styling"
+    components: []
+
+  - key: WASH_CUT_BLOW_60
+    name: "Waschen, schneiden, föhnen"
+    event_id: 3719741
+    duration_minutes: 60
+    price: 45.00
+    category: "Schnitt"
+    skill: "cut_women"
+    components: []
+
+  - key: HAIR_DONATION_30
+    name: "Haarspende"
+    event_id: 3719742
+    duration_minutes: 30
+    price: 80.00
+    category: "Sonstiges"
+    skill: "cut_special"
+    components: []
+
+  - key: CONSULTATION_30
+    name: "Beratung"
+    event_id: 3719743
+    duration_minutes: 30
+    price: 30.00
+    category: "Beratung"
+    skill: "consultation"
+    components: []
+
+  - key: HAIRDETOX_15
+    name: "Hairdetox"
+    event_id: 3719744
+    duration_minutes: 15
+    price: 12.50
+    category: "Pflege"
+    skill: "treatment"
+    components: []
+
+  - key: OLAPLEX_15
+    name: "Rebuild Treatment Olaplex"
+    event_id: 3719745
+    duration_minutes: 15
+    price: 15.50
+    category: "Pflege"
+    skill: "treatment"
+    components: []
+
+  - key: MARIA_NILA_15
+    name: "Intensiv Pflege Maria Nila"
+    event_id: 3719746
+    duration_minutes: 15
+    price: 15.50
+    category: "Pflege"
+    skill: "treatment"
+    components: []
+
+  - key: GLOSS_30
+    name: "Gloss"
+    event_id: 3719747
+    duration_minutes: 30
+    price: 45.00
+    category: "Färben"
+    skill: "color_basic"
+    components: []
+
+  - key: ANSATZ_120
+    name: "Ansatzfärbung, waschen, schneiden, föhnen"
+    event_id: 3719748
+    duration_minutes: 120
+    price: 85.00
+    category: "Färben"
+    skill: "color"
+    components: []  # TODO: GAP-004 - Komponenten implementieren
+
+  - key: ANSATZ_LAENGEN_120
+    name: "Ansatz, Längenausgleich, waschen, schneiden, föhnen"
+    event_id: 3719749
+    duration_minutes: 120
+    price: 85.00
+    category: "Färben"
+    skill: "color"
+    components: []  # TODO: GAP-004
+
+  - key: STRAEHNEN_120
+    name: "Klassisches Strähnen-Paket"
+    event_id: 3719750
+    duration_minutes: 120
+    price: 125.00
+    category: "Färben"
+    skill: "color_advanced"
+    components: []  # TODO: GAP-004
+
+  - key: BLONDIERUNG_120
+    name: "Globale Blondierung"
+    event_id: 3719751
+    duration_minutes: 120
+    price: 185.00
+    category: "Färben"
+    skill: "color_advanced"
+    components:  # BEISPIEL für Komponenten-Service (TODO: Backend-Support)
+      - name: "Auftragen & Verteilen"
+        duration_minutes: 30
+        requires_staff: true
+      - name: "Einwirkzeit"
+        duration_minutes: 25
+        requires_staff: false
+        staff_reuse_allowed: true  # Staff kann parallel andere Termine übernehmen
+        min_gap: 0
+        max_gap: 5  # Nach 5 Min muss Staff zurück checken
+      - name: "Ausspülen & Pflege"
+        duration_minutes: 20
+        requires_staff: true
+      - name: "Trocknen & Styling"
+        duration_minutes: 45
+        requires_staff: true
+
+  - key: BALAYAGE_180
+    name: "Strähnentechnik Balayage"
+    event_id: 3719752
+    duration_minutes: 180
+    price: 255.00
+    category: "Färben"
+    skill: "color_expert"
+    components: []  # TODO: GAP-004
+
+  - key: FACEFRAME_180
+    name: "Faceframe"
+    event_id: 3719753
+    duration_minutes: 180
+    price: 225.00
+    category: "Färben"
+    skill: "color_expert"
+    components: []  # TODO: GAP-004
+
+staff:
+  - key: EMMA
+    name: "Emma Williams"
+    email: "emma.williams@friseur1.de"
+    calcom_user_id: null  # TODO: GAP-002 BLOCKER - Mappen!
+    branches:
+      - "Filiale A"
+    skills:
+      - cut_men
+      - cut_women
+      - cut_children
+      - color
+      - color_advanced
+    working_hours:
+      - dow: "MON"
+        start: "09:00"
+        end: "18:00"
+      - dow: "TUE"
+        start: "09:00"
+        end: "18:00"
+      - dow: "WED"
+        start: "09:00"
+        end: "18:00"
+      - dow: "THU"
+        start: "09:00"
+        end: "18:00"
+      - dow: "FRI"
+        start: "09:00"
+        end: "18:00"
+    breaks:
+      - start: "12:00"
+        end: "13:00"
+
+  - key: FABIAN
+    name: "Fabian Spitzer"
+    email: "fabian.spitzer@friseur1.de"
+    calcom_user_id: null  # TODO: GAP-002 BLOCKER
+    branches:
+      - "Filiale A"
+    skills:
+      - cut_men
+      - cut_women
+      - styling
+    working_hours:
+      - dow: "MON"
+        start: "10:00"
+        end: "19:00"
+      - dow: "TUE"
+        start: "10:00"
+        end: "19:00"
+      - dow: "WED"
+        start: "10:00"
+        end: "19:00"
+      - dow: "THU"
+        start: "10:00"
+        end: "19:00"
+      - dow: "FRI"
+        start: "10:00"
+        end: "19:00"
+    breaks:
+      - start: "13:00"
+        end: "13:30"
+
+  - key: SARAH
+    name: "Dr. Sarah Johnson"
+    email: "sarah.johnson@friseur1.de"
+    calcom_user_id: null  # TODO: GAP-002 BLOCKER
+    branches:
+      - "Filiale A"
+    skills:
+      - color
+      - color_advanced
+      - color_expert
+    working_hours:
+      - dow: "TUE"
+        start: "09:00"
+        end: "17:00"
+      - dow: "WED"
+        start: "09:00"
+        end: "17:00"
+      - dow: "THU"
+        start: "09:00"
+        end: "17:00"
+      - dow: "FRI"
+        start: "09:00"
+        end: "17:00"
+      - dow: "SAT"
+        start: "09:00"
+        end: "17:00"
+    breaks:
+      - start: "12:00"
+        end: "12:30"
+
+  - key: DAVID
+    name: "David Martinez"
+    email: "david.martinez@friseur1.de"
+    calcom_user_id: null  # TODO: GAP-002 BLOCKER
+    branches:
+      - "Filiale B"
+    skills:
+      - cut_men
+      - cut_women
+      - styling
+    working_hours:
+      - dow: "MON"
+        start: "09:00"
+        end: "18:00"
+      - dow: "TUE"
+        start: "09:00"
+        end: "18:00"
+      - dow: "WED"
+        start: "09:00"
+        end: "18:00"
+      - dow: "THU"
+        start: "09:00"
+        end: "18:00"
+      - dow: "FRI"
+        start: "09:00"
+        end: "18:00"
+    breaks:
+      - start: "12:30"
+        end: "13:00"
+
+  - key: MICHAEL
+    name: "Michael Chen"
+    email: "michael.chen@friseur1.de"
+    calcom_user_id: null  # TODO: GAP-002 BLOCKER
+    branches:
+      - "Filiale B"
+    skills:
+      - cut_men
+      - cut_children
+    working_hours:
+      - dow: "MON"
+        start: "10:00"
+        end: "19:00"
+      - dow: "TUE"
+        start: "10:00"
+        end: "19:00"
+      - dow: "WED"
+        start: "10:00"
+        end: "19:00"
+      - dow: "THU"
+        start: "10:00"
+        end: "19:00"
+      - dow: "FRI"
+        start: "10:00"
+        end: "19:00"
+    breaks:
+      - start: "13:00"
+        end: "13:30"
+
+integration:
+  stripe:
+    mode: "prepaid"  # TODO: GAP-006 - Implementierung ausstehend
+    topup_webhook_url: "https://api.askproai.de/webhooks/stripe"
+    min_balance_warning_eur: 50
+    auto_topup_enabled: false
+    topup_amount_eur: 100
+
+security:
+  pii_redaction: true
+  retention_days: 365
+  transcript_anonymization_days: 90
+  audio_retention_days: 30  # Retell.ai, dann S3 für 90 Tage (TODO: GAP-007)
+
+# Changelog
+# 2025-11-03: Initial version basierend auf Research
+# 2025-11-03: Policy-Update (ADR-005): Non-blocking Cancellation mit Reschedule-first
+#   - Reschedule/Cancel Cutoff: 1440 → 0 Min (jederzeit erlaubt)
+#   - Max Reschedules: 3 → null (keine Limits)
+#   - Reschedule-first Flow aktiviert
+#   - Branch-Notifications hinzugefügt (Email + Filament UI)
+# TODO: GAP-001 - Agent ID Diskrepanz klären
+# TODO: GAP-002 - Staff Cal.com User IDs mappen (BLOCKER)
+# TODO: GAP-003 - Branch-spezifische Policies?
+# TODO: GAP-004 - Komponenten-Services Backend implementieren
+# TODO: GAP-006 - Prepaid Balance System
+# TODO: GAP-007 - Audio-Archivierung nach S3

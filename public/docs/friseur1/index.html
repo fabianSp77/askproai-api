@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friseur 1 - Dokumentations-Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 50px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .doc-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text-dark);
+            display: block;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+
+        .doc-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .doc-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .doc-description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .badge-new {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-updated {
+            background: #3b82f6;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Friseur 1</h1>
+            <div class="subtitle">Dokumentations-Hub | Retell AI Voice Agent</div>
+        </div>
+
+        <div class="content">
+            <!-- Agent Documentation -->
+            <div class="section">
+                <h2 class="section-title">🤖 Agent Versionen</h2>
+                <div class="card-grid">
+                    <a href="agents/index.html" class="doc-card">
+                        <div class="doc-icon">📦</div>
+                        <div class="doc-title">Agent Library</div>
+                        <div class="doc-description">
+                            Komplette Übersicht aller Agent-Versionen (V50, V51, V62)
+                            mit Features, Changelogs und Download-Möglichkeiten.
+                        </div>
+                        <span class="badge badge-new">✨ NEU</span>
+                    </a>
+
+                    <a href="agents/v62.html" class="doc-card">
+                        <div class="doc-icon">🚀</div>
+                        <div class="doc-title">Agent V62 (Latest)</div>
+                        <div class="doc-description">
+                            Conversational Flow Optimization mit Zeit/Datum-Standards,
+                            Anti-Loop-Logik und 81% schnelleren Timeouts.
+                        </div>
+                        <span class="badge badge-new">✨ NEU</span>
+                    </a>
+
+                    <a href="agent-v51-interactive-complete.html" class="doc-card">
+                        <div class="doc-icon">📋</div>
+                        <div class="doc-title">Agent V51 (Published)</div>
+                        <div class="doc-description">
+                            Complete Feature Coverage mit get_alternatives,
+                            request_callback und Two-Step Booking.
+                        </div>
+                        <span class="badge badge-updated">🟢 LIVE</span>
+                    </a>
+
+                    <a href="agent-v50-interactive-complete.html" class="doc-card">
+                        <div class="doc-icon">📖</div>
+                        <div class="doc-title">Agent V50 (Archived)</div>
+                        <div class="doc-description">
+                            Baseline-Version mit grundlegenden Booking-Features
+                            und Tool-Call Enforcement.
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- E2E & Configuration -->
+            <div class="section">
+                <h2 class="section-title">⚙️ Konfiguration & Testing</h2>
+                <div class="card-grid">
+                    <a href="../e2e/e2e.md" class="doc-card">
+                        <div class="doc-icon">🔧</div>
+                        <div class="doc-title">E2E Configuration</div>
+                        <div class="doc-description">
+                            End-to-End Konfiguration für Friseur 1,
+                            Services, Policies und Cal.com Integration.
+                        </div>
+                    </a>
+
+                    <a href="https://dashboard.retellai.com/agents/agent_45daa54928c5768b52ba3db736"
+                       target="_blank" class="doc-card">
+                        <div class="doc-icon">🎛️</div>
+                        <div class="doc-title">Retell Dashboard</div>
+                        <div class="doc-description">
+                            Live-Agent im Retell Dashboard verwalten,
+                            testen und publishen.
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="section">
+                <h2 class="section-title">🔗 Quick Links</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <a href="agents/retell_agent_v62.json" download
+                       style="padding: 15px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; text-align: center; border-radius: 10px; text-decoration: none; font-weight: 600;">
+                        ⬇️ V62 JSON Download
+                    </a>
+                    <a href="agents/retell_agent_v51.json" download
+                       style="padding: 15px; background: white; color: var(--primary); border: 2px solid var(--primary); text-align: center; border-radius: 10px; text-decoration: none; font-weight: 600;">
+                        ⬇️ V51 JSON Download
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-top: 60px; padding-top: 30px; border-top: 2px solid var(--border); text-align: center; color: var(--text-light);">
+                <p><strong>Friseur 1 Dokumentation</strong> | Erstellt: 2025-11-07</p>
+                <p style="margin-top: 10px;">Agent ID: agent_45daa54928c5768b52ba3db736</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

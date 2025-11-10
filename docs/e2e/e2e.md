@@ -85,19 +85,23 @@ Dieses Dokument beschreibt das End-to-End-System für **Friseur 1**, ein Haar sa
 **Akzeptanzkriterien:**
 - ✅ Kunde ruft an und bittet um Umbuchung
 - ✅ Agent identifiziert bestehenden Termin
-- ✅ Agent prüft Policy: Umbuchung >24h vor Termin erlaubt
-- ✅ Agent prüft neue Verfügbarkeit
+- ✅ Agent prüft neue Verfügbarkeit (keine zeitliche Einschränkung)
 - ✅ Agent bucht um bei Bestätigung
 - ✅ Alter Termin wird storniert, neuer erstellt
 - ✅ Email-Benachrichtigung mit neuem .ics
+- ✅ Filiale erhält Notification (Email + UI)
 
 **Fehlerbehandlung:**
-- Umbuchung <24h vor Termin → Policy blockiert, Agent erklärt
-- Keine Verfügbarkeit für Wunschzeit → Alternativen
+- Keine Verfügbarkeit für Wunschzeit → Agent schlägt Alternativen vor
+- Cal.com Timeout → Retry mit Circuit Breaker
+
+**Policy:**
+- Umbuchung jederzeit erlaubt (0 Min Cutoff)
+- Keine Limits für Anzahl der Umbuchungen
 
 ---
 
-### FR-3: Stornierung (Cancel Appointment)
+### FR-3: Stornierung mit Reschedule-first (Cancel Appointment)
 
 **Als** Kunde
 **Möchte ich** einen Termin stornieren
@@ -106,13 +110,27 @@ Dieses Dokument beschreibt das End-to-End-System für **Friseur 1**, ein Haar sa
 **Akzeptanzkriterien:**
 - ✅ Kunde ruft an und bittet um Storno
 - ✅ Agent identifiziert Termin
-- ✅ Agent prüft Policy: Storno >24h vor Termin erlaubt
-- ✅ Agent storniert bei Bestätigung
-- ✅ Termin Status: "cancelled" in DB und Cal.com
-- ✅ Email-Benachrichtigung über Storno
+- ✅ **Agent bietet Umbuchung an:** "Möchten Sie den Termin lieber verschieben statt stornieren?"
+- ✅ **Fall A (Umbuchung akzeptiert):**
+  - Agent prüft neue Verfügbarkeit
+  - Agent bucht um bei passendem Slot
+  - Filiale erhält Notification: "Direkt neu gebucht am [Datum]"
+- ✅ **Fall B (Umbuchung abgelehnt):**
+  - Agent storniert bei Bestätigung
+  - Termin Status: "cancelled" in DB und Cal.com
+  - Filiale erhält Notification: "Storniert ohne Umbuchung"
+- ✅ Email-Benachrichtigung über Storno/Umbuchung
+- ✅ Filiale erhält Notification (Email + Filament UI) in BEIDEN Fällen
 
 **Fehlerbehandlung:**
-- Storno <24h vor Termin → Policy blockiert
+- Keine Verfügbarkeit für Wunschzeit (Fall A) → Agent schlägt Alternativen vor
+- Kunde lehnt alle Alternativen ab → Stornierung wie Fall B
+- Cal.com Timeout → Retry mit Circuit Breaker
+
+**Policy:**
+- Stornierung jederzeit erlaubt (0 Min Cutoff)
+- Reschedule-first Flow ist verpflichtend (Agent MUSS Umbuchung anbieten)
+- Filiale wird IMMER informiert (auch bei erfolgreicher Umbuchung)
 
 ---
 
@@ -221,11 +239,18 @@ Dieses Dokument beschreibt das End-to-End-System für **Friseur 1**, ein Haar sa
 | Policy Type | Zentrale | Zweigstelle | Company Default |
 |-------------|----------|-------------|-----------------|
 | **Allowed Actions** | book, reschedule, cancel | book, reschedule, cancel | book, reschedule, cancel |
-| **Reschedule Cutoff** | 1440 Min (24h) | 1440 Min (24h) | 1440 Min (24h) |
-| **Cancel Cutoff** | 1440 Min (24h) | 1440 Min (24h) | 1440 Min (24h) |
+| **Reschedule Cutoff** | 0 Min (jederzeit) | 0 Min (jederzeit) | 0 Min (jederzeit) |
+| **Cancel Cutoff** | 0 Min (jederzeit) | 0 Min (jederzeit) | 0 Min (jederzeit) |
+| **Reschedule-first** | ✅ Aktiv | ✅ Aktiv | ✅ Aktiv |
+| **Branch Notification** | Email + UI | Email + UI | Email + UI |
 | **No-Show Grace Period** | 15 Min | 15 Min | 15 Min |
 | **No-Show Fee** | €0 | €0 | €0 |
-| **Max Reschedules** | 3 | 3 | 3 |
+| **Max Reschedules** | ∞ (keine Limits) | ∞ (keine Limits) | ∞ (keine Limits) |
+
+**Policy-Details:**
+- **Non-blocking:** Cancel + Reschedule jederzeit erlaubt (0 Min Cutoff)
+- **Reschedule-first:** Agent bietet bei jeder Storno-Absicht automatisch Umbuchung an
+- **Notification:** Filiale wird bei JEDER Stornierung informiert (auch bei Umbuchung)
 
 TODO: GAP-003 - Branch-spezifische Policies konfigurieren (falls unterschiedlich)
 
@@ -284,24 +309,53 @@ TODO: GAP-003 - Branch-spezifische Policies konfigurieren (falls unterschiedlich
 
 ---
 
-### Test 3: Storno nach Cutoff (NEGATIV-TEST)
+### Test 3a: Reschedule-first Flow → Umbuchung akzeptiert
 
 **Voraussetzungen:**
-- Bestehender Termin in 12 Stunden
-- Policy: Storno >24h erforderlich
+- Bestehender Termin (beliebig wann)
+- Policy: Non-blocking (0 Min Cutoff)
+- Alternative Slots verfügbar
 
 **Schritte:**
 1. Kunde ruft an: "Ich möchte meinen Termin stornieren"
 2. Agent identifiziert Termin
-3. Agent prüft Policy
-4. Agent: "Leider ist eine Stornierung nur bis 24h vor dem Termin möglich. Ihr Termin ist in 12 Stunden."
-5. Storno wird NICHT durchgeführt
+3. Agent: "Möchten Sie den Termin lieber verschieben statt stornieren?"
+4. Kunde: "Ja, geht auch nächste Woche?"
+5. Agent prüft Verfügbarkeit
+6. Agent: "Nächste Woche Donnerstag 15 Uhr verfügbar"
+7. Kunde: "Perfekt, dann buche ich um"
+8. Agent bucht um
 
 **Erwartetes Ergebnis:**
-- ❌ Storno blockiert
-- ✅ Termin bleibt "scheduled"
-- ✅ Call-Log mit "policy_block" Metadata
-- ✅ Kunde informiert über Policy
+- ✅ Alter Termin Status "cancelled"
+- ✅ Neuer Termin Status "scheduled"
+- ✅ Email mit neuem .ics
+- ✅ Filiale-Notification: "Direkt neu gebucht am [Datum]" (Email + UI)
+- ✅ `appointment_modifications` Eintrag mit "reschedule_accepted"
+- ✅ Telemetrie: `reschedule_offered=1`, `reschedule_accepted=1`
+
+---
+
+### Test 3b: Reschedule-first Flow → Umbuchung abgelehnt
+
+**Voraussetzungen:**
+- Bestehender Termin (beliebig wann)
+- Policy: Non-blocking (0 Min Cutoff)
+
+**Schritte:**
+1. Kunde ruft an: "Ich möchte meinen Termin stornieren"
+2. Agent identifiziert Termin
+3. Agent: "Möchten Sie den Termin lieber verschieben statt stornieren?"
+4. Kunde: "Nein, ich möchte den Termin komplett stornieren"
+5. Agent: "Verstanden, ich storniere den Termin"
+6. Agent storniert
+
+**Erwartetes Ergebnis:**
+- ✅ Termin Status "cancelled"
+- ✅ Email über Stornierung
+- ✅ Filiale-Notification: "Storniert ohne Umbuchung" (Email + UI)
+- ✅ `appointment_modifications` Eintrag mit "reschedule_declined"
+- ✅ Telemetrie: `reschedule_offered=1`, `reschedule_declined=1`
 
 ---
 
@@ -379,9 +433,21 @@ TODO: GAP-003 - Branch-spezifische Policies konfigurieren (falls unterschiedlich
 ### Tests
 
 - [ ] **G2: cURL-Tests bestanden** (5 Szenarien)
-- [ ] **G4: Policy-Engine blockiert korrekt**
-- [ ] **G5: Kostenberechnung sekundengenau**
-- [ ] **G6: Webhook-Idempotenz validiert**
+- [ ] **G4: Policy-Engine non-blocking validiert**
+  - [ ] Cancel jederzeit erlaubt (0 Min Cutoff)
+  - [ ] Reschedule jederzeit erlaubt (0 Min Cutoff)
+  - [ ] Reschedule-first Flow aktiv (Agent bietet Umbuchung an)
+- [ ] **G5: Branch-Notifications funktionieren**
+  - [ ] Email-Versand bei Cancel/Reschedule
+  - [ ] Filament UI Notification erscheint
+  - [ ] Notification enthält korrekten Status ("Direkt neu gebucht" vs. "Ohne Umbuchung")
+- [ ] **G6: Telemetrie korrekt erfasst**
+  - [ ] `reschedule_offered` Counter
+  - [ ] `reschedule_accepted` Counter
+  - [ ] `reschedule_declined` Counter
+  - [ ] `branch_notified` Counter
+- [ ] **G7: Kostenberechnung sekundengenau**
+- [ ] **G8: Webhook-Idempotenz validiert**
 
 ### Monitoring
 

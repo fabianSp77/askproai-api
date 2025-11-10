@@ -54,8 +54,9 @@ class SyncCalcomServices extends Command
                 return Command::FAILURE;
             }
 
-            $eventTypes = $response->json()['event_types'] ?? [];
-            $this->info('Found ' . count($eventTypes) . ' Event Types in Cal.com');
+            // V2 API returns 'data' field, not 'event_types'
+            $eventTypes = $response->json()['data'] ?? $response->json()['event_types'] ?? [];
+            $this->info('Found ' . count($eventTypes) . ' Event Types in Cal.com (Team: ' . config('calcom.team_id') . ')');
 
             // Statistics
             $stats = [

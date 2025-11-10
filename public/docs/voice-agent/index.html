@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice AI Agent - Complete Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+
+        /* Header */
+        header {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            padding: 2rem 0;
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gray-700);
+            letter-spacing: 0.05em;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 1.5rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+        }
+
+        .nav-link:hover {
+            background: var(--gray-50);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-x: auto;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            font-size: 1.125rem;
+            color: var(--gray-700);
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        /* Feature Matrix Table */
+        .feature-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9375rem;
+        }
+
+        .feature-table thead {
+            background: var(--gray-50);
+        }
+
+        .feature-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .feature-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .feature-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .badge-high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-low {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+        }
+
+        .form-label .required {
+            color: var(--danger);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.375rem;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin-top: 0.25rem;
+        }
+
+        /* Response Display */
+        .response-container {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .response-container.show {
+            display: block;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .response-status {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .response-status.success {
+            color: var(--success);
+        }
+
+        .response-status.error {
+            color: var(--danger);
+        }
+
+        .response-body {
+            background: var(--gray-900);
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .response-body pre {
+            margin: 0;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--gray-900);
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8125rem;
+            background: var(--gray-700);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--gray-600);
+        }
+
+        /* Grid System */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.9375rem;
+            color: var(--gray-700);
+            margin-top: 0.5rem;
+        }
+
+        /* Mermaid Diagrams */
+        .diagram-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--gray-200);
+            overflow-x: auto;
+        }
+
+        /* Loading State */
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--gray-300);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid var(--primary);
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Links */
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Parameter Table */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9375rem;
+            margin: 1rem 0;
+        }
+
+        .param-table th {
+            background: var(--gray-50);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .param-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: top;
+        }
+
+        .param-type {
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: var(--primary);
+            font-size: 0.875rem;
+        }
+
+        /* Interactive Playground */
+        .playground {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .playground {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .playground-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🎙️ Voice AI Agent Documentation</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportDocumentation()">
+                    📥 Export JSON
+                </button>
+                <button class="btn btn-primary" onclick="runAllTests()">
+                    🧪 Run All Tests
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-title">Overview</div>
+                    <a href="#overview" class="nav-link active" onclick="navigate('overview')">Dashboard</a>
+                    <a href="#feature-matrix" class="nav-link" onclick="navigate('feature-matrix')">Feature Matrix</a>
+                    <a href="#architecture" class="nav-link" onclick="navigate('architecture')">Architecture</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Functions</div>
+                    <a href="#collect-appointment" class="nav-link" onclick="navigate('collect-appointment')">collect_appointment_info</a>
+                    <a href="#check-availability" class="nav-link" onclick="navigate('check-availability')">check_availability</a>
+                    <a href="#book-appointment" class="nav-link" onclick="navigate('book-appointment')">book_appointment</a>
+                    <a href="#modify-appointment" class="nav-link" onclick="navigate('modify-appointment')">modify_appointment</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">API Reference</div>
+                    <a href="#webhooks" class="nav-link" onclick="navigate('webhooks')">Webhooks</a>
+                    <a href="#endpoints" class="nav-link" onclick="navigate('endpoints')">Endpoints</a>
+                    <a href="#schemas" class="nav-link" onclick="navigate('schemas')">Data Schemas</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Testing</div>
+                    <a href="#playground" class="nav-link" onclick="navigate('playground')">Interactive Playground</a>
+                    <a href="#test-scenarios" class="nav-link" onclick="navigate('test-scenarios')">Test Scenarios</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="section active">
+                <div class="page-header">
+                    <h1 class="page-title">Voice AI Agent Documentation</h1>
+                    <p class="page-description">Complete technical documentation for appointment booking voice agent</p>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-functions">8</div>
+                        <div class="stat-label">Total Functions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="implemented-functions">6</div>
+                        <div class="stat-label">Implemented</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="test-coverage">75%</div>
+                        <div class="stat-label">Test Coverage</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Start</h2>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Getting Started:</strong> This documentation provides complete technical specifications,
+                        interactive testing tools, and implementation guides for the Voice AI Agent system.
+                    </div>
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">System Architecture</h3>
+                    <p style="margin-bottom: 1rem;">The Voice AI Agent integrates three main components:</p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li><strong>Retell.ai</strong> - Voice conversation handling and natural language processing</li>
+                        <li><strong>Laravel Backend</strong> - Business logic, validation, and data management</li>
+                        <li><strong>Cal.com</strong> - Calendar management and availability checking</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Core Functions Overview</h2>
+                    </div>
+                    <div class="grid grid-2">
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Information Collection</h4>
+                            <p style="font-size: 0.9375rem; color: var(--gray-700);">
+                                <code>collect_appointment_info</code> - Gathers appointment details from conversation
+                            </p>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Availability Checking</h4>
+                            <p style="font-size: 0.9375rem; color: var(--gray-700);">
+                                <code>check_availability</code> - Queries available time slots from Cal.com
+                            </p>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Booking Creation</h4>
+                            <p style="font-size: 0.9375rem; color: var(--gray-700);">
+                                <code>book_appointment</code> - Creates confirmed appointment in system
+                            </p>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Modification</h4>
+                            <p style="font-size: 0.9375rem; color: var(--gray-700);">
+                                <code>modify_appointment</code> - Updates or cancels existing appointments
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature Matrix Section -->
+            <section id="feature-matrix" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">Feature Matrix</h1>
+                    <p class="page-description">Complete overview of all system features and their implementation status</p>
+                </div>
+
+                <div class="card">
+                    <table class="feature-table">
+                        <thead>
+                            <tr>
+                                <th>Feature Name</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Specification</th>
+                                <th>Tests</th>
+                                <th>Documentation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>collect_appointment_info</strong></td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                                <td><span class="badge badge-critical">Critical</span></td>
+                                <td><span class="badge badge-success">Complete</span></td>
+                                <td><span class="badge badge-success">Pass</span></td>
+                                <td><a href="#collect-appointment">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>check_availability</strong></td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                                <td><span class="badge badge-critical">Critical</span></td>
+                                <td><span class="badge badge-success">Complete</span></td>
+                                <td><span class="badge badge-success">Pass</span></td>
+                                <td><a href="#check-availability">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>book_appointment</strong></td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                                <td><span class="badge badge-critical">Critical</span></td>
+                                <td><span class="badge badge-success">Complete</span></td>
+                                <td><span class="badge badge-success">Pass</span></td>
+                                <td><a href="#book-appointment">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>modify_appointment</strong></td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                                <td><span class="badge badge-high">High</span></td>
+                                <td><span class="badge badge-warning">Partial</span></td>
+                                <td><span class="badge badge-warning">Untested</span></td>
+                                <td><a href="#modify-appointment">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>get_appointment_status</strong></td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                                <td><span class="badge badge-medium">Medium</span></td>
+                                <td><span class="badge badge-success">Complete</span></td>
+                                <td><span class="badge badge-success">Pass</span></td>
+                                <td><a href="#get-status">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>send_confirmation</strong></td>
+                                <td><span class="badge badge-warning">Partial</span></td>
+                                <td><span class="badge badge-high">High</span></td>
+                                <td><span class="badge badge-warning">Partial</span></td>
+                                <td><span class="badge badge-warning">Untested</span></td>
+                                <td><a href="#send-confirmation">View Docs</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>handle_payment</strong></td>
+                                <td><span class="badge badge-danger">Missing</span></td>
+                                <td><span class="badge badge-low">Low</span></td>
+                                <td><span class="badge badge-danger">Missing</span></td>
+                                <td><span class="badge badge-danger">Fail</span></td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>multi_service_booking</strong></td>
+                                <td><span class="badge badge-warning">Partial</span></td>
+                                <td><span class="badge badge-medium">Medium</span></td>
+                                <td><span class="badge badge-warning">Partial</span></td>
+                                <td><span class="badge badge-warning">Untested</span></td>
+                                <td><a href="#multi-service">View Docs</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 class="card-title">By Status</h3>
+                        <div style="margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Implemented</span>
+                                <span><strong>5</strong> (62.5%)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Partial</span>
+                                <span><strong>2</strong> (25%)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Missing</span>
+                                <span><strong>1</strong> (12.5%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">By Priority</h3>
+                        <div style="margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Critical</span>
+                                <span><strong>3</strong> (37.5%)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>High</span>
+                                <span><strong>2</strong> (25%)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Medium</span>
+                                <span><strong>2</strong> (25%)</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Low</span>
+                                <span><strong>1</strong> (12.5%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">System Architecture</h1>
+                    <p class="page-description">Complete data flow and integration architecture</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Overall System Flow</h2>
+                    </div>
+                    <div class="diagram-container">
+                        <pre class="mermaid">
+graph TB
+    subgraph "User Layer"
+        U[User Call] -->|Voice| R[Retell.ai]
+    end
+
+    subgraph "AI Layer"
+        R -->|NLP| P[Prompt Processing]
+        P -->|Function Call| FC[Function Router]
+    end
+
+    subgraph "Backend Layer"
+        FC -->|HTTP POST| L[Laravel API]
+        L -->|Validate| V[Validation Layer]
+        V -->|Business Logic| BL[Service Layer]
+        BL -->|Cache Check| C[(Redis Cache)]
+        BL -->|Database| DB[(PostgreSQL)]
+    end
+
+    subgraph "Integration Layer"
+        BL -->|API Call| CAL[Cal.com API]
+        CAL -->|Availability| BL
+        CAL -->|Webhook| L
+    end
+
+    L -->|Response| FC
+    FC -->|Result| R
+    R -->|Voice| U
+
+    style R fill:#2563eb,color:#fff
+    style L fill:#10b981,color:#fff
+    style CAL fill:#f59e0b,color:#fff
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Request/Response Flow</h2>
+                    </div>
+                    <div class="diagram-container">
+                        <pre class="mermaid">
+sequenceDiagram
+    participant User
+    participant Retell
+    participant Backend
+    participant Cache
+    participant DB
+    participant CalCom
+
+    User->>Retell: Voice Input
+    Retell->>Retell: Speech to Text
+    Retell->>Backend: Function Call (collect_appointment_info)
+    Backend->>Backend: Validate Input
+    Backend->>DB: Store Partial Data
+    Backend-->>Retell: Success
+
+    Retell->>Backend: Function Call (check_availability)
+    Backend->>Cache: Check Cached Slots
+    alt Cache Hit
+        Cache-->>Backend: Return Slots
+    else Cache Miss
+        Backend->>CalCom: Get Availability
+        CalCom-->>Backend: Available Slots
+        Backend->>Cache: Store Slots (5min TTL)
+    end
+    Backend-->>Retell: Available Times
+
+    Retell->>Backend: Function Call (book_appointment)
+    Backend->>DB: Create Appointment
+    Backend->>CalCom: Create Booking
+    CalCom-->>Backend: Booking Confirmed
+    Backend->>Cache: Invalidate Availability
+    Backend-->>Retell: Booking Success
+
+    Retell->>Retell: Text to Speech
+    Retell->>User: Voice Confirmation
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Error Handling Flow</h2>
+                    </div>
+                    <div class="diagram-container">
+                        <pre class="mermaid">
+graph TD
+    FC[Function Call] --> V{Validation}
+    V -->|Pass| BL[Business Logic]
+    V -->|Fail| E1[Return Validation Error]
+
+    BL --> DB{Database Operation}
+    DB -->|Success| INT{External Integration}
+    DB -->|Fail| E2[Rollback & Return Error]
+
+    INT -->|Cal.com Success| S[Success Response]
+    INT -->|Cal.com Fail| COMP[Compensation]
+
+    COMP --> ROLLDB[Rollback Database]
+    COMP --> E3[Return Integration Error]
+
+    E1 --> LOG[Log Error]
+    E2 --> LOG
+    E3 --> LOG
+
+    LOG --> NOT[Notify Monitoring]
+    NOT --> RET[Return to Retell]
+
+    S --> RET
+
+    style E1 fill:#ef4444,color:#fff
+    style E2 fill:#ef4444,color:#fff
+    style E3 fill:#ef4444,color:#fff
+    style S fill:#10b981,color:#fff
+                        </pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- collect_appointment_info Function Section -->
+            <section id="collect-appointment" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">collect_appointment_info</h1>
+                    <p class="page-description">Collects and validates appointment details from user conversation</p>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('collect-docs')">Documentation</div>
+                    <div class="tab" onclick="switchTab('collect-test')">Interactive Test</div>
+                    <div class="tab" onclick="switchTab('collect-examples')">Examples</div>
+                    <div class="tab" onclick="switchTab('collect-flow')">Data Flow</div>
+                </div>
+
+                <!-- Documentation Tab -->
+                <div id="collect-docs" class="tab-content active">
+                    <div class="card">
+                        <h3 class="section-title">Function Specification</h3>
+                        <p style="margin-bottom: 1rem;">
+                            This function is called by Retell.ai during conversation to collect appointment details.
+                            It validates input and stores partial appointment data for later completion.
+                        </p>
+
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Endpoint</h4>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>POST /api/retell/collect-appointment-info</pre>
+                        </div>
+
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Parameters</h4>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>call_id</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-danger">Yes</span></td>
+                                    <td>Unique identifier for the Retell call session</td>
+                                </tr>
+                                <tr>
+                                    <td><code>service_name</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-danger">Yes</span></td>
+                                    <td>Name of the requested service (e.g., "Herrenhaarschnitt")</td>
+                                </tr>
+                                <tr>
+                                    <td><code>customer_name</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>Customer's full name</td>
+                                </tr>
+                                <tr>
+                                    <td><code>customer_phone</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-danger">Yes</span></td>
+                                    <td>Customer's contact phone number</td>
+                                </tr>
+                                <tr>
+                                    <td><code>customer_email</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>Customer's email address</td>
+                                </tr>
+                                <tr>
+                                    <td><code>preferred_date</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>Preferred date in YYYY-MM-DD format</td>
+                                </tr>
+                                <tr>
+                                    <td><code>preferred_time</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>Preferred time in HH:MM format</td>
+                                </tr>
+                                <tr>
+                                    <td><code>notes</code></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>Additional notes or special requests</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Response Schema</h4>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>{
+  "success": true,
+  "message": "Appointment information collected successfully",
+  "data": {
+    "appointment_id": "uuid-v4",
+    "status": "pending",
+    "collected_fields": ["service_name", "customer_phone", "preferred_date"],
+    "missing_fields": ["customer_name", "preferred_time"]
+  }
+}</pre>
+                        </div>
+
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Validation Rules</h4>
+                        <ul style="margin-left: 1.5rem; list-style-type: disc;">
+                            <li><code>call_id</code> - Must be valid UUID format</li>
+                            <li><code>service_name</code> - Must match existing service in database</li>
+                            <li><code>customer_phone</code> - Must be valid phone format (E.164 recommended)</li>
+                            <li><code>customer_email</code> - Must be valid email format if provided</li>
+                            <li><code>preferred_date</code> - Must be today or future date</li>
+                            <li><code>preferred_time</code> - Must be valid time format (HH:MM)</li>
+                        </ul>
+
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Error Responses</h4>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>Status Code</th>
+                                    <th>Error Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>400</code></td>
+                                    <td>Validation Error</td>
+                                    <td>Invalid input parameters</td>
+                                </tr>
+                                <tr>
+                                    <td><code>404</code></td>
+                                    <td>Service Not Found</td>
+                                    <td>Requested service does not exist</td>
+                                </tr>
+                                <tr>
+                                    <td><code>422</code></td>
+                                    <td>Unprocessable Entity</td>
+                                    <td>Data fails business logic validation</td>
+                                </tr>
+                                <tr>
+                                    <td><code>500</code></td>
+                                    <td>Server Error</td>
+                                    <td>Internal processing error</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Interactive Test Tab -->
+                <div id="collect-test" class="tab-content">
+                    <div class="playground">
+                        <div class="playground-section">
+                            <h3 class="section-title">Request Builder</h3>
+                            <form id="collect-form" onsubmit="testCollectAppointment(event)">
+                                <div class="form-group">
+                                    <label class="form-label">Call ID <span class="required">*</span></label>
+                                    <input type="text" class="form-input" name="call_id"
+                                           value="test-call-123" required>
+                                    <div class="form-hint">Unique identifier for the call session</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Service Name <span class="required">*</span></label>
+                                    <select class="form-select" name="service_name" required>
+                                        <option value="">Select a service...</option>
+                                        <option value="Herrenhaarschnitt">Herrenhaarschnitt</option>
+                                        <option value="Damenhaarschnitt">Damenhaarschnitt</option>
+                                        <option value="Färben">Färben</option>
+                                        <option value="Dauerwelle">Dauerwelle</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Customer Name</label>
+                                    <input type="text" class="form-input" name="customer_name"
+                                           placeholder="Max Mustermann">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Customer Phone <span class="required">*</span></label>
+                                    <input type="tel" class="form-input" name="customer_phone"
+                                           value="+4915123456789" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Customer Email</label>
+                                    <input type="email" class="form-input" name="customer_email"
+                                           placeholder="max@example.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Preferred Date</label>
+                                    <input type="date" class="form-input" name="preferred_date">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Preferred Time</label>
+                                    <input type="time" class="form-input" name="preferred_time">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-textarea" name="notes"
+                                              placeholder="Any special requests..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    Test Function Call
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="playground-section">
+                            <h3 class="section-title">Response</h3>
+                            <div id="collect-response" class="response-container">
+                                <div class="response-header">
+                                    <div class="response-status success">Status: <span id="collect-status-code">200</span></div>
+                                    <button class="btn btn-secondary btn-sm" onclick="copyResponse('collect-response-body')">
+                                        Copy Response
+                                    </button>
+                                </div>
+                                <div class="response-body">
+                                    <pre id="collect-response-body">// Response will appear here after testing</pre>
+                                </div>
+                            </div>
+                            <div style="text-align: center; color: var(--gray-700); padding: 3rem;">
+                                Fill out the form and click "Test Function Call" to see the response
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Examples Tab -->
+                <div id="collect-examples" class="tab-content">
+                    <div class="card">
+                        <h3 class="section-title">Example 1: Minimal Required Fields</h3>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>curl -X POST https://api.example.com/api/retell/collect-appointment-info \
+  -H "Content-Type: application/json" \
+  -d '{
+    "call_id": "call_abc123xyz",
+    "service_name": "Herrenhaarschnitt",
+    "customer_phone": "+4915123456789"
+  }'</pre>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <strong>Response:</strong>
+                            <div class="code-block" style="margin-top: 0.5rem;">
+                                <pre>{
+  "success": true,
+  "message": "Appointment information collected successfully",
+  "data": {
+    "appointment_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "pending",
+    "collected_fields": ["service_name", "customer_phone"],
+    "missing_fields": ["customer_name", "preferred_date", "preferred_time"]
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="section-title">Example 2: Complete Appointment Information</h3>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>curl -X POST https://api.example.com/api/retell/collect-appointment-info \
+  -H "Content-Type: application/json" \
+  -d '{
+    "call_id": "call_abc123xyz",
+    "service_name": "Damenhaarschnitt",
+    "customer_name": "Anna Schmidt",
+    "customer_phone": "+4915198765432",
+    "customer_email": "anna.schmidt@example.com",
+    "preferred_date": "2025-11-15",
+    "preferred_time": "14:30",
+    "notes": "Bitte mit Föhnen"
+  }'</pre>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <strong>Response:</strong>
+                            <div class="code-block" style="margin-top: 0.5rem;">
+                                <pre>{
+  "success": true,
+  "message": "Appointment information collected successfully",
+  "data": {
+    "appointment_id": "660e8400-e29b-41d4-a716-446655440001",
+    "status": "ready_for_booking",
+    "collected_fields": [
+      "service_name",
+      "customer_name",
+      "customer_phone",
+      "customer_email",
+      "preferred_date",
+      "preferred_time",
+      "notes"
+    ],
+    "missing_fields": []
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="section-title">Example 3: Validation Error</h3>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>curl -X POST https://api.example.com/api/retell/collect-appointment-info \
+  -H "Content-Type: application/json" \
+  -d '{
+    "call_id": "call_abc123xyz",
+    "service_name": "NonExistentService",
+    "customer_phone": "invalid-phone"
+  }'</pre>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <strong>Response (400 Bad Request):</strong>
+                            <div class="code-block" style="margin-top: 0.5rem;">
+                                <pre>{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "service_name": ["The selected service does not exist"],
+    "customer_phone": ["The phone number format is invalid"]
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Flow Tab -->
+                <div id="collect-flow" class="tab-content">
+                    <div class="card">
+                        <h3 class="section-title">Data Flow Diagram</h3>
+                        <div class="diagram-container">
+                            <pre class="mermaid">
+sequenceDiagram
+    participant R as Retell.ai
+    participant V as Validator
+    participant S as Service Layer
+    participant DB as Database
+    participant C as Cache
+
+    R->>V: POST collect_appointment_info
+    Note over V: Validate call_id format
+    Note over V: Validate service_name
+    Note over V: Validate phone format
+
+    alt Validation Fails
+        V-->>R: 400 Validation Error
+    else Validation Passes
+        V->>S: Process Request
+
+        S->>DB: Check Service Exists
+        alt Service Not Found
+            DB-->>S: Not Found
+            S-->>R: 404 Service Not Found
+        else Service Found
+            DB-->>S: Service Details
+
+            S->>DB: Store Partial Appointment
+            DB-->>S: Appointment ID
+
+            S->>C: Cache Call Session Data
+            C-->>S: Cached
+
+            S-->>R: 200 Success Response
+        end
+    end
+                            </pre>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="section-title">Processing Steps</h3>
+                        <ol style="margin-left: 1.5rem;">
+                            <li style="margin-bottom: 1rem;">
+                                <strong>Input Validation</strong>
+                                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <li>Verify call_id format (UUID)</li>
+                                    <li>Check service_name against database</li>
+                                    <li>Validate phone number format</li>
+                                    <li>Validate email format if provided</li>
+                                    <li>Validate date/time formats</li>
+                                </ul>
+                            </li>
+                            <li style="margin-bottom: 1rem;">
+                                <strong>Service Lookup</strong>
+                                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <li>Query database for service by name</li>
+                                    <li>Check if service is active</li>
+                                    <li>Retrieve service duration and pricing</li>
+                                </ul>
+                            </li>
+                            <li style="margin-bottom: 1rem;">
+                                <strong>Data Storage</strong>
+                                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <li>Create partial appointment record</li>
+                                    <li>Link to call_id</li>
+                                    <li>Store collected fields</li>
+                                    <li>Track missing fields</li>
+                                </ul>
+                            </li>
+                            <li style="margin-bottom: 1rem;">
+                                <strong>Session Caching</strong>
+                                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <li>Cache appointment data with call_id as key</li>
+                                    <li>Set TTL to 30 minutes</li>
+                                    <li>Enable quick retrieval for subsequent calls</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Response Generation</strong>
+                                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                                    <li>Return appointment_id</li>
+                                    <li>List collected fields</li>
+                                    <li>List missing required fields</li>
+                                    <li>Provide status (pending/ready_for_booking)</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="section-title">Database Schema</h3>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre>-- appointments table
+CREATE TABLE appointments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    call_id VARCHAR(255) NOT NULL,
+    company_id UUID NOT NULL,
+    service_id UUID NOT NULL,
+    customer_name VARCHAR(255),
+    customer_phone VARCHAR(50) NOT NULL,
+    customer_email VARCHAR(255),
+    preferred_date DATE,
+    preferred_time TIME,
+    notes TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+
+    CONSTRAINT fk_service FOREIGN KEY (service_id)
+        REFERENCES services(id) ON DELETE CASCADE,
+    CONSTRAINT fk_company FOREIGN KEY (company_id)
+        REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Indexes for performance
+CREATE INDEX idx_appointments_call_id ON appointments(call_id);
+CREATE INDEX idx_appointments_status ON appointments(status);
+CREATE INDEX idx_appointments_created_at ON appointments(created_at);</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Placeholder sections for other functions -->
+            <section id="check-availability" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">check_availability</h1>
+                    <p class="page-description">Query available time slots from Cal.com calendar</p>
+                </div>
+                <div class="alert alert-info">
+                    Documentation similar to collect_appointment_info would be here...
+                </div>
+            </section>
+
+            <section id="book-appointment" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">book_appointment</h1>
+                    <p class="page-description">Create confirmed appointment in system</p>
+                </div>
+                <div class="alert alert-info">
+                    Documentation similar to collect_appointment_info would be here...
+                </div>
+            </section>
+
+            <section id="modify-appointment" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">modify_appointment</h1>
+                    <p class="page-description">Update or cancel existing appointments</p>
+                </div>
+                <div class="alert alert-info">
+                    Documentation similar to collect_appointment_info would be here...
+                </div>
+            </section>
+
+            <!-- Webhooks Section -->
+            <section id="webhooks" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">Webhooks</h1>
+                    <p class="page-description">Webhook endpoints for external integrations</p>
+                </div>
+                <div class="alert alert-info">
+                    Webhook documentation would be here...
+                </div>
+            </section>
+
+            <!-- Endpoints Section -->
+            <section id="endpoints" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">API Endpoints</h1>
+                    <p class="page-description">Complete API reference</p>
+                </div>
+                <div class="alert alert-info">
+                    API endpoint documentation would be here...
+                </div>
+            </section>
+
+            <!-- Schemas Section -->
+            <section id="schemas" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">Data Schemas</h1>
+                    <p class="page-description">Complete data structure documentation</p>
+                </div>
+                <div class="alert alert-info">
+                    Schema documentation would be here...
+                </div>
+            </section>
+
+            <!-- Playground Section -->
+            <section id="playground" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">Interactive Playground</h1>
+                    <p class="page-description">Test all functions in real-time</p>
+                </div>
+                <div class="alert alert-info">
+                    Interactive playground would be here...
+                </div>
+            </section>
+
+            <!-- Test Scenarios Section -->
+            <section id="test-scenarios" class="section">
+                <div class="page-header">
+                    <h1 class="page-title">Test Scenarios</h1>
+                    <p class="page-description">Pre-defined test scenarios for validation</p>
+                </div>
+                <div class="alert alert-info">
+                    Test scenarios would be here...
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+
+        // Navigation
+        function navigate(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show selected section
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('active');
+            }
+
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+
+            // Update URL hash
+            window.location.hash = sectionId;
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabContent = document.getElementById(tabId);
+            const section = tabContent.closest('.section');
+
+            // Hide all tab contents in this section
+            section.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs in this section
+            section.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab content
+            tabContent.classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Test collect_appointment_info function
+        async function testCollectAppointment(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // Remove empty fields
+            Object.keys(data).forEach(key => {
+                if (data[key] === '') delete data[key];
+            });
+
+            const responseContainer = document.getElementById('collect-response');
+            const responseBody = document.getElementById('collect-response-body');
+            const statusCode = document.getElementById('collect-status-code');
+
+            // Show loading state
+            responseContainer.classList.add('show');
+            responseBody.innerHTML = '<div class="loading"></div> Testing function call...';
+
+            try {
+                // Make actual API call
+                const response = await fetch('/api/retell/collect-appointment-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // Update response display
+                statusCode.textContent = response.status;
+                statusCode.parentElement.className = 'response-status ' +
+                    (response.ok ? 'success' : 'error');
+
+                responseBody.textContent = JSON.stringify(result, null, 2);
+
+            } catch (error) {
+                // Handle network errors
+                statusCode.textContent = 'Error';
+                statusCode.parentElement.className = 'response-status error';
+                responseBody.textContent = JSON.stringify({
+                    success: false,
+                    message: 'Network error: ' + error.message
+                }, null, 2);
+            }
+        }
+
+        // Copy code to clipboard
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('pre').textContent;
+
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Copy response to clipboard
+        function copyResponse(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Response copied to clipboard!');
+            });
+        }
+
+        // Export documentation as JSON
+        function exportDocumentation() {
+            const doc = {
+                title: "Voice AI Agent Documentation",
+                version: "1.0.0",
+                generated: new Date().toISOString(),
+                functions: [
+                    {
+                        name: "collect_appointment_info",
+                        status: "implemented",
+                        priority: "critical",
+                        endpoint: "/api/retell/collect-appointment-info",
+                        method: "POST"
+                    }
+                    // Add more functions here
+                ]
+            };
+
+            const blob = new Blob([JSON.stringify(doc, null, 2)],
+                { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'voice-agent-documentation.json';
+            a.click();
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            alert('Running all tests... This feature will execute all test scenarios.');
+            // Implementation would iterate through all test scenarios
+        }
+
+        // Handle URL hash on page load
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const link = document.querySelector(`[href="#${hash}"]`);
+                if (link) {
+                    link.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

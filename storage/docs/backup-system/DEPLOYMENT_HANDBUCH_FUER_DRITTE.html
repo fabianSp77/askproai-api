@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment-Handbuch für Dritte - AskPro AI Gateway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50; --secondary: #34495e; --success: #27ae60; --danger: #e74c3c;
+            --warning: #f39c12; --info: #3498db; --light: #ecf0f1; --dark: #2c3e50;
+            --text: #2c3e50; --bg: #f8f9fa; --card-bg: #ffffff; --border: #dee2e6;
+            --code-bg: #f8f9fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6; color: var(--text); background: var(--bg); padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; background: var(--card-bg);
+            padding: 3rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 2.5em; margin-bottom: 0.5rem; color: var(--primary);
+            padding-bottom: 1rem; border-bottom: 3px solid var(--primary); }
+        h2 { font-size: 1.8em; margin: 2rem 0 1rem 0; color: var(--secondary);
+            padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
+        h3 { font-size: 1.4em; margin: 1.5rem 0 0.8rem 0; color: var(--info); }
+        p { margin-bottom: 1rem; }
+        code { background: var(--code-bg); padding: 0.2rem 0.4rem; border-radius: 3px;
+            font-family: 'Courier New', monospace; font-size: 0.9em; color: var(--danger); }
+        pre { background: var(--code-bg); padding: 1rem; border-radius: 5px; overflow-x: auto;
+            border-left: 4px solid var(--primary); margin-bottom: 1rem; }
+        pre code { background: none; padding: 0; color: var(--text); }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 0.75rem; text-align: left; border: 1px solid var(--border); }
+        th { background: var(--primary); color: white; font-weight: 600; }
+        tr:nth-child(even) { background: var(--light); }
+        ul, ol { margin-left: 2rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.5rem; }
+        .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px;
+            font-size: 0.85em; font-weight: 600; }
+        .badge-success { background: var(--success); color: white; }
+        .badge-danger { background: var(--danger); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+        .badge-info { background: var(--info); color: white; }
+        blockquote { border-left: 4px solid var(--warning); background: #fffbf0;
+            padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+        a { color: var(--info); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .toc { background: var(--light); padding: 1.5rem; border-radius: 8px; margin: 2rem 0;
+            border: 2px solid var(--border); }
+        .toc h3 { margin-top: 0; color: var(--primary); }
+        .toc ul { margin-left: 1.5rem; }
+        .back-to-hub { display: inline-block; margin-bottom: 1rem; padding: 0.5rem 1rem;
+            background: var(--primary); color: white; border-radius: 5px; text-decoration: none; }
+        .back-to-hub:hover { background: var(--secondary); text-decoration: none; }
+        @media print { .back-to-hub { display: none; } }
+    
+        /* Markdown Download Section */
+        .markdown-download {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .markdown-download h3 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .markdown-preview {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 1rem;
+        }
+
+        .markdown-preview.expanded {
+            max-height: none;
+        }
+
+        .download-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+            transform: translateY(-2px);
+        }
+
+</style>
+</head>
+<body>
+    <a href="/docs/backup-system" class="back-to-hub">← Zurück zum Documentation Hub</a>
+    <div class="container">
+        <h1>Deployment-Handbuch für AskPro AI Gateway</h1>
+<p><strong>Version:</strong> 1.0
+<strong>Stand:</strong> 2025-11-02
+<strong>Zielgruppe:</strong> Externe Entwickler, DevOps-Teams, neue Teammitglieder</p>
+<hr />
+<h2>Überblick</h2>
+<p>Dieses Handbuch beschreibt den vollständigen Deployment-Prozess für die AskPro AI Gateway Applikation. Der Prozess ist <strong>vollautomatisiert</strong> über GitHub Actions und beinhaltet mehrere Sicherheits-Gates.</p>
+<h3>Umgebungen</h3>
+<table>
+<thead>
+<tr>
+<th>Umgebung</th>
+<th>URL</th>
+<th>Server</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Staging</strong></td>
+<td>https://staging.askproai.de</td>
+<td>152.53.116.127</td>
+<td>Test-Umgebung für neue Features</td>
+</tr>
+<tr>
+<td><strong>Production</strong></td>
+<td>https://api.askproai.de</td>
+<td>152.53.116.127</td>
+<td>Live-System für Endkunden</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>🚀 Deployment-Flow (Übersicht)</h2>
+<div class="codehilite"><pre><span></span><code>Code ändern → Push to develop → Build → Tests → Staging Deploy → Tests → Production Deploy
+</code></pre></div>
+
+<h3>Zeitaufwand</h3>
+<ul>
+<li><strong>Build:</strong> ~3-5 Minuten</li>
+<li><strong>Staging Deployment:</strong> ~2-3 Minuten</li>
+<li><strong>Production Deployment:</strong> ~2-3 Minuten</li>
+<li><strong>Gesamt:</strong> ~10-15 Minuten</li>
+</ul>
+<hr />
+<h2>📋 Voraussetzungen</h2>
+<h3>GitHub Repository Access</h3>
+<p>Sie benötigen:
+- ✅ Push-Rechte auf das Repository <code>fabianSp77/askproai-api</code>
+- ✅ Zugriff auf GitHub Actions
+- ✅ Optional: <code>gh</code> CLI installiert</p>
+<h3>Lokale Entwicklung</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Repository klonen</span>
+git<span class="w"> </span>clone<span class="w"> </span>git@github.com:fabianSp77/askproai-api.git
+<span class="nb">cd</span><span class="w"> </span>askproai-api
+
+<span class="c1"># Dependencies installieren</span>
+composer<span class="w"> </span>install
+npm<span class="w"> </span>install
+</code></pre></div>
+
+<hr />
+<h2>🔄 Deployment-Prozess Schritt-für-Schritt</h2>
+<h3>Schritt 1: Code-Änderungen vorbereiten</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Neuen Feature-Branch erstellen</span>
+git<span class="w"> </span>checkout<span class="w"> </span>develop
+git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>develop
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feature/meine-aenderung
+
+<span class="c1"># Code ändern, testen</span>
+<span class="c1"># ...</span>
+
+<span class="c1"># Commit erstellen</span>
+git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: Meine neue Funktion&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>feature/meine-aenderung
+</code></pre></div>
+
+<h3>Schritt 2: Pull Request erstellen</h3>
+<ol>
+<li>Gehen Sie zu: https://github.com/fabianSp77/askproai-api/pulls</li>
+<li>Klicken Sie auf "New Pull Request"</li>
+<li><strong>Base:</strong> <code>develop</code> ← <strong>Compare:</strong> <code>feature/meine-aenderung</code></li>
+<li>Titel und Beschreibung hinzufügen</li>
+<li>"Create Pull Request"</li>
+</ol>
+<p><strong>Wichtig:</strong> Pull Requests triggern KEINE Builds (nur Dummy-Checks für Branch Protection)</p>
+<h3>Schritt 3: Code Review &amp; Merge</h3>
+<ol>
+<li>Code Review durchführen lassen</li>
+<li>Tests prüfen (alle müssen grün sein)</li>
+<li><strong>Merge to develop</strong> (via Squash &amp; Merge empfohlen)</li>
+</ol>
+<h3>Schritt 4: Automatischer Build (triggert automatisch)</h3>
+<p>Nach dem Merge wird automatisch der <strong>Build Artifacts Workflow</strong> gestartet:</p>
+<p><strong>Workflow:</strong> <code>.github/workflows/build-artifacts.yml</code></p>
+<p><strong>Jobs:</strong>
+1. ✅ Frontend Build (Vite)
+2. ✅ Backend Build (Composer)
+3. ✅ Static Analysis (PHPStan)
+4. ✅ Tests (Pest)
+5. ✅ <strong>Pre-Bundle Gates</strong> (9 Checks)
+6. ✅ Bundle erstellen &amp; hochladen</p>
+<p><strong>Wo sehen:</strong>
+- https://github.com/fabianSp77/askproai-api/actions
+- Filter: "Build Artifacts"
+- Status: Grüner Haken = Erfolgreich</p>
+<p><strong>Build-Output:</strong>
+- <code>deployment-bundle-{SHA}.tar.gz</code> (ca. 21 MB)
+- SHA256 Checksum für Verifikation
+- Retention: 30 Tage</p>
+<h3>Schritt 5: Staging Deployment (manuell triggern)</h3>
+<p><strong>Option A: Via GitHub UI</strong></p>
+<ol>
+<li>Gehen Sie zu: https://github.com/fabianSp77/askproai-api/actions</li>
+<li>Workflow: "Deploy to Staging"</li>
+<li>"Run workflow" → Branch: <code>develop</code> → "Run workflow"</li>
+</ol>
+<p><strong>Option B: Via CLI</strong></p>
+<div class="codehilite"><pre><span></span><code>gh<span class="w"> </span>workflow<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Deploy to Staging&quot;</span><span class="w"> </span>--ref<span class="w"> </span>develop
+</code></pre></div>
+
+<p><strong>Deployment-Schritte:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">Health</span><span class="w"> </span><span class="n">Check</span><span class="w"> </span><span class="p">(</span><span class="n">Staging</span><span class="w"> </span><span class="n">erreichbar</span><span class="err">?</span><span class="p">)</span><span class="w">           </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">Pre</span><span class="o">-</span><span class="n">Deploy</span><span class="w"> </span><span class="n">Backup</span><span class="w"> </span><span class="p">(</span><span class="n">App</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">DB</span><span class="p">)</span><span class="w">                 </span><span class="err">✅</span><span class="w"> </span><span class="mi">30</span><span class="n">s</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">Bundle</span><span class="w"> </span><span class="n">Download</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">Verifikation</span><span class="w">               </span><span class="err">✅</span><span class="w"> </span><span class="mi">20</span><span class="n">s</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">Upload</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">Server</span><span class="w">                              </span><span class="err">✅</span><span class="w"> </span><span class="mi">15</span><span class="n">s</span>
+<span class="mf">5.</span><span class="w"> </span><span class="n">Extract</span><span class="w"> </span><span class="n">Bundle</span><span class="w">                                </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">6.</span><span class="w"> </span><span class="err">✅</span><span class="w"> </span><span class="n">PRE</span><span class="o">-</span><span class="n">SWITCH</span><span class="w"> </span><span class="n">GATE</span><span class="w"> </span><span class="p">(</span><span class="mi">9</span><span class="w"> </span><span class="n">Checks</span><span class="p">)</span><span class="w">                </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">7.</span><span class="w"> </span><span class="n">Run</span><span class="w"> </span><span class="n">Migrations</span><span class="w">                                </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span>
+<span class="mf">8.</span><span class="w"> </span><span class="n">Clear</span><span class="w"> </span><span class="n">Caches</span><span class="w">                                  </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">9.</span><span class="w"> </span><span class="n">Fix</span><span class="w"> </span><span class="n">Permissions</span><span class="w">                               </span><span class="err">✅</span><span class="w"> </span><span class="mi">2</span><span class="n">s</span>
+<span class="mf">10.</span><span class="w"> </span><span class="n">Switch</span><span class="w"> </span><span class="n">Symlink</span><span class="w"> </span><span class="p">(</span><span class="n">Atomic</span><span class="p">)</span><span class="w">                     </span><span class="err">✅</span><span class="w"> </span><span class="mi">1</span><span class="n">s</span>
+<span class="mf">11.</span><span class="w"> </span><span class="n">Reload</span><span class="w"> </span><span class="n">Services</span><span class="w"> </span><span class="p">(</span><span class="n">PHP</span><span class="o">-</span><span class="n">FPM</span><span class="p">,</span><span class="w"> </span><span class="n">NGINX</span><span class="p">)</span><span class="w">            </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">12.</span><span class="w"> </span><span class="n">Grace</span><span class="w"> </span><span class="n">Period</span><span class="w"> </span><span class="p">(</span><span class="mi">15</span><span class="n">s</span><span class="p">)</span><span class="w">                          </span><span class="err">✅</span><span class="w"> </span><span class="mi">15</span><span class="n">s</span>
+<span class="mf">13.</span><span class="w"> </span><span class="n">Health</span><span class="w"> </span><span class="n">Checks</span><span class="w"> </span><span class="p">(</span><span class="n">mit</span><span class="w"> </span><span class="n">Retry</span><span class="o">-</span><span class="n">Logik</span><span class="p">)</span><span class="w">             </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span>
+</code></pre></div>
+
+<p><strong>Gesamtdauer:</strong> ~2-3 Minuten</p>
+<p><strong>Monitoring:</strong>
+- Live-Logs: https://github.com/fabianSp77/askproai-api/actions
+- Bei Fehler: <strong>Automatischer Rollback</strong> zur vorherigen Version</p>
+<p><strong>Smoke Tests:</strong></p>
+<p>Nach erfolgreichem Deployment laufen automatisch:</p>
+<div class="codehilite"><pre><span></span><code>✅<span class="w"> </span>https://staging.askproai.de/health
+✅<span class="w"> </span>https://staging.askproai.de/api/health-check
+✅<span class="w"> </span>https://staging.askproai.de/healthcheck.php
+✅<span class="w"> </span>https://staging.askproai.de/build/manifest.json
+✅<span class="w"> </span>Vite<span class="w"> </span>Asset<span class="w"> </span>verfügbar?
+</code></pre></div>
+
+<p><strong>Ergebnis:</strong> 5/5 Tests müssen bestehen</p>
+<h3>Schritt 6: Staging-Tests durchführen</h3>
+<p><strong>Manuell testen:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 1. Health Check</span>
+curl<span class="w"> </span>https://staging.askproai.de/health
+<span class="c1"># Expected: {&quot;status&quot;:&quot;ok&quot;,&quot;timestamp&quot;:&quot;...&quot;}</span>
+
+<span class="c1"># 2. API testen</span>
+curl<span class="w"> </span>https://staging.askproai.de/api/health-check
+<span class="c1"># Expected: {&quot;status&quot;:&quot;healthy&quot;,&quot;environment&quot;:&quot;staging&quot;}</span>
+
+<span class="c1"># 3. Frontend testen</span>
+<span class="c1"># Browser: https://staging.askproai.de</span>
+<span class="c1"># Expected: Applikation lädt korrekt</span>
+</code></pre></div>
+
+<p><strong>Bei Problemen:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Logs auf Server anschauen (benötigt SSH-Zugang)</span>
+ssh<span class="w"> </span>deploy@152.53.116.127
+tail<span class="w"> </span>-f<span class="w"> </span>/var/www/api-gateway-staging/current/storage/logs/laravel.log
+</code></pre></div>
+
+<h3>Schritt 7: Production Deployment (nach Freigabe)</h3>
+<p><strong>⚠️ WICHTIG:</strong> Production Deployments sollten nur nach erfolgreicher Staging-Validierung durchgeführt werden!</p>
+<p><strong>Trigger-Bedingung:</strong></p>
+<p>Option A: <strong>Merge <code>develop</code> → <code>main</code></strong></p>
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>main
+git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>main
+git<span class="w"> </span>merge<span class="w"> </span>develop
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div>
+
+<p>→ Production-Deployment startet <strong>automatisch</strong></p>
+<p>Option B: <strong>Manuell triggern</strong> (Notfall)</p>
+<div class="codehilite"><pre><span></span><code>gh<span class="w"> </span>workflow<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Deploy to Production&quot;</span><span class="w"> </span>--ref<span class="w"> </span>main
+</code></pre></div>
+
+<p><strong>Production-Deployment-Schritte:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">Staging</span><span class="w"> </span><span class="n">Health</span><span class="w"> </span><span class="n">Check</span><span class="w"> </span><span class="p">(</span><span class="n">ist</span><span class="w"> </span><span class="n">Staging</span><span class="w"> </span><span class="n">ok</span><span class="err">?</span><span class="p">)</span><span class="w">       </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">Pre</span><span class="o">-</span><span class="n">Deploy</span><span class="w"> </span><span class="n">Backup</span><span class="w"> </span><span class="p">(</span><span class="n">App</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">DB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NGINX</span><span class="p">)</span><span class="w">         </span><span class="err">✅</span><span class="w"> </span><span class="mi">60</span><span class="n">s</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">Bundle</span><span class="w"> </span><span class="n">Download</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">Verifikation</span><span class="w">               </span><span class="err">✅</span><span class="w"> </span><span class="mi">20</span><span class="n">s</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">Upload</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">Server</span><span class="w">                              </span><span class="err">✅</span><span class="w"> </span><span class="mi">15</span><span class="n">s</span>
+<span class="mf">5.</span><span class="w"> </span><span class="n">Extract</span><span class="w"> </span><span class="n">Bundle</span><span class="w">                                </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">6.</span><span class="w"> </span><span class="err">✅</span><span class="w"> </span><span class="n">PRE</span><span class="o">-</span><span class="n">SWITCH</span><span class="w"> </span><span class="n">GATE</span><span class="w"> </span><span class="p">(</span><span class="mi">9</span><span class="w"> </span><span class="n">Checks</span><span class="p">)</span><span class="w">                </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">7.</span><span class="w"> </span><span class="n">Switch</span><span class="w"> </span><span class="n">Symlink</span><span class="w"> </span><span class="p">(</span><span class="n">Atomic</span><span class="p">)</span><span class="w">                      </span><span class="err">✅</span><span class="w"> </span><span class="mi">1</span><span class="n">s</span>
+<span class="mf">8.</span><span class="w"> </span><span class="n">Reload</span><span class="w"> </span><span class="n">PHP</span><span class="o">-</span><span class="n">FPM</span><span class="w">                                </span><span class="err">✅</span><span class="w"> </span><span class="mi">5</span><span class="n">s</span>
+<span class="mf">9.</span><span class="w"> </span><span class="n">Health</span><span class="w"> </span><span class="n">Checks</span><span class="w">                                 </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span>
+<span class="mf">10.</span><span class="w"> </span><span class="err">✅</span><span class="w"> </span><span class="n">ROLLBACK</span><span class="w"> </span><span class="n">bei</span><span class="w"> </span><span class="n">Fehler</span><span class="w">                       </span><span class="err">✅</span><span class="w"> </span><span class="mi">10</span><span class="n">s</span><span class="w"> </span><span class="p">(</span><span class="n">wenn</span><span class="w"> </span><span class="n">nötig</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Gesamtdauer:</strong> ~2-3 Minuten</p>
+<p><strong>Zero-Downtime:</strong>
+- Atomic Symlink Switch (&lt; 1 Sekunde Downtime)
+- Alte Version bleibt verfügbar bis Switch
+- Automatischer Rollback bei Fehler</p>
+<hr />
+<h2>🛡️ Sicherheits-Gates (4-Schicht-Verteidigung)</h2>
+<h3>Gate 1: Build-Time (Layer 1)</h3>
+<p><strong>Workflow:</strong> <code>build-artifacts.yml</code>
+<strong>Zeitpunkt:</strong> Vor Bundle-Erstellung
+<strong>Checks:</strong> 9</p>
+<div class="codehilite"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">✅ artisan existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ composer.json existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ public/index.php existiert (CRITICAL)</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ public/build/manifest.json existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ vendor/autoload.php existiert (CRITICAL)</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ bootstrap/ Verzeichnis existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ config/ Verzeichnis existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ routes/ Verzeichnis existiert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ app/ Verzeichnis existiert</span>
+</code></pre></div>
+
+<p><strong>Bei Fehler:</strong> Build schlägt fehl, kein Bundle hochgeladen</p>
+<h3>Gate 2: Staging Pre-Switch (Layer 2)</h3>
+<p><strong>Workflow:</strong> <code>deploy-staging.yml</code>
+<strong>Zeitpunkt:</strong> Nach Bundle-Extraktion, VOR Migrations
+<strong>Checks:</strong> 9 + PHP Tests</p>
+<div class="codehilite"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">✅ 9 Struktur-Checks (wie Gate 1)</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ PHP Autoload funktioniert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ artisan --version funktioniert</span>
+</code></pre></div>
+
+<p><strong>Bei Fehler:</strong> Deployment abgebrochen, Symlink NICHT gewechselt</p>
+<h3>Gate 3: Production Pre-Switch (Layer 3)</h3>
+<p><strong>Workflow:</strong> <code>deploy-production.yml</code>
+<strong>Zeitpunkt:</strong> Nach Bundle-Extraktion, VOR Symlink-Switch
+<strong>Checks:</strong> 9 + PHP Tests</p>
+<div class="codehilite"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">✅ 9 Struktur-Checks (wie Gate 1)</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ PHP Autoload funktioniert</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ artisan config:cache funktioniert</span>
+</code></pre></div>
+
+<p><strong>Bei Fehler:</strong> Production unverändert, automatischer Rollback</p>
+<h3>Gate 4: Post-Deployment Smoke Tests (Layer 4)</h3>
+<p><strong>Workflow:</strong> <code>deploy-production.yml</code> + <code>staging-smoke.yml</code>
+<strong>Zeitpunkt:</strong> Nach Symlink-Switch
+<strong>Checks:</strong> 2-5 Endpoints</p>
+<div class="codehilite"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">✅ /health returns HTTP 200</span>
+<span class="l l-Scalar l-Scalar-Plain">✅ /build/manifest.json verfügbar</span>
+</code></pre></div>
+
+<p><strong>Bei Fehler:</strong> Automatischer Rollback zur vorherigen Version</p>
+<hr />
+<h2>🔧 Troubleshooting</h2>
+<h3>Problem: Build schlägt fehl</h3>
+<p><strong>Symptom:</strong> Build Artifacts Workflow zeigt rotes X</p>
+<p><strong>Lösung:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 1. Workflow-Logs anschauen</span>
+https://github.com/fabianSp77/askproai-api/actions
+
+<span class="c1"># 2. Fehler identifizieren (häufig):</span>
+<span class="c1"># - Composer-Fehler → composer.json prüfen</span>
+<span class="c1"># - NPM-Fehler → package.json prüfen</span>
+<span class="c1"># - PHPStan-Fehler → Code-Qualität verbessern</span>
+<span class="c1"># - Pest-Fehler → Tests fixen</span>
+
+<span class="c1"># 3. Lokal reproduzieren</span>
+composer<span class="w"> </span>install
+npm<span class="w"> </span>run<span class="w"> </span>build
+vendor/bin/phpstan<span class="w"> </span>analyze
+vendor/bin/pest
+</code></pre></div>
+
+<h3>Problem: Staging Deployment schlägt fehl</h3>
+<p><strong>Symptom:</strong> Deploy to Staging Workflow zeigt rotes X</p>
+<p><strong>Häufige Ursachen:</strong></p>
+<ol>
+<li><strong>Pre-Switch Gate Failure</strong></li>
+<li>Symptom: "❌ FAILED: index.php missing"</li>
+<li>Ursache: Bundle unvollständig</li>
+<li>
+<p>Lösung: Build-Workflow prüfen (Gate 1)</p>
+</li>
+<li>
+<p><strong>Health Check Failure</strong></p>
+</li>
+<li>Symptom: "❌ Health check failed after 6 attempts"</li>
+<li>Ursache: Applikation startet nicht korrekt</li>
+<li>
+<p>Lösung: Logs prüfen (<code>tail -f storage/logs/laravel.log</code>)</p>
+</li>
+<li>
+<p><strong>Permissions-Fehler</strong></p>
+</li>
+<li>Symptom: "sudo: Ein Passwort ist notwendig"</li>
+<li>Ursache: Passwordless sudo fehlt</li>
+<li>Lösung: Kontaktieren Sie den Server-Admin</li>
+</ol>
+<p><strong>Auto-Rollback:</strong></p>
+<p>Bei Fehler wird automatisch zur vorherigen Version zurückgerollt:</p>
+<div class="codehilite"><pre><span></span><code>✅<span class="w"> </span>Rollback<span class="w"> </span>completed
+Current<span class="w"> </span>symlink<span class="w"> </span>→<span class="w"> </span>releases/PREVIOUS_VERSION
+</code></pre></div>
+
+<h3>Problem: Production Deployment unsicher</h3>
+<p><strong>Frage:</strong> Wie kann ich Production Deployment sicher durchführen?</p>
+<p><strong>Best Practices:</strong></p>
+<ol>
+<li><strong>Immer zuerst Staging testen</strong>
+   ```bash
+   # 1. Deploy to Staging
+   gh workflow run "Deploy to Staging" --ref develop</li>
+</ol>
+<p># 2. Warten auf Success (2-3 min)
+   # 3. Manuell testen: https://staging.askproai.de</p>
+<p># 4. Erst dann Production
+   gh workflow run "Deploy to Production" --ref main
+   ```</p>
+<ol>
+<li><strong>Smoke Tests beobachten</strong></li>
+<li>Live-Logs verfolgen</li>
+<li>
+<p>Bei Fehler greift automatischer Rollback</p>
+</li>
+<li>
+<p><strong>Peak-Times vermeiden</strong></p>
+</li>
+<li>Nicht während Stoßzeiten deployen</li>
+<li>Optimal: Nachts oder am Wochenende</li>
+</ol>
+<hr />
+<h2>📊 Monitoring &amp; Logs</h2>
+<h3>GitHub Actions Logs</h3>
+<p><strong>URL:</strong> https://github.com/fabianSp77/askproai-api/actions</p>
+<p><strong>Filter:</strong>
+- "Build Artifacts" → Build-Status
+- "Deploy to Staging" → Staging Deployments
+- "Deploy to Production" → Production Deployments</p>
+<p><strong>Log-Level:</strong>
+- ✅ Grün = Erfolgreich
+- 🟡 Gelb = In Progress
+- ❌ Rot = Fehler</p>
+<h3>Server-Logs (benötigt SSH-Zugang)</h3>
+<p><strong>Staging:</strong></p>
+<div class="codehilite"><pre><span></span><code>ssh<span class="w"> </span>deploy@152.53.116.127
+tail<span class="w"> </span>-f<span class="w"> </span>/var/www/api-gateway-staging/current/storage/logs/laravel.log
+</code></pre></div>
+
+<p><strong>Production:</strong></p>
+<div class="codehilite"><pre><span></span><code>ssh<span class="w"> </span>deploy@152.53.116.127
+tail<span class="w"> </span>-f<span class="w"> </span>/var/www/api-gateway/current/storage/logs/laravel.log
+</code></pre></div>
+
+<h3>Deployment Ledger</h3>
+<p>Alle Deployments werden protokolliert:</p>
+<p><strong>Location:</strong> <code>/var/www/api-gateway/backups/deployment_ledger_*.json</code></p>
+<p><strong>Beispiel:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-11-02T12:30:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;deploy&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;environment&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;bundle&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;sha256&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0a95b3ab...&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;commit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4144baac&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;19003049369&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;preflight_checks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;public/index.php&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;vendor/autoload.php&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;artisan_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2>🔐 Zugriff &amp; Berechtigungen</h2>
+<h3>GitHub Repository</h3>
+<p><strong>Benötigt:</strong>
+- GitHub Account mit Zugriff auf <code>fabianSp77/askproai-api</code>
+- Rolle: Developer oder höher (für Merge-Rechte)</p>
+<p><strong>Anfrage:</strong> Kontaktieren Sie Repository-Owner</p>
+<h3>Server-Zugriff (optional)</h3>
+<p><strong>SSH-Zugang für Debugging:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># User: deploy</span>
+<span class="c1"># Server: 152.53.116.127</span>
+<span class="c1"># Key: Ed25519</span>
+</code></pre></div>
+
+<p><strong>Anfrage:</strong> Kontaktieren Sie Server-Admin</p>
+<h3>Documentation Hub</h3>
+<p><strong>URL:</strong> https://api.askproai.de/docs/backup-system</p>
+<p><strong>Login:</strong>
+- Username: (siehe <code>.env</code> → <code>DOCS_USERNAME</code>)
+- Password: (siehe <code>.env</code> → <code>DOCS_PASSWORD</code>)</p>
+<p><strong>Inhalt:</strong>
+- Deployment-Reports
+- E2E Validierungen
+- Incident-Tracking
+- Backup-System-Status</p>
+<hr />
+<h2>📚 Weiterführende Dokumentation</h2>
+<h3>Technische Details</h3>
+<ol>
+<li><strong>STATUS_QUO_DEPLOYMENT_PROZESS_2025-11-01.md</strong></li>
+<li>Detaillierte IST vs. SOLL Analyse</li>
+<li>Gate-System Erklärung</li>
+<li>
+<p>Flow-Diagramme</p>
+</li>
+<li>
+<p><strong>E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html</strong></p>
+</li>
+<li>Validierungs-Reports</li>
+<li>Test-Ergebnisse</li>
+<li>
+<p>Performance-Metriken</p>
+</li>
+<li>
+<p><strong>PROD_FIX_BUNDLE_GATES.md</strong></p>
+</li>
+<li>Gate-Code-Implementierung</li>
+<li>Testing-Strategie</li>
+<li>Evidenz-Sammlung</li>
+</ol>
+<h3>Workflow-Dateien</h3>
+<ul>
+<li><code>.github/workflows/build-artifacts.yml</code> - Build-Pipeline</li>
+<li><code>.github/workflows/deploy-staging.yml</code> - Staging Deployment</li>
+<li><code>.github/workflows/deploy-production.yml</code> - Production Deployment</li>
+<li><code>.github/workflows/staging-smoke.yml</code> - Smoke Tests</li>
+</ul>
+<hr />
+<h2>❓ Häufig gestellte Fragen (FAQ)</h2>
+<h3>Kann ich direkt auf Production deployen?</h3>
+<p><strong>Nein.</strong> Best Practice ist immer:
+1. Develop Branch testen
+2. Staging Deployment
+3. Staging-Tests
+4. Production Deployment</p>
+<h3>Was passiert bei einem fehlerhaften Deployment?</h3>
+<p><strong>Automatischer Rollback:</strong>
+- Bei Pre-Switch Gate Failure: Gar kein Wechsel
+- Bei Smoke Test Failure: Automatischer Rollback zur vorherigen Version
+- Downtime: Maximal ~10 Sekunden</p>
+<h3>Wie lange sind Backups verfügbar?</h3>
+<p><strong>Backups:</strong>
+- Pre-Deploy Backups: 30 Tage
+- Location: <code>/var/www/*/backups/</code>
+- Format: <code>tar.gz</code> mit SHA256</p>
+<h3>Kann ich einen alten Commit deployen?</h3>
+<p><strong>Ja</strong>, via manueller Workflow-Trigger:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Zuerst Build für spezifischen Commit</span>
+gh<span class="w"> </span>workflow<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Build Artifacts&quot;</span><span class="w"> </span>--ref<span class="w"> </span>&lt;COMMIT_SHA&gt;
+
+<span class="c1"># Dann Deployment</span>
+gh<span class="w"> </span>workflow<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Deploy to Staging&quot;</span><span class="w"> </span>--ref<span class="w"> </span>&lt;COMMIT_SHA&gt;
+</code></pre></div>
+
+<h3>Wie sehe ich welche Version gerade deployed ist?</h3>
+<p><strong>Staging:</strong></p>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>https://staging.askproai.de/health
+<span class="c1"># → &quot;version&quot;: &quot;...&quot;</span>
+</code></pre></div>
+
+<p><strong>Production:</strong></p>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>https://api.askproai.de/health
+<span class="c1"># → &quot;version&quot;: &quot;...&quot;</span>
+</code></pre></div>
+
+<p>Oder auf Server:</p>
+<div class="codehilite"><pre><span></span><code>ssh<span class="w"> </span>deploy@152.53.116.127
+readlink<span class="w"> </span>/var/www/api-gateway/current
+<span class="c1"># → releases/20251102_115313-540bed7f</span>
+<span class="c1">#                               ^^^^^^^^ Git SHA</span>
+</code></pre></div>
+
+<hr />
+<h2>📞 Support &amp; Kontakt</h2>
+<h3>Bei Deployment-Problemen</h3>
+<ol>
+<li><strong>Check GitHub Actions Logs</strong></li>
+<li>
+<p>https://github.com/fabianSp77/askproai-api/actions</p>
+</li>
+<li>
+<p><strong>Check Documentation Hub</strong></p>
+</li>
+<li>
+<p>https://api.askproai.de/docs/backup-system</p>
+</li>
+<li>
+<p><strong>Kontakt aufnehmen</strong></p>
+</li>
+<li>Repository Owner: fabianSp77</li>
+<li>Email: fabian@askproai.de</li>
+</ol>
+<h3>Incident-Meldung</h3>
+<p>Bei kritischen Production-Issues:</p>
+<ol>
+<li>
+<p><strong>Sofortiger Rollback:</strong>
+   <code>bash
+   # Via GitHub Actions
+   gh workflow run "Deploy to Production" --ref main
+   # → Wählt automatisch letztes erfolgreiches Deployment</code></p>
+</li>
+<li>
+<p><strong>Incident loggen:</strong></p>
+</li>
+<li>Documentation Hub → Incident Tracking</li>
+</ol>
+<hr />
+<h2>✅ Checkliste: Deployment durchführen</h2>
+<p><strong>Vor dem Deployment:</strong></p>
+<ul>
+<li>[ ] Code-Review durchgeführt</li>
+<li>[ ] Tests laufen lokal grün</li>
+<li>[ ] Feature-Branch in <code>develop</code> gemerged</li>
+<li>[ ] Build Artifacts Workflow erfolgreich</li>
+</ul>
+<p><strong>Staging Deployment:</strong></p>
+<ul>
+<li>[ ] "Deploy to Staging" Workflow getriggert</li>
+<li>[ ] Alle 9 Pre-Switch Gates bestanden</li>
+<li>[ ] Health Checks bestanden (5/5)</li>
+<li>[ ] Manuell getestet: https://staging.askproai.de</li>
+</ul>
+<p><strong>Production Deployment:</strong></p>
+<ul>
+<li>[ ] Staging seit mindestens 1 Stunde stabil</li>
+<li>[ ] Kein Peak-Time (Stoßzeiten vermeiden)</li>
+<li>[ ] "Deploy to Production" Workflow getriggert</li>
+<li>[ ] Alle 9 Pre-Switch Gates bestanden</li>
+<li>[ ] Smoke Tests bestanden (2/2)</li>
+<li>[ ] Manuell geprüft: https://api.askproai.de</li>
+</ul>
+<p><strong>Nach dem Deployment:</strong></p>
+<ul>
+<li>[ ] Monitoring für 30 Minuten beobachten</li>
+<li>[ ] Keine Error-Rate-Erhöhung in Logs</li>
+<li>[ ] Deployment im Documentation Hub dokumentiert</li>
+</ul>
+<hr />
+<p><strong>Version:</strong> 1.0
+<strong>Erstellt:</strong> 2025-11-02
+<strong>Zielgruppe:</strong> Externe Entwickler, DevOps-Teams
+<strong>Wartung:</strong> Bitte bei Prozess-Änderungen aktualisieren</p>
+    </div>
+    <script>
+        // Add emoji icons to checkboxes
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.style.transform = 'scale(1.5)';
+                cb.style.marginRight = '0.5rem';
+            });
+        });
+    </script>
+
+    <!-- Markdown Download Section -->
+    <div id="download" class="markdown-download">
+        <h3>⬇️ Markdown-Download</h3>
+        <p>Vollständiger Report als Markdown zum Kopieren oder Herunterladen für KI-Systeme</p>
+
+        <div class="download-actions">
+            <button class="btn btn-primary" onclick="copyFullMarkdown()">
+                📋 Gesamtes Markdown kopieren
+            </button>
+            <button class="btn btn-secondary" onclick="downloadMarkdown()">
+                💾 Als .md Datei herunterladen
+            </button>
+            <button class="btn btn-secondary" onclick="togglePreview()">
+                👁️ Vorschau umschalten
+            </button>
+        </div>
+
+        <div class="markdown-preview" id="markdownPreview" style="display: none;"># Deployment-Handbuch für AskPro AI Gateway
+**Version:** 1.0
+**Stand:** 2025-11-02
+**Zielgruppe:** Externe Entwickler, DevOps-Teams, neue Teammitglieder
+
+---
+
+## Überblick
+
+Dieses Handbuch beschreibt den vollständigen Deployment-Prozess für die AskPro AI Gateway Applikation. Der Prozess ist **vollautomatisiert** über GitHub Actions und beinhaltet mehrere Sicherheits-Gates.
+
+### Umgebungen
+
+| Umgebung | URL | Server | Zweck |
+|----------|-----|--------|-------|
+| **Staging** | https://staging.askproai.de | 152.53.116.127 | Test-Umgebung für neue Features |
+| **Production** | https://api.askproai.de | 152.53.116.127 | Live-System für Endkunden |
+
+---
+
+## 🚀 Deployment-Flow (Übersicht)
+
+```
+Code ändern → Push to develop → Build → Tests → Staging Deploy → Tests → Production Deploy
+```
+
+### Zeitaufwand
+
+- **Build:** ~3-5 Minuten
+- **Staging Deployment:** ~2-3 Minuten
+- **Production Deployment:** ~2-3 Minuten
+- **Gesamt:** ~10-15 Minuten
+
+---
+
+## 📋 Voraussetzungen
+
+### GitHub Repository Access
+
+Sie benötigen:
+- ✅ Push-Rechte auf das Repository `fabianSp77/askproai-api`
+- ✅ Zugriff auf GitHub Actions
+- ✅ Optional: `gh` CLI installiert
+
+### Lokale Entwicklung
+
+```bash
+# Repository klonen
+git clone git@github.com:fabianSp77/askproai-api.git
+cd askproai-api
+
+# Dependencies installieren
+composer install
+npm install
+```
+
+---
+
+## 🔄 Deployment-Prozess Schritt-für-Schritt
+
+### Schritt 1: Code-Änderungen vorbereiten
+
+```bash
+# Neuen Feature-Branch erstellen
+git checkout develop
+git pull origin develop
+git checkout -b feature/meine-aenderung
+
+# Code ändern, testen
+# ...
+
+# Commit erstellen
+git add .
+git commit -m &quot;feat: Meine neue Funktion&quot;
+git push origin feature/meine-aenderung
+```
+
+### Schritt 2: Pull Request erstellen
+
+1. Gehen Sie zu: https://github.com/fabianSp77/askproai-api/pulls
+2. Klicken Sie auf &quot;New Pull Request&quot;
+3. **Base:** `develop` ← **Compare:** `feature/meine-aenderung`
+4. Titel und Beschreibung hinzufügen
+5. &quot;Create Pull Request&quot;
+
+**Wichtig:** Pull Requests triggern KEINE Builds (nur Dummy-Checks für Branch Protection)
+
+### Schritt 3: Code Review &amp; Merge
+
+1. Code Review durchführen lassen
+2. Tests prüfen (alle müssen grün sein)
+3. **Merge to develop** (via Squash &amp; Merge empfohlen)
+
+### Schritt 4: Automatischer Build (triggert automatisch)
+
+Nach dem Merge wird automatisch der **Build Artifacts Workflow** gestartet:
+
+**Workflow:** `.github/workflows/build-artifacts.yml`
+
+**Jobs:**
+1. ✅ Frontend Build (Vite)
+2. ✅ Backend Build (Composer)
+3. ✅ Static Analysis (PHPStan)
+4. ✅ Tests (Pest)
+5. ✅ **Pre-Bundle Gates** (9 Checks)
+6. ✅ Bundle erstellen &amp; hochladen
+
+**Wo sehen:**
+- https://github.com/fabianSp77/askproai-api/actions
+- Filter: &quot;Build Artifacts&quot;
+- Status: Grüner Haken = Erfolgreich
+
+**Build-Output:**
+- `deployment-bundle-{SHA}.tar.gz` (ca. 21 MB)
+- SHA256 Checksum für Verifikation
+- Retention: 30 Tage
+
+### Schritt 5: Staging Deployment (manuell triggern)
+
+**Option A: Via GitHub UI**
+
+1. Gehen Sie zu: https://github.com/fabianSp77/askproai-api/actions
+2. Workflow: &quot;Deploy to Staging&quot;
+3. &quot;Run workflow&quot; → Branch: `develop` → &quot;Run workflow&quot;
+
+**Option B: Via CLI**
+
+```bash
+gh workflow run &quot;Deploy to Staging&quot; --ref develop
+```
+
+**Deployment-Schritte:**
+
+```
+1. Health Check (Staging erreichbar?)           ✅ 10s
+2. Pre-Deploy Backup (App + DB)                 ✅ 30s
+3. Bundle Download &amp; Verifikation               ✅ 20s
+4. Upload to Server                              ✅ 15s
+5. Extract Bundle                                ✅ 5s
+6. ✅ PRE-SWITCH GATE (9 Checks)                ✅ 5s
+7. Run Migrations                                ✅ 10s
+8. Clear Caches                                  ✅ 5s
+9. Fix Permissions                               ✅ 2s
+10. Switch Symlink (Atomic)                     ✅ 1s
+11. Reload Services (PHP-FPM, NGINX)            ✅ 5s
+12. Grace Period (15s)                          ✅ 15s
+13. Health Checks (mit Retry-Logik)             ✅ 10s
+```
+
+**Gesamtdauer:** ~2-3 Minuten
+
+**Monitoring:**
+- Live-Logs: https://github.com/fabianSp77/askproai-api/actions
+- Bei Fehler: **Automatischer Rollback** zur vorherigen Version
+
+**Smoke Tests:**
+
+Nach erfolgreichem Deployment laufen automatisch:
+
+```bash
+✅ https://staging.askproai.de/health
+✅ https://staging.askproai.de/api/health-check
+✅ https://staging.askproai.de/healthcheck.php
+✅ https://staging.askproai.de/build/manifest.json
+✅ Vite Asset verfügbar?
+```
+
+**Ergebnis:** 5/5 Tests müssen bestehen
+
+### Schritt 6: Staging-Tests durchführen
+
+**Manuell testen:**
+
+```bash
+# 1. Health Check
+curl https://staging.askproai.de/health
+# Expected: {&quot;status&quot;:&quot;ok&quot;,&quot;timestamp&quot;:&quot;...&quot;}
+
+# 2. API testen
+curl https://staging.askproai.de/api/health-check
+# Expected: {&quot;status&quot;:&quot;healthy&quot;,&quot;environment&quot;:&quot;staging&quot;}
+
+# 3. Frontend testen
+# Browser: https://staging.askproai.de
+# Expected: Applikation lädt korrekt
+```
+
+**Bei Problemen:**
+
+```bash
+# Logs auf Server anschauen (benötigt SSH-Zugang)
+ssh deploy@152.53.116.127
+tail -f /var/www/api-gateway-staging/current/storage/logs/laravel.log
+```
+
+### Schritt 7: Production Deployment (nach Freigabe)
+
+**⚠️ WICHTIG:** Production Deployments sollten nur nach erfolgreicher Staging-Validierung durchgeführt werden!
+
+**Trigger-Bedingung:**
+
+Option A: **Merge `develop` → `main`**
+
+```bash
+git checkout main
+git pull origin main
+git merge develop
+git push origin main
+```
+
+→ Production-Deployment startet **automatisch**
+
+Option B: **Manuell triggern** (Notfall)
+
+```bash
+gh workflow run &quot;Deploy to Production&quot; --ref main
+```
+
+**Production-Deployment-Schritte:**
+
+```
+1. Staging Health Check (ist Staging ok?)       ✅ 10s
+2. Pre-Deploy Backup (App + DB + NGINX)         ✅ 60s
+3. Bundle Download &amp; Verifikation               ✅ 20s
+4. Upload to Server                              ✅ 15s
+5. Extract Bundle                                ✅ 5s
+6. ✅ PRE-SWITCH GATE (9 Checks)                ✅ 5s
+7. Switch Symlink (Atomic)                      ✅ 1s
+8. Reload PHP-FPM                                ✅ 5s
+9. Health Checks                                 ✅ 10s
+10. ✅ ROLLBACK bei Fehler                       ✅ 10s (wenn nötig)
+```
+
+**Gesamtdauer:** ~2-3 Minuten
+
+**Zero-Downtime:**
+- Atomic Symlink Switch (&lt; 1 Sekunde Downtime)
+- Alte Version bleibt verfügbar bis Switch
+- Automatischer Rollback bei Fehler
+
+---
+
+## 🛡️ Sicherheits-Gates (4-Schicht-Verteidigung)
+
+### Gate 1: Build-Time (Layer 1)
+
+**Workflow:** `build-artifacts.yml`
+**Zeitpunkt:** Vor Bundle-Erstellung
+**Checks:** 9
+
+```yaml
+✅ artisan existiert
+✅ composer.json existiert
+✅ public/index.php existiert (CRITICAL)
+✅ public/build/manifest.json existiert
+✅ vendor/autoload.php existiert (CRITICAL)
+✅ bootstrap/ Verzeichnis existiert
+✅ config/ Verzeichnis existiert
+✅ routes/ Verzeichnis existiert
+✅ app/ Verzeichnis existiert
+```
+
+**Bei Fehler:** Build schlägt fehl, kein Bundle hochgeladen
+
+### Gate 2: Staging Pre-Switch (Layer 2)
+
+**Workflow:** `deploy-staging.yml`
+**Zeitpunkt:** Nach Bundle-Extraktion, VOR Migrations
+**Checks:** 9 + PHP Tests
+
+```yaml
+✅ 9 Struktur-Checks (wie Gate 1)
+✅ PHP Autoload funktioniert
+✅ artisan --version funktioniert
+```
+
+**Bei Fehler:** Deployment abgebrochen, Symlink NICHT gewechselt
+
+### Gate 3: Production Pre-Switch (Layer 3)
+
+**Workflow:** `deploy-production.yml`
+**Zeitpunkt:** Nach Bundle-Extraktion, VOR Symlink-Switch
+**Checks:** 9 + PHP Tests
+
+```yaml
+✅ 9 Struktur-Checks (wie Gate 1)
+✅ PHP Autoload funktioniert
+✅ artisan config:cache funktioniert
+```
+
+**Bei Fehler:** Production unverändert, automatischer Rollback
+
+### Gate 4: Post-Deployment Smoke Tests (Layer 4)
+
+**Workflow:** `deploy-production.yml` + `staging-smoke.yml`
+**Zeitpunkt:** Nach Symlink-Switch
+**Checks:** 2-5 Endpoints
+
+```yaml
+✅ /health returns HTTP 200
+✅ /build/manifest.json verfügbar
+```
+
+**Bei Fehler:** Automatischer Rollback zur vorherigen Version
+
+---
+
+## 🔧 Troubleshooting
+
+### Problem: Build schlägt fehl
+
+**Symptom:** Build Artifacts Workflow zeigt rotes X
+
+**Lösung:**
+
+```bash
+# 1. Workflow-Logs anschauen
+https://github.com/fabianSp77/askproai-api/actions
+
+# 2. Fehler identifizieren (häufig):
+# - Composer-Fehler → composer.json prüfen
+# - NPM-Fehler → package.json prüfen
+# - PHPStan-Fehler → Code-Qualität verbessern
+# - Pest-Fehler → Tests fixen
+
+# 3. Lokal reproduzieren
+composer install
+npm run build
+vendor/bin/phpstan analyze
+vendor/bin/pest
+```
+
+### Problem: Staging Deployment schlägt fehl
+
+**Symptom:** Deploy to Staging Workflow zeigt rotes X
+
+**Häufige Ursachen:**
+
+1. **Pre-Switch Gate Failure**
+   - Symptom: &quot;❌ FAILED: index.php missing&quot;
+   - Ursache: Bundle unvollständig
+   - Lösung: Build-Workflow prüfen (Gate 1)
+
+2. **Health Check Failure**
+   - Symptom: &quot;❌ Health check failed after 6 attempts&quot;
+   - Ursache: Applikation startet nicht korrekt
+   - Lösung: Logs prüfen (`tail -f storage/logs/laravel.log`)
+
+3. **Permissions-Fehler**
+   - Symptom: &quot;sudo: Ein Passwort ist notwendig&quot;
+   - Ursache: Passwordless sudo fehlt
+   - Lösung: Kontaktieren Sie den Server-Admin
+
+**Auto-Rollback:**
+
+Bei Fehler wird automatisch zur vorherigen Version zurückgerollt:
+
+```bash
+✅ Rollback completed
+Current symlink → releases/PREVIOUS_VERSION
+```
+
+### Problem: Production Deployment unsicher
+
+**Frage:** Wie kann ich Production Deployment sicher durchführen?
+
+**Best Practices:**
+
+1. **Immer zuerst Staging testen**
+   ```bash
+   # 1. Deploy to Staging
+   gh workflow run &quot;Deploy to Staging&quot; --ref develop
+
+   # 2. Warten auf Success (2-3 min)
+   # 3. Manuell testen: https://staging.askproai.de
+
+   # 4. Erst dann Production
+   gh workflow run &quot;Deploy to Production&quot; --ref main
+   ```
+
+2. **Smoke Tests beobachten**
+   - Live-Logs verfolgen
+   - Bei Fehler greift automatischer Rollback
+
+3. **Peak-Times vermeiden**
+   - Nicht während Stoßzeiten deployen
+   - Optimal: Nachts oder am Wochenende
+
+---
+
+## 📊 Monitoring &amp; Logs
+
+### GitHub Actions Logs
+
+**URL:** https://github.com/fabianSp77/askproai-api/actions
+
+**Filter:**
+- &quot;Build Artifacts&quot; → Build-Status
+- &quot;Deploy to Staging&quot; → Staging Deployments
+- &quot;Deploy to Production&quot; → Production Deployments
+
+**Log-Level:**
+- ✅ Grün = Erfolgreich
+- 🟡 Gelb = In Progress
+- ❌ Rot = Fehler
+
+### Server-Logs (benötigt SSH-Zugang)
+
+**Staging:**
+```bash
+ssh deploy@152.53.116.127
+tail -f /var/www/api-gateway-staging/current/storage/logs/laravel.log
+```
+
+**Production:**
+```bash
+ssh deploy@152.53.116.127
+tail -f /var/www/api-gateway/current/storage/logs/laravel.log
+```
+
+### Deployment Ledger
+
+Alle Deployments werden protokolliert:
+
+**Location:** `/var/www/api-gateway/backups/deployment_ledger_*.json`
+
+**Beispiel:**
+```json
+{
+  &quot;timestamp&quot;: &quot;2025-11-02T12:30:00Z&quot;,
+  &quot;action&quot;: &quot;deploy&quot;,
+  &quot;environment&quot;: &quot;production&quot;,
+  &quot;bundle&quot;: {
+    &quot;sha256&quot;: &quot;0a95b3ab...&quot;,
+    &quot;commit&quot;: &quot;4144baac&quot;,
+    &quot;run_id&quot;: &quot;19003049369&quot;
+  },
+  &quot;result&quot;: &quot;success&quot;,
+  &quot;preflight_checks&quot;: {
+    &quot;public/index.php&quot;: &quot;pass&quot;,
+    &quot;vendor/autoload.php&quot;: &quot;pass&quot;,
+    &quot;artisan_version&quot;: &quot;pass&quot;
+  }
+}
+```
+
+---
+
+## 🔐 Zugriff &amp; Berechtigungen
+
+### GitHub Repository
+
+**Benötigt:**
+- GitHub Account mit Zugriff auf `fabianSp77/askproai-api`
+- Rolle: Developer oder höher (für Merge-Rechte)
+
+**Anfrage:** Kontaktieren Sie Repository-Owner
+
+### Server-Zugriff (optional)
+
+**SSH-Zugang für Debugging:**
+
+```bash
+# User: deploy
+# Server: 152.53.116.127
+# Key: Ed25519
+```
+
+**Anfrage:** Kontaktieren Sie Server-Admin
+
+### Documentation Hub
+
+**URL:** https://api.askproai.de/docs/backup-system
+
+**Login:**
+- Username: (siehe `.env` → `DOCS_USERNAME`)
+- Password: (siehe `.env` → `DOCS_PASSWORD`)
+
+**Inhalt:**
+- Deployment-Reports
+- E2E Validierungen
+- Incident-Tracking
+- Backup-System-Status
+
+---
+
+## 📚 Weiterführende Dokumentation
+
+### Technische Details
+
+1. **STATUS_QUO_DEPLOYMENT_PROZESS_2025-11-01.md**
+   - Detaillierte IST vs. SOLL Analyse
+   - Gate-System Erklärung
+   - Flow-Diagramme
+
+2. **E2E_DEPLOYMENT_VALIDATION_FINAL_2025-11-02_1300.html**
+   - Validierungs-Reports
+   - Test-Ergebnisse
+   - Performance-Metriken
+
+3. **PROD_FIX_BUNDLE_GATES.md**
+   - Gate-Code-Implementierung
+   - Testing-Strategie
+   - Evidenz-Sammlung
+
+### Workflow-Dateien
+
+- `.github/workflows/build-artifacts.yml` - Build-Pipeline
+- `.github/workflows/deploy-staging.yml` - Staging Deployment
+- `.github/workflows/deploy-production.yml` - Production Deployment
+- `.github/workflows/staging-smoke.yml` - Smoke Tests
+
+---
+
+## ❓ Häufig gestellte Fragen (FAQ)
+
+### Kann ich direkt auf Production deployen?
+
+**Nein.** Best Practice ist immer:
+1. Develop Branch testen
+2. Staging Deployment
+3. Staging-Tests
+4. Production Deployment
+
+### Was passiert bei einem fehlerhaften Deployment?
+
+**Automatischer Rollback:**
+- Bei Pre-Switch Gate Failure: Gar kein Wechsel
+- Bei Smoke Test Failure: Automatischer Rollback zur vorherigen Version
+- Downtime: Maximal ~10 Sekunden
+
+### Wie lange sind Backups verfügbar?
+
+**Backups:**
+- Pre-Deploy Backups: 30 Tage
+- Location: `/var/www/*/backups/`
+- Format: `tar.gz` mit SHA256
+
+### Kann ich einen alten Commit deployen?
+
+**Ja**, via manueller Workflow-Trigger:
+
+```bash
+# Zuerst Build für spezifischen Commit
+gh workflow run &quot;Build Artifacts&quot; --ref &lt;COMMIT_SHA&gt;
+
+# Dann Deployment
+gh workflow run &quot;Deploy to Staging&quot; --ref &lt;COMMIT_SHA&gt;
+```
+
+### Wie sehe ich welche Version gerade deployed ist?
+
+**Staging:**
+```bash
+curl https://staging.askproai.de/health
+# → &quot;version&quot;: &quot;...&quot;
+```
+
+**Production:**
+```bash
+curl https://api.askproai.de/health
+# → &quot;version&quot;: &quot;...&quot;
+```
+
+Oder auf Server:
+```bash
+ssh deploy@152.53.116.127
+readlink /var/www/api-gateway/current
+# → releases/20251102_115313-540bed7f
+#                               ^^^^^^^^ Git SHA
+```
+
+---
+
+## 📞 Support &amp; Kontakt
+
+### Bei Deployment-Problemen
+
+1. **Check GitHub Actions Logs**
+   - https://github.com/fabianSp77/askproai-api/actions
+
+2. **Check Documentation Hub**
+   - https://api.askproai.de/docs/backup-system
+
+3. **Kontakt aufnehmen**
+   - Repository Owner: fabianSp77
+   - Email: fabian@askproai.de
+
+### Incident-Meldung
+
+Bei kritischen Production-Issues:
+
+1. **Sofortiger Rollback:**
+   ```bash
+   # Via GitHub Actions
+   gh workflow run &quot;Deploy to Production&quot; --ref main
+   # → Wählt automatisch letztes erfolgreiches Deployment
+   ```
+
+2. **Incident loggen:**
+   - Documentation Hub → Incident Tracking
+
+---
+
+## ✅ Checkliste: Deployment durchführen
+
+**Vor dem Deployment:**
+
+- [ ] Code-Review durchgeführt
+- [ ] Tests laufen lokal grün
+- [ ] Feature-Branch in `develop` gemerged
+- [ ] Build Artifacts Workflow erfolgreich
+
+**Staging Deployment:**
+
+- [ ] &quot;Deploy to Staging&quot; Workflow getriggert
+- [ ] Alle 9 Pre-Switch Gates bestanden
+- [ ] Health Checks bestanden (5/5)
+- [ ] Manuell getestet: https://staging.askproai.de
+
+**Production Deployment:**
+
+- [ ] Staging seit mindestens 1 Stunde stabil
+- [ ] Kein Peak-Time (Stoßzeiten vermeiden)
+- [ ] &quot;Deploy to Production&quot; Workflow getriggert
+- [ ] Alle 9 Pre-Switch Gates bestanden
+- [ ] Smoke Tests bestanden (2/2)
+- [ ] Manuell geprüft: https://api.askproai.de
+
+**Nach dem Deployment:**
+
+- [ ] Monitoring für 30 Minuten beobachten
+- [ ] Keine Error-Rate-Erhöhung in Logs
+- [ ] Deployment im Documentation Hub dokumentiert
+
+---
+
+**Version:** 1.0
+**Erstellt:** 2025-11-02
+**Zielgruppe:** Externe Entwickler, DevOps-Teams
+**Wartung:** Bitte bei Prozess-Änderungen aktualisieren
+</div>
+    </div>
+
+    <script>
+        // Copy full markdown
+        function copyFullMarkdown() {
+            const markdown = document.getElementById('markdownPreview').textContent;
+            navigator.clipboard.writeText(markdown).then(() => {
+                alert('✅ Vollständiges Markdown in Zwischenablage kopiert!');
+            });
+        }
+
+        // Download markdown as file
+        function downloadMarkdown() {
+            const markdown = document.getElementById('markdownPreview').textContent;
+            const blob = new Blob([markdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'DEPLOYMENT_HANDBUCH_FUER_DRITTE.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Toggle preview visibility
+        function togglePreview() {
+            const preview = document.getElementById('markdownPreview');
+            preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+
+</body>
+</html>

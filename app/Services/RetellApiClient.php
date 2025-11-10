@@ -185,18 +185,52 @@ class RetellApiClient
                 ]);
             }
             
-            // Find phone number record - skip for now due to type mismatch
-            // TODO: Fix phone_number_id column type mismatch (UUID vs bigint)
-            $phoneNumber = null;
+            // 🔧 FIX: Preserve existing phone_number_id + branch_id or resolve from phone number
+            // Check if call already exists and has phone_number_id + branch_id
             $phoneNumberId = null;
+            $branchId = null;
 
-            // if ($toNumber) {
-            //     $phoneNumber = PhoneNumber::where('number', $toNumber)->first();
-            //     if ($phoneNumber) {
-            //         // Don't set phone_number_id due to type mismatch
-            //         // $phoneNumberId = $phoneNumber->id;
-            //     }
-            // }
+            if ($existingCall) {
+                // Preserve existing phone_number_id
+                if ($existingCall->phone_number_id) {
+                    $phoneNumberId = $existingCall->phone_number_id;
+                    Log::info('🔒 Preserving existing phone_number_id for call', [
+                        'call_id' => $callId,
+                        'phone_number_id' => $phoneNumberId
+                    ]);
+                }
+
+                // Preserve existing branch_id
+                if ($existingCall->branch_id) {
+                    $branchId = $existingCall->branch_id;
+                    Log::info('🔒 Preserving existing branch_id for call', [
+                        'call_id' => $callId,
+                        'branch_id' => $branchId
+                    ]);
+                }
+            }
+
+            // If phone_number_id not preserved, try to resolve from to_number
+            if (!$phoneNumberId && $toNumber) {
+                $normalizer = new \App\Services\PhoneNumberNormalizer();
+                $normalized = $normalizer::normalize($toNumber);
+                if ($normalized) {
+                    $phoneNumber = PhoneNumber::where('number_normalized', $normalized)->first();
+                    if ($phoneNumber) {
+                        $phoneNumberId = $phoneNumber->id;
+                        // Also get branch_id from phone number if not already set
+                        if (!$branchId && $phoneNumber->branch_id) {
+                            $branchId = $phoneNumber->branch_id;
+                        }
+                        Log::info('📞 Resolved phone_number_id (and branch_id) from to_number', [
+                            'call_id' => $callId,
+                            'to_number' => $toNumber,
+                            'phone_number_id' => $phoneNumberId,
+                            'branch_id' => $branchId
+                        ]);
+                    }
+                }
+            }
             
             // Find agent if provided
             $agent = null;
@@ -222,7 +256,8 @@ class RetellApiClient
                 'is_unknown_customer' => $matchResult['is_unknown'] ?? false,
                 'unknown_reason' => $matchResult['unknown_reason'] ?? null,
                 'company_id' => $companyId ?? $customer?->company_id ?? 1,
-                'phone_number_id' => $phoneNumberId,
+                'branch_id' => $branchId,  // 🔧 FIX: Add branch_id to preserve multi-tenant isolation
+                'phone_number_id' => $phoneNumberId,  // 🔧 FIX: Now properly preserved/resolved
                 'agent_id' => $agent?->id,
                 'direction' => $callData['direction'] ?? 'inbound',
                 'call_status' => $callData['call_status'] ?? $callData['status'] ?? null,
@@ -458,19 +493,98 @@ class RetellApiClient
     public function getAgents()
     {
         try {
+            // Retell API uses /list-agents (no /v2/ prefix)
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json'
-            ])->get($this->baseUrl . '/v2/list-agents');
-            
+            ])->get($this->baseUrl . '/list-agents');
+
             if ($response->successful()) {
                 return $response->json();
             }
         } catch (\Exception $e) {
             Log::error('Failed to fetch agents', ['error' => $e->getMessage()]);
         }
-        
+
         return [];
+    }
+
+    /**
+     * Get specific agent details
+     *
+     * @param string $agentId The Retell agent ID
+     * @return array|null Agent data or null if failed
+     */
+    public function getAgent(string $agentId): ?array
+    {
+        try {
+            Log::info('Fetching agent from Retell', ['agent_id' => $agentId]);
+
+            // Retell API uses /get-agent/{agent_id} (no /v2/ prefix)
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json'
+            ])->get($this->baseUrl . '/get-agent/' . $agentId);
+
+            if ($response->successful()) {
+                Log::info('Successfully fetched agent', ['agent_id' => $agentId]);
+                return $response->json();
+            }
+
+            Log::error('Failed to fetch agent', [
+                'agent_id' => $agentId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Exception while fetching agent', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Update agent configuration
+     *
+     * @param string $agentId The Retell agent ID
+     * @param array $data Agent update data
+     * @return array|null Updated agent data or null if failed
+     */
+    public function updateAgent(string $agentId, array $data): ?array
+    {
+        try {
+            Log::info('Updating agent via Retell API', [
+                'agent_id' => $agentId,
+                'fields_updated' => array_keys($data)
+            ]);
+
+            // Retell API uses /update-agent/{agent_id} with PATCH (no /v2/ prefix)
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json'
+            ])->patch($this->baseUrl . '/update-agent/' . $agentId, $data);
+
+            if ($response->successful()) {
+                Log::info('Successfully updated agent', ['agent_id' => $agentId]);
+                return $response->json();
+            }
+
+            Log::error('Failed to update agent', [
+                'agent_id' => $agentId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Exception while updating agent', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return null;
     }
 
     /**

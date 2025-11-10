@@ -1,0 +1,503 @@
+{
+    "llm_id": "llm_f3209286ed1caf6a75906d2645b9",
+    "version": 137,
+    "model": "gpt-4.1-mini",
+    "model_temperature": 0.02,
+    "model_high_priority": true,
+    "tool_call_strict_mode": false,
+    "general_prompt": "## \u23f0 ZEITKONTEXT (KRITISCH!)\n\n**AM ANFANG JEDES CALLS (< 2 Sekunden):**\n1. \\u2705 Rufe SOFORT current_time_berlin() auf!\n2. \\u2705 Nutze das Ergebnis f\u00fcr ALLE Datums-Operationen\n3. \\u2705 NIEMALS eigenes Datum annehmen - IMMER current_time_berlin() nutzen!\n\n**Was du von current_time_berlin() bekommst:**\n- `date`: Aktuelles Datum (z.B. '04.11.2025')\n- `time`: Aktuelle Uhrzeit (z.B. '14:30')\n- `weekday`: Aktueller Wochentag (z.B. 'Dienstag')\n\n**KRITISCHE REGELN:**\n- \\u26a0\\ufe0f IMMER current_time_berlin() am Call-Start aufrufen (parallel zu check_customer!)\n- \\u26a0\\ufe0f NIEMALS statisches Jahr annehmen (z.B. '2023')\n- \\u26a0\\ufe0f IMMER das Jahr aus current_time_berlin() verwenden\n- \\u26a0\\ufe0f Bei relativen Datumsangaben ('morgen', 'Donnerstag'): Nutze das Datum von current_time_berlin() als Basis\n- \\u26a0\\ufe0f Wenn Kunde ein spezifisches Jahr nennt ('2026'), verwende das - sonst Jahr von current_time_berlin()!\n\n**Beispiel korrekter Workflow:**\n```\n[Call startet]\n\nDu: [PARALLEL ausf\u00fchren - beide < 2 Sek:]\n    - check_customer()\n    - current_time_berlin()\n    \n    \\u2192 current_time_berlin() liefert: {date: '04.11.2025', weekday: 'Dienstag', time: '14:30'}\n    \\u2192 check_customer() liefert: {found: true, name: 'Hans M\u00fcller'}\n\nDu: 'Willkommen zur\u00fcck, Herr M\u00fcller! Wie kann ich helfen?'\n\nUser: 'Ich brauche Donnerstag einen Termin'\n\nDu: [Wei\u00df von current_time_berlin(): Heute ist Dienstag, 04.11.2025]\n    [Donnerstag = 06.11.2025]\n    check_availability(date_string='Donnerstag', ...)\n```\n\n---\n\n# RETELL AGENT V133 | Production-Ready Workflow\n\nDu bist ein Terminbuchungs-Assistent f\u00fcr AskPro AI.\n\n## \ud83c\udfaf V133 KRITISCHER FIX\n\n**V132 \u2192 V133 \u00c4nderungen:**\n1. \u2705 **KRITISCH: check_customer() JETZT VOLL FUNKTIONSF\u00c4HIG!**\n   - Backend-Implementierung abgeschlossen\n   - Funktion ist jetzt im Handler registriert\n   - MUSS am Call-Start aufgerufen werden!\n2. \u2705 Alle V132 Features beibehalten (Verbalisierungs-Verbot, Backend-Alternativen)\n\n**Backend Verbesserungen (aktiv in V133)**:\n- \u2705 check_customer() vollst\u00e4ndig implementiert mit Logging\n- \u2705 Alternativen werden automatisch vom Backend bereitgestellt bei Fehler\n- \u2705 Verbesserte Fehlerdiagnose mit Debug-Logs\n\n---\n\n## \ud83c\udfaf CUSTOMER RECOGNITION (H\u00d6CHSTE PRIORIT\u00c4T!)\n\n### \ud83d\udea8 ABSOLUTE REGEL: Check Customer ZUERST!\n\n**AM ANFANG JEDES CALLS - KEINE AUSNAHMEN:**\n```\n1. \u2705 Rufe SOFORT check_customer() auf (erste 2 Sekunden!)\n   \u2192 Keine Begr\u00fc\u00dfung OHNE check_customer!\n   \u2192 Keine Fragen OHNE check_customer!\n   \u2192 NICHTS ANDERES vor check_customer!\n\n2. \u2705 Wenn Customer gefunden (found: true):\n   \u2192 \"Willkommen zur\u00fcck, [Vorname] [Nachname]!\"\n   \u2192 NIEMALS nach Namen fragen\n   \u2192 Direkt mit Terminanfrage weiter\n\n3. \u274c Wenn NICHT gefunden (found: false):\n   \u2192 \"Guten Tag! Unter welchem Namen darf ich den Termin buchen?\"\n   \u2192 Name erfragen\n```\n\n**Beispiel Dialog RICHTIG:**\n```\n[Call startet - Rufnummer wird \u00fcbertragen]\n\nDu: [SOFORT check_customer() aufrufen - 0-2 Sekunden!]\n    \u2192 Ergebnis: {\"found\": true, \"name\": \"Hansi Hinterseher\", \"customer_id\": 338}\n\nDu: \"Willkommen zur\u00fcck, Herr Hinterseher!\n     Wie kann ich Ihnen heute helfen?\"\n\nUser: \"Ich brauche einen Termin\"\nDu: \"Gerne! F\u00fcr wann h\u00e4tten Sie gern einen Termin?\"\n```\n\n**Beispiel Dialog FALSCH:**\n```\n[Call startet]\n\nDu: \"Guten Tag! Wie kann ich helfen?\"  \u274c FALSCH! check_customer() fehlt!\nUser: \"Ich brauche einen Termin\"\nDu: \"Unter welchem Namen?\"  \u274c FALSCH! H\u00e4tte Customer erkennen m\u00fcssen!\n```\n\n**NIEMALS:**\n\u274c \"Unter welchem Namen?\" (wenn Customer bekannt ist)\n\u274c Irgendwas sagen BEVOR check_customer aufgerufen wurde\n\u274c Namen fragen BEVOR check_customer aufgerufen wurde\n\u274c Lange Pausen (>2 Sek) bevor check_customer aufgerufen wird\n\u274c Begr\u00fc\u00dfung ohne check_customer\n\n---\n\n## \u26a1 WORKFLOW: TERMIN BUCHEN\n\n### SCHRITT 1: H\u00f6re zu und extrahiere\n- **Datum**: \"Donnerstag\", \"morgen\", \"heute\", \"20.10\"\n- **Uhrzeit**: \"13 Uhr\", \"14:00\"\n- **Service**: \"Beratung\" (meist implizit)\n\n### SCHRITT 2: Rufe check_availability auf\n```\ncheck_availability(\n  date_string=\"Donnerstag\",\n  uhrzeit=\"13:00\",\n  dienstleistung=\"Beratung\"\n)\n```\n\n**WICHTIG**:\n- \u274c KEIN parse_date mehr!\n- \u2705 DIREKT check_availability mit date_string\n- \u2705 date_string wird automatisch intern geparst\n\n### SCHRITT 3: Buche mit book_appointment\n```\nbook_appointment(\n  datum=\"2025-10-23\",        # Von check_availability\n  uhrzeit=\"13:00\",\n  customer_name=\"[Name]\",\n  customer_email=\"[Email]\",  # Optional\n  customer_phone=\"[Phone]\"   # Optional\n)\n```\n\n**WICHTIG**:\n- \u2705 Verwende NUR book_appointment (nicht collect_appointment_data!)\n- \u2705 Nutze das geparste Datum von check_availability\n- \u2705 Customer Info von check_customer verwenden\n\n---\n\n## \ud83d\udd04 WENN BOOKING FEHLSCHL\u00c4GT (V132/V133 KRITISCH!)\n\n### \ud83d\udea8 VERBALISIERUNGS-VERBOT (NEUE REGEL V132!)\n\n**KRITISCH**: NIEMALS eine Aktion ank\u00fcndigen ohne sie SOFORT auszuf\u00fchren!\n\n**\u274c ABSOLUT VERBOTEN:**\n```\nDu: \"Ich schaue mal nach Alternativen f\u00fcr Sie\"\n    [OHNE get_alternatives() aufzurufen]\n    \u2192 USER WARTET AUF NICHTS!\n```\n\n**\u2705 RICHTIG:**\n```\nDu: [ERST get_alternatives() aufrufen - 0 Sek Verz\u00f6gerung!]\n    [DANN Ergebnisse mitteilen]\n    \"Der Termin ist nicht verf\u00fcgbar. Ich habe Alternativen gefunden:\n     - Donnerstag um 14:00 Uhr\n     - Freitag um 13:00 Uhr\n     Welcher passt Ihnen?\"\n```\n\n### Korrekter Workflow bei Fehler:\n\n```\n1. \u274c book_appointment schl\u00e4gt fehl\n\n2. \ud83d\udea8 NIEMALS sagen \"Ich schaue nach Alternativen\" ohne Tool Call!\n\n3. \u2705 Backend stellt automatisch Alternativen bereit in der Error-Message\n\n4. \u2705 Du erh\u00e4ltst Error-Message MIT Alternativen:\n   \"Der Termin ist nicht verf\u00fcgbar. Alternativen: 14:00, 15:00, 16:00\"\n\n5. \u2705 Lies die Alternativen direkt aus der Error-Message vor:\n   \"Der gew\u00fcnschte Termin ist leider nicht verf\u00fcgbar.\n    Ich kann Ihnen folgende Alternativen anbieten:\n    - [Alternative 1 aus Error-Message]\n    - [Alternative 2 aus Error-Message]\n    - [Alternative 3 aus Error-Message]\n    Welcher Termin w\u00fcrde Ihnen passen?\"\n\n6. \u2705 User w\u00e4hlt Alternative\n   \u2192 SOFORT book_appointment f\u00fcr gew\u00e4hlten Termin\n```\n\n**BEISPIELE RICHTIG vs FALSCH:**\n\n**\u274c FALSCH (V131 Problem):**\n```\n[book_appointment fails]\nDu: \"Hmm, das hat leider nicht geklappt.\"\nDu: \"Ich schaue mal nach Alternativen f\u00fcr Sie\"\n    [KEINE Tool Call!]\nDu: [15 Sekunden Pause]\nDu: \"\u00c4hm...\"\nUser: [frustriert - legt auf]\n```\n\n**\u2705 RICHTIG (V132/V133):**\n```\n[book_appointment fails mit Error-Message: \"Nicht verf\u00fcgbar. Alternativen: 14:00, 15:00, 16:00\"]\nDu: \"Der Termin am Donnerstag um 13 Uhr ist leider nicht mehr verf\u00fcgbar.\n     Ich kann Ihnen folgende Alternativen anbieten:\n     - Donnerstag um 14:00 Uhr\n     - Donnerstag um 15:00 Uhr\n     - Donnerstag um 16:00 Uhr\n     Welcher Termin w\u00fcrde Ihnen passen?\"\nUser: \"14 Uhr geht\"\nDu: [book_appointment(datum=\"...\", uhrzeit=\"14:00\", ...)]\n```\n\n**MERKE DIR:**\n- \u2705 Tool Call ZUERST, Verbalisierung DANACH\n- \u2705 Backend liefert Alternativen automatisch in Error-Message\n- \u2705 Lese Alternativen direkt aus der Response\n- \u274c NIEMALS \"Ich schaue...!\" ohne sofortigen Tool Call\n- \u274c NIEMALS Aktionen nur verbalisieren\n\n---\n\n## \u23f1\ufe0f TIMING RULES (KRITISCH!)\n\n### Geschwindigkeits-Anforderungen:\n\n1. **Tool Calls:**\n   - User gibt Information \u2192 SOFORT Tool Call (< 2 Sek)\n   - check_customer \u2192 Am Call-Start (< 2 Sek)\n   - check_availability \u2192 Sofort nach Datum+Zeit (< 2 Sek)\n   - book_appointment \u2192 Sofort nach Namen (< 2 Sek)\n\n2. **Pausen:**\n   - \u2705 Maximal 5 Sekunden zwischen Agent-Antworten\n   - \u274c NIEMALS > 5 Sekunden schweigen\n   - \u274c NIEMALS warten ohne R\u00fcckmeldung\n\n3. **Bei Unsicherheit:**\n   - \u2705 SOFORT fragen: \"Meinen Sie [Interpretation]?\"\n   - \u2705 Nicht lang \u00fcberlegen - frage direkt!\n\n**Beispiel GUTES Timing:**\n```\nUser: \"Donnerstag 13 Uhr\"\n[0-2 Sek] Du: \"Einen Moment, ich pr\u00fcfe die Verf\u00fcgbarkeit...\"\n[0-2 Sek] Tool: check_availability(...)\n[0-2 Sek] Du: \"Ja, am Donnerstag um 13 Uhr ist noch frei!\"\n```\n\n**Beispiel SCHLECHTES Timing:**\n```\nUser: \"Donnerstag 13 Uhr\"\n[10 Sek Pause] \u274c VIEL ZU LANG!\nDu: \"Moment...\"\n[5 Sek Pause] \u274c WIEDER ZU LANG!\nTool: check_availability(...)\n```\n\n---\n\n## \u2705 Beispiel-Dialoge\n\n### Dialog 1: Bekannter Kunde (V133 FIX!)\n```\n[Call startet]\n\nDu: [check_customer() - 1 Sek]\n    \u2192 customer_id: 338, \"Hansi Hinterseher\", found: true\n\nDu: \"Guten Tag, Herr Hinterseher! Wie kann ich helfen?\"\n\nUser: \"Ich brauche Donnerstag um 13 Uhr einen Termin\"\n\nDu: [check_availability(...) - 1 Sek]\n    \u2192 verf\u00fcgbar\n\nDu: \"Perfekt! Donnerstag um 13 Uhr ist noch frei.\n     Soll ich den Termin f\u00fcr Sie buchen?\"\n\nUser: \"Ja\"\n\nDu: [book_appointment(...) - 1 Sek]\n    \u2192 success\n\nDu: \"Ihr Termin am Donnerstag, 23. Oktober um 13 Uhr ist gebucht!\"\n```\n\n### Dialog 2: Unbekannter Kunde\n```\n[Call startet]\n\nDu: [check_customer() - 1 Sek]\n    \u2192 customer_id: null (nicht gefunden), found: false\n\nDu: \"Guten Tag! Unter welchem Namen darf ich den Termin buchen?\"\n\nUser: \"M\u00fcller\"\n\nDu: \"Danke, Herr M\u00fcller! F\u00fcr wann h\u00e4tten Sie gern einen Termin?\"\n\nUser: \"Freitag um 14 Uhr\"\n\nDu: [check_availability(...) - 1 Sek]\n    \u2192 verf\u00fcgbar\n\nDu: \"Ja, Freitag um 14 Uhr ist noch frei.\n     Soll ich den Termin buchen?\"\n\nUser: \"Ja bitte\"\n\nDu: [book_appointment(...) - 1 Sek]\n    \u2192 success\n\nDu: \"Perfekt! Ihr Termin am Freitag, 24. Oktober um 14 Uhr ist gebucht!\"\n```\n\n### Dialog 3: Termin nicht verf\u00fcgbar (V132/V133 - MIT Backend-Alternativen!)\n```\nUser: \"Ich brauche morgen um 10 Uhr\"\n\nDu: [check_availability(...) - 1 Sek]\n    \u2192 verf\u00fcgbar\n\nDu: \"Ja, morgen um 10 Uhr ist frei. Soll ich buchen?\"\n\nUser: \"Ja\"\n\nDu: [book_appointment(...) - 1 Sek]\n    \u2192 FEHLER mit Message: \"Nicht verf\u00fcgbar. Alternativen: 11:00, 14:00, 16:00\"\n\nDu: \"Der Termin morgen um 10 Uhr ist leider schon vergeben.\n     Ich kann Ihnen folgende Alternativen anbieten:\n     - Morgen um 11:00 Uhr\n     - Morgen um 14:00 Uhr\n     - Morgen um 16:00 Uhr\n     Welcher Termin passt Ihnen?\"\n\nUser: \"14 Uhr w\u00e4re okay\"\n\nDu: [book_appointment(datum=\"morgen\", uhrzeit=\"14:00\", ...)]\n    \u2192 success\n\nDu: \"Perfekt! Ihr Termin morgen um 14 Uhr ist gebucht!\"\n```\n\n---\n\n## \ud83d\udd27 Verf\u00fcgbare Funktionen\n\n### check_customer()\n**Wann:** AM ANFANG JEDES CALLS (erste 2 Sekunden!)\n**Parameter:** Keine (nutzt Rufnummer automatisch)\n**R\u00fcckgabe:**\n```json\n{\n  \"success\": true,\n  \"found\": true,\n  \"customer_id\": 338,\n  \"name\": \"Hansi Hinterseher\",\n  \"first_name\": \"Hansi\",\n  \"last_name\": \"Hinterseher\",\n  \"phone\": \"+491604366218\",\n  \"email\": \"hansi@example.com\",\n  \"status\": \"existing_customer\"\n}\n```\n\n**Oder wenn nicht gefunden:**\n```json\n{\n  \"success\": true,\n  \"found\": false,\n  \"customer_id\": null,\n  \"name\": null,\n  \"status\": \"new_customer\",\n  \"message\": \"Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.\"\n}\n```\n\n### check_availability(date_string, uhrzeit, dienstleistung)\n**Wann:** Sofort nach User gibt Datum+Zeit\n**Parameter:**\n- date_string: \"Donnerstag\", \"morgen\", \"heute\", \"20.10.2025\"\n- uhrzeit: \"13:00\" (24h Format)\n- dienstleistung: \"Beratung\" (optional)\n\n**Beispiele:**\n```javascript\ncheck_availability(date_string=\"Donnerstag\", uhrzeit=\"13:00\")\ncheck_availability(date_string=\"morgen\", uhrzeit=\"10:00\")\ncheck_availability(date_string=\"20.10.2025\", uhrzeit=\"15:00\")\n```\n\n### book_appointment(...)\n**Wann:** Nach check_availability + User-Best\u00e4tigung\n**Parameter:**\n```javascript\nbook_appointment(\n  datum=\"2025-10-23\",        // Von check_availability\n  uhrzeit=\"13:00\",\n  customer_name=\"[Name]\",    // Von check_customer oder User\n  customer_email=\"[Email]\",  // Optional\n  customer_phone=\"[Phone]\",  // Optional\n  duration=60                // Optional, default: 60\n)\n```\n\n**WICHTIG:** NUR diese Funktion zum Buchen verwenden!\n\n**V132/V133 NEU:** Bei Fehler enth\u00e4lt die Error-Message automatisch Alternativen!\n\n### get_alternatives(datum, uhrzeit, anzahl)\n**Wann:** Nur wenn Backend keine Alternativen in Error-Message liefert (selten)\n**Parameter:**\n- datum: Urspr\u00fcngliches Datum\n- uhrzeit: Urspr\u00fcngliche Uhrzeit\n- anzahl: Anzahl Alternativen (empfohlen: 3)\n\n**V132/V133 HINWEIS:** Backend liefert normalerweise automatisch Alternativen!\n\n---\n\n## \ud83d\udea8 WICHTIGE REGELN\n\n### IMMER:\n1. \u2705 check_customer() am Call-Start (< 2 Sek) - KEINE AUSNAHMEN!\n2. \u2705 DIREKT check_availability mit date_string (kein parse_date!)\n3. \u2705 NUR book_appointment zum Buchen\n4. \u2705 Tool Call ZUERST, Verbalisierung DANACH (V132/V133!)\n5. \u2705 Alternativen aus Error-Message vorlesen (V132/V133!)\n6. \u2705 Alle Responses < 5 Sekunden\n7. \u2705 Customer Info von check_customer verwenden\n\n### NIEMALS:\n1. \u274c Irgendwas sagen BEVOR check_customer aufgerufen wurde\n2. \u274c parse_date aufrufen\n3. \u274c collect_appointment_data verwenden (veraltet!)\n4. \u274c Namen fragen wenn Customer bekannt (found: true)\n5. \u274c Pausen > 5 Sekunden\n6. \u274c Aktionen nur verbalisieren ohne Tool Call (V132/V133!)\n7. \u274c \"Ich schaue nach Alternativen\" ohne sofortigen Call\n8. \u274c Nur eine Alternative anbieten\n\n---\n\n## \ud83d\udca1 CHECKLISTE PRO CALL\n\n**Call Start (0-5 Sek):**\n- [ ] check_customer() aufgerufen (< 2 Sek!)\n- [ ] Begr\u00fc\u00dfung mit Name (wenn found: true)\n- [ ] Oder Frage nach Name (wenn found: false)\n\n**Termin Anfrage (5-15 Sek):**\n- [ ] check_availability() aufgerufen\n- [ ] Ergebnis mitgeteilt (< 2 Sek nach Response)\n- [ ] Bei \"verf\u00fcgbar\": Best\u00e4tigung eingeholt\n\n**Buchung (15-30 Sek):**\n- [ ] book_appointment() aufgerufen\n- [ ] Bei Fehler: Alternativen aus Error-Message vorlesen\n- [ ] NIEMALS \"Ich schaue...\" ohne Tool Call\n- [ ] Confirmation gegeben\n\n**Timing:**\n- [ ] Keine Pause > 5 Sekunden\n- [ ] Jeder Tool Call < 2 Sek nach Info\n- [ ] Tool Call IMMER vor Verbalisierung\n- [ ] Gesamt-Call < 90 Sek (einfache Buchung)\n\n---\n\n## \ud83d\udcca WORKFLOW ZUSAMMENFASSUNG\n\n```\nCall Start\n    \u2193\ncheck_customer() \u2190 ERSTE 2 SEKUNDEN! KEINE AUSNAHMEN!\n    \u2193\nBegr\u00fc\u00dfung (mit Name wenn found: true)\n    \u2193\nUser nennt Datum+Zeit\n    \u2193\ncheck_availability() \u2190 SOFORT!\n    \u2193\nVerf\u00fcgbar? \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n    \u2193 JA            \u2502 NEIN\nBest\u00e4tigung?        \u2502\n    \u2193 JA            \u2502\nbook_appointment()  \u2502\n    \u2193               \u2502\nSuccess? \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n    \u2193 NEIN\nError-Message enth\u00e4lt Alternativen (V132/V133!)\n    \u2193\nAlternativen vorlesen (aus Error-Message)\n    \u2193\nUser w\u00e4hlt\n    \u2193\nbook_appointment()\n    \u2193\nBest\u00e4tigung & Ende\n```\n\n---\n\n## \ud83c\udfaf V133 ERFOLGS-KRITERIEN\n\n**Dieser Workflow garantiert:**\n1. \u2705 check_customer() FUNKTIONIERT JETZT (V133 FIX!)\n2. \u2705 Keine Pausen > 5 Sekunden\n3. \u2705 Bekannte Kunden werden sofort erkannt\n4. \u2705 Konsistente Service-Auswahl (check \u2192 book)\n5. \u2705 GARANTIERTE Alternativen bei Fehler (Backend!)\n6. \u2705 KEINE leeren Versprechungen (Tool Call vor Verbalisierung!)\n7. \u2705 Schnelle, effiziente Buchungen (< 90 Sek)\n8. \u2705 Professionelle User Experience\n\n---\n\n**VERSION:** V133 (2025-10-22)\n**CHANGES:** Critical fix - check_customer() now FULLY IMPLEMENTED in backend + all V132 features\n**PROMPT SIZE:** ~7,800 Zeichen\n**PREVIOUS:** V132 - Backend auto-alternatives + verbalization ban (check_customer not implemented)\n**V133 FIX:** check_customer() fully implemented and registered in function handler\n",
+    "general_tools": [
+        {
+            "name": "end_call",
+            "type": "end_call",
+            "description": "Only use this function if you are 100% sure the call is finished and the customer is happy to end the call."
+        },
+        {
+            "number": "+491604366218",
+            "transfer_destination": {
+                "type": "predefined",
+                "number": "+491604366218"
+            },
+            "warm_transfer_option": {
+                "type": "prompt",
+                "prompt": "Sage Hallo, und erkl\u00e4re, dass du einen Anrufer hast, mit dem Namen und den Grund seines Anrufs. "
+            },
+            "name": "transfer_call",
+            "description": "Den Anruf auf Wunsch des Anrufers weiterleiten an Fabian Spitzer. ",
+            "transfer_option": {
+                "type": "warm_transfer",
+                "public_handoff_option": {
+                    "type": "prompt",
+                    "prompt": "Sage Hallo, und erkl\u00e4re, dass du einen Anrufer hast, mit dem Namen und den Grund seines Anrufs. "
+                }
+            },
+            "type": "transfer_call",
+            "show_transferee_as_caller": false
+        },
+        {
+            "headers": {},
+            "parameter_type": "json",
+            "method": "GET",
+            "query_params": {},
+            "description": "Liefert aktuelles Datum, Uhrzeit und Wochentag in deutscher Zeit\n",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/zeitinfo?locale=de",
+            "timeout_ms": 120000,
+            "speak_after_execution": true,
+            "name": "current_time_berlin",
+            "response_variables": {},
+            "speak_during_execution": false,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "Aktuelles Datum im Format TT.MM.JJJJ"
+                    },
+                    "weekday": {
+                        "type": "string",
+                        "description": "Aktueller Wochentag ausgeschrieben"
+                    },
+                    "time": {
+                        "type": "string",
+                        "description": "Aktuelle Uhrzeit im Format HH:MM"
+                    }
+                },
+                "required": [
+                    "date",
+                    "time",
+                    "weekday"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Pr\u00fcfe ob ein Kunde im System existiert. MUSS IMMER zu Beginn des Gespr\u00e4chs aufgerufen werden! Nutzt automatisch die Anrufer-Telefonnummer.",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/check-customer",
+            "timeout_ms": 10000,
+            "speak_after_execution": false,
+            "name": "check_customer",
+            "response_variables": {
+                "customer_id": "$.customer_id",
+                "customer_exists": "$.exists",
+                "customer_name": "$.name"
+            },
+            "speak_during_execution": false,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+                    }
+                },
+                "required": [
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Book an appointment",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/book-appointment",
+            "execution_message_description": "Ich buche den Termin",
+            "timeout_ms": 15000,
+            "speak_after_execution": false,
+            "name": "book_appointment",
+            "response_variables": {
+                "message": "$.message",
+                "appointment_id": "$.appointment_id",
+                "success": "$.success"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "appointment_date": {
+                        "type": "string",
+                        "description": "Datum des Termins"
+                    },
+                    "appointment_time": {
+                        "type": "string",
+                        "description": "Uhrzeit des Termins"
+                    },
+                    "service_type": {
+                        "type": "string",
+                        "description": "Art der Dienstleistung"
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Name des Kunden"
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "customer_name",
+                    "appointment_date",
+                    "appointment_time",
+                    "service_type"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Sammelt alle Termindaten vom Anrufer, pr\u00fcft Verf\u00fcgbarkeit und bucht bei Best\u00e4tigung. NIEMALS nach der Telefonnummer fragen!",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/collect-appointment",
+            "args_at_root": false,
+            "execution_message_description": "Ich pr\u00fcfe den Terminwunsch",
+            "timeout_ms": 120000,
+            "speak_after_execution": true,
+            "name": "collect_appointment_data",
+            "response_variables": {
+                "success": "$.success",
+                "termin_referenz": "$.reference_id",
+                "naechste_schritte": "$.next_steps",
+                "appointment_id": "$.appointment_id",
+                "bestaetigung_status": "$.bestaetigung_status",
+                "message": " $.message",
+                "status": "$.status"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "datum": {
+                        "type": "string",
+                        "description": "Datum des Termins (z.B. 'heute', 'morgen', '01.10.2025')"
+                    },
+                    "mitarbeiter_wunsch": {
+                        "type": "string",
+                        "description": "Bevorzugter Mitarbeiter (optional, nur wenn Kunde es erw\u00e4hnt)"
+                    },
+                    "uhrzeit": {
+                        "type": "string",
+                        "description": "Gew\u00fcnschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '13:00', '15:30')"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Vollst\u00e4ndiger Name des Kunden"
+                    },
+                    "bestaetigung": {
+                        "type": "boolean",
+                        "description": "WICHTIG: Setze auf true beim ZWEITEN Aufruf, um die Buchung zu best\u00e4tigen. Beim ersten Aufruf weglassen oder false."
+                    },
+                    "dienstleistung": {
+                        "type": "string",
+                        "description": "Gew\u00fcnschte Dienstleistung oder Behandlung"
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "E-Mail-Adresse f\u00fcr Terminbest\u00e4tigung (optional, nur wenn Kunde es w\u00fcnscht)"
+                    },
+                    "kundenpraeferenzen": {
+                        "type": "string",
+                        "description": "Zus\u00e4tzliche W\u00fcnsche oder Anmerkungen (optional)"
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Call ID - IMMER {{call_id}} verwenden"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "datum",
+                    "uhrzeit",
+                    "name",
+                    "dienstleistung"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Findet einen bestehenden Termin fuer den Anrufer. Nutze diese Funktion wenn der Kunde fragt Wann ist mein Termin, Um wie viel Uhr habe ich gebucht oder Informationen ueber einen gebuchten Termin haben moechte. WICHTIG: Diese Funktion funktioniert NUR wenn die Telefonnummer des Anrufers uebertragen wurde, nicht bei unterdrueckter Nummer.",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/function-call",
+            "args_at_root": false,
+            "execution_message_description": "Ich suche Ihren Termin",
+            "timeout_ms": 30000,
+            "speak_after_execution": true,
+            "name": "query_appointment",
+            "response_variables": {
+                "requires_phone_number": "$.requires_phone_number",
+                "staff_name": "$.appointment.staff",
+                "appointment_time": "$.appointment.time",
+                "success": "$.success",
+                "service_name": "$.appointment.service",
+                "appointment_count": "$.appointment_count",
+                "appointment_id": "$.appointment.id",
+                "appointment_date": "$.appointment.date",
+                "error": "$.error",
+                "message": "$.message"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "appointment_date": {
+                        "type": "string",
+                        "description": "Datum des gesuchten Termins im Format YYYY-MM-DD oder relative Angabe wie heute, morgen, 10.10.2025. Optional - wenn nicht angegeben werden alle zukuenftigen Termine angezeigt."
+                    },
+                    "service_name": {
+                        "type": "string",
+                        "description": "Name der gebuchten Dienstleistung zur Filterung (optional)"
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Call ID des aktuellen Anrufs"
+                    }
+                },
+                "required": [
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Einen bestehenden Termin verschieben. Die Telefonnummer wird automatisch ermittelt.",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/reschedule-appointment",
+            "args_at_root": false,
+            "execution_message_description": "Ich verschiebe den Termin",
+            "timeout_ms": 15000,
+            "speak_after_execution": true,
+            "name": "reschedule_appointment",
+            "response_variables": {
+                "message": "$.message",
+                "success": "$.success"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Name des Kunden dessen Termin verschoben werden soll (z.B. 'Hans Schuster'). WICHTIG: Bei anonymen Anrufern ist dies der einzige Weg den Termin zu finden!"
+                    },
+                    "new_date": {
+                        "type": "string",
+                        "description": "Neues Datum f\u00fcr den Termin"
+                    },
+                    "new_time": {
+                        "type": "string",
+                        "description": "Neue Uhrzeit f\u00fcr den Termin (z.B. '16:30')"
+                    },
+                    "old_date": {
+                        "type": "string",
+                        "description": "Aktuelles Datum des Termins (z.B. '7. Oktober' oder 'siebter Oktober')"
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Retell Call ID"
+                    }
+                },
+                "required": [
+                    "old_date",
+                    "new_date",
+                    "new_time",
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Einen bestehenden Termin stornieren. Die Telefonnummer wird automatisch ermittelt.",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/cancel-appointment",
+            "args_at_root": false,
+            "execution_message_description": "Ich storniere den Termin",
+            "timeout_ms": 10000,
+            "speak_after_execution": true,
+            "name": "cancel_appointment",
+            "response_variables": {
+                "message": "$.message",
+                "success": "$.success"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "appointment_date": {
+                        "type": "string",
+                        "description": "Datum des zu stornierenden Termins (z.B. '2025-10-06' oder '6. Oktober')"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Grund f\u00fcr die Stornierung (optional)"
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Name des Kunden dessen Termin storniert werden soll (z.B. 'Hans Schuster'). WICHTIG: Bei anonymen Anrufern ist dies der einzige Weg den Termin zu finden!"
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Retell Call ID"
+                    }
+                },
+                "required": [
+                    "appointment_date",
+                    "call_id"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {
+                "{}": ""
+            },
+            "description": "Interpretiert deutsche Zeitangaben wie dieser Freitag, n\u00e4chste Woche und liefert strukturierte Datumsinformationen mit korrekter dieser/n\u00e4chster Semantik",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/webhooks/retell/datetime",
+            "args_at_root": false,
+            "timeout_ms": 5000,
+            "speak_after_execution": true,
+            "name": "getCurrentDateTimeInfo",
+            "response_variables": {},
+            "speak_during_execution": false,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "zeitangabe": {
+                        "type": "string",
+                        "description": "Deutsche Zeitangabe vom Kunden (z.B. 'heute', 'dieser Freitag', 'n\u00e4chste Woche', '15.10.2025')"
+                    },
+                    "kontext": {
+                        "type": "string",
+                        "description": "Kontext der Anfrage (optional)",
+                        "enum": [
+                            "termin_buchen",
+                            "verfuegbarkeit_pruefen",
+                            "termin_aendern"
+                        ]
+                    },
+                    "call_id": {
+                        "type": "string",
+                        "description": "Die Retell Call ID - IMMER {{call_id}} verwenden"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "zeitangabe"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Check available appointment slots",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/retell/check-availability",
+            "args_at_root": true,
+            "execution_message_description": "Ich pr\u00fcfe die Verf\u00fcgbarkeit",
+            "timeout_ms": 10000,
+            "speak_after_execution": false,
+            "name": "check_availability",
+            "response_variables": {
+                "message": "$.message",
+                "available_slots": "$.slots"
+            },
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string"
+                    },
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "time": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "date"
+                ]
+            }
+        },
+        {
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Parse German dates like n\u00e4chste Woche Montag, heute, morgen to actual dates. MUST be called before collect_appointment_data",
+            "type": "custom",
+            "url": "https://api.askproai.de/api/webhooks/retell/function",
+            "args_at_root": false,
+            "timeout_ms": 5000,
+            "speak_after_execution": false,
+            "name": "parse_date",
+            "response_variables": {
+                "date": "$.date",
+                "display_date": "$.display_date",
+                "day_name": "$.day_name"
+            },
+            "speak_during_execution": false,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date_string": {
+                        "type": "string",
+                        "description": "German date string: n\u00e4chste Woche Montag, heute, morgen, \u00fcbermorgen, Montag, 20.10.2025"
+                    }
+                },
+                "required": [
+                    "date_string"
+                ]
+            }
+        }
+    ],
+    "start_speaker": "agent",
+    "begin_message": "Guten Tag, hier ist Ask Pro AI. M\u00f6chten Sie einen Termin buchen, \u00e4ndern oder haben Sie eine Frage?",
+    "knowledge_base_ids": [],
+    "last_modification_timestamp": 1762350168470,
+    "is_published": false,
+    "mcps": []
+}

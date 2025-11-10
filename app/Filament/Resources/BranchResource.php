@@ -30,19 +30,22 @@ class BranchResource extends Resource
     protected static ?string $model = Branch::class;
 
     /**
-     * Resource disabled - branches table missing 30+ columns in Sept 21 database backup
-     * Only has: id, company_id, name, slug, is_active, created_at, updated_at, deleted_at
-     * Missing: phone_number, address, city, calendar_mode, active, accepts_walkins, etc.
-     * TODO: Re-enable when database is fully restored
+     * Resource re-enabled 2025-11-05 - branches table fully restored with 50 columns
+     * Database includes: phone_number, address, retell_agent_id, calendar_mode, etc.
+     * Super Admin can now view and manage all branches across all companies
+     *
+     * FIX 2025-11-05 (second fix): Changed auth()->guard('admin') to auth()
+     *
+     * Reason: AdminPanelProvider uses authGuard('web'), but this method
+     * was checking auth()->guard('admin')->user() which is always NULL
+     * in Filament navigation context → Resource not visible!
+     *
+     * Solution: Use auth()->user() which respects the panel's configured guard
      */
-    public static function shouldRegisterNavigation(): bool
-    {
-        return false;
-    }
-
     public static function canViewAny(): bool
     {
-        return false; // Prevents all access to this resource
+        $user = auth()->user();
+        return $user && $user->can('viewAny', static::getModel());
     }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';

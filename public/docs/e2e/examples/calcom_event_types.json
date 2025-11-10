@@ -1,0 +1,4221 @@
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 3757785,
+      "lengthInMinutes": 60,
+      "title": "Komplette Umfärbung (Blondierung): Blondierung auftragen (1 von 6)",
+      "slug": "komplette-umfarbung-blondierung-blondierung-auftragen-1-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Blondierung auftragen (1 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757755,
+      "lengthInMinutes": 40,
+      "title": "Balayage/Ombré: Föhnen & Styling (4 von 4)",
+      "slug": "balayageombre-fohnen-styling-4-von-4",
+      "description": "Service: Balayage/Ombré: Föhnen & Styling (4 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757770,
+      "lengthInMinutes": 55,
+      "title": "Herrenhaarschnitt",
+      "slug": "herrenhaarschnitt",
+      "description": "Service: Herrenhaarschnitt",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3762475,
+      "lengthInMinutes": 15,
+      "title": "test",
+      "slug": "test",
+      "description": "Service: test",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "google-meet"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {
+        "managedEventConfig": {
+          "unlockedFields": {
+            "locations": true,
+            "scheduleId": true,
+            "destinationCalendar": true
+          }
+        }
+      },
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "managed",
+      "assignAllTeamMembers": false,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757808,
+      "lengthInMinutes": 30,
+      "title": "Trockenschnitt",
+      "slug": "trockenschnitt",
+      "description": "Service: Trockenschnitt",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "name",
+          "slug": "name",
+          "required": true,
+          "label": "your_name",
+          "disableOnPrefill": false
+        },
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "radioInput",
+          "slug": "location",
+          "required": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "text",
+          "slug": "title",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": true
+        },
+        {
+          "isDefault": true,
+          "type": "textarea",
+          "slug": "notes",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "multiemail",
+          "slug": "guests",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "textarea",
+          "slug": "rescheduleReason",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": false,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757756,
+      "lengthInMinutes": 30,
+      "title": "Balayage/Ombré: Haarschnitt (3 von 4)",
+      "slug": "balayageombre-haarschnitt-3-von-4",
+      "description": "Service: Balayage/Ombré: Haarschnitt (3 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757706,
+      "lengthInMinutes": 40,
+      "title": "Ansatz + Längenausgleich: Formschnitt (3 von 4)",
+      "slug": "ansatz-langenausgleich-formschnitt-3-von-4",
+      "description": "Service: Ansatz + Längenausgleich: Formschnitt (3 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757803,
+      "lengthInMinutes": 15,
+      "title": "Strähnen/Highlights: Auswaschen & Tönen (2 von 4)",
+      "slug": "strahnenhighlights-auswaschen-tonen-2-von-4",
+      "description": "Service: Strähnen/Highlights: Auswaschen & Tönen (2 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757761,
+      "lengthInMinutes": 50,
+      "title": "Dauerwelle: Haare wickeln (1 von 4)",
+      "slug": "dauerwelle-haare-wickeln-1-von-4",
+      "description": "Service: Dauerwelle: Haare wickeln (1 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757774,
+      "lengthInMinutes": 20,
+      "title": "Komplette Umfärbung (Blondierung): Ansatzfarbe auftragen (3 von 6)",
+      "slug": "komplette-umfarbung-blondierung-ansatzfarbe-auftragen-3-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Ansatzfarbe auftragen (3 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757710,
+      "lengthInMinutes": 150,
+      "title": "Balayage/Ombré",
+      "slug": "balayageombre",
+      "description": "Service: Balayage/Ombré",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757804,
+      "lengthInMinutes": 30,
+      "title": "Strähnen/Highlights: Föhnen & Styling (4 von 4)",
+      "slug": "strahnenhighlights-fohnen-styling-4-von-4",
+      "description": "Service: Strähnen/Highlights: Föhnen & Styling (4 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757709,
+      "lengthInMinutes": 30,
+      "title": "Ansatzfärbung: Föhnen & Styling (4 von 4)",
+      "slug": "ansatzfarbung-fohnen-styling-4-von-4",
+      "description": "Service: Ansatzfärbung: Föhnen & Styling (4 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757762,
+      "lengthInMinutes": 30,
+      "title": "Föhnen & Styling Damen",
+      "slug": "fohnen-styling-damen",
+      "description": "Service: Föhnen & Styling Damen",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "name",
+          "slug": "name",
+          "required": true,
+          "label": "your_name",
+          "disableOnPrefill": false
+        },
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "radioInput",
+          "slug": "location",
+          "required": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "text",
+          "slug": "title",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": true
+        },
+        {
+          "isDefault": true,
+          "type": "textarea",
+          "slug": "notes",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "multiemail",
+          "slug": "guests",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        },
+        {
+          "isDefault": true,
+          "type": "textarea",
+          "slug": "rescheduleReason",
+          "required": false,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": false,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757766,
+      "lengthInMinutes": 20,
+      "title": "Föhnen & Styling Herren",
+      "slug": "fohnen-styling-herren",
+      "description": "Service: Föhnen & Styling Herren",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757768,
+      "lengthInMinutes": 30,
+      "title": "Haarspende",
+      "slug": "haarspende",
+      "description": "Service: Haarspende",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757769,
+      "lengthInMinutes": 15,
+      "title": "Hairdetox",
+      "slug": "hairdetox",
+      "description": "Service: Hairdetox",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757751,
+      "lengthInMinutes": 30,
+      "title": "Ansatzfärbung: Haarschnitt (3 von 4)",
+      "slug": "ansatzfarbung-haarschnitt-3-von-4",
+      "description": "Service: Ansatzfärbung: Haarschnitt (3 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757772,
+      "lengthInMinutes": 30,
+      "title": "Kinderhaarschnitt",
+      "slug": "kinderhaarschnitt",
+      "description": "Service: Kinderhaarschnitt",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757752,
+      "lengthInMinutes": 20,
+      "title": "Balayage/Ombré: Auswaschen & Tönen (2 von 4)",
+      "slug": "balayageombre-auswaschen-tonen-2-von-4",
+      "description": "Service: Balayage/Ombré: Auswaschen & Tönen (2 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757805,
+      "lengthInMinutes": 25,
+      "title": "Strähnen/Highlights: Haarschnitt (3 von 4)",
+      "slug": "strahnenhighlights-haarschnitt-3-von-4",
+      "description": "Service: Strähnen/Highlights: Haarschnitt (3 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757773,
+      "lengthInMinutes": 165,
+      "title": "Komplette Umfärbung (Blondierung)",
+      "slug": "komplette-umfarbung-blondierung",
+      "description": "Service: Komplette Umfärbung (Blondierung)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757810,
+      "lengthInMinutes": 60,
+      "title": "Waschen, schneiden, föhnen",
+      "slug": "waschen-schneiden-fohnen",
+      "description": "Service: Waschen, schneiden, föhnen",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757754,
+      "lengthInMinutes": 60,
+      "title": "Balayage/Ombré: Balayage-Technik anwenden (1 von 4)",
+      "slug": "balayageombre-balayage-technik-anwenden-1-von-4",
+      "description": "Service: Balayage/Ombré: Balayage-Technik anwenden (1 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757775,
+      "lengthInMinutes": 10,
+      "title": "Komplette Umfärbung (Blondierung): Auswaschen (2 von 6)",
+      "slug": "komplette-umfarbung-blondierung-auswaschen-2-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Auswaschen (2 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757806,
+      "lengthInMinutes": 45,
+      "title": "Strähnen/Highlights: Strähnen einarbeiten (1 von 4)",
+      "slug": "strahnenhighlights-strahnen-einarbeiten-1-von-4",
+      "description": "Service: Strähnen/Highlights: Strähnen einarbeiten (1 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757697,
+      "lengthInMinutes": 125,
+      "title": "Ansatz + Längenausgleich",
+      "slug": "ansatz-langenausgleich-test-3",
+      "description": "Service: Ansatz + Längenausgleich",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": false,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757698,
+      "lengthInMinutes": 125,
+      "title": "Ansatz + Längenausgleich",
+      "slug": "ansatz-langenausgleich",
+      "description": "Service: Ansatz + Längenausgleich",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757699,
+      "lengthInMinutes": 40,
+      "title": "Ansatz + Längenausgleich: Ansatzfärbung & Längenausgleich auftragen (1 von 4)",
+      "slug": "ansatz-langenausgleich-ansatzfarbung-langenausgleich-auftragen-1-von-4",
+      "description": "Service: Ansatz + Längenausgleich: Ansatzfärbung & Längenausgleich auftragen (1 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757707,
+      "lengthInMinutes": 105,
+      "title": "Ansatzfärbung",
+      "slug": "ansatzfarbung",
+      "description": "Service: Ansatzfärbung",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757700,
+      "lengthInMinutes": 15,
+      "title": "Ansatz + Längenausgleich: Auswaschen (2 von 4)",
+      "slug": "ansatz-langenausgleich-auswaschen-2-von-4",
+      "description": "Service: Ansatz + Längenausgleich: Auswaschen (2 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757701,
+      "lengthInMinutes": 30,
+      "title": "Ansatz + Längenausgleich: Föhnen & Styling (4 von 4)",
+      "slug": "ansatz-langenausgleich-fohnen-styling-4-von-4",
+      "description": "Service: Ansatz + Längenausgleich: Föhnen & Styling (4 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757708,
+      "lengthInMinutes": 15,
+      "title": "Ansatzfärbung: Auswaschen (2 von 4)",
+      "slug": "ansatzfarbung-auswaschen-2-von-4",
+      "description": "Service: Ansatzfärbung: Auswaschen (2 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757758,
+      "lengthInMinutes": 115,
+      "title": "Dauerwelle",
+      "slug": "dauerwelle",
+      "description": "Service: Dauerwelle",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757757,
+      "lengthInMinutes": 45,
+      "title": "Damenhaarschnitt",
+      "slug": "damenhaarschnitt",
+      "description": "Service: Damenhaarschnitt",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757759,
+      "lengthInMinutes": 20,
+      "title": "Dauerwelle: Auswaschen & Pflege (3 von 4)",
+      "slug": "dauerwelle-auswaschen-pflege-3-von-4",
+      "description": "Service: Dauerwelle: Auswaschen & Pflege (3 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757771,
+      "lengthInMinutes": 15,
+      "title": "Intensiv Pflege Maria Nila",
+      "slug": "intensiv-pflege-maria-nila",
+      "description": "Service: Intensiv Pflege Maria Nila",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757787,
+      "lengthInMinutes": 30,
+      "title": "Komplette Umfärbung (Blondierung): Haarschnitt (5 von 6)",
+      "slug": "komplette-umfarbung-blondierung-haarschnitt-5-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Haarschnitt (5 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757786,
+      "lengthInMinutes": 30,
+      "title": "Komplette Umfärbung (Blondierung): Föhnen & Styling (6 von 6)",
+      "slug": "komplette-umfarbung-blondierung-fohnen-styling-6-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Föhnen & Styling (6 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757800,
+      "lengthInMinutes": 40,
+      "title": "Dauerwelle: Schneiden & Styling (4 von 4)",
+      "slug": "dauerwelle-schneiden-styling-4-von-4",
+      "description": "Service: Dauerwelle: Schneiden & Styling (4 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757801,
+      "lengthInMinutes": 15,
+      "title": "Komplette Umfärbung (Blondierung): Auswaschen & Tönen (4 von 6)",
+      "slug": "komplette-umfarbung-blondierung-auswaschen-tonen-4-von-6",
+      "description": "Service: Komplette Umfärbung (Blondierung): Auswaschen & Tönen (4 von 6)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757809,
+      "lengthInMinutes": 45,
+      "title": "Waschen & Styling",
+      "slug": "waschen-styling",
+      "description": "Service: Waschen & Styling",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": false,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757749,
+      "lengthInMinutes": 30,
+      "title": "Ansatzfärbung: Ansatzfärbung auftragen (1 von 4)",
+      "slug": "ansatzfarbung-ansatzfarbung-auftragen-1-von-4",
+      "description": "Service: Ansatzfärbung: Ansatzfärbung auftragen (1 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757760,
+      "lengthInMinutes": 5,
+      "title": "Dauerwelle: Fixierung auftragen (2 von 4)",
+      "slug": "dauerwelle-fixierung-auftragen-2-von-4",
+      "description": "Service: Dauerwelle: Fixierung auftragen (2 von 4)",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757767,
+      "lengthInMinutes": 30,
+      "title": "Gloss",
+      "slug": "gloss",
+      "description": "Service: Gloss",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    },
+    {
+      "id": 3757802,
+      "lengthInMinutes": 15,
+      "title": "Rebuild Treatment Olaplex",
+      "slug": "rebuild-treatment-olaplex",
+      "description": "Service: Rebuild Treatment Olaplex",
+      "locations": [
+        {
+          "type": "integration",
+          "integration": "cal-video"
+        }
+      ],
+      "bookingFields": [
+        {
+          "isDefault": true,
+          "type": "email",
+          "slug": "email",
+          "required": true,
+          "disableOnPrefill": false,
+          "hidden": false
+        }
+      ],
+      "recurrence": null,
+      "disableGuests": false,
+      "slotInterval": null,
+      "minimumBookingNotice": 120,
+      "beforeEventBuffer": 0,
+      "afterEventBuffer": 0,
+      "metadata": {},
+      "price": 0,
+      "currency": "usd",
+      "lockTimeZoneToggleOnBookingPage": false,
+      "forwardParamsSuccessRedirect": true,
+      "successRedirectUrl": null,
+      "isInstantEvent": false,
+      "scheduleId": null,
+      "onlyShowFirstAvailableSlot": false,
+      "offsetStart": 0,
+      "bookingWindow": {
+        "disabled": true
+      },
+      "confirmationPolicy": {
+        "disabled": true
+      },
+      "requiresBookerEmailVerification": false,
+      "hideCalendarNotes": false,
+      "seats": {
+        "disabled": true
+      },
+      "useDestinationCalendarEmail": false,
+      "hideCalendarEventDetails": false,
+      "hideOrganizerEmail": false,
+      "calVideoSettings": null,
+      "hidden": true,
+      "bookingRequiresAuthentication": false,
+      "bookerActiveBookingsLimit": {
+        "disabled": true
+      },
+      "hosts": [
+        {
+          "userId": 1414768,
+          "name": "Fabian Spitzer",
+          "username": "askproai",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        },
+        {
+          "userId": 1346408,
+          "name": "Fabian Spitzer",
+          "username": "fabianspitzer",
+          "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ7kutLXwf2Em3GS2BHwm20PhZyZxG-IyDknTXeTfl9S4pGBOmeDg=s96-c"
+        }
+      ],
+      "teamId": 34209,
+      "ownerId": null,
+      "parentEventTypeId": null,
+      "schedulingType": "collective",
+      "assignAllTeamMembers": true,
+      "team": {
+        "id": 34209,
+        "name": "Friseur",
+        "slug": "friseur",
+        "bannerUrl": null,
+        "logoUrl": null,
+        "weekStart": "Sunday",
+        "brandColor": "#292929",
+        "darkBrandColor": "#fafafa",
+        "theme": null
+      },
+      "rescheduleWithSameRoundRobinHost": false
+    }
+  ]
+}

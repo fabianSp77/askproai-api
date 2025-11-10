@@ -1,0 +1,475 @@
+================================================================================
+RETELL AI INTEGRATION - COMPLETE FILE LISTING
+================================================================================
+Generated: 2025-11-06
+Project: AskPro AI Gateway (Laravel 11 + Filament 3)
+Total Files: 94+
+
+================================================================================
+SECTION 1: CONFIGURATION
+================================================================================
+
+CONFIGURATION FILES:
+  [1] /var/www/api-gateway/config/services.php
+      └─ Retell API credentials and settings (lines 62-76)
+
+================================================================================
+SECTION 2: CONTROLLERS - WEBHOOK HANDLING
+================================================================================
+
+MAIN WEBHOOK CONTROLLERS:
+  [2] /var/www/api-gateway/app/Http/Controllers/RetellWebhookController.php
+      └─ Primary handler for Retell webhook events (call completion)
+      └─ Methods: __invoke(), diagnostic()
+
+  [3] /var/www/api-gateway/app/Http/Controllers/RetellFunctionCallHandler.php
+      └─ Real-time function call handler during active calls
+      └─ Methods: handleFunctionCall(), collectAppointment(), checkAvailability*()
+      └─ V4, V17 endpoints supported
+
+================================================================================
+SECTION 3: CONTROLLERS - API ENDPOINTS
+================================================================================
+
+API CONTROLLERS:
+  [4] /var/www/api-gateway/app/Http/Controllers/Api/RetellApiController.php
+      └─ Primary API endpoints for agent function calls
+      └─ Methods: checkCustomer(), initializeCall(), checkAvailability(), 
+                  collectAppointment(), bookAppointment(), cancelAppointment(),
+                  rescheduleAppointment()
+
+  [5] /var/www/api-gateway/app/Http/Controllers/Api/RetellGetAppointmentsController.php
+      └─ Dedicated appointments retrieval handler
+
+SPECIALIZED RETELL CONTROLLERS (Api/Retell subdirectory):
+  [6] /var/www/api-gateway/app/Http/Controllers/Api/Retell/DateTimeInfoController.php
+      └─ German datetime context endpoint
+
+  [7] /var/www/api-gateway/app/Http/Controllers/Api/Retell/CurrentContextController.php
+      └─ Dynamic current context (date/time) for agent
+
+LEGACY API CONTROLLERS (backups):
+  [8] /var/www/api-gateway/app/Http/Controllers/Api/API_backup/RetellWebhookController.php
+  [9] /var/www/api-gateway/app/Http/Controllers/Api/API_backup/RetellInboundWebhookController.php
+  [10] /var/www/api-gateway/app/Http/Controllers/Api/API_backup/RetellConversationEndedController.php
+
+================================================================================
+SECTION 4: MIDDLEWARE - SECURITY & VALIDATION
+================================================================================
+
+SIGNATURE VERIFICATION MIDDLEWARE:
+  [11] /var/www/api-gateway/app/Http/Middleware/VerifyRetellWebhookSignature.php
+       └─ Validates webhook payload signatures (CVSS 9.3 mitigation)
+
+  [12] /var/www/api-gateway/app/Http/Middleware/VerifyRetellSignature.php
+       └─ Alias extending VerifyRetellWebhookSignature
+
+  [13] /var/www/api-gateway/app/Http/Middleware/VerifyRetellFunctionSignature.php
+       └─ Validates function call request signatures
+
+  [14] /var/www/api-gateway/app/Http/Middleware/VerifyRetellFunctionSignatureWithWhitelist.php
+       └─ Enhanced function signature verification with IP whitelist
+
+CALL ID VALIDATION & RATE LIMITING:
+  [15] /var/www/api-gateway/app/Http/Middleware/ValidateRetellCallId.php
+       └─ RCA 2025-11-03: Defense-in-depth call_id validation
+
+  [16] /var/www/api-gateway/app/Http/Middleware/RetellCallRateLimiter.php
+       └─ Rate limiting for Retell function calls by call_id
+
+================================================================================
+SECTION 5: SERVICES - BUSINESS LOGIC
+================================================================================
+
+CORE API CLIENT:
+  [17] /var/www/api-gateway/app/Services/RetellApiClient.php
+       └─ HTTP client for Retell API communication
+       └─ Handles: getAllCalls(), call fetching, pagination
+
+APPOINTMENT & BOOKING SERVICES (app/Services/Retell/):
+  [18] /var/www/api-gateway/app/Services/Retell/AppointmentCreationService.php
+       └─ Creates appointments from booking data
+
+  [19] /var/www/api-gateway/app/Services/Retell/AppointmentCreationInterface.php
+       └─ Interface contract
+
+  [20] /var/www/api-gateway/app/Services/Retell/AppointmentQueryService.php
+       └─ Queries and retrieves appointments
+
+  [21] /var/www/api-gateway/app/Services/Retell/AppointmentCustomerResolver.php
+       └─ Resolves customer identity from call context
+
+  [22] /var/www/api-gateway/app/Services/Retell/BookingDetailsExtractor.php
+       └─ Extracts booking information from collected data
+
+  [23] /var/www/api-gateway/app/Services/Retell/BookingDetailsExtractorInterface.php
+       └─ Interface contract
+
+SERVICE SELECTION & RESOLUTION:
+  [24] /var/www/api-gateway/app/Services/Retell/ServiceSelectionService.php
+       └─ Selects appropriate service from available options
+
+  [25] /var/www/api-gateway/app/Services/Retell/ServiceSelectionInterface.php
+       └─ Interface contract
+
+  [26] /var/www/api-gateway/app/Services/Retell/ServiceNameExtractor.php
+       └─ Extracts service names from transcripts (NLP)
+
+PHONE NUMBER HANDLING:
+  [27] /var/www/api-gateway/app/Services/Retell/PhoneNumberResolutionService.php
+       └─ Resolves and normalizes phone numbers
+
+  [28] /var/www/api-gateway/app/Services/Retell/PhoneNumberResolutionInterface.php
+       └─ Interface contract
+
+DATA VALIDATION & PROCESSING:
+  [29] /var/www/api-gateway/app/Services/Retell/CustomerDataValidator.php
+       └─ Validates customer information integrity
+
+  [30] /var/www/api-gateway/app/Services/Retell/DateTimeParser.php
+       └─ Parses German time expressions and validates datetimes
+
+RESPONSE FORMATTING:
+  [31] /var/www/api-gateway/app/Services/Retell/WebhookResponseService.php
+       └─ Formats API responses for Retell
+
+  [32] /var/www/api-gateway/app/Services/Retell/WebhookResponseInterface.php
+       └─ Interface contract
+
+CALL LIFECYCLE & TRACKING:
+  [33] /var/www/api-gateway/app/Services/Retell/CallLifecycleService.php
+       └─ Manages call state throughout lifecycle
+
+  [34] /var/www/api-gateway/app/Services/Retell/CallLifecycleInterface.php
+       └─ Interface contract
+
+  [35] /var/www/api-gateway/app/Services/Retell/CallTrackingService.php
+       └─ Tracks call events and metrics
+
+AGENT MANAGEMENT & PROMPTS:
+  [36] /var/www/api-gateway/app/Services/Retell/RetellAgentManagementService.php
+       └─ Manages Retell agent configuration and updates
+
+  [37] /var/www/api-gateway/app/Services/Retell/RetellPromptTemplateService.php
+       └─ Manages agent prompt templates
+
+  [38] /var/www/api-gateway/app/Services/Retell/RetellPromptValidationService.php
+       └─ Validates prompt configurations
+
+LEGACY & QUERY:
+  [39] /var/www/api-gateway/app/Services/Retell/QueryAppointmentByNameFunction.php
+       └─ Legacy function for querying appointments by name
+
+================================================================================
+SECTION 6: MODELS - DATA STRUCTURES
+================================================================================
+
+AGENT CONFIGURATION:
+  [40] /var/www/api-gateway/app/Models/RetellAgent.php
+       └─ Retell AI agent configuration
+       └─ Relations: belongsTo Company, hasMany Calls
+
+CALL & SESSION MODELS:
+  [41] /var/www/api-gateway/app/Models/Call.php
+       └─ Core call model (shared integration point)
+
+  [42] /var/www/api-gateway/app/Models/RetellCallSession.php
+       └─ Individual call session tracking
+
+  [43] /var/www/api-gateway/app/Models/RetellCallEvent.php
+       └─ Events during a call
+
+LOGGING & MONITORING:
+  [44] /var/www/api-gateway/app/Models/RetellErrorLog.php
+       └─ Error and failure logging
+
+  [45] /var/www/api-gateway/app/Models/RetellFunctionTrace.php
+       └─ Function call execution tracing
+
+  [46] /var/www/api-gateway/app/Models/RetellTranscriptSegment.php
+       └─ Call transcript storage
+
+PROMPT MANAGEMENT:
+  [47] /var/www/api-gateway/app/Models/RetellAgentPrompt.php
+       └─ Versioned prompt storage
+
+================================================================================
+SECTION 7: DATABASE MIGRATIONS
+================================================================================
+
+CORE INTEGRATION:
+  [48] /var/www/api-gateway/database/migrations/2025_09_25_000000_create_calls_table.php
+       └─ Main calls table
+
+  [49] /var/www/api-gateway/database/migrations/2025_09_30_090000_add_retell_agent_id_to_calls_table.php
+       └─ Links calls to Retell agents
+
+AGENT CONFIGURATION:
+  [50] /var/www/api-gateway/database/migrations/2025_10_27_000001_add_retell_agent_id_to_companies.php
+       └─ Links companies to Retell agent
+
+  [51] /var/www/api-gateway/database/migrations/2025_10_21_131415_create_retell_agent_prompts_table.php
+       └─ Versioned prompt storage
+
+SESSION & MONITORING:
+  [52] /var/www/api-gateway/database/migrations/2025_10_23_000001_create_retell_monitoring_tables.php
+       └─ Monitoring infrastructure tables
+
+  [53] /var/www/api-gateway/database/migrations/2025_10_25_132525_add_phone_and_branch_to_retell_call_sessions.php
+       └─ Phone number and branch tracking
+
+================================================================================
+SECTION 8: REQUESTS & VALIDATION
+================================================================================
+
+REQUEST VALIDATION:
+  [54] /var/www/api-gateway/app/Http/Requests/RetellWebhookRequest.php
+       └─ Validates incoming webhook payloads
+
+================================================================================
+SECTION 9: JOBS & ASYNC PROCESSING
+================================================================================
+
+QUEUE JOBS:
+  [55] /var/www/api-gateway/app/Jobs/ProcessRetellCallJob.php
+       └─ Asynchronous call processing
+
+================================================================================
+SECTION 10: CONSOLE COMMANDS
+================================================================================
+
+CONFIGURATION & WEBHOOK:
+  [56] /var/www/api-gateway/app/Console/Commands/ConfigureRetellWebhook.php
+       └─ Setup webhook configuration
+
+COST MANAGEMENT:
+  [57] /var/www/api-gateway/app/Console/Commands/ValidateRetellCostsCommand.php
+       └─ Validate cost calculations
+
+  [58] /var/www/api-gateway/app/Console/Commands/RollbackRetellCostsCommand.php
+       └─ Rollback cost calculations
+
+  [59] /var/www/api-gateway/app/Console/Commands/RecalculateRetellCostsCommand.php
+       └─ Recalculate call costs
+
+DATA SYNC & IMPORT:
+  [60] /var/www/api-gateway/app/Console/Commands/SyncRetellCalls.php
+       └─ Synchronize calls from Retell API
+
+  [61] /var/www/api-gateway/app/Console/Commands/RetellImportCommand.php
+       └─ Bulk import of Retell data
+
+TESTING & MONITORING:
+  [62] /var/www/api-gateway/app/Console/Commands/TestRetellIntegration.php
+       └─ Test integration health
+
+  [63] /var/www/api-gateway/app/Console/Commands/MonitorRetellHealth.php
+       └─ Monitor integration health and metrics
+
+================================================================================
+SECTION 11: FILAMENT ADMIN RESOURCES
+================================================================================
+
+RETELL AGENT MANAGEMENT:
+  [64] /var/www/api-gateway/app/Filament/Resources/RetellAgentResource.php
+       └─ Main agent resource
+
+  [65] /var/www/api-gateway/app/Filament/Resources/RetellAgentResource/Pages/ListRetellAgents.php
+       └─ List agents
+
+  [66] /var/www/api-gateway/app/Filament/Resources/RetellAgentResource/Pages/CreateRetellAgent.php
+       └─ Create agent
+
+  [67] /var/www/api-gateway/app/Filament/Resources/RetellAgentResource/Pages/EditRetellAgent.php
+       └─ Edit agent
+
+  [68] /var/www/api-gateway/app/Filament/Resources/RetellAgentResource/Pages/ViewRetellAgent.php
+       └─ View agent details
+
+CALL SESSION MANAGEMENT:
+  [69] /var/www/api-gateway/app/Filament/Resources/RetellCallSessionResource.php
+       └─ Main call session resource
+
+  [70] /var/www/api-gateway/app/Filament/Resources/RetellCallSessionResource/Pages/ListRetellCallSessions.php
+       └─ List sessions
+
+  [71] /var/www/api-gateway/app/Filament/Resources/RetellCallSessionResource/Pages/ViewRetellCallSession.php
+       └─ View session details
+
+================================================================================
+SECTION 12: POLICIES & AUTHORIZATION
+================================================================================
+
+POLICIES:
+  [72] /var/www/api-gateway/app/Policies/RetellCallSessionPolicy.php
+       └─ Authorization rules for call sessions
+
+================================================================================
+SECTION 13: TESTS
+================================================================================
+
+FEATURE TESTS:
+  [73] /var/www/api-gateway/tests/Feature/RetellPolicyIntegrationTest.php
+       └─ Policy integration tests
+
+UNIT TESTS - MIDDLEWARE:
+  [74] /var/www/api-gateway/tests/Unit/Middleware/VerifyRetellWebhookSignatureTest.php
+       └─ Webhook signature verification tests
+
+UNIT TESTS - CONTROLLERS:
+  [75] /var/www/api-gateway/tests/Unit/Controllers/RetellFunctionCallHandlerCanonicalCallIdTest.php
+       └─ Canonical call_id extraction tests
+
+================================================================================
+SECTION 14: ROUTE DEFINITIONS
+================================================================================
+
+ROUTES (in /var/www/api-gateway/routes/api.php):
+
+WEBHOOK ROUTES:
+  POST  /webhook                                    [Legacy compatibility]
+  POST  /webhooks/retell                            [Main webhook]
+  GET   /webhooks/retell/diagnostic                 [Diagnostic]
+
+FUNCTION CALL ROUTES:
+  POST  /webhooks/retell/function                   [Main handler]
+  POST  /webhooks/retell/function-call              [Alias]
+  POST  /webhooks/retell/collect-appointment        [Specific]
+  POST  /webhooks/retell/check-availability         [Specific]
+  POST  /webhooks/retell/datetime                   [DateTime]
+  POST  /webhooks/retell/current-context            [Context]
+
+API ENDPOINTS (Agent Function Calls):
+  POST  /api/retell/check-customer
+  POST  /api/retell/initialize-call                 [V16]
+  POST  /api/retell/check-availability
+  POST  /api/retell/collect-appointment
+  POST  /api/retell/book-appointment
+  POST  /api/retell/cancel-appointment
+  POST  /api/retell/reschedule-appointment
+  POST  /api/retell/get-customer-appointments
+
+  POST  /api/retell/v17/check-availability
+  POST  /api/retell/v17/book-appointment
+
+  POST  /api/retell/v4/initialize-call
+  POST  /api/retell/v4/get-appointments
+  POST  /api/retell/v4/cancel-appointment
+  POST  /api/retell/v4/reschedule-appointment
+  POST  /api/retell/v4/get-services
+
+  POST  /api/retell/get-available-services
+  POST  /api/retell/current-time-berlin
+  POST  /api/retell/function-call                   [Legacy fallback]
+
+  GET   /api/zeitinfo                               [German timezone]
+
+================================================================================
+SECTION 15: CONFIGURATION & LOG FILES
+================================================================================
+
+CONFIGURATION:
+  config/services.php                              [Retell config section]
+
+LOG FILES (storage/logs/):
+  retell_sync.log                                  [Sync logs]
+  retell_sync.log.1 through .5.gz                  [Rotated logs]
+
+================================================================================
+SECTION 16: RELATED FILES (NOT RETELL-SPECIFIC)
+================================================================================
+
+These files integrate with Retell but are not Retell-specific:
+  
+  app/Services/CalcomService.php                   [Cal.com integration]
+  app/Services/AppointmentAlternativeFinder.php    [Alternative slot finding]
+  app/Services/Policies/AppointmentPolicyEngine.php [Policy enforcement]
+  app/Services/PlatformCostService.php             [Cost calculation]
+  app/Services/CostCalculator.php                  [Cost calculation]
+  app/Services/Monitoring/DataConsistencyMonitor.php [Monitoring]
+  app/Services/Notifications/NotificationManager.php [Notifications]
+  app/Models/Appointment.php                       [Core appointment]
+  app/Models/Customer.php                          [Core customer]
+  app/Models/Service.php                           [Services]
+  app/Models/Staff.php                             [Staff]
+  app/Models/PhoneNumber.php                       [Phone tracking]
+  
+================================================================================
+SUMMARY STATISTICS
+================================================================================
+
+Total Retell-Specific Files: 75+
+  Controllers:              5
+  Middleware:               6
+  Services:                 22 (1 root + 21 in Retell/)
+  Models:                   8
+  Migrations:               6
+  Request Classes:          1
+  Jobs:                     1
+  Console Commands:         8
+  Filament Resources:       9
+  Tests:                    3
+  Policies:                 1
+
+Total Routes:               30+
+Total API Endpoints:        20+
+Middleware Functions:       6
+
+================================================================================
+KEY PATTERNS & ARCHITECTURE
+================================================================================
+
+Service Injection: Heavy use of dependency injection
+Interfaces: Multiple contracts for extensibility
+Multi-tenant: Company-based isolation throughout
+Versioning: V4, V16, V17, V4 endpoints supported
+Security: 6 middleware layers, signature verification
+Logging: Comprehensive tracing and sanitization
+Monitoring: Health checks and metrics collection
+
+================================================================================
+QUICK REFERENCE BY CATEGORY
+================================================================================
+
+WEBHOOK HANDLING:
+  1. RetellWebhookController.php
+  2. VerifyRetellWebhookSignature.php
+  3. RetellWebhookRequest.php
+
+REAL-TIME FUNCTION CALLS:
+  1. RetellFunctionCallHandler.php
+  2. VerifyRetellFunctionSignature.php
+  3. ValidateRetellCallId.php
+
+API ENDPOINTS:
+  1. RetellApiController.php
+  2. RetellGetAppointmentsController.php
+  3. DateTimeInfoController.php
+  4. CurrentContextController.php
+
+BUSINESS LOGIC:
+  1. RetellApiClient.php
+  2. AppointmentCreationService.php
+  3. ServiceSelectionService.php
+  4. CallLifecycleService.php
+  5. DateTimeParser.php
+
+DATA MODELS:
+  1. RetellAgent.php
+  2. RetellCallSession.php
+  3. RetellCallEvent.php
+  4. RetellErrorLog.php
+  5. RetellFunctionTrace.php
+
+ADMIN UI:
+  1. RetellAgentResource.php
+  2. RetellCallSessionResource.php
+
+MONITORING:
+  1. MonitorRetellHealth (Command)
+  2. CallTrackingService
+  3. RetellErrorLog model
+
+================================================================================
+END OF FILE LISTING
+================================================================================

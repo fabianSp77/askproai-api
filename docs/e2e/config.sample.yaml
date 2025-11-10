@@ -27,14 +27,24 @@ branches:
         - book
         - reschedule
         - cancel
-      reschedule_cutoff_minutes: 1440  # 24 Stunden
-      cancel_cutoff_minutes: 1440      # 24 Stunden
+      # NON-BLOCKING POLICY (ADR-005)
+      reschedule_cutoff_minutes: 0     # Jederzeit erlaubt
+      cancel_cutoff_minutes: 0         # Jederzeit erlaubt
+      reschedule_first_enabled: true   # Agent bietet Umbuchung vor Stornierung an
+      branch_notification:
+        enabled: true
+        channels:
+          - email
+          - filament_ui
+        message_templates:
+          reschedule_accepted: "Direkt neu gebucht am {{new_date}}"
+          reschedule_declined: "Storniert ohne Umbuchung"
       no_show_rules:
         grace_period_minutes: 15
         fee_amount: 0
         fee_currency: "EUR"
         policy_text: "Bei wiederholtem Nichterscheinen behalten wir uns vor, zukünftige Buchungen abzulehnen."
-      max_reschedules_per_appointment: 3
+      max_reschedules_per_appointment: null  # Keine Limits mehr
 
   - id: "{{BRANCH_ZWEIGSTELLE_UUID}}"  # TODO: c335705a-435b-42a0-8305-5cf44a99602b
     name: "Filiale B (Zweigstelle)"
@@ -48,11 +58,16 @@ branches:
       team_slug: "friseur1"
     policies:
       # TODO: GAP-003 - Unterschiedliche Policies für Filiale B?
+      # NON-BLOCKING POLICY (ADR-005) - Same as Filiale A
       allowed_actions: [book, reschedule, cancel]
-      reschedule_cutoff_minutes: 1440
-      cancel_cutoff_minutes: 1440
+      reschedule_cutoff_minutes: 0  # Jederzeit erlaubt
+      cancel_cutoff_minutes: 0      # Jederzeit erlaubt
+      reschedule_first_enabled: true
+      branch_notification:
+        enabled: true
+        channels: [email, filament_ui]
       no_show_rules: {grace_period_minutes: 15, fee_amount: 0}
-      max_reschedules_per_appointment: 3
+      max_reschedules_per_appointment: null  # Keine Limits
 
 pricing:
   retellai_cost_per_min_usd: 0.020  # Retell.ai Pricing
@@ -391,6 +406,11 @@ security:
 
 # Changelog
 # 2025-11-03: Initial version basierend auf Research
+# 2025-11-03: Policy-Update (ADR-005): Non-blocking Cancellation mit Reschedule-first
+#   - Reschedule/Cancel Cutoff: 1440 → 0 Min (jederzeit erlaubt)
+#   - Max Reschedules: 3 → null (keine Limits)
+#   - Reschedule-first Flow aktiviert
+#   - Branch-Notifications hinzugefügt (Email + Filament UI)
 # TODO: GAP-001 - Agent ID Diskrepanz klären
 # TODO: GAP-002 - Staff Cal.com User IDs mappen (BLOCKER)
 # TODO: GAP-003 - Branch-spezifische Policies?

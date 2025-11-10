@@ -624,4 +624,191 @@ class Call extends Model
 
         return null;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | System Duration Calculations (2025-11-06)
+    |--------------------------------------------------------------------------
+    | Real-time durations between system transitions for performance analysis
+    */
+
+    /**
+     * Get duration from call start to customer linking (seconds)
+     * Measures: Retell → Laravel customer identification
+     *
+     * @return int|null Duration in seconds (null if unrealistic or invalid)
+     */
+    public function getTimeToCustomerLinkSeconds(): ?int
+    {
+        if (!$this->customer_linked_at || !$this->created_at) {
+            return null;
+        }
+
+        $seconds = $this->created_at->diffInSeconds($this->customer_linked_at);
+
+        // Only return if positive and realistic (< 24 hours)
+        // customer_linked_at might be from a batch update, not real-time
+        if ($seconds < 0 || $seconds > 86400) {
+            return null;
+        }
+
+        return $seconds;
+    }
+
+    /**
+     * Get duration from customer link to appointment creation (seconds)
+     * Measures: Laravel → Cal.com booking creation
+     *
+     * @return int|null Duration in seconds (null if unrealistic or invalid)
+     */
+    public function getTimeFromCustomerToAppointmentSeconds(): ?int
+    {
+        if (!$this->customer_linked_at) {
+            return null;
+        }
+
+        // Use relationLoaded to prevent N+1
+        if ($this->relationLoaded('appointments') && $this->appointments->isNotEmpty()) {
+            $firstAppointment = $this->appointments->first();
+            $seconds = $this->customer_linked_at->diffInSeconds($firstAppointment->created_at, false);
+
+            // Only return if realistic (< 1 hour and positive)
+            if ($seconds < 0 || $seconds > 3600) {
+                return null;
+            }
+
+            return $seconds;
+        }
+
+        // Fallback query
+        $appointment = $this->appointments()->orderBy('created_at')->first();
+        if ($appointment) {
+            $seconds = $this->customer_linked_at->diffInSeconds($appointment->created_at, false);
+
+            if ($seconds < 0 || $seconds > 3600) {
+                return null;
+            }
+
+            return $seconds;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get total duration from call start to appointment creation (seconds)
+     * Measures: Complete flow Retell → Laravel → Cal.com
+     *
+     * @return int|null Duration in seconds (null if unrealistic or invalid)
+     */
+    public function getTotalTimeToAppointmentSeconds(): ?int
+    {
+        if (!$this->created_at) {
+            return null;
+        }
+
+        // Use relationLoaded to prevent N+1
+        if ($this->relationLoaded('appointments') && $this->appointments->isNotEmpty()) {
+            $firstAppointment = $this->appointments->first();
+            $seconds = $this->created_at->diffInSeconds($firstAppointment->created_at, false);
+
+            // Only return if realistic (< 2 hours and positive)
+            if ($seconds < 0 || $seconds > 7200) {
+                return null;
+            }
+
+            return $seconds;
+        }
+
+        // Fallback query
+        $appointment = $this->appointments()->orderBy('created_at')->first();
+        if ($appointment) {
+            $seconds = $this->created_at->diffInSeconds($appointment->created_at, false);
+
+            if ($seconds < 0 || $seconds > 7200) {
+                return null;
+            }
+
+            return $seconds;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get formatted duration breakdown for display
+     * Returns HTML string with system-to-system durations
+     *
+     * @return string|null HTML formatted duration breakdown
+     */
+    public function getSystemDurationBreakdownAttribute(): ?string
+    {
+        $parts = [];
+
+        // Call duration
+        if ($this->duration_sec) {
+            $parts[] = sprintf(
+                '<span class="text-gray-600">📞 Anrufdauer:</span> <span class="font-semibold">%s</span>',
+                $this->formatDuration($this->duration_sec)
+            );
+        }
+
+        // Time to customer link
+        $timeToCustomer = $this->getTimeToCustomerLinkSeconds();
+        if ($timeToCustomer !== null) {
+            $parts[] = sprintf(
+                '<span class="text-blue-600">🔍 Retell → Customer:</span> <span class="font-semibold">%s</span>',
+                $this->formatDuration($timeToCustomer)
+            );
+        }
+
+        // Time from customer to appointment
+        $timeToAppointment = $this->getTimeFromCustomerToAppointmentSeconds();
+        if ($timeToAppointment !== null) {
+            $parts[] = sprintf(
+                '<span class="text-green-600">📅 Customer → Termin:</span> <span class="font-semibold">%s</span>',
+                $this->formatDuration($timeToAppointment)
+            );
+        }
+
+        // Total time to appointment
+        $totalTime = $this->getTotalTimeToAppointmentSeconds();
+        if ($totalTime !== null) {
+            $parts[] = sprintf(
+                '<span class="text-purple-600">⚡ Gesamt (Call → Termin):</span> <span class="font-semibold">%s</span>',
+                $this->formatDuration($totalTime)
+            );
+        }
+
+        return !empty($parts) ? implode('<br>', $parts) : null;
+    }
+
+    /**
+     * Format seconds into human-readable duration
+     *
+     * @param int $seconds
+     * @return string
+     */
+    private function formatDuration(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return "{$seconds}s";
+        }
+
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+
+        if ($minutes < 60) {
+            return $remainingSeconds > 0
+                ? "{$minutes}m {$remainingSeconds}s"
+                : "{$minutes}m";
+        }
+
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        return $remainingMinutes > 0
+            ? "{$hours}h {$remainingMinutes}m"
+            : "{$hours}h";
+    }
 }

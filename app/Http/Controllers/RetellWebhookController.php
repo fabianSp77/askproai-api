@@ -594,10 +594,23 @@ class RetellWebhookController extends Controller
 
             // Direkt Verfügbarkeiten mitgeben - KEIN Function Call nötig!
             $availableSlots = $this->getQuickAvailability($call->company_id ?? 1, $call->branch_id ?? null);
+
+            // Date/Time Context für Agent (damit er "heute", "morgen", "nächste Woche" versteht)
+            $now = \Carbon\Carbon::now('Europe/Berlin');
+
             $customData = [
+                // Availability data
                 'verfuegbare_termine_heute' => $availableSlots['today'] ?? [],
                 'verfuegbare_termine_morgen' => $availableSlots['tomorrow'] ?? [],
                 'naechster_freier_termin' => $availableSlots['next'] ?? null,
+
+                // Date/Time Context für temporale Referenzen
+                'current_date' => $now->format('Y-m-d'),           // 2025-11-04
+                'current_time' => $now->format('H:i'),             // 09:41
+                'current_datetime' => $now->toIso8601String(),     // 2025-11-04T09:41:25+01:00
+                'weekday' => $now->locale('de')->dayName,          // Montag
+                'weekday_english' => $now->dayName,                // Monday
+                'current_year' => $now->year,                      // 2025
             ];
 
             // Response mit Appointment-Daten für Retell AI

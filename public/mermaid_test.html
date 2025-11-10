@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mermaid Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body style="background: #1a1a2e; color: white; padding: 40px;">
+    <h1>Mermaid Syntax Test</h1>
+
+    <h2>Test 1: Multi-Tenant Architecture (No Quotes)</h2>
+    <pre class="mermaid">
+graph LR
+    Call["Call Record"]
+    Phone["PhoneNumber"]
+    Company["Company"]
+
+    Call -->|phone_number_id| Phone
+    Phone -->|company_id| Company
+
+    style Call fill:#667eea,color:#fff
+    style Company fill:#10b981,color:#fff
+    </pre>
+
+    <h2 style="margin-top: 50px;">Test 2: Error Handling (Less Than Symbol)</h2>
+    <pre class="mermaid">
+graph TD
+    Start["Start"]
+    Retry{"Retry less than 5?"}
+    Success["Success"]
+    Error["Error"]
+
+    Start --> Retry
+    Retry -->|Yes| Success
+    Retry -->|No| Error
+
+    style Start fill:#667eea,color:#fff
+    style Success fill:#10b981,color:#fff
+    style Error fill:#ef4444,color:#fff
+    </pre>
+
+    <h2 style="margin-top: 50px;">Test 3: Sequence Diagram</h2>
+    <pre class="mermaid">
+sequenceDiagram
+    participant Retell
+    participant Backend
+    participant Database
+
+    Retell->>Backend: check_availability(date)
+    Backend->>Database: Load Context
+    Database-->>Backend: Data
+    Backend-->>Retell: Result
+    </pre>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Capture console errors
+        window.onerror = function(msg, url, line) {
+            console.error(`Error: ${msg} at ${url}:${line}`);
+            return false;
+        };
+
+        console.log("✅ Mermaid initialized");
+    </script>
+</body>
+</html>

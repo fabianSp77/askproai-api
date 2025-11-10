@@ -254,6 +254,130 @@ EOF
     echo "--BOUNDARY_MAIN--"
 }
 
+# Generate warning email (degraded mode - local backup only)
+generate_warning_email() {
+    local subject="⚠️  Backup WARNING: ${TIER} - DEGRADED MODE ($(get_local_time "$TIMESTAMP"))"
+    local local_time=$(get_local_time "$TIMESTAMP")
+    local duration_fmt=$(format_duration "$DURATION")
+    local db_size_fmt=$(bytes_to_human "$DB_SIZE")
+    local app_size_fmt=$(bytes_to_human "$APP_SIZE")
+    local sys_size_fmt=$(bytes_to_human "$SYS_SIZE")
+    local total_size_fmt=$(bytes_to_human "$TOTAL_SIZE")
+
+    cat <<EOF
+From: ${FROM_NAME} <${FROM_ADDRESS}>
+To: ${RECIPIENTS}
+Subject: ${subject}
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
+.container { max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.header { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+.header h1 { margin: 0; font-size: 24px; }
+.header .status { font-size: 48px; margin: 10px 0; }
+.content { padding: 30px; }
+.section { margin-bottom: 25px; }
+.section h2 { color: #333; font-size: 18px; margin: 0 0 15px 0; border-bottom: 2px solid #f39c12; padding-bottom: 5px; }
+.info-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; }
+.info-label { font-weight: 600; color: #666; }
+.info-value { color: #333; font-family: 'Courier New', monospace; }
+.warning-box { background: #fff3cd; border-left: 4px solid #f39c12; padding: 15px; border-radius: 4px; margin: 15px 0; }
+.warning-box strong { color: #856404; }
+.sizes { background: #f8f9fa; border-radius: 6px; padding: 15px; }
+.size-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+.size-item:last-child { border-bottom: none; }
+.size-label { font-weight: 600; }
+.size-value { font-family: 'Courier New', monospace; color: #f39c12; }
+.footer { background: #f8f9fa; padding: 20px 30px; border-radius: 0 0 8px 8px; text-align: center; color: #666; font-size: 13px; }
+.action-required { background: #fff3cd; border: 2px solid #f39c12; padding: 20px; border-radius: 6px; margin: 20px 0; }
+.action-required h3 { margin: 0 0 10px 0; color: #856404; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>AskPro AI Backup System</h1>
+    <div class="status">⚠️  WARNING</div>
+    <div>Backup completed in DEGRADED MODE (local only)</div>
+  </div>
+
+  <div class="content">
+    <div class="warning-box">
+      <strong>⚠️  DEGRADED MODE:</strong> Backup created successfully on local server, but <strong>NOT replicated to offsite storage (Synology NAS)</strong>. The backup is not protected against hardware failure or disaster.
+    </div>
+
+    <div class="section">
+      <h2>📊 Backup Details</h2>
+      <div class="info-grid">
+        <div class="info-label">Tier:</div>
+        <div class="info-value">${TIER}</div>
+
+        <div class="info-label">Timestamp:</div>
+        <div class="info-value">${local_time}</div>
+
+        <div class="info-label">Duration:</div>
+        <div class="info-value">${duration_fmt}</div>
+
+        <div class="info-label">Local Path:</div>
+        <div class="info-value">/var/backups/askproai/</div>
+
+        <div class="info-label">NAS Status:</div>
+        <div class="info-value" style="color: #e67e22; font-weight: 600;">❌ Unreachable - upload skipped</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>💾 Backup Sizes</h2>
+      <div class="sizes">
+        <div class="size-item">
+          <span class="size-label">Database:</span>
+          <span class="size-value">${db_size_fmt}</span>
+        </div>
+        <div class="size-item">
+          <span class="size-label">Application:</span>
+          <span class="size-value">${app_size_fmt}</span>
+        </div>
+        <div class="size-item">
+          <span class="size-label">System State:</span>
+          <span class="size-value">${sys_size_fmt}</span>
+        </div>
+        <div class="size-item">
+          <span class="size-label"><strong>Total:</strong></span>
+          <span class="size-value"><strong>${total_size_fmt}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-required">
+      <h3>🔧 ACTION REQUIRED</h3>
+      <p><strong>Root Cause:</strong> Synology NAS (fs-cloud1977.synology.me:50222) is unreachable.</p>
+      <p><strong>Impact:</strong> Backups are stored locally only. Not protected against server failure.</p>
+      <p><strong>Next Steps:</strong></p>
+      <ol>
+        <li>Check Synology NAS status (powered on, network connectivity)</li>
+        <li>Verify SSH service running on port 50222</li>
+        <li>Check firewall rules and DynDNS configuration</li>
+        <li>Once NAS is restored, next scheduled backup will resume offsite replication</li>
+      </ol>
+      <p><strong>Documentation:</strong> See <code>BACKUP_FAILURE_RCA_2025-11-07.md</code> for detailed analysis</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>AskPro AI Backup System - Automated Backup Monitoring</p>
+    <p>Server: $(hostname) | Generated: $(date -Iseconds)</p>
+  </div>
+</div>
+</body>
+</html>
+EOF
+}
+
 # Function: Generate Failure E-Mail
 generate_failure_email() {
     local subject="❌ Backup FAILED: ${TIER} - ${ERROR_STEP} ($(get_local_time "$TIMESTAMP"))"
@@ -481,6 +605,8 @@ main() {
     elif [ "$STATUS" = "failure" ]; then
         generate_failure_email > "$email_file"
         create_github_issue
+    elif [ "$STATUS" = "warning" ]; then
+        generate_warning_email > "$email_file"
     else
         echo "Error: Unknown status: $STATUS" >&2
         exit 1
