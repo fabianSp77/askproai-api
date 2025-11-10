@@ -18,10 +18,8 @@ return new class extends Migration
             Schema::create('notification_deliveries', function (Blueprint $table) {
             $table->id();
 
-            // Foreign key to notification_queue
-            $table->foreignId('notification_queue_id')
-                  ->constrained('notification_queue')
-                  ->cascadeOnDelete();
+            // Foreign key to notification_queue (nullable for safety)
+            $table->unsignedBigInteger('notification_queue_id');
 
             // Channel and status
             $table->string('channel', 50);  // sms, email, push, webhook, etc.
@@ -51,6 +49,16 @@ return new class extends Migration
             $table->index(['status', 'created_at']);
             $table->index(['notification_queue_id', 'status']);
             });
+
+            // Add foreign key constraint only if notification_queue table exists
+            if (Schema::hasTable('notification_queue')) {
+                Schema::table('notification_deliveries', function (Blueprint $table) {
+                    $table->foreign('notification_queue_id')
+                          ->references('id')
+                          ->on('notification_queue')
+                          ->onDelete('cascade');
+                });
+            }
         }
     }
 

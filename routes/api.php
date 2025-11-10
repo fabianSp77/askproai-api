@@ -86,6 +86,18 @@ Route::prefix('webhooks')->group(function () {
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
+    // Retell current context endpoint (dynamic date/time for agent)
+    Route::post('/retell/current-context', [\App\Http\Controllers\Api\Retell\CurrentContextController::class, 'handle'])
+        ->name('webhooks.retell.current-context')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    // Retell check customer endpoint (NEW in V110 - proactive customer recognition)
+    Route::post('/retell/check-customer', [\App\Http\Controllers\Api\Retell\CheckCustomerController::class, 'checkCustomer'])
+        ->name('webhooks.retell.check-customer')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
     // Retell Diagnostic Endpoint (requires authentication)
     Route::get('/retell/diagnostic', [RetellWebhookController::class, 'diagnostic'])
         ->name('webhooks.retell.diagnostic')
@@ -279,14 +291,15 @@ Route::prefix('retell')->group(function () {
         ->withoutMiddleware('retell.function.whitelist');
 
     // 🚀 V17: Explicit Function Node Endpoints
+    // 🔧 FIX 2025-11-03: Added retell.validate.callid middleware (Defense-in-Depth)
     Route::post('/v17/check-availability', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'checkAvailabilityV17'])
         ->name('api.retell.v17.check-availability')
-        ->middleware(['throttle:100,1'])
+        ->middleware(['throttle:100,1', 'retell.validate.callid'])
         ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/v17/book-appointment', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'bookAppointmentV17'])
         ->name('api.retell.v17.book-appointment')
-        ->middleware(['throttle:100,1'])
+        ->middleware(['throttle:100,1', 'retell.validate.callid'])
         ->withoutMiddleware('retell.function.whitelist');
 
     // 🚀 V4: Conversation Flow V4 Endpoints (Complex Features)
@@ -300,14 +313,15 @@ Route::prefix('retell')->group(function () {
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
+    // 🔧 FIX 2025-11-03: Added retell.validate.callid middleware (Defense-in-Depth)
     Route::post('/cancel-appointment-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'cancelAppointmentV4'])
         ->name('api.retell.v4.cancel-appointment')
-        ->middleware(['throttle:100,1'])
+        ->middleware(['throttle:100,1', 'retell.validate.callid'])
         ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/reschedule-appointment-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'rescheduleAppointmentV4'])
         ->name('api.retell.v4.reschedule-appointment')
-        ->middleware(['throttle:100,1'])
+        ->middleware(['throttle:100,1', 'retell.validate.callid'])
         ->withoutMiddleware('retell.function.whitelist');
 
     Route::post('/get-services-v4', [\App\Http\Controllers\RetellFunctionCallHandler::class, 'getAvailableServicesV4'])
@@ -353,3 +367,38 @@ Route::middleware(['auth:sanctum'])->prefix('user-preferences')->group(function 
     Route::post('/columns/{resource}/reset', [UserPreferenceController::class, 'resetColumnPreferences'])
         ->name('api.preferences.columns.reset');
 });
+
+// ---- Admin / Retell Function Schema Routes -------------------------------------------
+// Purpose: Dynamic schema extraction for interactive documentation
+// PHASE 2: Real Function Data API for auto-generated documentation
+Route::prefix('admin/retell/functions')->group(function () {
+    // Get all function schemas
+    Route::get('/schema', [\App\Http\Controllers\Api\RetellFunctionSchemaController::class, 'index'])
+        ->name('api.admin.retell.functions.schema.index');
+
+    // Get single function schema
+    Route::get('/schema/{name}', [\App\Http\Controllers\Api\RetellFunctionSchemaController::class, 'show'])
+        ->name('api.admin.retell.functions.schema.show');
+
+    // Get schema statistics
+    Route::get('/statistics', [\App\Http\Controllers\Api\RetellFunctionSchemaController::class, 'statistics'])
+        ->name('api.admin.retell.functions.statistics');
+
+    // Export in Retell AI compatible format
+    Route::get('/export/retell-format', [\App\Http\Controllers\Api\RetellFunctionSchemaController::class, 'exportRetellFormat'])
+        ->name('api.admin.retell.functions.export.retell');
+});
+
+// ---- Cal.com Atoms & Booking Routes -------------------------------------------
+// Cal.com branches API for booking widget (branch/team selection)
+// SEC-003: Rate limited to 60 requests per minute per user
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('calcom')->group(function () {
+    Route::get('/branches', [\App\Http\Controllers\Api\CalcomBranchesController::class, 'index'])
+        ->name('api.calcom.branches');
+});
+
+// Note: Cal.com Atoms routes moved to web.php for session-based authentication
+// See routes/web.php for the actual route definitions
+
+// Note: Cal.com API Proxy also moved to web.php to catch root-level requests
+// (BookerEmbed makes requests to /atoms/... directly, not /api/atoms/...)
