@@ -38,7 +38,7 @@
   ],
   "generated_at": "2025-11-02T12:50:00+01:00",
   "health_check": {
-    "last_check": "2025-11-10T16:30:01.471945",
+    "last_check": "2025-11-10T17:00:01.441821",
     "critical_issues": 0,
     "warnings": 0,
     "checks_passed": 7,

@@ -1923,11 +1923,41 @@ class RetellFunctionCallHandler extends Controller
 
             if ($pinnedServiceId) {
                 $service = $this->serviceSelector->findServiceById($pinnedServiceId, $companyId, $branchId);
-                Log::info('✅ Service found via PINNED cache', [
-                    'call_id' => $callId,
-                    'service_id' => $pinnedServiceId,
-                    'service_name' => $service?->name
-                ]);
+
+                if ($service) {
+                    Log::info('✅ Service found via PINNED cache', [
+                        'call_id' => $callId,
+                        'service_id' => $pinnedServiceId,
+                        'service_name' => $service->name
+                    ]);
+                } else {
+                    Log::warning('⚠️ Pinned service lookup failed', [
+                        'pinned_service_id' => $pinnedServiceId,
+                        'call_id' => $callId,
+                        'reason' => 'Possible team ownership validation failure'
+                    ]);
+                }
+
+                // 🔧 FIX 2025-11-10: Fallback to name search if pinned service fails
+                // This handles cases where service exists but team ownership validation fails
+                if (!$service && $serviceName) {
+                    Log::info('🔄 start_booking: Falling back to name search', [
+                        'pinned_service_id' => $pinnedServiceId,
+                        'service_name' => $serviceName,
+                        'call_id' => $callId
+                    ]);
+
+                    $service = $this->serviceSelector->findServiceByName($serviceName, $companyId, $branchId);
+
+                    if ($service) {
+                        Log::info('✅ Service found via FALLBACK name search', [
+                            'call_id' => $callId,
+                            'service_id' => $service->id,
+                            'service_name' => $service->name,
+                            'original_pinned_id' => $pinnedServiceId
+                        ]);
+                    }
+                }
             } elseif ($serviceId) {
                 $service = $this->serviceSelector->findServiceById($serviceId, $companyId, $branchId);
                 Log::info('✅ Service found via SERVICE_ID parameter', [

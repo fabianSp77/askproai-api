@@ -575,21 +575,35 @@
                 // Use alternative time if original time not available
                 await runStep(5, 'start_booking', async () => {
                     let bookingTime;
+                    let useAlternative = false;
+
+                    // 🔧 DEBUG: Log availability data structure
+                    console.log('🔍 [DEBUG] Availability data for alternative selection:', {
+                        available: availabilityData?.data?.available,
+                        hasAlternatives: availabilityData?.data?.alternatives?.length > 0,
+                        alternativesCount: availabilityData?.data?.alternatives?.length,
+                        alternatives: availabilityData?.data?.alternatives
+                    });
 
                     // Check if we need to use an alternative time
                     if (availabilityData?.data?.available === false &&
                         availabilityData?.data?.alternatives?.length > 0) {
                         // Use first alternative
+                        useAlternative = true;
                         bookingTime = availabilityData.data.alternatives[0].time;
+                        console.log('✅ [DEBUG] Using alternative time:', bookingTime);
                     } else {
                         // Use original time
+                        useAlternative = false;
                         const tomorrow = new Date();
                         tomorrow.setDate(tomorrow.getDate() + 1);
                         const dateStr = tomorrow.toISOString().split('T')[0];
                         bookingTime = `${dateStr} ${testData.time}`;
+                        console.log('⚠️ [DEBUG] Using original time (fallback):', bookingTime);
                     }
 
-                    const result = await makeRequest('/api/webhooks/retell/function', 'POST', {
+                    // 🔧 DEBUG: Log the exact payload being sent
+                    const payload = {
                         name: 'start_booking',
                         args: {
                             service_name: testData.service,
@@ -601,7 +615,27 @@
                         call: {
                             call_id: callId
                         }
+                    };
+
+                    console.log('🔍 [DEBUG] start_booking payload:', {
+                        service_name: payload.args.service_name,
+                        datetime: payload.args.datetime,
+                        customer_name: payload.args.customer_name,
+                        customer_phone: payload.args.customer_phone,
+                        call_id: payload.args.call_id,
+                        useAlternative: useAlternative
                     });
+
+                    const result = await makeRequest('/api/webhooks/retell/function', 'POST', payload);
+
+                    // 🔧 DEBUG: Log response
+                    console.log('🔍 [DEBUG] start_booking response:', {
+                        success: result.success,
+                        status: result.data?.status,
+                        error: result.data?.error,
+                        raw: result.data
+                    });
+
                     return result.data;
                 });
 
