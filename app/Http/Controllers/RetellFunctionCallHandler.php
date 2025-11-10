@@ -52,6 +52,9 @@ class RetellFunctionCallHandler extends Controller
         AppointmentCustomerResolver $customerResolver,
         DateTimeParser $dateTimeParser
     ) {
+        // 🔧 DEBUG 2025-11-10: Log constructor execution
+        error_log("🔍 RetellFunctionCallHandler CONSTRUCTOR START");
+
         $this->serviceSelector = $serviceSelector;
         $this->serviceExtractor = $serviceExtractor;
         $this->responseFormatter = $responseFormatter;
@@ -62,6 +65,16 @@ class RetellFunctionCallHandler extends Controller
         $this->dateTimeParser = $dateTimeParser;
         $this->alternativeFinder = new AppointmentAlternativeFinder();
         $this->calcomService = new CalcomService();
+
+        // 🔧 DEBUG 2025-11-10: Verify all dependencies are set
+        error_log("🔍 Dependencies injected: " . json_encode([
+            'serviceSelector' => get_class($this->serviceSelector),
+            'responseFormatter' => get_class($this->responseFormatter),
+            'callLifecycle' => get_class($this->callLifecycle),
+            'calcomService' => get_class($this->calcomService),
+            'dateTimeParser' => get_class($this->dateTimeParser),
+            'all_set' => isset($this->serviceSelector, $this->responseFormatter, $this->callLifecycle, $this->calcomService)
+        ]));
     }
 
     /**
@@ -88,6 +101,21 @@ class RetellFunctionCallHandler extends Controller
 
         // Priority 2: Agent-provided args (validate against canonical)
         $callIdFromArgs = $request->input('args.call_id');
+
+        // 🔧 FIX 2025-11-10: Reject placeholder call_id from flow
+        // BUG: Conversation flow uses {{call_id}} which resolves to placeholder values
+        // Known placeholders: "12345", "1", or any value that doesn't match Retell format
+        // Real Retell call_id format: "call_[alphanumeric]"
+        // SAFETY NET: If args contains placeholder, treat it as invalid and use webhook source only
+        if ($callIdFromArgs && (!str_starts_with($callIdFromArgs, 'call_') || strlen($callIdFromArgs) < 10)) {
+            Log::warning('⚠️ CANONICAL_CALL_ID: Detected placeholder from flow - ignoring args', [
+                'metric' => 'placeholder_call_id_detected',
+                'args_call_id' => $callIdFromArgs,
+                'webhook_call_id' => $callIdFromWebhook,
+                'reason' => !str_starts_with($callIdFromArgs, 'call_') ? 'missing_prefix' : 'too_short'
+            ]);
+            $callIdFromArgs = null; // Force use of webhook source
+        }
 
         // Normalize empty strings to null for consistency
         if ($callIdFromWebhook === '' || $callIdFromWebhook === 'None') {
@@ -542,6 +570,9 @@ class RetellFunctionCallHandler extends Controller
 
         // Route to appropriate function handler
         try {
+            // 🔧 DEBUG 2025-11-10: Log function routing
+            error_log("🔍 FUNCTION ROUTER: base_name={$baseFunctionName}, full_name={$functionName}, call_id={$callId}");
+
             $result = match($baseFunctionName) {
             // 🔧 FIX 2025-10-22 V133: Add check_customer to enable customer recognition
             'check_customer' => $this->checkCustomer($parameters, $callId),
@@ -551,7 +582,10 @@ class RetellFunctionCallHandler extends Controller
             'book_appointment' => $this->bookAppointment($parameters, $callId),
             // 🔧 NEW 2025-11-05: Tool-Call Splitting (2-step booking for better UX)
             'start_booking' => $this->startBooking($parameters, $callId),
-            'confirm_booking' => $this->confirmBooking($parameters, $callId),
+            'confirm_booking' => (function() use ($parameters, $callId) {
+                error_log("🔍 MATCH BRANCH: confirm_booking - About to call confirmBooking()");
+                return $this->confirmBooking($parameters, $callId);
+            })(),
             'query_appointment' => $this->queryAppointment($parameters, $callId),
             // 🔒 NEW V85: Query appointment by customer name (for anonymous/hidden number calls)
             'query_appointment_by_name' => $this->queryAppointmentByName($parameters, $callId),
@@ -591,6 +625,12 @@ class RetellFunctionCallHandler extends Controller
             return $result;
 
         } catch (\Exception $e) {
+            // 🔧 DEBUG 2025-11-10: Extensive exception logging in function router
+            error_log("🚨 FUNCTION ROUTER EXCEPTION: " . $e->getMessage());
+            error_log("🚨 Function: {$functionName} (base: {$baseFunctionName})");
+            error_log("🚨 Exception class: " . get_class($e));
+            error_log("🚨 Exception file: " . $e->getFile() . ":" . $e->getLine());
+
             // 🎯 RECORD FUNCTION ERROR
             if ($trace) {
                 try {
@@ -601,11 +641,15 @@ class RetellFunctionCallHandler extends Controller
                         error: [
                             'code' => 'function_execution_failed',
                             'message' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                            'exception_file' => $e->getFile(),
+                            'exception_line' => $e->getLine(),
                             'trace' => $e->getTraceAsString(),
                             'booking_failed' => $baseFunctionName === 'book_appointment',
                         ]
                     );
                 } catch (\Exception $trackingError) {
+                    error_log("🚨 Tracking error recording failed: " . $trackingError->getMessage());
                     Log::error('⚠️ Failed to record function error (non-blocking)', [
                         'error' => $trackingError->getMessage(),
                         'trace_id' => $trace->id
@@ -616,8 +660,13 @@ class RetellFunctionCallHandler extends Controller
             // Log and re-throw the original exception
             Log::error('❌ Function execution failed', [
                 'function' => $functionName,
+                'base_function' => $baseFunctionName,
                 'call_id' => $callId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             throw $e;
@@ -1891,17 +1940,42 @@ class RetellFunctionCallHandler extends Controller
                 );
             }
 
-            // 🔧 FIX 2025-11-07: Phone is OPTIONAL - use fallback if not provided
-            // USER REQUIREMENT: "Telefonnummer ist keine Pflicht, nur echte Daten wenn vorhanden"
-            // Use fallback phone for Cal.com compatibility
+            // 🔧 FIX 2025-11-10: CALLER ID AUTO-DETECTION
+            // USER REQUIREMENT: "Nummer vom Kunden übernehmen wenn übermittelt, sonst Fallback"
+            // Priority:
+            // 1. Provided customer_phone (if valid and not placeholder)
+            // 2. Caller ID from call.from_number (if not anonymous)
+            // 3. Fallback: "0151123456"
             $phoneValidation = trim($customerPhone);
-            if (empty($phoneValidation) || $phoneValidation === 'anonymous') {
-                $customerPhone = config('retell.fallback_phone', '+49000000000');
+            $usedCallerID = false;
 
-                Log::info('ℹ️ start_booking: Using fallback phone (customer did not provide)', [
+            if (empty($phoneValidation) || $phoneValidation === 'anonymous' || $phoneValidation === '0151123456') {
+                // Check if we can use Caller ID
+                if ($call && $call->from_number && $call->from_number !== 'anonymous') {
+                    $customerPhone = $call->from_number;
+                    $usedCallerID = true;
+
+                    Log::info('📞 start_booking: Using CALLER ID as customer phone', [
+                        'call_id' => $callId,
+                        'caller_id' => $call->from_number,
+                        'source' => 'automatic_caller_id_detection'
+                    ]);
+                } else {
+                    // Anonymous or unavailable - use fallback
+                    $customerPhone = '0151123456';
+
+                    Log::info('📞 start_booking: Anonymous call - using FALLBACK phone', [
+                        'call_id' => $callId,
+                        'fallback_phone' => $customerPhone,
+                        'from_number' => $call->from_number ?? 'unknown',
+                        'reason' => $call->from_number === 'anonymous' ? 'caller_anonymous' : 'caller_id_unavailable'
+                    ]);
+                }
+            } else {
+                Log::info('📞 start_booking: Using CUSTOMER-PROVIDED phone', [
                     'call_id' => $callId,
-                    'fallback_phone' => $customerPhone,
-                    'from_number' => $call->from_number ?? 'unknown'
+                    'customer_phone' => $customerPhone,
+                    'source' => 'customer_input'
                 ]);
             }
 
@@ -2110,26 +2184,54 @@ class RetellFunctionCallHandler extends Controller
      */
     private function confirmBooking(array $params, ?string $callId)
     {
+        // 🔧 DEBUG 2025-11-10: Pre-log to catch early exceptions
+        error_log("🔍 CONFIRM_BOOKING ENTRY POINT REACHED: {$callId}");
+
+        // 🔧 DEBUG 2025-11-10: Log all dependencies to detect injection issues
+        try {
+            error_log("🔍 Dependencies check: " . json_encode([
+                'calcomService' => get_class($this->calcomService ?? null),
+                'responseFormatter' => get_class($this->responseFormatter ?? null),
+                'callLifecycle' => get_class($this->callLifecycle ?? null),
+                'dateTimeParser' => get_class($this->dateTimeParser ?? null),
+            ]));
+        } catch (\Throwable $e) {
+            error_log("🚨 DEPENDENCY CHECK FAILED: " . $e->getMessage());
+        }
+
         Log::info('🔷 confirm_booking: Step 2 of 2-step booking flow', [
-            'call_id' => $callId
+            'call_id' => $callId,
+            'params' => LogSanitizer::sanitize($params),
+            'dependencies_ok' => isset($this->calcomService) && isset($this->responseFormatter)
         ]);
 
         try {
             // STEP 1: Retrieve validated data from cache
+            error_log("🔍 STEP 1: Attempting cache retrieval for call_id: {$callId}");
+
             $cacheKey = "pending_booking:{$callId}";
             $bookingData = Cache::get($cacheKey);
 
+            error_log("🔍 Cache lookup result: " . ($bookingData ? "FOUND" : "NOT FOUND") . " - Key: {$cacheKey}");
+
             if (!$bookingData) {
+                error_log("🚨 NO BOOKING DATA IN CACHE for {$callId}");
+
                 Log::error('confirm_booking: No pending booking found in cache', [
                     'call_id' => $callId,
-                    'cache_key' => $cacheKey
+                    'cache_key' => $cacheKey,
+                    'cache_driver' => config('cache.default'),
+                    'redis_status' => Cache::getStore() instanceof \Illuminate\Cache\RedisStore ? 'OK' : 'NOT REDIS'
                 ]);
+
                 return $this->responseFormatter->error(
                     'Die Buchungsdaten sind abgelaufen. Bitte versuchen Sie es erneut.',
                     [],
                     $this->getDateTimeContext()
                 );
             }
+
+            error_log("🔍 Booking data retrieved from cache: " . json_encode($bookingData));
 
             // Check cache freshness (max 10 minutes)
             $validatedAt = Carbon::parse($bookingData['validated_at']);
@@ -2282,20 +2384,35 @@ class RetellFunctionCallHandler extends Controller
             );
 
         } catch (\Exception $e) {
+            // 🔧 DEBUG 2025-11-10: Extensive exception logging
+            error_log("🚨 EXCEPTION IN CONFIRM_BOOKING: " . $e->getMessage());
+            error_log("🚨 Exception class: " . get_class($e));
+            error_log("🚨 Exception file: " . $e->getFile() . ":" . $e->getLine());
+            error_log("🚨 Stack trace: " . $e->getTraceAsString());
+
             // Clear cache on error
             if (isset($cacheKey)) {
                 Cache::forget($cacheKey);
+                error_log("🔍 Cache cleared: {$cacheKey}");
             }
 
             Log::error('❌ confirm_booking: Booking error', [
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
                 'call_id' => $callId,
+                'cache_key' => $cacheKey ?? 'not_set',
+                'booking_data_available' => isset($bookingData) ? 'yes' : 'no',
                 'trace' => $e->getTraceAsString()
             ]);
 
             return $this->responseFormatter->error(
                 'Fehler bei der Terminbuchung',
-                [],
+                [
+                    'debug_error' => config('app.debug') ? $e->getMessage() : null,
+                    'debug_class' => config('app.debug') ? get_class($e) : null
+                ],
                 $this->getDateTimeContext()
             );
         }
