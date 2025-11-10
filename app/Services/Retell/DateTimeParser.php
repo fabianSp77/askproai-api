@@ -84,8 +84,11 @@ class DateTimeParser
     {
         // 🔧 NEW 2025-10-23: Smart date inference for time-only input
         // When user says "14 Uhr" without date → infer today vs tomorrow
-        $time = $params['time'] ?? $params['uhrzeit'] ?? null;
-        $date = $params['date'] ?? $params['datum'] ?? null;
+        // 🔧 FIX 2025-11-10: Support appointment_date/appointment_time parameter names
+        // CRITICAL BUG: Alternative selection sends appointment_time="08:50" but parser only checked time/uhrzeit
+        // RESULT: Parser fell back to default/cached values, ignoring selected alternative
+        $time = $params['time'] ?? $params['uhrzeit'] ?? $params['appointment_time'] ?? null;
+        $date = $params['date'] ?? $params['datum'] ?? $params['appointment_date'] ?? null;
 
         if ($time && !$date && !isset($params['relative_day']) && !isset($params['datetime'])) {
             $inference = $this->inferDateFromTime($time);
