@@ -2253,6 +2253,11 @@ class RetellFunctionCallHandler extends Controller
             // STEP 2: Execute Cal.com booking
             $appointmentTime = Carbon::parse($bookingData['appointment_time']);
 
+            // 🔧 FIX 2025-11-10: Load service to get name for Cal.com title field
+            // ROOT CAUSE: Cal.com requires 'title' in bookingFieldsResponses
+            $service = Service::find($bookingData['service_id']);
+            $serviceName = $service ? $service->name : 'Service';
+
             $booking = $this->calcomService->createBooking([
                 'eventTypeId' => $bookingData['event_type_id'],
                 'start' => $appointmentTime->toIso8601String(),
@@ -2260,6 +2265,7 @@ class RetellFunctionCallHandler extends Controller
                 'email' => $bookingData['customer_email'] ?: 'booking@temp.de',
                 'phone' => $bookingData['customer_phone'],
                 'notes' => $bookingData['notes'],
+                'service_name' => $serviceName,  // 🔧 FIX 2025-11-10: Required for Cal.com title field
                 'metadata' => [
                     'call_id' => $callId,
                     'booked_via' => 'retell_ai_2step'

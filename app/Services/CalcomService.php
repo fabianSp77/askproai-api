@@ -80,6 +80,16 @@ class CalcomService
 
         // Add optional booking field responses (custom fields, notes, phone)
         $bookingFieldsResponses = [];
+
+        // 🔧 FIX 2025-11-10: Add required 'title' field for Cal.com bookings
+        // ROOT CAUSE: Cal.com API returns HTTP 400 "responses - {title}error_required_field"
+        // SOLUTION: Include title field derived from service/event type name
+        if (isset($bookingDetails['title'])) {
+            $bookingFieldsResponses['title'] = $bookingDetails['title'];
+        } elseif (isset($bookingDetails['service_name'])) {
+            $bookingFieldsResponses['title'] = $bookingDetails['service_name'];
+        }
+
         if ($phone) {
             $bookingFieldsResponses['phone'] = $phone;
         }
