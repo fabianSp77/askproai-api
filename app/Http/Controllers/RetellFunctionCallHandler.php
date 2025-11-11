@@ -2125,7 +2125,7 @@ class RetellFunctionCallHandler extends Controller
                 'service' => $service->name,
                 'service_id' => $service->id,
                 'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
-                'customer_name' => LogSanitizer::sanitizeName($customerName),
+                'customer_name' => substr($customerName, 0, 1) . '***', // Anonymized for privacy
                 'ttl_minutes' => 10,
                 'ttl_expires_at' => now()->addMinutes(10)->toIso8601String(),
                 'data_keys' => array_keys($bookingData)
