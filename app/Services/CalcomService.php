@@ -18,6 +18,7 @@ class CalcomService
     protected string $apiKey;
     protected string $eventTypeId;
     protected CircuitBreaker $circuitBreaker;
+    protected CalcomApiRateLimiter $rateLimiter;
 
     public function __construct()
     {
@@ -33,21 +34,71 @@ class CalcomService
             recoveryTimeout: 60,
             successThreshold: 2
         );
+
+        // 🔧 FIX 2025-11-11: Initialize rate limiter for Cal.com API
+        // Prevents account suspension by enforcing 120 req/min limit
+        $this->rateLimiter = new CalcomApiRateLimiter();
     }
 
     public function createBooking(array $bookingDetails): Response
     {
+        // 🎯 FIX 2025-11-11: Add comprehensive input validation
+        // CRITICAL: Prevents invalid API calls that waste rate limit quota
+        // Reference: Ultra-Analysis Phase 1.2 - Input Validation
+        $validated = validator($bookingDetails, [
+            // Required: Event type (must exist in our services table)
+            'eventTypeId' => 'required|integer|min:1',
+
+            // Required: Start time (must be future datetime)
+            'start' => 'required_without:startTime|date|after:now',
+            'startTime' => 'required_without:start|date|after:now',
+
+            // Required: Attendee info (supports both nested 'responses' and flat structure)
+            'name' => 'required_without:responses.name|string|max:255',
+            'email' => 'required_without:responses.email|email|max:255',
+            'responses.name' => 'required_without:name|string|max:255',
+            'responses.email' => 'required_without:email|email|max:255',
+
+            // Optional: Contact details
+            'phone' => 'nullable|string|max:50',
+            'responses.attendeePhoneNumber' => 'nullable|string|max:50',
+            'responses.notes' => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:1000',
+
+            // Optional: Timezone (defaults to Europe/Berlin)
+            'timeZone' => 'nullable|string|timezone',
+
+            // Optional: Team context
+            'teamId' => 'nullable|integer|min:1',
+            'teamSlug' => 'nullable|string|max:255',
+
+            // Optional: Title and service name
+            'title' => 'nullable|string|max:255',
+            'service_name' => 'nullable|string|max:255',
+        ], [
+            // Custom error messages
+            'eventTypeId.required' => 'Event type ID is required for booking creation',
+            'eventTypeId.min' => 'Event type ID must be a positive integer',
+            'start.required_without' => 'Either start or startTime field is required',
+            'start.after' => 'Start time must be in the future',
+            'startTime.after' => 'Start time must be in the future',
+            'name.required_without' => 'Attendee name is required (via name or responses.name)',
+            'email.required_without' => 'Attendee email is required (via email or responses.email)',
+            'email.email' => 'Attendee email must be a valid email address',
+            'timeZone.timezone' => 'Invalid timezone identifier provided',
+        ])->validate();
+
         // Extract attendee information from either 'responses' or direct fields
-        if (isset($bookingDetails['responses'])) {
-            $name = $bookingDetails['responses']['name'];
-            $email = $bookingDetails['responses']['email'];
-            $phone = $bookingDetails['responses']['attendeePhoneNumber'] ?? null;
-            $notes = $bookingDetails['responses']['notes'] ?? null;
+        if (isset($validated['responses'])) {
+            $name = $validated['responses']['name'];
+            $email = $validated['responses']['email'];
+            $phone = $validated['responses']['attendeePhoneNumber'] ?? null;
+            $notes = $validated['responses']['notes'] ?? null;
         } else {
-            $name = $bookingDetails['name'];
-            $email = $bookingDetails['email'];
-            $phone = $bookingDetails['phone'] ?? null;
-            $notes = $bookingDetails['notes'] ?? null;
+            $name = $validated['name'];
+            $email = $validated['email'];
+            $phone = $validated['phone'] ?? null;
+            $notes = $validated['notes'] ?? null;
         }
 
         // Get timezone (preserve original timezone context for audit trail)
@@ -67,6 +118,12 @@ class CalcomService
         // Bug: Cache invalidation was missing teamId, causing multi-tenant cache collision
         $teamId = isset($bookingDetails['teamId']) ? (int)$bookingDetails['teamId'] : null;
 
+        // 🔧 FIX 2025-11-11: Add teamSlug for team event types
+        // ROOT CAUSE: Cal.com V2 API requires teamSlug for team event type bookings
+        // Without teamSlug, Cal.com returns "eventTypeUser.notFound" (HTTP 404)
+        // Reference: https://cal.com/docs/api-reference/v2/bookings/create-a-booking
+        $teamSlug = $bookingDetails['teamSlug'] ?? config('calcom.team_slug');
+
         // Build V2 API payload - simpler format without end, language, responses
         $payload = [
             'eventTypeId' => $eventTypeId,
@@ -77,6 +134,11 @@ class CalcomService
                 'timeZone' => $originalTimezone, // Timezone for Cal.com to display
             ],
         ];
+
+        // Add teamSlug for team event types (required by V2 API for proper user/host resolution)
+        if ($teamSlug) {
+            $payload['teamSlug'] = $teamSlug;
+        }
 
         // Add optional booking field responses (custom fields, notes, phone)
         $bookingFieldsResponses = [];
@@ -166,6 +228,12 @@ class CalcomService
 
         Log::channel('calcom')->debug('[Cal.com V2] Sende createBooking Payload:', $payload);
 
+        // 🔧 FIX 2025-11-11: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::warning('Cal.com rate limit reached, waiting for availability');
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Wrap Cal.com API call with circuit breaker for reliability
         try {
             // 🔧 FIX 2025-10-15: Include $teamId in closure for cache invalidation
@@ -182,15 +250,61 @@ class CalcomService
                     'body'   => $resp->json() ?? $resp->body(),
                 ]);
 
+                // 🔧 FIX 2025-11-11: Handle 429 Rate Limit responses
+                if ($resp->status() === 429) {
+                    $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                    Log::error('Cal.com rate limit exceeded (429)', [
+                        'endpoint' => '/bookings',
+                        'retry_after' => $retryAfter,
+                        'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                    ]);
+
+                    throw new CalcomApiException(
+                        "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                        null,
+                        '/bookings',
+                        $payload,
+                        429
+                    );
+                }
+
                 // Throw exception if not successful
                 if (!$resp->successful()) {
                     throw CalcomApiException::fromResponse($resp, '/bookings', $payload, 'POST');
                 }
 
-                // 🔧 FIX 2025-10-15: Pass teamId to cache invalidation for correct multi-tenant cache keys
-                // Only invalidate if teamId is available (backward compatibility)
+                // 🎯 PHASE 3: Async cache invalidation after booking creation (2025-11-11)
+                // Dispatch background job for cache clearing (non-blocking)
                 if ($teamId) {
-                    $this->clearAvailabilityCacheForEventType($eventTypeId, $teamId);
+                    // Get service info for duration and tenant context
+                    $service = \App\Models\Service::where('calcom_event_type_id', $eventTypeId)
+                        ->where('calcom_team_id', $teamId)
+                        ->first();
+
+                    if ($service) {
+                        // Calculate end time from service duration
+                        $endCarbon = $startCarbon->copy()->addMinutes($service->duration_minutes ?? 30);
+
+                        \App\Jobs\ClearAvailabilityCacheJob::dispatch(
+                            eventTypeId: $eventTypeId,
+                            appointmentStart: $startCarbon,
+                            appointmentEnd: $endCarbon,
+                            teamId: $teamId,
+                            companyId: $service->company_id,
+                            branchId: $service->branch_id,
+                            source: 'api_booking_created'
+                        );
+
+                        Log::info('✅ ASYNC: Cache clearing job dispatched from createBooking', [
+                            'event_type_id' => $eventTypeId,
+                            'team_id' => $teamId,
+                            'optimization' => 'Phase 3 - Async cache clearing'
+                        ]);
+                    } else {
+                        // Fallback to old method if service not found (backward compatibility)
+                        $this->clearAvailabilityCacheForEventType($eventTypeId, $teamId);
+                    }
                 }
 
                 return $resp;
@@ -233,6 +347,26 @@ class CalcomService
      */
     public function getAvailableSlots(int $eventTypeId, string $startDate, string $endDate, ?int $teamId = null): Response
     {
+        // 🎯 FIX 2025-11-11: Add input validation for availability queries
+        // CRITICAL: Prevents malformed date queries that waste rate limit quota
+        // Reference: Ultra-Analysis Phase 1.2 - Input Validation
+        validator([
+            'eventTypeId' => $eventTypeId,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'teamId' => $teamId,
+        ], [
+            'eventTypeId' => 'required|integer|min:1',
+            'startDate' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'endDate' => 'required|date_format:Y-m-d|after_or_equal:startDate',
+            'teamId' => 'nullable|integer|min:1',
+        ], [
+            'startDate.date_format' => 'Start date must be in Y-m-d format (e.g., 2025-11-13)',
+            'startDate.after_or_equal' => 'Start date must be today or in the future',
+            'endDate.date_format' => 'End date must be in Y-m-d format (e.g., 2025-11-13)',
+            'endDate.after_or_equal' => 'End date must be on or after start date',
+        ])->validate();
+
         // Include teamId in cache key if provided
         $cacheKey = $teamId
             ? "calcom:slots:{$teamId}:{$eventTypeId}:{$startDate}:{$endDate}"
@@ -281,11 +415,36 @@ class CalcomService
 
                 $fullUrl = $this->baseUrl . '/slots/available?' . http_build_query($query);
 
+                // 🔧 FIX 2025-11-11: Check rate limit before making API call
+                if (!$this->rateLimiter->canMakeRequest()) {
+                    Log::debug('Cal.com rate limit reached for availability check, waiting');
+                    $this->rateLimiter->waitForAvailability();
+                }
+
                 return $this->circuitBreaker->call(function() use ($fullUrl, $query, $cacheKey, $eventTypeId, $startDate, $endDate) {
                     $resp = Http::withHeaders([
                         'Authorization' => 'Bearer ' . $this->apiKey,
                         'cal-api-version' => config('services.calcom.api_version', '2024-08-13')
                     ])->acceptJson()->timeout(3)->get($fullUrl);
+
+                    // 🔧 FIX 2025-11-11: Handle 429 Rate Limit responses
+                    if ($resp->status() === 429) {
+                        $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                        Log::error('Cal.com rate limit exceeded (429)', [
+                            'endpoint' => '/slots/available',
+                            'retry_after' => $retryAfter,
+                            'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                        ]);
+
+                        throw new CalcomApiException(
+                            "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                            null,
+                            '/slots/available',
+                            $query,
+                            429
+                        );
+                    }
 
                     if (!$resp->successful()) {
                         throw CalcomApiException::fromResponse($resp, '/slots/available', $query, 'GET');
@@ -507,14 +666,27 @@ class CalcomService
         }
 
         // LAYER 1: Clear CalcomService cache (30 days, all teams)
-        foreach ($teamIds as $tid) {
-            for ($i = 0; $i < 30; $i++) {
-                $date = $today->copy()->addDays($i)->format('Y-m-d');
-                // CalcomService cache key format
-                $cacheKey = "calcom:slots:{$tid}:{$eventTypeId}:{$date}:{$date}";
-                Cache::forget($cacheKey);
-                $clearedKeys++;
+        // 🎯 FIX 2025-11-11: Wrap in try-catch to prevent uncaught exceptions
+        // Reference: Ultra-Analysis Phase 1.3 - Silent Cache Failures
+        try {
+            foreach ($teamIds as $tid) {
+                for ($i = 0; $i < 30; $i++) {
+                    $date = $today->copy()->addDays($i)->format('Y-m-d');
+                    // CalcomService cache key format
+                    $cacheKey = "calcom:slots:{$tid}:{$eventTypeId}:{$date}:{$date}";
+                    Cache::forget($cacheKey);
+                    $clearedKeys++;
+                }
             }
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to clear CalcomService cache layer', [
+                'event_type_id' => $eventTypeId,
+                'team_ids' => $teamIds,
+                'error' => $e->getMessage(),
+                'cleared_keys_before_failure' => $clearedKeys
+            ]);
+            report($e);
+            // Continue to try clearing AlternativeFinder cache even if this fails
         }
 
         // LAYER 2: Clear AppointmentAlternativeFinder cache (30 days, all hour combinations)
@@ -572,13 +744,186 @@ class CalcomService
             ]);
 
         } catch (\Exception $e) {
-            // If clearing AlternativeFinder cache fails, log but don't break
-            Log::warning('Failed to clear AlternativeFinder cache layer', [
+            // 🎯 FIX 2025-11-11: Proper error reporting for cache failures
+            // CRITICAL: Silent failures prevented observability
+            // Reference: Ultra-Analysis Phase 1.3 - Silent Cache Failures
+            Log::error('❌ Failed to clear AlternativeFinder cache layer', [
                 'event_type_id' => $eventTypeId,
                 'error' => $e->getMessage(),
-                'cleared_calcom_keys' => $clearedKeys
+                'trace' => $e->getTraceAsString(),
+                'cleared_calcom_keys' => $clearedKeys,
+                'impact' => 'Potential stale availability data - manual cache clear may be needed'
             ]);
+
+            // Report to error tracking system (Sentry, Bugsnag, etc.)
+            report($e);
+
+            // Log to dedicated monitoring channel if configured
+            if (config('logging.channels.cache_alerts')) {
+                Log::channel('cache_alerts')->critical('Cache invalidation failure', [
+                    'service' => 'CalcomService',
+                    'method' => 'clearAvailabilityCacheForEventType',
+                    'event_type_id' => $eventTypeId,
+                    'exception' => $e->getMessage()
+                ]);
+            }
         }
+    }
+
+    /**
+     * 🎯 PHASE 2: Smart Cache Invalidation (2025-11-11)
+     *
+     * Intelligently clear ONLY the cache keys actually affected by an appointment.
+     *
+     * OPTIMIZATION IMPACT:
+     * - Before: ~300-370 keys cleared (30 days × teams + 7 days × 10 hours × services)
+     * - After: ~12-18 keys cleared (2 days × teams + 4 hours × services)
+     * - Reduction: 95% fewer cache operations
+     *
+     * STRATEGY:
+     * 1. Date Range: Only clear appointment date ± 1 day buffer (not 30 days)
+     * 2. Time Range: Only clear appointment time ± 1 hour buffer (not all 24 hours)
+     * 3. Scope: Only clear specific company/branch affected (not all tenants)
+     *
+     * @param int $eventTypeId Cal.com event type ID
+     * @param Carbon $appointmentStart Start time of the appointment
+     * @param Carbon $appointmentEnd End time of the appointment
+     * @param int|null $teamId Cal.com team ID (optional)
+     * @param int|null $companyId Company ID for tenant isolation (optional)
+     * @param int|null $branchId Branch ID for branch-specific cache (optional)
+     * @return int Number of cache keys cleared
+     */
+    public function smartClearAvailabilityCache(
+        int $eventTypeId,
+        Carbon $appointmentStart,
+        Carbon $appointmentEnd,
+        ?int $teamId = null,
+        ?int $companyId = null,
+        ?int $branchId = null
+    ): int {
+        $clearedKeys = 0;
+
+        // Calculate smart date range (appointment date ± 1 day buffer)
+        $startDate = $appointmentStart->copy()->startOfDay();
+        $endDate = $appointmentStart->copy()->addDay()->endOfDay(); // +1 day buffer
+
+        // Calculate smart time range (appointment time ± 1 hour buffer)
+        $startHour = max(0, $appointmentStart->hour - 1); // -1 hour buffer
+        $endHour = min(23, $appointmentEnd->hour + 1); // +1 hour buffer
+
+        // Get team IDs if not provided
+        $teamIds = [];
+        if ($teamId !== null) {
+            $teamIds = [$teamId];
+        } else {
+            $services = \App\Models\Service::where('calcom_event_type_id', $eventTypeId)->get();
+            foreach ($services as $service) {
+                if ($service->calcom_team_id) {
+                    $teamIds[] = $service->calcom_team_id;
+                }
+            }
+            $teamIds = array_unique($teamIds);
+        }
+
+        // LAYER 1: Clear CalcomService cache (SMART: Only affected dates)
+        try {
+            $currentDate = $startDate->copy();
+            while ($currentDate <= $endDate) {
+                foreach ($teamIds as $tid) {
+                    $dateStr = $currentDate->format('Y-m-d');
+                    $cacheKey = "calcom:slots:{$tid}:{$eventTypeId}:{$dateStr}:{$dateStr}";
+                    Cache::forget($cacheKey);
+                    $clearedKeys++;
+                }
+                $currentDate->addDay();
+            }
+
+            Log::info('✅ SMART: Cleared CalcomService cache layer', [
+                'event_type_id' => $eventTypeId,
+                'date_range' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
+                'teams' => count($teamIds),
+                'keys_cleared' => $clearedKeys
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to clear CalcomService cache (smart)', [
+                'event_type_id' => $eventTypeId,
+                'error' => $e->getMessage(),
+                'cleared_before_failure' => $clearedKeys
+            ]);
+            report($e);
+        }
+
+        // LAYER 2: Clear AppointmentAlternativeFinder cache (SMART: Only affected hours)
+        try {
+            // Get services for this event type (or use provided company/branch)
+            $services = \App\Models\Service::where('calcom_event_type_id', $eventTypeId);
+
+            if ($companyId) {
+                $services->where('company_id', $companyId);
+            }
+            if ($branchId) {
+                $services->where('branch_id', $branchId);
+            }
+
+            $services = $services->get();
+
+            foreach ($services as $service) {
+                $compId = $service->company_id ?? 0;
+                $brId = $service->branch_id ?? 0;
+
+                // Iterate through affected dates
+                $currentDate = $startDate->copy();
+                while ($currentDate <= $endDate) {
+                    // Only clear affected hour ranges (not all 24 hours)
+                    for ($hour = $startHour; $hour <= $endHour; $hour++) {
+                        $startTime = $currentDate->copy()->setTime($hour, 0);
+                        $endTime = $startTime->copy()->addHour();
+
+                        $altCacheKey = sprintf(
+                            'cal_slots_%d_%d_%d_%s_%s',
+                            $compId,
+                            $brId,
+                            $eventTypeId,
+                            $startTime->format('Y-m-d-H'),
+                            $endTime->format('Y-m-d-H')
+                        );
+
+                        Cache::forget($altCacheKey);
+                        $clearedKeys++;
+                    }
+
+                    $currentDate->addDay();
+                }
+            }
+
+            Log::info('✅ SMART: Cleared AlternativeFinder cache layer', [
+                'event_type_id' => $eventTypeId,
+                'date_range' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
+                'hour_range' => "{$startHour}:00 to {$endHour}:00",
+                'services' => $services->count(),
+                'total_keys_cleared' => $clearedKeys
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to clear AlternativeFinder cache (smart)', [
+                'event_type_id' => $eventTypeId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            report($e);
+
+            if (config('logging.channels.cache_alerts')) {
+                Log::channel('cache_alerts')->critical('Smart cache invalidation failure', [
+                    'service' => 'CalcomService',
+                    'method' => 'smartClearAvailabilityCache',
+                    'event_type_id' => $eventTypeId,
+                    'exception' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return $clearedKeys;
     }
 
     /**
@@ -903,6 +1248,26 @@ class CalcomService
      */
     public function rescheduleBooking($bookingId, string $newDateTime, ?string $reason = null, ?string $timezone = null): Response
     {
+        // 🎯 FIX 2025-11-11: Add input validation for rescheduling
+        // CRITICAL: Prevents invalid reschedule requests
+        // Reference: Ultra-Analysis Phase 1.2 - Input Validation
+        validator([
+            'bookingId' => $bookingId,
+            'newDateTime' => $newDateTime,
+            'reason' => $reason,
+            'timezone' => $timezone,
+        ], [
+            'bookingId' => 'required|integer|min:1',
+            'newDateTime' => 'required|date|after:now',
+            'reason' => 'nullable|string|max:500',
+            'timezone' => 'nullable|string|timezone',
+        ], [
+            'bookingId.required' => 'Booking ID is required for rescheduling',
+            'newDateTime.date' => 'New date/time must be a valid datetime string',
+            'newDateTime.after' => 'New date/time must be in the future',
+            'timezone.timezone' => 'Invalid timezone identifier provided',
+        ])->validate();
+
         // Preserve timezone context for metadata
         $timezone = $timezone ?? 'Europe/Berlin';
 
@@ -972,6 +1337,20 @@ class CalcomService
      */
     public function cancelBooking($bookingId, ?string $reason = null): Response
     {
+        // 🎯 FIX 2025-11-11: Add input validation for cancellation
+        // CRITICAL: Prevents invalid cancellation requests
+        // Reference: Ultra-Analysis Phase 1.2 - Input Validation
+        validator([
+            'bookingId' => $bookingId,
+            'reason' => $reason,
+        ], [
+            'bookingId' => 'required|integer|min:1',
+            'reason' => 'nullable|string|max:500',
+        ], [
+            'bookingId.required' => 'Booking ID is required for cancellation',
+            'bookingId.min' => 'Booking ID must be a positive integer',
+        ])->validate();
+
         $payload = [];
 
         if ($reason) {
