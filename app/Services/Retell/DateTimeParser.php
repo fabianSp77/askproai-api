@@ -121,31 +121,47 @@ class DateTimeParser
 
             $parsed = Carbon::parse($dateString . ' ' . $time);
 
-            // 🔧 CRITICAL FIX 2025-10-20: ANY past time is invalid, not just >30 days
-            // User says "14:00 Uhr today" but it's already 14:00 → REJECT and suggest alternative
-            // This prevents infinite loop: "Ich überprüfe nochmal... Ich überprüfe nochmal..."
+            // 🔧 CRITICAL FIX 2025-11-11: Handle past times intelligently
+            // BUG: Previous logic added +2h to NOW, changing user's requested time (10:40 → 22:00)
+            // FIX: If same day + past time → Move to tomorrow SAME TIME (preserves user's intent)
             if ($parsed->isPast()) {
-                $minutesAgo = $parsed->diffInMinutes(now());
+                $now = now('Europe/Berlin');
+                $minutesAgo = $parsed->diffInMinutes($now);
 
-                if ($minutesAgo > 0) {
-                    Log::warning('⏰ Past time requested - suggesting next available', [
-                        'requested' => $parsed->format('Y-m-d H:i'),
-                        'minutes_ago' => $minutesAgo,
-                        'params' => $params
+                Log::warning('⏰ Past time requested', [
+                    'requested' => $parsed->format('Y-m-d H:i'),
+                    'current_time' => $now->format('Y-m-d H:i'),
+                    'minutes_ago' => $minutesAgo,
+                    'requested_date' => $date,
+                    'requested_time' => $time,
+                    'params' => $params
+                ]);
+
+                // Case 1: Same date + past time → User likely meant tomorrow at same time
+                // Example: User says "heute um 10:40" but it's 20:08 → Infer tomorrow 10:40
+                if ($parsed->isSameDay($now)) {
+                    $tomorrow = $parsed->addDay();
+
+                    Log::info('📅 Same-day past time → inferring tomorrow at SAME TIME', [
+                        'original' => $parsed->format('Y-m-d H:i'),
+                        'inferred' => $tomorrow->format('Y-m-d H:i'),
+                        'reason' => 'User requested time today but it is past - assuming tomorrow',
+                        'preserved_time' => $time  // ✅ Keeps user's requested time!
                     ]);
 
-                    // Suggest next available time: +2 hours from now, rounded to hour
-                    $suggestedTime = now('Europe/Berlin')
-                        ->addHours(2)
-                        ->floorHour()
-                        ->setMinutes(0);
-
-                    Log::info('✅ Suggesting alternative time', [
-                        'suggested' => $suggestedTime->format('Y-m-d H:i')
-                    ]);
-
-                    return $suggestedTime;
+                    return $tomorrow;
                 }
+
+                // Case 2: Different date in past → Cannot infer, throw error
+                Log::error('❌ Date significantly in past - cannot infer intent', [
+                    'requested' => $parsed->format('Y-m-d H:i'),
+                    'days_ago' => $parsed->diffInDays($now)
+                ]);
+
+                throw new \InvalidArgumentException(
+                    "Das Datum {$parsed->format('d.m.Y')} liegt in der Vergangenheit. " .
+                    "Bitte wählen Sie ein Datum in der Zukunft."
+                );
             }
 
             Log::info('✅ parseDateTime SUCCESS', [

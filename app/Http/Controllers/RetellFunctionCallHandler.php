@@ -2117,15 +2117,32 @@ class RetellFunctionCallHandler extends Controller
             $cacheKey = "pending_booking:{$callId}";
             Cache::put($cacheKey, $bookingData, now()->addMinutes(10));
 
-            Log::info('✅ start_booking: Data validated and cached', [
+            Log::info('💾 CACHE PUT - start_booking', [
                 'call_id' => $callId,
                 'cache_key' => $cacheKey,
+                'cache_driver' => config('cache.default'),
+                'cache_store_type' => get_class(Cache::getStore()),
                 'service' => $service->name,
                 'service_id' => $service->id,
                 'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
-                'customer_name' => $customerName,
-                'ttl_seconds' => 600
+                'customer_name' => LogSanitizer::sanitizeName($customerName),
+                'ttl_minutes' => 10,
+                'ttl_expires_at' => now()->addMinutes(10)->toIso8601String(),
+                'data_keys' => array_keys($bookingData)
             ]);
+
+            // Immediate verification
+            $verifyRead = Cache::get($cacheKey);
+            if ($verifyRead) {
+                Log::info('✅ CACHE PUT VERIFIED - data readable immediately', [
+                    'cache_key' => $cacheKey
+                ]);
+            } else {
+                Log::error('❌ CACHE PUT FAILED - cannot read back immediately!', [
+                    'cache_key' => $cacheKey,
+                    'cache_driver' => config('cache.default')
+                ]);
+            }
 
             // STEP 6: Return immediate status update
             // User hears this within <500ms instead of waiting 15s
