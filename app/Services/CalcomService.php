@@ -243,7 +243,7 @@ class CalcomService
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13'),
                     'Content-Type' => 'application/json'
-                ])->timeout(5.0)->acceptJson()->post($fullUrl, $payload);  // 🔧 FIX 2025-10-25: Increased back to 5s - 1.5s was causing timeouts for booking creation
+                ])->timeout(10.0)->acceptJson()->post($fullUrl, $payload);  // 🔧 FIX 2025-11-12: Increased to 10s - Cal.com booking creation needs more time during phone calls
 
                 Log::channel('calcom')->debug('[Cal.com V2] Booking Response:', [
                     'status' => $resp->status(),
@@ -325,7 +325,7 @@ class CalcomService
             Log::error('Cal.com API network error during createBooking', [
                 'endpoint' => '/bookings',
                 'error' => $e->getMessage(),
-                'timeout' => '5.0s'  // 🔧 UPDATED 2025-10-25: Increased back to 5s for booking reliability
+                'timeout' => '10.0s'  // 🔧 UPDATED 2025-11-12: Increased to 10s for booking reliability
             ]);
 
             throw CalcomApiException::networkError('/bookings', $payload, $e);
@@ -561,6 +561,15 @@ class CalcomService
 
         $fullUrl = $this->baseUrl . '/slots/available?' . http_build_query($query);
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call (fallback path)
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached in fallback path, waiting', [
+                'method' => 'getAvailableSlots (fallback)',
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         try {
             // Wrap API call with circuit breaker
             return $this->circuitBreaker->call(function() use ($fullUrl, $query, $cacheKey, $eventTypeId, $startDate, $endDate) {
@@ -568,6 +577,25 @@ class CalcomService
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13')
                 ])->acceptJson()->timeout(3)->get($fullUrl);
+
+                // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses (fallback path)
+                if ($resp->status() === 429) {
+                    $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                    Log::error('[Cal.com] Rate limit exceeded (429) in fallback path', [
+                        'endpoint' => '/slots/available',
+                        'retry_after' => $retryAfter,
+                        'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                    ]);
+
+                    throw new CalcomApiException(
+                        "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                        null,
+                        '/slots/available',
+                        $query,
+                        429
+                    );
+                }
 
                 if (!$resp->successful()) {
                     throw CalcomApiException::fromResponse($resp, '/slots/available', $query, 'GET');
@@ -931,12 +959,44 @@ class CalcomService
      */
     public function getEventType(int $eventTypeId): Response
     {
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'getEventType',
+                'event_type_id' => $eventTypeId,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Cal.com v2 API requires Bearer token authentication
         $fullUrl = $this->baseUrl . '/event-types/' . $eventTypeId;
 
-        return Http::withHeaders([
+        $resp = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey
         ])->acceptJson()->get($fullUrl);
+
+        // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+        if ($resp->status() === 429) {
+            $retryAfter = $resp->header('Retry-After') ?? 60;
+
+            Log::error('[Cal.com] Rate limit exceeded (429)', [
+                'endpoint' => "/event-types/{$eventTypeId}",
+                'method' => 'getEventType',
+                'retry_after' => $retryAfter,
+                'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+            ]);
+
+            throw new CalcomApiException(
+                "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                null,
+                "/event-types/{$eventTypeId}",
+                [],
+                429
+            );
+        }
+
+        return $resp;
     }
 
     /**
@@ -967,6 +1027,16 @@ class CalcomService
             'payload' => $payload
         ]);
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'createEventType',
+                'service_id' => $service->id,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Cal.com v2 API requires Bearer token authentication
         $fullUrl = $this->baseUrl . '/event-types';
         $resp = Http::withHeaders([
@@ -978,6 +1048,26 @@ class CalcomService
             'status' => $resp->status(),
             'body' => $resp->json() ?? $resp->body(),
         ]);
+
+        // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+        if ($resp->status() === 429) {
+            $retryAfter = $resp->header('Retry-After') ?? 60;
+
+            Log::error('[Cal.com] Rate limit exceeded (429)', [
+                'endpoint' => '/event-types',
+                'method' => 'createEventType',
+                'retry_after' => $retryAfter,
+                'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+            ]);
+
+            throw new CalcomApiException(
+                "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                null,
+                '/event-types',
+                $payload,
+                429
+            );
+        }
 
         return $resp;
     }
@@ -1016,6 +1106,16 @@ class CalcomService
             'payload' => $payload
         ]);
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'updateEventType',
+                'service_id' => $service->id,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Cal.com v2 API requires Bearer token authentication
         $fullUrl = $this->baseUrl . '/event-types/' . $service->calcom_event_type_id;
         $resp = Http::withHeaders([
@@ -1028,6 +1128,26 @@ class CalcomService
             'body' => $resp->json() ?? $resp->body(),
         ]);
 
+        // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+        if ($resp->status() === 429) {
+            $retryAfter = $resp->header('Retry-After') ?? 60;
+
+            Log::error('[Cal.com] Rate limit exceeded (429)', [
+                'endpoint' => "/event-types/{$service->calcom_event_type_id}",
+                'method' => 'updateEventType',
+                'retry_after' => $retryAfter,
+                'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+            ]);
+
+            throw new CalcomApiException(
+                "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                null,
+                "/event-types/{$service->calcom_event_type_id}",
+                $payload,
+                429
+            );
+        }
+
         return $resp;
     }
 
@@ -1036,11 +1156,41 @@ class CalcomService
      */
     public function deleteEventType(string $eventTypeId): Response
     {
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'deleteEventType',
+                'event_type_id' => $eventTypeId,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Cal.com v2 API requires Bearer token authentication
         $fullUrl = $this->baseUrl . '/event-types/' . $eventTypeId;
         $resp = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey
         ])->acceptJson()->delete($fullUrl);
+
+        // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+        if ($resp->status() === 429) {
+            $retryAfter = $resp->header('Retry-After') ?? 60;
+
+            Log::error('[Cal.com] Rate limit exceeded (429)', [
+                'endpoint' => "/event-types/{$eventTypeId}",
+                'method' => 'deleteEventType',
+                'retry_after' => $retryAfter,
+                'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+            ]);
+
+            throw new CalcomApiException(
+                "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                null,
+                "/event-types/{$eventTypeId}",
+                [],
+                429
+            );
+        }
 
         Log::channel('calcom')->debug('[Cal.com] Delete EventType Response:', [
             'event_type_id' => $eventTypeId,
@@ -1166,6 +1316,16 @@ class CalcomService
             throw new \Exception('Cal.com team_id not configured');
         }
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'fetchEventTypes',
+                'team_id' => $teamId,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         // Use v2 API team endpoint to get team event types
         // Note: baseUrl already includes /v2, so don't add it again
         $fullUrl = $this->baseUrl . '/teams/' . $teamId . '/event-types';
@@ -1174,6 +1334,26 @@ class CalcomService
             'Authorization' => 'Bearer ' . $this->apiKey,
             'cal-api-version' => '2024-08-13'
         ])->acceptJson()->get($fullUrl);
+
+        // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+        if ($resp->status() === 429) {
+            $retryAfter = $resp->header('Retry-After') ?? 60;
+
+            Log::error('[Cal.com] Rate limit exceeded (429)', [
+                'endpoint' => "/teams/{$teamId}/event-types",
+                'method' => 'fetchEventTypes',
+                'retry_after' => $retryAfter,
+                'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+            ]);
+
+            throw new CalcomApiException(
+                "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                null,
+                "/teams/{$teamId}/event-types",
+                [],
+                429
+            );
+        }
 
         // V2 API returns data in 'data' field, not 'event_types'
         $eventTypes = $resp->json()['data'] ?? [];
@@ -1208,11 +1388,39 @@ class CalcomService
         }
 
         try {
+            // 🔧 FIX 2025-11-12: Check rate limit before making API call
+            if (!$this->rateLimiter->canMakeRequest()) {
+                Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                    'method' => 'testConnection',
+                    'remaining' => $this->rateLimiter->getRemainingRequests()
+                ]);
+                $this->rateLimiter->waitForAvailability();
+            }
+
             // Cal.com v2 API requires Bearer token authentication
             $fullUrl = $this->baseUrl . '/me';
             $resp = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey
             ])->acceptJson()->timeout(10)->get($fullUrl);
+
+            // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+            if ($resp->status() === 429) {
+                $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                Log::error('[Cal.com] Rate limit exceeded (429)', [
+                    'endpoint' => '/me',
+                    'method' => 'testConnection',
+                    'retry_after' => $retryAfter,
+                    'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                    'error' => 'Rate limit exceeded (429)',
+                    'retry_after' => $retryAfter
+                ];
+            }
 
             if ($resp->successful()) {
                 return [
@@ -1291,6 +1499,16 @@ class CalcomService
             'payload' => $payload
         ]);
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'rescheduleBooking',
+                'booking_id' => $bookingId,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         try {
             // Wrap Cal.com API call with circuit breaker for reliability
             return $this->circuitBreaker->call(function() use ($bookingId, $payload) {
@@ -1305,6 +1523,26 @@ class CalcomService
                     'status' => $resp->status(),
                     'body' => $resp->json() ?? $resp->body(),
                 ]);
+
+                // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+                if ($resp->status() === 429) {
+                    $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                    Log::error('[Cal.com] Rate limit exceeded (429)', [
+                        'endpoint' => "/bookings/{$bookingId}/reschedule",
+                        'method' => 'rescheduleBooking',
+                        'retry_after' => $retryAfter,
+                        'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                    ]);
+
+                    throw new CalcomApiException(
+                        "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                        null,
+                        "/bookings/{$bookingId}/reschedule",
+                        $payload,
+                        429
+                    );
+                }
 
                 // Throw exception if not successful
                 if (!$resp->successful()) {
@@ -1362,6 +1600,16 @@ class CalcomService
             'reason' => $reason,
         ]);
 
+        // 🔧 FIX 2025-11-12: Check rate limit before making API call
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached, waiting', [
+                'method' => 'cancelBooking',
+                'booking_id' => $bookingId,
+                'remaining' => $this->rateLimiter->getRemainingRequests()
+            ]);
+            $this->rateLimiter->waitForAvailability();
+        }
+
         try {
             return $this->circuitBreaker->call(function() use ($bookingId, $payload) {
                 $fullUrl = $this->baseUrl . '/bookings/' . $bookingId . '/cancel';
@@ -1375,6 +1623,26 @@ class CalcomService
                     'status' => $resp->status(),
                     'body' => $resp->json() ?? $resp->body(),
                 ]);
+
+                // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses
+                if ($resp->status() === 429) {
+                    $retryAfter = $resp->header('Retry-After') ?? 60;
+
+                    Log::error('[Cal.com] Rate limit exceeded (429)', [
+                        'endpoint' => "/bookings/{$bookingId}/cancel",
+                        'method' => 'cancelBooking',
+                        'retry_after' => $retryAfter,
+                        'remaining_requests' => $this->rateLimiter->getRemainingRequests()
+                    ]);
+
+                    throw new CalcomApiException(
+                        "Cal.com rate limit exceeded. Please retry after {$retryAfter} seconds.",
+                        null,
+                        "/bookings/{$bookingId}/cancel",
+                        $payload,
+                        429
+                    );
+                }
 
                 if (!$resp->successful()) {
                     throw CalcomApiException::fromResponse($resp, "/bookings/{$bookingId}/cancel", $payload, 'POST');
