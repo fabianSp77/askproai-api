@@ -1345,7 +1345,7 @@ class RetellFunctionCallHandler extends Controller
                         'metadata' => [
                             'call_id' => $callId,
                             'booked_via' => 'retell_ai',
-                            'attempt' => $attempt
+                            'attempt' => (string)$attempt  // Cal.com expects string, not number
                         ]
                     ]);
 
