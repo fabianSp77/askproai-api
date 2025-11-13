@@ -135,6 +135,15 @@ class CalcomService
             ],
         ];
 
+        // 🔧 FIX 2025-11-13: Add title field directly to payload (required by Cal.com)
+        // ERROR: "responses - {title}error_required_field"
+        // SOLUTION: Cal.com requires title at top level of payload
+        if (isset($bookingDetails['title'])) {
+            $payload['title'] = $bookingDetails['title'];
+        } elseif (isset($bookingDetails['service_name'])) {
+            $payload['title'] = $bookingDetails['service_name'];
+        }
+
         // Add teamSlug for team event types (required by V2 API for proper user/host resolution)
         if ($teamSlug) {
             $payload['teamSlug'] = $teamSlug;

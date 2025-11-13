@@ -303,7 +303,7 @@ class RetellFunctionCallHandler extends Controller
 
         // Bug #4 Fix (Call 777): Retell sends 'name' and 'args', not 'function_name' and 'parameters'
         $functionName = $data['name'] ?? $data['function_name'] ?? '';
-        $parameters = $data['args'] ?? $data['parameters'] ?? [];
+        $parameters = $data['arguments'] ?? $data['args'] ?? $data['parameters'] ?? [];
         // Bug #6 Fix (Call 778): call_id is inside parameters/args, not at top level - CHECK PARAMETERS FIRST!
         $callId = $parameters['call_id'] ?? $data['call_id'] ?? null;
 
@@ -322,20 +322,28 @@ class RetellFunctionCallHandler extends Controller
         }
 
         // 🔧 FIX 2025-10-19: Agent sometimes sends "None" as string when call_id variable not injected
+        // 🔧 FIX 2025-11-12: Also handle placeholder values like "call_1", "test", "example", "1"
+        // 🔧 FIX 2025-11-12 22:59: Correct webhook path - call_id is at $data['call']['call_id'], not $data['call_id']
         // Fallback: Extract from root level webhook data
-        if ($callId === 'None' || $callId === 'null' || $callId === '' || is_null($callId)) {
-            $callId = $data['call_id'] ?? null;
+        $placeholders = ['None', 'null', '', 'call_1', 'test', 'example', 'call_test', '1'];
+        if (is_null($callId) || in_array($callId, $placeholders, true) || (is_string($callId) && strlen($callId) < 10)) {
+            $originalCallId = $callId;
+            // CRITICAL: Real call_id is nested at $data['call']['call_id']
+            $callId = $data['call']['call_id'] ?? $data['call_id'] ?? null;
 
-            if ($callId && $callId !== 'None') {
-                Log::warning('⚠️ call_id was invalid in parameters, extracted from webhook root', [
+            if ($callId && !in_array($callId, $placeholders, true)) {
+                Log::warning('⚠️ call_id was invalid/placeholder in parameters, extracted from webhook root', [
                     'extracted_call_id' => $callId,
-                    'original_param' => $parameters['call_id'] ?? 'missing',
-                    'function' => $functionName
+                    'original_param' => $originalCallId ?? 'missing',
+                    'function' => $functionName,
+                    'fix_applied' => 'placeholder_detection_2025-11-12_fixed',
+                    'extraction_path' => 'data[call][call_id]'
                 ]);
             } else {
                 Log::error('❌ call_id is completely missing or invalid', [
                     'param_value' => $parameters['call_id'] ?? 'missing',
-                    'root_value' => $data['call_id'] ?? 'missing',
+                    'root_value_nested' => $data['call']['call_id'] ?? 'missing',
+                    'root_value_direct' => $data['call_id'] ?? 'missing',
                     'function' => $functionName
                 ]);
             }
@@ -427,6 +435,8 @@ class RetellFunctionCallHandler extends Controller
             'parse_date' => $this->handleParseDate($parameters, $callId),
             'check_availability' => $this->checkAvailability($parameters, $callId),
             'book_appointment' => $this->bookAppointment($parameters, $callId),
+            // 🔧 FIX 2025-11-12: Agent V116 nutzt "start_booking" statt "book_appointment"
+            'start_booking' => $this->bookAppointment($parameters, $callId),
             'query_appointment' => $this->queryAppointment($parameters, $callId),
             // 🔒 NEW V85: Query appointment by customer name (for anonymous/hidden number calls)
             'query_appointment_by_name' => $this->queryAppointmentByName($parameters, $callId),
@@ -768,96 +778,221 @@ class RetellFunctionCallHandler extends Controller
                 ]);
             }
 
-            // Check exact availability
-            $slotStartTime = $requestedDate->copy()->startOfHour();
-            $slotEndTime = $requestedDate->copy()->endOfHour();
+            // 🔧 REFACTORED 2025-11-13: Cal.com as SOURCE OF TRUTH for composite services
+            // ⚠️ CRITICAL: Local DB only contains OUR bookings, Cal.com may have external bookings
+            // Phase-aware availability checking for composite services
+            // Composite services have segments with gaps where staff is available
+            if ($service->composite && !empty($service->segments)) {
+                Log::info('🎨 Composite service detected - using Cal.com + phase-aware availability check', [
+                    'call_id' => $callId,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'segments_count' => count($service->segments),
+                    'requested_time' => $requestedDate->format('Y-m-d H:i')
+                ]);
 
-            // 🔧 FIX 2025-10-18: Add timeout and logging for Cal.com API calls
-            // Bug: Cal.com API calls were taking 19+ seconds, blocking response
-            Log::info('⏱️ Cal.com API call START', [
+                // Get staff for this branch (for now, check first available staff)
+                // TODO: Allow customer to select specific staff
+                $staff = \App\Models\Staff::where('branch_id', $branchId)
+                    ->where('is_active', true)
+                    ->whereHas('services', function($q) use ($service) {
+                        $q->where('service_id', $service->id);
+                    })
+                    ->first();
+
+                if (!$staff) {
+                    Log::error('❌ No staff found for composite service', [
+                        'service_id' => $service->id,
+                        'branch_id' => $branchId
+                    ]);
+                    return $this->responseFormatter->error('Kein Mitarbeiter für diesen Service verfügbar');
+                }
+
+                // STEP 1: Check Cal.com availability (SOURCE OF TRUTH) ✅
+                $calcomAvailabilityService = app(\App\Services\Appointments\CalcomAvailabilityService::class);
+
+                $calcomStartTime = microtime(true);
+                $calcomAvailable = false;
+
+                try {
+                    $calcomAvailable = $calcomAvailabilityService->isTimeSlotAvailable(
+                        $requestedDate,
+                        $service->calcom_event_type_id,
+                        $service->duration_minutes ?? $duration,
+                        $staff->calcom_user_id,
+                        $service->company->calcom_team_id
+                    );
+
+                    $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
+
+                    Log::info('✅ Cal.com availability checked (composite service)', [
+                        'call_id' => $callId,
+                        'available' => $calcomAvailable,
+                        'duration_ms' => $calcomDuration,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'event_type_id' => $service->calcom_event_type_id,
+                        'staff_id' => $staff->id
+                    ]);
+                } catch (\Exception $e) {
+                    $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
+
+                    Log::error('❌ Cal.com availability check failed (composite service)', [
+                        'call_id' => $callId,
+                        'error' => $e->getMessage(),
+                        'duration_ms' => $calcomDuration
+                    ]);
+
+                    // Conservative: if Cal.com check fails, assume not available
+                    return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
+                }
+
+                // STEP 2: If Cal.com says NO → find alternatives immediately
+                if (!$calcomAvailable) {
+                    Log::warning('⚠️ Cal.com says slot NOT available (composite service)', [
+                        'call_id' => $callId,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'service' => $service->name
+                    ]);
+
+                    // Find alternatives considering phase-aware availability
+                    $alternatives = $this->findAlternativesForCompositeService(
+                        $service,
+                        $staff,
+                        $requestedDate,
+                        $branchId
+                    );
+
+                    return [
+                        'success' => true,
+                        'available' => false,
+                        'service' => $service->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'alternatives' => $alternatives,
+                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
+                    ];
+                }
+
+                // STEP 3: Cal.com says YES → verify phase-aware availability for gaps
+                Log::info('✅ Cal.com says available - now checking phase-aware gaps', [
+                    'call_id' => $callId,
+                    'requested_time' => $requestedDate->format('Y-m-d H:i')
+                ]);
+
+                $availabilityService = app(\App\Services\ProcessingTimeAvailabilityService::class);
+
+                $isPhaseAvailable = $availabilityService->isStaffAvailable(
+                    $staff->id,
+                    $requestedDate,
+                    $service
+                );
+
+                if ($isPhaseAvailable) {
+                    Log::info('✅ Phase-aware availability confirmed (composite service)', [
+                        'call_id' => $callId,
+                        'staff_id' => $staff->id,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'service' => $service->name,
+                        'checks_passed' => ['calcom' => true, 'phase_aware' => true]
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'available' => true,
+                        'service' => $service->name,
+                        'staff' => $staff->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'message' => sprintf(
+                            'Ja, %s ist verfügbar am %s um %s Uhr.',
+                            $service->name,
+                            $requestedDate->locale('de')->isoFormat('dddd, [den] D. MMMM'),
+                            $requestedDate->format('H:i')
+                        ),
+                    ];
+                } else {
+                    // Cal.com says available, but local phase check says no
+                    // This could mean staff has internal conflicts during gaps
+                    Log::warning('⚠️ Cal.com available but phase-aware check failed', [
+                        'call_id' => $callId,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'note' => 'Staff may have conflicts during processing time gaps'
+                    ]);
+
+                    $alternatives = $this->findAlternativesForCompositeService(
+                        $service,
+                        $staff,
+                        $requestedDate,
+                        $branchId
+                    );
+
+                    return [
+                        'success' => true,
+                        'available' => false,
+                        'service' => $service->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'alternatives' => $alternatives,
+                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
+                    ];
+                }
+            }
+
+            // 🔧 REFACTORED 2025-11-13: Regular services now use Cal.com as SOURCE OF TRUTH
+            // ⚠️ CRITICAL: Local DB only contains OUR bookings, Cal.com may have external bookings
+            Log::info('📅 Regular service - using Cal.com API (SOURCE OF TRUTH)', [
                 'call_id' => $callId,
-                'event_type_id' => $service->calcom_event_type_id,
-                'date_range' => "{$slotStartTime->format('Y-m-d H:i')} - {$slotEndTime->format('Y-m-d H:i')}",
-                'team_id' => $service->company->calcom_team_id
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'requested_time' => $requestedDate->format('Y-m-d H:i')
             ]);
 
+            // Use new CalcomAvailabilityService for direct slot checking
+            $calcomAvailabilityService = app(\App\Services\Appointments\CalcomAvailabilityService::class);
+
             $calcomStartTime = microtime(true);
+            $isAvailable = false;
 
-            // 🔧 FIX 2025-10-18: No retries for interactive call - fast failure is better than 19 second delay!
-            // Bug: RetryPolicy was causing 5+1+5+2+5 = 18+ second delays
-            // Solution: Use circuit breaker WITHOUT retries, with immediate timeout
-            set_time_limit(5); // Hard timeout: 5 seconds max, abort otherwise
-
-            $response = null;
             try {
-                $response = $this->calcomService->getAvailableSlots(
+                // Check availability directly with Cal.com API
+                $isAvailable = $calcomAvailabilityService->isTimeSlotAvailable(
+                    $requestedDate,
                     $service->calcom_event_type_id,
-                    $slotStartTime->format('Y-m-d H:i:s'),
-                    $slotEndTime->format('Y-m-d H:i:s'),
-                    $service->company->calcom_team_id  // ← CRITICAL: teamId added for multi-tenant scoping
+                    $service->duration_minutes ?? $duration,
+                    null, // staff_id - not specified for regular services yet
+                    $service->company->calcom_team_id
                 );
 
                 $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
-                Log::info('⏱️ Cal.com API call END', [
+
+                Log::info('✅ Cal.com availability checked (regular service)', [
                     'call_id' => $callId,
+                    'available' => $isAvailable,
                     'duration_ms' => $calcomDuration,
-                    'status_code' => $response->status() ?? 'unknown'
+                    'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                    'event_type_id' => $service->calcom_event_type_id,
+                    'performance_target' => '< 1000ms',
+                    'performance_status' => $calcomDuration < 1000 ? 'GOOD' : 'NEEDS_OPTIMIZATION'
                 ]);
 
-                if ($calcomDuration > 8000) {
-                    Log::warning('⚠️ Cal.com API slow response', [
+                if ($calcomDuration > 2000) {
+                    Log::warning('⚠️ Cal.com API slow response (regular service)', [
                         'call_id' => $callId,
                         'duration_ms' => $calcomDuration,
-                        'threshold_ms' => 8000
+                        'threshold_ms' => 2000,
+                        'recommendation' => 'Consider caching strategy or API optimization'
                     ]);
                 }
             } catch (\Exception $e) {
                 $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
-                Log::error('❌ Cal.com API error or timeout', [
+
+                Log::error('❌ Cal.com availability check failed (regular service)', [
                     'call_id' => $callId,
-                    'duration_ms' => $calcomDuration,
-                    'error_message' => $e->getMessage(),
-                    'error_class' => get_class($e)
+                    'error' => $e->getMessage(),
+                    'error_class' => get_class($e),
+                    'duration_ms' => $calcomDuration
                 ]);
-                // Return conservative response: assume not available during errors
+
+                // Conservative: if Cal.com check fails, assume not available
                 return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
             }
-
-            // 🔧 FIX 2025-10-18: Validate response is not null before accessing json()
-            if (!$response) {
-                Log::error('⚠️ Cal.com API returned null response', [
-                    'call_id' => $callId
-                ]);
-                return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen: Leere Antwort.');
-            }
-
-            $slotsData = $response->json()['data']['slots'] ?? [];
-
-            // 🔧 FIX 2025-10-19: Cal.com V2 returns slots grouped by date
-            // Structure: {"2025-10-20": [{slot1}, {slot2}], "2025-10-21": [...]}
-            // We need to flatten this into a single array of all slots
-            $slots = [];
-            if (is_array($slotsData)) {
-                foreach ($slotsData as $date => $dateSlots) {
-                    if (is_array($dateSlots)) {
-                        $slots = array_merge($slots, $dateSlots);
-                    }
-                }
-            }
-
-            // 🔧 VERBOSE DEBUG 2025-10-19: Log COMPLETE slot data for debugging
-            Log::info('📊 Cal.com slots returned - VERBOSE DEBUG', [
-                'call_id' => $callId,
-                'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                'requested_timezone' => $requestedDate->timezone->getName(),
-                'total_slots_count' => count($slots),
-                'slots_data_structure' => gettype($slotsData),
-                'slots_data_keys' => is_array($slotsData) ? array_keys($slotsData) : 'not array',
-                'first_10_raw_slots' => array_slice($slots, 0, 10),  // COMPLETE slot objects
-                'structure' => 'flattened from date-grouped format'
-            ]);
-
-            $isAvailable = $this->isTimeAvailable($requestedDate, $slots);
 
             // 🔧 FIX 2025-10-11: Check if customer already has appointment at this time
             // Bug: Customer asked for Wednesday 9:00 but system didn't detect existing appointment
@@ -1106,6 +1241,15 @@ class RetellFunctionCallHandler extends Controller
             $companyId = $callContext['company_id'];
             $branchId = $callContext['branch_id'];
 
+            // 🔧 FIX 2025-11-13: Map appointment_date/appointment_time to date/time for dateTimeParser
+            // Different webhooks/agents may use different parameter names
+            if (isset($params['appointment_date']) && !isset($params['date'])) {
+                $params['date'] = $params['appointment_date'];
+            }
+            if (isset($params['appointment_time']) && !isset($params['time'])) {
+                $params['time'] = $params['appointment_time'];
+            }
+
             $appointmentTime = $this->dateTimeParser->parseDateTime($params);
             $duration = $params['duration'] ?? 60;
             $customerName = $params['customer_name'] ?? '';
@@ -1177,19 +1321,69 @@ class RetellFunctionCallHandler extends Controller
                 'call_id' => $callId
             ]);
 
-            // Create booking via Cal.com
-            $booking = $this->calcomService->createBooking([
-                'eventTypeId' => $service->calcom_event_type_id,
-                'start' => $appointmentTime->toIso8601String(),
-                'name' => $customerName,
-                'email' => $customerEmail ?: 'booking@temp.de',
-                'phone' => $customerPhone,
-                'notes' => $notes,
-                'metadata' => [
-                    'call_id' => $callId,
-                    'booked_via' => 'retell_ai'
-                ]
-            ]);
+            // 🔧 FIX 2025-11-13: Create booking with optimistic locking (retry on race condition)
+            // PROBLEM: 38-second gap between check_availability and booking allows slot to be taken
+            // SOLUTION: Catch CalcomApiException for "already has booking", retry with fresh availability
+            $maxRetries = 1;
+            $attempt = 0;
+            $booking = null;
+            $lastException = null;
+
+            while ($attempt <= $maxRetries && !$booking) {
+                $attempt++;
+
+                try {
+                    // Create booking via Cal.com
+                    $booking = $this->calcomService->createBooking([
+                        'eventTypeId' => $service->calcom_event_type_id,
+                        'start' => $appointmentTime->toIso8601String(),
+                        'name' => $customerName,
+                        'email' => $customerEmail ?: 'booking@temp.de',
+                        'phone' => $customerPhone,
+                        'notes' => $notes,
+                        'service_name' => $service->name,  // Required for title field
+                        'title' => $service->name . ' - ' . $customerName,  // 🔧 FIX: Add explicit title
+                        'metadata' => [
+                            'call_id' => $callId,
+                            'booked_via' => 'retell_ai',
+                            'attempt' => $attempt
+                        ]
+                    ]);
+
+                    break; // Success, exit retry loop
+
+                } catch (\App\Exceptions\CalcomApiException $e) {
+                    $lastException = $e;
+
+                    // Check if this is a race condition error
+                    if (str_contains($e->getMessage(), 'already has booking') ||
+                        str_contains($e->getMessage(), 'not available')) {
+
+                        Log::warning('🔄 Race condition detected - slot taken between check and booking', [
+                            'call_id' => $callId,
+                            'attempt' => $attempt,
+                            'max_retries' => $maxRetries,
+                            'error' => $e->getMessage()
+                        ]);
+
+                        // If this was the last attempt, give up
+                        if ($attempt > $maxRetries) {
+                            Log::error('❌ Booking failed after max retries', [
+                                'call_id' => $callId,
+                                'attempts' => $attempt
+                            ]);
+                            throw $e;
+                        }
+
+                        // Otherwise, continue to next attempt (no additional delay needed, already waited)
+                        Log::info('Retrying booking after race condition...');
+
+                    } else {
+                        // Different error, don't retry
+                        throw $e;
+                    }
+                }
+            }
 
             if ($booking->successful()) {
                 $bookingData = $booking->json();
@@ -1231,11 +1425,7 @@ class RetellFunctionCallHandler extends Controller
                                 'synced_at' => now()->toIso8601String(),
                                 'sync_method' => 'immediate',
                                 'created_at' => now()->toIso8601String()  // ✅ For Same-Call time validation
-                            ]),
-                            // ✅ METADATA FIX 2025-10-10: Populate tracking fields
-                            'created_by' => 'customer',
-                            'booking_source' => 'retell_phone',
-                            'booked_by_user_id' => null  // Customer bookings have no user
+                            ])
                         ]);
                         $appointment->save();
 
@@ -1271,6 +1461,16 @@ class RetellFunctionCallHandler extends Controller
                         ]);
                     }
                 } catch (\Exception $e) {
+                    // 🔥 DEBUG 2025-11-13: Capture exception details
+                    file_put_contents('/var/www/api-gateway/storage/logs/BOOKING_ERROR.txt',
+                        "=== BOOKING ERROR at " . date('Y-m-d H:i:s') . " ===\n" .
+                        "Cal.com Booking ID: " . $calcomBookingId . "\n" .
+                        "Error: " . $e->getMessage() . "\n" .
+                        "File: " . $e->getFile() . ":" . $e->getLine() . "\n" .
+                        "Trace:\n" . $e->getTraceAsString() . "\n\n",
+                        FILE_APPEND
+                    );
+
                     Log::error('❌ CRITICAL: Failed to create local appointment after Cal.com success', [
                         'calcom_booking_id' => $calcomBookingId,
                         'call_id' => $callId,
@@ -5467,5 +5667,108 @@ class RetellFunctionCallHandler extends Controller
                 'message' => 'Guten Tag! Wie kann ich Ihnen helfen?'
             ]);
         }
+    }
+
+    /**
+     * Find alternative times for composite services considering phase-aware availability
+     *
+     * @param \App\Models\Service $service
+     * @param \App\Models\Staff $staff
+     * @param \Carbon\Carbon $requestedDate
+     * @param string $branchId
+     * @return array
+     */
+    private function findAlternativesForCompositeService($service, $staff, $requestedDate, $branchId)
+    {
+        $availabilityService = app(\App\Services\ProcessingTimeAvailabilityService::class);
+        $alternatives = [];
+
+        // Check same day first (every 15 minutes)
+        $sameDayStart = $requestedDate->copy()->startOfDay()->setTime(8, 0);
+        $sameDayEnd = $requestedDate->copy()->endOfDay()->setTime(20, 0);
+
+        for ($time = $sameDayStart; $time <= $sameDayEnd; $time->addMinutes(15)) {
+            if ($time->equalTo($requestedDate)) {
+                continue; // Skip requested time (we know it's not available)
+            }
+
+            if ($availabilityService->isStaffAvailable($staff->id, $time, $service)) {
+                $alternatives[] = [
+                    'time' => $time->format('Y-m-d H:i'),
+                    'spoken' => $time->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
+                    'available' => true,
+                    'type' => 'same_day'
+                ];
+
+                if (count($alternatives) >= 3) {
+                    break; // Found enough alternatives
+                }
+            }
+        }
+
+        // If not enough same-day alternatives, check next few days
+        if (count($alternatives) < 3) {
+            for ($dayOffset = 1; $dayOffset <= 7; $dayOffset++) {
+                $nextDay = $requestedDate->copy()->addDays($dayOffset)->setTime(9, 0);
+                $dayEnd = $nextDay->copy()->setTime(18, 0);
+
+                for ($time = $nextDay; $time <= $dayEnd; $time->addMinutes(30)) {
+                    if ($availabilityService->isStaffAvailable($staff->id, $time, $service)) {
+                        $alternatives[] = [
+                            'time' => $time->format('Y-m-d H:i'),
+                            'spoken' => $time->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
+                            'available' => true,
+                            'type' => 'next_day'
+                        ];
+
+                        if (count($alternatives) >= 5) {
+                            break 2; // Found enough alternatives
+                        }
+                    }
+                }
+            }
+        }
+
+        return $alternatives;
+    }
+
+    /**
+     * Format alternatives message for German language
+     *
+     * @param \Carbon\Carbon $requestedDate
+     * @param array $alternatives
+     * @return string
+     */
+    private function formatAlternativesMessage($requestedDate, $alternatives)
+    {
+        if (empty($alternatives)) {
+            return sprintf(
+                'Leider ist zur gewünschten Zeit %s nichts frei. Möchten Sie einen anderen Termin?',
+                $requestedDate->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]')
+            );
+        }
+
+        $message = sprintf(
+            'Zur gewünschten Zeit %s ist leider nichts frei. ',
+            $requestedDate->locale('de')->isoFormat('H:mm [Uhr]')
+        );
+
+        $sameDayAlts = array_filter($alternatives, fn($alt) => $alt['type'] === 'same_day');
+        if (!empty($sameDayAlts)) {
+            $message .= 'Aber am gleichen Tag habe ich noch: ';
+            $times = array_map(fn($alt) => $alt['spoken'], array_slice($sameDayAlts, 0, 3));
+            $message .= implode(', ', $times) . '. ';
+        }
+
+        $nextDayAlts = array_filter($alternatives, fn($alt) => $alt['type'] === 'next_day');
+        if (!empty($nextDayAlts) && count($sameDayAlts) < 2) {
+            $message .= 'An anderen Tagen: ';
+            $times = array_map(fn($alt) => $alt['spoken'], array_slice($nextDayAlts, 0, 2));
+            $message .= implode(', ', $times) . '. ';
+        }
+
+        $message .= 'Was würde Ihnen passen?';
+
+        return $message;
     }
 }
