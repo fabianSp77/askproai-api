@@ -1342,7 +1342,6 @@ class RetellFunctionCallHandler extends Controller
                         'phone' => $customerPhone,
                         'notes' => $notes,
                         'service_name' => $service->name,  // Required for title field
-                        'title' => $service->name . ' - ' . $customerName,  // 🔧 FIX: Add explicit title
                         'metadata' => [
                             'call_id' => $callId,
                             'booked_via' => 'retell_ai',
