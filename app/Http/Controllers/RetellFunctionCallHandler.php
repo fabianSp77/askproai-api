@@ -4030,13 +4030,15 @@ class RetellFunctionCallHandler extends Controller
             }
 
             // 3. Parse new date FIRST (before policy check)
-            $newDate = $params['new_date'] ?? null;
-            $newTime = $params['new_time'] ?? null;
+            // FIX 2025-11-16: Support both German (new_datum, new_uhrzeit) and English (new_date, new_time)
+            // Root cause: Retell Agent sends German parameter names but code expected English
+            $newDate = $params['new_date'] ?? $params['new_datum'] ?? null;
+            $newTime = $params['new_time'] ?? $params['new_uhrzeit'] ?? null;
 
             if (!$newDate || !$newTime) {
                 return response()->json([
-                    'success' => true,
-                    'status' => 'ready_to_reschedule',
+                    'success' => false,  // FIX 2025-11-16: Changed from true - this is NOT success, it's awaiting input
+                    'status' => 'needs_new_time',
                     'message' => "Wann möchten Sie den Termin verschieben?",
                     'current_appointment' => [
                         'date' => $appointment->starts_at->format('d.m.Y'),
@@ -4055,6 +4057,10 @@ class RetellFunctionCallHandler extends Controller
                 ], 200);
             }
 
+            // FIX 2025-11-16: parseDateString returns string (YYYY-MM-DD), not Carbon object
+            // Convert to Carbon before calling setTime()
+            $date = Carbon::parse($newDateParsed);
+
             // Add time to date
             if (strpos($newTime, ':') !== false) {
                 list($hour, $minute) = explode(':', $newTime);
@@ -4062,7 +4068,7 @@ class RetellFunctionCallHandler extends Controller
                 $hour = intval($newTime);
                 $minute = 0;
             }
-            $newDateTime = $newDateParsed->setTime($hour, $minute);
+            $newDateTime = $date->setTime($hour, $minute);
 
             // 6. Check availability for new slot
             $companyId = $callContext['company_id'];
