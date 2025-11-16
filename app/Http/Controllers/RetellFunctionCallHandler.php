@@ -4152,14 +4152,15 @@ class RetellFunctionCallHandler extends Controller
                     return response()->json([
                         'success' => false,
                         'status' => 'unavailable',
-                    'message' => $message,
-                    'alternatives' => array_map(function($alt) {
-                        return [
-                            'time' => $alt['datetime']->format('H:i'),
-                            'description' => $alt['description']
-                        ];
-                    }, $alternatives['alternatives'] ?? [])
-                ], 200);
+                        'message' => $message,
+                        'alternatives' => array_map(function($alt) {
+                            return [
+                                'time' => $alt['datetime']->format('H:i'),
+                                'description' => $alt['description']
+                            ];
+                        }, $alternatives['alternatives'] ?? [])
+                    ], 200);
+                }
             }
 
             // 🔧 FIX 2025-10-18: Add 2-STEP CONFIRMATION for reschedule (like collect_appointment_data)
