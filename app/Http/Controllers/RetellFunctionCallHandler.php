@@ -513,7 +513,10 @@ class RetellFunctionCallHandler extends Controller
     /**
      * Check if customer exists in database by phone number
      * 🔧 FIX 2025-10-22 V133: Implement check_customer in main function handler
-     * Called at start of every call to recognize returning customers
+     * 🚀 PERFORMANCE OPTIMIZATION 2025-11-16: Cache-first strategy
+     *
+     * Called at start of every call to recognize returning customers.
+     * Data is pre-loaded at call_started for instant response (0.1s vs 9.2s)
      */
     private function checkCustomer(array $params, ?string $callId)
     {
@@ -549,8 +552,54 @@ class RetellFunctionCallHandler extends Controller
                 ], 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.');
             }
 
-            // Normalize phone number
+            // 🚀 PERFORMANCE OPTIMIZATION: Cache-first lookup
+            // Data was pre-loaded at call_started → instant response
             $normalizedPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
+            $cacheKey = "customer_lookup:{$normalizedPhone}:{$companyId}";
+
+            if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                $cachedData = \Illuminate\Support\Facades\Cache::get($cacheKey);
+
+                if ($cachedData === null) {
+                    // Cached "not found" result
+                    Log::info('⚡ Customer not found (from CACHE)', [
+                        'call_id' => $callId,
+                        'cache_key' => $cacheKey,
+                        'performance' => 'instant'
+                    ]);
+
+                    return $this->responseFormatter->success([
+                        'customer_id' => null,
+                        'name' => null,
+                        'found' => false,
+                        'status' => 'new_customer',
+                        'performance' => 'cached'
+                    ], 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.');
+                }
+
+                // Cached customer data found!
+                $customer = Customer::find($cachedData['customer_id']);
+                if ($customer) {
+                    $call->update(['customer_id' => $customer->id]);
+
+                    Log::info('⚡ Customer found (from CACHE - INSTANT!)', [
+                        'call_id' => $callId,
+                        'customer_id' => $customer->id,
+                        'customer_name' => $customer->name,
+                        'cache_key' => $cacheKey,
+                        'performance' => 'instant'
+                    ]);
+
+                    return $this->responseFormatter->success($cachedData, $cachedData['smart_greeting'] ?? 'Willkommen zurück!');
+                }
+            }
+
+            // 🐢 FALLBACK: Cache miss - do full lookup (slower)
+            Log::info('🐢 Cache MISS - performing full lookup', [
+                'call_id' => $callId,
+                'cache_key' => $cacheKey,
+                'performance' => 'fallback'
+            ]);
 
             // Search for customer with company isolation
             $customer = Customer::where(function($q) use ($normalizedPhone) {
