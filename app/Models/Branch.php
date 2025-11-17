@@ -152,4 +152,41 @@ class Branch extends Model
     {
         return $this->hasMany(RetellAgentPrompt::class);
     }
+
+    /**
+     * ✅ Phase 2: Get policy configurations for this branch
+     *
+     * Branch can have operational policies (booking, inquiry, etc.)
+     * Polymorphic relationship via configurable_type/configurable_id
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function policyConfigurations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(PolicyConfiguration::class, 'configurable');
+    }
+
+    /**
+     * ✅ Phase 2: Get call forwarding configuration for this branch
+     *
+     * Each branch can have one active forwarding configuration
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function callForwardingConfiguration(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CallForwardingConfiguration::class);
+    }
+
+    /**
+     * ✅ Phase 2: Get callback requests for this branch
+     *
+     * Callback requests when immediate booking not possible
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function callbackRequests(): HasMany
+    {
+        return $this->hasMany(CallbackRequest::class);
+    }
 }

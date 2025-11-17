@@ -82,10 +82,38 @@ class DateTimeParser
      */
     public function parseDateTime(array $params): Carbon
     {
+        // 🔍 DETAILED MONITORING - Log parseDateTime entry
+        Log::info('🎯 DateTimeParser::parseDateTime ENTRY', [
+            'params' => $params,
+            'params_keys' => array_keys($params),
+            'time_param' => $params['time'] ?? $params['uhrzeit'] ?? null,
+            'date_param' => $params['date'] ?? $params['datum'] ?? null
+        ]);
+
         // 🔧 NEW 2025-10-23: Smart date inference for time-only input
         // When user says "14 Uhr" without date → infer today vs tomorrow
         $time = $params['time'] ?? $params['uhrzeit'] ?? null;
         $date = $params['date'] ?? $params['datum'] ?? null;
+
+        // 🔧 FIX 2025-11-17: Validate vague date input without time
+        // Bug: "diese Woche" without time defaulted to 10:00, causing confusion
+        // Solution: Return null to signal caller to ask for time explicitly
+        if (!$time && !isset($params['relative_day']) && !isset($params['datetime'])) {
+            if ($date) {
+                // Check if it's a vague expression requiring clarification
+                if (preg_match('/(diese|nächste)\s+woche/i', $date)) {
+                    Log::channel('retell')->warning('⚠️ Vague date without time - returning null to prompt user', [
+                        'date_input' => $date,
+                        'call_id' => $params['call_id'] ?? 'unknown',
+                        'params' => $params
+                    ]);
+
+                    // Return null to signal need for clarification
+                    // Caller should detect this and ask user for time
+                    return null;
+                }
+            }
+        }
 
         if ($time && !$date && !isset($params['relative_day']) && !isset($params['datetime'])) {
             $inference = $this->inferDateFromTime($time);
@@ -102,9 +130,45 @@ class DateTimeParser
             }
         }
 
-        // Handle specific date if provided
-        if (isset($params['date']) && isset($params['time'])) {
-            $parsed = Carbon::parse($params['date'] . ' ' . $params['time']);
+        // Handle specific date if provided (supports both English and German param names)
+        $hasDateAndTime = ($date && $time);
+
+        if ($hasDateAndTime) {
+            // 🔧 FIX 2025-11-13: Check if date is a German relative word first
+            // BUG: Agent sends {"date":"morgen","time":"10:00"} or {"datum":"morgen","uhrzeit":"10:00"}
+            // SOLUTION: Detect German dates and use parseRelativeDate() instead
+            $dateValue = strtolower(trim($date));
+            $isGermanDate = isset(self::GERMAN_DATE_MAP[$dateValue]);
+
+            // 🔧 FIX 2025-11-14: Also check for week-based expressions
+            // Both orders: "nächste Woche Montag" AND "Montag nächste Woche"
+            $isWeekBasedDate = preg_match('/(nächste|diese|dieser|nächster|nächstes|kommende|kommender|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s+(woche|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|nächste|diese)/i', $dateValue);
+
+            if ($isGermanDate || $isWeekBasedDate) {
+                // Parse date string first to get the actual date
+                $parsedDateString = $this->parseDateString($dateValue);
+
+                if ($parsedDateString) {
+                    // Combine parsed date with time
+                    $parsedTime = Carbon::parse($time);
+                    $result = Carbon::parse($parsedDateString)->setTime($parsedTime->hour, $parsedTime->minute);
+
+                    Log::info('📅 German date + time parsed', [
+                        'date_input' => $dateValue,
+                        'time_input' => $time,
+                        'parsed_date' => $parsedDateString,
+                        'final_result' => $result->format('Y-m-d H:i')
+                    ]);
+
+                    return $result;
+                }
+
+                // Fallback to parseRelativeDate if parseDateString failed
+                return $this->parseRelativeDate($dateValue, $time);
+            }
+
+            // English date or ISO format - use Carbon::parse()
+            $parsed = Carbon::parse($date . ' ' . $time);
 
             // 🔧 CRITICAL FIX 2025-10-20: ANY past time is invalid, not just >30 days
             // User says "14:00 Uhr today" but it's already 14:00 → REJECT and suggest alternative
@@ -146,8 +210,9 @@ class DateTimeParser
             return Carbon::parse($params['datetime']);
         }
 
-        // Default to tomorrow at 10 AM
-        return Carbon::tomorrow()->setTime(10, 0);
+        // 🔧 FIX 2025-11-17: Default to tomorrow at 9 AM (business opening hour)
+        // Changed from 10:00 to align with typical business hours
+        return Carbon::tomorrow()->setTime(9, 0);
     }
 
     /**
@@ -305,15 +370,115 @@ class DateTimeParser
      */
     public function parseDateString(?string $dateString): ?string
     {
+        // 🔍 DETAILED MONITORING - Log parseDateString entry
+        Log::info('🎯 DateTimeParser::parseDateString ENTRY', [
+            'input' => $dateString,
+            'input_type' => gettype($dateString),
+            'input_length' => $dateString ? strlen($dateString) : 0
+        ]);
+
         if (empty($dateString)) {
+            Log::warning('⚠️ parseDateString: empty input', ['input' => $dateString]);
             return null;
         }
 
         $normalizedDate = strtolower(trim($dateString));
 
+        Log::info('🔍 parseDateString: normalized', [
+            'original' => $dateString,
+            'normalized' => $normalizedDate
+        ]);
+
         // Handle relative German dates
         if (isset(self::GERMAN_DATE_MAP[$normalizedDate])) {
             return Carbon::parse(self::GERMAN_DATE_MAP[$normalizedDate])->format('Y-m-d');
+        }
+
+        // 🔧 FIX 2025-11-14: Handle "Mittwoch diese Woche" (reversed order)
+        // Pattern: "Mittwoch diese Woche" → Wednesday this week
+        // User said: "Mittwoch diese Woche um 14:00"
+        // This is the natural German order (weekday first, then "diese Woche")
+        if (preg_match('/^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s+diese\s+woche$/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+
+            $weekdayMap = [
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
+            ];
+
+            if (isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $targetDayOfWeek = $weekdayMap[$weekdayName];
+
+                    // Get the target weekday in this calendar week
+                    $targetDate = $now->copy()->startOfWeek()->addDays($targetDayOfWeek - 1);
+
+                    // If the target day is before today (not today or future) → move to next week
+                    if ($targetDate->isBefore($now->copy()->startOfDay())) {
+                        $targetDate->addWeek();
+                    }
+
+                    Log::info('📅 Parsed "[WEEKDAY] diese Woche" pattern (reversed order)', [
+                        'input' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'today' => $now->format('Y-m-d (l)'),
+                        'target_date' => $targetDate->format('Y-m-d (l)'),
+                        'days_away' => $targetDate->diffInDays($now),
+                        'logic' => $targetDate->isBefore($now->copy()->startOfDay()) ? 'moved_to_next_week' : 'this_week'
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse "[WEEKDAY] diese Woche"', [
+                        'input' => $normalizedDate,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        // 🔧 FIX 2025-11-14: Handle "diese Woche" (without specific weekday)
+        // Pattern: "diese Woche" → Current day if workweek, or next Monday if weekend
+        // User said: "diese Woche"
+        // Expected: Today (if workday) or Monday this week (if weekend/past Monday)
+        if (preg_match('/^diese\s+woche$/i', $normalizedDate)) {
+            try {
+                $now = Carbon::now('Europe/Berlin');
+
+                // If it's weekend (Saturday/Sunday), default to Monday of this week
+                if ($now->isWeekend()) {
+                    $thisMonday = $now->copy()->startOfWeek(Carbon::MONDAY);
+
+                    Log::info('📅 Parsed "diese Woche" (weekend) → this Monday', [
+                        'input' => $normalizedDate,
+                        'today' => $now->format('Y-m-d (l)'),
+                        'this_monday' => $thisMonday->format('Y-m-d (l)'),
+                        'week_number' => $thisMonday->weekOfYear
+                    ]);
+
+                    return $thisMonday->format('Y-m-d');
+                }
+
+                // It's a workday - default to today
+                Log::info('📅 Parsed "diese Woche" (workday) → today', [
+                    'input' => $normalizedDate,
+                    'today' => $now->format('Y-m-d (l)'),
+                    'week_number' => $now->weekOfYear
+                ]);
+
+                return $now->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to parse "diese Woche"', [
+                    'input' => $normalizedDate,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
 
         // 🔧 FIX 2025-10-21: Handle "dieser/diese/dieses [WEEKDAY]" pattern
@@ -421,6 +586,81 @@ class DateTimeParser
                         'error' => $e->getMessage()
                     ]);
                 }
+            }
+        }
+
+        // 🔧 FIX 2025-11-14: Handle "Mittwoch nächste Woche" (reversed order)
+        // Pattern: "Mittwoch nächste Woche" → Wednesday of next week
+        // User said: "Mittwoch nächste Woche um 17:00"
+        // This is the natural German order (weekday first, then "nächste Woche")
+        if (preg_match('/^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s+nächste\s+woche$/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+
+            $weekdayMap = [
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
+            ];
+
+            if (isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $targetDayOfWeek = $weekdayMap[$weekdayName];
+
+                    // Get next week's start and then add days to target weekday
+                    $nextWeekStart = $now->copy()->startOfWeek()->addWeek();
+                    $targetDate = $nextWeekStart->addDays($targetDayOfWeek - 1);
+
+                    Log::info('📅 Parsed "[WEEKDAY] nächste Woche" pattern (reversed order)', [
+                        'input' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'today' => $now->format('Y-m-d (l)'),
+                        'next_week_target' => $targetDate->format('Y-m-d (l)'),
+                        'days_away' => $targetDate->diffInDays($now)
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse "[WEEKDAY] nächste Woche"', [
+                        'input' => $normalizedDate,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        // 🔧 FIX 2025-11-14: Handle "nächste Woche" (without specific weekday)
+        // Pattern: "nächste Woche" → Default to Monday of next week
+        // User said: "nächste Woche um 17:00"
+        // Expected: Next Monday (start of next week)
+        if (preg_match('/^nächste\s+woche$/i', $normalizedDate)) {
+            try {
+                $now = Carbon::now('Europe/Berlin');
+                $nextMonday = $now->copy()->next(Carbon::MONDAY);
+
+                // If next Monday is this week, move to the following Monday
+                if ($nextMonday->weekOfYear === $now->weekOfYear) {
+                    $nextMonday->addWeek();
+                }
+
+                Log::info('📅 Parsed "nächste Woche" (without weekday) → next Monday', [
+                    'input' => $normalizedDate,
+                    'today' => $now->format('Y-m-d (l)'),
+                    'next_monday' => $nextMonday->format('Y-m-d (l)'),
+                    'days_away' => $nextMonday->diffInDays($now),
+                    'week_number' => $nextMonday->weekOfYear
+                ]);
+
+                return $nextMonday->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to parse "nächste Woche"', [
+                    'input' => $normalizedDate,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
@@ -605,11 +845,18 @@ class DateTimeParser
                 }
             }
 
+            Log::info('✅ parseDateString SUCCESS (generic path)', [
+                'input' => $dateString,
+                'output' => $carbon->format('Y-m-d'),
+                'parsed_by' => 'Carbon::parse'
+            ]);
+
             return $carbon->format('Y-m-d');
         } catch (\Exception $e) {
-            Log::error('Failed to parse date string', [
+            Log::error('❌ Failed to parse date string', [
                 'input' => $dateString,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return null;
         }

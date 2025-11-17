@@ -179,7 +179,7 @@ unset($__defined_vars); ?>
 </div>
 
 
-<?php if (! $__env->hasRenderedOnce('47b2a64c-9325-4088-98f0-0b179d2475ba')): $__env->markAsRenderedOnce('47b2a64c-9325-4088-98f0-0b179d2475ba'); ?>
+<?php if (! $__env->hasRenderedOnce('9c9fb537-c09c-478b-b382-3b0684271b8c')): $__env->markAsRenderedOnce('9c9fb537-c09c-478b-b382-3b0684271b8c'); ?>
 <script>
     // Add subtle pulse animation to verification badges on mobile to indicate they're tappable
     if (window.matchMedia('(max-width: 768px)').matches) {

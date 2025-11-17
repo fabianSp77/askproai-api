@@ -27,6 +27,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\PolicyConfiguration::class => \App\Policies\PolicyConfigurationPolicy::class,
         \App\Models\NotificationConfiguration::class => \App\Policies\NotificationConfigurationPolicy::class,
         \App\Models\CallbackRequest::class => \App\Policies\CallbackRequestPolicy::class,
+        \App\Models\CallForwardingConfiguration::class => \App\Policies\CallForwardingConfigurationPolicy::class, // ✅ Phase 4
         \App\Models\SystemSetting::class => \App\Policies\SystemSettingPolicy::class,
         \App\Models\User::class => \App\Policies\UserPolicy::class,
         \App\Models\AppointmentModification::class => \App\Policies\AppointmentModificationPolicy::class,

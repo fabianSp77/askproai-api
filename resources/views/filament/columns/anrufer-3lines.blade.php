@@ -1,24 +1,46 @@
 @php
     $record = $getRecord();
     $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig', 'ja bitte', 'danke'];
-    $customerNameLower = $record->customer_name ? strtolower(trim($record->customer_name)) : '';
-    $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
 
-    // Determine display name and link
+    // 🔧 FIX 2025-11-12: Neue Logik für Namen-Anzeige
+    // MIT Appointment: Namen vom Termin (appointment.customer.name)
+    // OHNE Appointment: Namen aus dem Telefonat (call.customer_name aus Transcript)
+
     $displayName = null;
     $customerLink = null;
     $isAnonymous = false;
 
-    if ($record->from_number === 'anonymous' && (!$record->customer_name || trim($record->customer_name) === '' || $isTranscriptFragment)) {
-        $displayName = "Anonymer Anrufer";
-        $isAnonymous = true;
-    } elseif ($record->customer_id && $record->customer) {
-        $displayName = $record->customer->name;
-        $customerLink = route('filament.admin.resources.customers.view', $record->customer_id);
-    } elseif ($record->customer_name) {
-        $displayName = $record->customer_name;
-        $isAnonymous = false;
-    } else {
+    // PRIORITY 1: Hat der Call ein Appointment? → Nutze Appointment-Customer
+    if ($record->appointments && $record->appointments->isNotEmpty()) {
+        $appointment = $record->appointments->first();
+        if ($appointment->customer) {
+            $displayName = $appointment->customer->name;
+            $customerLink = route('filament.admin.resources.customers.view', $appointment->customer_id);
+        }
+    }
+
+    // PRIORITY 2: Kein Appointment → Nutze Call-Customer oder extrahierten Namen aus Transcript
+    if (!$displayName) {
+        if ($record->customer_id && $record->customer) {
+            $displayName = $record->customer->name;
+            $customerLink = route('filament.admin.resources.customers.view', $record->customer_id);
+        } else {
+            // 🔧 FIX: Use actual DB column, not accessor (accessor checks metadata/customer relationship)
+            $dbCustomerName = $record->getAttributes()['customer_name'] ?? null;
+
+            if ($dbCustomerName) {
+                $customerNameLower = strtolower(trim($dbCustomerName));
+                $isTranscriptFragment = in_array($customerNameLower, $nonNamePhrases);
+
+                if (!$isTranscriptFragment) {
+                    $displayName = $dbCustomerName;
+                }
+            }
+        }
+    }
+
+    // FALLBACK: Anonymer Anrufer
+    if (!$displayName) {
         $displayName = "Anonymer Anrufer";
         $isAnonymous = true;
     }

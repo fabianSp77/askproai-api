@@ -95,9 +95,22 @@ class PolicyConfigurationResource extends Resource
                         Forms\Components\Select::make('policy_type')
                             ->label('Richtlinientyp')
                             ->options([
+                                // Legacy Appointment Policies
                                 PolicyConfiguration::POLICY_TYPE_CANCELLATION => '🚫 Stornierung - Regelt wann Kunden absagen dürfen',
                                 PolicyConfiguration::POLICY_TYPE_RESCHEDULE => '🔄 Umbuchung - Regelt wann Kunden verschieben dürfen',
                                 PolicyConfiguration::POLICY_TYPE_RECURRING => '🔁 Wiederkehrend - Regelt Serien-Termine',
+
+                                // ✅ Phase 4: Operational Policies
+                                PolicyConfiguration::POLICY_TYPE_BOOKING => '📅 Terminbuchung - Erlaubt/Verbietet Buchungen',
+                                PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => '🔍 Terminabfrage - Auskunft über Termine',
+                                PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => '📊 Verfügbarkeitsabfrage - Freie Termine prüfen',
+                                PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => '📞 Rückrufservice - Rückrufanfragen erlauben',
+                                PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => '📋 Service-Informationen - Info über Dienstleistungen',
+                                PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => '🕐 Öffnungszeiten - Auskunft über Öffnungszeiten',
+
+                                // ✅ Phase 4: Access Control Policies
+                                PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => '🔒 Anonyme Anrufer - Sicherheitsregeln (Hard-coded)',
+                                PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => '👁️ Info-Offenlegung - Welche Infos preisgeben',
                             ])
                             ->required()
                             ->native(false)
@@ -106,7 +119,7 @@ class PolicyConfigurationResource extends Resource
                                 // Reset config when policy type changes
                                 $set('config', null);
                             })
-                            ->helperText('💡 **Stornierung:** Kunde sagt Termin komplett ab | **Umbuchung:** Kunde verschiebt Termin auf anderen Tag/Zeit')
+                            ->helperText('💡 **Legacy**: Stornierung/Umbuchung | **Operational**: Buchung/Abfrage | **Access Control**: Sicherheit')
                             ->columnSpanFull(),
 
                         // ═══════════════════════════════════════════════════════════════
@@ -276,6 +289,90 @@ class PolicyConfigurationResource extends Resource
                             ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_RECURRING)
                             ->columnSpanFull(),
 
+                        // ═══════════════════════════════════════════════════════════════
+                        // ✅ Phase 4: OPERATIONAL POLICIES - Generic Config
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Toggle::make('config.enabled')
+                                    ->label('✅ Policy aktiviert')
+                                    ->default(true)
+                                    ->helperText('Deaktivieren um diese Funktion komplett zu sperren')
+                                    ->columnSpan(2),
+
+                                Forms\Components\Textarea::make('config.disabled_message')
+                                    ->label('📢 Nachricht bei Deaktivierung')
+                                    ->placeholder('Diese Funktion ist derzeit nicht verfügbar.')
+                                    ->helperText('Wird dem Anrufer mitgeteilt wenn Policy deaktiviert ist')
+                                    ->rows(2)
+                                    ->columnSpan(2)
+                                    ->visible(fn (Get $get): bool => !$get('config.enabled')),
+
+                                Forms\Components\KeyValue::make('config.allowed_hours')
+                                    ->label('🕐 Erlaubte Zeiten (Optional)')
+                                    ->helperText('Beschränken Sie die Funktion auf bestimmte Zeiten. Format: monday => ["09:00-17:00"]')
+                                    ->columnSpan(2),
+                            ])
+                            ->visible(fn (Get $get): bool => in_array($get('policy_type'), [
+                                PolicyConfiguration::POLICY_TYPE_BOOKING,
+                                PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY,
+                                PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY,
+                                PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE,
+                                PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION,
+                                PolicyConfiguration::POLICY_TYPE_OPENING_HOURS,
+                            ]))
+                            ->columnSpanFull(),
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // ✅ Phase 4: ANONYMOUS RESTRICTIONS - Read-Only Display
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\Placeholder::make('anonymous_security_notice')
+                            ->label('🔒 Sicherheitsregeln')
+                            ->content('**Diese Regeln sind fest im System verankert und können nicht geändert werden.**
+
+**Erlaubt für anonyme Anrufer:**
+- ✅ Terminbuchung
+- ✅ Verfügbarkeit prüfen
+- ✅ Service-Informationen
+- ✅ Öffnungszeiten
+- ✅ Rückruf anfordern
+
+**NICHT erlaubt für anonyme Anrufer:**
+- ❌ Termin verschieben
+- ❌ Termin stornieren
+- ❌ Termin abfragen
+
+**Grund:** Ohne verifizierte Telefonnummer kann die Identität nicht bestätigt werden.')
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS)
+                            ->columnSpanFull(),
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // ✅ Phase 4: INFO DISCLOSURE - Field Selection
+                        // ═══════════════════════════════════════════════════════════════
+                        Forms\Components\CheckboxList::make('config.default_fields')
+                            ->label('📋 Standard-Felder (werden immer mitgeteilt)')
+                            ->options([
+                                'date' => 'Datum',
+                                'time' => 'Uhrzeit',
+                                'service' => 'Service',
+                            ])
+                            ->default(['date', 'time', 'service'])
+                            ->helperText('Diese Informationen werden bei Terminabfragen standardmäßig mitgeteilt')
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE),
+
+                        Forms\Components\CheckboxList::make('config.on_request_fields')
+                            ->label('📝 Felder auf Nachfrage')
+                            ->options([
+                                'staff' => 'Mitarbeiter-Name',
+                                'price' => 'Preis',
+                                'notes' => 'Notizen',
+                            ])
+                            ->default(['staff'])
+                            ->helperText('Diese Informationen werden nur auf explizite Nachfrage mitgeteilt')
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('policy_type') === PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE),
+
                         Forms\Components\Placeholder::make('policy_info')
                             ->label('ℹ️ Hinweis')
                             ->content('Wählen Sie zuerst einen **Richtlinientyp** aus, um die Einstellungen zu sehen.')
@@ -375,22 +472,55 @@ class PolicyConfigurationResource extends Resource
                 Tables\Columns\TextColumn::make('policy_type')
                     ->label('Richtlinientyp')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                        // Legacy
                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'Stornierung',
                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'Umbuchung',
                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'Wiederkehrend',
+                        // ✅ Phase 4: Operational
+                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'Terminbuchung',
+                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'Terminabfrage',
+                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'Verfügbarkeit',
+                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'Rückruf',
+                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'Service-Info',
+                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'Öffnungszeiten',
+                        // ✅ Phase 4: Access Control
+                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'Anonyme Anrufer',
+                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'Info-Offenlegung',
                         default => $state,
                     })
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
+                        // Legacy
                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'danger',
                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'warning',
                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'success',
+                        // ✅ Phase 4: Operational (blue)
+                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'info',
+                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'info',
+                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'info',
+                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'info',
+                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'info',
+                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'info',
+                        // ✅ Phase 4: Access Control (purple)
+                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'purple',
+                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'purple',
                         default => 'gray',
                     })
                     ->icon(fn (string $state): string => match ($state) {
+                        // Legacy
                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'heroicon-o-x-circle',
                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'heroicon-o-arrow-path',
                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'heroicon-o-arrow-path-rounded-square',
+                        // ✅ Phase 4: Operational
+                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'heroicon-o-calendar-days',
+                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'heroicon-o-magnifying-glass',
+                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'heroicon-o-chart-bar',
+                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'heroicon-o-phone',
+                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'heroicon-o-information-circle',
+                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'heroicon-o-clock',
+                        // ✅ Phase 4: Access Control
+                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'heroicon-o-lock-closed',
+                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'heroicon-o-eye',
                         default => 'heroicon-o-document-text',
                     })
                     ->searchable()
@@ -432,9 +562,20 @@ class PolicyConfigurationResource extends Resource
                     ->label('Richtlinientyp')
                     ->multiple()
                     ->options([
-                        PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'Stornierung',
-                        PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'Umbuchung',
-                        PolicyConfiguration::POLICY_TYPE_RECURRING => 'Wiederkehrend',
+                        // Legacy Appointment Policies
+                        PolicyConfiguration::POLICY_TYPE_CANCELLATION => '🚫 Stornierung',
+                        PolicyConfiguration::POLICY_TYPE_RESCHEDULE => '🔄 Umbuchung',
+                        PolicyConfiguration::POLICY_TYPE_RECURRING => '🔁 Wiederkehrend',
+                        // ✅ Phase 4: Operational Policies
+                        PolicyConfiguration::POLICY_TYPE_BOOKING => '📅 Terminbuchung',
+                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => '🔍 Terminabfrage',
+                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => '📊 Verfügbarkeit',
+                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => '📞 Rückruf',
+                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => '📋 Service-Info',
+                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => '🕐 Öffnungszeiten',
+                        // ✅ Phase 4: Access Control Policies
+                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => '🔒 Anonyme Anrufer',
+                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => '👁️ Info-Offenlegung',
                     ]),
 
                 Tables\Filters\TernaryFilter::make('is_override')
@@ -541,22 +682,55 @@ class PolicyConfigurationResource extends Resource
                                 Infolists\Components\TextEntry::make('policy_type')
                                     ->label('Richtlinientyp')
                                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                                        // Legacy
                                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'Stornierung',
                                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'Umbuchung',
                                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'Wiederkehrend',
+                                        // ✅ Phase 4: Operational
+                                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'Terminbuchung',
+                                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'Terminabfrage',
+                                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'Verfügbarkeit',
+                                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'Rückruf',
+                                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'Service-Info',
+                                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'Öffnungszeiten',
+                                        // ✅ Phase 4: Access Control
+                                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'Anonyme Anrufer',
+                                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'Info-Offenlegung',
                                         default => $state,
                                     })
                                     ->badge()
                                     ->color(fn (string $state): string => match ($state) {
+                                        // Legacy
                                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'danger',
                                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'warning',
                                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'success',
+                                        // ✅ Phase 4: Operational (blue)
+                                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'info',
+                                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'info',
+                                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'info',
+                                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'info',
+                                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'info',
+                                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'info',
+                                        // ✅ Phase 4: Access Control (purple)
+                                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'purple',
+                                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'purple',
                                         default => 'gray',
                                     })
                                     ->icon(fn (string $state): string => match ($state) {
+                                        // Legacy
                                         PolicyConfiguration::POLICY_TYPE_CANCELLATION => 'heroicon-o-x-circle',
                                         PolicyConfiguration::POLICY_TYPE_RESCHEDULE => 'heroicon-o-arrow-path',
                                         PolicyConfiguration::POLICY_TYPE_RECURRING => 'heroicon-o-arrow-path-rounded-square',
+                                        // ✅ Phase 4: Operational
+                                        PolicyConfiguration::POLICY_TYPE_BOOKING => 'heroicon-o-calendar-days',
+                                        PolicyConfiguration::POLICY_TYPE_APPOINTMENT_INQUIRY => 'heroicon-o-magnifying-glass',
+                                        PolicyConfiguration::POLICY_TYPE_AVAILABILITY_INQUIRY => 'heroicon-o-chart-bar',
+                                        PolicyConfiguration::POLICY_TYPE_CALLBACK_SERVICE => 'heroicon-o-phone',
+                                        PolicyConfiguration::POLICY_TYPE_SERVICE_INFORMATION => 'heroicon-o-information-circle',
+                                        PolicyConfiguration::POLICY_TYPE_OPENING_HOURS => 'heroicon-o-clock',
+                                        // ✅ Phase 4: Access Control
+                                        PolicyConfiguration::POLICY_TYPE_ANONYMOUS_RESTRICTIONS => 'heroicon-o-lock-closed',
+                                        PolicyConfiguration::POLICY_TYPE_INFO_DISCLOSURE => 'heroicon-o-eye',
                                         default => 'heroicon-o-document-text',
                                     }),
 

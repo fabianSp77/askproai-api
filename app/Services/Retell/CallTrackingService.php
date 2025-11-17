@@ -87,7 +87,7 @@ class CallTrackingService
 
         return DB::transaction(function () use ($session, $functionName, $arguments, $correlationId) {
             // Generate correlation ID if not provided
-            $correlationId = $correlationId ?? $this->correlationService->generateCorrelationId();
+            $correlationId = $correlationId ?? $this->correlationService->getId();
 
             // Sanitize input params for PII protection
             $sanitizedArgs = $this->sanitizer->sanitize($arguments);

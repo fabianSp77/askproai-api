@@ -27,6 +27,9 @@ class AppointmentObserver
                 'call_id' => $appointment->call_id
             ]);
         }
+
+        // 🔧 NEW 2025-11-12: Auto-create AppointmentPhase records for composite services
+        $this->createPhasesForCompositeService($appointment);
     }
 
     /**
@@ -106,15 +109,113 @@ class AppointmentObserver
             ->first();
 
         if ($latestAppointment) {
-            // Has appointment(s) - set flags
-            $call->appointment_made = true;
-            $call->converted_appointment_id = $latestAppointment->id;
+            // 🔧 FIX 2025-11-12: Sync customer_id from appointment to call
+            // This ensures customer names appear in the call list
+            if ($latestAppointment->customer_id && !$call->customer_id) {
+                $call->forceFill([
+                    'appointment_made' => true,
+                    'converted_appointment_id' => $latestAppointment->id,
+                    'customer_id' => $latestAppointment->customer_id
+                ]);
+
+                Log::info('✅ AppointmentObserver: Synced customer_id from appointment to call', [
+                    'call_id' => $call->id,
+                    'customer_id' => $latestAppointment->customer_id,
+                    'appointment_id' => $latestAppointment->id
+                ]);
+            } else {
+                // Has appointment(s) - set flags only
+                $call->forceFill([
+                    'appointment_made' => true,
+                    'converted_appointment_id' => $latestAppointment->id
+                ]);
+            }
         } else {
             // No appointments - clear flags
-            $call->appointment_made = false;
-            $call->converted_appointment_id = null;
+            $call->forceFill([
+                'appointment_made' => false,
+                'converted_appointment_id' => null
+            ]);
         }
 
         $call->saveQuietly(); // Save without triggering events
+    }
+
+    /**
+     * Create AppointmentPhase records for composite services
+     *
+     * Composite services have multiple segments with gaps (e.g., Dauerwelle):
+     * - Active segments: staff_required = true (staff is BUSY)
+     * - Gap segments: staff_required = false (staff is AVAILABLE for other customers)
+     *
+     * This enables optimal staff utilization during processing/waiting times.
+     *
+     * @param Appointment $appointment
+     * @return void
+     */
+    private function createPhasesForCompositeService(Appointment $appointment): void
+    {
+        // Load service relationship if not loaded
+        if (!$appointment->relationLoaded('service')) {
+            $appointment->load('service');
+        }
+
+        $service = $appointment->service;
+
+        // Skip if not composite or no segments defined
+        if (!$service || !$service->composite || empty($service->segments)) {
+            return;
+        }
+
+        Log::info('🎨 Creating AppointmentPhase records for composite service', [
+            'appointment_id' => $appointment->id,
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'segments_count' => count($service->segments)
+        ]);
+
+        $startTime = $appointment->starts_at;
+        $offset = 0;
+
+        foreach ($service->segments as $segment) {
+            $phaseStart = $startTime->copy()->addMinutes($offset);
+            $duration = $segment['durationMin'] ?? 0;
+            $phaseEnd = $phaseStart->copy()->addMinutes($duration);
+
+            // Map segment type to phase_type enum
+            $phaseType = match($segment['type'] ?? 'active') {
+                'active' => $offset === 0 ? 'initial' : 'final',
+                'processing' => 'processing',
+                default => 'initial'
+            };
+
+            // Create phase record
+            \App\Models\AppointmentPhase::create([
+                'appointment_id' => $appointment->id,
+                'phase_type' => $phaseType,
+                'start_offset_minutes' => $offset,
+                'duration_minutes' => $duration,
+                'staff_required' => $segment['staff_required'] ?? true,
+                'start_time' => $phaseStart,
+                'end_time' => $phaseEnd,
+            ]);
+
+            Log::debug('  • Phase created', [
+                'key' => $segment['key'] ?? '?',
+                'name' => $segment['name'] ?? 'Unknown',
+                'type' => $segment['type'] ?? 'active',
+                'staff_required' => $segment['staff_required'] ?? true,
+                'duration' => $duration,
+                'time' => $phaseStart->format('H:i') . ' - ' . $phaseEnd->format('H:i')
+            ]);
+
+            $offset += $duration;
+        }
+
+        Log::info('✅ AppointmentPhase records created', [
+            'appointment_id' => $appointment->id,
+            'phases_created' => count($service->segments),
+            'total_duration' => $offset . ' minutes'
+        ]);
     }
 }

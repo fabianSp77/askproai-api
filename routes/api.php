@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V2\CalcomSyncController;
 use App\Http\Controllers\Api\V2\CommunicationController;
 use App\Http\Controllers\Api\CompositeBookingExampleController;
 use App\Http\Controllers\Api\UserPreferenceController;
+use App\Http\Controllers\TestChecklistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,22 @@ Route::prefix('webhooks')->group(function () {
     // Retell datetime interpretation endpoint (for German time expressions)
     Route::post('/retell/datetime', [\App\Http\Controllers\Api\Retell\DateTimeInfoController::class, 'handle'])
         ->name('webhooks.retell.datetime')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    // 🔧 FIX 2025-11-13: Alias for Agent V116 (uses wrong function names)
+    // Agent V116 calls "get_current_context" → routes to /api/webhooks/retell/current-context
+    // This is an alias to the correct initialize-call endpoint
+    Route::post('/retell/current-context', [\App\Http\Controllers\Api\RetellApiController::class, 'initializeCall'])
+        ->name('webhooks.retell.current-context')
+        ->middleware(['throttle:100,1'])
+        ->withoutMiddleware('retell.function.whitelist');
+
+    // 🔧 FIX 2025-11-13: Alias for Agent V116 check-customer route
+    // Agent V116 calls check_customer → routes to /api/webhooks/retell/check-customer
+    // This is an alias to the correct /api/retell/check-customer endpoint
+    Route::post('/retell/check-customer', [\App\Http\Controllers\Api\RetellApiController::class, 'checkCustomer'])
+        ->name('webhooks.retell.check-customer')
         ->middleware(['throttle:100,1'])
         ->withoutMiddleware('retell.function.whitelist');
 
@@ -231,6 +248,21 @@ Route::prefix('v2')
 // Allow translation API without authentication for now (internal use)
 Route::post('/translate', [\App\Http\Controllers\Api\TranslationController::class, 'translate'])
     ->name('api.translate');
+
+// ---- V1 API Routes (Callback Requests) ----------------------------
+// Requires Sanctum authentication + rate limiting
+Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+    // Callback Requests API
+    Route::apiResource('callbacks', \App\Http\Controllers\Api\V1\CallbackRequestController::class);
+
+    // Additional callback actions
+    Route::post('callbacks/{id}/assign', [\App\Http\Controllers\Api\V1\CallbackRequestController::class, 'assign'])
+        ->name('api.v1.callbacks.assign');
+    Route::post('callbacks/{id}/contact', [\App\Http\Controllers\Api\V1\CallbackRequestController::class, 'contact'])
+        ->name('api.v1.callbacks.contact');
+    Route::post('callbacks/{id}/complete', [\App\Http\Controllers\Api\V1\CallbackRequestController::class, 'complete'])
+        ->name('api.v1.callbacks.complete');
+});
 Route::post('/detect-language', [\App\Http\Controllers\Api\TranslationController::class, 'detectLanguage'])
     ->name('api.detect-language');
 
@@ -352,4 +384,20 @@ Route::middleware(['auth:sanctum'])->prefix('user-preferences')->group(function 
 
     Route::post('/columns/{resource}/reset', [UserPreferenceController::class, 'resetColumnPreferences'])
         ->name('api.preferences.columns.reset');
+});
+
+// ---- Test Routes (Local/Testing Environment Only) -------------------------------------------
+// IMPORTANT: Only available in local/testing environments (see controller)
+Route::prefix('test')->group(function () {
+    // E2E Test: Create Call record for testing
+    // Used by backend-api-tester-v3-e2e.html to simulate real call context
+    Route::post('/create-call-record', [TestChecklistController::class, 'createTestCallRecord'])
+        ->name('api.test.create-call-record')
+        ->middleware(['throttle:100,1']);
+
+    // E2E Test: Delete Call record after test
+    // Cleanup test data after E2E test completion
+    Route::post('/delete-call-record', [TestChecklistController::class, 'deleteTestCallRecord'])
+        ->name('api.test.delete-call-record')
+        ->middleware(['throttle:100,1']);
 });

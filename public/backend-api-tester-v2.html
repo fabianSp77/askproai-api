@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester V2 - Customer Recognition</title>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="apiTesterV2()" x-cloak>
+
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Backend API Tester V2</h1>
+                    <span class="ml-3 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-600 rounded">Customer Recognition</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">RetellFunctionCallHandler.php</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Customer Type Toggle -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">🎭 Test-Szenario</h3>
+
+            <div class="flex space-x-4">
+                <button @click="setCustomerType('existing')"
+                        class="flex-1 p-4 border-2 rounded-lg transition-all"
+                        :class="customerType === 'existing' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center justify-center mb-2">
+                        <span class="text-2xl">👤</span>
+                    </div>
+                    <h4 class="font-semibold text-sm text-gray-900">Bestandskunde</h4>
+                    <p class="text-xs text-gray-600 mt-1">Hans Schuster (+49 160 4366 218)</p>
+                    <p class="text-xs text-blue-600 mt-2" x-show="customerType === 'existing'">✓ Aktiv</p>
+                </button>
+
+                <button @click="setCustomerType('new')"
+                        class="flex-1 p-4 border-2 rounded-lg transition-all"
+                        :class="customerType === 'new' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center justify-center mb-2">
+                        <span class="text-2xl">✨</span>
+                    </div>
+                    <h4 class="font-semibold text-sm text-gray-900">Neukunde</h4>
+                    <p class="text-xs text-gray-600 mt-1">Test User (+49 151 9999 9999)</p>
+                    <p class="text-xs text-green-600 mt-2" x-show="customerType === 'new'">✓ Aktiv</p>
+                </button>
+            </div>
+
+            <!-- Expected Behavior -->
+            <div class="mt-4 p-4 rounded-lg" :class="customerType === 'existing' ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'">
+                <h4 class="text-xs font-semibold mb-2" :class="customerType === 'existing' ? 'text-blue-900' : 'text-green-900'">
+                    Erwartetes Verhalten:
+                </h4>
+                <div x-show="customerType === 'existing'" class="text-xs text-blue-800 space-y-1">
+                    <p>✓ check_customer liefert: <code class="bg-white px-1 rounded">predicted_service</code></p>
+                    <p>✓ check_customer liefert: <code class="bg-white px-1 rounded">service_confidence</code> (0.0-1.0)</p>
+                    <p>✓ check_customer liefert: <code class="bg-white px-1 rounded">preferred_staff</code> + <code class="bg-white px-1 rounded">preferred_staff_id</code></p>
+                    <p>✓ Greeting: "Möchten Sie wieder einen [predicted_service] buchen?"</p>
+                    <p>✓ start_booking erhält: <code class="bg-white px-1 rounded">preferred_staff_id</code></p>
+                </div>
+                <div x-show="customerType === 'new'" class="text-xs text-green-800 space-y-1">
+                    <p>✓ check_customer liefert: <code class="bg-white px-1 rounded">found: false</code></p>
+                    <p>✓ Keine predicted_service Daten</p>
+                    <p>✓ Greeting: "Willkommen bei Friseur 1!"</p>
+                    <p>✓ Normale Datenabfrage (Service, Datum, Zeit)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Test Section -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">⚡ Quick Test</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button @click="quickTest('check_customer')"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                    <div class="text-2xl mb-2">🔍</div>
+                    <h4 class="font-semibold text-sm">check_customer</h4>
+                    <p class="text-xs text-gray-600 mt-1">Kunde identifizieren</p>
+                </button>
+
+                <button @click="quickTest('check_availability')"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                    <div class="text-2xl mb-2">📅</div>
+                    <h4 class="font-semibold text-sm">check_availability</h4>
+                    <p class="text-xs text-gray-600 mt-1">Verfügbarkeit prüfen</p>
+                </button>
+
+                <button @click="quickTest('full_flow')" :disabled="flowRunning"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all disabled:opacity-50">
+                    <div class="text-2xl mb-2">🚀</div>
+                    <h4 class="font-semibold text-sm">Kompletter Flow</h4>
+                    <p class="text-xs text-gray-600 mt-1">E2E Test</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Response Panel -->
+        <div x-show="response" class="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-semibold text-gray-900">📊 Response</h3>
+                <div class="flex items-center space-x-3">
+                    <span class="px-2 py-1 text-xs font-medium rounded"
+                          :class="response && response.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                        <span x-show="response && response.success">✓ Success</span>
+                        <span x-show="response && !response.success">✗ Error</span>
+                    </span>
+                    <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded" x-show="response && response.duration">
+                        <span x-text="response.duration"></span>ms
+                    </span>
+                    <button @click="copyToClipboard(JSON.stringify(response.data, null, 2))" x-show="response"
+                            class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200">
+                        Kopieren
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customer Recognition Highlights -->
+            <template x-if="response && response.data && response.data.data">
+                <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h4 class="text-xs font-semibold text-yellow-900 mb-2">🎯 Customer Recognition Daten:</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div>
+                            <span class="text-gray-600">Found:</span>
+                            <span class="ml-1 font-semibold" :class="response.data.data.found ? 'text-green-700' : 'text-red-700'" x-text="response.data.data.found ? 'Ja ✓' : 'Nein ✗'"></span>
+                        </div>
+                        <div x-show="response.data.data.predicted_service">
+                            <span class="text-gray-600">Service:</span>
+                            <span class="ml-1 font-semibold text-blue-700" x-text="response.data.data.predicted_service"></span>
+                        </div>
+                        <div x-show="response.data.data.service_confidence !== undefined">
+                            <span class="text-gray-600">Confidence:</span>
+                            <span class="ml-1 font-semibold" :class="response.data.data.service_confidence >= 0.8 ? 'text-green-700' : response.data.data.service_confidence >= 0.5 ? 'text-yellow-700' : 'text-gray-700'" x-text="(response.data.data.service_confidence * 100).toFixed(0) + '%'"></span>
+                        </div>
+                        <div x-show="response.data.data.preferred_staff">
+                            <span class="text-gray-600">Staff:</span>
+                            <span class="ml-1 font-semibold text-purple-700" x-text="response.data.data.preferred_staff"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <pre class="bg-gray-900 rounded-lg overflow-x-auto p-4"><code class="language-json text-xs" x-text="JSON.stringify(response.data, null, 2)"></code></pre>
+        </div>
+
+        <!-- E2E Flow Steps -->
+        <div x-show="flowRunning || flowCompleted" class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-6">🔄 Flow-Schritte</h3>
+
+            <div class="space-y-4">
+                <template x-for="(step, index) in flowSteps" :key="index">
+                    <div class="relative pl-6 pb-6 border-l-2"
+                         :class="{ 'border-green-400': step.status === 'completed', 'border-blue-400': step.status === 'running', 'border-gray-300': step.status === 'pending', 'border-red-400': step.status === 'failed' }">
+
+                        <div class="absolute left-[-5px] top-0 w-3 h-3 rounded-full"
+                             :class="{ 'bg-green-500': step.status === 'completed', 'bg-blue-500 animate-pulse': step.status === 'running', 'bg-gray-300': step.status === 'pending', 'bg-red-500': step.status === 'failed' }"></div>
+
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900" x-text="(index + 1) + '. ' + step.name"></h4>
+                                <p class="text-xs text-gray-500 mt-1" x-text="step.description"></p>
+
+                                <template x-if="step.result">
+                                    <div class="mt-2 p-2 bg-gray-50 rounded text-xs">
+                                        <pre class="overflow-x-auto"><code class="language-json" x-text="JSON.stringify(step.result, null, 2)"></code></pre>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="ml-4 flex items-center space-x-2">
+                                <span class="px-2 py-1 text-xs rounded"
+                                      :class="{ 'bg-green-100 text-green-800': step.status === 'completed', 'bg-blue-100 text-blue-800': step.status === 'running', 'bg-gray-100 text-gray-600': step.status === 'pending', 'bg-red-100 text-red-800': step.status === 'failed' }"
+                                      x-text="step.status"></span>
+                                <span x-show="step.duration" class="text-xs text-gray-500" x-text="step.duration + 'ms'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Summary -->
+            <template x-if="flowCompleted">
+                <div class="mt-6 p-4 rounded-lg" :class="flowSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                    <h3 class="text-sm font-semibold mb-1" :class="flowSuccess ? 'text-green-800' : 'text-red-800'">
+                        <span x-show="flowSuccess">✓ Flow erfolgreich</span>
+                        <span x-show="!flowSuccess">✗ Flow fehlgeschlagen</span>
+                    </h3>
+                    <p class="text-xs" :class="flowSuccess ? 'text-green-700' : 'text-red-700'" x-text="flowSummary"></p>
+                </div>
+            </template>
+        </div>
+
+    </div>
+
+    <script>
+        function apiTesterV2() {
+            return {
+                customerType: 'existing',  // 'existing' or 'new'
+                response: null,
+                loading: false,
+
+                // E2E Flow
+                flowRunning: false,
+                flowCompleted: false,
+                flowSuccess: false,
+                flowSummary: '',
+                flowSteps: [],
+
+                // Customer Data
+                customers: {
+                    existing: {
+                        phone: '+491604366218',  // Hans Schuster (KORREKT)
+                        name: 'Hans Schuster',
+                        expectedFound: true
+                    },
+                    new: {
+                        phone: '+491519999999',
+                        name: 'Test Neukunde',
+                        expectedFound: false
+                    }
+                },
+
+                init() {
+                    this.setCustomerType('existing');
+                },
+
+                setCustomerType(type) {
+                    this.customerType = type;
+                    this.response = null;
+                    this.flowCompleted = false;
+                },
+
+                getCurrentCustomer() {
+                    return this.customers[this.customerType];
+                },
+
+                async quickTest(testType) {
+                    const customer = this.getCurrentCustomer();
+                    const callId = 'test_' + Date.now();
+
+                    if (testType === 'check_customer') {
+                        await this.runTest('/api/webhooks/retell/check-customer', {
+                            call: { call_id: callId },
+                            args: { telefonnummer: customer.phone }
+                        });
+                    } else if (testType === 'check_availability') {
+                        await this.runTest('/api/webhooks/retell/check-availability', {
+                            call: { call_id: callId },
+                            args: {
+                                datum: 'morgen',
+                                uhrzeit: '10:00',
+                                dienstleistung: 'Herrenhaarschnitt'
+                            }
+                        });
+                    } else if (testType === 'full_flow') {
+                        await this.runFullFlow();
+                    }
+                },
+
+                async runTest(endpoint, payload) {
+                    this.loading = true;
+                    const startTime = performance.now();
+
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const duration = Math.round(performance.now() - startTime);
+                        const contentType = res.headers.get('content-type');
+
+                        let data;
+                        if (contentType && contentType.includes('application/json')) {
+                            data = await res.json();
+                        } else {
+                            const text = await res.text();
+                            data = {
+                                error: 'Server returned non-JSON response',
+                                http_status: res.status,
+                                response_preview: text.substring(0, 500)
+                            };
+                        }
+
+                        this.response = {
+                            success: res.ok && (data.success !== false),
+                            duration: duration,
+                            http_status: res.status,
+                            data: data
+                        };
+
+                        setTimeout(() => Prism.highlightAll(), 50);
+                    } catch (error) {
+                        this.response = {
+                            success: false,
+                            duration: Math.round(performance.now() - startTime),
+                            data: { error: error.message }
+                        };
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async runFullFlow() {
+                    this.flowRunning = true;
+                    this.flowCompleted = false;
+                    this.flowSuccess = false;
+                    this.response = null;
+
+                    const customer = this.getCurrentCustomer();
+                    const callId = 'flow_test_' + Date.now();
+
+                    this.flowSteps = [
+                        { name: 'get_current_context', description: 'Lade aktuelles Datum/Zeit', status: 'pending', result: null, duration: null },
+                        { name: 'check_customer', description: 'Identifiziere Kunde + Customer Recognition', status: 'pending', result: null, duration: null },
+                        { name: 'check_availability', description: 'Prüfe Verfügbarkeit', status: 'pending', result: null, duration: null },
+                        { name: 'start_booking', description: 'Führe Buchung durch (mit preferred_staff_id)', status: 'pending', result: null, duration: null }
+                    ];
+
+                    // Step 1: get_current_context
+                    await this.runFlowStep(0, async () => {
+                        const res = await fetch('/api/webhooks/retell/current-context', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ call: { call_id: callId } })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 2: check_customer
+                    await this.runFlowStep(1, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-customer', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: { telefonnummer: customer.phone }
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Validation: Check if customer recognition data is present
+                    const customerStep = this.flowSteps[1];
+                    if (this.customerType === 'existing' && customerStep.result && customerStep.result.data) {
+                        const hasRecognitionData =
+                            customerStep.result.data.predicted_service !== undefined ||
+                            customerStep.result.data.service_confidence !== undefined ||
+                            customerStep.result.data.preferred_staff !== undefined;
+
+                        if (!hasRecognitionData) {
+                            customerStep.status = 'failed';
+                            customerStep.result.validation_error = 'Bestandskunde sollte Customer Recognition Daten haben!';
+                        }
+                    }
+
+                    // Step 3: check_availability
+                    await this.runFlowStep(2, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-availability', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {
+                                    datum: 'morgen',
+                                    uhrzeit: '10:00',
+                                    dienstleistung: 'Herrenhaarschnitt'
+                                }
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 4: start_booking
+                    await this.runFlowStep(3, async () => {
+                        const res = await fetch('/api/retell/v17/book-appointment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {
+                                    datum: 'morgen',
+                                    uhrzeit: '10:00',
+                                    dienstleistung: 'Herrenhaarschnitt',
+                                    name: customer.name
+                                }
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Finalize
+                    this.flowCompleted = true;
+                    this.flowSuccess = this.flowSteps.every(s => s.status === 'completed');
+                    this.flowSummary = this.flowSuccess
+                        ? `✅ Alle Schritte erfolgreich für ${this.customerType === 'existing' ? 'Bestandskunde' : 'Neukunde'}`
+                        : '❌ Einige Schritte sind fehlgeschlagen. Prüfe die Details oben.';
+                    this.flowRunning = false;
+
+                    setTimeout(() => Prism.highlightAll(), 100);
+                },
+
+                async runFlowStep(stepIndex, fetchFn) {
+                    this.flowSteps[stepIndex].status = 'running';
+                    const startTime = performance.now();
+
+                    try {
+                        const result = await fetchFn();
+                        const duration = Math.round(performance.now() - startTime);
+
+                        this.flowSteps[stepIndex].status = 'completed';
+                        this.flowSteps[stepIndex].result = result;
+                        this.flowSteps[stepIndex].duration = duration;
+
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (error) {
+                        const duration = Math.round(performance.now() - startTime);
+                        this.flowSteps[stepIndex].status = 'failed';
+                        this.flowSteps[stepIndex].result = {
+                            error: error.message,
+                            stack: error.stack
+                        };
+                        this.flowSteps[stepIndex].duration = duration;
+                    }
+                },
+
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        console.log('Copied to clipboard');
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

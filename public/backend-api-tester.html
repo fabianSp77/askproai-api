@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester - Friseur 1</title>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .tab-button {
+            @apply px-4 py-2 text-sm font-medium border-b-2 transition-colors;
+        }
+
+        .tab-button.active {
+            @apply border-blue-600 text-blue-600;
+        }
+
+        .tab-button:not(.active) {
+            @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="apiTester()" x-cloak>
+
+    <!-- Top Navigation Bar -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Backend API Tester</h1>
+                    <span class="ml-3 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">Friseur 1</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">RetellFunctionCallHandler.php</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Tabs -->
+        <div class="border-b border-gray-200 mb-8">
+            <nav class="-mb-px flex space-x-8">
+                <button
+                    @click="activeTab = 'individual'"
+                    class="tab-button"
+                    :class="{ 'active': activeTab === 'individual' }">
+                    Einzelne Funktionen
+                </button>
+                <button
+                    @click="activeTab = 'e2e'"
+                    class="tab-button"
+                    :class="{ 'active': activeTab === 'e2e' }">
+                    E2E Flow
+                </button>
+                <button
+                    @click="activeTab = 'comparison'"
+                    class="tab-button"
+                    :class="{ 'active': activeTab === 'comparison' }">
+                    Cal.com Vergleich
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content: Individual Functions -->
+        <div x-show="activeTab === 'individual'" class="space-y-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Function Selector -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">Funktion wählen</h3>
+
+                        <select x-model="selectedFunction" @change="updateForm()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">-- Wähle Funktion --</option>
+                            <template x-for="func in functions" :key="func.name">
+                                <option :value="func.name" x-text="func.label"></option>
+                            </template>
+                        </select>
+
+                        <template x-if="selectedFunction">
+                            <div class="mt-4 p-3 bg-blue-50 rounded-md">
+                                <p class="text-xs text-blue-900 mb-2" x-text="getCurrentFunction().description"></p>
+                                <code class="text-xs text-blue-700" x-text="getCurrentFunction().endpoint"></code>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Parameters Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">Parameter</h3>
+
+                        <template x-if="!selectedFunction">
+                            <div class="text-center py-12 text-gray-400">
+                                <p class="text-sm">Wähle zuerst eine Funktion aus</p>
+                            </div>
+                        </template>
+
+                        <template x-if="selectedFunction">
+                            <div class="space-y-4">
+
+                                <!-- Call ID -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Call ID (optional)</label>
+                                    <input type="text" x-model="formData.call_id" placeholder="test_691202d3d71d7"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <p class="text-xs text-gray-500 mt-1">Auto-generiert wenn leer</p>
+                                </div>
+
+                                <!-- Dynamic Parameters -->
+                                <template x-for="param in getCurrentFunction().params" :key="param.name">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                                            <span x-text="param.label"></span>
+                                            <span x-show="param.required" class="text-red-500">*</span>
+                                        </label>
+
+                                        <!-- Text Input -->
+                                        <template x-if="param.type === 'text' || !param.type">
+                                            <input type="text" x-model="formData[param.name]"
+                                                   :placeholder="param.placeholder" :required="param.required"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                        </template>
+
+                                        <!-- Select -->
+                                        <template x-if="param.type === 'select'">
+                                            <select x-model="formData[param.name]" :required="param.required"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">-- Wählen --</option>
+                                                <template x-for="opt in param.options" :key="opt.value">
+                                                    <option :value="opt.value" x-text="opt.label"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+
+                                        <!-- Time -->
+                                        <template x-if="param.type === 'time'">
+                                            <input type="time" x-model="formData[param.name]" :required="param.required"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                        </template>
+
+                                        <!-- Tel -->
+                                        <template x-if="param.type === 'tel'">
+                                            <input type="tel" x-model="formData[param.name]" :placeholder="param.placeholder" :required="param.required"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                        </template>
+
+                                        <!-- Textarea -->
+                                        <template x-if="param.type === 'textarea'">
+                                            <textarea x-model="formData[param.name]" :placeholder="param.placeholder" :required="param.required" rows="3"
+                                                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                        </template>
+
+                                        <p x-show="param.help" class="text-xs text-gray-500 mt-1" x-text="param.help"></p>
+                                    </div>
+                                </template>
+
+                                <!-- Submit Button -->
+                                <button @click="sendRequest()" :disabled="loading"
+                                        class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span x-show="!loading">Test durchführen</span>
+                                    <span x-show="loading">Lädt...</span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Panel -->
+            <template x-if="response">
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-semibold text-gray-900">Response</h3>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-2 py-1 text-xs font-medium rounded"
+                                  :class="response.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                <span x-show="response.success">✓ Success</span>
+                                <span x-show="!response.success">✗ Error</span>
+                            </span>
+                            <span class="px-2 py-1 text-xs font-medium rounded"
+                                  :class="response.http_status < 300 ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
+                                HTTP <span x-text="response.http_status || '200'"></span>
+                            </span>
+                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+                                <span x-text="response.duration"></span>ms
+                            </span>
+                            <button @click="copyToClipboard(JSON.stringify(response.data, null, 2))"
+                                    class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200">
+                                Kopieren
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="bg-gray-900 rounded-lg overflow-x-auto p-4"><code class="language-json text-xs" x-text="JSON.stringify(response.data, null, 2)"></code></pre>
+                </div>
+            </template>
+        </div>
+
+        <!-- Tab Content: E2E Flow -->
+        <div x-show="activeTab === 'e2e'" class="space-y-6">
+
+            <!-- Test Data -->
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">Testdaten (JSON)</h3>
+                <textarea x-model="e2eTestData" rows="8"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <!-- Flow Steps -->
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-6">Flow-Schritte</h3>
+
+                <div class="space-y-4">
+                    <template x-for="(step, index) in e2eSteps" :key="index">
+                        <div class="relative pl-6 pb-6 border-l-2"
+                             :class="{ 'border-green-400': step.status === 'completed', 'border-blue-400': step.status === 'running', 'border-gray-300': step.status === 'pending', 'border-red-400': step.status === 'failed' }">
+
+                            <div class="absolute left-[-5px] top-0 w-3 h-3 rounded-full"
+                                 :class="{ 'bg-green-500': step.status === 'completed', 'bg-blue-500 animate-pulse': step.status === 'running', 'bg-gray-300': step.status === 'pending', 'bg-red-500': step.status === 'failed' }"></div>
+
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900" x-text="(index + 1) + '. ' + step.name"></h4>
+                                    <p class="text-xs text-gray-500 mt-1" x-text="step.description"></p>
+
+                                    <template x-if="step.result">
+                                        <div class="mt-2 p-2 bg-gray-50 rounded text-xs">
+                                            <pre class="overflow-x-auto"><code class="language-json" x-text="JSON.stringify(step.result, null, 2)"></code></pre>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="ml-4 flex items-center space-x-2">
+                                    <span class="px-2 py-1 text-xs rounded"
+                                          :class="{ 'bg-green-100 text-green-800': step.status === 'completed', 'bg-blue-100 text-blue-800': step.status === 'running', 'bg-gray-100 text-gray-600': step.status === 'pending', 'bg-red-100 text-red-800': step.status === 'failed' }"
+                                          x-text="step.status"></span>
+                                    <span x-show="step.duration" class="text-xs text-gray-500" x-text="step.duration + 'ms'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex space-x-3">
+                <button @click="runE2EFlow()" :disabled="e2eRunning"
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="!e2eRunning">Flow starten</span>
+                    <span x-show="e2eRunning">Läuft...</span>
+                </button>
+                <button @click="resetE2EFlow()"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300">
+                    Reset
+                </button>
+                <button @click="exportE2EResults()" :disabled="!e2eCompleted"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    JSON Export
+                </button>
+            </div>
+
+            <!-- Summary -->
+            <template x-if="e2eCompleted">
+                <div class="p-4 rounded-lg" :class="e2eSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                    <h3 class="text-sm font-semibold mb-1" :class="e2eSuccess ? 'text-green-800' : 'text-red-800'">
+                        <span x-show="e2eSuccess">✓ Alle Schritte erfolgreich</span>
+                        <span x-show="!e2eSuccess">✗ Flow fehlgeschlagen</span>
+                    </h3>
+                    <p class="text-xs" :class="e2eSuccess ? 'text-green-700' : 'text-red-700'" x-text="e2eSummary"></p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Tab Content: Cal.com Comparison -->
+        <div x-show="activeTab === 'comparison'" class="space-y-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Backend Says -->
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-4">Backend Response</h3>
+                    <div class="p-4 bg-gray-50 rounded-lg min-h-[200px]">
+                        <template x-if="response && response.data && response.data.alternatives">
+                            <div class="space-y-2">
+                                <template x-for="(alt, idx) in response.data.alternatives" :key="idx">
+                                    <div class="p-2 bg-white border border-gray-200 rounded text-xs">
+                                        <span x-text="alt.description || alt.spoken || (alt.date + ' ' + alt.time)"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template x-if="!response || !response.data || !response.data.alternatives">
+                            <p class="text-xs text-gray-400 italic">Keine Daten - führe zuerst check_availability aus</p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Cal.com Reality -->
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-4">Cal.com Realität</h3>
+                    <textarea x-model="calcomComparison" rows="8"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md text-xs focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Trage hier ein, was du in Cal.com siehst...
+
+Beispiel:
+- Montag 15:10 ✓ verfügbar
+- Montag 14:15 ✓ verfügbar
+- Montag 16:00 ✗ nicht verfügbar"></textarea>
+                </div>
+            </div>
+
+            <!-- Copy for Feedback -->
+            <button @click="copyComparisonForFeedback()"
+                    class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Vergleich kopieren für Feedback
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        function apiTester() {
+            return {
+                // UI State
+                activeTab: 'individual',
+
+                // Function Test State
+                selectedFunction: '',
+                formData: {},
+                response: null,
+                loading: false,
+                calcomComparison: '',
+
+                // E2E Flow State
+                e2eRunning: false,
+                e2eCompleted: false,
+                e2eSuccess: false,
+                e2eSummary: '',
+                e2eTestData: JSON.stringify({
+                    "phone": "+4915112345678",
+                    "transcript": "Hans Schuster, Herrenhaarschnitt morgen um 10 Uhr",
+                    "service": "Herrenhaarschnitt",
+                    "date": "morgen",
+                    "time": "10:00",
+                    "customer_name": "Hans Schuster"
+                }, null, 2),
+
+                e2eSteps: [
+                    { name: 'get_current_context', description: 'Lade aktuelles Datum/Zeit', status: 'pending', result: null, duration: null },
+                    { name: 'check_customer', description: 'Identifiziere Kunde', status: 'pending', result: null, duration: null },
+                    { name: 'extract_booking_variables', description: 'Extrahiere Buchungsvariablen (simuliert)', status: 'pending', result: null, duration: null },
+                    { name: 'check_availability', description: 'Prüfe Verfügbarkeit', status: 'pending', result: null, duration: null },
+                    { name: 'start_booking', description: 'Führe Buchung durch', status: 'pending', result: null, duration: null }
+                ],
+
+                // Functions Definition
+                functions: [
+                    {
+                        name: 'check_customer',
+                        label: 'check_customer',
+                        description: 'Identifiziert Kunden via Telefonnummer',
+                        endpoint: '/api/webhooks/retell/check-customer',
+                        method: 'POST',
+                        params: [
+                            { name: 'telefonnummer', label: 'Telefonnummer', type: 'tel', placeholder: '+4915112345678', required: true }
+                        ]
+                    },
+                    {
+                        name: 'get_current_context',
+                        label: 'get_current_context',
+                        description: 'Ruft aktuelles Datum, Uhrzeit und Kontext ab',
+                        endpoint: '/api/webhooks/retell/current-context',
+                        method: 'POST',
+                        params: []
+                    },
+                    {
+                        name: 'check_availability',
+                        label: 'check_availability_v17',
+                        description: 'Prüft Verfügbarkeit für einen Termin',
+                        endpoint: '/api/webhooks/retell/check-availability',
+                        method: 'POST',
+                        params: [
+                            {
+                                name: 'dienstleistung',
+                                label: 'Service Name',
+                                type: 'select',
+                                required: true,
+                                options: [
+                                    { value: 'Herrenhaarschnitt', label: 'Herrenhaarschnitt (Einfach)' },
+                                    { value: 'Dauerwelle', label: 'Dauerwelle (Composite)' },
+                                    { value: 'Damenhaarschnitt', label: 'Damenhaarschnitt' }
+                                ]
+                            },
+                            { name: 'datum', label: 'Datum', type: 'text', placeholder: 'morgen oder DD.MM.YYYY', required: true, help: 'Format: "heute", "morgen", "Montag" oder "17.11.2025"' },
+                            { name: 'uhrzeit', label: 'Uhrzeit', type: 'time', placeholder: '10:00', required: true }
+                        ]
+                    },
+                    {
+                        name: 'start_booking',
+                        label: 'bookAppointmentV17 (start_booking)',
+                        description: 'Bucht einen Termin (bestaetigung=true)',
+                        endpoint: '/api/retell/v17/book-appointment',
+                        method: 'POST',
+                        params: [
+                            {
+                                name: 'dienstleistung',
+                                label: 'Service',
+                                type: 'select',
+                                required: true,
+                                options: [
+                                    { value: 'Herrenhaarschnitt', label: 'Herrenhaarschnitt' },
+                                    { value: 'Dauerwelle', label: 'Dauerwelle' },
+                                    { value: 'Damenhaarschnitt', label: 'Damenhaarschnitt' }
+                                ]
+                            },
+                            { name: 'datum', label: 'Datum', type: 'text', placeholder: 'Montag oder 18.11.2025', required: true },
+                            { name: 'uhrzeit', label: 'Uhrzeit (HH:MM)', type: 'time', required: true },
+                            { name: 'name', label: 'Kundenname', type: 'text', placeholder: 'Hans Schuster', required: true },
+                            { name: 'telefonnummer', label: 'Telefon', type: 'tel', placeholder: '+4915112345678', required: false }
+                        ]
+                    },
+                    {
+                        name: 'get_alternatives',
+                        label: 'get_alternatives',
+                        description: 'Schlägt alternative Zeitslots vor',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'service_name', label: 'Service', type: 'text', placeholder: 'Herrenhaarschnitt', required: true },
+                            { name: 'preferred_date', label: 'Wunsch-Datum', type: 'text', placeholder: 'morgen', required: true },
+                            { name: 'preferred_time', label: 'Wunsch-Zeit', type: 'time', required: false }
+                        ]
+                    },
+                    {
+                        name: 'list_services',
+                        label: 'list_services',
+                        description: 'Listet alle verfügbaren Services',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: []
+                    },
+                    {
+                        name: 'parse_date',
+                        label: 'parse_date',
+                        description: 'Parst Datumsangaben (morgen, Montag, etc.)',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'date_string', label: 'Datum-String', type: 'text', placeholder: 'morgen', required: true }
+                        ]
+                    },
+                    {
+                        name: 'query_appointment',
+                        label: 'query_appointment',
+                        description: 'Ruft Termine eines Kunden ab',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'phone_number', label: 'Telefonnummer', type: 'tel', placeholder: '+4915112345678', required: false },
+                            { name: 'customer_name', label: 'Name (alternative)', type: 'text', placeholder: 'Hans Schuster', required: false }
+                        ]
+                    },
+                    {
+                        name: 'cancel_appointment',
+                        label: 'cancel_appointment',
+                        description: 'Storniert einen Termin',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'appointment_id', label: 'Termin-ID', type: 'text', placeholder: '12345', required: true }
+                        ]
+                    },
+                    {
+                        name: 'reschedule_appointment',
+                        label: 'reschedule_appointment',
+                        description: 'Verschiebt einen Termin',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'appointment_id', label: 'Termin-ID', type: 'text', required: true },
+                            { name: 'new_date', label: 'Neues Datum', type: 'text', required: true },
+                            { name: 'new_time', label: 'Neue Uhrzeit', type: 'time', required: true }
+                        ]
+                    },
+                    {
+                        name: 'request_callback',
+                        label: 'request_callback',
+                        description: 'Erstellt Callback-Anfrage',
+                        endpoint: '/api/webhooks/retell/function',
+                        method: 'POST',
+                        params: [
+                            { name: 'customer_name', label: 'Name', type: 'text', required: true },
+                            { name: 'phone_number', label: 'Telefon', type: 'tel', required: true },
+                            { name: 'reason', label: 'Grund', type: 'textarea', placeholder: 'Termin buchen', required: true }
+                        ]
+                    }
+                ],
+
+                // Methods
+                getCurrentFunction() {
+                    return this.functions.find(f => f.name === this.selectedFunction);
+                },
+
+                updateForm() {
+                    this.formData = { call_id: 'test_' + Date.now() };
+                    this.response = null;
+                },
+
+                async sendRequest() {
+                    const func = this.getCurrentFunction();
+                    if (!func) return;
+
+                    this.loading = true;
+                    const startTime = performance.now();
+
+                    try {
+                        const callId = this.formData.call_id || 'test_' + Date.now();
+                        const args = { ...this.formData };
+                        delete args.call_id;
+
+                        let url = func.endpoint;
+                        let fetchOptions = {
+                            method: func.method,
+                            headers: { 'Content-Type': 'application/json' }
+                        };
+
+                        if (func.method === 'GET') {
+                            // GET: Use query parameters
+                            const params = new URLSearchParams(args);
+                            url += '?' + params.toString();
+                        } else {
+                            // POST: Use JSON body with Retell structure
+                            const payload = {
+                                name: func.name,
+                                call: { call_id: callId },
+                                args: args
+                            };
+                            fetchOptions.body = JSON.stringify(payload);
+                        }
+
+                        const res = await fetch(url, fetchOptions);
+                        const duration = Math.round(performance.now() - startTime);
+
+                        let data;
+                        const contentType = res.headers.get('content-type');
+
+                        if (contentType && contentType.includes('application/json')) {
+                            data = await res.json();
+                        } else {
+                            // HTML or other response
+                            const text = await res.text();
+                            data = {
+                                error: 'Server returned non-JSON response',
+                                http_status: res.status,
+                                content_type: contentType,
+                                response_preview: text.substring(0, 500)
+                            };
+                        }
+
+                        this.response = {
+                            success: res.ok && (data.success !== false),
+                            duration: duration,
+                            http_status: res.status,
+                            data: data
+                        };
+
+                        setTimeout(() => Prism.highlightAll(), 50);
+                    } catch (error) {
+                        this.response = {
+                            success: false,
+                            duration: Math.round(performance.now() - startTime),
+                            data: { error: error.message, stack: error.stack }
+                        };
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async runE2EFlow() {
+                    this.e2eRunning = true;
+                    this.e2eCompleted = false;
+                    this.e2eSuccess = false;
+                    this.resetE2ESteps();
+
+                    const testData = JSON.parse(this.e2eTestData);
+                    const callId = 'flow_test_' + Date.now();
+
+                    // Step 1: get_current_context
+                    await this.runE2EStep(0, async () => {
+                        const res = await fetch('/api/webhooks/retell/current-context', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ call: { call_id: callId } })
+                        });
+
+                        const contentType = res.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await res.json();
+                        } else {
+                            const text = await res.text();
+                            return {
+                                error: 'Server returned HTML instead of JSON',
+                                http_status: res.status,
+                                content_type: contentType,
+                                response_preview: text.substring(0, 1000)
+                            };
+                        }
+                    });
+
+                    // Step 2: check_customer
+                    await this.runE2EStep(1, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-customer', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: { telefonnummer: testData.phone }
+                            })
+                        });
+
+                        const contentType = res.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await res.json();
+                        } else {
+                            const text = await res.text();
+                            return {
+                                error: 'Server returned HTML instead of JSON',
+                                http_status: res.status,
+                                content_type: contentType,
+                                response_preview: text.substring(0, 1000)
+                            };
+                        }
+                    });
+
+                    // Step 3: extract_booking_variables (simulated)
+                    await this.runE2EStep(2, async () => {
+                        return {
+                            customer_name: testData.customer_name,
+                            service_name: testData.service,
+                            appointment_date: testData.date,
+                            appointment_time: testData.time,
+                            note: 'Simulated - extract_dynamic_variables ist Flow-Node'
+                        };
+                    });
+
+                    // Step 4: check_availability
+                    await this.runE2EStep(3, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-availability', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {
+                                    datum: testData.date,
+                                    uhrzeit: testData.time,
+                                    dienstleistung: testData.service
+                                }
+                            })
+                        });
+
+                        const contentType = res.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await res.json();
+                        } else {
+                            // HTML error page
+                            const text = await res.text();
+                            return {
+                                error: 'Server returned HTML instead of JSON',
+                                http_status: res.status,
+                                content_type: contentType,
+                                response_preview: text.substring(0, 1000)
+                            };
+                        }
+                    });
+
+                    // Step 5: start_booking
+                    await this.runE2EStep(4, async () => {
+                        const res = await fetch('/api/retell/v17/book-appointment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {
+                                    datum: testData.date,
+                                    uhrzeit: testData.time,
+                                    dienstleistung: testData.service,
+                                    name: testData.customer_name
+                                }
+                            })
+                        });
+
+                        const contentType = res.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await res.json();
+                        } else {
+                            const text = await res.text();
+                            return {
+                                error: 'Server returned HTML instead of JSON',
+                                http_status: res.status,
+                                content_type: contentType,
+                                response_preview: text.substring(0, 1000)
+                            };
+                        }
+                    });
+
+                    // Finalize
+                    this.e2eCompleted = true;
+                    this.e2eSuccess = this.e2eSteps.every(s => s.status === 'completed');
+                    this.e2eSummary = this.e2eSuccess
+                        ? 'Alle Schritte erfolgreich abgeschlossen!'
+                        : 'Einige Schritte sind fehlgeschlagen. Prüfe die Details oben.';
+                    this.e2eRunning = false;
+
+                    setTimeout(() => Prism.highlightAll(), 100);
+                },
+
+                async runE2EStep(stepIndex, fetchFn) {
+                    this.e2eSteps[stepIndex].status = 'running';
+                    const startTime = performance.now();
+
+                    try {
+                        const result = await fetchFn();
+                        const duration = Math.round(performance.now() - startTime);
+
+                        this.e2eSteps[stepIndex].status = 'completed';
+                        this.e2eSteps[stepIndex].result = result;
+                        this.e2eSteps[stepIndex].duration = duration;
+
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (error) {
+                        const duration = Math.round(performance.now() - startTime);
+                        this.e2eSteps[stepIndex].status = 'failed';
+                        this.e2eSteps[stepIndex].result = {
+                            error: error.message,
+                            stack: error.stack,
+                            step_name: this.e2eSteps[stepIndex].name
+                        };
+                        this.e2eSteps[stepIndex].duration = duration;
+                    }
+                },
+
+                resetE2ESteps() {
+                    this.e2eSteps.forEach(step => {
+                        step.status = 'pending';
+                        step.result = null;
+                        step.duration = null;
+                    });
+                },
+
+                resetE2EFlow() {
+                    this.resetE2ESteps();
+                    this.e2eCompleted = false;
+                    this.e2eSuccess = false;
+                    this.e2eSummary = '';
+                },
+
+                exportE2EResults() {
+                    const results = {
+                        success: this.e2eSuccess,
+                        call_id: 'flow_test_' + Date.now(),
+                        steps: this.e2eSteps,
+                        summary: this.e2eSummary
+                    };
+
+                    this.copyToClipboard(JSON.stringify(results, null, 2));
+                    alert('✅ E2E Results kopiert!');
+                },
+
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        console.log('Copied to clipboard');
+                    });
+                },
+
+                copyComparisonForFeedback() {
+                    const comparison = `
+=== Backend API Testing - Verfügbarkeits-Vergleich ===
+
+BACKEND RESPONSE:
+${this.response ? JSON.stringify(this.response.data, null, 2) : 'Keine Response vorhanden'}
+
+CAL.COM TATSÄCHLICH:
+${this.calcomComparison || 'Nicht ausgefüllt'}
+
+FUNKTION: ${this.selectedFunction || 'Keine'}
+TEST-DATEN: ${JSON.stringify(this.formData, null, 2)}
+ZEITSTEMPEL: ${new Date().toISOString()}
+                    `.trim();
+
+                    this.copyToClipboard(comparison);
+                    alert('✅ Vergleich kopiert! Du kannst ihn jetzt als Feedback einfügen.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

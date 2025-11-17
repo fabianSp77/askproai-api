@@ -30,20 +30,12 @@ class BranchResource extends Resource
     protected static ?string $model = Branch::class;
 
     /**
-     * Resource disabled - branches table missing 30+ columns in Sept 21 database backup
-     * Only has: id, company_id, name, slug, is_active, created_at, updated_at, deleted_at
-     * Missing: phone_number, address, city, calendar_mode, active, accepts_walkins, etc.
-     * TODO: Re-enable when database is fully restored
+     * ✅ FIXED 2025-11-14: Resource re-enabled after database verification
+     * All required columns confirmed present in branches table:
+     * phone_number, address, city, calendar_mode, active, accepts_walkins, etc.
      */
-    public static function shouldRegisterNavigation(): bool
-    {
-        return false;
-    }
-
-    public static function canViewAny(): bool
-    {
-        return false; // Prevents all access to this resource
-    }
+    // Removed shouldRegisterNavigation() - defaults to true
+    // Removed canViewAny() override - uses BranchPolicy automatically
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationGroup = 'Stammdaten';

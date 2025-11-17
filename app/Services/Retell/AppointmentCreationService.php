@@ -893,7 +893,9 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 'email' => $sanitizedEmail,
                 'phone' => $sanitizedPhone,
                 'timeZone' => self::DEFAULT_TIMEZONE,
-                'language' => self::DEFAULT_LANGUAGE
+                'language' => self::DEFAULT_LANGUAGE,
+                'title' => $service->name,          // Required for Cal.com bookingFieldsResponses
+                'service_name' => $service->name    // Fallback
             ];
 
             Log::info('📞 Attempting Cal.com booking (lock acquired)', [

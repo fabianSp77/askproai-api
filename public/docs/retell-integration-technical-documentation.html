@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell.ai Integration - Technische Dokumentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+
+        .method.post {
+            background: #28a745;
+            color: white;
+        }
+
+        .method.get {
+            background: #007bff;
+            color: white;
+        }
+
+        .url {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-weight: 500;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .flow-diagram {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .flow-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 5px 0;
+            display: block;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.required {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge.optional {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Retell.ai Integration</h1>
+            <p class="subtitle">Komplette technische Dokumentation der Voice AI Telefonassistent Integration</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Letzte Aktualisierung: 2025-11-13 | AskPro AI Gateway</p>
+        </header>
+
+        <div class="section toc">
+            <h2>📋 Inhaltsverzeichnis</h2>
+            <ul>
+                <li><a href="#overview">1. Übersicht & Architektur</a></li>
+                <li><a href="#webhooks">2. Webhook-Endpoints</a></li>
+                <li><a href="#function-calls">3. Function Call Handling</a></li>
+                <li><a href="#data-flow">4. Kompletter Datenfluss</a></li>
+                <li><a href="#services">5. Service Layer</a></li>
+                <li><a href="#calcom">6. Cal.com Integration</a></li>
+                <li><a href="#errors">7. Error Handling</a></li>
+                <li><a href="#examples">8. Vollständige Beispiele</a></li>
+            </ul>
+        </div>
+
+        <!-- SECTION 1: OVERVIEW -->
+        <div class="section" id="overview">
+            <h2>1. Übersicht & Architektur</h2>
+
+            <h3>Was ist Retell.ai?</h3>
+            <p>Retell.ai ist ein Voice AI Service, der:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Eingehende Telefonanrufe entgegennimmt</li>
+                <li>Text-to-Speech (TTS) für natürliche Sprachausgabe nutzt</li>
+                <li>Speech-to-Text (STT) für Spracherkennung nutzt</li>
+                <li>LLM (GPT-4) für Konversationslogik nutzt</li>
+                <li><strong>Function Calls</strong> an unser Backend sendet, um Daten abzurufen oder Aktionen durchzuführen</li>
+            </ul>
+
+            <div class="info">
+                <strong>💡 Wichtig:</strong> Retell.ai ist NICHT unser Backend. Es ist ein externer Service, der unsere API-Endpoints aufruft, um Terminbuchungen, Verfügbarkeiten etc. zu verarbeiten.
+            </div>
+
+            <h3>System-Architektur</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div>
+                        <strong>Kunde ruft an</strong><br>
+                        <code>+49 30 33081738</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div>
+                        <strong>Retell.ai empfängt Anruf</strong><br>
+                        Twilio SIP → Retell.ai Infrastructure
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div>
+                        <strong>Agent antwortet (TTS)</strong><br>
+                        "Willkommen bei Friseur 1! Wie kann ich helfen?"
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div>
+                        <strong>Kunde spricht</strong><br>
+                        "Herrenhaarschnitt morgen 10 Uhr bitte"
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div>
+                        <strong>Retell.ai → STT → LLM</strong><br>
+                        Text wird an GPT-4 gesendet mit Conversation Flow
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">6</div>
+                    <div>
+                        <strong>LLM entscheidet: Function Call nötig</strong><br>
+                        <code>check_availability_v17(...)</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">7</div>
+                    <div>
+                        <strong>Retell.ai → Webhook an unser Backend</strong><br>
+                        <code>POST https://api.askproai.de/api/webhooks/retell/function-call</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">8</div>
+                    <div>
+                        <strong>Unser Backend verarbeitet</strong><br>
+                        RetellFunctionCallHandler.php → CalcomService.php
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">9</div>
+                    <div>
+                        <strong>Backend → Cal.com API</strong><br>
+                        Verfügbarkeit prüfen
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">10</div>
+                    <div>
+                        <strong>Response zurück an Retell.ai</strong><br>
+                        JSON mit Verfügbarkeit + Alternativen
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">11</div>
+                    <div>
+                        <strong>Retell.ai → LLM formuliert Antwort</strong><br>
+                        "Um 10 Uhr ist leider belegt, aber um 9:45..."
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">12</div>
+                    <div>
+                        <strong>Agent spricht (TTS)</strong><br>
+                        Kunde hört die Antwort
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: WEBHOOKS -->
+        <div class="section" id="webhooks">
+            <h2>2. Webhook-Endpoints</h2>
+
+            <p>Alle Endpoints sind in <code>routes/api.php</code> definiert und zeigen auf <code>RetellFunctionCallHandler.php</code></p>
+
+            <h3>2.1 Call Lifecycle Webhooks</h3>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/webhooks/retell/call-started</span>
+                <p style="margin-top: 10px;"><strong>Zweck:</strong> Wird aufgerufen wenn ein Anruf beginnt</p>
+                <p><strong>Handler:</strong> <code>RetellApiController::handleCallStarted()</code></p>
+                <p><strong>Input-Daten:</strong></p>
+                <pre><code>{
+  "event": "call_started",
+  "call": {
+    "call_id": "call_abc123...",
+    "agent_id": "agent_7a24afda65b04d1cd79fa11e8f",
+    "from_number": "+4915112345678",
+    "to_number": "+493033081738",
+    "direction": "inbound",
+    "call_type": "phone_call",
+    "start_timestamp": 1763029833727
+  }
+}</code></pre>
+                <p><strong>Was passiert:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Call-Record wird in DB erstellt</li>
+                    <li>call_id wird für Tracking gespeichert</li>
+                    <li>Status: "initiated"</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/webhooks/retell/call-ended</span>
+                <p style="margin-top: 10px;"><strong>Zweck:</strong> Wird aufgerufen wenn ein Anruf endet</p>
+                <p><strong>Handler:</strong> <code>RetellApiController::handleCallEnded()</code></p>
+                <p><strong>Input-Daten:</strong></p>
+                <pre><code>{
+  "event": "call_ended",
+  "call": {
+    "call_id": "call_abc123...",
+    "end_timestamp": 1763029916026,
+    "duration_ms": 82299,
+    "transcript": "Agent: Willkommen...\nUser: Herrenhaarschnitt...",
+    "recording_url": "https://...",
+    "call_analysis": {
+      "call_summary": "User requested haircut...",
+      "user_sentiment": "Neutral",
+      "call_successful": true
+    },
+    "disconnection_reason": "user_hangup"
+  }
+}</code></pre>
+                <p><strong>Was passiert:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Transcript wird gespeichert</li>
+                    <li>Call Analysis wird in DB geschrieben</li>
+                    <li>Recording URL wird gespeichert</li>
+                    <li>Status: "ended"</li>
+                </ul>
+            </div>
+
+            <h3>2.2 Function Call Webhook (WICHTIGSTER ENDPOINT!)</h3>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/webhooks/retell/function-call</span>
+                <p style="margin-top: 10px;"><strong>Zweck:</strong> Retell.ai ruft diesen Endpoint auf wenn der Agent eine Funktion aufrufen muss</p>
+                <p><strong>Handler:</strong> <code>RetellFunctionCallHandler::handleFunctionCall()</code></p>
+                <p><strong>Input-Daten (Retell sendet):</strong></p>
+                <pre><code>{
+  "call": {
+    "call_id": "call_4eaa8eb824101ed282f852f3d99",
+    "agent_id": "agent_7a24afda65b04d1cd79fa11e8f"
+  },
+  "name": "check_availability_v17",  // ← Funktionsname
+  "arguments": {                      // ← Parameter
+    "dienstleistung": "Herrenhaarschnitt",
+    "datum": "morgen",
+    "uhrzeit": "10:00",
+    "name": "Hans Schuster",
+    "call_id": "call_4eaa8eb824101ed282f852f3d99"
+  }
+}</code></pre>
+
+                <div class="warning">
+                    <strong>⚠️ WICHTIG - Payload-Struktur Variationen:</strong><br>
+                    Retell sendet manchmal <code>name</code>, manchmal <code>function_name</code>.<br>
+                    Retell sendet manchmal <code>arguments</code>, manchmal <code>args</code>, manchmal <code>parameters</code>.<br>
+                    <strong>RetellFunctionCallHandler.php Lines 305-308</strong> handhabt alle Varianten!
+                </div>
+
+                <p><strong>Output-Daten (wir senden zurück):</strong></p>
+                <pre><code>{
+  "success": true,
+  "available": false,
+  "service": "Herrenhaarschnitt",
+  "requested_time": "2025-11-14 10:00",
+  "alternatives": [
+    {
+      "time": "2025-11-14 09:45",
+      "spoken": "morgen um 9 Uhr 45",
+      "available": true,
+      "type": "same_day_later"
+    },
+    {
+      "time": "2025-11-14 08:50",
+      "spoken": "morgen um 8 Uhr 50",
+      "available": true,
+      "type": "same_day_later"
+    }
+  ],
+  "message": "Zur gewünschten Zeit nicht frei, aber am gleichen Tag..."
+}</code></pre>
+
+                <div class="info">
+                    <strong>💡 Antwort-Format:</strong> Retell.ai erwartet JSON. Die LLM nutzt dann die Daten um eine natürliche Antwort zu formulieren.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: FUNCTION CALLS -->
+        <div class="section" id="function-calls">
+            <h2>3. Function Call Handling</h2>
+
+            <p>Der <code>RetellFunctionCallHandler.php</code> ist der zentrale Controller der ALLE Function Calls verarbeitet.</p>
+
+            <h3>3.1 Verfügbare Funktionen</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Funktionsname</th>
+                        <th>Zweck</th>
+                        <th>Handler Method</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>get_current_context</code></td>
+                        <td>Aktuelles Datum, Zeit, Kundeninfo laden</td>
+                        <td>ContextService</td>
+                    </tr>
+                    <tr>
+                        <td><code>check_customer</code></td>
+                        <td>Prüfen ob Kunde existiert (via Telefonnummer)</td>
+                        <td>CustomerMatchingService</td>
+                    </tr>
+                    <tr>
+                        <td><code>check_availability_v17</code></td>
+                        <td>Verfügbarkeit für Service + Zeit prüfen</td>
+                        <td>checkAvailabilityV17()</td>
+                    </tr>
+                    <tr>
+                        <td><code>start_booking</code></td>
+                        <td>Termin buchen</td>
+                        <td>AppointmentCreationService</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_appointments</code></td>
+                        <td>Termine eines Kunden laden</td>
+                        <td>getCustomerAppointments()</td>
+                    </tr>
+                    <tr>
+                        <td><code>cancel_appointment</code></td>
+                        <td>Termin stornieren</td>
+                        <td>cancelAppointment()</td>
+                    </tr>
+                    <tr>
+                        <td><code>reschedule_appointment</code></td>
+                        <td>Termin verschieben</td>
+                        <td>rescheduleAppointment()</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>3.2 Function Call Flow im Detail</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div>
+                        <strong>Webhook Request empfangen</strong><br>
+                        <code>RetellFunctionCallHandler::handleFunctionCall()</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div>
+                        <strong>Payload-Normalisierung</strong><br>
+                        Lines 305-308: Handle <code>name</code> vs <code>function_name</code><br>
+                        Lines 306: Handle <code>arguments</code> vs <code>args</code> vs <code>parameters</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div>
+                        <strong>call_id Extraktion & Validation</strong><br>
+                        Lines 308-350: Handle verschiedene call_id Locations<br>
+                        Fix für "None", "null", Placeholder-Werte
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div>
+                        <strong>Function Name Normalisierung</strong><br>
+                        Lines 352-363: Strip version suffix (_v17, _v18)<br>
+                        <code>book_appointment_v17</code> → <code>book_appointment</code>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div>
+                        <strong>Function Call Tracking START</strong><br>
+                        Lines 367-379: Create retell_function_traces entry<br>
+                        Status: "pending", Start-Timestamp erfassen
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">6</div>
+                    <div>
+                        <strong>Function Router (Switch Statement)</strong><br>
+                        Lines 381-550: Route zu korrekter Handler-Method
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">7</div>
+                    <div>
+                        <strong>Handler-Method ausführen</strong><br>
+                        z.B. <code>checkAvailabilityV17()</code><br>
+                        → Service Layer → Cal.com API
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">8</div>
+                    <div>
+                        <strong>Response formatieren</strong><br>
+                        WebhookResponseService formatiert für Retell.ai
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">9</div>
+                    <div>
+                        <strong>Function Call Tracking END</strong><br>
+                        Update retell_function_traces:<br>
+                        Status: "completed" / "failed"<br>
+                        Duration, Output, Error speichern
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">10</div>
+                    <div>
+                        <strong>JSON Response senden</strong><br>
+                        Return HTTP 200 + JSON Payload
+                    </div>
+                </div>
+            </div>
+
+            <h3>3.3 Detailliertes Beispiel: check_availability_v17</h3>
+
+            <p><strong>Retell sendet:</strong></p>
+            <pre><code>{
+  "call": {
+    "call_id": "call_4eaa8eb824101ed282f852f3d99"
+  },
+  "name": "check_availability_v17",
+  "arguments": {
+    "dienstleistung": "Herrenhaarschnitt",
+    "datum": "morgen",
+    "uhrzeit": "10:00",
+    "name": "Hans Schuster",
+    "call_id": "call_4eaa8eb824101ed282f852f3d99"
+  }
+}</code></pre>
+
+            <p><strong>Was passiert im Backend:</strong></p>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div>
+                        <strong>checkAvailabilityV17()</strong> (Line ~650)<br>
+                        Parameter extrahieren: dienstleistung, datum, uhrzeit
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div>
+                        <strong>Service finden</strong><br>
+                        <code>ServiceSelectionService::selectService("Herrenhaarschnitt")</code><br>
+                        Fuzzy matching: "herren schnitt" → Service ID
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div>
+                        <strong>Datum parsen</strong><br>
+                        <code>DateTimeParser::parseRelativeDate("morgen")</code><br>
+                        "morgen" → 2025-11-14
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div>
+                        <strong>Cal.com API Call</strong><br>
+                        <code>CalcomService::checkAvailability(service, datetime, duration)</code><br>
+                        GET /slots?eventTypeId=3757770&startTime=...
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div>
+                        <strong>Alternativen finden</strong><br>
+                        <code>AppointmentAlternativeFinder::findAlternatives()</code><br>
+                        Same-day, Next-day, Next-week Slots
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-number">6</div>
+                    <div>
+                        <strong>Response formatieren</strong><br>
+                        JSON mit available, alternatives[], message
+                    </div>
+                </div>
+            </div>
+
+            <p><strong>Wir senden zurück:</strong></p>
+            <pre><code>{
+  "success": true,
+  "available": false,
+  "service": "Herrenhaarschnitt",
+  "requested_time": "2025-11-14 10:00",
+  "alternatives": [
+    {
+      "time": "2025-11-14 09:45",
+      "spoken": "morgen um 9 Uhr 45",
+      "available": true,
+      "type": "same_day_later"
+    }
+  ],
+  "message": "Zur gewünschten Zeit nicht frei, aber am gleichen Tag habe ich noch: morgen um 9 Uhr 45. Was würde Ihnen passen?"
+}</code></pre>
+        </div>
+
+        <!-- SECTION 4: DATA FLOW -->
+        <div class="section" id="data-flow">
+            <h2>4. Kompletter Datenfluss einer Terminbuchung</h2>
+
+            <h3>4.1 Schritt-für-Schritt mit allen Daten</h3>
+
+            <div class="flow-diagram">
+                <h4 style="margin-bottom: 15px;">📞 Schritt 1: Call Initiated</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /call-started</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "event": "call_started",
+  "call_id": "call_xyz123",
+  "from_number": "+4915112345678",
+  "to_number": "+493033081738"
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend creates Call record</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>DB INSERT INTO calls:
+- call_id: "call_xyz123"
+- from_number: "+4915112345678"
+- status: "initiated"
+- started_at: NOW()</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">🎯 Schritt 2: Context laden</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /function-call</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "name": "get_current_context",
+  "arguments": {
+    "call_id": "call_xyz123"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend Response</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "success": true,
+  "call_id": "call_xyz123",
+  "customer": {
+    "status": "anonymous",
+    "message": "Neuer Anruf"
+  },
+  "current_time": {
+    "iso": "2025-11-13T11:30:43+01:00",
+    "date": "2025-11-13",
+    "time": "11:30",
+    "weekday": "Donnerstag"
+  },
+  "policies": {
+    "reschedule_hours": 24,
+    "cancel_hours": 24
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">👤 Schritt 3: Kunde identifizieren</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /function-call</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "name": "check_customer",
+  "arguments": {
+    "phone": "+4915112345678",
+    "call_id": "call_xyz123"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend prüft DB</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>SELECT * FROM customers
+WHERE phone = '+4915112345678'</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend Response (Neukunde)</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "success": true,
+  "status": "new_customer",
+  "customer_exists": false,
+  "message": "Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen."
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">📅 Schritt 4: Verfügbarkeit prüfen</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /function-call</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "name": "check_availability_v17",
+  "arguments": {
+    "dienstleistung": "Herrenhaarschnitt",
+    "datum": "morgen",
+    "uhrzeit": "10:00",
+    "name": "Hans Schuster",
+    "call_id": "call_xyz123"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend → Cal.com API</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>GET https://api.cal.com/v2/slots/available
+?eventTypeId=3757770
+&startTime=2025-11-14T10:00:00Z
+&endTime=2025-11-14T10:45:00Z</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Cal.com Response</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "data": {
+    "slots": {
+      "2025-11-14": []  // Keine Slots um 10:00
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend findet Alternativen</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>AppointmentAlternativeFinder:
+- Same day: 09:45 ✓, 08:50 ✓
+- Next day: 10:00 ✓</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend Response</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "success": true,
+  "available": false,
+  "requested_time": "2025-11-14 10:00",
+  "alternatives": [
+    {
+      "time": "2025-11-14 09:45",
+      "spoken": "morgen um 9 Uhr 45",
+      "available": true
+    }
+  ],
+  "message": "Zur gewünschten Zeit nicht frei..."
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">✅ Schritt 5: Termin buchen</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /function-call</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "name": "start_booking",
+  "arguments": {
+    "service_name": "Herrenhaarschnitt",
+    "datetime": "2025-11-14 09:45",
+    "customer_name": "Hans Schuster",
+    "customer_email": "test@example.com",
+    "customer_phone": "+4915112345678",
+    "call_id": "call_xyz123"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend: Customer erstellen/finden</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>AppointmentCustomerResolver:
+- Check if customer exists
+- Create if new
+- Return customer_id</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend: Appointment erstellen</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>AppointmentCreationService:
+INSERT INTO appointments:
+- customer_id
+- service_id
+- scheduled_at: 2025-11-14 09:45
+- status: "confirmed"
+- source: "retell_ai"</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend → Cal.com API</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>POST https://api.cal.com/v2/bookings
+{
+  "eventTypeId": 3757770,
+  "start": "2025-11-14T09:45:00Z",
+  "attendee": {
+    "name": "Hans Schuster",
+    "email": "test@example.com",
+    "timeZone": "Europe/Berlin"
+  },
+  "bookingFieldsResponses": {
+    "title": "Herrenhaarschnitt",
+    "phone": "+4915112345678"
+  },
+  "metadata": {
+    "call_id": "call_xyz123",
+    "booked_via": "retell_ai",
+    "attempt": "1"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Cal.com Response</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "status": "success",
+  "data": {
+    "id": 123456,
+    "uid": "abc-def-ghi",
+    "status": "ACCEPTED"
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend: Update Appointment</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>UPDATE appointments SET:
+- calcom_booking_id = 123456
+- calcom_booking_uid = "abc-def-ghi"
+- synced_to_calcom_at = NOW()</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend Response</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "success": true,
+  "appointment_id": 789,
+  "booking_uid": "abc-def-ghi",
+  "message": "Termin erfolgreich gebucht",
+  "confirmation": {
+    "service": "Herrenhaarschnitt",
+    "datetime": "2025-11-14 09:45",
+    "customer": "Hans Schuster"
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram" style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">📞 Schritt 6: Call Ended</h4>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Retell → POST /call-ended</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>{
+  "event": "call_ended",
+  "call_id": "call_xyz123",
+  "transcript": "Full conversation...",
+  "recording_url": "https://...",
+  "call_analysis": {
+    "call_successful": true,
+    "call_summary": "User booked haircut..."
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">↓</div>
+                    <div>
+                        <strong>Backend updates Call record</strong>
+                        <pre style="margin-top: 10px; font-size: 0.85em;"><code>UPDATE calls SET:
+- status = "ended"
+- transcript = "..."
+- call_successful = true
+- ended_at = NOW()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: SERVICES -->
+        <div class="section" id="services">
+            <h2>5. Service Layer</h2>
+
+            <h3>5.1 Service-Übersicht</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Datei</th>
+                        <th>Zweck</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ContextService</strong></td>
+                        <td>app/Services/ContextService.php</td>
+                        <td>Lädt aktuelles Datum, Zeit, Policies</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CustomerMatchingService</strong></td>
+                        <td>app/Services/CustomerMatchingService.php</td>
+                        <td>Findet Kunden via Telefonnummer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CalcomService</strong></td>
+                        <td>app/Services/CalcomService.php</td>
+                        <td>Cal.com API Kommunikation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AppointmentCreationService</strong></td>
+                        <td>app/Services/Retell/AppointmentCreationService.php</td>
+                        <td>Terminbuchung mit Cal.com Sync</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ServiceSelectionService</strong></td>
+                        <td>app/Services/Retell/ServiceSelectionService.php</td>
+                        <td>Service-Matching (fuzzy)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DateTimeParser</strong></td>
+                        <td>app/Services/Retell/DateTimeParser.php</td>
+                        <td>Relative Datumsangaben parsen</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AppointmentAlternativeFinder</strong></td>
+                        <td>app/Services/AppointmentAlternativeFinder.php</td>
+                        <td>Alternative Zeitslots finden</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebhookResponseService</strong></td>
+                        <td>app/Services/Retell/WebhookResponseService.php</td>
+                        <td>Responses für Retell formatieren</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>5.2 CalcomService Details</h3>
+
+            <p><code>app/Services/CalcomService.php</code> ist der zentrale Service für Cal.com Integration.</p>
+
+            <h4>Wichtigste Methods:</h4>
+
+            <div class="endpoint">
+                <strong>checkAvailability($service, $datetime, $duration)</strong>
+                <p style="margin-top: 10px;"><strong>Input:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><code>$service</code>: Service Model (contains calcom_event_type_id)</li>
+                    <li><code>$datetime</code>: Carbon instance</li>
+                    <li><code>$duration</code>: Integer (minutes)</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>Cal.com API Call:</strong></p>
+                <pre><code>GET /slots/available
+?eventTypeId={service->calcom_event_type_id}
+&startTime={datetime->toIso8601String()}
+&endTime={datetime->addMinutes($duration)->toIso8601String()}</code></pre>
+                <p style="margin-top: 10px;"><strong>Output:</strong></p>
+                <pre><code>[
+  "available" => true/false,
+  "slots" => [...],
+  "cache_hit" => true/false
+]</code></pre>
+            </div>
+
+            <div class="endpoint" style="margin-top: 20px;">
+                <strong>createBooking($bookingData)</strong>
+                <p style="margin-top: 10px;"><strong>Input:</strong></p>
+                <pre><code>$bookingData = [
+  'eventTypeId' => 3757770,
+  'startTime' => '2025-11-14T09:45:00Z',
+  'endTime' => '2025-11-14T10:30:00Z',
+  'name' => 'Hans Schuster',
+  'email' => 'test@example.com',
+  'phone' => '+4915112345678',
+  'timeZone' => 'Europe/Berlin',
+  'language' => 'de',
+  'title' => 'Herrenhaarschnitt',      // ← WICHTIG!
+  'service_name' => 'Herrenhaarschnitt' // ← Fallback
+]</code></pre>
+                <p style="margin-top: 10px;"><strong>Cal.com Payload (wird gebaut):</strong></p>
+                <pre><code>{
+  "eventTypeId": 3757770,
+  "start": "2025-11-14T09:45:00Z",
+  "end": "2025-11-14T10:30:00Z",
+  "attendee": {
+    "name": "Hans Schuster",
+    "email": "test@example.com",
+    "timeZone": "Europe/Berlin",
+    "language": "de"
+  },
+  "bookingFieldsResponses": {
+    "title": "Herrenhaarschnitt",  // ← Lines 146-154
+    "phone": "+4915112345678"
+  },
+  "metadata": {
+    "call_id": "...",
+    "booked_via": "retell_ai",
+    "attempt": "1"  // ← String, not number!
+  }
+}</code></pre>
+                <div class="warning" style="margin-top: 15px;">
+                    <strong>⚠️ KRITISCH - title Field Placement:</strong><br>
+                    Das <code>title</code> Feld MUSS in <code>bookingFieldsResponses</code> sein, NICHT im root-level payload!<br>
+                    <strong>CalcomService.php Lines 146-154</strong> macht diese Transformation.<br>
+                    <strong>AppointmentCreationService.php Lines 897-898</strong> liefert title im $bookingData array.
+                </div>
+                <div class="error" style="margin-top: 15px;">
+                    <strong>❌ FEHLER wenn title fehlt:</strong><br>
+                    <code>{"code":"BAD_REQUEST","message":"responses - {title}error_required_field"}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: CAL.COM -->
+        <div class="section" id="calcom">
+            <h2>6. Cal.com Integration</h2>
+
+            <h3>6.1 Cal.com API v2 Endpoints die wir nutzen</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Zweck</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>/slots/available</code></td>
+                        <td>GET</td>
+                        <td>Verfügbare Zeitslots abfragen</td>
+                    </tr>
+                    <tr>
+                        <td><code>/bookings</code></td>
+                        <td>POST</td>
+                        <td>Termin buchen</td>
+                    </tr>
+                    <tr>
+                        <td><code>/bookings/{uid}</code></td>
+                        <td>GET</td>
+                        <td>Termin-Details abrufen</td>
+                    </tr>
+                    <tr>
+                        <td><code>/bookings/{uid}/cancel</code></td>
+                        <td>POST</td>
+                        <td>Termin stornieren</td>
+                    </tr>
+                    <tr>
+                        <td><code>/bookings/{uid}/reschedule</code></td>
+                        <td>POST</td>
+                        <td>Termin verschieben</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>6.2 Cal.com Booking Payload Struktur</h3>
+
+            <div class="info">
+                <strong>💡 Wichtig:</strong> Cal.com V2 API hat sehr strikte Validation. Alle Felder müssen exakt richtig sein!
+            </div>
+
+            <h4>Korrekte Payload-Struktur:</h4>
+            <pre><code>{
+  "eventTypeId": 3757770,              // REQUIRED - Integer
+  "start": "2025-11-14T09:45:00Z",     // REQUIRED - ISO8601 UTC
+  "end": "2025-11-14T10:30:00Z",       // REQUIRED - ISO8601 UTC (start + duration)
+
+  "attendee": {                        // REQUIRED
+    "name": "Hans Schuster",           // REQUIRED - String
+    "email": "test@example.com",       // REQUIRED - Valid email
+    "timeZone": "Europe/Berlin",       // REQUIRED - IANA timezone
+    "language": "de"                   // OPTIONAL
+  },
+
+  "bookingFieldsResponses": {          // REQUIRED
+    "title": "Herrenhaarschnitt",      // REQUIRED - Service name
+    "phone": "+4915112345678"          // REQUIRED - E164 format
+  },
+
+  "metadata": {                        // OPTIONAL
+    "call_id": "call_xyz123",          // String
+    "booked_via": "retell_ai",         // String
+    "attempt": "1"                     // String (NICHT Integer!)
+  }
+}</code></pre>
+
+            <h4>Häufige Fehler:</h4>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fehler</th>
+                        <th>Ursache</th>
+                        <th>Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>title - error_required_field</code></td>
+                        <td>title fehlt in bookingFieldsResponses</td>
+                        <td>title MUSS in bookingFieldsResponses sein</td>
+                    </tr>
+                    <tr>
+                        <td><code>title should not exist</code></td>
+                        <td>title ist im root-level payload</td>
+                        <td>title NUR in bookingFieldsResponses</td>
+                    </tr>
+                    <tr>
+                        <td><code>metadata.attempt - Expected string, received number</code></td>
+                        <td>attempt ist Integer statt String</td>
+                        <td>Cast zu string: <code>(string)$attempt</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Invalid email format</code></td>
+                        <td>Email-Validation fehlgeschlagen</td>
+                        <td>Fallback: <code>noreply+{sanitized}@askproai.de</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Invalid timezone</code></td>
+                        <td>Nicht-IANA timezone</td>
+                        <td>Immer <code>Europe/Berlin</code> verwenden</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 7: ERRORS -->
+        <div class="section" id="errors">
+            <h2>7. Error Handling</h2>
+
+            <h3>7.1 Error Response Format</h3>
+
+            <p>Bei Fehlern senden wir IMMER HTTP 200 zurück (damit Retell nicht abbricht), aber mit <code>success: false</code></p>
+
+            <pre><code>{
+  "success": false,
+  "error": "Human-readable error message",
+  "error_code": "SERVICE_NOT_FOUND",  // Optional
+  "context": {
+    "current_date": "2025-11-13",
+    "current_time": "11:30"
+  }
+}</code></pre>
+
+            <h3>7.2 Häufige Fehler & Handling</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fehler</th>
+                        <th>HTTP Code</th>
+                        <th>Was Backend tut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Service nicht gefunden</td>
+                        <td>200</td>
+                        <td>
+                            <code>success: false</code><br>
+                            error: "Dieser Service ist leider nicht verfügbar"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cal.com API Error</td>
+                        <td>200</td>
+                        <td>
+                            <code>success: false</code><br>
+                            error: "Technisches Problem bei der Buchung"<br>
+                            Log: Full Cal.com error für Debugging
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Ungültiges Datum</td>
+                        <td>200</td>
+                        <td>
+                            <code>success: false</code><br>
+                            error: "Das Datum konnte nicht verstanden werden"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Keine Verfügbarkeit</td>
+                        <td>200</td>
+                        <td>
+                            <code>success: true, available: false</code><br>
+                            alternatives: [...]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Customer save failed</td>
+                        <td>200</td>
+                        <td>
+                            <code>success: false</code><br>
+                            error: "Kundendaten konnten nicht gespeichert werden"
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>7.3 Logging</h3>
+
+            <p>Alle Function Calls werden in <code>retell_function_traces</code> getrackt:</p>
+
+            <pre><code>retell_function_traces:
+- id
+- call_session_id
+- function_name
+- execution_sequence
+- started_at
+- completed_at
+- duration_ms
+- status (pending/completed/failed)
+- input_params (JSON)
+- output_data (JSON)
+- error_message
+- error_trace</code></pre>
+
+            <div class="info">
+                <strong>💡 Debugging:</strong> Für jeden Call kann man alle Function Calls + Timing + Errors sehen!
+            </div>
+        </div>
+
+        <!-- SECTION 8: EXAMPLES -->
+        <div class="section" id="examples">
+            <h2>8. Vollständige Beispiele</h2>
+
+            <h3>8.1 Erfolgreiche Buchung - Kompletter Flow</h3>
+
+            <div class="flow-diagram">
+                <h4>Request 1: get_current_context</h4>
+                <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "get_current_context",
+  "arguments": {"call_id": "call_abc123"}
+}
+
+→ Response:
+{
+  "success": true,
+  "current_time": {
+    "date": "2025-11-13",
+    "time": "11:30",
+    "weekday": "Donnerstag"
+  }
+}</code></pre>
+            </div>
+
+            <div class="flow-diagram">
+                <h4>Request 2: check_customer</h4>
+                <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "check_customer",
+  "arguments": {
+    "phone": "+4915112345678",
+    "call_id": "call_abc123"
+  }
+}
+
+→ Response:
+{
+  "success": true,
+  "status": "new_customer",
+  "customer_exists": false,
+  "message": "Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen."
+}</code></pre>
+            </div>
+
+            <div class="flow-diagram">
+                <h4>Request 3: check_availability_v17</h4>
+                <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "check_availability_v17",
+  "arguments": {
+    "dienstleistung": "Herrenhaarschnitt",
+    "datum": "morgen",
+    "uhrzeit": "10:00",
+    "name": "Hans Schuster",
+    "call_id": "call_abc123"
+  }
+}
+
+→ Backend checks Cal.com API
+→ Finds alternatives
+
+→ Response:
+{
+  "success": true,
+  "available": false,
+  "service": "Herrenhaarschnitt",
+  "requested_time": "2025-11-14 10:00",
+  "alternatives": [
+    {
+      "time": "2025-11-14 09:45",
+      "spoken": "morgen um 9 Uhr 45",
+      "available": true
+    }
+  ],
+  "message": "Zur gewünschten Zeit nicht frei, aber am gleichen Tag habe ich noch: morgen um 9 Uhr 45. Was würde Ihnen passen?"
+}</code></pre>
+            </div>
+
+            <div class="flow-diagram">
+                <h4>Request 4: start_booking</h4>
+                <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "start_booking",
+  "arguments": {
+    "service_name": "Herrenhaarschnitt",
+    "datetime": "2025-11-14 09:45",
+    "customer_name": "Hans Schuster",
+    "customer_email": "test@example.com",
+    "customer_phone": "+4915112345678",
+    "call_id": "call_abc123"
+  }
+}
+
+→ Backend:
+   1. Creates/finds Customer
+   2. Creates Appointment in DB
+   3. Calls Cal.com API to create booking
+   4. Updates Appointment with Cal.com UID
+
+→ Response:
+{
+  "success": true,
+  "appointment_id": 789,
+  "booking_uid": "abc-def-ghi",
+  "message": "Termin erfolgreich gebucht für Donnerstag, 14. November um 9:45 Uhr",
+  "confirmation": {
+    "service": "Herrenhaarschnitt",
+    "datetime": "2025-11-14 09:45",
+    "customer": "Hans Schuster",
+    "duration": "45 Minuten"
+  }
+}</code></pre>
+            </div>
+
+            <h3>8.2 Fehlerfall - Service nicht gefunden</h3>
+
+            <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "check_availability_v17",
+  "arguments": {
+    "dienstleistung": "Regenbogen Einhorn Schnitt",  // Gibt's nicht
+    "datum": "morgen",
+    "uhrzeit": "10:00"
+  }
+}
+
+→ Response:
+{
+  "success": false,
+  "error": "Dieser Service ist leider nicht verfügbar. Verfügbare Services: Herrenhaarschnitt, Damenhaarschnitt, Dauerwelle, Bartpflege",
+  "context": {
+    "current_date": "2025-11-13",
+    "current_time": "11:30"
+  }
+}</code></pre>
+
+            <h3>8.3 Fehlerfall - Cal.com Buchung fehlgeschlagen</h3>
+
+            <pre><code>POST /api/webhooks/retell/function-call
+{
+  "name": "start_booking",
+  "arguments": {
+    "service_name": "Herrenhaarschnitt",
+    "datetime": "2025-11-14 09:45",
+    "customer_name": "Hans Schuster",
+    "customer_email": "invalid-email",  // Invalid!
+    "customer_phone": "+4915112345678"
+  }
+}
+
+→ Backend validates email, uses fallback
+→ Cal.com API call fails (other reason)
+
+→ Response:
+{
+  "success": false,
+  "error": "Es gab leider ein technisches Problem bei der Buchung. Unsere Mitarbeiter werden Sie in den nächsten 30 Minuten zurückrufen.",
+  "context": {
+    "current_date": "2025-11-13",
+    "current_time": "11:30"
+  }
+}
+
+→ DB: Appointment marked as "failed"
+→ Logs: Full Cal.com error details</code></pre>
+        </div>
+
+        <div class="section" style="background: #f8f9fa; border-left: 4px solid #667eea;">
+            <h2>📚 Weitere Ressourcen</h2>
+            <ul style="margin-left: 20px; margin-top: 15px;">
+                <li><strong>Retell.ai Docs:</strong> <a href="https://docs.retellai.com" target="_blank">https://docs.retellai.com</a></li>
+                <li><strong>Cal.com API Docs:</strong> <a href="https://cal.com/docs/api" target="_blank">https://cal.com/docs/api</a></li>
+                <li><strong>Code Repository:</strong> <code>/var/www/api-gateway/</code></li>
+                <li><strong>Logs:</strong> <code>/var/www/api-gateway/storage/logs/laravel.log</code></li>
+                <li><strong>Database:</strong> <code>retell_function_traces</code>, <code>calls</code>, <code>appointments</code></li>
+            </ul>
+        </div>
+
+        <footer style="text-align: center; padding: 40px 20px; color: #6c757d;">
+            <p>AskPro AI Gateway - Retell.ai Integration Documentation</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Erstellt: 2025-11-13 | Version 1.0</p>
+        </footer>
+    </div>
+</body>
+</html>

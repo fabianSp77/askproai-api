@@ -148,6 +148,17 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/processing-time-health.log'));
+
+        // 📞 CALLBACK SLA MONITORING (2025-11-13)
+
+        // Callback SLA check - runs every 5 minutes during business hours
+        // Monitors callback response times and triggers alerts/escalations
+        // Thresholds: 60min (warning), 90min (critical), 120min (escalation)
+        $schedule->job(new \App\Jobs\CheckCallbackSlaJob())
+            ->everyFiveMinutes()
+            ->between('8:00', '20:00')
+            ->timezone('Europe/Berlin')
+            ->withoutOverlapping();
     }
 
     protected function commands(): void

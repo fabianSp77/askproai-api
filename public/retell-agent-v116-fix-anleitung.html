@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Retell Agent V116 - Fix Anleitung</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 1200px;
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #764ba2;
+        }
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .badge-custom {
+            padding: 8px 15px;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .alert-info {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            border: none;
+            border-left: 4px solid #00acc1;
+        }
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: none;
+            border-left: 4px solid #fb8c00;
+        }
+        .alert-success {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: none;
+            border-left: 4px solid #43a047;
+        }
+        .alert-danger {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border: none;
+            border-left: 4px solid #e53935;
+        }
+        .code-block {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .code-block pre {
+            margin: 0;
+            color: #f8f8f2;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .step-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        .step-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        .checklist li {
+            padding: 10px 0;
+            padding-left: 40px;
+            position: relative;
+        }
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 24px;
+            color: #667eea;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            line-height: 2;
+        }
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .print-btn {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            border-left: 3px solid #667eea;
+            margin: 20px 0;
+        }
+        .timeline-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .timeline-item:before {
+            content: "";
+            position: absolute;
+            left: -36px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="bi bi-tools"></i> Retell Agent V116 - Fix Anleitung</h1>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <span class="badge bg-danger badge-custom">🚨 CRITICAL</span>
+                <span class="badge bg-primary badge-custom">Agent V116</span>
+                <span class="badge bg-info badge-custom">2025-11-14</span>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="badge bg-secondary badge-custom">Call ID: call_23453d...</span>
+            </div>
+        </div>
+
+        <div class="alert alert-danger">
+            <h4><i class="bi bi-exclamation-triangle-fill"></i> Problem</h4>
+            <p class="mb-0"><strong>Agent bleibt im Node "Buchungsdaten klären" stecken, auch wenn alle Daten vorhanden sind</strong></p>
+            <hr>
+            <p class="mb-0">
+                <strong>Call ID:</strong> call_23453d2836b223c770baefa793d<br>
+                <strong>Datum:</strong> 2025-11-14 22:22 Uhr<br>
+                <strong>Agent:</strong> Friseur 1 Agent V116 - Direct Booking Fix (agent_7a24afda65b04d1cd79fa11e8f)
+            </p>
+        </div>
+
+        <h2><i class="bi bi-bar-chart-fill"></i> Problem-Analyse</h2>
+
+        <h3>Was ist passiert?</h3>
+        <div class="code-block">
+            <pre>User: "Ja, Hans Schuster mein Name. Ich hätte gern Herren Herrenhaarschnitt
+      am Montag um neun Uhr."
+
+Agent extrahierte:
+✅ service_name: "Herrenhaarschnitt"
+✅ appointment_date: "Montag"
+✅ appointment_time: "09:00"
+✅ customer_name: "Hans Schuster"
+✅ customer_email: "hans@example.com"
+✅ customer_phone: "+491604366218"
+
+→ Alle Daten vorhanden!</pre>
+        </div>
+
+        <div class="alert alert-warning">
+            <h5><i class="bi bi-arrow-down-circle"></i> Agent-Verhalten</h5>
+            <div class="timeline">
+                <div class="timeline-item">✅ Agent ging in Node: "Buchungsdaten klären" (node_clarify_booking_data)</div>
+                <div class="timeline-item">💬 Sagte "[Silent]" (hatte keine Frage)</div>
+                <div class="timeline-item">⏱️ Wartete 10 Sekunden</div>
+                <div class="timeline-item">💬 Sagte "Ich prüfe gleich die Verfügbarkeit..."</div>
+                <div class="timeline-item">❌ BLIEB STECKEN - check_availability wurde NIE aufgerufen!</div>
+                <div class="timeline-item">☎️ User legte nach 51 Sekunden auf</div>
+            </div>
+        </div>
+
+        <h3><i class="bi bi-bug-fill"></i> Root Cause</h3>
+        <div class="alert alert-info">
+            <p>Der Node <code>node_clarify_booking_data</code> hat <strong>keine Edge-Bedingung</strong> für den Fall, dass alle Daten bereits vorhanden sind.</p>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h6>❌ Aktuell:</h6>
+                    <ul>
+                        <li>Edge 1: Wenn Daten fehlen → Nachfragen</li>
+                        <li>Edge 2: KEINE → Agent bleibt stecken</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>✅ Benötigt:</h6>
+                    <ul>
+                        <li><strong>Edge 1: Wenn ALLE Daten vorhanden → SOFORT zu check_availability</strong> ⭐ NEU!</li>
+                        <li>Edge 2: Wenn Daten fehlen → Nachfragen</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2><i class="bi bi-wrench-adjustable-circle-fill"></i> FIX - Retell Dashboard</h2>
+
+        <div class="step-card">
+            <h3><span class="step-number">1</span> Retell Dashboard öffnen</h3>
+            <ol>
+                <li>Gehe zu: <a href="https://app.retellai.com/dashboard" target="_blank">https://app.retellai.com/dashboard</a></li>
+                <li>Login mit Deinem Account</li>
+                <li>Navigiere zu: <strong>Agents</strong> → <strong>Friseur 1 Agent V116 - Direct Booking Fix</strong></li>
+            </ol>
+            <div class="alert alert-info mt-3">
+                <strong>Agent ID:</strong> <code>agent_7a24afda65b04d1cd79fa11e8f</code>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <h3><span class="step-number">2</span> Conversation Flow Editor öffnen</h3>
+            <ol>
+                <li>Im Agent-Detail klicke auf <strong>"Edit Agent"</strong> oder <strong>"Conversation Flow"</strong></li>
+                <li>Du solltest jetzt den <strong>Visual Flow Editor</strong> sehen</li>
+                <li>Suche den Node: <strong>"Buchungsdaten klären"</strong> oder <strong>"node_clarify_booking_data"</strong></li>
+            </ol>
+
+            <div class="flow-diagram mt-3">
+node_smart_intent_extract (Smart Intent & Data Extraction V117)
+    ↓
+node_clarify_booking_data (Buchungsdaten klären) ← DIESER NODE!
+    ↓
+func_check_availability (Check Availability V17)
+            </div>
+        </div>
+
+        <div class="step-card">
+            <h3><span class="step-number">3</span> Node "Buchungsdaten klären" bearbeiten</h3>
+            <ol>
+                <li><strong>Klicke</strong> auf den Node <code>node_clarify_booking_data</code></li>
+                <li>Im rechten Panel solltest Du sehen:
+                    <ul>
+                        <li>Node Name</li>
+                        <li>Agent Response (was der Agent sagt)</li>
+                        <li><strong>Edges</strong> (Übergänge zu anderen Nodes)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step-card border-warning">
+            <h3><span class="step-number">4</span> Neue Edge hinzufügen (HÖCHSTE PRIORITÄT!)</h3>
+            <div class="alert alert-warning">
+                <strong><i class="bi bi-exclamation-triangle-fill"></i> WICHTIG:</strong> Diese Edge muss <strong>ZUERST</strong> geprüft werden!
+            </div>
+
+            <h4 class="mt-4">Edge-Einstellungen:</h4>
+
+            <table class="table table-bordered">
+                <tr>
+                    <th width="30%">Name</th>
+                    <td>Alle Daten vorhanden - Direkt zur Verfügbarkeitsprüfung</td>
+                </tr>
+                <tr>
+                    <th>From Node</th>
+                    <td><code>node_clarify_booking_data</code></td>
+                </tr>
+                <tr>
+                    <th>To Node</th>
+                    <td><code>func_check_availability</code></td>
+                </tr>
+                <tr>
+                    <th>Priority</th>
+                    <td><span class="badge bg-danger">1</span> (Höchste Priorität - muss VOR allen anderen Edges stehen!)</td>
+                </tr>
+                <tr>
+                    <th>Trigger</th>
+                    <td><code>immediate</code> oder <code>on_node_enter</code> (je nach Retell-Version)</td>
+                </tr>
+            </table>
+
+            <h4 class="mt-4">Condition (JavaScript):</h4>
+            <div class="code-block">
+                <pre><code class="language-javascript">// Prüfe ob ALLE benötigten Buchungsdaten vorhanden sind
+(
+  service_name && service_name !== "" &&
+  appointment_date && appointment_date !== "" &&
+  appointment_time && appointment_time !== "" &&
+  customer_email && customer_email !== ""
+)</code></pre>
+            </div>
+
+            <h4 class="mt-4">Alternative Condition (falls Retell stricter ist):</h4>
+            <div class="code-block">
+                <pre><code class="language-javascript">// Explizite null/undefined/empty checks
+(
+  typeof service_name === 'string' && service_name.length > 0 &&
+  typeof appointment_date === 'string' && appointment_date.length > 0 &&
+  typeof appointment_time === 'string' && appointment_time.length > 0 &&
+  typeof customer_email === 'string' && customer_email.length > 0
+)</code></pre>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <h3><span class="step-number">5</span> Bestehende Edges anpassen</h3>
+
+            <h4>Edge "Daten fehlen - Nachfragen"</h4>
+            <div class="alert alert-warning">
+                <strong><i class="bi bi-exclamation-triangle-fill"></i> WICHTIG:</strong> Diese Edge muss <strong>Priority 2</strong> oder niedriger haben!
+            </div>
+
+            <h5>Condition:</h5>
+            <div class="code-block">
+                <pre><code class="language-javascript">// Nur wenn Daten FEHLEN → Nachfragen
+(
+  !service_name || service_name === "" ||
+  !appointment_date || appointment_date === "" ||
+  !appointment_time || appointment_time === "" ||
+  !customer_email || customer_email === ""
+)</code></pre>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <h3><span class="step-number">6</span> Node Response anpassen (Optional)</h3>
+            <p>Falls der Node bei vollständigen Daten trotzdem etwas sagen soll:</p>
+
+            <h5>Response Condition:</h5>
+            <div class="code-block">
+                <pre><code class="language-javascript">// Nur antworten wenn wir wirklich nachfragen müssen
+(!service_name || !appointment_date || !appointment_time || !customer_email)</code></pre>
+            </div>
+
+            <h5>Response Text:</h5>
+            <div class="code-block">
+                <pre>Welche Dienstleistung möchten Sie buchen? Und zu welchem Zeitpunkt?</pre>
+            </div>
+        </div>
+
+        <h2><i class="bi bi-lightbulb-fill"></i> Alternative Lösung (Falls Bedingungen nicht funktionieren)</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="step-card">
+                    <h4>Option A: Node überspringen</h4>
+                    <p><strong>Direkter Weg:</strong></p>
+                    <ol>
+                        <li>Von <code>node_smart_intent_extract</code> direkt zu <code>func_check_availability</code></li>
+                        <li>Bedingung: <code>intent_type === "booking"</code></li>
+                        <li><code>check_availability</code> gibt selbst Fehler zurück wenn Daten fehlen</li>
+                    </ol>
+
+                    <h5>Edge-Einstellung:</h5>
+                    <ul>
+                        <li><strong>From:</strong> <code>node_smart_intent_extract</code></li>
+                        <li><strong>To:</strong> <code>func_check_availability</code></li>
+                        <li><strong>Condition:</strong> <code>intent_type === "booking"</code></li>
+                        <li><strong>Priority:</strong> 1</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="step-card">
+                    <h4>Option B: Timeout kürzen</h4>
+                    <p>Falls der Node nicht übersprungen werden kann:</p>
+                    <ol>
+                        <li>Setze <strong>Node Timeout</strong> auf 3 Sekunden (statt default 30s)</li>
+                        <li><strong>On Timeout</strong> → Transition zu <code>func_check_availability</code></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <h2><i class="bi bi-check-circle-fill"></i> Checkliste vor dem Speichern</h2>
+
+        <ul class="checklist">
+            <li>Neue Edge erstellt: <code>node_clarify_booking_data</code> → <code>func_check_availability</code></li>
+            <li>Bedingung: Alle Daten vorhanden</li>
+            <li><strong>Priority: 1</strong> (HÖCHSTE!)</li>
+            <li>Bestehende Edges haben Priority 2 oder niedriger</li>
+            <li>Agent speichern</li>
+            <li>Agent Version incrementieren (V117 oder V116.1)</li>
+            <li>Agent neu deployen</li>
+        </ul>
+
+        <h2><i class="bi bi-clipboard-check-fill"></i> Test nach dem Fix</h2>
+
+        <div class="alert alert-success">
+            <h4>Test-Satz:</h4>
+            <div class="code-block">
+                <pre>"Ja, Hans Schuster mein Name. Ich hätte gern Herrenhaarschnitt am Montag um neun Uhr."</pre>
+            </div>
+
+            <h4 class="mt-4">Erwartetes Verhalten:</h4>
+            <div class="timeline">
+                <div class="timeline-item">Agent: "Willkommen bei Friseur 1!"</div>
+                <div class="timeline-item">User: "Ja, Hans Schuster..." (alle Daten in EINEM Satz)</div>
+                <div class="timeline-item">Agent: "Einen Moment, ich prüfe die Verfügbarkeit..." ← SOFORT!</div>
+                <div class="timeline-item">Agent: → check_availability wird SOFORT aufgerufen</div>
+                <div class="timeline-item">Agent: "Montag um 9 Uhr ist verfügbar / nicht verfügbar..."</div>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <strong>⚡ KEINE STILLE!</strong> Agent sollte innerhalb von 3 Sekunden reagieren.
+            </div>
+        </div>
+
+        <h2><i class="bi bi-shield-fill-exclamation"></i> Fallback: Wenn nichts funktioniert</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="alert alert-danger">
+                    <h5>Lösung 1: Node komplett entfernen</h5>
+                    <ol>
+                        <li>Lösche <code>node_clarify_booking_data</code> komplett</li>
+                        <li>Edge direkt: <code>node_smart_intent_extract</code> → <code>func_check_availability</code></li>
+                    </ol>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-danger">
+                    <h5>Lösung 2: Response im Node anpassen</h5>
+                    <p><strong>Response:</strong> <code>""</code> (Leer lassen, damit Agent nichts sagt wenn alle Daten da sind)</p>
+                    <p><strong>Edge:</strong> Unconditional transition zu <code>func_check_availability</code> nach 1 Sekunde</p>
+                </div>
+            </div>
+        </div>
+
+        <h2><i class="bi bi-telephone-fill"></i> Support-Informationen</h2>
+
+        <table class="table table-striped">
+            <tr>
+                <th width="30%">Retell Support</th>
+                <td><a href="mailto:support@retellai.com">support@retellai.com</a></td>
+            </tr>
+            <tr>
+                <th>Retell Docs</th>
+                <td><a href="https://docs.retellai.com/" target="_blank">https://docs.retellai.com/</a></td>
+            </tr>
+            <tr>
+                <th>Agent ID</th>
+                <td><code>agent_7a24afda65b04d1cd79fa11e8f</code></td>
+            </tr>
+            <tr>
+                <th>Problem Node</th>
+                <td><code>node_clarify_booking_data</code></td>
+            </tr>
+            <tr>
+                <th>Timestamp</th>
+                <td>2025-11-14 22:22:26 CET</td>
+            </tr>
+            <tr>
+                <th>Call ID</th>
+                <td><code>call_23453d2836b223c770baefa793d</code></td>
+            </tr>
+        </table>
+
+        <h2><i class="bi bi-play-circle-fill"></i> Video-Tutorial (falls verfügbar)</h2>
+
+        <div class="alert alert-info">
+            <p>Retell hat oft Video-Tutorials für Edge-Bedingungen:</p>
+            <ul class="mb-0">
+                <li><a href="https://docs.retellai.com/guides/conversation-flow" target="_blank">Conversation Flow Guide</a></li>
+                <li><a href="https://docs.retellai.com/guides/conditions" target="_blank">Conditions Guide</a></li>
+            </ul>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="text-center text-muted">
+            <p>
+                <strong>Erstellt:</strong> 2025-11-14 22:25 CET<br>
+                <strong>Autor:</strong> Claude Code Analysis<br>
+                <strong>Version:</strong> 1.0
+            </p>
+        </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg print-btn" onclick="window.print()">
+        <i class="bi bi-printer-fill"></i> Drucken
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+</body>
+</html>

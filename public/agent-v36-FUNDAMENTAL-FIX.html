@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Agent V36 - FUNDAMENTALE FLOW-PROBLEME GEFIXT!</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #c0392b 0%, #8e44ad 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .container { max-width: 1200px; }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #c0392b 0%, #8e44ad 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .problem-box {
+            background: #fee;
+            border: 3px solid #dc3545;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .fix-box {
+            background: #d1ecf1;
+            border: 3px solid #0c5460;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border-left: 4px solid #8e44ad;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #e06c75;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .old { background: #fee; padding: 1rem; border-radius: 8px; }
+        .new { background: #d4edda; padding: 1rem; border-radius: 8px; }
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #8e44ad;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4">
+            <h1 class="text-white mb-3">🚨 Agent V36 - FUNDAMENTALE DESIGN-PROBLEME GEFIXT!</h1>
+            <p class="text-white-50">Warum der Agent nichts gesagt hat + Komplette Lösung</p>
+        </div>
+
+        <!-- Root Cause -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🔍 ROOT CAUSE - Warum Agent nichts gesagt hat</h3>
+            </div>
+            <div class="card-body">
+                <h4>Ich habe 2 FUNDAMENTALE FLOW-DESIGN-PROBLEME gefunden:</h4>
+
+                <div class="problem-box">
+                    <h5>🚨 PROBLEM 1: Function Nodes warten NICHT auf API Results!</h5>
+                    <p><strong>Betroffene Nodes:</strong></p>
+                    <ul>
+                        <li><code>func_initialize_context</code> → <code>wait_for_result: false</code> ❌</li>
+                        <li><code>func_check_customer</code> → <code>wait_for_result: false</code> ❌</li>
+                    </ul>
+                    <p><strong>Was das bedeutet:</strong></p>
+                    <p>
+                        Retell ruft die API auf, wartet aber NICHT auf die Response!<br>
+                        Die Edge Condition "Context loaded" / "Customer check completed" wird evaluiert <strong>BEVOR</strong> die API antwortet!<br>
+                        → Flow kann nicht weitergehen → Agent stuck! → 30 Sekunden Stille!
+                    </p>
+                </div>
+
+                <div class="problem-box">
+                    <h5>🚨 PROBLEM 2: Keine Fallback-Edge bei node_smart_intent_extract!</h5>
+                    <p><strong>Was das bedeutet:</strong></p>
+                    <p>
+                        Der Node hat 6 Edges (Priority 1-6) für verschiedene Intents:<br>
+                        - "booking"<br>
+                        - "check_appointments"<br>
+                        - "reschedule"<br>
+                        - "cancel"<br>
+                        - "services_info"
+                    </p>
+                    <p><strong>ABER:</strong> Wenn das LLM einen <strong>anderen</strong> Intent extrahiert (z.B. "unknown", "", "greeting"), dann matched KEINE Edge!</p>
+                    <p>→ Node bleibt stuck! → Agent sagt nichts! → 30 Sekunden Stille!</p>
+                </div>
+
+                <h5 class="mt-4">📊 Wo der Flow stuck war:</h5>
+                <div class="flow-diagram">
+                    User ruft an<br>
+                    ↓<br>
+                    node_greeting: "Willkommen bei Friseur 1!" ✅<br>
+                    ↓<br>
+                    func_initialize_context: API Call gestartet...<br>
+                    ↓ wait_for_result: false → Wartet NICHT! ❌<br>
+                    ↓ Edge "Context loaded" → ??? (kein Result da!)<br>
+                    🚨 <strong>STUCK! Agent sagt nichts! 30s Stille!</strong>
+                </div>
+
+                <p class="mt-3"><strong>Oder alternativ stuck bei:</strong></p>
+                <div class="flow-diagram">
+                    func_check_customer: API Call gestartet...<br>
+                    ↓ wait_for_result: false → Wartet NICHT! ❌<br>
+                    ↓ Edge "Customer check completed" → ??? (kein Result da!)<br>
+                    🚨 <strong>STUCK! Agent sagt nichts! 30s Stille!</strong>
+                </div>
+
+                <p class="mt-3"><strong>Oder stuck bei:</strong></p>
+                <div class="flow-diagram">
+                    node_smart_intent_extract: LLM extrahiert Variables...<br>
+                    ↓ intent_type: "unknown" oder "" ❌<br>
+                    ↓ Priority 1-6: Alle FALSE (kein Match!)<br>
+                    ↓ Priority 7 (Fallback): FEHLT! ❌<br>
+                    🚨 <strong>STUCK! Agent sagt nichts! 30s Stille!</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Fixes -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">✅ VERSION 36 - ALLE FIXES ANGEWENDET!</h3>
+            </div>
+            <div class="card-body">
+                <div class="fix-box">
+                    <h5>FIX 1: func_initialize_context → wait_for_result: TRUE</h5>
+                    <div class="comparison">
+                        <div class="old">
+                            <strong>❌ ALT (Version 35):</strong><br>
+                            <code>wait_for_result: false</code><br>
+                            → Wartet NICHT auf API<br>
+                            → Edge evaluated ohne Result<br>
+                            → STUCK!
+                        </div>
+                        <div class="new">
+                            <strong>✅ NEU (Version 36):</strong><br>
+                            <code>wait_for_result: true</code><br>
+                            → Wartet auf API Response<br>
+                            → Edge evaluated NACH Result<br>
+                            → FUNKTIONIERT!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fix-box">
+                    <h5>FIX 2: func_check_customer → wait_for_result: TRUE</h5>
+                    <div class="comparison">
+                        <div class="old">
+                            <strong>❌ ALT (Version 35):</strong><br>
+                            <code>wait_for_result: false</code><br>
+                            → Wartet NICHT auf API<br>
+                            → STUCK!
+                        </div>
+                        <div class="new">
+                            <strong>✅ NEU (Version 36):</strong><br>
+                            <code>wait_for_result: true</code><br>
+                            → Wartet auf Customer Check<br>
+                            → FUNKTIONIERT!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fix-box">
+                    <h5>FIX 3: node_smart_intent_extract → Fallback-Edge (Priority 7)</h5>
+                    <div class="comparison">
+                        <div class="old">
+                            <strong>❌ ALT (Version 35):</strong><br>
+                            6 Edges (Priority 1-6)<br>
+                            Wenn keine matched → STUCK!
+                        </div>
+                        <div class="new">
+                            <strong>✅ NEU (Version 36):</strong><br>
+                            7 Edges (Priority 1-7)<br>
+                            Priority 7: FALLBACK zu node_clarify_intent<br>
+                            → Agent fragt nach: "Wie kann ich Ihnen helfen?"
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4">📊 Neuer Flow mit Fixes:</h5>
+                <div class="flow-diagram">
+                    User ruft an<br>
+                    ↓<br>
+                    node_greeting: "Willkommen bei Friseur 1!" ✅<br>
+                    ↓<br>
+                    func_initialize_context: API Call... ✅<br>
+                    ↓ <strong>wait_for_result: true → WARTET auf Result!</strong> ✅<br>
+                    ↓ Result: {"date": "2025-11-15", "time": "12:30", ...}<br>
+                    ↓ Edge "Context loaded" → TRUE ✅<br>
+                    ↓<br>
+                    func_check_customer: API Call... ✅<br>
+                    ↓ <strong>wait_for_result: true → WARTET auf Result!</strong> ✅<br>
+                    ↓ Result: {"customer_name": "Hans", "found": true, ...}<br>
+                    ↓ Edge "Customer check completed" → TRUE ✅<br>
+                    ↓<br>
+                    node_smart_intent_extract: LLM extrahiert...<br>
+                    ↓ intent_type: "booking" ✅<br>
+                    ↓ service_name: "Herrenhaarschnitt" ✅<br>
+                    ↓ Priority 1 Edge: ALL CONDITIONS TRUE → func_check_availability ✅<br>
+                    ↓<br>
+                    <strong>AGENT ANTWORTET SOFORT! ✅</strong>
+                </div>
+
+                <h5 class="mt-4">Fallback-Szenario:</h5>
+                <div class="flow-diagram">
+                    User: "Hallo" (unklar)<br>
+                    ↓<br>
+                    node_smart_intent_extract: LLM extrahiert...<br>
+                    ↓ intent_type: "unknown" ❓<br>
+                    ↓ Priority 1-6: Alle FALSE (kein Match)<br>
+                    ↓ <strong>Priority 7 (FALLBACK): TRUE → node_clarify_intent</strong> ✅<br>
+                    ↓<br>
+                    Agent: "Wie kann ich Ihnen helfen? Möchten Sie einen Termin buchen?" ✅
+                </div>
+            </div>
+        </div>
+
+        <!-- Publish Now -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🚀 JETZT: Version 36 Publishen!</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5>⚠️ KRITISCH: Version 36 MUSS published werden!</h5>
+                    <p class="mb-0">Alle Fixes sind angewendet, aber Version 36 ist NICHT PUBLISHED!</p>
+                </div>
+
+                <div class="text-center my-4">
+                    <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank" class="btn btn-danger btn-lg">
+                        🔗 RETELL DASHBOARD ÖFFNEN
+                    </a>
+                </div>
+
+                <h5>Schritte:</h5>
+                <p><span class="step-number">1</span> Dashboard öffnen (Button oben)</p>
+                <p><span class="step-number">2</span> "Publish" Button klicken (rechts oben)</p>
+                <p><span class="step-number">3</span> Version 36 auswählen</p>
+                <p><span class="step-number">4</span> Bestätigen</p>
+                <p><span class="step-number">5</span> ⏳ 60 Sekunden warten (CDN Propagation)</p>
+            </div>
+        </div>
+
+        <!-- Testing -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🧪 NACH DEM PUBLISHEN: Testen</h3>
+            </div>
+            <div class="card-body">
+                <h5>Test 1: Klarer Booking-Intent</h5>
+                <div class="flow-diagram">
+                    Input: "Herrenhaarschnitt am Montag um 8 Uhr"<br>
+                    <br>
+                    Erwartung:<br>
+                    ✅ Agent antwortet SOFORT (kein stuck!)<br>
+                    ✅ "Einen Moment, ich prüfe die Verfügbarkeit..."<br>
+                    ✅ Zeit korrekt: "08:00" (nicht "20:45")<br>
+                    ✅ Geht zu check_availability
+                </div>
+
+                <h5 class="mt-4">Test 2: Unklarer Intent (Fallback-Test)</h5>
+                <div class="flow-diagram">
+                    Input: "Hallo"<br>
+                    <br>
+                    Erwartung:<br>
+                    ✅ Agent antwortet SOFORT (kein stuck!)<br>
+                    ✅ "Wie kann ich Ihnen helfen?"<br>
+                    ✅ Fallback-Edge funktioniert!
+                </div>
+
+                <h5 class="mt-4">Test 3: Echter Testanruf</h5>
+                <p><strong>Nummer:</strong> <code>+493033081738</code></p>
+                <p><strong>Sage:</strong> "Ich hätte gern einen Herrenhaarschnitt am Montag um 8 Uhr"</p>
+                <p><strong>Erwartung:</strong></p>
+                <ul>
+                    <li>✅ Agent begrüßt dich</li>
+                    <li>✅ Agent antwortet SOFORT (keine 30s Stille!)</li>
+                    <li>✅ Agent prüft Verfügbarkeit</li>
+                    <li>✅ Alles funktioniert!</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- What was fixed -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📋 Zusammenfassung</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>❌ VORHER (Version 35):</h5>
+                        <ul>
+                            <li>func_initialize_context: wait_for_result = false</li>
+                            <li>func_check_customer: wait_for_result = false</li>
+                            <li>node_smart_intent_extract: Keine Fallback-Edge</li>
+                            <li><strong>Resultat: Agent stuck! 30s Stille!</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>✅ NACHHER (Version 36):</h5>
+                        <ul>
+                            <li>func_initialize_context: wait_for_result = true ✅</li>
+                            <li>func_check_customer: wait_for_result = true ✅</li>
+                            <li>node_smart_intent_extract: Fallback-Edge ✅</li>
+                            <li><strong>Resultat: Agent antwortet sofort! ✅</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-success mt-4">
+                    <h5>🎯 Nach Publish von Version 36:</h5>
+                    <ul class="mb-0">
+                        <li>✅ Keine 30 Sekunden Stille mehr!</li>
+                        <li>✅ Agent antwortet IMMER (auch bei unklaren Inputs)</li>
+                        <li>✅ Function Nodes warten auf API Results</li>
+                        <li>✅ Fallback-Edge bei unklaren Intents</li>
+                        <li>✅ Kompletter Flow funktioniert!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-white-50">
+                Flow ID: <code style="color: #fff;">conversation_flow_ec9a4cdef77e</code><br>
+                Agent ID: <code style="color: #fff;">agent_7a24afda65b04d1cd79fa11e8f</code><br>
+                Version: <strong style="color: #fff;">36</strong> (UNPUBLISHED - JETZT PUBLISHEN!)
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

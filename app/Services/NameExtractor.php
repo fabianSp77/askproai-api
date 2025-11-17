@@ -94,8 +94,8 @@ class NameExtractor
      */
     public function updateCallWithExtractedName(Call $call): bool
     {
-        // Don't override existing customer name
-        if ($call->customer_name) {
+        // Don't override existing customer name (check actual DB column, not accessor)
+        if ($call->getAttributes()['customer_name'] ?? null) {
             return false;
         }
 
@@ -121,7 +121,7 @@ class NameExtractor
                     'customer_name' => trim($callerName),
                     'customer_name_verified' => !$isAnonymous, // Only verify if not anonymous
                     'verification_confidence' => $isAnonymous ? 50 : 99, // Higher confidence from Retell
-                    'verification_method' => 'retell_agent_provided'
+                    'verification_method' => $isAnonymous ? 'anonymous_name' : 'phone_match'
                 ]);
 
                 return true;

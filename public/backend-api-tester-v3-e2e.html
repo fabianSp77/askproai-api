@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester V3 - E2E Telefon-Simulation</title>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        .type-error {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { background-color: #FEE2E2; }
+            50% { background-color: #FCA5A5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="apiTesterV3()" x-cloak>
+
+    <!-- Top Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">Backend API Tester V3</h1>
+                    <span class="ml-3 px-3 py-1 text-xs font-medium bg-white text-blue-600 rounded-full">E2E Telefon-Simulation</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Export Button -->
+                    <button @click="exportResults()"
+                            :disabled="!flowCompleted && !extractedVariables"
+                            class="px-4 py-2 text-sm font-semibold bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+                        <span>📋</span>
+                        <span>Export Results</span>
+                    </button>
+                    <span class="text-sm text-blue-100">Webhook → Functions → Flow</span>
+                    <span class="px-2 py-1 text-xs font-mono bg-blue-800 text-blue-100 rounded">v3.0.0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- 📞 Caller Type Selection (NEW!) -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">📞 Anrufer-Typ wählen</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Known Customer -->
+                <button @click="setCallerType('known')"
+                        class="p-6 border-2 rounded-xl transition-all transform hover:scale-105"
+                        :class="callerType === 'known' ? 'border-blue-500 bg-blue-50 shadow-lg' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center justify-center mb-3">
+                        <span class="text-4xl">👤</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-gray-900 mb-1">Bestandskunde</h4>
+                    <p class="text-xs text-gray-600 mb-2">mit Caller ID</p>
+                    <code class="text-xs text-blue-700 font-mono">+49 160 4366 218</code>
+                    <p class="text-xs text-gray-500 mt-2">Hans Schuster</p>
+                    <div x-show="callerType === 'known'" class="mt-3 flex items-center justify-center">
+                        <span class="px-3 py-1 text-xs font-semibold bg-blue-600 text-white rounded-full">✓ Aktiv</span>
+                    </div>
+                </button>
+
+                <!-- New Customer -->
+                <button @click="setCallerType('new')"
+                        class="p-6 border-2 rounded-xl transition-all transform hover:scale-105"
+                        :class="callerType === 'new' ? 'border-green-500 bg-green-50 shadow-lg' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center justify-center mb-3">
+                        <span class="text-4xl">✨</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-gray-900 mb-1">Neukunde</h4>
+                    <p class="text-xs text-gray-600 mb-2">mit Caller ID</p>
+                    <code class="text-xs text-green-700 font-mono">+49 151 9999 999</code>
+                    <p class="text-xs text-gray-500 mt-2">Max Mustermann</p>
+                    <div x-show="callerType === 'new'" class="mt-3 flex items-center justify-center">
+                        <span class="px-3 py-1 text-xs font-semibold bg-green-600 text-white rounded-full">✓ Aktiv</span>
+                    </div>
+                </button>
+
+                <!-- Anonymous Caller -->
+                <button @click="setCallerType('anonymous')"
+                        class="p-6 border-2 rounded-xl transition-all transform hover:scale-105"
+                        :class="callerType === 'anonymous' ? 'border-orange-500 bg-orange-50 shadow-lg' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center justify-center mb-3">
+                        <span class="text-4xl">🔒</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-gray-900 mb-1">Anonymous Caller</h4>
+                    <p class="text-xs text-gray-600 mb-2">Rufnummer unterdrückt</p>
+                    <code class="text-xs text-orange-700 font-mono">"anonymous"</code>
+                    <p class="text-xs text-gray-500 mt-2">Unbekannt</p>
+                    <div x-show="callerType === 'anonymous'" class="mt-3 flex items-center justify-center">
+                        <span class="px-3 py-1 text-xs font-semibold bg-orange-600 text-white rounded-full">✓ Aktiv</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Expected Behavior -->
+            <div class="mt-6 p-4 rounded-lg border-2"
+                 :class="{
+                     'bg-blue-50 border-blue-200': callerType === 'known',
+                     'bg-green-50 border-green-200': callerType === 'new',
+                     'bg-orange-50 border-orange-200': callerType === 'anonymous'
+                 }">
+                <h4 class="text-xs font-semibold mb-2"
+                    :class="{
+                        'text-blue-900': callerType === 'known',
+                        'text-green-900': callerType === 'new',
+                        'text-orange-900': callerType === 'anonymous'
+                    }">
+                    ✓ Erwartetes Verhalten:
+                </h4>
+
+                <!-- Known Customer -->
+                <div x-show="callerType === 'known'" class="text-xs text-blue-800 space-y-1">
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">from_number</code>: +491604366218</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">customer_found</code>: <strong>true</strong></p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">predicted_service</code>: "30 Minuten Termin Standard"</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">service_confidence</code>: 1.0</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">preferred_staff</code>: "Fabian Spitzer"</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">preferred_staff_id</code>: UUID</p>
+                    <p>• <strong>Greeting</strong>: "Guten Tag! Möchten Sie wieder einen 30 Minuten Termin buchen?"</p>
+                </div>
+
+                <!-- New Customer -->
+                <div x-show="callerType === 'new'" class="text-xs text-green-800 space-y-1">
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">from_number</code>: +491519999999</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">customer_found</code>: <strong>false</strong></p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">predicted_service</code>: null</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">service_confidence</code>: 0.0</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">preferred_staff</code>: null</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">preferred_staff_id</code>: null</p>
+                    <p>• <strong>Greeting</strong>: "Wie kann ich Ihnen helfen?"</p>
+                </div>
+
+                <!-- Anonymous Caller -->
+                <div x-show="callerType === 'anonymous'" class="text-xs text-orange-800 space-y-1">
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">from_number</code>: <strong>"anonymous"</strong></p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">customer_found</code>: <strong>false</strong></p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">predicted_service</code>: null</p>
+                    <p>• <code class="bg-white px-2 py-0.5 rounded">service_confidence</code>: 0.0</p>
+                    <p>• <strong>Greeting</strong>: "Wie kann ich Ihnen helfen?"</p>
+                    <p class="mt-2 font-semibold">⚠️ Flow MUSS weiterlaufen (kein Type Mismatch!)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌐 Webhook Simulation (NEW!) -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">🌐 Webhook Events simulieren</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <button @click="simulateWebhook('call_inbound')" :disabled="loading"
+                        class="p-4 border-2 border-gray-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50">
+                    <div class="text-3xl mb-2">📥</div>
+                    <h4 class="font-semibold text-sm">call_inbound</h4>
+                    <p class="text-xs text-gray-600 mt-1">Call Creation</p>
+                </button>
+
+                <button @click="simulateWebhook('call_started')" :disabled="loading || !currentCallId"
+                        class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all disabled:opacity-50">
+                    <div class="text-3xl mb-2">▶️</div>
+                    <h4 class="font-semibold text-sm">call_started</h4>
+                    <p class="text-xs text-gray-600 mt-1">Call Start</p>
+                </button>
+
+                <button @click="simulateWebhook('call_ended')" :disabled="loading || !currentCallId"
+                        class="p-4 border-2 border-gray-200 rounded-lg hover:border-red-400 hover:bg-red-50 transition-all disabled:opacity-50">
+                    <div class="text-3xl mb-2">⏹️</div>
+                    <h4 class="font-semibold text-sm">call_ended</h4>
+                    <p class="text-xs text-gray-600 mt-1">Call End</p>
+                </button>
+            </div>
+
+            <!-- Call Record Display -->
+            <div x-show="callRecord" class="mt-4 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+                <h4 class="text-xs font-semibold text-gray-700 mb-3 flex items-center">
+                    <span class="mr-2">📞</span> Call Record Created
+                </h4>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <span class="text-gray-500">Call ID:</span>
+                        <code class="ml-2 text-gray-900 font-mono text-xs" x-text="callRecord.call_id"></code>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">From:</span>
+                        <code class="ml-2 font-mono text-xs"
+                              :class="callRecord.from_number === 'anonymous' ? 'text-orange-700 font-bold' : 'text-gray-900'"
+                              x-text="callRecord.from_number"></code>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">To:</span>
+                        <code class="ml-2 text-gray-900 font-mono text-xs" x-text="callRecord.to_number"></code>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Status:</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded" x-text="callRecord.status"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚡ Quick Test + E2E Flow -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">⚡ Tests ausführen</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <button @click="quickTest('check_customer')" :disabled="loading"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50">
+                    <div class="text-2xl mb-2">🔍</div>
+                    <h4 class="font-semibold text-sm">check_customer</h4>
+                    <p class="text-xs text-gray-600 mt-1">Kunde identifizieren</p>
+                </button>
+
+                <button @click="quickTest('check_availability')" :disabled="loading"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50">
+                    <div class="text-2xl mb-2">📅</div>
+                    <h4 class="font-semibold text-sm">check_availability</h4>
+                    <p class="text-xs text-gray-600 mt-1">Verfügbarkeit prüfen</p>
+                </button>
+
+                <button @click="quickTest('start_booking')" :disabled="loading"
+                        class="p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50">
+                    <div class="text-2xl mb-2">✅</div>
+                    <h4 class="font-semibold text-sm">start_booking</h4>
+                    <p class="text-xs text-gray-600 mt-1">Termin buchen</p>
+                </button>
+
+                <button @click="runFullFlow()" :disabled="flowRunning || loading"
+                        class="p-4 border-2 border-green-500 bg-green-50 rounded-lg hover:bg-green-100 transition-all disabled:opacity-50">
+                    <div class="text-2xl mb-2">🚀</div>
+                    <h4 class="font-bold text-sm text-green-900">Kompletter E2E Flow</h4>
+                    <p class="text-xs text-green-700 mt-1">8 Schritte</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- 🧬 Variable Extraction (NEW!) -->
+        <div x-show="extractedVariables" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">🧬 Extrahierte Variablen (Flow Simulation)</h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Variable</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Wert</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Typ</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Validation</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <template x-for="(value, key) in extractedVariables" :key="key">
+                            <tr>
+                                <td class="px-4 py-2 font-mono text-gray-900" x-text="key"></td>
+                                <td class="px-4 py-2">
+                                    <code class="text-gray-700" x-text="JSON.stringify(value)"></code>
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-1 rounded font-mono text-xs"
+                                          :class="getTypeClass(key, value)"
+                                          x-text="typeof value"></span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span x-show="isValidType(key, value)" class="text-green-600 font-semibold">✓ OK</span>
+                                    <span x-show="!isValidType(key, value)" class="text-red-600 font-semibold">✗ Type Mismatch!</span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Type Errors -->
+            <div x-show="variableTypeErrors.length > 0" class="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                <h4 class="text-sm font-bold text-red-900 mb-2">⚠️ Type Errors gefunden!</h4>
+                <ul class="space-y-2">
+                    <template x-for="error in variableTypeErrors" :key="error.field">
+                        <li class="text-xs text-red-800">
+                            <code class="bg-white px-2 py-1 rounded font-mono" x-text="error.field"></code>:
+                            Expected <strong x-text="error.expected"></strong>, got <strong x-text="error.actual"></strong>
+                            (value: <code x-text="JSON.stringify(error.value)"></code>)
+                        </li>
+                    </template>
+                </ul>
+                <p class="mt-3 text-sm text-red-900 font-semibold">
+                    → Flow würde hier STOPPEN (Type Mismatch in extract_dynamic_variables)
+                </p>
+            </div>
+        </div>
+
+        <!-- 💬 Flow Decision (NEW!) -->
+        <div x-show="flowDecision" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-4">💬 Flow Decision (Was Agent tun würde)</h3>
+
+            <div class="space-y-4">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="text-xs font-semibold text-blue-900 mb-2">Agent würde sagen:</h4>
+                    <p class="text-sm text-blue-800 font-medium italic" x-text="flowDecision.greeting"></p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-xs">
+                    <div class="p-3 bg-gray-50 rounded">
+                        <span class="text-gray-500">Grund:</span>
+                        <p class="mt-1 font-semibold text-gray-900" x-text="flowDecision.reason"></p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded">
+                        <span class="text-gray-500">Current Node:</span>
+                        <p class="mt-1 font-mono text-gray-900" x-text="flowDecision.node"></p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded">
+                        <span class="text-gray-500">Next Node:</span>
+                        <p class="mt-1 font-mono text-gray-900" x-text="flowDecision.nextNode"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔄 E2E Flow Steps -->
+        <div x-show="flowRunning || flowCompleted" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 mb-6">🔄 Flow-Schritte (E2E Telefon-Simulation)</h3>
+
+            <div class="space-y-4">
+                <template x-for="(step, index) in flowSteps" :key="index">
+                    <div class="relative pl-8 pb-6 border-l-2"
+                         :class="{
+                             'border-green-400': step.status === 'completed',
+                             'border-blue-400 animate-pulse': step.status === 'running',
+                             'border-gray-300': step.status === 'pending',
+                             'border-red-400': step.status === 'failed'
+                         }">
+
+                        <div class="absolute left-[-6px] top-0 w-4 h-4 rounded-full border-2 border-white"
+                             :class="{
+                                 'bg-green-500': step.status === 'completed',
+                                 'bg-blue-500': step.status === 'running',
+                                 'bg-gray-300': step.status === 'pending',
+                                 'bg-red-500': step.status === 'failed'
+                             }"></div>
+
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900" x-text="(index + 1) + '. ' + step.name"></h4>
+                                <p class="text-xs text-gray-500 mt-1" x-text="step.description"></p>
+
+                                <template x-if="step.result && Object.keys(step.result).length > 0">
+                                    <details class="mt-3">
+                                        <summary class="text-xs text-blue-600 cursor-pointer hover:text-blue-800">Response anzeigen</summary>
+                                        <div class="mt-2 p-3 bg-gray-900 rounded-lg overflow-x-auto">
+                                            <pre class="text-xs"><code class="language-json text-white" x-text="JSON.stringify(step.result, null, 2)"></code></pre>
+                                        </div>
+                                    </details>
+                                </template>
+                            </div>
+
+                            <div class="ml-4 flex items-center space-x-2">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full"
+                                      :class="{
+                                          'bg-green-100 text-green-800': step.status === 'completed',
+                                          'bg-blue-100 text-blue-800': step.status === 'running',
+                                          'bg-gray-100 text-gray-600': step.status === 'pending',
+                                          'bg-red-100 text-red-800': step.status === 'failed'
+                                      }"
+                                      x-text="step.status"></span>
+                                <span x-show="step.duration" class="text-xs text-gray-500 font-mono" x-text="step.duration + 'ms'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Summary -->
+            <template x-if="flowCompleted">
+                <div class="mt-6 p-5 rounded-lg border-2"
+                     :class="flowSuccess ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
+                    <h3 class="text-base font-bold mb-2"
+                        :class="flowSuccess ? 'text-green-800' : 'text-red-800'">
+                        <span x-show="flowSuccess">✅ Flow erfolgreich abgeschlossen</span>
+                        <span x-show="!flowSuccess">❌ Flow fehlgeschlagen</span>
+                    </h3>
+                    <p class="text-sm" :class="flowSuccess ? 'text-green-700' : 'text-red-700'" x-text="flowSummary"></p>
+                </div>
+            </template>
+        </div>
+
+    </div>
+
+    <script>
+        function apiTesterV3() {
+            return {
+                // State
+                callerType: 'known',  // 'known', 'new', 'anonymous'
+                loading: false,
+                response: null,
+
+                // Call Record
+                currentCallId: null,
+                callRecord: null,
+
+                // Extracted Variables (Flow Simulation)
+                extractedVariables: null,
+                variableTypeErrors: [],
+
+                // Flow Decision
+                flowDecision: null,
+
+                // E2E Flow
+                flowRunning: false,
+                flowCompleted: false,
+                flowSuccess: false,
+                flowSummary: '',
+                flowSteps: [],
+
+                // Caller Types Configuration
+                callerTypes: {
+                    known: {
+                        phone: '+491604366218',
+                        name: 'Hans Schuster',
+                        from_number: '+491604366218',
+                        email: 'hans@example.com'
+                    },
+                    new: {
+                        phone: '+491519999999',
+                        name: 'Max Mustermann',
+                        from_number: '+491519999999',
+                        email: 'max@example.com'
+                    },
+                    anonymous: {
+                        phone: null,  // Will be generated as anonymous_timestamp_hash
+                        name: 'Anonymous User',
+                        from_number: 'anonymous',
+                        email: null  // Will use booking@temp.de fallback
+                    }
+                },
+
+                init() {
+                    this.setCallerType('known');
+                },
+
+                setCallerType(type) {
+                    this.callerType = type;
+                    this.response = null;
+                    this.flowCompleted = false;
+                    this.currentCallId = null;
+                    this.callRecord = null;
+                    this.extractedVariables = null;
+                    this.flowDecision = null;
+                    this.variableTypeErrors = [];
+                },
+
+                getCurrentCaller() {
+                    return this.callerTypes[this.callerType];
+                },
+
+                // ========================================
+                // WEBHOOK SIMULATION (NEW!)
+                // ========================================
+                async simulateWebhook(eventType) {
+                    const caller = this.getCurrentCaller();
+
+                    if (eventType === 'call_inbound') {
+                        this.currentCallId = 'test_' + Date.now();
+
+                        const payload = {
+                            event: 'call_inbound',
+                            call_inbound: {
+                                call_id: this.currentCallId,
+                                from_number: caller.from_number,
+                                to_number: '+493033081738',
+                                agent_id: 'agent_7a24afda65b04d1cd79fa11e8f'
+                            }
+                        };
+
+                        this.loading = true;
+                        try {
+                            const res = await fetch('/api/webhooks/retell', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify(payload)
+                            });
+
+                            const data = await res.json();
+
+                            this.callRecord = {
+                                call_id: this.currentCallId,
+                                from_number: caller.from_number,
+                                to_number: '+493033081738',
+                                status: 'inbound',
+                                created: new Date().toISOString()
+                            };
+
+                            this.response = { success: true, data: data };
+                        } catch (error) {
+                            this.response = { success: false, data: { error: error.message } };
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
+
+                    // call_started and call_ended similar...
+                },
+
+                // ========================================
+                // VARIABLE EXTRACTION (NEW!)
+                // ========================================
+                extractVariables(checkCustomerResponse) {
+                    const customer = checkCustomerResponse.customer || {};
+
+                    this.extractedVariables = {
+                        customer_found: checkCustomerResponse.customer_found ?? false,
+                        predicted_service: customer.predicted_service ?? null,
+                        service_confidence: customer.service_confidence ?? 0.0,
+                        preferred_staff: customer.preferred_staff ?? null,
+                        preferred_staff_id: customer.preferred_staff_id ?? null
+                    };
+
+                    // Type Validation
+                    this.variableTypeErrors = [];
+
+                    if (typeof this.extractedVariables.customer_found !== 'boolean') {
+                        this.variableTypeErrors.push({
+                            field: 'customer_found',
+                            expected: 'boolean',
+                            actual: typeof this.extractedVariables.customer_found,
+                            value: this.extractedVariables.customer_found
+                        });
+                    }
+
+                    if (typeof this.extractedVariables.service_confidence !== 'number') {
+                        this.variableTypeErrors.push({
+                            field: 'service_confidence',
+                            expected: 'number',
+                            actual: typeof this.extractedVariables.service_confidence,
+                            value: this.extractedVariables.service_confidence
+                        });
+                    }
+
+                    return {
+                        extracted: this.extractedVariables,
+                        typeErrors: this.variableTypeErrors,
+                        validation: this.variableTypeErrors.length === 0 ? 'PASS' : 'FAIL'
+                    };
+                },
+
+                isValidType(key, value) {
+                    const expectedTypes = {
+                        customer_found: 'boolean',
+                        service_confidence: 'number',
+                        predicted_service: ['string', 'object'],  // null is object
+                        preferred_staff: ['string', 'object'],
+                        preferred_staff_id: ['string', 'object', 'number']
+                    };
+
+                    const expected = expectedTypes[key];
+                    if (!expected) return true;
+
+                    const actualType = typeof value;
+                    if (Array.isArray(expected)) {
+                        return expected.includes(actualType);
+                    }
+                    return actualType === expected;
+                },
+
+                getTypeClass(key, value) {
+                    const valid = this.isValidType(key, value);
+                    return valid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800 type-error';
+                },
+
+                // ========================================
+                // FLOW DECISION (NEW!)
+                // ========================================
+                determineFlowDecision(variables) {
+                    if (variables.customer_found === true && variables.service_confidence >= 0.8) {
+                        return {
+                            greeting: `Guten Tag! Möchten Sie wieder einen ${variables.predicted_service} buchen?`,
+                            reason: 'Bestandskunde + hohe Service-Confidence (≥0.8)',
+                            node: 'node_personalized_greeting',
+                            nextNode: 'intent_router'
+                        };
+                    } else if (variables.customer_found === true) {
+                        return {
+                            greeting: 'Guten Tag! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?',
+                            reason: 'Bestandskunde ohne klare Service-Präferenz (<0.8)',
+                            node: 'node_personalized_greeting',
+                            nextNode: 'intent_router'
+                        };
+                    } else {
+                        return {
+                            greeting: 'Wie kann ich Ihnen helfen?',
+                            reason: 'Neukunde oder Anonymous Caller',
+                            node: 'node_personalized_greeting',
+                            nextNode: 'intent_router'
+                        };
+                    }
+                },
+
+                // ========================================
+                // QUICK TEST
+                // ========================================
+                async quickTest(testType) {
+                    const caller = this.getCurrentCaller();
+                    const callId = 'test_' + Date.now();
+
+                    if (testType === 'check_customer') {
+                        await this.runTest('/api/webhooks/retell/check-customer', {
+                            call: { call_id: callId },
+                            args: {}
+                        });
+
+                        // Extract variables after check_customer
+                        if (this.response && this.response.data) {
+                            const extracted = this.extractVariables(this.response.data);
+                            this.flowDecision = this.determineFlowDecision(this.extractedVariables);
+                        }
+                    }
+                    // ... other quick tests ...
+                },
+
+                // ========================================
+                // FULL E2E FLOW (EXTENDED!)
+                // ========================================
+                async runFullFlow() {
+                    this.flowRunning = true;
+                    this.flowCompleted = false;
+                    this.flowSuccess = false;
+                    this.response = null;
+                    this.extractedVariables = null;
+                    this.flowDecision = null;
+                    this.variableTypeErrors = [];
+
+                    const caller = this.getCurrentCaller();
+                    const callId = 'flow_test_' + Date.now();
+                    this.currentCallId = callId;
+
+                    this.flowSteps = [
+                        { name: '🌐 call_inbound Webhook', description: 'Create Call record', status: 'pending', result: null, duration: null },
+                        { name: '🗄️ Create Call Record (DB)', description: 'Create actual Call record in database', status: 'pending', result: null, duration: null },
+                        { name: '🌐 call_started Webhook', description: 'Update Call status to ongoing', status: 'pending', result: null, duration: null },
+                        { name: '🎯 get_current_context', description: 'Lade aktuelles Datum/Zeit', status: 'pending', result: null, duration: null },
+                        { name: '👤 check_customer', description: 'Customer Recognition', status: 'pending', result: null, duration: null },
+                        { name: '🧬 Variable Extraction', description: 'Simulate extract_dynamic_variables', status: 'pending', result: null, duration: null },
+                        { name: '💬 Flow Decision', description: 'Determine agent greeting', status: 'pending', result: null, duration: null },
+                        { name: '📅 check_availability', description: 'Prüfe Verfügbarkeit', status: 'pending', result: null, duration: null },
+                        { name: '✅ start_booking', description: 'Termin buchen (mit preferred_staff_id)', status: 'pending', result: null, duration: null }
+                    ];
+
+                    // Step 1: call_inbound Webhook
+                    await this.runFlowStep(0, async () => {
+                        const payload = {
+                            event: 'call_inbound',
+                            call_inbound: {
+                                call_id: callId,
+                                from_number: caller.from_number,
+                                to_number: '+493033081738',
+                                agent_id: 'agent_7a24afda65b04d1cd79fa11e8f'
+                            }
+                        };
+
+                        const res = await fetch('/api/webhooks/retell', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+
+                        this.callRecord = {
+                            call_id: callId,
+                            from_number: caller.from_number,
+                            to_number: '+493033081738',
+                            status: 'inbound'
+                        };
+
+                        return await res.json();
+                    });
+
+                    // Step 1.5: Create Call Record in Database (NEW V4!)
+                    // FIX: E2E tests need actual Call records for functions to work
+                    await this.runFlowStep(1, async () => {
+                        const res = await fetch('/api/test/create-call-record', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                call_id: callId,
+                                from_number: caller.from_number,
+                                to_number: '+493033081738'
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 2: call_started Webhook (simulated - not actually needed for flow)
+                    await this.runFlowStep(2, async () => {
+                        return { success: true, message: 'Call started (simulated)' };
+                    });
+
+                    // Step 3: get_current_context
+                    await this.runFlowStep(3, async () => {
+                        const res = await fetch('/api/webhooks/retell/current-context', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ call: { call_id: callId } })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 4: check_customer
+                    await this.runFlowStep(4, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-customer', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {}
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 5: Variable Extraction (NEW!)
+                    await this.runFlowStep(5, async () => {
+                        const customerResponse = this.flowSteps[4].result;
+                        return this.extractVariables(customerResponse);
+                    });
+
+                    // Step 6: Flow Decision (NEW!)
+                    await this.runFlowStep(6, async () => {
+                        this.flowDecision = this.determineFlowDecision(this.extractedVariables);
+                        return this.flowDecision;
+                    });
+
+                    // Step 7: check_availability
+                    await this.runFlowStep(7, async () => {
+                        const res = await fetch('/api/webhooks/retell/check-availability', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                call: { call_id: callId },
+                                args: {
+                                    datum: 'morgen',
+                                    uhrzeit: '10:00',
+                                    dienstleistung: 'Herrenhaarschnitt'
+                                }
+                            })
+                        });
+                        return await res.json();
+                    });
+
+                    // Step 8: start_booking (with preferred_staff_id!)
+                    await this.runFlowStep(8, async () => {
+                        const payload = {
+                            name: 'start_booking',
+                            call: { call_id: callId },
+                            args: {
+                                datetime: '2025-11-17 10:00',
+                                service_name: 'Herrenhaarschnitt',
+                                customer_name: caller.name,
+                                customer_email: caller.email || undefined,
+                                customer_phone: caller.phone || undefined,
+                                preferred_staff_id: this.extractedVariables?.preferred_staff_id || undefined
+                            }
+                        };
+
+                        const res = await fetch('/api/webhooks/retell/function', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+                        return await res.json();
+                    });
+
+                    // Finalize
+                    this.flowCompleted = true;
+                    this.flowSuccess = this.flowSteps.every(s => s.status === 'completed') && this.variableTypeErrors.length === 0;
+
+                    if (this.flowSuccess) {
+                        this.flowSummary = `✅ Alle 9 Schritte erfolgreich für ${this.getCallerTypeLabel()}. Keine Type Errors!`;
+                    } else if (this.variableTypeErrors.length > 0) {
+                        this.flowSummary = `❌ Type Errors gefunden! Flow würde in Realität STOPPEN.`;
+                    } else {
+                        this.flowSummary = '❌ Einige Schritte sind fehlgeschlagen. Prüfe die Details oben.';
+                    }
+
+                    this.flowRunning = false;
+
+                    // Cleanup: Delete test Call record
+                    await this.cleanupTestCall(callId);
+
+                    setTimeout(() => Prism.highlightAll(), 100);
+                },
+
+                async cleanupTestCall(callId) {
+                    if (!callId || !callId.startsWith('flow_test_')) {
+                        return; // Only cleanup test calls
+                    }
+
+                    try {
+                        await fetch('/api/test/delete-call-record', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ call_id: callId })
+                        });
+                        console.log('✅ Test Call record cleanup complete:', callId);
+                    } catch (e) {
+                        console.warn('⚠️ Test Call cleanup failed (non-critical):', e.message);
+                    }
+                },
+
+                getCallerTypeLabel() {
+                    const labels = {
+                        known: 'Bestandskunde',
+                        new: 'Neukunde',
+                        anonymous: 'Anonymous Caller'
+                    };
+                    return labels[this.callerType];
+                },
+
+                async runFlowStep(stepIndex, fetchFn) {
+                    this.flowSteps[stepIndex].status = 'running';
+                    const startTime = performance.now();
+
+                    try {
+                        const result = await fetchFn();
+                        const duration = Math.round(performance.now() - startTime);
+
+                        this.flowSteps[stepIndex].status = 'completed';
+                        this.flowSteps[stepIndex].result = result;
+                        this.flowSteps[stepIndex].duration = duration;
+
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    } catch (error) {
+                        const duration = Math.round(performance.now() - startTime);
+                        this.flowSteps[stepIndex].status = 'failed';
+                        this.flowSteps[stepIndex].result = {
+                            error: error.message,
+                            stack: error.stack
+                        };
+                        this.flowSteps[stepIndex].duration = duration;
+                    }
+                },
+
+                async runTest(endpoint, payload) {
+                    this.loading = true;
+                    const startTime = performance.now();
+
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const duration = Math.round(performance.now() - startTime);
+                        const data = await res.json();
+
+                        this.response = {
+                            success: res.ok && (data.success !== false),
+                            duration: duration,
+                            http_status: res.status,
+                            data: data
+                        };
+
+                        setTimeout(() => Prism.highlightAll(), 50);
+                    } catch (error) {
+                        this.response = {
+                            success: false,
+                            duration: Math.round(performance.now() - startTime),
+                            data: { error: error.message }
+                        };
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                // ========================================
+                // EXPORT RESULTS (NEW!)
+                // ========================================
+                exportResults() {
+                    const timestamp = new Date().toISOString();
+                    const callerTypeLabel = this.getCallerTypeLabel();
+
+                    const exportData = {
+                        // Meta
+                        exported_at: timestamp,
+                        tester_version: 'v3.0.0',
+
+                        // Test Configuration
+                        caller_type: this.callerType,
+                        caller_type_label: callerTypeLabel,
+                        caller_config: this.getCurrentCaller(),
+
+                        // Call Record
+                        call_record: this.callRecord,
+
+                        // Variable Extraction
+                        extracted_variables: this.extractedVariables,
+                        variable_type_errors: this.variableTypeErrors,
+                        variable_validation: this.variableTypeErrors.length === 0 ? 'PASS' : 'FAIL',
+
+                        // Flow Decision
+                        flow_decision: this.flowDecision,
+
+                        // E2E Flow
+                        flow_completed: this.flowCompleted,
+                        flow_success: this.flowSuccess,
+                        flow_summary: this.flowSummary,
+                        flow_steps: this.flowSteps.map(step => ({
+                            name: step.name,
+                            description: step.description,
+                            status: step.status,
+                            duration: step.duration,
+                            result: step.result
+                        })),
+
+                        // Analysis
+                        analysis: {
+                            total_steps: this.flowSteps.length,
+                            completed_steps: this.flowSteps.filter(s => s.status === 'completed').length,
+                            failed_steps: this.flowSteps.filter(s => s.status === 'failed').length,
+                            total_duration: this.flowSteps.reduce((sum, s) => sum + (s.duration || 0), 0),
+                            has_type_errors: this.variableTypeErrors.length > 0,
+                            type_error_count: this.variableTypeErrors.length
+                        }
+                    };
+
+                    // Format as readable text + JSON
+                    const readableReport = this.formatReadableReport(exportData);
+                    const jsonReport = JSON.stringify(exportData, null, 2);
+
+                    // Combined output
+                    const fullReport = `${readableReport}\n\n${'='.repeat(80)}\nRAW JSON DATA:\n${'='.repeat(80)}\n\n${jsonReport}`;
+
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(fullReport).then(() => {
+                        alert('✅ Test-Ergebnisse in Zwischenablage kopiert!\n\nDu kannst sie jetzt an Claude senden.');
+                    }).catch(err => {
+                        // Fallback: Create downloadable file
+                        const blob = new Blob([fullReport], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `backend-test-results-${this.callerType}-${Date.now()}.txt`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        alert('✅ Test-Ergebnisse als Datei heruntergeladen!');
+                    });
+                },
+
+                formatReadableReport(data) {
+                    const lines = [];
+                    lines.push('═'.repeat(80));
+                    lines.push('BACKEND API TESTER V3 - TEST RESULTS');
+                    lines.push('═'.repeat(80));
+                    lines.push('');
+                    lines.push(`Exported: ${data.exported_at}`);
+                    lines.push(`Tester Version: ${data.tester_version}`);
+                    lines.push('');
+
+                    lines.push('─'.repeat(80));
+                    lines.push('TEST CONFIGURATION');
+                    lines.push('─'.repeat(80));
+                    lines.push(`Caller Type: ${data.caller_type_label} (${data.caller_type})`);
+                    lines.push(`Phone: ${data.caller_config.from_number}`);
+                    lines.push(`Name: ${data.caller_config.name}`);
+                    lines.push('');
+
+                    if (data.call_record) {
+                        lines.push('─'.repeat(80));
+                        lines.push('CALL RECORD');
+                        lines.push('─'.repeat(80));
+                        lines.push(`Call ID: ${data.call_record.call_id}`);
+                        lines.push(`From: ${data.call_record.from_number}`);
+                        lines.push(`To: ${data.call_record.to_number}`);
+                        lines.push(`Status: ${data.call_record.status}`);
+                        lines.push('');
+                    }
+
+                    if (data.extracted_variables) {
+                        lines.push('─'.repeat(80));
+                        lines.push('VARIABLE EXTRACTION');
+                        lines.push('─'.repeat(80));
+                        lines.push(`Validation: ${data.variable_validation} ${data.variable_validation === 'PASS' ? '✅' : '❌'}`);
+                        lines.push('');
+                        lines.push('Variables:');
+                        Object.entries(data.extracted_variables).forEach(([key, value]) => {
+                            const typeStr = typeof value;
+                            lines.push(`  ${key}: ${JSON.stringify(value)} (${typeStr})`);
+                        });
+
+                        if (data.variable_type_errors.length > 0) {
+                            lines.push('');
+                            lines.push('⚠️  TYPE ERRORS FOUND:');
+                            data.variable_type_errors.forEach(err => {
+                                lines.push(`  ❌ ${err.field}: Expected ${err.expected}, got ${err.actual} (value: ${JSON.stringify(err.value)})`);
+                            });
+                        }
+                        lines.push('');
+                    }
+
+                    if (data.flow_decision) {
+                        lines.push('─'.repeat(80));
+                        lines.push('FLOW DECISION');
+                        lines.push('─'.repeat(80));
+                        lines.push(`Greeting: "${data.flow_decision.greeting}"`);
+                        lines.push(`Reason: ${data.flow_decision.reason}`);
+                        lines.push(`Current Node: ${data.flow_decision.node}`);
+                        lines.push(`Next Node: ${data.flow_decision.nextNode}`);
+                        lines.push('');
+                    }
+
+                    if (data.flow_completed) {
+                        lines.push('─'.repeat(80));
+                        lines.push('E2E FLOW RESULTS');
+                        lines.push('─'.repeat(80));
+                        lines.push(`Status: ${data.flow_success ? '✅ SUCCESS' : '❌ FAILED'}`);
+                        lines.push(`Summary: ${data.flow_summary}`);
+                        lines.push('');
+                        lines.push(`Total Steps: ${data.analysis.total_steps}`);
+                        lines.push(`Completed: ${data.analysis.completed_steps}`);
+                        lines.push(`Failed: ${data.analysis.failed_steps}`);
+                        lines.push(`Total Duration: ${data.analysis.total_duration}ms`);
+                        lines.push('');
+
+                        lines.push('Flow Steps:');
+                        data.flow_steps.forEach((step, i) => {
+                            const statusIcon = {
+                                completed: '✅',
+                                failed: '❌',
+                                running: '🔄',
+                                pending: '⏳'
+                            }[step.status] || '?';
+
+                            lines.push(`  ${i + 1}. ${statusIcon} ${step.name} (${step.status})`);
+                            if (step.duration) {
+                                lines.push(`     Duration: ${step.duration}ms`);
+                            }
+                            if (step.status === 'failed' && step.result) {
+                                lines.push(`     Error: ${step.result.error || JSON.stringify(step.result)}`);
+                            }
+                        });
+                        lines.push('');
+                    }
+
+                    lines.push('═'.repeat(80));
+                    lines.push('ANALYSIS SUMMARY');
+                    lines.push('═'.repeat(80));
+                    if (data.analysis.has_type_errors) {
+                        lines.push(`❌ CRITICAL: ${data.analysis.type_error_count} Type Error(s) detected!`);
+                        lines.push('   → Flow würde in Realität STOPPEN (Type Mismatch)');
+                    } else if (data.flow_success) {
+                        lines.push('✅ ALL CHECKS PASSED');
+                        lines.push('   → Flow würde korrekt durchlaufen');
+                    } else if (data.flow_completed) {
+                        lines.push('⚠️  FLOW COMPLETED WITH ERRORS');
+                        lines.push(`   → ${data.analysis.failed_steps} step(s) failed`);
+                    } else {
+                        lines.push('ℹ️  Partial test completed');
+                    }
+                    lines.push('');
+
+                    return lines.join('\n');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
