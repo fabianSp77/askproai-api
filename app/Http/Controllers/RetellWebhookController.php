@@ -499,6 +499,28 @@ class RetellWebhookController extends Controller
                     $call = $existingCall;
                 }
 
+                // 🚀 PERFORMANCE OPTIMIZATION 2025-11-16: Proactive Customer Data Pre-Loading
+                // FIX: Also pre-load for existing calls (not just new ones)
+                // Load customer data NOW (before user speaks) so it's cached when Agent needs it
+                if (!empty($callData['from_number']) && $callData['from_number'] !== 'anonymous') {
+                    try {
+                        $recognitionService = app(\App\Services\Retell\CustomerRecognitionService::class);
+                        $recognitionService->preloadCustomerData($callData['from_number'], $call->company_id);
+
+                        Log::info('⚡ Customer data pre-loaded (existing call)', [
+                            'call_id' => $callData['call_id'] ?? 'unknown',
+                            'phone' => substr($callData['from_number'], -4),
+                            'company_id' => $call->company_id,
+                            'performance' => 'proactive_loading'
+                        ]);
+                    } catch (\Exception $e) {
+                        // Non-critical - don't fail webhook if pre-loading fails
+                        Log::warning('⚠️ Customer data pre-loading failed (non-critical)', [
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
                 // 🔥 FIX: Ensure RetellCallSession exists for admin panel visibility
                 try {
                     $this->callTracking->startCallSession([
