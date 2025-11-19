@@ -144,7 +144,11 @@ class DateTimeParser
             // Both orders: "nächste Woche Montag" AND "Montag nächste Woche"
             $isWeekBasedDate = preg_match('/(nächste|diese|dieser|nächster|nächstes|kommende|kommender|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s+(woche|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|nächste|diese)/i', $dateValue);
 
-            if ($isGermanDate || $isWeekBasedDate) {
+            // 🔧 FIX 2025-11-19: Also check for German date format "Wochentag, den DD. Monat"
+            // Pattern: "Mittwoch, den 19. November", "Montag, den 25. Dezember"
+            $isGermanMonthDate = preg_match('/(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag),?\s+(den\s+)?\d{1,2}\.?\s+(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)/i', $dateValue);
+
+            if ($isGermanDate || $isWeekBasedDate || $isGermanMonthDate) {
                 // Parse date string first to get the actual date
                 $parsedDateString = $this->parseDateString($dateValue);
 
