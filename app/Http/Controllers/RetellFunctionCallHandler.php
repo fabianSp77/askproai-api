@@ -1565,8 +1565,14 @@ class RetellFunctionCallHandler extends Controller
             $callContext = $this->getCallContext($callId);
 
             if (!$callContext) {
-                Log::error('Cannot book appointment: Call context not found', [
-                    'call_id' => $callId
+                // 🔧 FIX 2025-11-19: Enhanced error logging for call context issues
+                Log::error('❌ Cannot book: Call context not found', [
+                    'call_id' => $callId,
+                    'function' => 'bookAppointment',
+                    'params' => $params,
+                    'datetime_param' => $params['datetime'] ?? 'NOT_SET',
+                    'service_name' => $params['service_name'] ?? 'NOT_SET',
+                    'customer_name' => $params['customer_name'] ?? 'NOT_SET'
                 ]);
                 return $this->responseFormatter->error('Call context not available');
             }
@@ -1574,9 +1580,67 @@ class RetellFunctionCallHandler extends Controller
             $companyId = $callContext['company_id'];
             $branchId = $callContext['branch_id'];
 
+            // 🔒 SECURITY FIX 2025-11-19 (CRIT-002): Enforce tenant context validation
+            // CRITICAL: Prevent cache poisoning and cross-tenant data leakage
+            if ($companyId === null || $branchId === null) {
+                Log::error('⚠️ SECURITY: bookAppointment called without tenant context', [
+                    'company_id' => $companyId,
+                    'branch_id' => $branchId,
+                    'call_id' => $callId,
+                    'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+                ]);
+                return $this->responseFormatter->error(
+                    'Sicherheitsfehler: Filialzuordnung fehlt. Bitte rufen Sie erneut an.'
+                );
+            }
+
+            Log::debug('✅ Tenant context validated (CRIT-002)', [
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'call_id' => $callId
+            ]);
+
             // 🔧 FIX 2025-11-14: Get customer ID for alternatives filtering
             $call = $this->callLifecycle->findCallByRetellId($callId);
             $customerId = $call?->customer_id;
+
+            // 🔧 FIX 2025-11-19: Map "datetime" parameter to "date" + "time" for dateTimeParser
+            // PROBLEM: Retell agent V117+ sends "datetime" but dateTimeParser expects "date" + "time"
+            // SOLUTION: Parse datetime string into separate parameters
+            if (isset($params['datetime']) && !isset($params['date']) && !isset($params['time'])) {
+                $datetimeStr = trim($params['datetime']);
+
+                // Try parsing "YYYY-MM-DD HH:MM" format
+                if (preg_match('/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/', $datetimeStr, $matches)) {
+                    $params['date'] = $matches[1];
+                    $params['time'] = $matches[2];
+
+                    Log::debug('✅ Mapped datetime parameter', [
+                        'original_datetime' => $datetimeStr,
+                        'mapped_date' => $params['date'],
+                        'mapped_time' => $params['time'],
+                        'call_id' => $callId
+                    ]);
+                }
+                // Try parsing ISO 8601 format "YYYY-MM-DDTHH:MM:SS"
+                elseif (preg_match('/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/', $datetimeStr, $matches)) {
+                    $params['date'] = $matches[1];
+                    $params['time'] = $matches[2];
+
+                    Log::debug('✅ Mapped ISO datetime parameter', [
+                        'original_datetime' => $datetimeStr,
+                        'mapped_date' => $params['date'],
+                        'mapped_time' => $params['time'],
+                        'call_id' => $callId
+                    ]);
+                }
+                else {
+                    Log::warning('⚠️ Failed to parse datetime parameter', [
+                        'datetime_value' => $datetimeStr,
+                        'call_id' => $callId
+                    ]);
+                }
+            }
 
             // 🔧 FIX 2025-11-13: Map appointment_date/appointment_time to date/time for dateTimeParser
             // Different webhooks/agents may use different parameter names
@@ -1709,11 +1773,21 @@ class RetellFunctionCallHandler extends Controller
             }
 
             if (!$service || !$service->calcom_event_type_id) {
-                Log::error('No active service with Cal.com event type found for booking', [
-                    'service_id' => $serviceId,
+                // 🔧 FIX 2025-11-19: Enhanced error logging with available services list
+                Log::error('❌ Cannot book: No active service with Cal.com event type', [
+                    'call_id' => $callId,
+                    'requested_service_id' => $serviceId,
+                    'requested_service_name' => $serviceName,
                     'company_id' => $companyId,
                     'branch_id' => $branchId,
-                    'call_id' => $callId
+                    'service_found' => $service !== null,
+                    'has_calcom_event_type' => $service?->calcom_event_type_id !== null,
+                    'available_services' => \App\Models\Service::where('company_id', $companyId)
+                        ->where('branch_id', $branchId)
+                        ->where('is_active', true)
+                        ->whereNotNull('calcom_event_type_id')
+                        ->pluck('name', 'id')
+                        ->toArray()
                 ]);
                 return $this->responseFormatter->error('Service nicht verfügbar für diese Filiale');
             }
@@ -1847,6 +1921,38 @@ class RetellFunctionCallHandler extends Controller
                     // Ensure customer exists or create from call context
                     $customer = $this->customerResolver->ensureCustomerFromCall($call, $customerName, $customerEmail);
 
+                    // 🔒 SECURITY FIX 2025-11-19: PRE-SYNC VALIDATION (ASYNC path)
+                    // Check for conflicting appointments BEFORE creating local appointment
+                    // Uses pessimistic locking to prevent race conditions
+                    $conflictCheck = \App\Models\Appointment::where('branch_id', $branchId)
+                        ->where('company_id', $companyId)
+                        ->where('starts_at', $appointmentTime)
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($conflictCheck) {
+                        Log::warning('🚨 PRE-SYNC CONFLICT: Slot already booked (ASYNC)', [
+                            'call_id' => $callId,
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'existing_appointment_id' => $conflictCheck->id,
+                            'existing_customer' => $conflictCheck->customer_id,
+                            'company_id' => $companyId,
+                            'branch_id' => $branchId
+                        ]);
+
+                        return $this->responseFormatter->error(
+                            'Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen Zeitpunkt.'
+                        );
+                    }
+
+                    Log::debug('✅ PRE-SYNC VALIDATION passed: No conflicts (ASYNC)', [
+                        'call_id' => $callId,
+                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId
+                    ]);
+
                     // Create local appointment with status "pending_sync"
                     $appointment = new Appointment();
                     $appointment->forceFill([
@@ -1860,7 +1966,8 @@ class RetellFunctionCallHandler extends Controller
                         'ends_at' => $appointmentTime->copy()->addMinutes($duration),
                         'status' => 'confirmed',  // User-facing status (already confirmed)
                         'calcom_sync_status' => 'pending',  // Internal sync status
-                        'sync_origin' => 'retell',  // FIX: ENUM only allows 'retell', not 'retell_phone'
+                        // 🔧 FIX 2025-11-19: sync_origin = 'system' for ASYNC (Cal.com sync happens later in job)
+                        'sync_origin' => 'system',  // Will be updated to 'calcom' after background job succeeds
                         'source' => 'retell_phone',
                         'booking_type' => 'single',
                         'notes' => $notes,
@@ -1915,6 +2022,38 @@ class RetellFunctionCallHandler extends Controller
             }
 
             // SYNC PATH (FALLBACK): Original synchronous booking
+            // 🔒 SECURITY FIX 2025-11-19: PRE-SYNC VALIDATION (SYNC path)
+            // Check for conflicting appointments BEFORE Cal.com API call
+            // Uses pessimistic locking to prevent race conditions
+            $conflictCheck = \App\Models\Appointment::where('branch_id', $branchId)
+                ->where('company_id', $companyId)
+                ->where('starts_at', $appointmentTime)
+                ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($conflictCheck) {
+                Log::warning('🚨 PRE-SYNC CONFLICT: Slot already booked (SYNC)', [
+                    'call_id' => $callId,
+                    'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                    'existing_appointment_id' => $conflictCheck->id,
+                    'existing_customer' => $conflictCheck->customer_id,
+                    'company_id' => $companyId,
+                    'branch_id' => $branchId
+                ]);
+
+                return $this->responseFormatter->error(
+                    'Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen Zeitpunkt.'
+                );
+            }
+
+            Log::debug('✅ PRE-SYNC VALIDATION passed: No conflicts (SYNC)', [
+                'call_id' => $callId,
+                'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                'company_id' => $companyId,
+                'branch_id' => $branchId
+            ]);
+
             // LAYER 2: Booking attempt with smart retry
             $maxRetries = 1;
             $attempt = 0;
@@ -2037,6 +2176,9 @@ class RetellFunctionCallHandler extends Controller
                             'starts_at' => $appointmentTime,
                             'ends_at' => $appointmentTime->copy()->addMinutes($duration),
                             'status' => 'confirmed',
+                            // 🔧 FIX 2025-11-19: Add sync_origin and calcom_sync_status for SYNC path
+                            'sync_origin' => 'calcom',  // Booked directly in Cal.com (synchronous)
+                            'calcom_sync_status' => 'synced',  // Already synced to Cal.com
                             'source' => 'retell_phone',
                             'booking_type' => 'single',
                             'notes' => $notes,
@@ -2186,11 +2328,26 @@ class RetellFunctionCallHandler extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Error booking appointment', [
-                'error' => $e->getMessage(),
-                'call_id' => $callId
+            // 🔧 FIX 2025-11-19: Comprehensive diagnostic logging with stack trace
+            Log::error('❌ BOOKING EXCEPTION - FULL DETAILS', [
+                'call_id' => $callId,
+                'error_message' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'stack_trace' => $e->getTraceAsString(),
+                'params_received' => $params,
+                'datetime_param' => $params['datetime'] ?? 'NOT_SET',
+                'date_param' => $params['date'] ?? 'NOT_SET',
+                'time_param' => $params['time'] ?? 'NOT_SET',
+                'appointment_date_param' => $params['appointment_date'] ?? 'NOT_SET',
+                'appointment_time_param' => $params['appointment_time'] ?? 'NOT_SET'
             ]);
-            return $this->responseFormatter->error('Fehler bei der Terminbuchung');
+
+            // Return error with exception message for debugging
+            return $this->responseFormatter->error(
+                'Fehler bei der Terminbuchung: ' . $e->getMessage()
+            );
         }
     }
 
