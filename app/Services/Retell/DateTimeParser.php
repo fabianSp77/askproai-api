@@ -394,6 +394,93 @@ class DateTimeParser
             return Carbon::parse(self::GERMAN_DATE_MAP[$normalizedDate])->format('Y-m-d');
         }
 
+        // 🔧 FIX 2025-11-19: Handle "Wochentag, den DD. Monat" pattern
+        // Pattern: "Mittwoch, den 19. November", "Montag, den 25. Dezember"
+        // User said: "Ich hätte gern Friseurtermin für heute. Haben Sie noch was frei um sechzehn Uhr circa?"
+        // Agent asks: "Für welchen Tag?"
+        // User says: "Mittwoch, den 19. November"
+        // PROBLEM: German formatted date with article "den" not recognized
+        // SOLUTION: Parse German weekday + day + month, infer year (current or next)
+        if (preg_match('/^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag),?\s+(?:den\s+)?(\d{1,2})\.?\s+(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/i', $normalizedDate, $matches)) {
+            $weekdayName = strtolower($matches[1]);
+            $day = (int)$matches[2];
+            $monthName = strtolower($matches[3]);
+
+            $monthMap = [
+                'januar' => 1,
+                'februar' => 2,
+                'märz' => 3,
+                'april' => 4,
+                'mai' => 5,
+                'juni' => 6,
+                'juli' => 7,
+                'august' => 8,
+                'september' => 9,
+                'oktober' => 10,
+                'november' => 11,
+                'dezember' => 12,
+            ];
+
+            $weekdayMap = [
+                'montag' => Carbon::MONDAY,
+                'dienstag' => Carbon::TUESDAY,
+                'mittwoch' => Carbon::WEDNESDAY,
+                'donnerstag' => Carbon::THURSDAY,
+                'freitag' => Carbon::FRIDAY,
+                'samstag' => Carbon::SATURDAY,
+                'sonntag' => Carbon::SUNDAY,
+            ];
+
+            if (isset($monthMap[$monthName]) && isset($weekdayMap[$weekdayName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $currentYear = $now->year;
+                    $month = $monthMap[$monthName];
+
+                    // Try current year first
+                    $targetDate = Carbon::createFromDate($currentYear, $month, $day, 'Europe/Berlin');
+
+                    // If date is in past (>2 days ago), try next year
+                    if ($targetDate->isPast() && $targetDate->diffInDays($now, true) > 2) {
+                        $targetDate = Carbon::createFromDate($currentYear + 1, $month, $day, 'Europe/Berlin');
+                    }
+
+                    // Validate that the weekday matches (user said "Mittwoch" but date is actually Monday?)
+                    if ($targetDate->dayOfWeek !== $weekdayMap[$weekdayName]) {
+                        Log::warning('⚠️ Weekday mismatch in German date format', [
+                            'input' => $dateString,
+                            'user_said_weekday' => $weekdayName,
+                            'calculated_weekday' => $targetDate->englishDayOfWeek,
+                            'calculated_date' => $targetDate->format('Y-m-d'),
+                            'action' => 'using_calculated_date_anyway'
+                        ]);
+                    }
+
+                    Log::info('📅 Parsed German "Wochentag, den DD. Monat" format', [
+                        'input' => $dateString,
+                        'normalized' => $normalizedDate,
+                        'weekday' => $weekdayName,
+                        'day' => $day,
+                        'month_name' => $monthName,
+                        'month_number' => $month,
+                        'year_used' => $targetDate->year,
+                        'result_date' => $targetDate->format('Y-m-d (l)'),
+                        'logic' => $targetDate->year > $currentYear ? 'next_year' : 'this_year'
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse German "Wochentag, den DD. Monat" format', [
+                        'input' => $dateString,
+                        'error' => $e->getMessage(),
+                        'weekday' => $weekdayName ?? null,
+                        'day' => $day ?? null,
+                        'month' => $monthName ?? null
+                    ]);
+                }
+            }
+        }
+
         // 🔧 FIX 2025-11-14: Handle "Mittwoch diese Woche" (reversed order)
         // Pattern: "Mittwoch diese Woche" → Wednesday this week
         // User said: "Mittwoch diese Woche um 14:00"
