@@ -83,6 +83,7 @@ class CallbackRequest extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'company_id',      // ✅ Required for API contexts (Retell) without Auth
         'customer_id',
         'branch_id',
         'service_id',

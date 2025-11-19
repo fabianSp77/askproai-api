@@ -158,10 +158,14 @@ class RetellApiController extends Controller
             // 🔧 FIX 2025-11-16: Return ALL expected fields for new_customer/anonymous
             // Agent Flow expects these fields to extract as variables
             // Missing fields cause extract_dynamic_variables to fail → Flow stops!
+            //
+            // 🔧 FIX 2025-11-18: Updated message and suggested_prompt to comply with Flow V72 policy
+            // POLICY: Neukunden (customer_found=false) → NICHT proaktiv nach Telefonnummer/E-Mail fragen!
+            // Only collect passively if customer provides it themselves
             return response()->json([
                 'success' => true,  // ✅ NOT an error - just a new customer scenario
                 'status' => 'new_customer',
-                'message' => 'Dies ist ein neuer Kunde. Bitte fragen Sie nach Name und E-Mail-Adresse.',
+                'message' => 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.',
                 'customer' => [
                     'id' => null,
                     'name' => null,
@@ -179,7 +183,7 @@ class RetellApiController extends Controller
                 'customer_exists' => false,
                 'customer_found' => false,  // ← IMPORTANT for Flow boolean variable
                 'next_steps' => 'ask_for_customer_details',
-                'suggested_prompt' => 'Kein Problem! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?'
+                'suggested_prompt' => 'Wie kann ich Ihnen helfen?'  // ✅ Neutral - kein proaktives Fragen nach Telefon/E-Mail
             ], 200);
 
         } catch (\Exception $e) {
