@@ -167,6 +167,25 @@ class AppointmentAlternativeFinder
                 $alternatives = $alternatives->merge($found);
             }
 
+            // 🔧 FIX 2025-11-18: Filter ALL slot conflicts (not just customer's own appointments)
+            // ROOT CAUSE: System offered 14:55 even though it overlaps with 15:00-16:00 booking
+            // This prevents offering slots that overlap with ANY existing appointment
+            $beforeCount = $alternatives->count();
+            $alternatives = $this->filterOutAllConflicts(
+                $alternatives,
+                $durationMinutes,
+                $desiredDateTime
+            );
+            $afterCount = $alternatives->count();
+
+            if ($beforeCount > $afterCount) {
+                Log::info('✅ Filtered out conflicting alternatives', [
+                    'before_count' => $beforeCount,
+                    'after_count' => $afterCount,
+                    'removed' => $beforeCount - $afterCount
+                ]);
+            }
+
             // 🔧 FIX 2025-10-13: Filter out customer's existing appointments
             // Prevents offering times where customer already has appointments
             if ($customerId) {
@@ -428,17 +447,33 @@ class AppointmentAlternativeFinder
         Carbon $endTime,
         int $eventTypeId
     ): array {
-        // SECURITY FIX: Include company_id and branch_id in cache key to prevent cross-tenant data leakage
+        // 🔒 SECURITY FIX 2025-11-19 (CRIT-002): Enforce tenant context before caching
+        // Prevents cache poisoning and cross-tenant data leakage
+        if ($this->companyId === null || $this->branchId === null) {
+            Log::error('⚠️ SECURITY: getAvailableSlots called without tenant context', [
+                'company_id' => $this->companyId,
+                'branch_id' => $this->branchId,
+                'event_type_id' => $eventTypeId,
+                'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+            ]);
+            throw new \RuntimeException(
+                'SECURITY: Tenant context required. Call setTenantContext() before getAvailableSlots()'
+            );
+        }
+
+        // SECURITY: Include company_id and branch_id in cache key to prevent cross-tenant data leakage
         $cacheKey = sprintf(
-            'cal_slots_%d_%d_%d_%s_%s',
-            $this->companyId ?? 0,
-            $this->branchId ?? 0,
+            'cal_slots_%d_%s_%d_%s_%s',
+            $this->companyId,      // NOT ?? 0
+            $this->branchId,       // NOT ?? 0
             $eventTypeId,
             $startTime->format('Y-m-d-H'),
             $endTime->format('Y-m-d-H')
         );
 
-        return Cache::remember($cacheKey, 300, function() use ($startTime, $endTime, $eventTypeId) {
+        // 🔧 FIX 2025-11-19: Reduce cache TTL from 300s to 60s
+        // Reduces race condition window from 5 minutes to 1 minute
+        return Cache::remember($cacheKey, 60, function() use ($startTime, $endTime, $eventTypeId) {
             try {
                 $response = $this->calcomService->getAvailableSlots(
                     $eventTypeId,
@@ -1107,5 +1142,107 @@ class AppointmentAlternativeFinder
         }
 
         return $filtered;
+    }
+
+    /**
+     * 🔧 FIX 2025-11-18: Filter out alternatives that overlap with ANY existing appointment
+     * 🔒 SECURITY FIX 2025-11-19 (CRIT-003): Add company_id filter for multi-tenant isolation
+     *
+     * ROOT CAUSE: System offered 14:55 when 15:00 was occupied
+     * PROBLEM: filterOutCustomerConflicts only checks customer's OWN appointments
+     * SOLUTION: Check against ALL appointments in the system for the branch
+     *
+     * @param Collection $alternatives Alternative time slots to validate
+     * @param int $durationMinutes Service duration in minutes
+     * @param Carbon $searchDate Date to check for existing appointments
+     * @return Collection Filtered alternatives without ANY conflicts
+     */
+    private function filterOutAllConflicts(
+        Collection $alternatives,
+        int $durationMinutes,
+        Carbon $searchDate
+    ): Collection {
+        // 🔒 SECURITY: Enforce tenant context before conflict checking
+        if ($this->companyId === null || $this->branchId === null) {
+            Log::error('⚠️ SECURITY: filterOutAllConflicts called without tenant context', [
+                'company_id' => $this->companyId,
+                'branch_id' => $this->branchId,
+                'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+            ]);
+            throw new \RuntimeException(
+                'SECURITY: Tenant context required. Call setTenantContext() before filterOutAllConflicts()'
+            );
+        }
+
+        // Get ALL appointments for this company AND branch on the search date
+        // 🔒 SECURITY: Filter by BOTH company_id AND branch_id to prevent cross-tenant data leakage
+        $existingAppointments = \App\Models\Appointment::where('company_id', $this->companyId)
+            ->where('branch_id', $this->branchId)
+            ->where('status', '!=', 'cancelled')
+            ->whereDate('starts_at', $searchDate->format('Y-m-d'))
+            ->get();
+
+        if ($existingAppointments->isEmpty()) {
+            Log::debug('No existing appointments on this date', [
+                'company_id' => $this->companyId,
+                'branch_id' => $this->branchId,
+                'date' => $searchDate->format('Y-m-d')
+            ]);
+            return $alternatives;
+        }
+
+        Log::info('🔍 Checking alternatives against ALL existing appointments', [
+            'company_id' => $this->companyId,
+            'branch_id' => $this->branchId,
+            'date' => $searchDate->format('Y-m-d'),
+            'existing_count' => $existingAppointments->count(),
+            'alternatives_count' => $alternatives->count()
+        ]);
+
+        // Filter out conflicting alternatives
+        $filtered = $alternatives->filter(function($alt) use ($existingAppointments, $durationMinutes) {
+            $altStart = $alt['datetime'];
+            $altEnd = $altStart->copy()->addMinutes($durationMinutes);
+
+            foreach ($existingAppointments as $appt) {
+                // Check for overlap: two time ranges overlap if start1 < end2 AND start2 < end1
+                $overlaps = $altStart < $appt->ends_at && $appt->starts_at < $altEnd;
+
+                if ($overlaps) {
+                    Log::debug('🚫 Filtered out overlapping alternative', [
+                        'alternative_time' => $altStart->format('H:i') . '-' . $altEnd->format('H:i'),
+                        'conflicts_with_appointment' => $appt->id,
+                        'appointment_time' => $appt->starts_at->format('H:i') . '-' . $appt->ends_at->format('H:i'),
+                        'overlap_minutes' => $this->calculateOverlapMinutes($altStart, $altEnd, $appt->starts_at, $appt->ends_at)
+                    ]);
+                    return false;  // Exclude this alternative
+                }
+            }
+
+            return true;  // No conflicts
+        });
+
+        return $filtered;
+    }
+
+    /**
+     * Calculate overlap duration between two time ranges
+     *
+     * @param Carbon $start1 Start of first time range
+     * @param Carbon $end1 End of first time range
+     * @param Carbon $start2 Start of second time range
+     * @param Carbon $end2 End of second time range
+     * @return int Overlap duration in minutes (0 if no overlap)
+     */
+    private function calculateOverlapMinutes(Carbon $start1, Carbon $end1, Carbon $start2, Carbon $end2): int
+    {
+        $overlapStart = max($start1, $start2);
+        $overlapEnd = min($end1, $end2);
+
+        if ($overlapStart >= $overlapEnd) {
+            return 0;
+        }
+
+        return $overlapStart->diffInMinutes($overlapEnd);
     }
 }
