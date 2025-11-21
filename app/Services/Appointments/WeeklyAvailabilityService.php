@@ -100,7 +100,9 @@ class WeeklyAvailabilityService implements AvailabilityServiceInterface
             'cache_key' => $cacheKey,
         ]);
 
-        return Cache::remember($cacheKey, 60, function() use ($service, $weekStart, $weekEnd, $cacheKey, $teamId) {
+        // 🔧 FIX 2025-11-21: Reduced cache TTL from 60s to 30s
+        // Reduces race condition window for external bookings
+        return Cache::remember($cacheKey, 30, function() use ($service, $weekStart, $weekEnd, $cacheKey, $teamId) {
             try {
                 // Fetch from Cal.com API with team context
                 $response = $this->calcomService->getAvailableSlots(

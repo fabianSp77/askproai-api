@@ -2092,11 +2092,34 @@ class RetellFunctionCallHandler extends Controller
                     $customer = $this->customerResolver->ensureCustomerFromCall($call, $customerName, $customerEmail);
 
                     // 🔒 SECURITY FIX 2025-11-19: PRE-SYNC VALIDATION (ASYNC path)
+                    // 🔧 FIX 2025-11-21: Timezone-aware conflict detection with overlap checking
                     // Check for conflicting appointments BEFORE creating local appointment
                     // Uses pessimistic locking to prevent race conditions
+
+                    // Normalize to UTC for consistent comparison
+                    $startTimeUTC = $appointmentTime->copy()->setTimezone('UTC');
+                    $endTimeUTC = $appointmentTime->copy()
+                        ->addMinutes($service->duration_minutes ?? 60)
+                        ->setTimezone('UTC');
+
                     $conflictCheck = \App\Models\Appointment::where('branch_id', $branchId)
                         ->where('company_id', $companyId)
-                        ->where('starts_at', $appointmentTime)
+                        ->where(function($query) use ($startTimeUTC, $endTimeUTC) {
+                            // Check for ANY overlap, not just exact start time match
+                            $query->where(function($q) use ($startTimeUTC, $endTimeUTC) {
+                                // New appointment starts during existing appointment
+                                $q->where('starts_at', '<=', $startTimeUTC)
+                                  ->where('ends_at', '>', $startTimeUTC);
+                            })->orWhere(function($q) use ($startTimeUTC, $endTimeUTC) {
+                                // New appointment ends during existing appointment
+                                $q->where('starts_at', '<', $endTimeUTC)
+                                  ->where('ends_at', '>=', $endTimeUTC);
+                            })->orWhere(function($q) use ($startTimeUTC, $endTimeUTC) {
+                                // New appointment completely contains existing appointment
+                                $q->where('starts_at', '>=', $startTimeUTC)
+                                  ->where('ends_at', '<=', $endTimeUTC);
+                            });
+                        })
                         ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
                         ->lockForUpdate()
                         ->first();
@@ -2194,11 +2217,34 @@ class RetellFunctionCallHandler extends Controller
 
             // SYNC PATH (FALLBACK): Original synchronous booking
             // 🔒 SECURITY FIX 2025-11-19: PRE-SYNC VALIDATION (SYNC path)
+            // 🔧 FIX 2025-11-21: Timezone-aware conflict detection with overlap checking
             // Check for conflicting appointments BEFORE Cal.com API call
             // Uses pessimistic locking to prevent race conditions
+
+            // Normalize to UTC for consistent comparison
+            $startTimeUTC = $appointmentTime->copy()->setTimezone('UTC');
+            $endTimeUTC = $appointmentTime->copy()
+                ->addMinutes($service->duration_minutes ?? 60)
+                ->setTimezone('UTC');
+
             $conflictCheck = \App\Models\Appointment::where('branch_id', $branchId)
                 ->where('company_id', $companyId)
-                ->where('starts_at', $appointmentTime)
+                ->where(function($query) use ($startTimeUTC, $endTimeUTC) {
+                    // Check for ANY overlap, not just exact start time match
+                    $query->where(function($q) use ($startTimeUTC, $endTimeUTC) {
+                        // New appointment starts during existing appointment
+                        $q->where('starts_at', '<=', $startTimeUTC)
+                          ->where('ends_at', '>', $startTimeUTC);
+                    })->orWhere(function($q) use ($startTimeUTC, $endTimeUTC) {
+                        // New appointment ends during existing appointment
+                        $q->where('starts_at', '<', $endTimeUTC)
+                          ->where('ends_at', '>=', $endTimeUTC);
+                    })->orWhere(function($q) use ($startTimeUTC, $endTimeUTC) {
+                        // New appointment completely contains existing appointment
+                        $q->where('starts_at', '>=', $startTimeUTC)
+                          ->where('ends_at', '<=', $endTimeUTC);
+                    });
+                })
                 ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
                 ->lockForUpdate()
                 ->first();
@@ -2235,6 +2281,58 @@ class RetellFunctionCallHandler extends Controller
                 $attempt++;
 
                 try {
+                    // 🔧 FIX 2025-11-21: DOUBLE-CHECK PATTERN
+                    // Re-check availability with Cal.com API immediately before booking
+                    // This eliminates the race condition window between check_availability and start_booking
+                    Log::debug('🔄 DOUBLE-CHECK: Re-verifying availability before booking', [
+                        'call_id' => $callId,
+                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'service' => $service->name
+                    ]);
+
+                    try {
+                        $freshAvailability = $this->calcomService->getAvailableSlots(
+                            eventTypeId: $service->calcom_event_type_id,
+                            startDate: $appointmentTime->format('Y-m-d'),
+                            endDate: $appointmentTime->format('Y-m-d'),
+                            teamId: $company->calcom_team_id ?? null
+                        );
+
+                        $requestedSlot = $appointmentTime->format('Y-m-d\TH:i:s');
+                        $slotAvailable = false;
+
+                        foreach ($freshAvailability as $slot) {
+                            if (str_starts_with($slot['time'], $requestedSlot)) {
+                                $slotAvailable = true;
+                                break;
+                            }
+                        }
+
+                        if (!$slotAvailable) {
+                            Log::warning('⚠️ DOUBLE-CHECK FAILED: Slot no longer available', [
+                                'call_id' => $callId,
+                                'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                                'service' => $service->name
+                            ]);
+
+                            return $this->responseFormatter->error(
+                                'Dieser Termin wurde gerade vergeben. Möchten Sie einen anderen Zeitpunkt wählen?'
+                            );
+                        }
+
+                        Log::info('✅ DOUBLE-CHECK PASSED: Slot confirmed available', [
+                            'call_id' => $callId,
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i')
+                        ]);
+
+                    } catch (\Exception $doubleCheckError) {
+                        // If double-check fails, log but continue (don't block booking)
+                        Log::warning('⚠️ DOUBLE-CHECK ERROR: Continuing with booking attempt', [
+                            'call_id' => $callId,
+                            'error' => $doubleCheckError->getMessage()
+                        ]);
+                    }
+
                     // Create booking via Cal.com
                     $booking = $this->calcomService->createBooking([
                         'eventTypeId' => $service->calcom_event_type_id,

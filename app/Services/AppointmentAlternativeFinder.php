@@ -472,8 +472,9 @@ class AppointmentAlternativeFinder
         );
 
         // 🔧 FIX 2025-11-19: Reduce cache TTL from 300s to 60s
-        // Reduces race condition window from 5 minutes to 1 minute
-        return Cache::remember($cacheKey, 60, function() use ($startTime, $endTime, $eventTypeId) {
+        // 🔧 FIX 2025-11-21: Further reduced from 60s to 30s
+        // Reduces race condition window from 1 minute to 30 seconds
+        return Cache::remember($cacheKey, 30, function() use ($startTime, $endTime, $eventTypeId) {
             try {
                 $response = $this->calcomService->getAvailableSlots(
                     $eventTypeId,
