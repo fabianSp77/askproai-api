@@ -120,8 +120,39 @@ class RetellFunctionCallHandler extends Controller
         // ============================================
         // LAYER 2: Function Parameters (STANDARD)
         // ============================================
+        // 🔥 FIX 2025-11-19: Check for placeholders FIRST, then try data.call.call_id
         $paramCallId = $parameters['call_id'] ?? $data['call_id'] ?? null;
-        if ($paramCallId && $paramCallId !== 'None') {
+
+        // Define all known placeholders
+        $placeholders = ['dummy_call_id', 'None', 'current', 'current_call'];
+
+        // If parameter is a placeholder, try to get real call_id from data.call.call_id
+        if ($paramCallId && in_array($paramCallId, $placeholders, true)) {
+            Log::info('🔍 Layer 2: Parameter is placeholder, checking data.call.call_id', [
+                'placeholder' => $paramCallId,
+                'checking' => '$data[\'call\'][\'call_id\']'
+            ]);
+
+            // Try to extract real call_id from nested data structure
+            $realCallId = $data['call']['call_id'] ?? null;
+            if ($realCallId && strlen($realCallId) === 32) {
+                Log::info('✅ Layer 2: Real Call ID extracted from data.call.call_id', [
+                    'placeholder' => $paramCallId,
+                    'real_call_id' => $realCallId,
+                    'source' => 'data.call.call_id'
+                ]);
+                return $realCallId;
+            } else {
+                Log::warning('⚠️ Layer 2: data.call.call_id not found or invalid', [
+                    'placeholder' => $paramCallId,
+                    'data_call_call_id' => $realCallId,
+                    'will_try_layer_4' => true
+                ]);
+                $paramCallId = null; // Clear placeholder so Layer 4 can try
+            }
+        }
+
+        if ($paramCallId && !in_array($paramCallId, $placeholders, true)) {
             $callId = $paramCallId;
             $source = 'parameter';
 
@@ -394,16 +425,42 @@ class RetellFunctionCallHandler extends Controller
             }
         }
 
-        // Final validation: ensure we have valid company_id
+        // 🔥 FIX 2025-11-19: DEFAULT BRANCH FALLBACK
+        // If company_id/branch_id still NULL after all resolution attempts,
+        // use default branch to prevent "Call context not available" errors
         if (!$companyId || !$branchId) {
-            Log::error('❌ getCallContext: Final validation failed - NULL company/branch', [
+            Log::error('❌ getCallContext: company/branch resolution failed - trying DEFAULT BRANCH fallback', [
                 'call_id' => $call->id,
                 'company_id' => $companyId,
                 'branch_id' => $branchId,
                 'from_number' => $call->from_number,
                 'to_number' => $call->to_number
             ]);
-            return null;
+
+            // Try to get default branch for company_id 1 (fallback)
+            $defaultBranch = \App\Models\Branch::where('company_id', 1)
+                ->where('is_default', true)
+                ->first();
+
+            if ($defaultBranch) {
+                $companyId = $defaultBranch->company_id;
+                $branchId = $defaultBranch->id;
+
+                Log::info('✅ DEFAULT BRANCH FALLBACK successful', [
+                    'call_id' => $call->id,
+                    'fallback_company_id' => $companyId,
+                    'fallback_branch_id' => $branchId,
+                    'fallback_branch_name' => $defaultBranch->name,
+                    'source' => 'default_branch_fallback'
+                ]);
+            } else {
+                Log::critical('🚨 NO DEFAULT BRANCH FOUND - functions will fail!', [
+                    'call_id' => $call->id,
+                    'company_id' => 1,
+                    'suggestion' => 'Ensure default branch exists in database with is_default=true'
+                ]);
+                return null;
+            }
         }
 
         return [
@@ -470,6 +527,24 @@ class RetellFunctionCallHandler extends Controller
                 'header_call_id' => $request->header('X-Retell-Call-Id') ?? 'missing'
             ]);
             // Continue processing - some functions may not need call context
+        }
+
+        // 🔥 CRITICAL FIX 2025-11-19: Replace placeholder call_ids with real call_id in parameters
+        // ROOT CAUSE: Retell sends placeholders in args.call_id but real call_id in call.call_id
+        // PLACEHOLDERS: "dummy_call_id" (old), "None" (Python), "current" (V121 12:33), "current_call" (V121 14:28+)
+        // IMPACT: getCallContext($parameters['call_id']) fails → "Call context not available" errors
+        // SOLUTION: Replace ALL known placeholders with extracted real call_id
+        if (isset($parameters['call_id']) && in_array($parameters['call_id'], ['dummy_call_id', 'None', 'current', 'current_call'], true) && $callId) {
+            $originalCallId = $parameters['call_id'];
+            $parameters['call_id'] = $callId;
+
+            Log::info('🔧 Replaced placeholder call_id in parameters', [
+                'function' => $functionName,
+                'original_call_id' => $originalCallId,
+                'real_call_id' => $callId,
+                'placeholder_type' => $originalCallId,
+                'source' => 'data.call.call_id'
+            ]);
         }
 
         // 🔧 FIX 2025-10-23: Strip version suffix (_v17, _v18, etc.) to support versioned function names
@@ -1033,6 +1108,97 @@ class RetellFunctionCallHandler extends Controller
                     'cache_key' => "call:{$callId}:service_id",
                     'ttl_minutes' => 30
                 ]);
+            }
+
+            // 🔥 FIX 2025-11-19: PROCESSING TIME LOGIC
+            // Services with has_processing_time=true (e.g., Dauerwelle) have 3 phases:
+            // - Initial: Staff BUSY (applying treatment)
+            // - Processing: Staff AVAILABLE (treatment processing, staff can serve others)
+            // - Final: Staff BUSY (finishing treatment)
+            // We must check phase-aware availability, not full duration blocking
+            if ($service->has_processing_time) {
+                Log::info('⏱️ Processing Time service detected - using phase-aware availability', [
+                    'call_id' => $callId,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'initial_duration' => $service->initial_duration,
+                    'processing_duration' => $service->processing_duration,
+                    'final_duration' => $service->final_duration,
+                    'total_duration' => $service->duration,
+                    'requested_time' => $requestedDate->format('Y-m-d H:i')
+                ]);
+
+                // Get staff for this branch
+                $staff = \App\Models\Staff::where('branch_id', $branchId)
+                    ->where('is_active', true)
+                    ->whereHas('services', function($q) use ($service) {
+                        $q->where('service_id', $service->id);
+                    })
+                    ->first();
+
+                if (!$staff) {
+                    Log::error('❌ No staff found for processing time service', [
+                        'service_id' => $service->id,
+                        'branch_id' => $branchId
+                    ]);
+                    return $this->responseFormatter->error('Kein Mitarbeiter für diesen Service verfügbar');
+                }
+
+                // Use ProcessingTimeAvailabilityService for phase-aware checking
+                $availabilityService = app(\App\Services\ProcessingTimeAvailabilityService::class);
+
+                $isPhaseAvailable = $availabilityService->isStaffAvailable(
+                    $staff->id,
+                    $requestedDate,
+                    $service
+                );
+
+                if ($isPhaseAvailable) {
+                    Log::info('✅ Processing time availability confirmed', [
+                        'call_id' => $callId,
+                        'staff_id' => $staff->id,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'service' => $service->name,
+                        'note' => 'Staff available for both initial and final phases'
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'available' => true,
+                        'service' => $service->name,
+                        'staff' => $staff->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'message' => sprintf(
+                            'Ja, %s ist verfügbar am %s um %s Uhr.',
+                            $service->name,
+                            $requestedDate->locale('de')->isoFormat('dddd, [den] D. MMMM'),
+                            $requestedDate->format('H:i')
+                        ),
+                    ];
+                } else {
+                    Log::warning('⚠️ Processing time service not available at requested time', [
+                        'call_id' => $callId,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'note' => 'Staff busy during initial or final phase'
+                    ]);
+
+                    // Find alternative times (reuse composite service logic)
+                    $alternatives = $this->findAlternativesForCompositeService(
+                        $service,
+                        $staff,
+                        $requestedDate,
+                        $branchId
+                    );
+
+                    return [
+                        'success' => true,
+                        'available' => false,
+                        'service' => $service->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'alternatives' => $alternatives,
+                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
+                    ];
+                }
             }
 
             // 🔧 REFACTORED 2025-11-13: Cal.com as SOURCE OF TRUTH for composite services
@@ -1862,12 +2028,16 @@ class RetellFunctionCallHandler extends Controller
 
                             // Find new alternatives
                             // 🔧 FIX 2025-11-14: Correct parameter order for findAlternatives()
-                            $alternatives = $this->alternativeFinder->findAlternatives(
-                                $appointmentTime,                   // Carbon $desiredDateTime
-                                $service->duration_minutes,         // int $durationMinutes
-                                $service->calcom_event_type_id,    // int $eventTypeId
-                                $customerId                         // ?int $customerId
-                            );
+                            // 🔒 FIX 2025-11-19: Set tenant context before calling findAlternatives()
+                            // CRITICAL: Prevents "SECURITY: Tenant context required" error
+                            $alternatives = $this->alternativeFinder
+                                ->setTenantContext($companyId, $branchId)
+                                ->findAlternatives(
+                                    $appointmentTime,                   // Carbon $desiredDateTime
+                                    $service->duration_minutes,         // int $durationMinutes
+                                    $service->calcom_event_type_id,    // int $eventTypeId
+                                    $customerId                         // ?int $customerId
+                                );
 
                             return $this->responseFormatter->error(
                                 'Dieser Termin wurde gerade vergeben. Ich habe neue Alternativen für Sie.',
@@ -1963,7 +2133,8 @@ class RetellFunctionCallHandler extends Controller
                         'staff_id' => $preferredStaffId,
                         'call_id' => $call->id,
                         'starts_at' => $appointmentTime,
-                        'ends_at' => $appointmentTime->copy()->addMinutes($duration),
+                        // CRITICAL FIX 2025-11-21: Use service duration, not parameter default
+                        'ends_at' => $appointmentTime->copy()->addMinutes($service->duration_minutes),
                         'status' => 'confirmed',  // User-facing status (already confirmed)
                         'calcom_sync_status' => 'pending',  // Internal sync status
                         // 🔧 FIX 2025-11-19: sync_origin = 'system' for ASYNC (Cal.com sync happens later in job)
@@ -2108,12 +2279,15 @@ class RetellFunctionCallHandler extends Controller
                             // Find new alternatives instead of hard failure
                             try {
                                 // 🔧 FIX 2025-11-14: Correct parameter order for findAlternatives()
-                                $alternatives = $this->alternativeFinder->findAlternatives(
-                                    $appointmentTime,                   // Carbon $desiredDateTime
-                                    $service->duration_minutes,         // int $durationMinutes
-                                    $service->calcom_event_type_id,    // int $eventTypeId
-                                    $customerId                         // ?int $customerId
-                                );
+                                // 🔒 FIX 2025-11-19: Set tenant context before calling findAlternatives()
+                                $alternatives = $this->alternativeFinder
+                                    ->setTenantContext($companyId, $branchId)
+                                    ->findAlternatives(
+                                        $appointmentTime,                   // Carbon $desiredDateTime
+                                        $service->duration_minutes,         // int $durationMinutes
+                                        $service->calcom_event_type_id,    // int $eventTypeId
+                                        $customerId                         // ?int $customerId
+                                    );
 
                                 if (!empty($alternatives)) {
                                     // 🔧 FIX 2025-11-14: Return SUCCESS with alternatives, not ERROR
@@ -2174,7 +2348,8 @@ class RetellFunctionCallHandler extends Controller
                             'staff_id' => $preferredStaffId,  // 🔥 NEW: Customer Recognition - Preferred staff
                             'call_id' => $call->id,
                             'starts_at' => $appointmentTime,
-                            'ends_at' => $appointmentTime->copy()->addMinutes($duration),
+                            // CRITICAL FIX 2025-11-21: Use service duration, not parameter default
+                            'ends_at' => $appointmentTime->copy()->addMinutes($service->duration_minutes),
                             'status' => 'confirmed',
                             // 🔧 FIX 2025-11-19: Add sync_origin and calcom_sync_status for SYNC path
                             'sync_origin' => 'calcom',  // Booked directly in Cal.com (synchronous)
@@ -2414,25 +2589,92 @@ class RetellFunctionCallHandler extends Controller
                 ]);
             }
 
-            // Standard behavior: List multiple services for manual selection
+            // 🔥 FIX 2025-11-19: SERVICE FILTERING (Progressive Disclosure UX)
+            // PROBLEM: Agent lists all 20+ services → information overload
+            // SOLUTION: Group by category, show categories first OR filter by gender/category if specified
+
+            // Check for optional filtering parameters
+            $category = $params['category'] ?? null;
+            $gender = $params['gender'] ?? null; // "damen", "herren", "kinder"
+
+            // If filtering requested, apply filters
+            if ($category || $gender) {
+                if ($gender) {
+                    $services = $services->filter(function($service) use ($gender) {
+                        return stripos($service->name, $gender) !== false;
+                    });
+
+                    Log::info('Services filtered by gender', [
+                        'gender' => $gender,
+                        'filtered_count' => $services->count(),
+                        'call_id' => $callId
+                    ]);
+                }
+
+                if ($category) {
+                    $services = $services->filter(function($service) use ($category) {
+                        return stripos($service->category, $category) !== false;
+                    });
+
+                    Log::info('Services filtered by category', [
+                        'category' => $category,
+                        'filtered_count' => $services->count(),
+                        'call_id' => $callId
+                    ]);
+                }
+            }
+
+            // 🔥 UX IMPROVEMENT: Show categories overview if many services (>5)
+            if ($services->count() > 5 && !$category && !$gender) {
+                // Extract unique categories
+                $categories = $services->pluck('category')->filter()->unique()->values();
+
+                if ($categories->count() > 1) {
+                    Log::info('Showing category overview instead of full service list', [
+                        'total_services' => $services->count(),
+                        'categories' => $categories->toArray(),
+                        'call_id' => $callId
+                    ]);
+
+                    $message = "Wir bieten Dienstleistungen in folgenden Kategorien an: ";
+                    $message .= $categories->join(', ') . '. ';
+                    $message .= "Für welche Kategorie interessieren Sie sich?";
+
+                    return $this->responseFormatter->success([
+                        'auto_selected' => false,
+                        'categories' => $categories->toArray(),
+                        'service_count' => $services->count(),
+                        'message' => $message,
+                        'progressive_disclosure' => true
+                    ]);
+                }
+            }
+
+            // Standard behavior: List services (≤5 or after filtering)
             $serviceList = $services->map(function($service) {
                 return [
                     'id' => $service->id,
                     'name' => $service->name,
                     'duration' => $service->duration,
                     'price' => $service->price,
-                    'description' => $service->description
+                    'description' => $service->description,
+                    'category' => $service->category
                 ];
-            });
+            })->take(5); // Limit to max 5 services even after filtering
 
             $message = "Wir bieten folgende Services an: ";
-            $message .= $services->pluck('name')->join(', ');
+            $message .= $services->take(5)->pluck('name')->join(', ');
+
+            if ($services->count() > 5) {
+                $message .= " ... und weitere. Welcher interessiert Sie?";
+            }
 
             return $this->responseFormatter->success([
                 'auto_selected' => false,
                 'services' => $serviceList,
                 'message' => $message,
-                'count' => $services->count()
+                'count' => $services->count(),
+                'shown' => min(5, $services->count())
             ]);
 
         } catch (\Exception $e) {
@@ -2621,14 +2863,102 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
+     * Convert time (HH:MM) to natural German expression
+     *
+     * @param string $time Time in HH:MM format
+     * @return string Natural German time expression
+     */
+    private function convertToNaturalGermanTime(string $time): string
+    {
+        [$hours, $minutes] = explode(':', $time);
+        $hours = (int) $hours;
+        $minutes = (int) $minutes;
+
+        // Exact hours (10:00, 14:00, etc.)
+        if ($minutes === 0) {
+            return $this->numberToGermanWord($hours) . " Uhr";
+        }
+
+        // Special cases for common times
+        if ($minutes === 30) {
+            return "halb " . $this->numberToGermanWord($hours + 1);
+        }
+
+        if ($minutes === 15) {
+            return "viertel nach " . $this->numberToGermanWord($hours);
+        }
+
+        if ($minutes === 45) {
+            return "viertel vor " . $this->numberToGermanWord($hours + 1);
+        }
+
+        // 5 minutes before (09:55 -> "fünf vor zehn")
+        if ($minutes === 55) {
+            return "fünf vor " . $this->numberToGermanWord($hours + 1);
+        }
+
+        // 10 minutes before (09:50 -> "zehn vor zehn")
+        if ($minutes === 50) {
+            return "zehn vor " . $this->numberToGermanWord($hours + 1);
+        }
+
+        // 5 minutes after (10:05 -> "fünf nach zehn")
+        if ($minutes === 5) {
+            return "fünf nach " . $this->numberToGermanWord($hours);
+        }
+
+        // 10 minutes after (10:10 -> "zehn nach zehn")
+        if ($minutes === 10) {
+            return "zehn nach " . $this->numberToGermanWord($hours);
+        }
+
+        // 20 minutes after (10:20 -> "zwanzig nach zehn")
+        if ($minutes === 20) {
+            return "zwanzig nach " . $this->numberToGermanWord($hours);
+        }
+
+        // 20 minutes before (09:40 -> "zwanzig vor zehn")
+        if ($minutes === 40) {
+            return "zwanzig vor " . $this->numberToGermanWord($hours + 1);
+        }
+
+        // Fallback: standard format (e.g., "10 Uhr 17")
+        return $this->numberToGermanWord($hours) . " Uhr " . $this->numberToGermanWord($minutes);
+    }
+
+    /**
+     * Convert number to German word (1-24 for hours, 1-59 for minutes)
+     *
+     * @param int $number
+     * @return string German word
+     */
+    private function numberToGermanWord(int $number): string
+    {
+        $words = [
+            0 => 'null', 1 => 'eins', 2 => 'zwei', 3 => 'drei', 4 => 'vier',
+            5 => 'fünf', 6 => 'sechs', 7 => 'sieben', 8 => 'acht', 9 => 'neun',
+            10 => 'zehn', 11 => 'elf', 12 => 'zwölf', 13 => 'dreizehn', 14 => 'vierzehn',
+            15 => 'fünfzehn', 16 => 'sechzehn', 17 => 'siebzehn', 18 => 'achtzehn', 19 => 'neunzehn',
+            20 => 'zwanzig', 21 => 'einundzwanzig', 22 => 'zweiundzwanzig', 23 => 'dreiundzwanzig', 24 => 'vierundzwanzig',
+            25 => 'fünfundzwanzig', 30 => 'dreißig', 35 => 'fünfunddreißig', 40 => 'vierzig',
+            45 => 'fünfundvierzig', 50 => 'fünfzig', 55 => 'fünfundfünfzig'
+        ];
+
+        return $words[$number] ?? (string) $number;
+    }
+
+    /**
      * Format alternatives for Retell AI to speak naturally
      */
     private function formatAlternativesForRetell(array $alternatives): array
     {
         return array_map(function($alt) {
+            $time = $alt['datetime']->format('H:i');
+
             return [
                 'time' => $alt['datetime']->format('Y-m-d H:i'),
                 'spoken' => $alt['description'],
+                'spoken_time' => $this->convertToNaturalGermanTime($time),  // ✅ NEW: Natural time
                 'available' => $alt['available'] ?? true,
                 'type' => $alt['type'] ?? 'alternative'
             ];
@@ -3555,6 +3885,32 @@ class RetellFunctionCallHandler extends Controller
                             if ($response->successful()) {
                                 $booking = $response->json()['data'] ?? [];
 
+                                // 🔧 FIX 2025-11-20: Fetch full booking details with host/organizer data
+                                // Cal.com POST /bookings doesn't include host info, must GET separately
+                                $bookingWithHost = $booking;
+                                $bookingUidOrId = $booking['uid'] ?? $booking['id'] ?? null;
+
+                                if ($bookingUidOrId) {
+                                    try {
+                                        $fullBookingResponse = $calcomService->getBooking($bookingUidOrId);
+                                        if ($fullBookingResponse->successful()) {
+                                            $bookingWithHost = $fullBookingResponse->json()['data'] ?? $booking;
+
+                                            Log::channel('calcom')->info('✅ Retrieved full booking details with host info', [
+                                                'booking_uid' => $bookingUidOrId,
+                                                'has_organizer' => isset($bookingWithHost['organizer']),
+                                                'has_hosts' => isset($bookingWithHost['hosts']),
+                                                'organizer_email' => $bookingWithHost['organizer']['email'] ?? null
+                                            ]);
+                                        }
+                                    } catch (\Exception $e) {
+                                        Log::channel('calcom')->warning('⚠️ Failed to fetch full booking details, using initial response', [
+                                            'booking_uid' => $bookingUidOrId,
+                                            'error' => $e->getMessage()
+                                        ]);
+                                    }
+                                }
+
                                 // 🔧 PHASE 5.4 FIX: Create Appointment FIRST, then set booking_confirmed
                                 // This ensures atomic transaction - booking_confirmed only after successful appointment creation
                                 if ($callId && $call) {
@@ -3584,7 +3940,7 @@ class RetellFunctionCallHandler extends Controller
                                             ],
                                             calcomBookingId: $booking['uid'] ?? null,
                                             call: $call,
-                                            calcomBookingData: $booking  // Pass Cal.com booking data for staff assignment
+                                            calcomBookingData: $bookingWithHost  // 🔧 FIX: Pass full booking WITH host data
                                         );
 
                                         // ✅ ATOMIC TRANSACTION: Only set booking_confirmed=true AFTER appointment created successfully
@@ -4451,18 +4807,19 @@ class RetellFunctionCallHandler extends Controller
                     ]
                 ]);
 
-                // Fire event for listeners (notifications, stats, etc.)
-                event(new \App\Events\Appointments\AppointmentCancellationRequested(
-                    appointment: $appointment->fresh(),
-                    reason: $params['reason'] ?? 'Via Telefonassistent storniert',
-                    customer: $appointment->customer,
-                    fee: $policyResult->fee,
-                    withinPolicy: true
-                ));
-
+                // Prepare success response BEFORE firing events
+                // This ensures notification failures don't affect the cancellation success
                 $feeMessage = $policyResult->fee > 0
                     ? " Es fällt eine Stornogebühr von {$policyResult->fee}€ an."
                     : "";
+
+                $successResponse = [
+                    'success' => true,
+                    'status' => 'cancelled',
+                    'message' => "Ihr Termin am {$appointment->starts_at->format('d.m.Y')} um {$appointment->starts_at->format('H:i')} Uhr wurde erfolgreich storniert.{$feeMessage}",
+                    'fee' => $policyResult->fee,
+                    'appointment_id' => $appointment->id
+                ];
 
                 Log::info('✅ Appointment cancelled via Retell AI', [
                     'appointment_id' => $appointment->id,
@@ -4471,13 +4828,36 @@ class RetellFunctionCallHandler extends Controller
                     'within_policy' => true
                 ]);
 
-                return response()->json([
-                    'success' => true,
-                    'status' => 'cancelled',
-                    'message' => "Ihr Termin am {$appointment->starts_at->format('d.m.Y')} um {$appointment->starts_at->format('H:i')} Uhr wurde erfolgreich storniert.{$feeMessage}",
-                    'fee' => $policyResult->fee,
-                    'appointment_id' => $appointment->id
-                ], 200);
+                // Fire events for listeners (notifications, stats, Cal.com sync, etc.)
+                // AFTER response is prepared - event failures won't affect user response
+                try {
+                    // 1. Fire AppointmentCancellationRequested for notifications
+                    event(new \App\Events\Appointments\AppointmentCancellationRequested(
+                        appointment: $appointment->fresh(),
+                        reason: $params['reason'] ?? 'Via Telefonassistent storniert',
+                        customer: $appointment->customer,
+                        fee: $policyResult->fee,
+                        withinPolicy: true
+                    ));
+
+                    // 2. Fire AppointmentCancelled for Cal.com sync and cache invalidation
+                    event(new \App\Events\Appointments\AppointmentCancelled(
+                        appointment: $appointment->fresh(),
+                        reason: $params['reason'] ?? 'Via Telefonassistent storniert',
+                        cancelledBy: 'customer'
+                    ));
+                } catch (\Exception $eventException) {
+                    // Log event failures but DON'T fail the cancellation
+                    Log::warning('⚠️ Event firing failed after successful cancellation (non-critical)', [
+                        'appointment_id' => $appointment->id,
+                        'call_id' => $callId,
+                        'event_error' => $eventException->getMessage(),
+                        'note' => 'Cancellation was successful, only event firing failed'
+                    ]);
+                    // Don't re-throw - cancellation already succeeded
+                }
+
+                return response()->json($successResponse, 200);
             }
 
             // 5. If denied: Explain reason
@@ -4506,14 +4886,6 @@ class RetellFunctionCallHandler extends Controller
                 $reasonCode = 'policy_violation';
             }
 
-            // Fire policy violation event
-            event(new \App\Events\Appointments\AppointmentPolicyViolation(
-                appointment: $appointment,
-                policyResult: $policyResult,
-                attemptedAction: 'cancel',
-                source: 'retell_ai'
-            ));
-
             Log::warning('❌ Cancellation denied by policy', [
                 'appointment_id' => $appointment->id,
                 'call_id' => $callId,
@@ -4521,13 +4893,32 @@ class RetellFunctionCallHandler extends Controller
                 'details' => $details
             ]);
 
-            return response()->json([
+            // Prepare denial response BEFORE firing events
+            $denialResponse = [
                 'success' => false,
                 'status' => 'denied',
                 'message' => $message,
                 'reason' => $reasonCode,
                 'details' => $details
-            ], 200);
+            ];
+
+            // Fire policy violation event AFTER response is prepared
+            try {
+                event(new \App\Events\Appointments\AppointmentPolicyViolation(
+                    appointment: $appointment,
+                    policyResult: $policyResult,
+                    attemptedAction: 'cancel',
+                    source: 'retell_ai'
+                ));
+            } catch (\Exception $eventException) {
+                // Log but don't fail - policy denial message is more important
+                Log::warning('⚠️ Event firing failed after policy denial (non-critical)', [
+                    'appointment_id' => $appointment->id,
+                    'event_error' => $eventException->getMessage()
+                ]);
+            }
+
+            return response()->json($denialResponse, 200);
 
         } catch (\Exception $e) {
             Log::error('Error handling cancellation attempt', [

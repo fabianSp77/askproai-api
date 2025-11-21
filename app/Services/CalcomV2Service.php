@@ -82,12 +82,11 @@ class CalcomV2Service
      */
     public function fetchTeamEventTypes(int $teamId): Response
     {
-        // Try V2 first
+        // Try V2 first - MUST use team-scoped path
         $client = $this->httpClient();
-        $fullUrl = $this->baseUrl . '/event-types';
-        $params = ['teamId' => $teamId];
+        $fullUrl = $this->baseUrl . '/teams/' . $teamId . '/event-types';
 
-        $response = $client->get($fullUrl, $params);
+        $response = $client->get($fullUrl);
 
         // If V2 fails, try V1 fallback
         if (!$response->successful()) {
@@ -275,6 +274,16 @@ class CalcomV2Service
 
                     if ($service) {
                         // Update existing service
+                        // CRITICAL FIX 2025-11-21: Preserve segments data during Cal.com sync
+                        // Without this, composite services lose their multi-phase structure
+                        if (!empty($service->segments)) {
+                            $serviceData['segments'] = $service->segments;
+                            Log::channel('calcom')->info('[Cal.com V2] Preserving segments during update', [
+                                'service_id' => $service->id,
+                                'service_name' => $service->name,
+                                'segments_count' => count(json_decode($service->segments, true) ?? [])
+                            ]);
+                        }
                         $service->update($serviceData);
                         $updated++;
                         $results[] = [
