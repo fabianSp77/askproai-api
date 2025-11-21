@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friseur Eins - Komplette Test-Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header .company-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            display: block;
+        }
+
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+            display: block;
+        }
+
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .rate-limit {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .rate-limit strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .service-card {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .service-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .service-card.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .service-card .name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .service-card .details {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Friseur Eins - Komplette Test-Suite</h1>
+            <div class="company-info">
+                Company ID: 1 (Krückenberg) | 17 Services | 2 Branches
+            </div>
+        </div>
+
+        <div class="rate-limit">
+            <strong>⚠️ API Rate Limits:</strong>
+            Cal.com API: Max 500 Requests/Monat | Retell AI: Unbegrenzt | Bitte Tests mit Bedacht durchführen
+        </div>
+
+        <div class="grid">
+            <!-- 1. Services Laden -->
+            <div class="card">
+                <h2>1️⃣ Services Laden</h2>
+                <p style="margin-bottom: 15px; font-size: 13px; color: #666;">
+                    Lädt alle 17 Dienstleistungen von Friseur Eins
+                </p>
+                <button class="btn btn-primary" onclick="loadServices()">
+                    Services Laden
+                </button>
+                <div id="services-result" class="result"></div>
+                <div id="services-list" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- 2. Verfügbarkeit Prüfen -->
+            <div class="card">
+                <h2>2️⃣ Verfügbarkeit Prüfen</h2>
+                <div class="form-group">
+                    <label>Service auswählen:</label>
+                    <select id="check-service" disabled>
+                        <option>Erst Services laden...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Datum:</label>
+                    <input type="date" id="check-date" min="">
+                </div>
+                <div class="form-group">
+                    <label>Uhrzeit:</label>
+                    <input type="time" id="check-time" value="10:00">
+                </div>
+                <button class="btn btn-primary" onclick="checkAvailability()" id="check-btn" disabled>
+                    Verfügbarkeit Prüfen
+                </button>
+                <div id="availability-result" class="result"></div>
+            </div>
+
+            <!-- 3. Termin Buchen -->
+            <div class="card">
+                <h2>3️⃣ Termin Buchen</h2>
+                <div class="form-group">
+                    <label>Service:</label>
+                    <select id="book-service" disabled>
+                        <option>Erst Services laden...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Datum:</label>
+                    <input type="date" id="book-date" min="">
+                </div>
+                <div class="form-group">
+                    <label>Uhrzeit:</label>
+                    <input type="time" id="book-time" value="10:00">
+                </div>
+                <div class="form-group">
+                    <label>Kundenname:</label>
+                    <input type="text" id="book-name" value="Test Kunde">
+                </div>
+                <div class="form-group">
+                    <label>E-Mail:</label>
+                    <input type="email" id="book-email" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input type="tel" id="book-phone" value="+4915112345678">
+                </div>
+                <button class="btn btn-primary" onclick="bookAppointment()" id="book-btn" disabled>
+                    Jetzt Buchen
+                </button>
+                <div id="booking-result" class="result"></div>
+            </div>
+
+            <!-- 4. Termin Stornieren -->
+            <div class="card">
+                <h2>4️⃣ Termin Stornieren</h2>
+                <div class="form-group">
+                    <label>Booking ID:</label>
+                    <input type="text" id="cancel-id" placeholder="Booking ID aus Buchung kopieren">
+                </div>
+                <div class="form-group">
+                    <label>Stornierungsgrund:</label>
+                    <textarea id="cancel-reason" rows="3" placeholder="Optionaler Grund..."></textarea>
+                </div>
+                <button class="btn btn-danger" onclick="cancelAppointment()">
+                    Termin Stornieren
+                </button>
+                <div id="cancel-result" class="result"></div>
+            </div>
+
+            <!-- 5. Termin Verschieben -->
+            <div class="card">
+                <h2>5️⃣ Termin Verschieben</h2>
+                <div class="form-group">
+                    <label>Booking ID:</label>
+                    <input type="text" id="reschedule-id" placeholder="Booking ID">
+                </div>
+                <div class="form-group">
+                    <label>Neues Datum:</label>
+                    <input type="date" id="reschedule-date" min="">
+                </div>
+                <div class="form-group">
+                    <label>Neue Uhrzeit:</label>
+                    <input type="time" id="reschedule-time" value="14:00">
+                </div>
+                <button class="btn btn-warning" onclick="rescheduleAppointment()">
+                    Termin Verschieben
+                </button>
+                <div id="reschedule-result" class="result"></div>
+            </div>
+
+            <!-- 6. Mitarbeiter Laden -->
+            <div class="card">
+                <h2>6️⃣ Mitarbeiter Laden</h2>
+                <p style="margin-bottom: 15px; font-size: 13px; color: #666;">
+                    Zeigt alle Mitarbeiter für Friseur Eins
+                </p>
+                <button class="btn btn-primary" onclick="loadStaff()">
+                    Mitarbeiter Laden
+                </button>
+                <div id="staff-result" class="result"></div>
+            </div>
+
+            <!-- 7. Service Duration Check -->
+            <div class="card">
+                <h2>7️⃣ Duration-Check (Bug-Diagnose)</h2>
+                <p style="margin-bottom: 15px; font-size: 13px; color: #666;">
+                    Prüft ob alle Services korrekte duration_minutes haben
+                </p>
+                <button class="btn btn-primary" onclick="checkDurations()">
+                    Duration-Check Starten
+                </button>
+                <div id="duration-result" class="result"></div>
+            </div>
+
+            <!-- 8. Service Selection Test -->
+            <div class="card">
+                <h2>8️⃣ Service Selection Test</h2>
+                <div class="form-group">
+                    <label>Duration (Minuten):</label>
+                    <input type="number" id="selection-duration" value="120" placeholder="z.B. 120 für Dauerwelle">
+                </div>
+                <p style="margin-bottom: 15px; font-size: 13px; color: #666;">
+                    Testet ob das System den richtigen Service basierend auf Duration findet
+                </p>
+                <button class="btn btn-primary" onclick="testServiceSelection()">
+                    Selection Test
+                </button>
+                <div id="selection-result" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL (ändern für Production)
+        const API_BASE = window.location.origin + '/api';
+        const COMPANY_ID = 1;
+
+        // Global state
+        let allServices = [];
+
+        // Set minimum date to today
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            input.min = new Date().toISOString().split('T')[0];
+            input.value = new Date().toISOString().split('T')[0];
+        });
+
+        // Helper: Show result
+        function showResult(elementId, success, message, data = null) {
+            const el = document.getElementById(elementId);
+            el.className = `result ${success ? 'success' : 'error'}`;
+            el.style.display = 'block';
+
+            let content = message;
+            if (data) {
+                content += '\n\n<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+            el.innerHTML = content;
+        }
+
+        // Helper: API Request
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP ${response.status}`);
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 1. Load Services
+        async function loadServices() {
+            showResult('services-result', true, '⏳ Lade Services...');
+
+            const result = await apiRequest(`/v2/services?company_id=${COMPANY_ID}`);
+
+            if (result.success) {
+                allServices = result.data.services || result.data;
+
+                // Update dropdowns
+                const serviceSelects = ['check-service', 'book-service'];
+                serviceSelects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    select.innerHTML = '<option value="">-- Service wählen --</option>';
+
+                    allServices.forEach(service => {
+                        const option = document.createElement('option');
+                        option.value = service.id;
+                        option.textContent = `${service.name} (${service.duration_minutes || '?'} Min, €${service.price})`;
+                        select.appendChild(option);
+                    });
+
+                    select.disabled = false;
+                });
+
+                // Enable buttons
+                document.getElementById('check-btn').disabled = false;
+                document.getElementById('book-btn').disabled = false;
+
+                // Display services as cards
+                const servicesList = document.getElementById('services-list');
+                servicesList.innerHTML = '<div class="services-grid">' +
+                    allServices.map(s => `
+                        <div class="service-card">
+                            <div class="name">${s.name}</div>
+                            <div class="details">
+                                ${s.duration_minutes || 'NULL'} Min | €${s.price}<br>
+                                ${s.is_default ? '🌟 Default' : ''}
+                            </div>
+                        </div>
+                    `).join('') +
+                    '</div>';
+
+                showResult('services-result', true,
+                    `✅ ${allServices.length} Services geladen`,
+                    allServices
+                );
+            } else {
+                showResult('services-result', false,
+                    `❌ Fehler: ${result.error}`
+                );
+            }
+        }
+
+        // 2. Check Availability
+        async function checkAvailability() {
+            const serviceId = document.getElementById('check-service').value;
+            const date = document.getElementById('check-date').value;
+            const time = document.getElementById('check-time').value;
+
+            if (!serviceId || !date || !time) {
+                showResult('availability-result', false, '❌ Bitte alle Felder ausfüllen');
+                return;
+            }
+
+            showResult('availability-result', true, '⏳ Prüfe Verfügbarkeit...');
+
+            const result = await apiRequest(
+                `/v2/availability?company_id=${COMPANY_ID}&service_id=${serviceId}&date=${date}&time=${time}`
+            );
+
+            if (result.success) {
+                const available = result.data.available;
+                showResult('availability-result', available,
+                    available ? '✅ Termin ist verfügbar!' : '❌ Termin ist nicht verfügbar',
+                    result.data
+                );
+            } else {
+                showResult('availability-result', false,
+                    `❌ Fehler: ${result.error}`
+                );
+            }
+        }
+
+        // 3. Book Appointment
+        async function bookAppointment() {
+            const serviceId = document.getElementById('book-service').value;
+            const date = document.getElementById('book-date').value;
+            const time = document.getElementById('book-time').value;
+            const name = document.getElementById('book-name').value;
+            const email = document.getElementById('book-email').value;
+            const phone = document.getElementById('book-phone').value;
+
+            if (!serviceId || !date || !time || !name || !email || !phone) {
+                showResult('booking-result', false, '❌ Bitte alle Felder ausfüllen');
+                return;
+            }
+
+            showResult('booking-result', true, '⏳ Buche Termin...');
+
+            const result = await apiRequest('/v2/bookings', {
+                method: 'POST',
+                body: JSON.stringify({
+                    company_id: COMPANY_ID,
+                    service_id: parseInt(serviceId),
+                    appointment_date: date,
+                    appointment_time: time,
+                    customer_name: name,
+                    customer_email: email,
+                    customer_phone: phone
+                })
+            });
+
+            if (result.success) {
+                const bookingId = result.data.booking_id || result.data.id;
+                showResult('booking-result', true,
+                    `✅ Termin erfolgreich gebucht!\n\nBooking ID: ${bookingId}\n(Kopiere diese ID für Stornierung/Verschiebung)`,
+                    result.data
+                );
+
+                // Auto-fill cancel/reschedule forms
+                document.getElementById('cancel-id').value = bookingId;
+                document.getElementById('reschedule-id').value = bookingId;
+            } else {
+                showResult('booking-result', false,
+                    `❌ Buchung fehlgeschlagen: ${result.error}`
+                );
+            }
+        }
+
+        // 4. Cancel Appointment
+        async function cancelAppointment() {
+            const bookingId = document.getElementById('cancel-id').value;
+            const reason = document.getElementById('cancel-reason').value;
+
+            if (!bookingId) {
+                showResult('cancel-result', false, '❌ Bitte Booking ID eingeben');
+                return;
+            }
+
+            showResult('cancel-result', true, '⏳ Storniere Termin...');
+
+            const result = await apiRequest(`/v2/bookings/${bookingId}`, {
+                method: 'DELETE',
+                body: JSON.stringify({ reason })
+            });
+
+            if (result.success) {
+                showResult('cancel-result', true,
+                    '✅ Termin erfolgreich storniert!',
+                    result.data
+                );
+                // Clear form
+                document.getElementById('cancel-id').value = '';
+                document.getElementById('cancel-reason').value = '';
+            } else {
+                showResult('cancel-result', false,
+                    `❌ Stornierung fehlgeschlagen: ${result.error}`
+                );
+            }
+        }
+
+        // 5. Reschedule Appointment
+        async function rescheduleAppointment() {
+            const bookingId = document.getElementById('reschedule-id').value;
+            const newDate = document.getElementById('reschedule-date').value;
+            const newTime = document.getElementById('reschedule-time').value;
+
+            if (!bookingId || !newDate || !newTime) {
+                showResult('reschedule-result', false, '❌ Bitte alle Felder ausfüllen');
+                return;
+            }
+
+            showResult('reschedule-result', true, '⏳ Verschiebe Termin...');
+
+            const result = await apiRequest(`/v2/bookings/${bookingId}/reschedule`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    new_date: newDate,
+                    new_time: newTime
+                })
+            });
+
+            if (result.success) {
+                showResult('reschedule-result', true,
+                    '✅ Termin erfolgreich verschoben!',
+                    result.data
+                );
+            } else {
+                showResult('reschedule-result', false,
+                    `❌ Verschiebung fehlgeschlagen: ${result.error}`
+                );
+            }
+        }
+
+        // 6. Load Staff
+        async function loadStaff() {
+            showResult('staff-result', true, '⏳ Lade Mitarbeiter...');
+
+            const result = await apiRequest(`/v2/staff?company_id=${COMPANY_ID}`);
+
+            if (result.success) {
+                const staff = result.data.staff || result.data;
+                showResult('staff-result', true,
+                    `✅ ${staff.length} Mitarbeiter gefunden`,
+                    staff
+                );
+            } else {
+                showResult('staff-result', false,
+                    `❌ Fehler: ${result.error}`
+                );
+            }
+        }
+
+        // 7. Check Durations (Bug Diagnosis)
+        async function checkDurations() {
+            showResult('duration-result', true, '⏳ Prüfe Service Durations...');
+
+            const result = await apiRequest(`/v2/services?company_id=${COMPANY_ID}`);
+
+            if (result.success) {
+                const services = result.data.services || result.data;
+                const nullDurations = services.filter(s => !s.duration_minutes || s.duration_minutes === null);
+
+                let message = '';
+                if (nullDurations.length > 0) {
+                    message = `❌ KRITISCHER BUG GEFUNDEN!\n\n${nullDurations.length} Services haben NULL duration_minutes:\n\n`;
+                    nullDurations.forEach(s => {
+                        message += `- ${s.name} (ID: ${s.id})\n`;
+                    });
+                    message += '\n⚠️ Diese Services können NIEMALS korrekt gebucht werden!';
+                    showResult('duration-result', false, message, nullDurations);
+                } else {
+                    message = '✅ Alle Services haben gültige duration_minutes!';
+                    showResult('duration-result', true, message, services);
+                }
+            } else {
+                showResult('duration-result', false, `❌ Fehler: ${result.error}`);
+            }
+        }
+
+        // 8. Test Service Selection
+        async function testServiceSelection() {
+            const duration = parseInt(document.getElementById('selection-duration').value);
+
+            if (!duration) {
+                showResult('selection-result', false, '❌ Bitte Duration eingeben');
+                return;
+            }
+
+            showResult('selection-result', true, '⏳ Teste Service Selection...');
+
+            const result = await apiRequest(
+                `/v2/service-selection?company_id=${COMPANY_ID}&duration=${duration}`
+            );
+
+            if (result.success) {
+                const service = result.data.service;
+                if (service) {
+                    showResult('selection-result', true,
+                        `✅ Service gefunden für ${duration} Minuten:\n\n` +
+                        `Service: ${service.name}\n` +
+                        `Duration: ${service.duration_minutes} Min\n` +
+                        `Price: €${service.price}\n` +
+                        `Is Default: ${service.is_default ? 'Ja' : 'Nein'}`,
+                        service
+                    );
+                } else {
+                    showResult('selection-result', false,
+                        `❌ Kein Service für ${duration} Minuten gefunden!\n\n` +
+                        `System verwendet Default Service.`,
+                        result.data
+                    );
+                }
+            } else {
+                showResult('selection-result', false, `❌ Fehler: ${result.error}`);
+            }
+        }
+
+        // Auto-load services on page load
+        window.addEventListener('load', () => {
+            console.log('🎨 Friseur Test Suite loaded');
+            console.log('Company ID:', COMPANY_ID);
+            console.log('API Base:', API_BASE);
+        });
+    </script>
+</body>
+</html>

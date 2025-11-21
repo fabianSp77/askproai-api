@@ -156,7 +156,7 @@ try {
         $serviceId = DB::table('services')->insertGetId([
             'company_id' => 1,
             'name' => $serviceData['name'],
-            'duration' => $serviceData['duration'],
+            'duration_minutes' => $serviceData['duration'],  // FIX: Use duration_minutes instead of duration
             'price' => $serviceData['price'],
             'description' => 'Professioneller Friseurservice bei Krückenberg',
             'is_active' => true,
@@ -167,7 +167,7 @@ try {
 
         $service = Service::find($serviceId);
         $createdServices[] = $service;
-        echo sprintf("   ✅ %-40s (€%6.2f, %3d min)\n", $service->name, $service->price, $service->duration);
+        echo sprintf("   ✅ %-40s (€%6.2f, %3d min)\n", $service->name, $service->price, $service->duration_minutes);
     }
 
     echo "\n";
