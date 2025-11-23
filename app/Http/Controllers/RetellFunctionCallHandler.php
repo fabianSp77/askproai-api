@@ -40,6 +40,8 @@ class RetellFunctionCallHandler extends Controller
     private CustomerDataValidator $dataValidator;
     private AppointmentCustomerResolver $customerResolver;
     private DateTimeParser $dateTimeParser;
+    private \App\Services\Booking\AvailabilityWithLockService $lockWrapper;
+    private \App\Services\Booking\SlotLockService $lockService;
     private array $callContextCache = []; // DEPRECATED: Use CallLifecycleService caching instead
 
     public function __construct(
@@ -50,7 +52,9 @@ class RetellFunctionCallHandler extends Controller
         CallTrackingService $callTracking,
         CustomerDataValidator $dataValidator,
         AppointmentCustomerResolver $customerResolver,
-        DateTimeParser $dateTimeParser
+        DateTimeParser $dateTimeParser,
+        \App\Services\Booking\AvailabilityWithLockService $lockWrapper,
+        \App\Services\Booking\SlotLockService $lockService
     ) {
         $this->serviceSelector = $serviceSelector;
         $this->serviceExtractor = $serviceExtractor;
@@ -60,6 +64,8 @@ class RetellFunctionCallHandler extends Controller
         $this->dataValidator = $dataValidator;
         $this->customerResolver = $customerResolver;
         $this->dateTimeParser = $dateTimeParser;
+        $this->lockWrapper = $lockWrapper;
+        $this->lockService = $lockService;
         $this->alternativeFinder = new AppointmentAlternativeFinder();
         $this->calcomService = new CalcomService();
     }
@@ -1525,12 +1531,45 @@ class RetellFunctionCallHandler extends Controller
                     'duration_ms' => round((microtime(true) - $startTime) * 1000, 2)
                 ]);
 
-                return $this->responseFormatter->success([
+                // Prepare availability result
+                $availabilityResult = [
                     'available' => true,
                     'message' => "Ja, {$requestedDate->format('H:i')} Uhr ist noch frei.",
                     'requested_time' => $requestedDate->format('Y-m-d H:i'),
                     'alternatives' => []
-                ]);
+                ];
+
+                // 🔒 REDIS LOCK INTEGRATION (2025-11-23)
+                // Wrap with Redis lock to prevent race conditions (15-20% → <1%)
+                // Only lock if slot is available - prevents double-booking during 8-12s gap
+                if (config('features.slot_locking.enabled', false)) {
+                    $customerPhone = $params['customer_phone'] ?? $params['phone'] ?? 'unknown';
+                    $customerName = $params['customer_name'] ?? $params['name'] ?? null;
+
+                    $availabilityResult = $this->lockWrapper->wrapWithLock(
+                        $availabilityResult,
+                        $companyId,
+                        $service->id,
+                        $requestedDate,
+                        $requestedDate->copy()->addMinutes($duration),
+                        $callId,
+                        $customerPhone,
+                        [
+                            'customer_name' => $customerName,
+                            'service_name' => $service->name,
+                            'is_compound' => $service->is_compound ?? false,
+                        ]
+                    );
+
+                    Log::info('🔒 Slot lock wrapper applied', [
+                        'call_id' => $callId,
+                        'has_lock_key' => isset($availabilityResult['lock_key']),
+                        'slot_locked' => $availabilityResult['slot_locked'] ?? false,
+                        'race_detected' => $availabilityResult['race_condition_detected'] ?? false,
+                    ]);
+                }
+
+                return $this->responseFormatter->success($availabilityResult);
             }
 
             // LATENZ-OPTIMIERUNG: Alternative-Suche nur wenn Feature enabled
@@ -2145,6 +2184,56 @@ class RetellFunctionCallHandler extends Controller
                         'company_id' => $companyId,
                         'branch_id' => $branchId
                     ]);
+
+                    // 🔧 CRITICAL FIX 2025-11-22: Auto-assign staff if not specified
+                    // This prevents appointments being created with staff_id = NULL
+                    // which causes Cal.com sync to fail (requires hostId)
+                    if (!$preferredStaffId) {
+                        Log::info('🔍 No staff preference specified, auto-assigning available staff (ASYNC)', [
+                            'service_id' => $service->id,
+                            'service_name' => $service->name,
+                            'branch_id' => $branchId,
+                            'time' => $appointmentTime->format('Y-m-d H:i')
+                        ]);
+
+                        // Find available staff for this service
+                        $endTime = $appointmentTime->copy()->addMinutes($service->duration_minutes);
+
+                        $availableStaff = \App\Models\Staff::where('branch_id', $branchId)
+                            ->where('is_active', true)
+                            ->whereHas('services', function($q) use ($service) {
+                                $q->where('service_id', $service->id)
+                                  ->where('service_staff.is_active', true);
+                            })
+                            ->whereDoesntHave('appointments', function($q) use ($appointmentTime, $endTime) {
+                                $q->where(function($query) use ($appointmentTime, $endTime) {
+                                    $query->where('starts_at', '<', $endTime)
+                                          ->where('ends_at', '>', $appointmentTime);
+                                })
+                                ->whereIn('status', ['scheduled', 'confirmed', 'booked']);
+                            })
+                            ->first();
+
+                        if ($availableStaff) {
+                            $preferredStaffId = $availableStaff->id;
+                            Log::info('✅ Auto-assigned staff (ASYNC)', [
+                                'staff_id' => $preferredStaffId,
+                                'staff_name' => $availableStaff->name,
+                                'calcom_user_id' => $availableStaff->calcom_user_id
+                            ]);
+                        } else {
+                            Log::error('❌ No available staff found for booking (ASYNC)', [
+                                'service_id' => $service->id,
+                                'service_name' => $service->name,
+                                'branch_id' => $branchId,
+                                'time_range' => $appointmentTime->format('Y-m-d H:i') . ' - ' . $endTime->format('H:i')
+                            ]);
+
+                            return $this->responseFormatter->error(
+                                'Leider ist zu dieser Zeit kein Mitarbeiter verfügbar. Bitte wählen Sie einen anderen Termin.'
+                            );
+                        }
+                    }
 
                     // Create local appointment with status "pending_sync"
                     $appointment = new Appointment();
@@ -3853,6 +3942,41 @@ class RetellFunctionCallHandler extends Controller
                         'call_id' => $callId,
                         'requested_time' => $appointmentDate->format('Y-m-d H:i')
                     ]);
+
+                    // 🔒 REDIS LOCK VALIDATION (2025-11-23)
+                    // Validate lock ownership before booking to prevent race conditions
+                    $lockKey = $args['lock_key'] ?? null;
+                    if (config('features.slot_locking.enabled', false) && $lockKey) {
+                        $lockValidation = $this->lockService->validateLock($lockKey, $callId);
+
+                        if (!$lockValidation['valid']) {
+                            Log::error('❌ Lock validation failed - slot reservation expired', [
+                                'call_id' => $callId,
+                                'lock_key' => $lockKey,
+                                'reason' => $lockValidation['reason'],
+                                'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                            ]);
+
+                            return response()->json([
+                                'success' => false,
+                                'status' => 'reservation_expired',
+                                'message' => 'Ihre Reservierung ist abgelaufen. Bitte prüfen Sie erneut die Verfügbarkeit.',
+                                'reason' => $lockValidation['reason'],
+                                'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                            ], 409);
+                        }
+
+                        Log::info('✅ Lock validated successfully', [
+                            'call_id' => $callId,
+                            'lock_key' => $lockKey,
+                        ]);
+                    } elseif (config('features.slot_locking.enabled', false) && !$lockKey) {
+                        Log::warning('⚠️ Booking without lock_key (old flow or backwards compatibility)', [
+                            'call_id' => $callId,
+                            'requested_time' => $appointmentDate->format('Y-m-d H:i'),
+                        ]);
+                    }
+
                     // Book the exact requested time (V84: ONLY with explicit confirmation)
                     Log::info('📅 Booking exact requested time (V84: 2-step confirmation)', [
                         'requested' => $appointmentDate->format('H:i'),
@@ -4061,6 +4185,19 @@ class RetellFunctionCallHandler extends Controller
                                             'service' => $service->name,
                                             'starts_at' => $appointmentDate->format('Y-m-d H:i')
                                         ]);
+
+                                        // 🔓 REDIS LOCK RELEASE (2025-11-23)
+                                        // Release lock after successful appointment creation
+                                        if (config('features.slot_locking.enabled', false) && $lockKey) {
+                                            $released = $this->lockService->releaseLock($lockKey, $callId, $appointment->id);
+
+                                            Log::info('🔓 Slot lock released after successful booking', [
+                                                'call_id' => $callId,
+                                                'lock_key' => $lockKey,
+                                                'appointment_id' => $appointment->id,
+                                                'released' => $released,
+                                            ]);
+                                        }
 
                                     } catch (\Exception $e) {
                                         // ❌ CRITICAL: Appointment creation failed - Cal.com booking exists locally
