@@ -336,13 +336,20 @@ class CalcomMetricsCollector
         int $ancientFailed,
         int $requiresManualReview
     ): string {
-        // CRITICAL: Manual review flags or ancient failures
-        if ($requiresManualReview > 0 || $ancientFailed > 5) {
+        // CRITICAL: Systemic sync failures (technical issues)
+        // - Ancient failures indicate long-standing sync problems
+        // - Many stale pending indicates broken sync process
+        // - Very low success rate indicates system-wide failure
+        // - Too many manual review indicates systemic issue (>= 20)
+        if ($ancientFailed > 0 || $stalePending > 20 || $successRate < 50 || $requiresManualReview >= 20) {
             return 'critical';
         }
 
-        // DEGRADED: Low success rate or stale pending
-        if ($successRate < 80 || $stalePending > 10) {
+        // DEGRADED: Normal business operations requiring attention
+        // - Low success rate (< 80%) but not critical
+        // - Some stale pending (5-20) that need investigation
+        // - Manual review appointments (1-19) - normal host conflicts, data issues
+        if ($successRate < 80 || $stalePending > 5 || $requiresManualReview > 0) {
             return 'degraded';
         }
 
@@ -361,12 +368,24 @@ class CalcomMetricsCollector
     {
         $alerts = [];
 
-        // CRITICAL: Manual review required
-        if ($requiresManualReview->count() > 0) {
+        // WARNING: Manual review required (normal business operations)
+        // These are typically host conflicts, data validation issues, or business logic
+        // Not technical failures - classified as "warning" not "critical"
+        if ($requiresManualReview->count() > 0 && $requiresManualReview->count() < 20) {
             $alerts[] = [
-                'severity' => 'critical',
+                'severity' => 'warning',
                 'message' => "{$requiresManualReview->count()} appointment(s) require manual review",
                 'action' => 'Check Appointments → Filter by requires_manual_review',
+                'appointment_ids' => $requiresManualReview->pluck('id')->take(5)->toArray(),
+            ];
+        }
+
+        // CRITICAL: Too many manual review (systemic issue)
+        if ($requiresManualReview->count() >= 20) {
+            $alerts[] = [
+                'severity' => 'critical',
+                'message' => "{$requiresManualReview->count()} appointment(s) require manual review (systemic issue)",
+                'action' => 'Investigate root cause - too many failures',
                 'appointment_ids' => $requiresManualReview->pluck('id')->take(5)->toArray(),
             ];
         }

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal MVP - Testing Ready!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .status {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .success-box {
+            background: #d1fae5;
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success-box h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .test-link-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .test-link-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .test-link-card h3 {
+            color: #1e293b;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .test-link-card h3::before {
+            content: "▶";
+            margin-right: 10px;
+            color: #667eea;
+            font-size: 0.8em;
+        }
+        .test-link {
+            display: block;
+            background: #667eea;
+            color: white !important;
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .test-link:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .copy-box {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85em;
+            margin: 10px 0;
+            word-break: break-all;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .copy-btn:hover {
+            background: #64748b;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .status-item.pass {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        .status-item h4 {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .status-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        .checklist {
+            list-style: none;
+            margin: 20px 0;
+        }
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 4px solid #10b981;
+        }
+        .checklist li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Customer Portal MVP</h1>
+            <div class="status">🟢 BEREIT FÜR TESTING</div>
+            <p style="margin-top: 15px; opacity: 0.9;">24. November 2025 | 18:00 CET</p>
+        </div>
+
+        <div class="content">
+            <div class="success-box">
+                <h2>✅ System erfolgreich initialisiert!</h2>
+                <p>Alle Backend-Komponenten sind aktiv und eine Test-Einladung wurde erstellt. Du kannst jetzt mit dem manuellen Testing beginnen.</p>
+            </div>
+
+            <h2 style="margin-top: 30px; color: #1e293b;">📊 System Status</h2>
+            <div class="status-grid">
+                <div class="status-item pass">
+                    <h4>PHP</h4>
+                    <div class="value">✓</div>
+                    <small>8.3.23</small>
+                </div>
+                <div class="status-item pass">
+                    <h4>Redis</h4>
+                    <div class="value">✓</div>
+                    <small>PONG</small>
+                </div>
+                <div class="status-item pass">
+                    <h4>MariaDB</h4>
+                    <div class="value">✓</div>
+                    <small>10.11.11</small>
+                </div>
+                <div class="status-item pass">
+                    <h4>Queue Worker</h4>
+                    <div class="value">✓</div>
+                    <small>PID: 1942015</small>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 40px; color: #1e293b;">🧪 Test-Szenarien</h2>
+
+            <!-- Test 1 -->
+            <div class="test-link-card">
+                <h3>Test 1: Filament Admin Interface</h3>
+                <p style="margin-bottom: 15px; color: #64748b;">Teste die Admin-Oberfläche für Kundeneinladungen</p>
+                <a href="https://api.askproai.de/admin/login" class="test-link" target="_blank">
+                    🔐 Admin Login öffnen
+                </a>
+                <ul style="margin-top: 15px; color: #475569; font-size: 0.95em;">
+                    <li>Login als Fabian (fabian@askproai.de)</li>
+                    <li>Navigate zu "Kundenverwaltung" → "Kundeneinladungen"</li>
+                    <li>Prüfe, ob Einladung ID 10 sichtbar ist</li>
+                    <li>Teste "Erneut senden" Button</li>
+                </ul>
+            </div>
+
+            <!-- Test 2 -->
+            <div class="test-link-card">
+                <h3>Test 2: Kunden-Registrierung</h3>
+                <p style="margin-bottom: 15px; color: #64748b;">Teste die Registrierung über den Einladungslink</p>
+                <a href="https://api.askproai.de/customer-portal/invitation/980c81369b8447f2801958bf77cbd9c37f2e08c63b1f5c45eda894c597590527" class="test-link" target="_blank">
+                    📧 Einladungslink öffnen
+                </a>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToken()">Copy</button>
+                    980c81369b8447f2801958bf77cbd9c37f2e08c63b1f5c45eda894c597590527
+                </div>
+                <ul style="margin-top: 15px; color: #475569; font-size: 0.95em;">
+                    <li>Registrierungsformular sollte laden</li>
+                    <li>E-Mail ist vorausgefüllt: test-customer-portal@askproai.de</li>
+                    <li>Name eingeben: Test Customer</li>
+                    <li>Passwort: SecureTest123!</li>
+                    <li>Nach Registrierung: Auto-Login zum Portal</li>
+                </ul>
+            </div>
+
+            <!-- Test 3 -->
+            <div class="test-link-card">
+                <h3>Test 3: Customer Portal Dashboard</h3>
+                <p style="margin-bottom: 15px; color: #64748b;">Prüfe die Kunden-Oberfläche (nach Registrierung)</p>
+                <a href="https://api.askproai.de/customer-portal/appointments" class="test-link" target="_blank">
+                    🏠 Customer Portal Dashboard
+                </a>
+                <ul style="margin-top: 15px; color: #475569; font-size: 0.95em;">
+                    <li>Dashboard sollte nach Login automatisch laden</li>
+                    <li>Termine-Liste sichtbar (kann leer sein)</li>
+                    <li>Navigation funktioniert</li>
+                    <li>Logout-Button vorhanden</li>
+                </ul>
+            </div>
+
+            <h2 style="margin-top: 40px; color: #1e293b;">📋 Pre-flight Checklist</h2>
+            <ul class="checklist">
+                <li>PHP 8.3.23 läuft</li>
+                <li>Redis läuft (PONG response)</li>
+                <li>MariaDB 10.11.11 läuft (251 tables, 232 MB)</li>
+                <li>Queue Worker aktiv (PID: 1942015)</li>
+                <li>user_invitations Tabelle existiert (12 columns)</li>
+                <li>Test-Einladung erstellt (ID: 10)</li>
+                <li>Token generiert (64 Zeichen)</li>
+                <li>Gültig bis: 27.11.2025 18:59</li>
+            </ul>
+
+            <h2 style="margin-top: 40px; color: #1e293b;">🔍 Test-Daten</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #f8fafc;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Parameter</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Wert</th>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Invitation ID</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace;">10</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">E-Mail</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace;">test-customer-portal@askproai.de</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Company</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Friseur 1 (ID: 1)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Role</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">viewer (ID: 15)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Invited By</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Fabian (ID: 5)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Status</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">pending</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">Gültig bis</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">27.11.2025 18:59</td>
+                </tr>
+            </table>
+
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 8px;">
+                <h3 style="color: #92400e; margin-bottom: 10px;">⚠️ Wichtig</h3>
+                <p style="color: #78350f;">
+                    Dieses Testing läuft auf dem <strong>Production-System</strong>. Alle Daten sind persistent.
+                    Nach erfolgreichem Testing sollten die Test-Einladungen aufgeräumt werden.
+                </p>
+            </div>
+
+            <h2 style="margin-top: 40px; color: #1e293b;">📖 Weitere Dokumentation</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                <a href="/CUSTOMER_PORTAL_E2E_TEST_GUIDE_2025-11-24.html" style="display: block; background: #f1f5f9; padding: 20px; border-radius: 8px; text-decoration: none; color: #1e293b; border: 2px solid #e2e8f0; transition: all 0.3s;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📘</div>
+                    <strong>E2E Test Guide</strong>
+                    <p style="font-size: 0.9em; color: #64748b; margin-top: 5px;">Vollständige Test-Anleitung mit allen Szenarien</p>
+                </a>
+                <a href="/CUSTOMER_PORTAL_MVP_DOCUMENTATION_2025-11-24.html" style="display: block; background: #f1f5f9; padding: 20px; border-radius: 8px; text-decoration: none; color: #1e293b; border: 2px solid #e2e8f0; transition: all 0.3s;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📗</div>
+                    <strong>MVP Dokumentation</strong>
+                    <p style="font-size: 0.9em; color: #64748b; margin-top: 5px;">Technische Implementierungs-Details</p>
+                </a>
+            </div>
+
+            <div style="background: #d1fae5; padding: 25px; margin: 40px 0; border-radius: 12px; text-align: center;">
+                <div style="font-size: 3em; margin-bottom: 15px;">🚀</div>
+                <h2 style="color: #065f46; margin-bottom: 10px;">System bereit für Testing!</h2>
+                <p style="color: #047857; font-size: 1.1em;">
+                    Alle Backend-Komponenten sind aktiv. Viel Erfolg beim Testing!
+                </p>
+                <p style="color: #047857; margin-top: 15px; font-size: 0.95em;">
+                    <strong>Geschätzte Testdauer:</strong> 30-45 Minuten für vollständigen E2E-Flow
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToken() {
+            const token = '980c81369b8447f2801958bf77cbd9c37f2e08c63b1f5c45eda894c597590527';
+            navigator.clipboard.writeText(token).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

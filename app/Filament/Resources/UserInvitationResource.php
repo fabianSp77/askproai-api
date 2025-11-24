@@ -48,12 +48,6 @@ class UserInvitationResource extends Resource
                             ->required()
                             ->label('Rolle')
                             ->helperText('Zugewiesene Rolle für den Kunden'),
-
-                        Forms\Components\Select::make('branch_id')
-                            ->relationship('branch', 'name')
-                            ->nullable()
-                            ->label('Filiale (optional)')
-                            ->helperText('Optional: Beschränke Zugriff auf eine bestimmte Filiale'),
                     ])
                     ->columns(2),
 
