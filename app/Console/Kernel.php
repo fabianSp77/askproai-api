@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\DetectCallConversions::class,
         \App\Console\Commands\ConfigureRetellWebhook::class,
         \App\Console\Commands\MonitorProcessingTimeHealth::class,
+        \App\Console\Commands\AlertAppointmentSyncFailures::class, // 🆕 PHASE 3 (2025-11-24)
     ];
 
     public function schedule(Schedule $schedule): void
@@ -56,8 +57,8 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/conversion-detection.log'));
 
         // Clean up stuck calls - runs every 10 minutes
-        // Uses 4 hour threshold to avoid cleaning up very long legitimate calls
-        $schedule->command('calls:cleanup-stuck --hours=4')
+        // Uses 2 hour threshold (test calls use 'test' status, so legitimate calls won't be cleaned)
+        $schedule->command('calls:cleanup-stuck --hours=2')
             ->everyTenMinutes()
             ->withoutOverlapping()
             ->runInBackground()
@@ -79,7 +80,8 @@ class Kernel extends ConsoleKernel
             ->name('materialized-stats-refresh')
             ->hourly()
             ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/materialized-stats.log'));
+            ->appendOutputTo(storage_path('logs/materialized-stats.log'))
+            ->onOneServer();
 
         // Materialized Stats: Clean up old stats daily at 3am (stats older than 90 days)
         $schedule->call(function () {
@@ -89,7 +91,8 @@ class Kernel extends ConsoleKernel
             ->name('materialized-stats-cleanup')
             ->dailyAt('03:00')
             ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/materialized-stats.log'));
+            ->appendOutputTo(storage_path('logs/materialized-stats.log'))
+            ->onOneServer();
 
         // 🛡️ DATA CONSISTENCY MONITORING (2025-10-20)
 
@@ -108,7 +111,8 @@ class Kernel extends ConsoleKernel
             ->name('data-consistency-check')
             ->everyFiveMinutes()
             ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/data-consistency.log'));
+            ->appendOutputTo(storage_path('logs/data-consistency.log'))
+            ->onOneServer();
 
         // Daily validation report - comprehensive data quality report
         $schedule->call(function () {
@@ -121,7 +125,8 @@ class Kernel extends ConsoleKernel
             ->dailyAt('02:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/data-consistency.log'))
-            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'));
+            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'))
+            ->onOneServer();
 
         // Manual review queue processing - runs every hour
         $schedule->call(function () {
@@ -135,7 +140,8 @@ class Kernel extends ConsoleKernel
             ->name('manual-review-queue-processing')
             ->hourly()
             ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/data-consistency.log'));
+            ->appendOutputTo(storage_path('logs/data-consistency.log'))
+            ->onOneServer();
 
         // 📊 PROCESSING TIME / SPLIT APPOINTMENTS MONITORING (2025-10-28)
 
@@ -159,6 +165,71 @@ class Kernel extends ConsoleKernel
             ->between('8:00', '20:00')
             ->timezone('Europe/Berlin')
             ->withoutOverlapping();
+
+        // 📧 CUSTOMER PORTAL: EMAIL QUEUE PROCESSING (2025-11-24)
+
+        // Process invitation email queue - runs every 5 minutes
+        // Sends pending invitation emails with retry mechanism
+        // Exponential backoff: 5min → 30min → 2hr (max 3 attempts)
+        $schedule->job(new \App\Jobs\ProcessInvitationEmailsJob())
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/invitation-emails.log'));
+
+        // Clean up expired invitations - runs daily at 3am
+        // Soft-deletes expired invitations after 30 days
+        // Hard-deletes soft-deleted invitations after 60 days
+        // Cleans up old failed email queue items
+        $schedule->job(new \App\Jobs\CleanupExpiredInvitationsJob())
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/invitation-cleanup.log'));
+
+        // Clean up expired appointment reservations - runs every 10 minutes
+        // Removes Redis-based slot locks that have expired
+        $schedule->job(new \App\Jobs\CleanupExpiredReservationsJob())
+            ->everyTenMinutes()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/reservation-cleanup.log'));
+
+        // 🔄 APPOINTMENT SYNC MONITORING (2025-11-24) - PHASE 3
+
+        // Alert on appointment sync failures - runs every 15 minutes
+        // Detects critical issues: stale pending (>1h), ancient failures (>24h), manual review required
+        // Logs to storage/logs/laravel.log (channel: calcom)
+        // Exit code FAILURE (1) triggers alert if critical issues detected
+        $schedule->command('appointments:alert-sync-failures')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/appointment-sync-alerts.log'));
+
+        // Collect appointment sync metrics - runs every 5 minutes
+        // Caches metrics for dashboard widget (5-minute TTL)
+        // Updates sync rate history for trending charts
+        $schedule->call(function () {
+            $collector = app(\App\Services\Monitoring\CalcomMetricsCollector::class);
+            $metrics = $collector->collectAllMetrics();
+
+            // Cache for dashboard widget
+            \Illuminate\Support\Facades\Cache::put('calcom:metrics:latest', $metrics, 300);
+
+            // Update sync rate history (for chart)
+            $syncRate = $metrics['synchronization']['appointments']['success_rate_24h'] ?? 100;
+            $history = \Illuminate\Support\Facades\Cache::get('calcom:appointment_sync:history', []);
+            $history[] = $syncRate;
+            $history = array_slice($history, -7); // Keep last 7 data points
+            \Illuminate\Support\Facades\Cache::put('calcom:appointment_sync:history', $history, 3600);
+
+            \Illuminate\Support\Facades\Log::channel('calcom')->debug('📊 Appointment sync metrics collected', [
+                'success_rate' => $syncRate,
+                'health_status' => $metrics['synchronization']['appointments']['health_status'] ?? 'unknown',
+            ]);
+        })
+            ->name('appointment-sync-metrics-collection')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->onOneServer();
     }
 
     protected function commands(): void

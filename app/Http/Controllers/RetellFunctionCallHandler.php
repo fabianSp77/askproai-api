@@ -130,7 +130,7 @@ class RetellFunctionCallHandler extends Controller
         $paramCallId = $parameters['call_id'] ?? $data['call_id'] ?? null;
 
         // Define all known placeholders
-        $placeholders = ['dummy_call_id', 'None', 'current', 'current_call'];
+        $placeholders = ['dummy_call_id', 'None', 'current', 'current_call', 'call_1', 'call_001'];
 
         // If parameter is a placeholder, try to get real call_id from data.call.call_id
         if ($paramCallId && in_array($paramCallId, $placeholders, true)) {
@@ -1015,6 +1015,19 @@ class RetellFunctionCallHandler extends Controller
             $serviceId = $params['service_id'] ?? null;
             $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
 
+            // 🔧 FIX 2025-11-24: Staff preference for availability checking
+            // Allows checking availability for specific staff member instead of any staff
+            $preferredStaffId = $params['preferred_staff_id'] ?? null;
+
+            if ($preferredStaffId) {
+                Log::info('👤 Staff preference received in check_availability', [
+                    'call_id' => $callId,
+                    'preferred_staff_id' => $preferredStaffId,
+                    'service_name' => $serviceName,
+                    'requested_time' => $requestedDate->format('Y-m-d H:i')
+                ]);
+            }
+
             Log::info('⏱️ checkAvailability START', [
                 'call_id' => $callId,
                 'requested_date' => $requestedDate->format('Y-m-d H:i'),
@@ -1049,10 +1062,15 @@ class RetellFunctionCallHandler extends Controller
                 return $this->responseFormatter->error('Service nicht verfügbar für diese Filiale');
             }
 
-            Log::info('Using service for availability check', [
+            // 🔧 FIX 2025-11-24: Use staff-specific event type if preference exists
+            $eventTypeId = $this->getEventTypeForStaff($service, $preferredStaffId, $branchId);
+
+            Log::info('Using event type for availability check', [
                 'service_id' => $service->id,
                 'service_name' => $service->name,
-                'event_type_id' => $service->calcom_event_type_id,
+                'event_type_id' => $eventTypeId,
+                'preferred_staff_id' => $preferredStaffId ?? 'none',
+                'is_staff_specific' => $preferredStaffId !== null,
                 'call_id' => $callId
             ]);
 
@@ -1105,7 +1123,7 @@ class RetellFunctionCallHandler extends Controller
             if ($callId) {
                 Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
                 Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
-                Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+                Cache::put("call:{$callId}:event_type_id", $eventTypeId, now()->addMinutes(30));
 
                 Log::info('📌 Service pinned to call session', [
                     'call_id' => $callId,
@@ -1326,6 +1344,58 @@ class RetellFunctionCallHandler extends Controller
                     ];
                 }
 
+                // STEP 2.5: 🔧 FIX 2025-11-24: HYBRID SOLUTION - Check local DB for pending sync
+                // Same logic as regular services - prevents race conditions
+                $pendingAppointment = Appointment::where('company_id', $companyId)
+                    ->where('branch_id', $branchId)
+                    ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                    ->whereIn('sync_status', ['pending', 'failed'])
+                    ->where(function($query) use ($requestedDate, $service) {
+                        $duration = $service->duration_minutes ?? 60;
+                        $query->where(function($q) use ($requestedDate, $duration) {
+                            $q->where('starts_at', '>=', $requestedDate)
+                              ->where('starts_at', '<', $requestedDate->copy()->addMinutes($duration));
+                        })
+                        ->orWhere(function($q) use ($requestedDate) {
+                            $q->where('starts_at', '<=', $requestedDate)
+                              ->where('ends_at', '>', $requestedDate);
+                        })
+                        ->orWhere(function($q) use ($requestedDate, $duration) {
+                            $q->where('ends_at', '>', $requestedDate)
+                              ->where('ends_at', '<=', $requestedDate->copy()->addMinutes($duration));
+                        });
+                    })
+                    ->first();
+
+                if ($pendingAppointment) {
+                    Log::warning('⚠️ LOCAL DB CONFLICT (composite service): Pending sync blocks slot', [
+                        'call_id' => $callId,
+                        'calcom_said' => 'available',
+                        'local_db_said' => 'blocked',
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'blocking_appointment_id' => $pendingAppointment->id,
+                        'blocking_appointment_sync_status' => $pendingAppointment->sync_status,
+                        'fix' => 'Hybrid solution prevents race condition for composite services'
+                    ]);
+
+                    $alternatives = $this->findAlternativesForCompositeService(
+                        $service,
+                        $staff,
+                        $requestedDate,
+                        $branchId
+                    );
+
+                    return [
+                        'success' => true,
+                        'available' => false,
+                        'service' => $service->name,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'alternatives' => $alternatives,
+                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
+                        'reason' => 'local_db_conflict'
+                    ];
+                }
+
                 // STEP 3: Cal.com says YES → verify phase-aware availability for gaps
                 Log::info('✅ Cal.com says available - now checking phase-aware gaps', [
                     'call_id' => $callId,
@@ -1346,7 +1416,7 @@ class RetellFunctionCallHandler extends Controller
                         'staff_id' => $staff->id,
                         'requested_time' => $requestedDate->format('Y-m-d H:i'),
                         'service' => $service->name,
-                        'checks_passed' => ['calcom' => true, 'phase_aware' => true]
+                        'checks_passed' => ['calcom' => true, 'local_db' => true, 'phase_aware' => true]
                     ]);
 
                     return [
@@ -1408,7 +1478,7 @@ class RetellFunctionCallHandler extends Controller
                 // Check availability directly with Cal.com API
                 $isAvailable = $calcomAvailabilityService->isTimeSlotAvailable(
                     $requestedDate,
-                    $service->calcom_event_type_id,
+                    $eventTypeId,  // ✅ Staff-specific if preference exists
                     $service->duration_minutes ?? $duration,
                     null, // staff_id - not specified for regular services yet
                     $service->company->calcom_team_id
@@ -1421,7 +1491,7 @@ class RetellFunctionCallHandler extends Controller
                     'available' => $isAvailable,
                     'duration_ms' => $calcomDuration,
                     'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                    'event_type_id' => $service->calcom_event_type_id,
+                    'event_type_id' => $eventTypeId,  // ✅ Staff-specific if preference exists
                     'performance_target' => '< 1000ms',
                     'performance_status' => $calcomDuration < 1000 ? 'GOOD' : 'NEEDS_OPTIMIZATION'
                 ]);
@@ -1439,7 +1509,7 @@ class RetellFunctionCallHandler extends Controller
                         'validated_at' => now(),
                         'requested_time' => $requestedDate->format('Y-m-d H:i'),
                         'service_id' => $service->id,
-                        'event_type_id' => $service->calcom_event_type_id
+                        'event_type_id' => $eventTypeId  // ✅ Staff-specific if preference exists
                     ], now()->addSeconds(90));
 
                     Log::info('⚡ PHASE 1: Cached availability validation for fast booking', [
@@ -1520,6 +1590,58 @@ class RetellFunctionCallHandler extends Controller
                             'alternatives' => []
                         ]);
                     }
+                }
+
+                // 🔧 FIX 2025-11-24: HYBRID SOLUTION - Check local DB for pending/failed sync appointments
+                // CRITICAL: Cal.com says "available" but local DB may have appointments not yet synced
+                // This prevents race conditions and false-positive availability responses
+                $pendingAppointment = Appointment::where('company_id', $companyId)
+                    ->where('branch_id', $branchId)
+                    ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                    ->whereIn('sync_status', ['pending', 'failed'])  // Not synced to Cal.com yet!
+                    ->where(function($query) use ($requestedDate, $duration) {
+                        // Check for overlapping appointments
+                        $query->where(function($q) use ($requestedDate, $duration) {
+                            // Appointment starts within requested window
+                            $q->where('starts_at', '>=', $requestedDate)
+                              ->where('starts_at', '<', $requestedDate->copy()->addMinutes($duration));
+                        })
+                        ->orWhere(function($q) use ($requestedDate) {
+                            // Requested time falls within existing appointment
+                            $q->where('starts_at', '<=', $requestedDate)
+                              ->where('ends_at', '>', $requestedDate);
+                        })
+                        ->orWhere(function($q) use ($requestedDate, $duration) {
+                            // Appointment ends within requested window
+                            $q->where('ends_at', '>', $requestedDate)
+                              ->where('ends_at', '<=', $requestedDate->copy()->addMinutes($duration));
+                        });
+                    })
+                    ->first();
+
+                if ($pendingAppointment) {
+                    Log::warning('⚠️ LOCAL DB CONFLICT: Pending sync appointment blocks slot', [
+                        'call_id' => $callId,
+                        'calcom_said' => 'available',
+                        'local_db_said' => 'blocked',
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'blocking_appointment_id' => $pendingAppointment->id,
+                        'blocking_appointment_status' => $pendingAppointment->status,
+                        'blocking_appointment_sync_status' => $pendingAppointment->sync_status,
+                        'blocking_appointment_time' => $pendingAppointment->starts_at->format('Y-m-d H:i'),
+                        'blocking_customer' => $pendingAppointment->customer?->name,
+                        'fix' => 'Hybrid solution: Cal.com + Local DB check prevents race condition',
+                        'reason' => 'Appointment exists locally but not yet synced to Cal.com'
+                    ]);
+
+                    return $this->responseFormatter->success([
+                        'available' => false,
+                        'message' => "Dieser Termin ist leider nicht verfügbar. Welche Zeit würde Ihnen alternativ passen?",
+                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'alternatives' => [],
+                        'reason' => 'local_db_conflict',
+                        'suggest_user_alternative' => true
+                    ]);
                 }
 
                 // No existing appointment found - slot is truly available
@@ -1604,7 +1726,7 @@ class RetellFunctionCallHandler extends Controller
                 ->findAlternatives(
                     $requestedDate,
                     $duration,
-                    $service->calcom_event_type_id,
+                    $eventTypeId,  // ✅ Staff-specific if preference exists
                     $customerId  // Pass customer ID to prevent offering conflicting times
                 );
 
@@ -1661,6 +1783,108 @@ class RetellFunctionCallHandler extends Controller
             ]);
             return $this->responseFormatter->error('Fehler beim Prüfen der Verfügbarkeit');
         }
+    }
+
+    /**
+     * Get the correct Cal.com Event Type ID for staff preference
+     *
+     * CRITICAL FIX 2025-11-24: Prevents double bookings by checking availability
+     * with the correct staff-specific event type instead of default service event type.
+     *
+     * Logic:
+     * - If preferred_staff_id set → Use staff-specific event type from CalcomEventMap
+     * - If no preference → Use default service event type (any available staff)
+     *
+     * For composite services: Uses segment A event type for initial availability check
+     *
+     * @param Service $service The service to book
+     * @param string|null $preferredStaffId Optional staff ID for preference
+     * @param string $branchId Branch context for filtering
+     * @return int Cal.com Event Type ID to use for availability check
+     */
+    private function getEventTypeForStaff(
+        \App\Models\Service $service,
+        ?string $preferredStaffId,
+        string $branchId
+    ): int
+    {
+        // No staff preference → use default event type (any staff)
+        if (!$preferredStaffId) {
+            Log::info('📅 No staff preference, using default event type', [
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'event_type_id' => $service->calcom_event_type_id
+            ]);
+            return $service->calcom_event_type_id;
+        }
+
+        // Staff preference exists → find staff-specific event type
+        Log::info('👤 Staff preference detected, looking for staff-specific event type', [
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'preferred_staff_id' => $preferredStaffId,
+            'is_composite' => $service->composite
+        ]);
+
+        // For composite services: use segment A (first segment)
+        if ($service->composite) {
+            $mapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                ->where('staff_id', $preferredStaffId)
+                ->where('segment_key', 'A')  // First segment for availability check
+                ->first();
+
+            if ($mapping) {
+                Log::info('✅ Found staff-specific event type (composite)', [
+                    'service_id' => $service->id,
+                    'staff_id' => $preferredStaffId,
+                    'segment_key' => 'A',
+                    'event_type_id' => $mapping->event_type_id,
+                    'event_type_slug' => $mapping->event_type_slug
+                ]);
+                return $mapping->event_type_id;
+            }
+
+            Log::warning('⚠️ Staff preference for composite service but no CalcomEventMap found', [
+                'service_id' => $service->id,
+                'staff_id' => $preferredStaffId,
+                'segment_key' => 'A'
+            ]);
+        } else {
+            // For simple services: direct lookup (no segment key)
+            $mapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                ->where('staff_id', $preferredStaffId)
+                ->whereNull('segment_key')  // Simple services have no segments
+                ->first();
+
+            if ($mapping) {
+                Log::info('✅ Found staff-specific event type (simple)', [
+                    'service_id' => $service->id,
+                    'staff_id' => $preferredStaffId,
+                    'event_type_id' => $mapping->event_type_id,
+                    'event_type_slug' => $mapping->event_type_slug
+                ]);
+                return $mapping->event_type_id;
+            }
+
+            Log::warning('⚠️ Staff preference for simple service but no CalcomEventMap found', [
+                'service_id' => $service->id,
+                'staff_id' => $preferredStaffId
+            ]);
+        }
+
+        // Fallback: staff not found or no mapping exists
+        // This can happen if:
+        // - Staff not assigned to this service yet
+        // - CalcomEventMap not populated for this staff/service combo
+        // - Staff ID invalid
+        Log::warning('⚠️ Fallback to default event type (staff preference set but no mapping)', [
+            'service_id' => $service->id,
+            'preferred_staff_id' => $preferredStaffId,
+            'fallback_event_type_id' => $service->calcom_event_type_id,
+            'reason' => 'No CalcomEventMap entry found for this staff/service combination'
+        ]);
+
+        return $service->calcom_event_type_id;
     }
 
     /**
@@ -1727,7 +1951,7 @@ class RetellFunctionCallHandler extends Controller
                 ->findAlternatives(
                     $requestedDate,
                     $duration,
-                    $service->calcom_event_type_id,
+                    $eventTypeId,  // ✅ Staff-specific if preference exists
                     $customerId  // Pass customer ID to prevent offering conflicting times
                 );
 
@@ -2103,6 +2327,47 @@ class RetellFunctionCallHandler extends Controller
                         ]);
                     }
                 }
+            }
+
+            // 🔒 REDIS LOCK VALIDATION (2025-11-24) - Phase 2 Fix
+            // CRITICAL: Validate lock ownership before booking to prevent race conditions
+            // Ensures slot is still reserved for this specific call
+            $lockKey = $params['lock_key'] ?? null;
+            if (config('features.slot_locking.enabled', false) && $lockKey) {
+                $lockValidation = $this->lockService->validateLock($lockKey, $callId);
+
+                if (!$lockValidation['valid']) {
+                    Log::error('❌ Lock validation failed - slot reservation expired or stolen', [
+                        'call_id' => $callId,
+                        'lock_key' => $lockKey,
+                        'reason' => $lockValidation['reason'],
+                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'fix' => 'Phase 2: Redis lock check prevents double bookings'
+                    ]);
+
+                    return $this->responseFormatter->error(
+                        'Ihre Reservierung ist abgelaufen. Bitte prüfen Sie erneut die Verfügbarkeit.',
+                        [
+                            'available' => false,
+                            'status' => 'reservation_expired',
+                            'reason' => $lockValidation['reason'],
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        ]
+                    );
+                }
+
+                Log::info('✅ Lock validated successfully - slot still reserved for this call', [
+                    'call_id' => $callId,
+                    'lock_key' => $lockKey,
+                    'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                    'fix' => 'Phase 2: Redis lock prevents race conditions'
+                ]);
+            } elseif (config('features.slot_locking.enabled', false) && !$lockKey) {
+                Log::warning('⚠️ Booking without lock_key (old flow or backwards compatibility)', [
+                    'call_id' => $callId,
+                    'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                    'note' => 'Consider enabling slot locking globally for all calls'
+                ]);
             }
 
             // 🚀 PHASE 2 OPTIMIZATION (2025-11-17): ASYNC CAL.COM SYNC
@@ -7217,10 +7482,16 @@ class RetellFunctionCallHandler extends Controller
 
             if ($callId && $callId !== 'None') {
                 // 🔧 FIX 2025-11-16: Add company_id and branch_id for test calls
+                // Check if this is a test call
+                $isTestCall = $callId && (str_starts_with($callId, 'flow_test_') ||
+                                          str_starts_with($callId, 'test_') ||
+                                          str_starts_with($callId, 'phase1_test_'));
+
                 $createData = [
                     'from_number' => $parameters['from_number'] ?? $parameters['caller_number'] ?? null,
                     'to_number' => $parameters['to_number'] ?? $parameters['called_number'] ?? null,
-                    'call_status' => 'ongoing',
+                    'status' => $isTestCall ? 'test' : 'ongoing',
+                    'call_status' => $isTestCall ? 'test' : 'ongoing',
                     'start_timestamp' => now(),
                     'direction' => 'inbound'
                 ];
