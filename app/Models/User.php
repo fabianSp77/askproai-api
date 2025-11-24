@@ -337,4 +337,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * Get the user's preferences.
+     *
+     * Purpose: Store user-specific UI/UX preferences
+     * - Column visibility and order
+     * - View mode (compact/classic)
+     * - Custom filters and sorting
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function preferences()
+    {
+        return $this->morphMany(UserPreference::class, 'user', 'user_type', 'user_id');
+    }
+
 }

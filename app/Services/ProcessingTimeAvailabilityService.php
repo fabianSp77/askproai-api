@@ -33,25 +33,32 @@ class ProcessingTimeAvailabilityService
     {
         $endTime = $startTime->copy()->addMinutes($service->getTotalDuration());
 
-        // For regular services (no processing time), check appointment overlap directly
-        if (!$service->hasProcessingTime()) {
-            return !$this->hasOverlappingAppointments($staffId, $startTime, $endTime);
+        // 🔧 FIX 2025-11-23: ALWAYS check for overlapping appointments first
+        // BUG: Processing-time services were only checking busy phases, missing regular appointments
+        // This caused false positives when a processing-time service was requested during a regular appointment
+        // Example: Dauerwelle (processing-time) 10:45-13:00 vs Herrenhaarschnitt (regular) 10:00-12:15
+        //          The phase check would pass (no phases in regular appointments), but durations overlap!
+        if ($this->hasOverlappingAppointments($staffId, $startTime, $endTime)) {
+            return false;
         }
 
-        // For processing time services, check each phase individually
-        $proposedPhases = $service->generatePhases($startTime);
+        // For processing time services, ADDITIONALLY check phase-aware conflicts
+        // This handles interleaving: staff can serve customer B during customer A's processing phase
+        if ($service->hasProcessingTime()) {
+            $proposedPhases = $service->generatePhases($startTime);
 
-        foreach ($proposedPhases as $phase) {
-            // Only check phases where staff is required (busy phases)
-            if ($phase['staff_required']) {
-                $hasConflict = $this->hasOverlappingBusyPhases(
-                    $staffId,
-                    $phase['start_time'],
-                    $phase['end_time']
-                );
+            foreach ($proposedPhases as $phase) {
+                // Only check phases where staff is required (busy phases)
+                if ($phase['staff_required']) {
+                    $hasConflict = $this->hasOverlappingBusyPhases(
+                        $staffId,
+                        $phase['start_time'],
+                        $phase['end_time']
+                    );
 
-                if ($hasConflict) {
-                    return false;
+                    if ($hasConflict) {
+                        return false;
+                    }
                 }
             }
         }

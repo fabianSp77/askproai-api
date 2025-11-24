@@ -9,9 +9,12 @@ use App\Jobs\SoftDeleteServiceJob;
 use App\Models\Service;
 use App\Models\Customer;
 use App\Models\Appointment;
+use App\Models\Staff;
 use App\Services\PhoneNumberNormalizer;
 use App\Services\StaffAssignmentService;
+use App\Services\CalcomHostMappingService;
 use App\Services\Strategies\AssignmentContext;
+use App\Services\Strategies\HostMatchContext;
 use App\Traits\LogsWebhookEvents;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -267,6 +270,56 @@ class CalcomWebhookController extends Controller
                 }
             }
 
+            // FALLBACK: Cal.com Host Mapping
+            // If StaffAssignmentService didn't assign, try Cal.com host mapping
+            $calcomHostId = null;
+
+            if (!$staffId) {
+                try {
+                    $hostMappingService = app(CalcomHostMappingService::class);
+
+                    // Extract host from Cal.com webhook payload
+                    $hostData = $hostMappingService->extractHostFromBooking($payload);
+
+                    if ($hostData) {
+                        $hostContext = new HostMatchContext(
+                            companyId: $expectedCompanyId,
+                            branchId: $branchId ?? null,
+                            serviceId: $service->id,
+                            calcomBooking: $payload
+                        );
+
+                        $staffId = $hostMappingService->resolveStaffForHost($hostData, $hostContext);
+                        $calcomHostId = $hostData['id'] ?? null;
+
+                        if ($staffId) {
+                            Log::channel('calcom')->info('[Cal.com] Staff assigned via host mapping', [
+                                'staff_id' => $staffId,
+                                'calcom_host_id' => $calcomHostId,
+                                'host_email' => $hostData['email'] ?? null,
+                                'matching_strategy' => 'calcom_host_mapping'
+                            ]);
+
+                            // Add to assignment metadata
+                            $assignmentMetadata['assignment_model_used'] = 'calcom_host_mapping';
+                            $assignmentMetadata['calcom_host_id'] = $calcomHostId;
+                            $assignmentMetadata['calcom_host_email'] = $hostData['email'] ?? null;
+                        } else {
+                            Log::channel('calcom')->warning('[Cal.com] No staff match for host', [
+                                'calcom_host_id' => $calcomHostId,
+                                'host_email' => $hostData['email'] ?? null,
+                                'host_name' => $hostData['name'] ?? null
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::channel('calcom')->error('[Cal.com] Host mapping error', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
+            }
+
             // 🏢 MULTI-BRANCH SUPPORT: Determine branch for appointment
             // Priority: 1) Service.branch_id (filialspezifischer Service)
             //          2) Staff.branch_id (Home-Filiale des Mitarbeiters)
@@ -284,7 +337,8 @@ class CalcomWebhookController extends Controller
                     'customer_id' => $customer->id,
                     'company_id' => $expectedCompanyId,  // ← Use verified company ID
                     'service_id' => $service?->id,
-                    'staff_id' => $staffId, // From multi-model assignment
+                    'staff_id' => $staffId, // From multi-model assignment or Cal.com host mapping
+                    'calcom_host_id' => $calcomHostId, // Cal.com host ID for audit trail
                     'branch_id' => $branchId, // 🏢 NEW: Multi-branch support via Service or Staff
                     'starts_at' => $startTime,
                     'ends_at' => $endTime,

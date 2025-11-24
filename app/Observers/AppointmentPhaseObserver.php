@@ -34,22 +34,48 @@ class AppointmentPhaseObserver
             return;
         }
 
-        // Only create phases if service has processing time
-        if (!$appointment->service || !$appointment->service->hasProcessingTime()) {
+        // Load service if not loaded
+        if (!$appointment->service) {
+            $appointment->load('service');
+        }
+
+        $service = $appointment->service;
+
+        // Skip if no service
+        if (!$service) {
             return;
         }
 
         try {
-            $phases = $this->phaseService->createPhasesForAppointment($appointment);
+            $phases = [];
 
-            Log::info('AppointmentPhaseObserver: Phases created on appointment creation', [
-                'appointment_id' => $appointment->id,
-                'phases_count' => count($phases),
-            ]);
+            // PRIORITY 1: Processing Time (3-phase model)
+            if ($service->hasProcessingTime()) {
+                $phases = $this->phaseService->createPhasesForAppointment($appointment);
+                Log::info('AppointmentPhaseObserver: Processing Time phases created', [
+                    'appointment_id' => $appointment->id,
+                    'service_id' => $service->id,
+                    'phases_count' => count($phases),
+                    'type' => 'processing_time',
+                ]);
+            }
+            // PRIORITY 2: Composite Service (N-segment model)
+            elseif ($service->isComposite() && !empty($service->segments)) {
+                $phases = $this->phaseService->createPhasesFromSegments($appointment);
+                Log::info('AppointmentPhaseObserver: Composite phases created from segments', [
+                    'appointment_id' => $appointment->id,
+                    'service_id' => $service->id,
+                    'phases_count' => count($phases),
+                    'segments_count' => count($service->segments),
+                    'type' => 'composite',
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('AppointmentPhaseObserver: Failed to create phases', [
                 'appointment_id' => $appointment->id,
+                'service_id' => $service->id ?? null,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

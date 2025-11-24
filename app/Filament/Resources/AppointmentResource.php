@@ -44,17 +44,47 @@ class AppointmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        // ✅ RESTORED with caching (2025-10-03) - Memory bugs fixed
+        // 🔒 SECURITY FIX 2025-11-21: Multi-tenant isolation (was showing ALL companies' appointments)
         return static::getCachedBadge(function() {
-            return static::getModel()::whereNotNull('starts_at')->count();
+            $query = static::getModel()::whereNotNull('starts_at');
+
+            // Apply company scope based on user role
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user->role === 'Company-Admin') {
+                    $query->where('company_id', $user->company_id);
+                } elseif ($user->role === 'Reseller') {
+                    $query->whereHas('company', fn($q) =>
+                        $q->where('parent_company_id', $user->company_id)
+                    );
+                }
+                // Super-Admin sees all (no filter)
+            }
+
+            return $query->count();
         });
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        // ✅ RESTORED with caching (2025-10-03)
+        // 🔒 SECURITY FIX 2025-11-21: Multi-tenant isolation (was showing ALL companies' appointments)
         return static::getCachedBadgeColor(function() {
-            $count = static::getModel()::whereNotNull('starts_at')->count();
+            $query = static::getModel()::whereNotNull('starts_at');
+
+            // Apply company scope based on user role
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user->role === 'Company-Admin') {
+                    $query->where('company_id', $user->company_id);
+                } elseif ($user->role === 'Reseller') {
+                    $query->whereHas('company', fn($q) =>
+                        $q->where('parent_company_id', $user->company_id)
+                    );
+                }
+                // Super-Admin sees all (no filter)
+            }
+
+            $count = $query->count();
             return $count > 50 ? 'danger' : ($count > 20 ? 'warning' : 'info');
         });
     }
@@ -635,6 +665,18 @@ class AppointmentResource extends Resource
     {
         return $table
             ->defaultSort('starts_at', 'asc')
+            // 🆕 2025-11-24: Eager load relationships to prevent N+1 queries
+            ->modifyQueryUsing(function (Builder $query) {
+                return $query
+                    ->with('service')
+                    ->with('staff')
+                    ->with('customer')
+                    ->with('branch')
+                    ->with(['phases' => function ($query) {
+                        $query->where('staff_required', true)
+                            ->orderBy('sequence_order');
+                    }]);
+            })
             ->columns([
                 // Time slot column with smart formatting
                 Tables\Columns\TextColumn::make('starts_at')
@@ -693,11 +735,30 @@ class AppointmentResource extends Resource
                         : null
                     ),
 
+                // 🆕 2025-11-24: Enhanced to show composite indicator
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Service')
                     ->searchable()
                     ->badge()
-                    ->color('info'),
+                    ->color(fn ($record) => $record->service && $record->service->composite ? 'success' : 'info')
+                    ->formatStateUsing(function ($record) {
+                        if (!$record->service) {
+                            return 'Kein Service';
+                        }
+
+                        // Show composite indicator
+                        if ($record->service->composite) {
+                            $phaseCount = $record->phases()->where('staff_required', true)->count();
+                            return '📦 ' . $record->service->name . ' (' . $phaseCount . ')';
+                        }
+
+                        return $record->service->name;
+                    })
+                    ->description(fn ($record) =>
+                        $record->service && $record->service->composite
+                            ? 'Compound-Service'
+                            : null
+                    ),
 
                 Tables\Columns\TextColumn::make('staff.name')
                     ->label('Mitarbeiter')
@@ -1253,6 +1314,21 @@ class AppointmentResource extends Resource
                     ->collapsible()
                     ->collapsed(true),
 
+                // 🆕 2025-11-24: Compound-Service Details
+                InfoSection::make('Compound-Service Details')
+                    ->schema([
+                        \Filament\Infolists\Components\ViewEntry::make('phases_timeline')
+                            ->view('filament.infolists.appointment-phases-timeline')
+                            ->label('')
+                            ->columnSpanFull(),
+                    ])
+                    ->icon('heroicon-o-squares-2x2')
+                    ->collapsible()
+                    ->collapsed(false)
+                    ->visible(fn ($record): bool =>
+                        $record->service && $record->service->composite === true
+                    ),
+
                 // Cal.com Integration
                 InfoSection::make('Cal.com Integration')
                     ->schema([
@@ -1394,7 +1470,7 @@ class AppointmentResource extends Resource
         return parent::getEloquentQuery()
             ->with([
                 'customer:id,name,email,phone',
-                'service:id,name,price,duration_minutes',
+                'service:id,name,price,duration_minutes,composite,segments',
                 'staff:id,name',
                 'branch:id,name',
                 'company:id,name'

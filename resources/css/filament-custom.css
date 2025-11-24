@@ -1,0 +1,140 @@
+/**
+ * Filament Custom Styles - Cancelled Appointments UX
+ */
+
+/* List View - Cancelled Row Styling */
+.fi-ta-row.bg-orange-50 {
+    transition: background-color 0.2s ease;
+}
+
+.fi-ta-row.bg-orange-50:hover {
+    background-color: rgb(255 237 213 / 0.8); /* Slightly darker orange on hover */
+}
+
+/* Dark mode override */
+.dark .fi-ta-row.bg-orange-950\/10:hover {
+    background-color: rgb(67 20 7 / 0.15);
+}
+
+/* Badge Icon Animation - Subtle attention grabber for cancelled status */
+.fi-badge .heroicon-o-exclamation-triangle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Tooltip Improvements */
+.fi-tooltip {
+    max-width: 24rem; /* Wider tooltips for cancellation info */
+}
+
+/* Cancellation Banner - Entrance Animation */
+.cancellation-banner {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Link Hover States - More prominent for navigation */
+.cancellation-link {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.cancellation-link:hover {
+    transform: translateX(4px);
+}
+
+.cancellation-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: currentColor;
+    transition: width 0.2s ease;
+}
+
+.cancellation-link:hover::before {
+    width: 100%;
+}
+
+/* Strikethrough Enhancement for Cancelled Dates */
+.appointment-cancelled {
+    text-decoration: line-through;
+    opacity: 0.6;
+    position: relative;
+}
+
+.appointment-cancelled::after {
+    content: '(Cancelled)';
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(234 88 12); /* Orange-600 */
+    margin-left: 0.5rem;
+    text-decoration: none;
+    opacity: 1;
+}
+
+/* Related Calls Section - Visual Hierarchy */
+.related-calls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.related-call-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(229 231 235); /* Gray-200 */
+    background-color: rgb(249 250 251); /* Gray-50 */
+    transition: all 0.2s ease;
+}
+
+.related-call-item:hover {
+    border-color: rgb(59 130 246); /* Blue-500 */
+    background-color: rgb(239 246 255); /* Blue-50 */
+    transform: translateX(4px);
+}
+
+.dark .related-call-item {
+    border-color: rgb(55 65 81); /* Gray-700 */
+    background-color: rgb(31 41 55); /* Gray-800 */
+}
+
+.dark .related-call-item:hover {
+    border-color: rgb(59 130 246); /* Blue-500 */
+    background-color: rgb(30 58 138); /* Blue-900 */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .cancellation-banner {
+        padding: 1rem;
+    }
+
+    .cancellation-banner .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-tooltip {
+        max-width: 90vw;
+    }
+}

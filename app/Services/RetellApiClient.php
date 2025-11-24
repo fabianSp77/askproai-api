@@ -190,6 +190,18 @@ class RetellApiClient
             $phoneNumber = null;
             $phoneNumberId = null;
 
+            // 🔧 FIX 2025-11-24: Preserve existing phone_number_id if already set
+            // Similar to company_id preservation (lines 144-152)
+            // Prevents call_analyzed event from overwriting phone_number_id set by call_started
+            $existingCall = Call::where('retell_call_id', $callId)->first();
+            if ($existingCall && $existingCall->phone_number_id) {
+                $phoneNumberId = $existingCall->phone_number_id;
+                Log::debug('📞 Preserved existing phone_number_id', [
+                    'call_id' => $callId,
+                    'phone_number_id' => $phoneNumberId
+                ]);
+            }
+
             // if ($toNumber) {
             //     $phoneNumber = PhoneNumber::where('number', $toNumber)->first();
             //     if ($phoneNumber) {

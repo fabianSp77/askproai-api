@@ -585,9 +585,31 @@ class RetellWebhookController extends Controller
                             }
                         }
                     } else {
-                        Log::warning('⚠️ Phone number not found in handleCallStarted', [
+                        Log::error('❌ Phone resolution failed - using DEFAULT BRANCH fallback', [
                             'to_number' => $callData['to_number'],
                         ]);
+
+                        // 🔥 FALLBACK (2025-11-19): Use default branch when phone resolution fails
+                        // This prevents "Call context not available" errors for anonymous calls
+                        $defaultBranch = \App\Models\Branch::where('company_id', 1)
+                            ->where('is_default', true)
+                            ->first();
+
+                        if ($defaultBranch) {
+                            $branchId = $defaultBranch->id;
+                            $phoneNumberId = $defaultBranch->phoneNumbers()->first()?->id;
+
+                            Log::info('✅ Fallback enrichment successful', [
+                                'branch_id' => $branchId,
+                                'branch_name' => $defaultBranch->name,
+                                'phone_number_id' => $phoneNumberId,
+                                'source' => 'default_branch_fallback'
+                            ]);
+                        } else {
+                            Log::critical('🚨 NO DEFAULT BRANCH FOUND - functions will fail!', [
+                                'company_id' => 1
+                            ]);
+                        }
                     }
                 }
 
@@ -607,6 +629,27 @@ class RetellWebhookController extends Controller
                     'company_id' => $call->company_id,
                     'branch_id' => $call->branch_id,
                 ]);
+
+                // 🔥 ENRICHMENT VERIFICATION (2025-11-19): Ensure context is available for functions
+                Log::info('🔍 Enrichment verification', [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id,
+                    'phone_number_id' => $call->phone_number_id,
+                    'enrichment_source' => $phoneContext ? 'phone_resolution' : 'default_branch_fallback',
+                ]);
+
+                // 🚨 CRITICAL WARNING if enrichment failed
+                if (!$call->company_id || !$call->branch_id) {
+                    Log::critical('🚨 ENRICHMENT FAILED - Functions will not work!', [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $call->retell_call_id,
+                        'company_id' => $call->company_id,
+                        'branch_id' => $call->branch_id,
+                        'action_required' => 'Check default branch configuration in database'
+                    ]);
+                }
 
                 // 🔥 FIX: Create RetellCallSession for admin panel visibility
                 try {

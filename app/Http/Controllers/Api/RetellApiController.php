@@ -182,8 +182,10 @@ class RetellApiController extends Controller
                 ],
                 'customer_exists' => false,
                 'customer_found' => false,  // ← IMPORTANT for Flow boolean variable
-                'next_steps' => 'ask_for_customer_details',
-                'suggested_prompt' => 'Wie kann ich Ihnen helfen?'  // ✅ Neutral - kein proaktives Fragen nach Telefon/E-Mail
+                'next_steps' => 'ask_for_customer_details'
+                // 🔥 REMOVED suggested_prompt (2025-11-19): Agent should not ask "Wie kann ich helfen?" when user already stated their intent
+                // Problem: User says "Ich hätte gern einen Termin" → Agent ignored and asked "Wie kann ich Ihnen helfen?"
+                // Solution: Let LLM decide based on conversation context instead of forcing a prompt
             ], 200);
 
         } catch (\Exception $e) {
@@ -263,7 +265,8 @@ class RetellApiController extends Controller
                         'retell_call_id' => $callId,
                         'from_number' => 'unknown',
                         'to_number' => '+4915112345678', // Test number
-                        'call_status' => 'ongoing',
+                        'status' => 'test',
+                        'call_status' => 'test',
                         'start_timestamp' => now()
                     ]);
 

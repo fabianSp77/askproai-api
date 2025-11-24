@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Tool ID - Detaillierte Anleitung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .critical-info {
+            background: #fff3cd;
+            border: 5px solid #c0392b;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .method {
+            background: #f8f9fa;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .method h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ui-hint {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .ui-hint::before {
+            content: "🖥️ ";
+            font-size: 1.2em;
+        }
+
+        .ui-path {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        .warning-box {
+            background: #ffebee;
+            border: 3px solid #c0392b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .warning-box h3 {
+            color: #c0392b;
+            margin-bottom: 15px;
+        }
+
+        .alternative {
+            background: #e8f5e9;
+            border: 3px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .alternative h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .tool-list {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+            padding: 20px;
+        }
+
+        .tool-item {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .tool-item:last-child {
+            border-bottom: none;
+        }
+
+        .old-id {
+            color: #e74c3c;
+            font-family: monospace;
+            font-size: 1.1em;
+            text-decoration: line-through;
+        }
+
+        .new-id {
+            color: #27ae60;
+            font-family: monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .screenshot-area {
+            background: #f5f5f5;
+            border: 2px dashed #999;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+        }
+
+        .json-code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+        }
+
+        .dashboard-link {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .dashboard-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Tool ID Feld finden - Detailanleitung</h1>
+            <div class="version">So findest du das versteckte "tool_id" Feld</div>
+        </div>
+
+        <div class="content">
+            <div class="critical-info">
+                <strong>🚨 PROBLEM:</strong> Das <code>tool_id</code> Feld ist im Retell Dashboard oft versteckt oder schwer zu finden!<br><br>
+                <strong>💡 LÖSUNG:</strong> Ich zeige dir 3 verschiedene Methoden, wie du es trotzdem ändern kannst.
+            </div>
+
+            <div class="dashboard-link">
+                <strong>🔗 Dashboard URL:</strong><br>
+                <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </a>
+            </div>
+
+            <!-- METHODE 1: UI Suche -->
+            <div class="method">
+                <h2>📍 METHODE 1: Im Dashboard UI suchen</h2>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        <span>Gehe zu "Tools" oder "Custom Tools"</span>
+                    </div>
+                    <div class="ui-path">
+                        Dashboard → Agent → Tools (oder Custom Tools oder Functions)
+                    </div>
+                    <div class="ui-hint">
+                        Du siehst eine Liste mit 10 Tools. Klicke auf das ERSTE Tool (get_current_context).
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        <span>Suche nach einem dieser Felder:</span>
+                    </div>
+                    <div class="ui-hint">
+                        <strong>Mögliche Feldnamen (unterschiedlich je nach Retell UI Version):</strong><br><br>
+                        ✅ "Tool ID"<br>
+                        ✅ "Function ID"<br>
+                        ✅ "Identifier"<br>
+                        ✅ "ID"<br>
+                        ✅ "Tool Identifier"<br>
+                        ✅ "External ID"<br><br>
+                        <strong style="color: #c0392b;">NICHT verwechseln mit:</strong><br>
+                        ❌ "Name" (das hast du bereits geändert!)<br>
+                        ❌ "Display Name"<br>
+                        ❌ "Function Name"
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        <span>Wo das Feld sein könnte:</span>
+                    </div>
+                    <div class="ui-hint">
+                        <strong>Option A:</strong> Direkt unter "Name" Feld<br>
+                        <strong>Option B:</strong> In einem "Advanced Settings" oder "Advanced" Tab/Accordion<br>
+                        <strong>Option C:</strong> In einem "Configuration" oder "Settings" Bereich<br>
+                        <strong>Option D:</strong> Ganz oben im Tool-Editor (über "Name")<br>
+                        <strong>Option E:</strong> Als schreibgeschütztes Feld (read-only) - dann siehe Methode 2!
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h3>⚠️ Wenn du das Feld nicht findest:</h3>
+                    <p>Das bedeutet wahrscheinlich, dass Retell dieses Feld im UI versteckt hat!</p>
+                    <p><strong>→ Gehe zu METHODE 2 (JSON Export/Import)</strong></p>
+                </div>
+            </div>
+
+            <!-- METHODE 2: JSON Export/Import -->
+            <div class="method">
+                <h2>📦 METHODE 2: JSON Export/Import (EMPFOHLEN!)</h2>
+
+                <div class="alternative">
+                    <h3>✅ Diese Methode funktioniert GARANTIERT!</h3>
+                    <p>Retell erlaubt JSON-Export und Import von Conversation Flows.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        <span>Flow exportieren</span>
+                    </div>
+                    <div class="ui-path">
+                        Dashboard → Agent → Conversation Flow Tab → Oben rechts "Export" oder "⋮" (3 Punkte) → "Export as JSON"
+                    </div>
+                    <div class="ui-hint">
+                        Du bekommst eine JSON-Datei heruntergeladen (z.B. "conversation_flow_ec9a4cdef77e.json")
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        <span>JSON-Datei bearbeiten</span>
+                    </div>
+                    <div class="ui-hint">
+                        Öffne die Datei in einem Text-Editor (Notepad, VS Code, Sublime, etc.)
+                    </div>
+                    <p style="margin: 15px 0;">Suche nach <code>"tool_id":</code> und ändere ALLE 10 Vorkommen:</p>
+
+                    <div class="tool-list">
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-get-current-context"</span></div>
+                            <div><span class="new-id">"tool_id": "get_current_context"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-check-customer"</span></div>
+                            <div><span class="new-id">"tool_id": "check_customer"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-check-availability"</span></div>
+                            <div><span class="new-id">"tool_id": "check_availability_v17"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-start-booking"</span></div>
+                            <div><span class="new-id">"tool_id": "start_booking"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-get-appointments"</span></div>
+                            <div><span class="new-id">"tool_id": "query_appointment"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-cancel-appointment"</span></div>
+                            <div><span class="new-id">"tool_id": "cancel_appointment"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-reschedule-appointment"</span></div>
+                            <div><span class="new-id">"tool_id": "reschedule_appointment"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-get-alternatives"</span></div>
+                            <div><span class="new-id">"tool_id": "get_alternatives"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-get-services"</span></div>
+                            <div><span class="new-id">"tool_id": "get_available_services"</span></div>
+                        </div>
+                        <div class="tool-item">
+                            <div><span class="old-id">"tool_id": "tool-request-callback"</span></div>
+                            <div><span class="new-id">"tool_id": "request_callback"</span></div>
+                        </div>
+                    </div>
+
+                    <div class="ui-hint">
+                        <strong>WICHTIG:</strong> Du musst tool_id in ZWEI Bereichen ändern:<br>
+                        1. Im <code>tools</code> Array (Tool-Definitionen)<br>
+                        2. In den <code>nodes</code> (wo Tools aufgerufen werden)
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        <span>JSON-Datei wieder importieren</span>
+                    </div>
+                    <div class="ui-path">
+                        Dashboard → Conversation Flow Tab → Oben rechts "Import" oder "⋮" (3 Punkte) → "Import from JSON"
+                    </div>
+                    <div class="ui-hint">
+                        Wähle die bearbeitete JSON-Datei aus → Import bestätigen
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        <span>Speichern und Publishen</span>
+                    </div>
+                    <div class="ui-hint">
+                        Nach dem Import → "Save" → "Publish"<br>
+                        V69 wird published, V70 wird als Draft erstellt
+                    </div>
+                </div>
+            </div>
+
+            <!-- METHODE 3: Nodes bearbeiten -->
+            <div class="method">
+                <h2>🔧 METHODE 3: Über Function Nodes</h2>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        <span>Gehe zum Conversation Flow Editor</span>
+                    </div>
+                    <div class="ui-path">
+                        Dashboard → Conversation Flow
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        <span>Klicke auf eine Function Node (z.B. "get_current_context")</span>
+                    </div>
+                    <div class="ui-hint">
+                        Function Nodes sind die Boxen im Flow, die externe Tools aufrufen (violett/lila farbig)
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        <span>Suche nach "Tool" oder "Function" Dropdown</span>
+                    </div>
+                    <div class="ui-hint">
+                        In den Node-Einstellungen gibt es ein Dropdown "Select Tool" oder "Select Function"<br>
+                        Hier kannst du manchmal auch die Tool ID sehen/ändern
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h3>⚠️ Problem mit dieser Methode:</h3>
+                    <p>Du müsstest JEDE Function Node einzeln durchgehen (20+ Nodes!)</p>
+                    <p><strong>→ METHODE 2 (JSON) ist viel schneller!</strong></p>
+                </div>
+            </div>
+
+            <!-- ZUSAMMENFASSUNG -->
+            <div class="method" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white;">
+                <h2 style="color: white;">✅ EMPFEHLUNG: METHODE 2 (JSON Export/Import)</h2>
+
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h3 style="color: white; margin-bottom: 15px;">Schnellste und sicherste Methode:</h3>
+                    <p style="font-size: 1.1em; line-height: 1.8;">
+                        1️⃣ Flow als JSON exportieren<br>
+                        2️⃣ Mit Text-Editor "tool-" Prefix bei allen tool_id entfernen (10x in tools + 20x in nodes)<br>
+                        3️⃣ JSON wieder importieren<br>
+                        4️⃣ Publishen → FERTIG!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">
+                    <h3 style="color: white; margin-bottom: 15px;">⚠️ Wichtig beim JSON-Editing:</h3>
+                    <p style="font-size: 1.1em;">
+                        • Achte auf korrekte JSON-Syntax (Kommas, Anführungszeichen!)<br>
+                        • Mache ein Backup der Original-Datei<br>
+                        • Teste mit einem JSON-Validator (z.B. jsonlint.com) bevor du importierst
+                    </p>
+                </div>
+            </div>
+
+            <!-- HILFE SECTION -->
+            <div class="critical-info" style="background: #e3f2fd; border-color: #2196f3;">
+                <strong>💬 Brauchst du Hilfe?</strong><br><br>
+                Wenn keine der Methoden funktioniert, schicke mir:<br>
+                1. Screenshot vom Tools-Bereich im Dashboard<br>
+                2. Screenshot wenn du ein Tool anklickst (alle sichtbaren Felder)<br>
+                3. Oder: Die exportierte JSON-Datei<br><br>
+                Dann kann ich dir GENAU sagen, wo das Feld ist!
+            </div>
+        </div>
+    </div>
+</body>
+</html>

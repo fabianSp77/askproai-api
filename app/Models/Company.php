@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Traits\HasConfigurationInheritance;
@@ -94,6 +95,9 @@ class Company extends Model
         'credit_balance' => 'decimal:2',
         'low_credit_threshold' => 'decimal:2',
         'commission_rate' => 'decimal:2',
+        // Customer Portal: Pilot program mechanism
+        'is_pilot' => 'boolean',
+        'pilot_enabled_at' => 'datetime',
     ];
 
     public function users(): HasMany
@@ -253,6 +257,70 @@ class Company extends Model
 
         $calcomService = new \App\Services\CalcomV2Service($this);
         return $calcomService->validateTeamAccess($this->calcom_team_id, $calcomEventTypeId);
+    }
+
+    /**
+     * Customer Portal: Pilot Program
+     */
+
+    /**
+     * User who enabled pilot program for this company
+     */
+    public function pilotEnabledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pilot_enabled_by');
+    }
+
+    /**
+     * Query scope to filter only pilot companies
+     */
+    public function scopePilot($query)
+    {
+        return $query->where('is_pilot', true);
+    }
+
+    /**
+     * Check if company is in pilot program
+     */
+    public function isPilotCompany(): bool
+    {
+        return $this->is_pilot === true;
+    }
+
+    /**
+     * Enable pilot program for this company
+     */
+    public function enablePilot(User $user, ?string $notes = null): void
+    {
+        $this->update([
+            'is_pilot' => true,
+            'pilot_enabled_at' => now(),
+            'pilot_enabled_by' => $user->id,
+            'pilot_notes' => $notes,
+        ]);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties(['notes' => $notes])
+            ->log('pilot_enabled');
+    }
+
+    /**
+     * Disable pilot program for this company
+     */
+    public function disablePilot(User $user, ?string $reason = null): void
+    {
+        $this->update([
+            'is_pilot' => false,
+            'pilot_notes' => $reason ? "Disabled: {$reason}" : $this->pilot_notes,
+        ]);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties(['reason' => $reason])
+            ->log('pilot_disabled');
     }
 
     /**

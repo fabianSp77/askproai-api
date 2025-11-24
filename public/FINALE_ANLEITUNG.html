@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FINALE ANLEITUNG - 8 Änderungen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .critical-box {
+            background: #fff3cd;
+            border: 5px solid #c0392b;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .change-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .change-item {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 5px solid #c0392b;
+        }
+
+        .change-number {
+            background: #c0392b;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .change-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .code-box {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        .old {
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+
+        .new {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border: 3px solid #28a745;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+
+        .dashboard-link {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .dashboard-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 FINALE ANLEITUNG</h1>
+            <div class="version">Nur noch 8 Änderungen im "tools" Bereich!</div>
+        </div>
+
+        <div class="content">
+            <div class="critical-box">
+                <strong>📍 WO MUSST DU ÄNDERN?</strong><br><br>
+                Dashboard → Conversation Flow → Scroll nach ganz unten → Suche "Tools" oder "Custom Tools" Sektion<br><br>
+                Dort siehst du 10 Tools. Du musst bei 8 davon die <code>tool_id</code> korrigieren.
+            </div>
+
+            <div class="dashboard-link">
+                <strong>🔗 Dashboard:</strong><br>
+                <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </a>
+            </div>
+
+            <div class="change-list">
+                <h2 style="margin-bottom: 20px; color: #c0392b;">Die 8 zu ändernden Tools:</h2>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">1</span>
+                        <span>Tool: get_current_context</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-get-current-context</span> → <span class="new">get_current_context</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'get_current_context')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">2</span>
+                        <span>Tool: check_customer</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-check-customer</span> → <span class="new">check_customer</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'check_customer')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">3</span>
+                        <span>Tool: check_availability_v17 ⚠️ MIT v17!</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-check-availability</span> → <span class="new">check_availability_v17</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'check_availability_v17')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">4</span>
+                        <span>Tool: get_alternatives</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-get-alternatives</span> → <span class="new">get_alternatives</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'get_alternatives')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">5</span>
+                        <span>Tool: start_booking</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-start-booking</span> → <span class="new">start_booking</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'start_booking')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">6</span>
+                        <span>Tool: query_appointment ⚠️ NICHT get_appointments!</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-get-appointments</span> → <span class="new">query_appointment</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'query_appointment')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">7</span>
+                        <span>Tool: cancel_appointment</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-cancel-appointment</span> → <span class="new">cancel_appointment</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'cancel_appointment')">📋 Kopieren</button>
+                </div>
+
+                <div class="change-item">
+                    <div class="change-title">
+                        <span class="change-number">8</span>
+                        <span>Tool: get_available_services</span>
+                    </div>
+                    <div class="code-box">
+                        <span class="old">tool-get-services</span> → <span class="new">get_available_services</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard(this, 'get_available_services')">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <div class="success-box">
+                <h2 style="color: #155724; margin-bottom: 20px;">✅ NACH ALLEN 8 ÄNDERUNGEN:</h2>
+                <ol style="margin-left: 20px; font-size: 1.1em; line-height: 2;">
+                    <li>Klicke <strong>"Save"</strong></li>
+                    <li>Klicke <strong>"Publish"</strong></li>
+                    <li>V69 wird published, V70 wird als Draft erstellt</li>
+                    <li><strong>FERTIG!</strong> Der Agent ist jetzt 100% korrekt!</li>
+                </ol>
+            </div>
+
+            <div class="critical-box" style="background: #e8f5e9; border-color: #28a745;">
+                <strong style="color: #155724;">💡 TIPP: Suchen & Ersetzen!</strong><br><br>
+                Wenn du den Flow als JSON exportierst, kannst du im Text-Editor einfach suchen:<br>
+                <code style="background: white; padding: 5px; border-radius: 3px;">"tool_id": "tool-</code><br><br>
+                und ersetzen mit:<br>
+                <code style="background: white; padding: 5px; border-radius: 3px;">"tool_id": "</code><br><br>
+                Das entfernt das "tool-" Prefix bei allen auf einmal!<br>
+                Dann noch die 2 Spezialfälle (check_availability_v17 und query_appointment) manuell korrigieren.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Kopiert!';
+                button.style.background = '#27ae60';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#3498db';
+                }, 2000);
+            }).catch(err => {
+                alert('Kopieren fehlgeschlagen. Bitte manuell kopieren.');
+            });
+        }
+    </script>
+</body>
+</html>

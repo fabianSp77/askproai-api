@@ -47,10 +47,11 @@ class CalcomEventTypeManager
      * 4. Handles errors gracefully with rollback
      *
      * @param Service $service The composite service
+     * @param \App\Models\Staff|null $staff Optional staff member for staff-specific mappings
      * @return array Created CalcomEventMap records
      * @throws \Exception if Cal.com API fails
      */
-    public function createSegmentEventTypes(Service $service): array
+    public function createSegmentEventTypes(Service $service, ?\App\Models\Staff $staff = null): array
     {
         // Validate composite service
         if (!$service->composite || empty($service->segments)) {
@@ -70,15 +71,16 @@ class CalcomEventTypeManager
 
         $createdMappings = [];
 
-        DB::transaction(function() use ($service, &$createdMappings) {
+        DB::transaction(function() use ($service, $staff, &$createdMappings) {
             foreach ($service->segments as $segment) {
                 $segmentKey = $segment['key'];
                 $segmentName = $segment['name'];
-                $duration = $segment['duration'];
+                $duration = $segment['durationMin'] ?? $segment['duration'] ?? 30;
 
-                // Check if mapping already exists
+                // Check if mapping already exists (staff-aware)
                 $existingMapping = CalcomEventMap::where('service_id', $service->id)
                     ->where('segment_key', $segmentKey)
+                    ->when($staff, fn($q) => $q->where('staff_id', $staff->id), fn($q) => $q->whereNull('staff_id'))
                     ->first();
 
                 if ($existingMapping) {
@@ -87,8 +89,8 @@ class CalcomEventTypeManager
                     continue;
                 }
 
-                // Generate event type name
-                $eventTypeName = $this->generateEventTypeName($service, $segment);
+                // Generate event type name (staff-aware if provided)
+                $eventTypeName = $this->generateEventTypeName($service, $segment, $staff);
 
                 // Create Cal.com event type via API
                 try {
@@ -182,13 +184,13 @@ class CalcomEventTypeManager
                         'segment_key' => $segmentKey
                     ]);
 
-                    // Create CalcomEventMap record
+                    // Create CalcomEventMap record (staff-aware)
                     $mapping = CalcomEventMap::create([
                         'company_id' => $service->company_id,
                         'branch_id' => $service->branch_id,
                         'service_id' => $service->id,
                         'segment_key' => $segmentKey,
-                        'staff_id' => null, // Can be set later for staff-specific mappings
+                        'staff_id' => $staff?->id, // Staff-specific mapping if provided
                         'event_type_id' => $eventTypeId,
                         'event_type_slug' => $eventTypeSlug,
                         'hidden' => true,
@@ -235,7 +237,7 @@ class CalcomEventTypeManager
      * @param array $segment
      * @return string
      */
-    private function generateEventTypeName(Service $service, array $segment): string
+    private function generateEventTypeName(Service $service, array $segment, ?\App\Models\Staff $staff = null): string
     {
         $segments = $service->segments;
         $totalSegments = count($segments);
@@ -252,15 +254,28 @@ class CalcomEventTypeManager
         // Shorten service name if needed (remove redundant parts like ", waschen, schneiden, föhnen")
         $serviceName = $this->shortenServiceName($service->name);
 
-        // Pattern: SERVICE: SEGMENT (X von Y) - COMPANY
-        return sprintf(
-            "%s: %s (%d von %d) - %s",
-            $serviceName,             // "Ansatzfärbung komplett"
-            $segment['name'],         // "Ansatzfärbung auftragen"
-            $position,                // 1
-            $totalSegments,           // 4
-            $this->company->name      // "Friseur 1"
-        );
+        // Pattern with staff: SERVICE: SEGMENT (X von Y) - STAFF - COMPANY
+        // Pattern without staff: SERVICE: SEGMENT (X von Y) - COMPANY
+        if ($staff) {
+            return sprintf(
+                "%s: %s (%d von %d) - %s - %s",
+                $serviceName,             // "Ansatzfärbung komplett"
+                $segment['name'],         // "Ansatzfärbung auftragen"
+                $position,                // 1
+                $totalSegments,           // 4
+                $staff->name,             // "Fabian Spitzer"
+                $this->company->name      // "Friseur 1"
+            );
+        } else {
+            return sprintf(
+                "%s: %s (%d von %d) - %s",
+                $serviceName,             // "Ansatzfärbung komplett"
+                $segment['name'],         // "Ansatzfärbung auftragen"
+                $position,                // 1
+                $totalSegments,           // 4
+                $this->company->name      // "Friseur 1"
+            );
+        }
     }
 
     /**

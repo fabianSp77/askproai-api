@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollensystem-Analyse - AskPro AI Gateway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stats-card.success { border-left-color: var(--success); }
+        .stats-card.warning { border-left-color: var(--warning); }
+        .stats-card.danger { border-left-color: var(--danger); }
+
+        .stats-card .icon {
+            font-size: 2.5rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 4px;
+            text-transform: none;
+        }
+
+        .role-badge.super-admin { background: #fee2e2; color: #991b1b; }
+        .role-badge.admin { background: #fef3c7; color: #92400e; }
+        .role-badge.manager { background: #d1fae5; color: #065f46; }
+        .role-badge.operator { background: #dbeafe; color: #1e40af; }
+        .role-badge.viewer { background: #f3f4f6; color: #374151; }
+        .role-badge.customer { background: #e0e7ff; color: #3730a3; }
+
+        .permission-table {
+            font-size: 0.9rem;
+        }
+
+        .permission-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .permission-table td, .permission-table th {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .check-yes {
+            color: var(--success);
+            font-size: 1.2rem;
+        }
+
+        .check-no {
+            color: #d1d5db;
+            font-size: 1.2rem;
+        }
+
+        .check-partial {
+            color: var(--warning);
+            font-size: 1.2rem;
+        }
+
+        .gap-badge {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .recommendation-card {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-card.critical {
+            background: #fef2f2;
+            border-left-color: #dc2626;
+        }
+
+        .recommendation-card.important {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .file-path {
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #374151;
+        }
+
+        .hierarchy-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            background: #f9fafb;
+            border-left: 4px solid #e5e7eb;
+        }
+
+        .hierarchy-item.level-1 { margin-left: 0; border-left-color: #dc2626; }
+        .hierarchy-item.level-2 { margin-left: 24px; border-left-color: #f59e0b; }
+        .hierarchy-item.level-3 { margin-left: 48px; border-left-color: #10b981; }
+        .hierarchy-item.level-4 { margin-left: 72px; border-left-color: #3b82f6; }
+        .hierarchy-item.level-5 { margin-left: 96px; border-left-color: #6b7280; }
+
+        .filter-btn {
+            margin: 4px;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.875rem;
+        }
+
+        .collapsible-section {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-section:hover {
+            background: #f9fafb;
+        }
+
+        .roadmap-phase {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+
+        .roadmap-phase.complete {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .roadmap-phase.current {
+            border-color: var(--warning);
+            background: #fffbeb;
+        }
+
+        .roadmap-phase.future {
+            border-color: #e5e7eb;
+            background: white;
+        }
+
+        .phase-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: white;
+            border: 2px solid;
+        }
+
+        .phase-badge.complete {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .phase-badge.current {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .phase-badge.future {
+            border-color: var(--gray);
+            color: var(--gray);
+        }
+
+        @media print {
+            .navbar, .filter-controls, .no-print { display: none; }
+            .section-card { page-break-inside: avoid; box-shadow: none; }
+            body { background: white; }
+        }
+
+        .toc {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .toc a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .policy-code {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        .keyword { color: #c084fc; }
+        .string { color: #86efac; }
+        .comment { color: #9ca3af; font-style: italic; }
+        .function { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-shield-lock"></i> Rollensystem-Analyse - AskPro AI Gateway
+            </span>
+            <span class="text-white">
+                <i class="bi bi-calendar3"></i> 24. November 2025
+            </span>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Executive Summary -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Executive Summary</h4>
+                    <p class="mb-0">
+                        Das AskPro AI Gateway implementiert ein robustes <strong>Role-Based Access Control (RBAC)</strong> System
+                        mit <strong>Spatie Laravel Permission</strong> Package. Die Architektur unterstützt eine <strong>Dual-Panel</strong>
+                        Struktur (Admin Panel + Customer Portal) mit umfassender Multi-Tenant-Isolation.
+                    </p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Status:</strong> Phase 1 (Read-Only Customer Portal) ✅ ABGESCHLOSSEN |
+                        Phase 2 (Write Access) 🔄 VORBEREITUNG
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <i class="bi bi-people icon"></i>
+                    <h3 class="mb-1">13</h3>
+                    <p class="text-muted mb-0">Definierte Rollen</p>
+                    <small class="text-muted">9 Plattform + 4 Kunden</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card success">
+                    <i class="bi bi-key icon"></i>
+                    <h3 class="mb-1">50+</h3>
+                    <p class="text-muted mb-0">Berechtigungen</p>
+                    <small class="text-muted">Über 9 Module</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card warning">
+                    <i class="bi bi-shield-check icon"></i>
+                    <h3 class="mb-1">20+</h3>
+                    <p class="text-muted mb-0">Policy-Klassen</p>
+                    <small class="text-muted">Granulare Kontrolle</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card danger">
+                    <i class="bi bi-exclamation-triangle icon"></i>
+                    <h3 class="mb-1">7</h3>
+                    <p class="text-muted mb-0">Identifizierte Lücken</p>
+                    <small class="text-muted">Verbesserungsbedarf</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="toc">
+                    <h5><i class="bi bi-list-ul"></i> Inhaltsverzeichnis</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ol>
+                                <li><a href="#section-hierarchy">Rollenhierarchie</a></li>
+                                <li><a href="#section-platform-roles">Plattform-Rollen</a></li>
+                                <li><a href="#section-customer-roles">Customer Portal Rollen</a></li>
+                                <li><a href="#section-permissions">Berechtigungsstruktur</a></li>
+                                <li><a href="#section-permission-matrix">Berechtigungs-Matrix</a></li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <ol start="6">
+                                <li><a href="#section-features">Feature-spezifische Berechtigungen</a></li>
+                                <li><a href="#section-navigation">Menü-Sichtbarkeit</a></li>
+                                <li><a href="#section-multitenancy">Multi-Tenancy</a></li>
+                                <li><a href="#section-gaps">Identifizierte Lücken</a></li>
+                                <li><a href="#section-roadmap">Implementierungs-Roadmap</a></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Role Hierarchy -->
+        <div class="row" id="section-hierarchy">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-diagram-3"></i> 1. Rollenhierarchie</h2>
+
+                    <div class="alert alert-light">
+                        <strong>Package:</strong> Spatie Laravel Permission v6.21<br>
+                        <strong>Model:</strong> <span class="file-path">app/Models/Role.php</span><br>
+                        <strong>Seeder:</strong> <span class="file-path">database/seeders/RolesAndPermissionsSeeder.php</span>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Plattform-Rollen (Admin Panel)</h5>
+                    <div class="hierarchy-item level-1">
+                        <strong>Priority 1:</strong> Super Admin
+                        <span class="role-badge super-admin">super_admin</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-shield-exclamation"></i> Vollzugriff auf alle Systemfunktionen,
+                            umgeht alle Autorisierungsprüfungen
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-2">
+                        <strong>Priority 2:</strong> Admin
+                        <span class="role-badge admin">Admin</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-shield-check"></i> Administrative Rechte für Plattform-Management,
+                            außer kritische System-Operationen
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-3">
+                        <strong>Priority 3:</strong> Manager
+                        <span class="role-badge manager">Manager</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-briefcase"></i> Business-Prozess-Management,
+                            keine Löschrechte
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-4">
+                        <strong>Priority 4:</strong> Operator
+                        <span class="role-badge operator">Operator</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-gear"></i> Operative Aufgaben und Datenpflege,
+                            eingeschränkte Schreibrechte
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-5">
+                        <strong>Priority 5:</strong> Viewer
+                        <span class="role-badge viewer">Viewer</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-eye"></i> Nur-Lese-Zugriff auf alle Ressourcen,
+                            keine Änderungen möglich
+                        </p>
+                    </div>
+
+                    <h5 class="mt-5 mb-3">Customer Portal Rollen</h5>
+                    <div class="hierarchy-item level-1">
+                        <strong>Zugriff:</strong> Company Owner
+                        <span class="role-badge customer">company_owner</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-building"></i> Vollzugriff auf alle Unternehmensdaten,
+                            keine Filial-Isolation
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-2">
+                        <strong>Zugriff:</strong> Company Admin
+                        <span class="role-badge customer">company_admin</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-person-badge"></i> Vollzugriff auf alle Unternehmensdaten,
+                            administrative Funktionen
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-3">
+                        <strong>Zugriff:</strong> Company Manager
+                        <span class="role-badge customer">company_manager</span>
+                        <span class="badge bg-warning">Branch-Isolation</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-geo-alt"></i> Filial-Level Zugriff,
+                            nur eigene Filial-Daten (via <code>branch_id</code>)
+                        </p>
+                    </div>
+                    <div class="hierarchy-item level-4">
+                        <strong>Zugriff:</strong> Company Staff
+                        <span class="role-badge customer">company_staff</span>
+                        <span class="badge bg-danger">Staff-Isolation</span>
+                        <p class="mb-0 mt-2 text-muted">
+                            <i class="bi bi-person"></i> Nur eigene Daten,
+                            streng limitiert (via <code>staff_id</code>)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Platform Roles Detailed -->
+        <div class="row" id="section-platform-roles">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-award"></i> 2. Plattform-Rollen (Detailliert)</h2>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover permission-table">
+                            <thead>
+                                <tr>
+                                    <th>Rolle</th>
+                                    <th>Konstante</th>
+                                    <th>Priorität</th>
+                                    <th>Beschreibung</th>
+                                    <th>Icon</th>
+                                    <th>Farbe</th>
+                                    <th>System-Rolle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="role-badge super-admin">Super Admin</span></td>
+                                    <td><code>SUPER_ADMIN</code></td>
+                                    <td><span class="badge bg-danger">1</span></td>
+                                    <td>Vollzugriff, umgeht alle Checks</td>
+                                    <td><i class="bi bi-shield-exclamation"></i></td>
+                                    <td><span class="badge bg-danger">danger</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge admin">Admin</span></td>
+                                    <td><code>ADMIN</code></td>
+                                    <td><span class="badge bg-warning">2</span></td>
+                                    <td>Administrative Plattform-Rechte</td>
+                                    <td><i class="bi bi-shield-check"></i></td>
+                                    <td><span class="badge bg-warning">warning</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge manager">Manager</span></td>
+                                    <td><code>MANAGER</code></td>
+                                    <td><span class="badge bg-success">3</span></td>
+                                    <td>Business-Management</td>
+                                    <td><i class="bi bi-briefcase"></i></td>
+                                    <td><span class="badge bg-success">success</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge operator">Operator</span></td>
+                                    <td><code>OPERATOR</code></td>
+                                    <td><span class="badge bg-info">4</span></td>
+                                    <td>Operative Tätigkeiten</td>
+                                    <td><i class="bi bi-gear"></i></td>
+                                    <td><span class="badge bg-info">info</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge viewer">Viewer</span></td>
+                                    <td><code>VIEWER</code></td>
+                                    <td><span class="badge bg-secondary">5</span></td>
+                                    <td>Nur-Lese-Zugriff</td>
+                                    <td><i class="bi bi-eye"></i></td>
+                                    <td><span class="badge bg-secondary">gray</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Legacy-Rollen (Veraltet)</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-secondary">staff</span>
+                            <span class="badge bg-secondary">branch_manager</span>
+                            <span class="badge bg-secondary">receptionist</span>
+                            <span class="badge bg-secondary">billing_manager</span>
+                            <br><small class="text-muted mt-2 d-block">
+                                Diese Rollen sollten konsolidiert und migriert werden.
+                            </small>
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="bi bi-building"></i> Reseller-Rollen (Teilweise implementiert)</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-primary">reseller_admin</span>
+                            <span class="badge bg-primary">reseller_owner</span>
+                            <span class="badge bg-primary">reseller_support</span>
+                            <br><small class="text-muted mt-2 d-block">
+                                In Policies vorhanden, aber nicht vollständig im Seeder definiert.
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Customer Portal Roles -->
+        <div class="row" id="section-customer-roles">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-person-circle"></i> 3. Customer Portal Rollen</h2>
+
+                    <div class="alert alert-primary">
+                        <strong>Zugriffskontrolle:</strong> <span class="file-path">app/Models/User.php:155-179</span><br>
+                        <strong>Feature Flag:</strong> <code>config('features.customer_portal')</code> = <span class="badge bg-success">true</span>
+                    </div>
+
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover permission-table">
+                            <thead>
+                                <tr>
+                                    <th>Rolle</th>
+                                    <th>Zugriffslevel</th>
+                                    <th>Branch-Isolation</th>
+                                    <th>Staff-Isolation</th>
+                                    <th>Verwendung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="role-badge customer">company_owner</span></td>
+                                    <td><span class="badge bg-success">Vollzugriff</span></td>
+                                    <td><i class="bi bi-x-circle check-no"></i> Nein</td>
+                                    <td><i class="bi bi-x-circle check-no"></i> Nein</td>
+                                    <td>Unternehmensinhaber</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge customer">company_admin</span></td>
+                                    <td><span class="badge bg-success">Vollzugriff</span></td>
+                                    <td><i class="bi bi-x-circle check-no"></i> Nein</td>
+                                    <td><i class="bi bi-x-circle check-no"></i> Nein</td>
+                                    <td>Unternehmens-Administrator</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge customer">company_manager</span></td>
+                                    <td><span class="badge bg-warning">Filial-Level</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i> Ja (via <code>branch_id</code>)</td>
+                                    <td><i class="bi bi-x-circle check-no"></i> Nein</td>
+                                    <td>Filialleiter</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-badge customer">company_staff</span></td>
+                                    <td><span class="badge bg-danger">Nur eigene Daten</span></td>
+                                    <td><i class="bi bi-check-circle check-yes"></i> Ja</td>
+                                    <td><i class="bi bi-check-circle check-yes"></i> Ja (via <code>staff_id</code>)</td>
+                                    <td>Personal/Mitarbeiter</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 class="mt-4">Zugriffsbedingungen (User.php:155-179)</h5>
+                    <div class="policy-code">
+<span class="keyword">public function</span> <span class="function">canAccessCustomerPortal</span>(): <span class="keyword">bool</span>
+{
+    <span class="comment">// 1. Feature Flag Check</span>
+    <span class="keyword">if</span> (!<span class="function">config</span>(<span class="string">'features.customer_portal'</span>)) {
+        <span class="keyword">return false</span>;
+    }
+
+    <span class="comment">// 2. Company Association Required</span>
+    <span class="keyword">if</span> (!<span class="keyword">$this</span>->company_id) {
+        <span class="keyword">return false</span>;
+    }
+
+    <span class="comment">// 3. Admins EXCLUDED (must use /admin)</span>
+    <span class="keyword">if</span> (<span class="keyword">$this</span>-><span class="function">hasAnyRole</span>([<span class="string">'super_admin'</span>, <span class="string">'Admin'</span>, <span class="string">'reseller_admin'</span>])) {
+        <span class="keyword">return false</span>;
+    }
+
+    <span class="comment">// 4. Customer Roles Allowed</span>
+    <span class="keyword">return</span> <span class="keyword">$this</span>-><span class="function">hasAnyRole</span>([
+        <span class="string">'company_owner'</span>,
+        <span class="string">'company_admin'</span>,
+        <span class="string">'company_manager'</span>,
+        <span class="string">'company_staff'</span>
+    ]);
+}
+                    </div>
+
+                    <div class="alert alert-danger mt-4">
+                        <h6><i class="bi bi-exclamation-octagon"></i> Phase 1: Read-Only Status</h6>
+                        <p class="mb-0">
+                            Aktuell sind alle Customer Portal Ressourcen auf <strong>Nur-Lese-Zugriff</strong> limitiert:
+                        </p>
+                        <ul class="mb-0 mt-2">
+                            <li><code>canCreate(): false</code></li>
+                            <li><code>canEdit(): false</code></li>
+                            <li><code>canDelete(): false</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Permission Structure -->
+        <div class="row" id="section-permissions">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-key-fill"></i> 4. Berechtigungsstruktur</h2>
+
+                    <div class="alert alert-light">
+                        <strong>Model:</strong> <span class="file-path">app/Models/Permission.php</span><br>
+                        <strong>Naming Convention:</strong> <code>{module}.{action}</code><br>
+                        <strong>Beispiel:</strong> <code>appointment.view</code>, <code>customer.create</code>
+                    </div>
+
+                    <h5 class="mt-4">Modul-Übersicht</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <i class="bi bi-gear"></i> System
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>system.access_admin</code></li>
+                                        <li><code>system.view_logs</code></li>
+                                        <li><code>system.manage_settings</code></li>
+                                        <li><code>system.manage_users</code></li>
+                                        <li><code>system.manage_roles</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="bi bi-building"></i> Company
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>company.view</code></li>
+                                        <li><code>company.create</code></li>
+                                        <li><code>company.update</code></li>
+                                        <li><code>company.delete</code></li>
+                                        <li><code>company.manage_billing</code></li>
+                                        <li><code>company.manage_integrations</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-geo-alt"></i> Branch
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>branch.view</code></li>
+                                        <li><code>branch.create</code></li>
+                                        <li><code>branch.update</code></li>
+                                        <li><code>branch.delete</code></li>
+                                        <li><code>branch.manage_services</code></li>
+                                        <li><code>branch.manage_staff</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-warning text-white">
+                                    <i class="bi bi-people"></i> Staff
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>staff.view</code></li>
+                                        <li><code>staff.create</code></li>
+                                        <li><code>staff.update</code></li>
+                                        <li><code>staff.delete</code></li>
+                                        <li><code>staff.manage_schedule</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <i class="bi bi-scissors"></i> Service
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>service.view</code></li>
+                                        <li><code>service.create</code></li>
+                                        <li><code>service.update</code></li>
+                                        <li><code>service.delete</code></li>
+                                        <li><code>service.manage_pricing</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <i class="bi bi-person"></i> Customer
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>customer.view</code></li>
+                                        <li><code>customer.create</code></li>
+                                        <li><code>customer.update</code></li>
+                                        <li><code>customer.delete</code></li>
+                                        <li><code>customer.export</code></li>
+                                        <li><code>customer.import</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header" style="background: #8b5cf6; color: white;">
+                                    <i class="bi bi-calendar-check"></i> Appointment
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>appointment.view</code></li>
+                                        <li><code>appointment.create</code></li>
+                                        <li><code>appointment.update</code></li>
+                                        <li><code>appointment.delete</code></li>
+                                        <li><code>appointment.reschedule</code></li>
+                                        <li><code>appointment.cancel</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header" style="background: #ec4899; color: white;">
+                                    <i class="bi bi-telephone"></i> Call
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>call.view</code></li>
+                                        <li><code>call.create</code></li>
+                                        <li><code>call.update</code></li>
+                                        <li><code>call.delete</code></li>
+                                        <li><code>call.manage_recordings</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header" style="background: #06b6d4; color: white;">
+                                    <i class="bi bi-phone"></i> Phone Number
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><code>phone_number.view</code></li>
+                                        <li><code>phone_number.create</code></li>
+                                        <li><code>phone_number.update</code></li>
+                                        <li><code>phone_number.delete</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Permission Matrix -->
+        <div class="row" id="section-permission-matrix">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-table"></i> 5. Berechtigungs-Matrix</h2>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Diese Matrix zeigt, welche Rollen welche Berechtigungen haben.
+                        <strong>Legende:</strong>
+                        <i class="bi bi-check-circle check-yes"></i> Ja |
+                        <i class="bi bi-dash-circle check-partial"></i> Teilweise |
+                        <i class="bi bi-x-circle check-no"></i> Nein
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm permission-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Modul</th>
+                                    <th colspan="5" class="text-center bg-light">Plattform-Rollen</th>
+                                    <th colspan="4" class="text-center bg-primary text-white">Customer Portal</th>
+                                </tr>
+                                <tr>
+                                    <th>Super Admin</th>
+                                    <th>Admin</th>
+                                    <th>Manager</th>
+                                    <th>Operator</th>
+                                    <th>Viewer</th>
+                                    <th>Owner</th>
+                                    <th>Admin</th>
+                                    <th>Manager</th>
+                                    <th>Staff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>System</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Company</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Branch</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Staff</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Service</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Customer</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Appointment</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Call</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-dash-circle check-partial"></i></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                    <td class="text-center bg-warning"><i class="bi bi-dash-circle"></i> <small>Read-Only</small></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone Number</strong></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-check-circle check-yes"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                    <td class="text-center"><i class="bi bi-x-circle check-no"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-danger mt-4">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Phase 1 Limitierung</h6>
+                        <p class="mb-0">
+                            Customer Portal Rollen haben aktuell <strong>KEINE Schreibrechte</strong> für Appointments und Calls.
+                            Dies muss in Phase 2 adressiert werden.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Feature-Specific Permissions -->
+        <div class="row" id="section-features">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-puzzle"></i> 6. Feature-spezifische Berechtigungen</h2>
+
+                    <div class="accordion" id="featuresAccordion">
+                        <!-- Calls -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCall">
+                                    <i class="bi bi-telephone me-2"></i> Anrufe (Calls)
+                                </button>
+                            </h2>
+                            <div id="collapseCall" class="accordion-collapse collapse show" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/CallResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/CallPolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle authentifizierten</span></td>
+                                                <td>Multi-tenant gefiltert</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Company-Isolation</span></td>
+                                                <td>Company-scoped</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Transkript ansehen</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff</span></td>
+                                                <td>Sensitive Daten</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Aufnahme abspielen</td>
+                                                <td><span class="badge bg-warning">admin, manager, assigned staff</span></td>
+                                                <td><code>playRecording()</code> policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Exportieren</td>
+                                                <td><span class="badge bg-danger">admin, manager, company_owner/admin/manager</span></td>
+                                                <td>Bulk-Datenzugriff</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-danger">admin only</span></td>
+                                                <td>System-generiert</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-warning">admin, manager, assigned staff</span></td>
+                                                <td>Limitierte Bearbeitung</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-danger">admin only</span></td>
+                                                <td>Permanente Entfernung</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="alert alert-info mt-3">
+                                        <strong>Customer Portal:</strong> Read-only via <code>CallHistoryResource</code>, company-scoped queries
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appointments -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAppointment">
+                                    <i class="bi bi-calendar-check me-2"></i> Termine (Appointments)
+                                </button>
+                            </h2>
+                            <div id="collapseAppointment" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/AppointmentResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/AppointmentPolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle Benutzer</span></td>
+                                                <td>Multi-level filtering</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Branch/Staff isolation</span></td>
+                                                <td>Branch- und Staff-gefiltert</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff, receptionist</span></td>
+                                                <td><span class="gap-badge">NICHT company_*</span> (Phase 1)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-warning">admin, manager, receptionist</span></td>
+                                                <td><span class="gap-badge">KEIN Customer Portal</span> (Phase 1)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-danger">admin, manager (future only)</span></td>
+                                                <td>Vergangene: admin only</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bestätigen</td>
+                                                <td><span class="badge bg-success">admin, manager, staff, receptionist</span></td>
+                                                <td>Custom action</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Stornieren</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff, receptionist</span></td>
+                                                <td>Außer abgeschlossene</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Umbuchen</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff, receptionist</span></td>
+                                                <td>Nur zukünftige Termine</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="alert alert-warning mt-3">
+                                        <h6><i class="bi bi-exclamation-triangle"></i> Branch-Isolation</h6>
+                                        <code>company_manager</code>: Nur <code>user.branch_id === appointment.branch_id</code>
+                                    </div>
+
+                                    <div class="alert alert-danger mt-2">
+                                        <h6><i class="bi bi-exclamation-triangle"></i> Staff-Isolation</h6>
+                                        <code>company_staff</code>: Nur <code>user.staff_id === appointment.staff_id</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Customers -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCustomer">
+                                    <i class="bi bi-person me-2"></i> Kunden (Customers)
+                                </button>
+                            </h2>
+                            <div id="collapseCustomer" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/CustomerResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/CustomerPolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle Benutzer</span></td>
+                                                <td>Branch/Staff gefiltert</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Branch/Staff isolation</span></td>
+                                                <td>Nach Zuordnung gefiltert</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Sensitive Daten ansehen</td>
+                                                <td><span class="badge bg-warning">admin, manager, assigned staff</span></td>
+                                                <td><code>viewSensitiveData()</code> policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff, receptionist</span></td>
+                                                <td><span class="gap-badge">NICHT company_*</span> (Phase 1)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-warning">admin, manager, staff, receptionist</span></td>
+                                                <td>Company users in Phase 2</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-danger">admin, manager</span></td>
+                                                <td>Permanente Entfernung</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Exportieren</td>
+                                                <td><span class="badge bg-danger">admin, manager, data_protection_officer</span></td>
+                                                <td>GDPR Compliance</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="alert alert-info mt-3">
+                                        <strong>Customer Portal:</strong> Phase 1: Read-only | Phase 2: CRM-Management via <code>features.customer_portal_crm</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseService">
+                                    <i class="bi bi-scissors me-2"></i> Services
+                                </button>
+                            </h2>
+                            <div id="collapseService" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/ServiceResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/ServicePolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle (inkl. reseller_*)</span></td>
+                                                <td>Breiter Zugriff</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Company isolation</span></td>
+                                                <td>Company-wide resource</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-success">admin, manager, company_owner/admin/manager, reseller_*</span></td>
+                                                <td>Management-Rollen</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-success">Gleich wie Erstellen</span></td>
+                                                <td>Company-scoped</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-warning">Gleich wie Erstellen</span></td>
+                                                <td>Soft delete</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Preise verwalten</td>
+                                                <td><span class="badge bg-danger">admin, company_owner, company_admin</span></td>
+                                                <td>Permission-basiert</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="alert alert-info mt-3">
+                                        <strong>Hinweis:</strong> Services sind company-wide, NICHT branch-spezifisch
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Staff -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStaff">
+                                    <i class="bi bi-people me-2"></i> Personal (Staff)
+                                </button>
+                            </h2>
+                            <div id="collapseStaff" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/StaffResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/StaffPolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">admin, manager, staff, company_owner/admin/manager</span></td>
+                                                <td>Alle Management</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Branch/Self isolation</span></td>
+                                                <td>Branch managers: nur eigene Filiale</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Performance ansehen</td>
+                                                <td><span class="badge bg-warning">admin, manager, self</span></td>
+                                                <td>Performance-Metriken</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-warning">admin, manager</span></td>
+                                                <td><span class="gap-badge">NICHT company_*</span> (Phase 1)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-warning">admin, manager, self (limitiert)</span></td>
+                                                <td>Company roles in Phase 2</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-danger">admin, manager</span></td>
+                                                <td>Permanente Entfernung</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Zeitplan verwalten</td>
+                                                <td><span class="badge bg-success">admin, manager, self (wenn erlaubt)</span></td>
+                                                <td><code>manageSchedule()</code> policy</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="alert alert-success mt-3">
+                                        <strong>Selbst-Zugriff:</strong> <code>company_staff</code> kann eigenes Profil sehen/bearbeiten via <code>user.staff_id === staff.id</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Branches -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBranch">
+                                    <i class="bi bi-geo-alt me-2"></i> Filialen (Branches)
+                                </button>
+                            </h2>
+                            <div id="collapseBranch" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Resource:</strong> <span class="file-path">app/Filament/Resources/BranchResource.php</span></p>
+                                    <p><strong>Policy:</strong> <span class="file-path">app/Policies/BranchPolicy.php</span></p>
+
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Aktion</th>
+                                                <th>Erlaubte Rollen</th>
+                                                <th>Notizen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Liste ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle Benutzer</span></td>
+                                                <td>Alle Benutzer</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Details ansehen</td>
+                                                <td><span class="badge bg-secondary">Alle + Branch isolation</span></td>
+                                                <td>Branch managers: nur zugewiesene Filiale</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Erstellen</td>
+                                                <td><span class="badge bg-warning">admin, manager</span></td>
+                                                <td><span class="gap-badge">NICHT company_*</span> (Phase 1)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bearbeiten</td>
+                                                <td><span class="badge bg-warning">admin, manager, branch_manager (legacy)</span></td>
+                                                <td>Company manager in Phase 2</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Löschen</td>
+                                                <td><span class="badge bg-danger">admin, manager</span></td>
+                                                <td>Kann is_main Filiale NICHT löschen</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Services verwalten</td>
+                                                <td><span class="badge bg-success">admin, manager, branch_manager</span></td>
+                                                <td><code>manageServices()</code> policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Personal verwalten</td>
+                                                <td><span class="badge bg-success">admin, manager, branch_manager</span></td>
+                                                <td><code>manageStaff()</code> policy</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Menu Visibility -->
+        <div class="row" id="section-navigation">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-list-ul"></i> 7. Menü-Sichtbarkeit</h2>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-gear"></i> Admin Panel Navigation</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Menüpunkt</th>
+                                            <th>Rollen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Dashboard</strong></td>
+                                            <td><span class="badge bg-secondary">Alle</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Anrufe</strong></td>
+                                            <td><span class="badge bg-secondary">Alle</span> <small>(Badge: heute)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Termine</strong></td>
+                                            <td><span class="badge bg-secondary">Alle</span> <small>(Badge: total)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Kunden</strong></td>
+                                            <td><span class="badge bg-secondary">Alle</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Stammdaten</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-success">admin, manager, company_*</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Companies</td>
+                                            <td><span class="badge bg-danger">admin, manager</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Branches</td>
+                                            <td><span class="badge bg-success">admin, manager, company_*</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Staff</td>
+                                            <td><span class="badge bg-success">admin, manager, company_*</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Services</td>
+                                            <td><span class="badge bg-success">admin, manager, company_*</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>System</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Users</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Roles & Rechte</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Permissions</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ System Settings</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Abrechnung</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-warning">admin, billing_manager, company_owner</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Retell AI</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-danger">admin, super_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Benachrichtigungen</strong></td>
+                                            <td><span class="badge bg-warning">admin, manager</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-person-circle"></i> Customer Portal Navigation</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Menüpunkt</th>
+                                            <th>Rollen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Dashboard</strong></td>
+                                            <td><span class="badge bg-primary">Alle Portal-Benutzer</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>CRM</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-primary">Alle Portal-Benutzer</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Anrufliste</td>
+                                            <td><span class="badge bg-primary">Alle</span> <small>(Read-only)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Termine</td>
+                                            <td><span class="badge bg-primary">Alle</span> <small>(Read-only)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Kunden</td>
+                                            <td><span class="badge bg-warning">Phase 2</span> <small>(feature flag)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Callback Requests</td>
+                                            <td><span class="badge bg-primary">Alle</span> <small>(Company-scoped)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Abrechnung</strong> (Gruppe)</td>
+                                            <td><span class="badge bg-success">company_owner, company_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Invoices</td>
+                                            <td><span class="badge bg-success">company_owner, company_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Transactions</td>
+                                            <td><span class="badge bg-success">company_owner, company_admin</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>├─ Balance Topup</td>
+                                            <td><span class="badge bg-success">company_owner, company_admin</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <h6><i class="bi bi-info-circle"></i> Feature Flags</h6>
+                                <ul class="mb-0">
+                                    <li><code>features.customer_portal</code> = <span class="badge bg-success">true</span></li>
+                                    <li><code>features.customer_portal_crm</code> = <span class="badge bg-warning">Phase 2</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Multi-Tenancy -->
+        <div class="row" id="section-multitenancy">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-diagram-3-fill"></i> 8. Multi-Tenancy & Data Isolation</h2>
+
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-octagon"></i> Kritisch für Sicherheit</h5>
+                        <p class="mb-0">
+                            Alle Policies implementieren ein <strong>5-Level Security Model</strong> zur Sicherstellung
+                            der Multi-Tenant-Isolation.
+                        </p>
+                    </div>
+
+                    <h5 class="mt-4">5-Level Security Model (Beispiel: AppointmentPolicy)</h5>
+                    <div class="policy-code">
+<span class="comment">// Level 1: Platform Admin Override</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'admin'</span>)) {
+    <span class="keyword">return true</span>; <span class="comment">// Siehe ALLE Termine (keine Einschränkungen)</span>
+}
+
+<span class="comment">// Level 2: Company Isolation (KRITISCH für Multi-Tenancy)</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>->company_id !== <span class="keyword">$appointment</span>->company_id) {
+    <span class="keyword">return false</span>; <span class="comment">// Verhindert Cross-Company-Zugriff</span>
+}
+
+<span class="comment">// Level 3: Branch Isolation</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'company_manager'</span>) && <span class="keyword">$user</span>->branch_id) {
+    <span class="keyword">return</span> <span class="keyword">$user</span>->branch_id === <span class="keyword">$appointment</span>->branch_id;
+}
+
+<span class="comment">// Level 4: Staff Isolation</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'company_staff'</span>) && <span class="keyword">$user</span>->staff_id) {
+    <span class="keyword">return</span> <span class="keyword">$user</span>->staff_id === <span class="keyword">$appointment</span>->staff_id;
+}
+
+<span class="comment">// Level 5: Company Owners/Admins</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasAnyRole</span>([<span class="string">'company_owner'</span>, <span class="string">'company_admin'</span>])) {
+    <span class="keyword">return true</span>; <span class="comment">// Siehe alle Unternehmensdaten</span>
+}
+
+<span class="keyword">return false</span>; <span class="comment">// Standard: kein Zugriff</span>
+                    </div>
+
+                    <h5 class="mt-4">User Model Company Relationships</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Schlüsselfelder</h6>
+                            <ul>
+                                <li><code>company_id</code> - Unternehmenszuordnung</li>
+                                <li><code>branch_id</code> - Filialzuweisung (für company_manager)</li>
+                                <li><code>staff_id</code> - Personal-Record-Link (für company_staff)</li>
+                                <li><code>tenant_id</code> - Legacy Tenant-Feld</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Relationships</h6>
+                            <ul>
+                                <li><code>company()</code> - belongsTo(Company::class)</li>
+                                <li><code>branch()</code> - belongsTo(Branch::class)</li>
+                                <li><code>staff()</code> - belongsTo(Staff::class)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4">Query-Level Data Isolation (Customer Portal)</h5>
+                    <p><strong>Beispiel:</strong> <span class="file-path">CallHistoryResource.php:254-266</span></p>
+                    <div class="policy-code">
+<span class="keyword">public static function</span> <span class="function">getEloquentQuery</span>(): <span class="keyword">Builder</span>
+{
+    <span class="keyword">return</span> <span class="function">parent</span>::<span class="function">getEloquentQuery</span>()
+        -><span class="function">where</span>(<span class="string">'company_id'</span>, <span class="function">auth</span>()-><span class="function">user</span>()->company_id) <span class="comment">// Multi-tenant isolation</span>
+        -><span class="function">with</span>([<span class="string">'customer'</span>, <span class="string">'company'</span>])
+        -><span class="function">withCount</span>([<span class="string">'functionTraces'</span>, <span class="string">'errors'</span>]);
+}
+                    </div>
+
+                    <h5 class="mt-4">Reseller Support</h5>
+                    <div class="policy-code">
+<span class="comment">// Resellers können auf Kunden-Unternehmen zugreifen</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>([<span class="string">'reseller_admin'</span>, <span class="string">'reseller_owner'</span>])) {
+    <span class="keyword">if</span> (<span class="keyword">$resource</span>->company && <span class="keyword">$resource</span>->company->parent_company_id === <span class="keyword">$user</span>->company_id) {
+        <span class="keyword">return true</span>;
+    }
+}
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Identifizierte Probleme</h6>
+                        <ul class="mb-0">
+                            <li>Reseller-Zugriff nicht konsistent über alle Ressourcen implementiert</li>
+                            <li>Branch-Isolation-Logik variiert zwischen Policies</li>
+                            <li>Einige Policies prüfen <code>user.id === staff_id</code> (falsch) statt <code>user.staff_id === staff.id</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: Gaps & Issues -->
+        <div class="row" id="section-gaps">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> 9. Identifizierte Lücken & Verbesserungsbedarf</h2>
+
+                    <h5><i class="bi bi-1-circle-fill text-danger"></i> Fehlende Customer Portal Berechtigungen</h5>
+                    <div class="recommendation-card critical">
+                        <h6><strong>Problem:</strong> Customer Portal ist Read-Only (Phase 1)</h6>
+                        <ul class="mb-0">
+                            <li><strong>Keine Create-Berechtigungen:</strong> company_owner, company_admin, company_manager können keine Termine erstellen</li>
+                            <li><strong>Keine Update-Berechtigungen:</strong> Können Termine nicht umbuchen oder Kundendaten nicht aktualisieren</li>
+                            <li><strong>Fehlende Granularität:</strong> Keine feingranularen Berechtigungen wie:
+                                <ul>
+                                    <li><code>appointment.reschedule_own</code> - Personal eigene Termine umbuchen</li>
+                                    <li><code>customer.view_own</code> - Kunden ansehen, die dem Personal zugeordnet sind</li>
+                                    <li><code>service.update_pricing</code> - Service-Preise aktualisieren</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-2-circle-fill text-danger"></i> Rollen-Inkonsistenzen</h5>
+                    <div class="recommendation-card critical">
+                        <h6><strong>Problem:</strong> Legacy-Rollen noch aktiv</h6>
+                        <ul class="mb-0">
+                            <li><code>staff</code> (alt) vs <code>company_staff</code> (neu) - sollte konsolidiert werden</li>
+                            <li><code>branch_manager</code> (veraltet) vs <code>company_manager</code></li>
+                            <li><strong>Inkonsistente Benennung:</strong> snake_case (<code>company_owner</code>), PascalCase (<code>Admin</code>), kebab-case (<code>super-admin</code>)</li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-3-circle-fill text-warning"></i> Unvollständige Berechtigungs-Abdeckung</h5>
+                    <div class="recommendation-card important">
+                        <h6><strong>Problem:</strong> Module ohne Berechtigungen</h6>
+                        <ul class="mb-0">
+                            <li><code>retell_agent</code> Modul - keine Berechtigungen definiert</li>
+                            <li><code>notification</code> Modul - teilweise Abdeckung</li>
+                            <li><code>callback</code> Modul - keine granularen Berechtigungen</li>
+                            <li><strong>Fehlende Actions:</strong> <code>*.approve</code>, <code>*.assign</code>, <code>*.export_sensitive</code>, <code>*.view_analytics</code></li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-4-circle-fill text-warning"></i> Policy-Enforcement-Probleme</h5>
+                    <div class="recommendation-card important">
+                        <h6><strong>Problem:</strong> Inkonsistente Policy-Methoden</h6>
+                        <ul class="mb-0">
+                            <li>Nicht alle Policies haben Custom-Actions (z.B. <code>confirm()</code>, <code>cancel()</code>)</li>
+                            <li>Einige Policies fehlt <code>export()</code> Methode</li>
+                            <li>Kein standardisiertes <code>viewSensitiveData()</code> über alle Ressourcen</li>
+                            <li><strong>Branch-Isolation variiert:</strong> Einige Policies prüfen <code>user.branch_id</code>, andere erlauben alle Manager</li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-5-circle-fill text-info"></i> Multi-Tenancy-Bedenken</h5>
+                    <div class="recommendation-card">
+                        <h6><strong>Problem:</strong> Fehlende Hierarchie-Unterstützung</h6>
+                        <ul class="mb-0">
+                            <li>Keine Unterstützung für Parent/Child-Unternehmen-Beziehungen (außer Reseller)</li>
+                            <li>Keine Franchise/Multi-Location-Unternehmen-Unterstützung</li>
+                            <li><strong>Branch-Level-Berechtigungen nicht formalisiert:</strong> Branch-Manager haben implizite Filterung, aber keine expliziten Branch-Level-Berechtigungen</li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-6-circle-fill text-danger"></i> Sicherheitsbedenken</h5>
+                    <div class="recommendation-card critical">
+                        <h6><strong>Problem:</strong> Fehlende Audit-Trails</h6>
+                        <ul class="mb-0">
+                            <li><strong>Keine Audit-Logs für Berechtigungsänderungen:</strong> Rollen-/Berechtigungszuweisungen werden nicht protokolliert</li>
+                            <li><strong>Super Admin Bypass zu breit:</strong> Super Admin umgeht ALLE Checks ohne Logging</li>
+                            <li><strong>Fehlende Rate-Limiting:</strong> Keine Rate-Limitierung für sensible Aktionen</li>
+                            <li><strong>Sensitive Daten-Zugriff nicht getrackt:</strong> <code>viewSensitiveData()</code> existiert, wird aber nicht überall verwendet</li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mt-4"><i class="bi bi-7-circle-fill text-warning"></i> Customer Portal spezifische Lücken</h5>
+                    <div class="recommendation-card important">
+                        <h6><strong>Problem:</strong> Fehlende Selbst-Verwaltung</h6>
+                        <ul class="mb-0">
+                            <li><strong>Keine Delegierungs-Mechanismen:</strong> Company Owner kann keine Berechtigungen an Personal delegieren</li>
+                            <li><strong>Fehlende Self-Service-Features:</strong> Personal kann eigene Verfügbarkeit nicht aktualisieren</li>
+                            <li><strong>Kein Ressourcen-Ownership:</strong> Kein Konzept von "created_by" Filterung</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Roadmap -->
+        <div class="row" id="section-roadmap">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-map"></i> 10. Implementierungs-Roadmap</h2>
+
+                    <div class="roadmap-phase complete">
+                        <span class="phase-badge complete">✅ ABGESCHLOSSEN</span>
+                        <h5 class="mt-2">Phase 1: Foundation</h5>
+                        <p class="text-muted mb-2">Status: COMPLETE</p>
+                        <ul>
+                            <li>✅ Spatie Permission Package installiert</li>
+                            <li>✅ Basis-Rollen definiert (5 Plattform + 4 Kunden)</li>
+                            <li>✅ Berechtigungen geseedet (9 Module)</li>
+                            <li>✅ Policies implementiert (20+ Modelle)</li>
+                            <li>✅ Customer Portal Infrastruktur (Read-Only)</li>
+                            <li>✅ Multi-Tenant-Isolation funktioniert</li>
+                        </ul>
+                    </div>
+
+                    <div class="roadmap-phase current">
+                        <span class="phase-badge current">🔄 AKTUELL</span>
+                        <h5 class="mt-2">Phase 2: Customer Portal Write Access</h5>
+                        <p class="text-muted mb-2">Zeitrahmen: Nächste 2-4 Wochen</p>
+                        <h6>Erforderliche Änderungen:</h6>
+                        <ol>
+                            <li>Update <code>AppointmentPolicy::create()</code> um Company-Rollen zu erlauben</li>
+                            <li>Feature Flag hinzufügen: <code>features.customer_portal_create_appointments</code></li>
+                            <li>Ownership-Tracking implementieren (<code>created_by</code> Spalte)</li>
+                            <li>Granulare Berechtigungen hinzufügen:
+                                <ul>
+                                    <li><code>appointment.create_for_company</code></li>
+                                    <li><code>appointment.reschedule_own</code></li>
+                                    <li><code>customer.view_assigned</code></li>
+                                </ul>
+                            </li>
+                            <li>Self-Service-Features für <code>company_staff</code> aktivieren</li>
+                        </ol>
+                        <h6>Test-Anforderungen:</h6>
+                        <ul>
+                            <li>Multi-Tenant-Isolation-Tests</li>
+                            <li>Berechtigungs-Grenz-Tests</li>
+                            <li>Ownership-Verifikations-Tests</li>
+                            <li>Branch-Isolation-Tests</li>
+                        </ul>
+                    </div>
+
+                    <div class="roadmap-phase future">
+                        <span class="phase-badge future">📅 GEPLANT</span>
+                        <h5 class="mt-2">Phase 3: Advanced Features</h5>
+                        <p class="text-muted mb-2">Zeitrahmen: 2-3 Monate</p>
+                        <h6>Features:</h6>
+                        <ul>
+                            <li>Dynamische Rollen-Erstellung durch Company Owners</li>
+                            <li>Berechtigungs-Delegierung</li>
+                            <li>Genehmigungs-Workflows</li>
+                            <li>Analytics/Reporting-Berechtigungen</li>
+                            <li>Advanced Multi-Tenancy (Franchises)</li>
+                        </ul>
+                        <h6>Infrastruktur:</h6>
+                        <ul>
+                            <li>Custom Permission Builder UI</li>
+                            <li>Rollen-Template-System</li>
+                            <li>Audit-Dashboard</li>
+                            <li>GDPR-Compliance-Automatisierung</li>
+                        </ul>
+                    </div>
+
+                    <div class="roadmap-phase future">
+                        <span class="phase-badge future">🔮 ZUKUNFT</span>
+                        <h5 class="mt-2">Phase 4: Enterprise Features</h5>
+                        <p class="text-muted mb-2">Zeitrahmen: 6-12 Monate</p>
+                        <h6>Features:</h6>
+                        <ul>
+                            <li>SSO/SAML-Integration</li>
+                            <li>SCIM User Provisioning</li>
+                            <li>Compliance-Automatisierung (SOC 2, HIPAA)</li>
+                            <li>Advanced RBAC (ABAC Hybrid)</li>
+                            <li>KI-gestützte Berechtigungs-Empfehlungen</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Summary -->
+        <div class="row">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-lightbulb"></i> Empfohlene Sofortmaßnahmen</h2>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="recommendation-card critical">
+                                <h6><i class="bi bi-1-circle-fill"></i> Schreibrechte aktivieren</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-danger">KRITISCH</span></p>
+                                <p class="mb-0">
+                                    Ermögliche company_owner, company_admin, company_manager Termine zu erstellen.
+                                    Implementiere Ownership-Tracking.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recommendation-card critical">
+                                <h6><i class="bi bi-2-circle-fill"></i> Audit-Logging implementieren</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-danger">KRITISCH</span></p>
+                                <p class="mb-0">
+                                    Nutze spatie/laravel-activitylog (bereits installiert).
+                                    Logge alle Berechtigungsänderungen und sensitive Datenzugriffe.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recommendation-card important">
+                                <h6><i class="bi bi-3-circle-fill"></i> Rollennamen standardisieren</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-warning">WICHTIG</span></p>
+                                <p class="mb-0">
+                                    Migriere zu konsistentem snake_case.
+                                    Deprecate Legacy-Rollen mit Migrations-Pfad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="recommendation-card important">
+                                <h6><i class="bi bi-4-circle-fill"></i> Granulare Berechtigungen</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-warning">WICHTIG</span></p>
+                                <p class="mb-0">
+                                    Füge feingranulare Berechtigungen hinzu:
+                                    <code>appointment.create_for_company</code>,
+                                    <code>customer.view_assigned</code>, etc.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recommendation-card">
+                                <h6><i class="bi bi-5-circle-fill"></i> Policy-Standardisierung</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-info">EMPFOHLEN</span></p>
+                                <p class="mb-0">
+                                    Standardisiere Custom-Policy-Methoden.
+                                    Implementiere <code>viewSensitiveData()</code> konsistent.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recommendation-card">
+                                <h6><i class="bi bi-6-circle-fill"></i> Reseller-Support vervollständigen</h6>
+                                <p class="mb-2"><strong>Priorität:</strong> <span class="badge bg-info">EMPFOHLEN</span></p>
+                                <p class="mb-0">
+                                    Definiere alle Reseller-Rollen im Seeder.
+                                    Implementiere konsistente Hierarchie-Policies.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File References -->
+        <div class="row">
+            <div class="col-12">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="bi bi-folder2-open"></i> Wichtige Datei-Referenzen</h2>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Kern-Dateien</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-file-earmark-code"></i> <span class="file-path">app/Models/User.php</span></li>
+                                <li><i class="bi bi-file-earmark-code"></i> <span class="file-path">app/Models/Role.php</span></li>
+                                <li><i class="bi bi-file-earmark-code"></i> <span class="file-path">app/Models/Permission.php</span></li>
+                                <li><i class="bi bi-file-earmark-code"></i> <span class="file-path">app/Providers/AuthServiceProvider.php</span></li>
+                            </ul>
+
+                            <h6 class="mt-3">Konfiguration</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-gear"></i> <span class="file-path">config/features.php</span></li>
+                                <li><i class="bi bi-gear"></i> <span class="file-path">config/permission.php</span></li>
+                            </ul>
+
+                            <h6 class="mt-3">Seeders</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-database"></i> <span class="file-path">database/seeders/RolesAndPermissionsSeeder.php</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6>Policies</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-shield"></i> <span class="file-path">app/Policies/</span></li>
+                                <li style="margin-left: 20px;"><small>20+ Policy-Dateien</small></li>
+                            </ul>
+
+                            <h6 class="mt-3">Filament Panels</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-window"></i> <span class="file-path">app/Providers/Filament/AdminPanelProvider.php</span></li>
+                                <li><i class="bi bi-window"></i> <span class="file-path">app/Providers/Filament/CustomerPanelProvider.php</span></li>
+                            </ul>
+
+                            <h6 class="mt-3">Resources</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-folder"></i> <span class="file-path">app/Filament/Resources/</span> (Admin)</li>
+                                <li><i class="bi bi-folder"></i> <span class="file-path">app/Filament/Customer/Resources/</span> (Portal)</li>
+                            </ul>
+
+                            <h6 class="mt-3">Middleware</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-filter"></i> <span class="file-path">app/Http/Middleware/CheckRole.php</span></li>
+                                <li><i class="bi bi-filter"></i> <span class="file-path">app/Http/Middleware/CheckPermission.php</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-light text-center">
+                    <p class="mb-0">
+                        <strong>Report Generated:</strong> 24. November 2025 |
+                        <strong>Analysis Depth:</strong> Comprehensive (Deep Code Inspection) |
+                        <strong>Files Analyzed:</strong> 30+ |
+                        <strong>Policies Reviewed:</strong> 20+ |
+                        <strong>Permissions Identified:</strong> 50+ |
+                        <strong>Roles Documented:</strong> 15+
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scrolling for TOC links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Print button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Rollensystem-Analyse loaded successfully');
+        });
+    </script>
+</body>
+</html>

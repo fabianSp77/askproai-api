@@ -98,6 +98,41 @@ Route::prefix('conversation-flow')->group(function () {
     });
 });
 
+// Customer Portal Routes
+Route::prefix('kundenportal')->name('customer-portal.')->group(function () {
+    // Public routes (no auth required)
+    Route::get('/einladung/{token}', function ($token) {
+        return view('customer-portal.auth.invitation', ['token' => $token]);
+    })->name('invitation');
+
+    // Redirect login to invitation (customers use invitation links)
+    Route::get('/login', function () {
+        return redirect()->route('customer-portal.invitation', ['token' => 'expired'])
+            ->with('message', 'Bitte verwenden Sie den Einladungslink aus Ihrer E-Mail.');
+    })->name('login');
+});
+
+// Customer Portal - Protected Routes (requires Sanctum token via Alpine.js)
+// Note: These routes render Blade views. Authentication is handled client-side via Alpine.js
+// The actual API calls will validate the Sanctum token
+Route::middleware(['web'])->group(function () {
+    Route::get('/meine-termine', function () {
+        return view('customer-portal.appointments.index');
+    })->name('customer-portal.appointments.index');
+
+    Route::get('/meine-termine/{id}', function ($id) {
+        return view('customer-portal.appointments.show', ['appointmentId' => $id]);
+    })->name('customer-portal.appointments.show');
+
+    Route::get('/meine-termine/{id}/umbuchen', function ($id) {
+        return view('customer-portal.appointments.reschedule', ['appointmentId' => $id]);
+    })->name('customer-portal.appointments.reschedule');
+
+    Route::get('/meine-termine/{id}/stornieren', function ($id) {
+        return view('customer-portal.appointments.cancel', ['appointmentId' => $id]);
+    })->name('customer-portal.appointments.cancel');
+});
+
 
 require __DIR__.'/auth.php';
 require __DIR__.'/web-test.php';

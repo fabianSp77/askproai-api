@@ -154,6 +154,42 @@ class CompositeBookingService
                 }
             }
             unset($segment); // Break reference
+        } else {
+            // 🔧 FIX 2025-11-22: Auto-assign available staff if not specified
+            // This prevents appointments being created without staff assignment
+            Log::info('🔍 No staff preference specified, auto-assigning available staff', [
+                'service_id' => $data['service_id'],
+                'segments' => count($data['segments'])
+            ]);
+
+            $autoAssignedStaffId = $this->findAvailableStaffForService(
+                $data['service_id'],
+                $data['branch_id'],
+                $data['segments'][0]['starts_at'],
+                end($data['segments'])['ends_at']
+            );
+
+            if (!$autoAssignedStaffId) {
+                Log::error('❌ No available staff found for composite service', [
+                    'service_id' => $data['service_id'],
+                    'branch_id' => $data['branch_id'],
+                    'start' => $data['segments'][0]['starts_at'],
+                    'end' => end($data['segments'])['ends_at']
+                ]);
+                throw new Exception('Kein verfügbarer Mitarbeiter für diesen Termin gefunden');
+            }
+
+            Log::info('✅ Auto-assigned staff to all segments', [
+                'staff_id' => $autoAssignedStaffId,
+                'segments' => count($data['segments'])
+            ]);
+
+            foreach ($data['segments'] as &$segment) {
+                if (!isset($segment['staff_id']) || empty($segment['staff_id'])) {
+                    $segment['staff_id'] = $autoAssignedStaffId;
+                }
+            }
+            unset($segment); // Break reference
         }
 
         return DB::transaction(function() use ($data, $compositeUid) {
@@ -432,6 +468,67 @@ class CompositeBookingService
                 }
             }
         }
+    }
+
+    /**
+     * Find available staff for a service at given time range
+     *
+     * 🔧 FIX 2025-11-22: Auto-assign staff when no preference specified
+     *
+     * @param int $serviceId
+     * @param string $branchId
+     * @param string $startTime ISO 8601 format
+     * @param string $endTime ISO 8601 format
+     * @return string|null Staff UUID
+     */
+    private function findAvailableStaffForService(
+        int $serviceId,
+        string $branchId,
+        string $startTime,
+        string $endTime
+    ): ?string {
+        $start = Carbon::parse($startTime);
+        $end = Carbon::parse($endTime);
+
+        Log::info('🔍 Searching for available staff', [
+            'service_id' => $serviceId,
+            'branch_id' => $branchId,
+            'start' => $start->format('Y-m-d H:i'),
+            'end' => $end->format('Y-m-d H:i')
+        ]);
+
+        // Get all staff assigned to this service at this branch
+        $staff = Staff::where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->whereHas('services', function($q) use ($serviceId) {
+                $q->where('service_id', $serviceId)
+                  ->where('service_staff.is_active', true);
+            })
+            ->whereDoesntHave('appointments', function($q) use ($start, $end) {
+                $q->where(function($query) use ($start, $end) {
+                    $query->where('starts_at', '<', $end)
+                          ->where('ends_at', '>', $start);
+                })
+                ->whereIn('status', ['scheduled', 'confirmed', 'booked']);
+            })
+            ->first();
+
+        if ($staff) {
+            Log::info('✅ Found available staff', [
+                'staff_id' => $staff->id,
+                'staff_name' => $staff->name,
+                'calcom_user_id' => $staff->calcom_user_id
+            ]);
+            return $staff->id;
+        }
+
+        Log::warning('⚠️ No available staff found', [
+            'service_id' => $serviceId,
+            'branch_id' => $branchId,
+            'time_range' => $start->format('Y-m-d H:i') . ' - ' . $end->format('Y-m-d H:i')
+        ]);
+
+        return null;
     }
 }
 

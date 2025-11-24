@@ -201,4 +201,100 @@ class AppointmentPhaseCreationService
 
         return $stats;
     }
+
+    /**
+     * Create phases from COMPOSITE service segments
+     *
+     * Converts service.segments JSON array to AppointmentPhase records
+     * with full 6-phase granularity (vs Processing Time 3-phase model).
+     *
+     * @param Appointment $appointment
+     * @return array<AppointmentPhase>
+     */
+    public function createPhasesFromSegments(Appointment $appointment): array
+    {
+        // Load service if not already loaded
+        if (!$appointment->relationLoaded('service')) {
+            $appointment->load('service');
+        }
+
+        $service = $appointment->service;
+
+        // Validate service has segments
+        if (!$service || !$service->isComposite() || empty($service->segments)) {
+            Log::warning('Cannot create composite phases: Service has no segments', [
+                'appointment_id' => $appointment->id,
+                'service_id' => $service?->id,
+                'is_composite' => $service?->isComposite(),
+            ]);
+            return [];
+        }
+
+        // Validate appointment has start time
+        if (!$appointment->starts_at) {
+            Log::warning('Cannot create composite phases: Appointment has no start time', [
+                'appointment_id' => $appointment->id,
+            ]);
+            return [];
+        }
+
+        $startTime = $appointment->starts_at;
+        $segments = $service->segments;
+
+        // Sort segments by 'order' field
+        usort($segments, fn($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+
+        $createdPhases = [];
+
+        DB::transaction(function () use ($appointment, $segments, $startTime, &$createdPhases) {
+            $offset = 0;
+
+            foreach ($segments as $index => $segment) {
+                // Determine phase type from segment type
+                $phaseType = match ($segment['type'] ?? 'active') {
+                    'processing' => 'processing',  // Gap/Einwirkzeit
+                    'active' => $index === 0 ? 'initial' : 'final',  // First = initial, rest = final
+                    default => 'final',
+                };
+
+                $duration = $segment['durationMin'] ?? $segment['duration_minutes'] ?? 0;
+
+                if ($duration <= 0) {
+                    Log::warning('Skipping segment with zero duration', [
+                        'segment_key' => $segment['key'] ?? 'unknown',
+                        'segment_name' => $segment['name'] ?? 'unknown',
+                    ]);
+                    continue;
+                }
+
+                // Create phase record
+                $phase = AppointmentPhase::create([
+                    'appointment_id' => $appointment->id,
+                    'phase_type' => $phaseType,
+                    'segment_name' => $segment['name'] ?? null,
+                    'segment_key' => $segment['key'] ?? null,
+                    'sequence_order' => $index + 1,
+                    'start_offset_minutes' => $offset,
+                    'duration_minutes' => $duration,
+                    'staff_required' => $segment['staff_required'] ?? true,
+                    'start_time' => $startTime->copy()->addMinutes($offset),
+                    'end_time' => $startTime->copy()->addMinutes($offset + $duration),
+                ]);
+
+                $createdPhases[] = $phase;
+                $offset += $duration;
+            }
+        });
+
+        $totalDuration = collect($createdPhases)->sum('duration_minutes');
+
+        Log::info('Created composite phases from segments', [
+            'appointment_id' => $appointment->id,
+            'service_id' => $service->id,
+            'phases_count' => count($createdPhases),
+            'total_duration' => $totalDuration,
+        ]);
+
+        return $createdPhases;
+    }
 }

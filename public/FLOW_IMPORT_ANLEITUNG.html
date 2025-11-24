@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 JSON IMPORT LÖSUNG</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .problem-box {
+            background: #fff3cd;
+            border: 5px solid #ff6b6b;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+        .solution-box {
+            background: #d4edda;
+            border: 5px solid #28a745;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .code-box {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 LÖSUNG: JSON Export/Import</h1>
+            <p>Das Dashboard UI hat KEIN tool_id Feld!</p>
+        </div>
+
+        <div class="content">
+            <div class="problem-box">
+                <strong>❌ WARUM FUNKTIONIERT DAS DASHBOARD NICHT?</strong><br><br>
+                Das Dashboard UI zeigt nur diese Felder:<br>
+                ✓ Name<br>
+                ✓ Description<br>
+                ✓ API Endpoint<br>
+                ✓ Parameters<br>
+                ✓ Response Variables<br><br>
+                <strong>ABER KEIN <code>tool_id</code> FELD!</strong><br><br>
+                Das <code>tool_id</code> Feld existiert nur in der JSON-Repräsentation und kann NUR über JSON Export/Import geändert werden!
+            </div>
+
+            <div class="solution-box">
+                <h2 style="margin-bottom: 20px; color: #155724;">✅ DIE LÖSUNG IN 4 SCHRITTEN:</h2>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    <span>Flow als JSON exportieren</span>
+                </div>
+                <p><strong>Dashboard öffnen:</strong></p>
+                <div class="code-box">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </div>
+                <p style="margin-top: 15px;">
+                    → Klicke auf <strong>"Conversation Flow"</strong> Tab<br>
+                    → Suche nach <strong>"Export"</strong> oder <strong>"Download JSON"</strong> Button<br>
+                    → Speichere die JSON-Datei
+                </p>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    <span>JSON-Datei an Claude senden</span>
+                </div>
+                <p>
+                    Kopiere den KOMPLETTEN Inhalt der JSON-Datei und sende ihn an mich mit:<br><br>
+                    <em>"Hier ist der komplette Flow als JSON: [PASTE]"</em>
+                </p>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    <span>Ich erstelle korrigierte Version</span>
+                </div>
+                <p>
+                    Ich werde alle 8 <code>tool_id</code> Felder automatisch korrigieren:<br><br>
+                    1. tool-get-current-context → get_current_context<br>
+                    2. tool-check-customer → check_customer<br>
+                    3. tool-check-availability → check_availability_v17<br>
+                    4. tool-get-alternatives → get_alternatives<br>
+                    5. tool-start-booking → start_booking<br>
+                    6. tool-get-appointments → query_appointment<br>
+                    7. tool-cancel-appointment → cancel_appointment<br>
+                    8. tool-get-services → get_available_services<br>
+                </p>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    <span>Korrigierte JSON importieren</span>
+                </div>
+                <p>
+                    Im Dashboard:<br>
+                    → <strong>"Import Flow"</strong> oder <strong>"Upload JSON"</strong><br>
+                    → Wähle die korrigierte JSON-Datei<br>
+                    → <strong>Save & Publish</strong>
+                </p>
+            </div>
+
+            <div class="warning">
+                ⚠️ WICHTIG: Das Dashboard UI kann tool_id NICHT ändern!<br>
+                JSON Export/Import ist die EINZIGE Möglichkeit!
+            </div>
+
+            <div class="solution-box">
+                <h2 style="color: #155724; margin-bottom: 15px;">📋 NÄCHSTER SCHRITT:</h2>
+                <p style="font-size: 1.2em;">
+                    <strong>Exportiere jetzt den Flow als JSON und sende mir den kompletten Inhalt!</strong><br><br>
+                    Ich erstelle dir dann die 100% korrigierte Version zum Import.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -5,7 +5,6 @@ namespace App\Filament\Resources\CallResource\Widgets;
 use App\Models\Call;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CallStatsOverview extends BaseWidget
@@ -30,13 +29,25 @@ class CallStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        // Cache stats for 60 seconds with 5-minute key granularity
-        // This creates 12 cache entries per hour instead of 60
-        // Using floor() to align with CallVolumeChart cache expiry
-        $cacheMinute = floor(now()->minute / 5) * 5;
-        return Cache::remember('call-stats-overview-' . now()->format('Y-m-d-H') . '-' . str_pad($cacheMinute, 2, '0', STR_PAD_LEFT), 60, function () {
-            return $this->calculateStats();
-        });
+        // 🔒 SECURITY FIX 2025-11-21: Cache removed due to multi-tenant data leakage
+        //
+        // ISSUE: Cache key lacked user/role context, causing role-based filtering
+        //        to execute INSIDE cached callback. First user to access the page
+        //        determined what ALL subsequent users saw (cross-tenant data leak).
+        //
+        // IMPACT: Super-admin saw company data, company-admin saw other companies' data
+        //         GDPR violation, incorrect statistics for all roles
+        //
+        // FIX: Direct calculation without caching ensures correct role filtering
+        //      Performance acceptable: ~75ms query time with proper indexes
+        //
+        // TODO Phase 2: Implement secure caching with user/company/role in cache key
+        //      See: /var/www/api-gateway/CACHE_CORRUPTION_ANALYSIS_2025-11-21.md
+        //
+        // References:
+        // - RCA: /var/www/api-gateway/RCA_CALL_STATS_CACHE_ISSUE_2025-11-21.md
+        // - Security Analysis: CACHE_CORRUPTION_ANALYSIS_2025-11-21.md
+        return $this->calculateStats();
     }
 
     /**
@@ -70,14 +81,26 @@ class CallStatsOverview extends BaseWidget
     {
         // 🔒 SECURITY: Single query for all today's stats with role filtering
         // ✅ FIXED: uses status and has_appointment (actual DB columns)
-        $todayStats = $this->applyRoleFilter(Call::whereDate('created_at', today()))
+        // ⚡ PERFORMANCE FIX 2025-11-21: Use whereBetween instead of whereDate for index usage
+        $todayStats = $this->applyRoleFilter(Call::whereBetween('created_at', [
+                today()->startOfDay(),
+                today()->endOfDay()
+            ]))
             ->selectRaw('
                 COUNT(*) as total_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as successful_count,
                 SUM(CASE WHEN has_appointment = 1 THEN 1 ELSE 0 END) as appointment_count,
                 AVG(CASE WHEN duration_sec > 0 THEN duration_sec ELSE NULL END) as avg_duration,
-                SUM(CASE WHEN JSON_EXTRACT(metadata, "$.sentiment") = "positive" THEN 1 ELSE 0 END) as positive_count,
-                SUM(CASE WHEN JSON_EXTRACT(metadata, "$.sentiment") = "negative" THEN 1 ELSE 0 END) as negative_count
+                SUM(CASE
+                    WHEN metadata IS NOT NULL
+                    AND JSON_VALID(metadata)
+                    AND JSON_EXTRACT(metadata, "$.sentiment") = "positive"
+                    THEN 1 ELSE 0 END) as positive_count,
+                SUM(CASE
+                    WHEN metadata IS NOT NULL
+                    AND JSON_VALID(metadata)
+                    AND JSON_EXTRACT(metadata, "$.sentiment") = "negative"
+                    THEN 1 ELSE 0 END) as negative_count
             ', ['completed'])
             ->first();
 
@@ -144,6 +167,11 @@ class CallStatsOverview extends BaseWidget
                 ->color($todayCount > 20 ? 'success' : ($todayCount > 10 ? 'warning' : 'danger'))
                 ->extraAttributes([
                     'class' => 'relative',
+                    'title' => "Anrufe heute: {$todayCount}\n" .
+                               "✓ Erfolgreich (completed): {$todaySuccessful}\n" .
+                               "✗ Fehlgeschlagen: " . ($todayCount - $todaySuccessful) . "\n" .
+                               "📅 Termine gebucht: {$todayAppointments}\n" .
+                               "📊 Chart: Letzte 7 Tage Verlauf",
                 ]),
 
             Stat::make('Erfolgsquote Heute', $todayCount > 0 ? round(($todaySuccessful / $todayCount) * 100, 1) . '%' : '0%')
@@ -153,13 +181,29 @@ class CallStatsOverview extends BaseWidget
                     $todaySuccessful,
                     $todayCount - $todaySuccessful,
                 ] : [0, 0])
-                ->color($todayCount > 0 && ($todaySuccessful / $todayCount) > 0.7 ? 'success' : 'warning'),
+                ->color($todayCount > 0 && ($todaySuccessful / $todayCount) > 0.7 ? 'success' : 'warning')
+                ->extraAttributes([
+                    'title' => "Berechnung: {$todaySuccessful} erfolgreich ÷ {$todayCount} gesamt\n" .
+                               "= " . ($todayCount > 0 ? round(($todaySuccessful / $todayCount) * 100, 1) : 0) . "%\n\n" .
+                               "Sentiment-Analyse:\n" .
+                               "😊 Positiv: {$positiveSentiment} Anrufe\n" .
+                               "😟 Negativ: {$negativeSentiment} Anrufe\n" .
+                               "Quelle: metadata.sentiment (JSON)",
+                ]),
 
             Stat::make('⌀ Dauer', gmdate("i:s", $todayAvgDuration))
                 ->description('Diese Woche: ' . $weekCount . ' Anrufe')
                 ->descriptionIcon('heroicon-m-clock')
                 ->chart($weekDurationData)
-                ->color($todayAvgDuration > 180 ? 'success' : 'info'),
+                ->color($todayAvgDuration > 180 ? 'success' : 'info')
+                ->extraAttributes([
+                    'title' => "Durchschnittliche Dauer: " . gmdate("i:s", $todayAvgDuration) . " (" . round($todayAvgDuration) . " Sekunden)\n" .
+                               "Nur abgeschlossene Anrufe mit duration_sec > 0\n\n" .
+                               "Diese Woche:\n" .
+                               "Anrufe: {$weekCount}\n" .
+                               "Erfolgreich: {$weekSuccessful}\n" .
+                               "Zeitraum: " . now()->startOfWeek()->format('d.m.') . " - " . now()->endOfWeek()->format('d.m.Y'),
+                ]),
         ];
 
         // 🔒 SECURITY: Platform profit stats ONLY for SuperAdmin
@@ -168,24 +212,69 @@ class CallStatsOverview extends BaseWidget
                 ->description($monthCount . ' Anrufe | Profit: €' . number_format($monthPlatformProfit, 2))
                 ->descriptionIcon('heroicon-m-currency-euro')
                 ->chart($monthCostData)
-                ->color($monthCost > 500 ? 'danger' : 'primary');
+                ->color($monthCost > 500 ? 'danger' : 'primary')
+                ->extraAttributes([
+                    'title' => "Gesamtkosten November: €" . number_format($monthCost, 2) . "\n" .
+                               "Berechnung: SUM(calculated_cost) ÷ 100\n\n" .
+                               "Anrufe: {$monthCount}\n" .
+                               "Plattform-Profit: €" . number_format($monthPlatformProfit, 2) . "\n" .
+                               "Total-Profit: €" . number_format($monthTotalProfit, 2) . "\n\n" .
+                               "Zeitraum: " . now()->startOfMonth()->format('d.m.') . " - " . now()->endOfMonth()->format('d.m.Y') . "\n" .
+                               "📊 Chart: Wöchentliche Kostenentwicklung\n\n" .
+                               "🔒 Nur für Super-Admin sichtbar",
+                ]);
 
             $stats[] = Stat::make('Profit Marge', round($avgProfitMargin, 1) . '%')
                 ->description('Durchschnitt | Total: €' . number_format($monthTotalProfit, 2))
                 ->descriptionIcon('heroicon-m-chart-bar')
-                ->color($avgProfitMargin > 50 ? 'success' : ($avgProfitMargin > 30 ? 'warning' : 'danger'));
+                ->color($avgProfitMargin > 50 ? 'success' : ($avgProfitMargin > 30 ? 'warning' : 'danger'))
+                ->extraAttributes([
+                    'title' => "Durchschnittliche Profit-Marge: " . round($avgProfitMargin, 1) . "%\n" .
+                               "Berechnung: (profit_margin_platform + profit_margin_reseller) ÷ 2\n\n" .
+                               "Total-Profit: €" . number_format($monthTotalProfit, 2) . "\n" .
+                               "Plattform-Profit: €" . number_format($monthPlatformProfit, 2) . "\n" .
+                               "Reseller-Profit: €0.00 (noch nicht implementiert)\n\n" .
+                               "⚠️ Aktuelle Profit-Daten noch nicht vollständig\n" .
+                               "Spalten fehlen: platform_profit, total_profit\n\n" .
+                               "🔒 Nur für Super-Admin sichtbar",
+                ]);
         }
 
         // Non-sensitive business metrics (visible to all authorized users)
         $stats[] = Stat::make('⌀ Kosten/Anruf', '€' . number_format($avgCostPerCall, 2))
             ->description('Monatsdurchschnitt für ' . $monthCount . ' Anrufe')
             ->descriptionIcon('heroicon-m-calculator')
-            ->color($avgCostPerCall > 5 ? 'danger' : ($avgCostPerCall > 3 ? 'warning' : 'success'));
+            ->color($avgCostPerCall > 5 ? 'danger' : ($avgCostPerCall > 3 ? 'warning' : 'success'))
+            ->extraAttributes([
+                'title' => "Durchschnittliche Kosten pro Anruf: €" . number_format($avgCostPerCall, 2) . "\n" .
+                           "Berechnung: €" . number_format($monthCost, 2) . " ÷ {$monthCount} Anrufe\n\n" .
+                           "Gesamtkosten: €" . number_format($monthCost, 2) . "\n" .
+                           "Anrufe gesamt: {$monthCount}\n\n" .
+                           "Quelle: calculated_cost (Retell + Twilio)\n" .
+                           "Zeitraum: " . now()->format('F Y') . "\n\n" .
+                           "Farbcodierung:\n" .
+                           "🟢 Gut: < €3.00\n" .
+                           "🟡 Mittel: €3.00 - €5.00\n" .
+                           "🔴 Hoch: > €5.00",
+            ]);
 
         $stats[] = Stat::make('Conversion Rate', round($conversionRate, 1) . '%')
             ->description($monthAppointments . ' Termine von ' . $monthCount . ' Anrufen')
             ->descriptionIcon('heroicon-m-check-badge')
-            ->color($conversionRate > 30 ? 'success' : ($conversionRate > 15 ? 'warning' : 'danger'));
+            ->color($conversionRate > 30 ? 'success' : ($conversionRate > 15 ? 'warning' : 'danger'))
+            ->extraAttributes([
+                'title' => "Conversion Rate: " . round($conversionRate, 1) . "%\n" .
+                           "Berechnung: {$monthAppointments} Termine ÷ {$monthCount} Anrufe × 100\n\n" .
+                           "Termine gebucht: {$monthAppointments}\n" .
+                           "Anrufe gesamt: {$monthCount}\n" .
+                           "Erfolgsquote: " . ($monthCount > 0 ? round(($monthAppointments / $monthCount) * 100, 1) : 0) . "%\n\n" .
+                           "Quelle: has_appointment = true\n" .
+                           "Zeitraum: " . now()->format('F Y') . "\n\n" .
+                           "Farbcodierung:\n" .
+                           "🟢 Gut: > 30%\n" .
+                           "🟡 Mittel: 15% - 30%\n" .
+                           "🔴 Niedrig: < 15%",
+            ]);
 
         return $stats;
     }

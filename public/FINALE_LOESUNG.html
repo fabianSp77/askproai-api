@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 FINALE LÖSUNG - Automatisches Script</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .header h1 { font-size: 2.8em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .solution-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 5px solid #28a745;
+            padding: 40px;
+            margin: 30px 0;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .solution-box h2 {
+            font-size: 2em;
+            color: #155724;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            font-size: 1.5em;
+        }
+        .step-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .code-box {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            overflow-x: auto;
+        }
+        .command-box {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+        }
+        .command-box .prompt {
+            color: #2ecc71;
+        }
+        .command-box .command {
+            color: #f1fa8c;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .success {
+            background: #d4edda;
+            border: 3px solid #28a745;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 3px solid #17a2b8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: inline-block;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        table tr:hover {
+            background: #f8f9fa;
+        }
+        .old { color: #e74c3c; text-decoration: line-through; }
+        .new { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 FINALE LÖSUNG</h1>
+            <p style="font-size: 1.5em;">Automatisches Python-Script</p>
+        </div>
+
+        <div class="content">
+            <div class="solution-box">
+                <h2>✨ Automatische Korrektur mit Python-Script</h2>
+                <p style="font-size: 1.3em; margin-top: 20px;">
+                    Ich habe ein Script erstellt, das ALLE 8 tool_id Fehler<br>
+                    automatisch korrigiert - in Sekunden!
+                </p>
+                <a href="/fix_tool_ids.py" download class="download-btn">
+                    📥 Script Herunterladen (fix_tool_ids.py)
+                </a>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    <span>Flow als JSON exportieren</span>
+                </div>
+                <p><strong>Im Retell Dashboard:</strong></p>
+                <div class="code-box">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </div>
+                <p style="margin-top: 15px;">
+                    → Klicke auf <strong>"Conversation Flow"</strong> Tab<br>
+                    → Finde den <strong>"Export"</strong> oder <strong>"⋮ (Menü)"</strong> Button<br>
+                    → Wähle <strong>"Export as JSON"</strong> oder <strong>"Download"</strong><br>
+                    → Speichere die Datei (z.B. als <code>flow_v68.json</code>)
+                </p>
+                <div class="warning">
+                    ⚠️ <strong>WICHTIG:</strong> Du musst den KOMPLETTEN Flow exportieren, nicht nur die Custom Functions!
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    <span>Script ausführen</span>
+                </div>
+                <p><strong>Im Terminal / Command Line:</strong></p>
+                <div class="command-box">
+                    <span class="prompt">$</span> <span class="command">python3 fix_tool_ids.py flow_v68.json</span>
+                </div>
+                <div class="success">
+                    ✅ Das Script wird automatisch:<br><br>
+                    1. Die JSON-Datei lesen<br>
+                    2. Alle 8 tool_id Felder korrigieren<br>
+                    3. Eine neue Datei erstellen: <code>flow_v68_FIXED.json</code><br>
+                    4. Einen Bericht ausgeben
+                </div>
+                <p style="margin-top: 15px;"><strong>Beispiel-Output:</strong></p>
+                <div class="command-box" style="font-size: 0.9em;">
+📖 Lese Datei: flow_v68.json
+🔧 Korrigiere tool_id Felder...
+
+📝 Korrekturen:
+   ✅ tools[]: tool-get-current-context → get_current_context
+   ✅ tools[]: tool-check-customer → check_customer
+   ✅ tools[]: tool-check-availability → check_availability_v17
+   ✅ tools[]: tool-get-alternatives → get_alternatives
+   ✅ tools[]: tool-start-booking → start_booking
+   ✅ tools[]: tool-get-appointments → query_appointment
+   ✅ tools[]: tool-cancel-appointment → cancel_appointment
+   ✅ tools[]: tool-get-services → get_available_services
+   ✅ nodes[func_initialize_context]: tool-get-current-context → get_current_context
+   ✅ nodes[func_check_customer]: tool-check-customer → check_customer
+
+✅ Fertig! Korrigierte Datei gespeichert:
+   flow_v68_FIXED.json
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    <span>Korrigierte JSON importieren</span>
+                </div>
+                <p><strong>Zurück im Retell Dashboard:</strong></p>
+                <p style="margin: 15px 0;">
+                    → Finde den <strong>"Import"</strong> oder <strong>"Upload JSON"</strong> Button<br>
+                    → Wähle die Datei: <code>flow_v68_FIXED.json</code><br>
+                    → Bestätige den Import
+                </p>
+                <div class="info-box">
+                    ℹ️ <strong>Hinweis:</strong> Der Import wird wahrscheinlich eine neue Version erstellen (z.B. V69).
+                    Das ist normal und gewollt!
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    <span>Save & Publish</span>
+                </div>
+                <p style="font-size: 1.2em;">
+                    → Klicke <strong>"Save"</strong><br>
+                    → Klicke <strong>"Publish"</strong><br>
+                    → Die neue Version wird published!
+                </p>
+                <div class="success">
+                    <strong>✅ GESCHAFFT!</strong><br><br>
+                    Alle 8 tool_id Fehler sind jetzt korrigiert!<br>
+                    Der Agent ist bereit für Live-Tests!
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-bottom: 15px;">📋 Was das Script genau macht:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Alt (FALSCH)</th>
+                            <th>Neu (KORREKT)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><span class="old">tool-get-current-context</span></td>
+                            <td><span class="new">get_current_context</span></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><span class="old">tool-check-customer</span></td>
+                            <td><span class="new">check_customer</span></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><span class="old">tool-check-availability</span></td>
+                            <td><span class="new">check_availability_v17</span> ⚠️</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><span class="old">tool-get-alternatives</span></td>
+                            <td><span class="new">get_alternatives</span></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td><span class="old">tool-start-booking</span></td>
+                            <td><span class="new">start_booking</span></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td><span class="old">tool-get-appointments</span></td>
+                            <td><span class="new">query_appointment</span> ⚠️</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td><span class="old">tool-cancel-appointment</span></td>
+                            <td><span class="new">cancel_appointment</span></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td><span class="old">tool-get-services</span></td>
+                            <td><span class="new">get_available_services</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 15px;">
+                    ⚠️ = Besondere Korrekturen (nicht nur Prefix entfernen)
+                </p>
+            </div>
+
+            <div class="warning">
+                <strong>🔧 Alternative ohne Python:</strong><br><br>
+                Falls du Python nicht installiert hast, kannst du mir die exportierte JSON-Datei schicken,
+                und ich erstelle dir die korrigierte Version manuell!<br><br>
+                Einfach den kompletten Inhalt der JSON-Datei kopieren und mir senden.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

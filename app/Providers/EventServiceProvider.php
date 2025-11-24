@@ -28,8 +28,14 @@ use App\Events\ConfigurationCreated;
 use App\Events\ConfigurationDeleted;
 use App\Listeners\InvalidateConfigurationCache;
 use App\Listeners\LogConfigurationChange;
+use App\Models\Appointment;
 use App\Models\Call;
+use App\Models\User;
+use App\Models\UserInvitation;
+use App\Observers\AppointmentObserver;
 use App\Observers\CallObserver;
+use App\Observers\UserInvitationObserver;
+use App\Observers\UserObserver;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -67,7 +73,7 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         AppointmentCancelled::class => [
-            // SyncToCalcomOnCancelled::class,  // ⚠️ TEMPORARILY DISABLED - migration pending
+            SyncToCalcomOnCancelled::class,  // ✅ RE-ENABLED: Sync cancellations to Cal.com
             InvalidateWeekCacheListener::class . '@handleCancelled', // Clear week availability cache
         ],
 
@@ -123,6 +129,11 @@ class EventServiceProvider extends ServiceProvider
 
         // Register model observers
         Call::observe(CallObserver::class);
+
+        // Customer Portal observers
+        Appointment::observe(AppointmentObserver::class);
+        UserInvitation::observe(UserInvitationObserver::class);
+        User::observe(UserObserver::class);
     }
 }
 

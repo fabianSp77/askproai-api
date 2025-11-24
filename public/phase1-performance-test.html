@@ -1,127 +1,445 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Phase 1 Performance Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CallStatsOverview Performance Analysis</title>
     <style>
-        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
-        .success { color: #4ec9b0; }
-        .error { color: #f48771; }
-        .info { color: #dcdcaa; }
-        .performance { color: #569cd6; font-weight: bold; }
-        pre { background: #252526; padding: 10px; border-left: 3px solid #007acc; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-left: 4px solid #764ba2;
+            padding-left: 10px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .metric-card h3 {
+            margin: 0 0 10px 0;
+            color: #444;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .metric-detail {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .performance-issue {
+            background: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .optimization {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .critical {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #5a6dd8;
+        }
+        #testResults {
+            margin-top: 20px;
+        }
+        .test-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-running {
+            background: #cfe2ff;
+            border: 1px solid #084298;
+            color: #084298;
+        }
+        .test-complete {
+            background: #d1e7dd;
+            border: 1px solid #0f5132;
+            color: #0f5132;
+        }
     </style>
 </head>
 <body>
-    <h1>🧪 Phase 1 Cache Performance Test</h1>
-    <div id="output"></div>
+
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 mb-6 border border-white/20">
+            <h1 class="text-3xl font-bold text-white mb-2">🧪 Phase 1 Performance Test</h1>
+            <p class="text-purple-200">Cache Performance Testing mit Multi-Tenant Support</p>
+        </div>
+
+        <!-- Multi-Tenant Selector -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 mb-6 border border-white/20">
+            <h3 class="text-lg font-semibold text-white mb-4">🏢 Unternehmen & Filiale wählen</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-purple-200 mb-2">Unternehmen (Company ID)</label>
+                    <select x-model="companyId"
+                            class="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="1">Company 1 - Friseur 1</option>
+                        <option value="2">Company 2</option>
+                        <option value="3">Company 3</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-purple-200 mb-2">Filiale (Branch ID)</label>
+                    <input type="text"
+                           x-model="branchId"
+                           placeholder="34c4d48e-4753-4715-9c30-c55843a943e8"
+                           class="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-purple-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-purple-200 mb-2">Phone Number ID</label>
+                    <input type="text"
+                           x-model="phoneNumberId"
+                           placeholder="5b449e91-5376-11f0-b773-0ad77e7a9793"
+                           class="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-purple-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-purple-200 mb-2">From Number</label>
+                    <input type="text"
+                           x-model="fromNumber"
+                           placeholder="+491604366218"
+                           class="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-purple-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-purple-500/20 border border-purple-400/30 rounded-lg">
+                <p class="text-sm text-purple-200">
+                    <strong>Test Context:</strong> Company <span x-text="companyId"></span>,
+                    Branch <span class="font-mono text-xs" x-text="branchId.substring(0, 8) + '...'"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Run Test Button -->
+        <div class="mb-6">
+            <button @click="runTest()"
+                    :disabled="loading"
+                    class="w-full performance rounded-xl px-8 py-4 font-bold text-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl">
+                <span x-show="!loading">🚀 Performance Test Starten</span>
+                <span x-show="loading">⏳ Test läuft...</span>
+            </button>
+        </div>
+
+        <!-- Output Console -->
+        <div class="bg-gray-900 rounded-xl p-6 border border-purple-500/30 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">📊 Test Output</h3>
+                <button @click="clearOutput()" class="px-3 py-1 bg-red-500/20 text-red-300 rounded hover:bg-red-500/30 text-sm">
+                    Clear
+                </button>
+            </div>
+
+            <div id="output" class="space-y-2 font-mono text-sm max-h-96 overflow-y-auto">
+                <template x-for="(log, index) in logs" :key="index">
+                    <div :class="log.class" x-html="log.message"></div>
+                </template>
+
+                <div x-show="logs.length === 0" class="text-gray-500 italic">
+                    Warte auf Testausführung...
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Summary -->
+        <div x-show="testCompleted" class="mt-6 bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 class="text-xl font-bold text-white mb-4">📈 Performance Summary</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-500/20 rounded-lg p-4 border border-blue-400/30">
+                    <div class="text-blue-300 text-sm font-medium mb-1">check_availability</div>
+                    <div class="text-3xl font-bold text-white" x-text="availDuration + 'ms'"></div>
+                </div>
+
+                <div class="bg-green-500/20 rounded-lg p-4 border border-green-400/30">
+                    <div class="text-green-300 text-sm font-medium mb-1">start_booking</div>
+                    <div class="text-3xl font-bold text-white" x-text="bookDuration + 'ms'"></div>
+                </div>
+
+                <div class="bg-purple-500/20 rounded-lg p-4 border border-purple-400/30">
+                    <div class="text-purple-300 text-sm font-medium mb-1">Improvement</div>
+                    <div class="text-3xl font-bold text-white" x-text="improvement + '%'"></div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-4 rounded-lg" :class="testSuccess ? 'bg-green-500/20 border border-green-400/30' : 'bg-red-500/20 border border-red-400/30'">
+                <p class="font-semibold" :class="testSuccess ? 'text-green-300' : 'text-red-300'" x-text="testMessage"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const log = (msg, type = 'info') => {
-            const div = document.createElement('div');
-            div.className = type;
-            div.textContent = msg;
-            document.getElementById('output').appendChild(div);
-        };
+        function perfTester() {
+            return {
+                // Multi-Tenant Configuration
+                companyId: 1,
+                branchId: '34c4d48e-4753-4715-9c30-c55843a943e8',
+                phoneNumberId: '5b449e91-5376-11f0-b773-0ad77e7a9793',
+                fromNumber: '+491604366218',
 
-        async function runTest() {
-            const callId = 'phase1_test_' + Date.now();
-            log('=== PHASE 1 PERFORMANCE TEST ===', 'performance');
-            log('Call ID: ' + callId);
-            log('');
+                // State
+                loading: false,
+                logs: [],
+                testCompleted: false,
+                testSuccess: false,
+                testMessage: '',
+                availDuration: 0,
+                bookDuration: 0,
+                improvement: 0,
 
-            try {
-                // Step 1: Create Call record
-                log('Step 1: Creating Call record...');
-                const callRes = await fetch('/api/test/create-call-record', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        call_id: callId,
-                        from_number: '+491604366218',
-                        to_number: '+493033081738'
-                    })
-                });
-                const callData = await callRes.json();
-                log(callData.success ? '✅ Call created' : '❌ Call creation failed', callData.success ? 'success' : 'error');
-                log('');
+                log(message, type = 'info') {
+                    const colors = {
+                        info: 'text-gray-300',
+                        success: 'text-green-400 font-semibold',
+                        error: 'text-red-400 font-semibold',
+                        performance: 'text-purple-400 font-bold text-lg'
+                    };
 
-                // Step 2: check_availability (SHOULD CACHE)
-                log('Step 2: check_availability (CACHING)...');
-                const availStart = performance.now();
-                const availRes = await fetch('/api/retell/function-call', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        function_name: 'check_availability',
-                        call_id: callId,
-                        parameters: {
-                            datum: 'morgen',
-                            uhrzeit: '10:00',
-                            service_name: 'Herrenhaarschnitt'
+                    this.logs.push({
+                        message: message,
+                        class: colors[type] || colors.info
+                    });
+
+                    // Auto-scroll to bottom
+                    this.$nextTick(() => {
+                        const output = document.getElementById('output');
+                        if (output) {
+                            output.scrollTop = output.scrollHeight;
                         }
-                    })
-                });
-                const availData = await availRes.json();
-                const availDuration = Math.round(performance.now() - availStart);
-                
-                log('Available: ' + (availData.data?.available ?? 'N/A'));
-                log('Duration: ' + availDuration + 'ms', 'performance');
-                log('');
+                    });
+                },
 
-                // Step 3: start_booking (SHOULD USE CACHE)
-                log('Step 3: start_booking (USING CACHE)...');
-                const bookStart = performance.now();
-                const bookRes = await fetch('/api/retell/function-call', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        function_name: 'start_booking',
-                        call_id: callId,
-                        parameters: {
-                            date: 'morgen',
-                            time: '10:00',
-                            service_name: 'Herrenhaarschnitt',
-                            customer_name: 'Hans Schuster',
-                            customer_phone: '+491604366218'
+                clearOutput() {
+                    this.logs = [];
+                    this.testCompleted = false;
+                },
+
+                async runTest() {
+                    this.loading = true;
+                    this.testCompleted = false;
+                    this.logs = [];
+
+                    const callId = 'phase1_test_' + Date.now();
+
+                    this.log('═══════════════════════════════════════════', 'performance');
+                    this.log('🧪 PHASE 1 PERFORMANCE TEST', 'performance');
+                    this.log('═══════════════════════════════════════════', 'performance');
+                    this.log('');
+                    this.log(`📞 Call ID: <span class="text-yellow-400">${callId}</span>`);
+                    this.log(`🏢 Company: ${this.companyId}, Branch: ${this.branchId.substring(0, 8)}...`);
+                    this.log('');
+
+                    try {
+                        // Step 1: Create Call Record
+                        this.log('📝 Step 1: Creating Call record...');
+                        const callRes = await fetch('/api/test/create-call-record', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                call_id: callId,
+                                from_number: this.fromNumber,
+                                to_number: '+493033081738',
+                                company_id: this.companyId,
+                                branch_id: this.branchId,
+                                phone_number_id: this.phoneNumberId
+                            })
+                        });
+                        const callData = await callRes.json();
+
+                        if (callData.success) {
+                            this.log('✅ Call created successfully', 'success');
+                        } else {
+                            this.log('❌ Call creation failed', 'error');
+                            throw new Error('Call creation failed');
                         }
-                    })
-                });
-                const bookData = await bookRes.json();
-                const bookDuration = Math.round(performance.now() - bookStart);
-                
-                log('Success: ' + (bookData.success ?? false));
-                log('Duration: ' + bookDuration + 'ms', 'performance');
-                log('');
+                        this.log('');
 
-                // Analysis
-                log('=== PERFORMANCE ANALYSIS ===', 'performance');
-                log('check_availability: ' + availDuration + 'ms');
-                log('start_booking: ' + bookDuration + 'ms');
-                
-                const baseline = 3200;
-                if (bookDuration < 2500) {
-                    const improvement = Math.round(((baseline - bookDuration) / baseline) * 100);
-                    log('✅ PHASE 1 SUCCESS: ' + improvement + '% faster than baseline (3200ms)', 'success');
-                } else {
-                    log('⚠️ WARNING: Performance not improved (expected < 2500ms)', 'error');
+                        // Step 2: check_availability (SHOULD CACHE)
+                        this.log('⚡ Step 2: check_availability (CACHING Cal.com response)...');
+                        const availStart = performance.now();
+
+                        const availRes = await fetch('/api/retell/function-call', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                function_name: 'check_availability',
+                                call_id: callId,
+                                parameters: {
+                                    datum: 'morgen',
+                                    uhrzeit: '10:00',
+                                    service_name: 'Herrenhaarschnitt'
+                                }
+                            })
+                        });
+                        const availData = await availRes.json();
+                        this.availDuration = Math.round(performance.now() - availStart);
+
+                        this.log(`   Available: <span class="text-yellow-400">${availData.data?.available ?? 'N/A'}</span>`);
+                        this.log(`   ⏱️  Duration: <span class="text-purple-400 font-bold">${this.availDuration}ms</span>`, 'performance');
+
+                        if (availData.data?.alternatives) {
+                            this.log(`   📅 Alternatives found: ${availData.data.alternatives.length}`);
+                        }
+                        this.log('');
+
+                        // Step 3: start_booking (SHOULD USE CACHE)
+                        this.log('💾 Step 3: start_booking (USING CACHED DATA)...');
+                        const bookStart = performance.now();
+
+                        const bookRes = await fetch('/api/retell/function-call', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                function_name: 'start_booking',
+                                call_id: callId,
+                                parameters: {
+                                    date: 'morgen',
+                                    time: '10:00',
+                                    service_name: 'Herrenhaarschnitt',
+                                    customer_name: 'Performance Tester',
+                                    customer_phone: this.fromNumber
+                                }
+                            })
+                        });
+                        const bookData = await bookRes.json();
+                        this.bookDuration = Math.round(performance.now() - bookStart);
+
+                        this.log(`   Success: <span class="text-yellow-400">${bookData.success ?? false}</span>`);
+                        this.log(`   ⏱️  Duration: <span class="text-purple-400 font-bold">${this.bookDuration}ms</span>`, 'performance');
+                        this.log('');
+
+                        // Analysis
+                        this.log('═══════════════════════════════════════════', 'performance');
+                        this.log('📊 PERFORMANCE ANALYSIS', 'performance');
+                        this.log('═══════════════════════════════════════════', 'performance');
+                        this.log('');
+                        this.log(`check_availability: <strong>${this.availDuration}ms</strong>`);
+                        this.log(`start_booking: <strong>${this.bookDuration}ms</strong>`);
+                        this.log('');
+
+                        const baseline = 3200;
+                        this.improvement = Math.round(((baseline - this.bookDuration) / baseline) * 100);
+
+                        if (this.bookDuration < 2500) {
+                            this.testSuccess = true;
+                            this.testMessage = `✅ PHASE 1 SUCCESS: ${this.improvement}% faster than baseline (3200ms)`;
+                            this.log(this.testMessage, 'success');
+                        } else {
+                            this.testSuccess = false;
+                            this.testMessage = `⚠️ WARNING: Performance not improved (expected < 2500ms, got ${this.bookDuration}ms)`;
+                            this.log(this.testMessage, 'error');
+                        }
+
+                        this.log('');
+                        this.log(`💡 Check logs with: tail -f storage/logs/laravel-$(date +%Y-%m-%d).log | grep "${callId}"`);
+                        this.log('   Look for: "⚡ PHASE 1" markers in logs');
+
+                        // Cleanup
+                        this.log('');
+                        this.log('🧹 Cleaning up test call record...');
+                        await fetch('/api/test/delete-call-record', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ call_id: callId })
+                        });
+                        this.log('✅ Cleanup complete', 'success');
+
+                        this.testCompleted = true;
+
+                    } catch (e) {
+                        this.log('', 'error');
+                        this.log('═══════════════════════════════════════════', 'error');
+                        this.log('❌ ERROR: ' + e.message, 'error');
+                        this.log('═══════════════════════════════════════════', 'error');
+                        this.testSuccess = false;
+                        this.testMessage = 'Test failed with error: ' + e.message;
+                    } finally {
+                        this.loading = false;
+                    }
                 }
-
-                log('');
-                log('Check logs with: tail -f storage/logs/laravel-$(date +%Y-%m-%d).log | grep "' + callId + '"');
-                log('Look for: "⚡ PHASE 1" markers in logs');
-
-                // Cleanup
-                await fetch('/api/test/delete-call-record', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ call_id: callId })
-                });
-
-            } catch (e) {
-                log('❌ ERROR: ' + e.message, 'error');
             }
         }
-
-        runTest();
     </script>
 </body>
 </html>

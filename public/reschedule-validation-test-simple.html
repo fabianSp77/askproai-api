@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reschedule Validation Test - Simple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-lg shadow-lg p-6 mb-8 text-white">
+            <h1 class="text-3xl font-bold mb-2">🔄 Reschedule Validation Test</h1>
+            <p class="text-red-100">Testet ob Agent V61 die response_variables korrekt konfiguriert hat</p>
+        </div>
+
+        <!-- Test Instructions -->
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-bold text-blue-900 mb-3">📋 Anleitung</h2>
+            <ol class="list-decimal ml-5 space-y-2 text-sm text-blue-800">
+                <li><strong>Rufen Sie zuerst an:</strong> +49 30 3308 1738</li>
+                <li><strong>Buchen Sie einen Termin</strong> (z.B. "Herrenhaarschnitt morgen um 10 Uhr")</li>
+                <li><strong>Warten Sie bis Buchung bestätigt</strong></li>
+                <li><strong>Sagen Sie:</strong> "Können Sie den Termin auf 14 Uhr verschieben?"</li>
+                <li><strong>Hören Sie die Antwort:</strong>
+                    <ul class="ml-5 mt-2 space-y-1">
+                        <li class="text-green-700">✅ <strong>Korrekt (V61):</strong> "Perfekt! Ihr Termin wurde verschoben auf <strong>Dienstag, den 19. November</strong> um <strong>14:00 Uhr</strong>"</li>
+                        <li class="text-red-700">❌ <strong>Falsch (V57):</strong> "Perfekt! Ihr Termin wurde verschoben auf <strong>{{neues_datum}}</strong> um <strong>{{neue_uhrzeit}} Uhr</strong>"</li>
+                    </ul>
+                </li>
+                <li><strong>Tragen Sie die Call ID unten ein</strong> und klicken Sie auf "Validation prüfen"</li>
+            </ol>
+        </div>
+
+        <!-- Test Form -->
+        <div class="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">🔍 Response Validation</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Call ID</label>
+                    <input type="text" id="callId"
+                           placeholder="z.B. call_abc123..."
+                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono text-sm">
+                    <p class="mt-1 text-xs text-gray-500">Finden Sie im Filament Admin unter "Anrufe" → Neuester Anruf</p>
+                </div>
+
+                <button onclick="testReschedule()"
+                        class="w-full px-6 py-4 bg-red-600 text-white rounded-lg font-bold text-lg hover:bg-red-700 transition-all shadow-lg">
+                    🚀 Validation prüfen
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+    </div>
+
+    <script>
+        async function testReschedule() {
+            const callId = document.getElementById('callId').value.trim();
+
+            if (!callId) {
+                alert('⚠️ Bitte Call ID eingeben!');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('results').innerHTML = `
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
+                    <div class="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p class="text-blue-800 font-semibold">Rufe Backend-Logs ab...</p>
+                </div>
+            `;
+            document.getElementById('results').classList.remove('hidden');
+
+            try {
+                // Call backend to get logs
+                const response = await fetch('/api/webhooks/retell/function', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        call_id: callId,
+                        function_name: 'reschedule_appointment',
+                        new_datum: 'morgen',
+                        new_uhrzeit: '14:00'
+                    })
+                });
+
+                const data = await response.json();
+                displayResults(data, callId);
+
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-red-900 mb-2">❌ Fehler</h3>
+                        <p class="text-red-700">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayResults(data, callId) {
+            const responseData = data?.data || {};
+
+            // Check which variables are present
+            const hasNeuesDatum = !!responseData.neues_datum;
+            const hasNeueUhrzeit = !!responseData.neue_uhrzeit;
+            const hasAltesDatum = !!responseData.altes_datum;
+            const hasAlteUhrzeit = !!responseData.alte_uhrzeit;
+
+            const allPresent = hasNeuesDatum && hasNeueUhrzeit && hasAltesDatum && hasAlteUhrzeit;
+
+            let html = '';
+
+            // Overall Result
+            if (allPresent) {
+                html += `
+                    <div class="bg-green-50 border-4 border-green-400 rounded-lg p-8 mb-6 text-center">
+                        <div class="text-6xl mb-4">✅</div>
+                        <h2 class="text-3xl font-bold text-green-900 mb-2">AGENT V61 IST LIVE!</h2>
+                        <p class="text-lg text-green-700">Alle response_variables sind korrekt konfiguriert</p>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="bg-red-50 border-4 border-red-400 rounded-lg p-8 mb-6 text-center">
+                        <div class="text-6xl mb-4">❌</div>
+                        <h2 class="text-3xl font-bold text-red-900 mb-2">AGENT V61 NICHT LIVE</h2>
+                        <p class="text-lg text-red-700">response_variables fehlen - noch auf V57?</p>
+                    </div>
+                `;
+            }
+
+            // Variable Details
+            html += `
+                <div class="bg-white border-2 border-gray-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Variable Validation</h3>
+                    <div class="space-y-3">
+            `;
+
+            const variables = [
+                { name: 'neues_datum', present: hasNeuesDatum, value: responseData.neues_datum },
+                { name: 'neue_uhrzeit', present: hasNeueUhrzeit, value: responseData.neue_uhrzeit },
+                { name: 'altes_datum', present: hasAltesDatum, value: responseData.altes_datum },
+                { name: 'alte_uhrzeit', present: hasAlteUhrzeit, value: responseData.alte_uhrzeit }
+            ];
+
+            variables.forEach(v => {
+                html += `
+                    <div class="flex items-center justify-between p-4 rounded-lg ${v.present ? 'bg-green-50 border-2 border-green-300' : 'bg-red-50 border-2 border-red-300'}">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">${v.present ? '✅' : '❌'}</span>
+                            <span class="font-mono font-bold text-sm">${v.name}</span>
+                        </div>
+                        <code class="text-sm ${v.present ? 'text-green-700' : 'text-red-700'}">${v.value || 'MISSING'}</code>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            // Full Response
+            html += `
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">📄 Komplette Response</h3>
+                    <pre class="text-xs font-mono bg-white p-4 rounded border overflow-auto max-h-96">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+
+            // Export Button
+            html += `
+                <div class="mt-6 text-center">
+                    <button onclick="exportResults('${callId}', ${JSON.stringify(data).replace(/"/g, '&quot;')})"
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">
+                        📥 Ergebnis exportieren (JSON)
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function exportResults(callId, data) {
+            const report = {
+                timestamp: new Date().toISOString(),
+                call_id: callId,
+                test: 'reschedule_validation',
+                agent_version_detected: 'V61',
+                validation: {
+                    passed: !!(data?.data?.neues_datum && data?.data?.neue_uhrzeit && data?.data?.altes_datum && data?.data?.alte_uhrzeit),
+                    variables: {
+                        neues_datum: data?.data?.neues_datum || null,
+                        neue_uhrzeit: data?.data?.neue_uhrzeit || null,
+                        altes_datum: data?.data?.altes_datum || null,
+                        alte_uhrzeit: data?.data?.alte_uhrzeit || null
+                    }
+                },
+                full_response: data
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reschedule-validation-${callId}-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert('✅ Ergebnis exportiert!');
+        }
+    </script>
+</body>
+</html>

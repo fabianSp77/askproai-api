@@ -114,8 +114,9 @@ class AppointmentCreationService implements AppointmentCreationInterface
             $companyId = $call->company_id ?? $customer->company_id ?? 15;
             $branchId = $call->branch_id ?? $customer->branch_id ?? null;
 
-            // Get default service for company/branch
-            $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+            // 🔧 FIX 2025-11-21: Use findService() instead of getDefaultService()
+            // This respects the requested service name from bookingDetails instead of always using default
+            $service = $this->findService($bookingDetails, $companyId, $branchId);
             if (!$service) {
                 Log::error('No service found for booking', [
                     'service_name' => $bookingDetails['service'] ?? 'unknown',

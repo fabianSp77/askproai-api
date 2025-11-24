@@ -17,10 +17,6 @@
                         <span>
                             <strong>{{ $wordCount }}</strong> Wörter
                         </span>
-                        <span>•</span>
-                        <span>
-                            <strong>{{ $readingTime }}</strong> Min. Lesezeit
-                        </span>
                     </div>
                 </div>
             </div>

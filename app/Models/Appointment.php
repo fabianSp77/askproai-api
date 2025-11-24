@@ -40,6 +40,10 @@ class Appointment extends Model
         // System notification timestamps
         'reminder_24h_sent_at',  // Set by notification system
 
+        // Customer Portal audit trail (CRITICAL)
+        'last_modified_at',      // Set by optimistic locking system
+        'last_modified_by',      // Set by optimistic locking system
+
         // System timestamps
         'created_at',
         'updated_at',
@@ -62,6 +66,12 @@ class Appointment extends Model
         'sync_initiated_at' => 'datetime',
         'manual_review_flagged_at' => 'datetime',
         'requires_manual_review' => 'boolean',
+        // Customer Portal: Optimistic locking & audit trail
+        'last_modified_at' => 'datetime',
+        'last_modified_by' => 'integer',
+        // Customer Portal: Cal.com sync status tracking
+        'calcom_sync_attempts' => 'integer',
+        'calcom_last_sync_at' => 'datetime',
     ];
 
     /**
@@ -164,6 +174,24 @@ class Appointment extends Model
     public function syncInitiatedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sync_initiated_by_user_id');
+    }
+
+    /**
+     * User who last modified this appointment (Customer Portal)
+     * Used for optimistic locking audit trail
+     */
+    public function lastModifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_modified_by');
+    }
+
+    /**
+     * Audit logs for this appointment (Customer Portal)
+     * Immutable history of all changes (created, rescheduled, cancelled)
+     */
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AppointmentAuditLog::class);
     }
 
     /**
@@ -354,5 +382,149 @@ class Appointment extends Model
         $duration = $this->duration_minutes;
 
         return $duration ? "{$duration} Min." : null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cancellation Helper Methods (2025-11-20)
+    |--------------------------------------------------------------------------
+    | Methods to support cancelled appointment display in Filament admin panel
+    */
+
+    /**
+     * Check if appointment was cancelled
+     *
+     * @return bool
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    /**
+     * Get the latest cancellation modification record
+     *
+     * @return \App\Models\AppointmentModification|null
+     */
+    public function getCancellationRecord(): ?AppointmentModification
+    {
+        if (!$this->isCancelled()) {
+            return null;
+        }
+
+        return $this->modifications()
+            ->where('modification_type', 'cancel')
+            ->latest('created_at')
+            ->first();
+    }
+
+    /**
+     * Get the call where this appointment was cancelled
+     * Returns the call_id from the cancellation metadata
+     *
+     * @return \App\Models\Call|null
+     */
+    public function getCancellationCall(): ?Call
+    {
+        $cancellation = $this->getCancellationRecord();
+
+        if (!$cancellation) {
+            return null;
+        }
+
+        // Check metadata for call_id
+        $metadata = $cancellation->metadata ?? [];
+        $callId = $metadata['call_id'] ?? null;
+
+        if (!$callId) {
+            return null;
+        }
+
+        // Extract numeric ID from call_xxx format
+        if (is_string($callId) && str_starts_with($callId, 'call_')) {
+            // This is a Retell call ID - find the Call record
+            return Call::where('retell_call_id', $callId)->first();
+        }
+
+        // Numeric call ID
+        return Call::find($callId);
+    }
+
+    /**
+     * Get the call where this appointment was originally booked
+     *
+     * @return \App\Models\Call|null
+     */
+    public function getBookingCall(): ?Call
+    {
+        if (!$this->call_id) {
+            return null;
+        }
+
+        return Call::find($this->call_id);
+    }
+
+    /**
+     * Get cancellation summary for admin display
+     *
+     * @return array{
+     *   cancelled_at: string|null,
+     *   cancelled_by: string|null,
+     *   reason: string|null,
+     *   fee: float,
+     *   within_policy: bool,
+     *   hours_notice: float|null,
+     *   cancellation_call_id: int|null,
+     *   booking_call_id: int|null
+     * }
+     */
+    public function getCancellationSummary(): array
+    {
+        $cancellation = $this->getCancellationRecord();
+
+        if (!$cancellation) {
+            return [
+                'cancelled_at' => null,
+                'cancelled_by' => null,
+                'reason' => null,
+                'fee' => 0,
+                'within_policy' => true,
+                'hours_notice' => null,
+                'cancellation_call_id' => null,
+                'booking_call_id' => null,
+            ];
+        }
+
+        $metadata = $cancellation->metadata ?? [];
+        $cancellationCall = $this->getCancellationCall();
+        $bookingCall = $this->getBookingCall();
+
+        return [
+            'cancelled_at' => $cancellation->created_at->format('d.m.Y H:i'),
+            'cancelled_by' => $this->formatModifiedBy($cancellation->modified_by_type),
+            'reason' => $cancellation->reason ?? 'Kein Grund angegeben',
+            'fee' => (float) $cancellation->fee_charged,
+            'within_policy' => (bool) $cancellation->within_policy,
+            'hours_notice' => $metadata['hours_notice'] ?? null,
+            'cancellation_call_id' => $cancellationCall?->id,
+            'booking_call_id' => $bookingCall?->id,
+        ];
+    }
+
+    /**
+     * Format modified_by_type for display
+     *
+     * @param string|null $type
+     * @return string
+     */
+    protected function formatModifiedBy(?string $type): string
+    {
+        return match($type) {
+            'User' => 'Admin',
+            'Staff' => 'Mitarbeiter',
+            'Customer' => 'Kunde',
+            'System' => 'System/AI',
+            default => $type ?? 'Unbekannt',
+        };
     }
 }

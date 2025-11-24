@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal MVP - E2E Test Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 40px; }
+        h1 { color: #1e40af; font-size: 2.5em; margin-bottom: 10px; border-bottom: 4px solid #3b82f6; padding-bottom: 15px; }
+        h2 { color: #1e40af; font-size: 1.8em; margin: 30px 0 15px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
+        h3 { color: #2563eb; font-size: 1.3em; margin: 20px 0 10px; }
+        .meta { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #3b82f6; }
+        .meta strong { color: #1e40af; }
+        .checklist { background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .checklist h3 { color: #059669; margin-top: 0; }
+        .checklist ul { margin-left: 25px; margin-top: 10px; }
+        .checklist li { margin: 8px 0; color: #065f46; }
+        .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 6px; }
+        .warning strong { color: #92400e; }
+        .success { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 6px; }
+        .error { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 15px 0; border-radius: 6px; }
+        .code-block { background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 6px; overflow-x: auto; margin: 15px 0; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9em; }
+        .test-scenario { background: #fefce8; border: 2px solid #fde047; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .test-scenario h4 { color: #854d0e; margin-bottom: 10px; }
+        .step { background: white; border: 1px solid #e5e7eb; padding: 15px; margin: 10px 0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .step-num { display: inline-block; background: #3b82f6; color: white; width: 30px; height: 30px; border-radius: 50%; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px; }
+        .expected { background: #eff6ff; padding: 10px; margin-top: 10px; border-radius: 4px; border-left: 3px solid #3b82f6; }
+        .expected strong { color: #1e40af; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #3b82f6; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        tr:hover { background: #f9fafb; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.85em; font-weight: 600; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-error { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Customer Portal MVP - E2E Test Guide</h1>
+
+        <div class="meta">
+            <strong>Dokument:</strong> End-to-End Test-Anleitung für Customer Portal MVP<br>
+            <strong>Datum:</strong> 24. November 2025<br>
+            <strong>Version:</strong> 1.0 (Production-Ready)<br>
+            <strong>Status:</strong> <span class="badge badge-success">Bereit für Testing</span><br>
+            <strong>Estimated Time:</strong> 45-60 Minuten
+        </div>
+
+        <!-- PRE-REQUISITES -->
+        <h2>🔧 Voraussetzungen (Pre-flight Check)</h2>
+
+        <div class="checklist">
+            <h3>✅ System-Check vor dem Start</h3>
+            <p>Bitte alle Punkte prüfen, bevor du mit dem Testing beginnst:</p>
+
+            <div class="code-block">
+# 1. Services laufen
+systemctl status php8.2-fpm     # Should be active (running)
+systemctl status nginx          # Should be active (running)
+systemctl status redis-server   # Should be active (running)
+systemctl status postgresql     # Should be active (running)
+
+# 2. Queue Worker aktiv
+ps aux | grep "queue:work"      # Should show running worker
+
+# Falls kein Worker läuft:
+nohup php artisan queue:work --queue=emails,default &
+
+# 3. Scheduler aktiv (in Cron)
+crontab -l | grep schedule      # Should show: * * * * * php /var/www/api-gateway/artisan schedule:run
+
+# 4. Database Check
+php artisan migrate:status      # All migrations should be "Ran"
+
+# 5. Cache Clear
+php artisan config:clear
+php artisan view:clear
+php artisan filament:cache-components
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Wichtig:</strong> Dieses Testing sollte auf einem <strong>Staging-System</strong> durchgeführt werden,
+            nicht direkt auf Production. Falls kein Staging verfügbar ist, Feature-Flag <code>FEATURE_CUSTOMER_PORTAL_MVP=false</code>
+            lassen und nur intern testen.
+        </div>
+
+        <!-- CONFIGURATION -->
+        <h2>⚙️ Konfiguration (.env Setup)</h2>
+
+        <h3>Option A: Pilot-Modus (Empfohlen für erste Tests)</h3>
+        <div class="code-block">
+# Customer Portal MVP aktivieren
+FEATURE_CUSTOMER_PORTAL_MVP=true
+
+# Pilot-Modus (nur bestimmte Companies)
+CUSTOMER_PORTAL_PILOT_MODE=true
+CUSTOMER_PORTAL_PILOT_COMPANIES="1,2"    # Deine Test-Company IDs
+
+# Token Lifetime
+CUSTOMER_PORTAL_INVITATION_LIFETIME=72   # 72 Stunden (3 Tage)
+CUSTOMER_PORTAL_SESSION_LIFETIME=10080   # 7 Tage
+
+# Email Queue
+CUSTOMER_PORTAL_EMAIL_QUEUE=emails
+MAIL_MAILER=smtp                         # Oder log für Testing
+        </div>
+
+        <h3>Option B: Vollständiger Rollout</h3>
+        <div class="code-block">
+# Customer Portal MVP aktivieren
+FEATURE_CUSTOMER_PORTAL_MVP=true
+
+# Kein Pilot-Modus (alle Companies)
+CUSTOMER_PORTAL_PILOT_MODE=false
+
+# Restliche Einstellungen wie Option A
+        </div>
+
+        <!-- TEST SCENARIOS -->
+        <h2>🧪 Test-Szenarien</h2>
+
+        <!-- Scenario 1 -->
+        <div class="test-scenario">
+            <h4>Szenario 1: Einladung erstellen & versenden (Admin-Seite)</h4>
+            <p><strong>Ziel:</strong> Prüfen, dass Admins Kundeneinladungen über Filament erstellen können</p>
+            <p><strong>Dauer:</strong> ~5 Minuten</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>Login ins Filament Admin Panel</strong>
+                <div class="code-block">URL: https://api.askproai.de/admin/login</div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Login erfolgreich<br>
+                    - Dashboard wird angezeigt
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>Navigation: "Kundeneinladungen" öffnen</strong>
+                <p>Im Sidebar unter "Kundenverwaltung" → "Kundeneinladungen" klicken</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Seite zeigt Liste aller Einladungen (kann leer sein)<br>
+                    - "Neue Kundeneinladung erstellen" Button sichtbar<br>
+                    - Filter für Status verfügbar
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">3</span>
+                <strong>Neue Einladung erstellen</strong>
+                <p>Button "Neue Kundeneinladung erstellen" klicken und Formular ausfüllen:</p>
+                <ul>
+                    <li><strong>E-Mail:</strong> deine-test-email@example.com</li>
+                    <li><strong>Rolle:</strong> "customer" (oder andere verfügbare Rolle)</li>
+                    <li><strong>Filiale (optional):</strong> Leer lassen oder spezifische Filiale wählen</li>
+                    <li><strong>Persönliche Nachricht (optional):</strong> "Willkommen! Dies ist eine Test-Einladung."</li>
+                </ul>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Formular wird validiert<br>
+                    - Nach Speichern: Erfolgs-Notification "Einladung erfolgreich erstellt"<br>
+                    - Redirect zur Detailansicht der neuen Einladung<br>
+                    - Status: <span class="badge badge-warning">Ausstehend</span> oder <span class="badge badge-info">Versendet</span>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">4</span>
+                <strong>Einladungsdetails prüfen</strong>
+                <p>Auf der Detailansicht folgende Informationen überprüfen:</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - E-Mail-Adresse korrekt angezeigt<br>
+                    - Einladungs-Token vorhanden (langer alphanumerischer String)<br>
+                    - "Gültig bis" Datum = jetzt + 72 Stunden<br>
+                    - "Eingeladen von" = Dein Admin-Username<br>
+                    - Einladungslink kopierbar (klickbar)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">5</span>
+                <strong>E-Mail Queue prüfen</strong>
+                <div class="code-block">
+# E-Mail Queue Jobs prüfen
+php artisan queue:monitor emails
+
+# Oder Log checken:
+tail -f storage/logs/laravel.log | grep "UserInvitationNotification"
+                </div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Job "UserInvitationNotification" in Queue<br>
+                    - Job wird vom Worker verarbeitet<br>
+                    - Kein Error im Log
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">6</span>
+                <strong>E-Mail empfangen (falls echte E-Mail)</strong>
+                <p>Prüfe dein E-Mail-Postfach (falls SMTP konfiguriert)</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - E-Mail mit Betreff "Einladung zum Kundenportal" empfangen<br>
+                    - Professionelles HTML-Design<br>
+                    - Persönliche Nachricht sichtbar (falls eingegeben)<br>
+                    - "Jetzt registrieren" Button funktioniert<br>
+                    - Gültigkeitsdauer angezeigt (72 Stunden)
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div class="test-scenario">
+            <h4>Szenario 2: Einladung akzeptieren & Registrierung (Kunden-Seite)</h4>
+            <p><strong>Ziel:</strong> Prüfen, dass Kunden sich erfolgreich registrieren können</p>
+            <p><strong>Dauer:</strong> ~10 Minuten</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>Einladungslink öffnen</strong>
+                <p>Kopiere den Einladungslink aus Filament oder der E-Mail:</p>
+                <div class="code-block">https://api.askproai.de/customer-portal/invitation/{TOKEN}</div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Seite lädt ohne Fehler<br>
+                    - Registrierungsformular wird angezeigt<br>
+                    - E-Mail-Adresse ist bereits ausgefüllt (read-only)<br>
+                    - Company-Name wird angezeigt
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>Registrierungsformular ausfüllen</strong>
+                <ul>
+                    <li><strong>Name:</strong> Max Mustermann</li>
+                    <li><strong>Passwort:</strong> sicheres-passwort-123</li>
+                    <li><strong>Passwort bestätigen:</strong> sicheres-passwort-123</li>
+                </ul>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Formular-Validierung funktioniert<br>
+                    - Passwort-Stärke wird angezeigt<br>
+                    - "Registrieren" Button ist klickbar
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">3</span>
+                <strong>Registrierung abschließen</strong>
+                <p>"Registrieren" Button klicken</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Erfolgs-Meldung erscheint<br>
+                    - Automatischer Login erfolgt<br>
+                    - Redirect zum Customer Portal Dashboard<br>
+                    - Sanctum Token wird erstellt (im Browser gespeichert)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">4</span>
+                <strong>Database-Check (Backend)</strong>
+                <div class="code-block">
+# Prüfen, dass Customer erstellt wurde
+psql askproai_db -c "SELECT id, email, name, portal_enabled FROM customers WHERE email = 'deine-test-email@example.com';"
+
+# Prüfen, dass Einladung auf "accepted" gesetzt wurde
+psql askproai_db -c "SELECT email, status, accepted_at FROM user_invitations WHERE email = 'deine-test-email@example.com';"
+                </div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Customer vorhanden mit <code>portal_enabled=true</code><br>
+                    - Einladung: <code>status='accepted'</code>, <code>accepted_at</code> nicht NULL
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div class="test-scenario">
+            <h4>Szenario 3: Termine ansehen (Customer Portal)</h4>
+            <p><strong>Ziel:</strong> Prüfen, dass Kunden ihre Termine sehen können</p>
+            <p><strong>Dauer:</strong> ~5 Minuten</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>Dashboard öffnen</strong>
+                <p>Nach Login solltest du automatisch auf dem Dashboard landen</p>
+                <div class="code-block">URL: https://api.askproai.de/customer-portal/appointments</div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Liste der Termine wird angezeigt<br>
+                    - Filter verfügbar (Datum, Status)<br>
+                    - Termine zeigen: Datum, Uhrzeit, Service, Staff, Filiale
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>Termin-Details öffnen</strong>
+                <p>Auf einen Termin klicken, um Details zu sehen</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Detailansicht zeigt vollständige Termininfo<br>
+                    - "Verschieben" Button sichtbar (wenn Termin in Zukunft)<br>
+                    - "Stornieren" Button sichtbar (wenn Termin in Zukunft)<br>
+                    - Termin-Historie sichtbar (falls vorhanden)
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 4 -->
+        <div class="test-scenario">
+            <h4>Szenario 4: Termin verschieben (Reschedule)</h4>
+            <p><strong>Ziel:</strong> Prüfen, dass Kunden Termine verschieben können</p>
+            <p><strong>Dauer:</strong> ~10 Minuten</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>Test-Termin erstellen (falls nicht vorhanden)</strong>
+                <div class="code-block">
+# Via Filament Admin oder Tinker einen Test-Termin erstellen
+php artisan tinker
+>>> $customer = \App\Models\Customer::where('email', 'deine-test-email@example.com')->first();
+>>> $service = \App\Models\Service::first();
+>>> $staff = \App\Models\Staff::first();
+>>> \App\Models\Appointment::create([
+    'customer_id' => $customer->id,
+    'service_id' => $service->id,
+    'staff_id' => $staff->id,
+    'company_id' => $customer->company_id,
+    'appointment_time' => now()->addDays(2),
+    'duration_minutes' => 60,
+    'status' => 'scheduled',
+    'customer_name' => $customer->name,
+    'customer_phone' => $customer->phone,
+]);
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>"Verschieben" Button klicken</strong>
+                <p>Im Termin-Detail auf "Verschieben" klicken</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Formular zum Verschieben erscheint<br>
+                    - Aktueller Termin wird angezeigt<br>
+                    - Alternative Termine werden vorgeschlagen (falls verfügbar)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">3</span>
+                <strong>Neues Datum/Uhrzeit wählen</strong>
+                <p>Entweder Alternative wählen oder manuell neues Datum eingeben</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Datumspicker funktioniert<br>
+                    - Verfügbarkeits-Check erfolgt (via Cal.com)<br>
+                    - Confirmation Dialog erscheint
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">4</span>
+                <strong>Verschiebung bestätigen</strong>
+                <p>"Termin verschieben" bestätigen</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Erfolgs-Meldung erscheint<br>
+                    - Termin wird aktualisiert (neues Datum sichtbar)<br>
+                    - Audit-Log Eintrag wird erstellt<br>
+                    - E-Mail-Bestätigung in Queue<br>
+                    - Cal.com Booking wird aktualisiert (Background Job)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">5</span>
+                <strong>E-Mail-Bestätigung prüfen</strong>
+                <div class="code-block">
+# Log checken
+tail -f storage/logs/laravel.log | grep "RescheduleConfirmation"
+
+# Job-Status
+php artisan queue:monitor emails
+                </div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Bestätigungs-E-Mail kommt an<br>
+                    - E-Mail zeigt alten & neuen Termin<br>
+                    - Link zum Portal funktioniert
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">6</span>
+                <strong>Backend-Verifizierung</strong>
+                <div class="code-block">
+# Prüfe Appointment Update
+psql askproai_db -c "SELECT id, appointment_time, updated_at FROM appointments WHERE customer_id = (SELECT id FROM customers WHERE email = 'deine-test-email@example.com') ORDER BY updated_at DESC LIMIT 1;"
+
+# Prüfe Audit Log
+psql askproai_db -c "SELECT action, old_values, new_values FROM appointment_audit_logs ORDER BY created_at DESC LIMIT 1;"
+                </div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - <code>appointment_time</code> wurde aktualisiert<br>
+                    - Audit-Log zeigt "rescheduled" mit alten & neuen Werten
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 5 -->
+        <div class="test-scenario">
+            <h4>Szenario 5: Termin stornieren (Cancellation)</h4>
+            <p><strong>Ziel:</strong> Prüfen, dass Kunden Termine stornieren können</p>
+            <p><strong>Dauer:</strong> ~8 Minuten</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>"Stornieren" Button klicken</strong>
+                <p>Im Termin-Detail auf "Stornieren" klicken</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Bestätigungs-Dialog erscheint<br>
+                    - Stornierungsgrund kann eingegeben werden (optional)<br>
+                    - Hinweis auf mögliche Gebühren (falls zutreffend)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>Stornierung bestätigen</strong>
+                <p>Optional Grund eingeben und bestätigen</p>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - Erfolgs-Meldung erscheint<br>
+                    - Termin-Status ändert sich zu "cancelled"<br>
+                    - Termin ist nicht mehr verschiebbar<br>
+                    - E-Mail-Bestätigung in Queue<br>
+                    - Cal.com Booking wird storniert (Background Job)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">3</span>
+                <strong>Backend-Verifizierung</strong>
+                <div class="code-block">
+# Prüfe Appointment Status
+psql askproai_db -c "SELECT id, status, cancelled_at, cancellation_reason FROM appointments WHERE customer_id = (SELECT id FROM customers WHERE email = 'deine-test-email@example.com') ORDER BY updated_at DESC LIMIT 1;"
+
+# Prüfe Audit Log
+psql askproai_db -c "SELECT action, metadata FROM appointment_audit_logs WHERE action = 'cancelled' ORDER BY created_at DESC LIMIT 1;"
+                </div>
+                <div class="expected">
+                    <strong>Erwartetes Ergebnis:</strong><br>
+                    - <code>status='cancelled'</code><br>
+                    - <code>cancelled_at</code> nicht NULL<br>
+                    - <code>cancellation_reason</code> enthält eingegebenen Grund<br>
+                    - Audit-Log vorhanden
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR HANDLING -->
+        <h2>🚨 Error Handling Tests</h2>
+
+        <h3>Test: Abgelaufene Einladung</h3>
+        <div class="step">
+            <strong>Setup:</strong>
+            <div class="code-block">
+# Einladung manuell ablaufen lassen
+psql askproai_db -c "UPDATE user_invitations SET expires_at = NOW() - INTERVAL '1 hour' WHERE email = 'test-expired@example.com';"
+            </div>
+            <strong>Test:</strong> Einladungslink öffnen
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - Fehlerseite: "Diese Einladung ist abgelaufen"<br>
+                - Kontakt-Info wird angezeigt
+            </div>
+        </div>
+
+        <h3>Test: Bereits akzeptierte Einladung</h3>
+        <div class="step">
+            <strong>Test:</strong> Einladungslink erneut öffnen (nach erfolgreicher Registrierung)
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - Fehlerseite: "Diese Einladung wurde bereits verwendet"<br>
+                - Link zum Login wird angezeigt
+            </div>
+        </div>
+
+        <h3>Test: Ungültiger Token</h3>
+        <div class="step">
+            <strong>Test:</strong>
+            <div class="code-block">https://api.askproai.de/customer-portal/invitation/invalid-token-12345</div>
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - 404 Fehlerseite oder "Einladung nicht gefunden"<br>
+                - Freundlicher Fehlertext
+            </div>
+        </div>
+
+        <!-- PERFORMANCE TESTS -->
+        <h2>⚡ Performance Tests</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Aktion</th>
+                    <th>Erwartete Zeit</th>
+                    <th>Akzeptabel</th>
+                    <th>Test-Methode</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Einladung erstellen (Filament)</td>
+                    <td>&lt; 1s</td>
+                    <td>&lt; 2s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+                <tr>
+                    <td>Einladungs-E-Mail Queue</td>
+                    <td>&lt; 5s</td>
+                    <td>&lt; 10s</td>
+                    <td><code>php artisan queue:monitor</code></td>
+                </tr>
+                <tr>
+                    <td>Registrierungsformular laden</td>
+                    <td>&lt; 500ms</td>
+                    <td>&lt; 1s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+                <tr>
+                    <td>Registrierung abschließen</td>
+                    <td>&lt; 1s</td>
+                    <td>&lt; 2s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+                <tr>
+                    <td>Termine laden (Customer Portal)</td>
+                    <td>&lt; 500ms</td>
+                    <td>&lt; 1s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+                <tr>
+                    <td>Termin verschieben (inkl. Availability Check)</td>
+                    <td>&lt; 2s</td>
+                    <td>&lt; 4s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+                <tr>
+                    <td>Termin stornieren</td>
+                    <td>&lt; 1s</td>
+                    <td>&lt; 2s</td>
+                    <td>Browser DevTools Network Tab</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SECURITY TESTS -->
+        <h2>🔒 Security Tests</h2>
+
+        <h3>Test: Unauthorized Access (kein Token)</h3>
+        <div class="step">
+            <strong>Test:</strong> Customer Portal ohne Login öffnen
+            <div class="code-block">https://api.askproai.de/customer-portal/appointments</div>
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - Redirect zum Login<br>
+                - Keine Daten werden angezeigt
+            </div>
+        </div>
+
+        <h3>Test: CSRF Protection</h3>
+        <div class="step">
+            <strong>Test:</strong> Formular ohne CSRF Token absenden (via curl)
+            <div class="code-block">
+curl -X POST https://api.askproai.de/customer-portal/invitation/{TOKEN}/accept \
+  -d "name=Test&password=test123" \
+  -H "Content-Type: application/x-www-form-urlencoded"
+            </div>
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - 419 CSRF Token Mismatch<br>
+                - Anfrage wird abgelehnt
+            </div>
+        </div>
+
+        <h3>Test: Rate Limiting</h3>
+        <div class="step">
+            <strong>Test:</strong> 100 Requests in kurzer Zeit
+            <div class="code-block">
+for i in {1..100}; do
+  curl -s https://api.askproai.de/api/customer-portal/appointments \
+    -H "Authorization: Bearer invalid-token" &
+done
+wait
+            </div>
+            <div class="expected">
+                <strong>Erwartetes Ergebnis:</strong><br>
+                - Nach ~60 Requests: 429 Too Many Requests<br>
+                - Rate Limit funktioniert
+            </div>
+        </div>
+
+        <!-- FINAL CHECKLIST -->
+        <h2>✅ Final Checklist (Production Readiness)</h2>
+
+        <div class="checklist">
+            <h3>Vor Production-Rollout prüfen:</h3>
+            <ul>
+                <li>✅ Alle E2E Tests erfolgreich durchgeführt</li>
+                <li>✅ Alle Error Handling Tests bestanden</li>
+                <li>✅ Performance-Metriken im akzeptablen Bereich</li>
+                <li>✅ Security Tests bestanden</li>
+                <li>✅ Email-Templates getestet (inkl. Branding)</li>
+                <li>✅ Queue Worker läuft zuverlässig</li>
+                <li>✅ Scheduler läuft (Cron Job aktiv)</li>
+                <li>✅ Cal.com Integration funktioniert</li>
+                <li>✅ Audit Logs werden korrekt erstellt</li>
+                <li>✅ Database Backups vorhanden</li>
+                <li>✅ Monitoring/Alerting konfiguriert</li>
+                <li>✅ Rollback-Plan dokumentiert</li>
+            </ul>
+        </div>
+
+        <!-- ROLLOUT PLAN -->
+        <h2>🚀 Production Rollout Plan</h2>
+
+        <h3>Phase 1: Silent Deployment (Tag 1)</h3>
+        <div class="code-block">
+# Feature-Flag auf FALSE lassen
+FEATURE_CUSTOMER_PORTAL_MVP=false
+
+# Code deployen
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan config:cache
+php artisan view:cache
+php artisan filament:cache-components
+        </div>
+
+        <h3>Phase 2: Pilot Testing (Tag 2-4)</h3>
+        <div class="code-block">
+# Feature-Flag aktivieren mit Pilot-Modus
+FEATURE_CUSTOMER_PORTAL_MVP=true
+CUSTOMER_PORTAL_PILOT_MODE=true
+CUSTOMER_PORTAL_PILOT_COMPANIES="1,2"  # 2-3 Test-Companies
+
+php artisan config:cache
+        </div>
+        <p><strong>Monitoring:</strong></p>
+        <ul>
+            <li>Logs überwachen: <code>tail -f storage/logs/laravel.log</code></li>
+            <li>Queue überwachen: <code>php artisan queue:monitor</code></li>
+            <li>User-Feedback sammeln</li>
+        </ul>
+
+        <h3>Phase 3: Gradual Rollout (Tag 5-7)</h3>
+        <div class="code-block">
+# Pilot-Modus deaktivieren (alle Companies)
+CUSTOMER_PORTAL_PILOT_MODE=false
+
+php artisan config:cache
+        </div>
+        <p><strong>Monitoring intensivieren:</strong></p>
+        <ul>
+            <li>Performance-Metriken tracken</li>
+            <li>Error-Rate überwachen</li>
+            <li>User-Adoption messen</li>
+        </ul>
+
+        <!-- ROLLBACK PLAN -->
+        <h2>🔙 Rollback Plan</h2>
+
+        <div class="error">
+            <strong>🚨 Im Notfall: Sofortiges Rollback</strong>
+            <div class="code-block">
+# Feature-Flag deaktivieren (sofort wirksam)
+FEATURE_CUSTOMER_PORTAL_MVP=false
+php artisan config:cache
+
+# Optional: Code auf vorherige Version zurücksetzen
+git reset --hard {PREVIOUS_COMMIT_SHA}
+composer install --no-dev
+php artisan migrate:rollback --step=3
+php artisan config:cache
+            </div>
+        </div>
+
+        <!-- CONTACT -->
+        <h2>📞 Support & Kontakt</h2>
+        <p><strong>Bei Problemen während des Testings:</strong></p>
+        <ul>
+            <li><strong>Logs prüfen:</strong> <code>storage/logs/laravel.log</code></li>
+            <li><strong>Queue Status:</strong> <code>php artisan queue:monitor</code></li>
+            <li><strong>Database Queries:</strong> Prüfe Slow Query Log</li>
+            <li><strong>Redis Status:</strong> <code>redis-cli ping</code></li>
+        </ul>
+
+        <div class="success">
+            <strong>✅ Dokumentation abgeschlossen!</strong><br>
+            Diese Anleitung deckt alle kritischen Test-Szenarien für das Customer Portal MVP ab.
+            Viel Erfolg beim Testing!
+        </div>
+    </div>
+</body>
+</html>

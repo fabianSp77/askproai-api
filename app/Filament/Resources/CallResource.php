@@ -203,494 +203,23 @@ class CallResource extends Resource
                     // })
                     // ✅ FIX 2025-11-12: Enable appointments eager loading for name display
                     ->with('appointments.customer')
+                    // 🆕 2025-11-24: Composite support - eager load service, staff, phases
+                    ->with('appointments.service')
+                    ->with('appointments.staff')
+                    ->with(['appointments.phases' => function ($query) {
+                        $query->where('staff_required', true)
+                            ->orderBy('sequence_order');
+                    }])
                     ->with('customer')
                     ->with('company')
                     ->with('branch')
                     ->with('phoneNumber');
             })
-            ->columns([
-                // 🟢 PREMIUM: Status / Zeit / Dauer Column (3-LINE LAYOUT)
-                Tables\Columns\ViewColumn::make('status_time_duration')
-                    ->label('Status / Zeit / Dauer')
-                    ->view('filament.columns.status-time-duration')
-                    ->sortable(query: fn($query, $direction) =>
-                        $query
-                            ->orderByRaw("CASE
-                                WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
-                                WHEN status = 'completed' THEN 1
-                                WHEN status IN ('missed','busy') THEN 2
-                                ELSE 3
-                                END {$direction}")
-                            ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
-                    ),
-
-                // 🆕 BOOKING STATUS: Now embedded in Status/Zeit/Dauer column
-                // (Separate column kept for backwards compatibility but hidden)
-                Tables\Columns\TextColumn::make('booking_status')
-                    ->label('Buchung')
-                    ->getStateUsing(function (Call $record) {
-                        if ($record->appointment && $record->appointment->starts_at) {
-                            return '✅ Gebucht';
-                        }
-                        // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
-                        // } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
-                        //     return '⏰ Wunsch';
-                        // }
-                        return '❓ Offen';
-                    })
-                    ->badge()
-                    ->color(function ($state) {
-                        return match($state) {
-                            '✅ Gebucht' => 'success',
-                            '⏰ Wunsch' => 'warning',
-                            '❓ Offen' => 'danger',
-                            default => 'gray',
-                        };
-                    })
-                    ->sortable(query: fn($query, $direction) =>
-                        $query->orderByRaw("CASE
-                            WHEN appointments.starts_at IS NOT NULL THEN 0
-                            ELSE 1
-                            END {$direction}")
-                            ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
-                    )
-                    ->hidden(),  // 🚫 Hidden - now integrated into Status/Zeit/Dauer column
-
-                // Company/Branch column with Phone number
-                Tables\Columns\ViewColumn::make('company_phone_display')
-                    ->label('Unternehmen/Filiale')
-                    ->view('filament.columns.company-phone')
-                    ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query
-                            ->orWhereHas('branch', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
-                            ->orWhereHas('company', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
-                    })
-                    ->toggleable(),
-
-                // Optimized Customer column with 3-line layout
-                Tables\Columns\ViewColumn::make('anrufer_display')
-                    ->label('Anrufer')
-                    ->view('filament.columns.anrufer-3lines')
-                    ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query
-                            // ✅ FIXED: customer_name is in metadata JSON, not a direct column
-                            ->where(function ($q) use ($search) {
-                                $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
-                                  ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
-                            });
-                    })
-                    ->sortable()
-                    ->toggleable(),
-
-                // 🆕 COMBINED: Appointment + Staff (Termin & Mitarbeiter)
-                Tables\Columns\TextColumn::make('appointment_summary')
-                    ->label('Termin & Mitarbeiter')
-                    ->getStateUsing(function (Call $record) {
-                        $appointment = $record->appointment;
-
-                        if (!$appointment || !$appointment->starts_at) {
-                            // No appointment - check for pending wishes
-                            // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
-                            // try {
-                            //     $unresolvedWish = $record->appointmentWishes()
-                            //         ->where('status', 'pending')
-                            //         ->latest()
-                            //         ->first();
-                            //
-                            //     if ($unresolvedWish && $unresolvedWish->desired_date) {
-                            //         $wishDate = \Carbon\Carbon::parse($unresolvedWish->desired_date);
-                            //         return new HtmlString(
-                            //             '<span class="text-xs text-orange-600">⏰ ' .
-                            //             $wishDate->locale('de')->isoFormat('ddd DD.MM') .
-                            //             '</span>'
-                            //         );
-                            //     }
-                            // } catch (\Exception $e) {
-                            //     // silently ignore if table missing
-                            // }
-
-                            return new HtmlString('<span class="text-xs text-gray-400">-</span>');
-                        }
-
-                        // Format: Mi 22.10 14:00 → Mitarbeiter
-                        $startDate = \Carbon\Carbon::parse($appointment->starts_at);
-                        $dateTime = $startDate->locale('de')->isoFormat('ddd DD.MM HH:mm');
-
-                        $staffName = $appointment->staff?->name ?? 'Unzugewiesen';
-                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
-
-                        return new HtmlString(
-                            '<span class="text-xs ' . $staffColor . ' font-medium">' .
-                            $dateTime . ' → ' . $staffName .
-                            '</span>'
-                        );
-                    })
-                    ->html()
-                    ->sortable(query: fn($query, $direction) =>
-                        $query->orderBy('appointments.starts_at', $direction)
-                            ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
-                    )
-                    ->tooltip(function (Call $record) {
-                        $appointment = $record->appointment;
-                        if (!$appointment) {
-                            return null;
-                        }
-
-                        $parts = [];
-                        if ($appointment->starts_at) {
-                            $start = \Carbon\Carbon::parse($appointment->starts_at);
-                            $parts[] = 'Datum: ' . $start->format('d.m.Y');
-                            $parts[] = 'Zeit: ' . $start->format('H:i') . ($appointment->ends_at ? ' - ' . \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : '');
-                        }
-
-                        if ($appointment->staff) {
-                            $parts[] = 'Mitarbeiter: ' . $appointment->staff->name;
-                        } else {
-                            $parts[] = 'Mitarbeiter: Nicht zugewiesen ⚠️';
-                        }
-
-                        if ($appointment->service) {
-                            $parts[] = 'Service: ' . $appointment->service->name;
-                        }
-
-                        return implode("\n", $parts);
-                    }),
-
-                // Staff column - DEPRECATED but kept for backwards compatibility (hidden)
-                Tables\Columns\TextColumn::make('appointment_staff')
-                    ->label('Mitarbeiter:in')
-                    ->getStateUsing(function (Call $record) {
-                        // Smart accessor automatically loads appointment
-                        $appointment = $record->appointment;
-
-                        if (!$appointment) {
-                            return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
-                        }
-
-                        // Load appointment relationships if needed
-                        if (!$appointment->relationLoaded('service')) {
-                            $appointment->load(['service', 'staff']);
-                        }
-
-                        $output = [];
-
-                        // Show staff member prominently
-                        if ($appointment->staff) {
-                            $output[] = '<span class="text-xs font-medium text-blue-600">' . $appointment->staff->name . '</span>';
-                        } else {
-                            $output[] = '<span class="text-xs text-gray-400">Nicht zugewiesen</span>';
-                        }
-
-                        // Add service as secondary info (smaller, gray)
-                        if ($appointment->service) {
-                            $serviceName = \Str::limit($appointment->service->name, 20);
-                            $output[] = '<span class="text-xs text-gray-500">' . $serviceName . '</span>';
-                        }
-
-                        return new HtmlString(
-                            '<div class="flex flex-col gap-0.5">' .
-                            implode('', $output) .
-                            '</div>'
-                        );
-                    })
-                    ->html()
-                    ->tooltip(function (Call $record) {
-                        if (!$record->appointment) {
-                            return null;
-                        }
-
-                        $appointment = $record->appointment;
-
-                        $tooltip = "Mitarbeiter:innen-Details:\n";
-                        $tooltip .= "━━━━━━━━━━━━━━━━━━━\n";
-
-                        if ($appointment->staff) {
-                            $tooltip .= "Zuständige:r Mitarbeiter:in: " . $appointment->staff->name . "\n";
-                        } else {
-                            $tooltip .= "Status: Noch nicht zugewiesen\n";
-                        }
-
-                        if ($appointment->service) {
-                            $tooltip .= "\nService: " . $appointment->service->name . "\n";
-                            if ($appointment->service->duration) {
-                                $tooltip .= "Standard-Dauer: " . $appointment->service->duration . " Min\n";
-                            }
-                        }
-
-                        return $tooltip;
-                    })
-                    ->toggleable()
-                    ->hidden(),  // 🚫 Hidden in favor of combined appointment_summary column
-
-                // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
-                Tables\Columns\TextColumn::make('service_type')
-                    ->label('Service / Preis')
-                    ->html()
-                    ->getStateUsing(function ($record) {
-                        try {
-                            // Use already-loaded appointments (eager-loaded on line 201)
-                            $appointments = $record->appointments ?? collect();
-
-                            // No appointments → show "-"
-                            if (!$appointments || $appointments->isEmpty()) {
-                                return '<span class="text-gray-400 text-xs">-</span>';
-                            }
-
-                            // Build service + price display
-                            $lines = [];
-                            $seen = [];
-
-                            foreach ($appointments as $appt) {
-                                if (!$appt || !$appt->service) continue;
-
-                                $serviceId = $appt->service->id;
-                                if (in_array($serviceId, $seen)) continue; // Skip duplicates
-                                $seen[] = $serviceId;
-
-                                // Use display_name if provided, otherwise use Cal.com name
-                                $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
-                                    ? $appt->service->display_name
-                                    : $appt->service->name;
-                                $price = $appt->service->price;
-
-                                if ($price && $price > 0) {
-                                    // Price is stored as decimal(10,2) in EUR, not cents
-                                    // Display as full euros only (no cents)
-                                    $formattedPrice = number_format($price, 0, ',', '.');
-                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
-                                              '<span class="text-xs text-green-600">💰 ' . $formattedPrice . '€</span>';
-                                } else {
-                                    $lines[] = '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
-                                              '<span class="text-xs text-gray-400">Kein Preis</span>';
-                                }
-                            }
-
-                            if (empty($lines)) {
-                                return '<span class="text-gray-400 text-xs">-</span>';
-                            }
-
-                            $text = implode('<br><br>', $lines);
-                            // Limit display length (increased for better readability)
-                            if (mb_strlen(strip_tags($text)) > 100) {
-                                $text = mb_substr(strip_tags($text), 0, 100) . '...';
-                            }
-
-                            return '<div class="text-xs space-y-1 w-full">' . $text . '</div>';
-                        } catch (\Throwable $e) {
-                            return '<span class="text-gray-400 text-xs">-</span>';
-                        }
-                    })
-                    ->tooltip(function ($record) {
-                        try {
-                            // Use already-loaded appointments (eager-loaded on line 201)
-                            $appointments = $record->appointments ?? collect();
-
-                            if (!$appointments || $appointments->isEmpty()) {
-                                return 'Kein Termin gebucht';
-                            }
-
-                            // Show details: Service name + Price + Duration
-                            $details = $appointments
-                                ->filter(fn($appt) => $appt)
-                                ->map(function ($appt) {
-                                    $name = $appt->service?->name ?? 'Unbekannt';
-                                    $duration = $appt->service?->duration ?? $appt->duration ?? '?';
-                                    $price = $appt->service?->price ?? 0;
-
-                                    if ($price && $price > 0) {
-                                        // Price is stored as decimal(10,2) in EUR, not cents
-                                        // Display as full euros only (no cents)
-                                        $formattedPrice = number_format($price, 0, ',', '.');
-                                        return "{$name} ({$duration} Min) - {$formattedPrice}€";
-                                    }
-                                    return "{$name} ({$duration} Min)";
-                                })
-                                ->implode("\n");
-
-                            return $details ?: 'Kein Termin gebucht';
-                        } catch (\Throwable $e) {
-                            return 'Fehler beim Laden';
-                        }
-                    })
-                    ->color(function ($state): string {
-                        if (strip_tags($state) === '-') return 'gray';
-                        return 'success';
-                    })
-                    ->icon(function ($state): ?string {
-                        if (strip_tags($state) === '-') return null;  // No icon for empty state
-                        return 'heroicon-m-calendar-days';
-                    })
-                    ->limit(150)
-                    ->wrap()
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-
-                // 🎙️ Combined: Summary + Audio Player (State of the Art)
-                Tables\Columns\TextColumn::make('summary_audio')
-                    ->label('Zusammenfassung & Audio')
-                    ->html()
-                    ->getStateUsing(function ($record) {
-                        $summary = '';
-                        if ($record->summary) {
-                            $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
-                            $summaryDisplay = mb_strlen($summaryText) > 100 ? mb_substr($summaryText, 0, 100) . '...' : $summaryText;
-                            $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-2">' .
-                                      htmlspecialchars($summaryDisplay) .
-                                      '</div>';
-                        }
-
-                        $audio = '';
-                        if (!empty($record->recording_url)) {
-                            $url = $record->recording_url;
-                            $audio = '<div class="flex items-center gap-2 mt-2">
-                                        <audio controls preload="none"
-                                               class="h-7 flex-shrink-0"
-                                               style="height: 28px; max-width: 250px;"
-                                               controlsList="nodownload">
-                                            <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
-                                            <source src="' . htmlspecialchars($url) . '" type="audio/wav">
-                                        </audio>
-                                      </div>';
-                        }
-
-                        if (empty($summary) && empty($audio)) {
-                            return '<span class="text-gray-400 text-xs">-</span>';
-                        }
-
-                        return '<div>' . $summary . $audio . '</div>';
-                    })
-                    ->tooltip(function ($record) {
-                        $lines = [];
-
-                        if ($record->summary) {
-                            $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
-                            $lines[] = "📝 Zusammenfassung:\n" . $summaryText;
-                        }
-
-                        if (!empty($record->recording_url)) {
-                            $lines[] = "🎙️ Audio-Aufnahme verfügbar";
-                        }
-
-                        // Add sentiment/mood information
-                        $sentiment = $record->sentiment;
-                        if ($sentiment) {
-                            $sentimentLabel = match(ucfirst(strtolower($sentiment))) {
-                                'Positive' => '😊 Positiv',
-                                'Neutral' => '😐 Neutral',
-                                'Negative' => '😟 Negativ',
-                                default => '❓ Unbekannt',
-                            };
-                            $lines[] = "💭 Stimmung: " . $sentimentLabel;
-                        }
-
-                        return !empty($lines) ? implode("\n\n", $lines) : 'Keine Informationen';
-                    })
-                    ->wrap()
-                    ->toggleable(),
-
-                // 💰 SECURE Cost display with HIERARCHICAL access
-                Tables\Columns\TextColumn::make('financials')
-                    ->label('Tel.-Kosten')
-                    ->getStateUsing(function (Call $record) {
-                        $user = auth()->user();
-
-                        // SECURITY: Verify tenant access before showing cost
-                        if (!$user) {
-                            return new HtmlString('<span class="text-gray-400">-</span>');
-                        }
-
-                        // COST HIERARCHY - 3 LEVELS:
-                        // Level 1 (AskProAI/Super-Admin): base_cost (OUR costs)
-                        // Level 2 (Reseller): reseller_cost (their costs from us)
-                        // Level 3 (Customer): customer_cost (what THEY charge their customers)
-
-                        // 🔐 LEVEL 1: Super-admin sees BASE costs + PROFIT
-                        if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
-                            $primaryCost = $record->base_cost ?? 0;
-                            // AskProAI's profit: what we charge reseller minus our cost
-                            $profitCost = ($record->reseller_cost ?? 0) - ($record->base_cost ?? 0);
-                            $costType = 'Cost';
-                            $profitLabel = 'AskProAI Profit';
-                        }
-                        // 🔐 LEVEL 2: Reseller can see RESELLER costs + PROFIT
-                        elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
-                            // Check if reseller owns this branch/company
-                            $canViewResellerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
-                                || ($record->company_id && $user->company_id === $record->company_id);
-
-                            if ($canViewResellerCost) {
-                                // Reseller sees THEIR cost
-                                $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
-                                // Reseller's profit: what customer pays minus what reseller pays us
-                                $profitCost = ($record->customer_cost ?? 0) - ($record->reseller_cost ?? 0);
-                                $costType = 'Your Cost';
-                                $profitLabel = 'Your Profit';
-                            } else {
-                                // SECURITY: Don't show costs for calls from other resellers
-                                return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
-                            }
-                        }
-                        // 🔐 LEVEL 3: Customer can see THEIR costs only
-                        else {
-                            // Check if customer owns this branch (direct employee)
-                            $canViewCustomerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
-                                || ($record->company_id && $user->company_id === $record->company_id);
-
-                            if (!$canViewCustomerCost) {
-                                // SECURITY: Don't show costs for calls from other customers/branches
-                                return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
-                            }
-
-                            // Customer sees what THEY are charged
-                            $primaryCost = $record->customer_cost ?? $record->cost ?? 0;
-                            if (is_numeric($record->cost) && $primaryCost == 0) {
-                                $primaryCost = round($record->cost * 100);
-                            }
-                            $profitCost = 0; // Customer doesn't see profit
-                            $costType = 'Your Charge';
-                            $profitLabel = '';
-                        }
-
-                        $formattedCost = number_format($primaryCost / 100, 2, ',', '.');
-                        $formattedProfit = ($profitCost > 0) ? number_format($profitCost / 100, 2, ',', '.') : '0,00';
-
-                        // Build tooltip with cost breakdown
-                        $tooltipParts = [$costType . ': ' . $formattedCost . '€'];
-                        if ($profitCost > 0 && $profitLabel) {
-                            $tooltipParts[] = $profitLabel . ': ' . $formattedProfit . '€';
-                        }
-                        $tooltipText = implode(' | ', $tooltipParts);
-
-                        // Status indicator (actual vs estimated)
-                        $statusDot = '';
-                        if ($record->total_external_cost_eur_cents > 0) {
-                            // Green dot for actual costs
-                            $statusDot = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 ml-1" title="Tatsächliche Kosten"></span>';
-                        } else {
-                            // Yellow dot for estimated costs
-                            $statusDot = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400 ml-1" title="Geschätzte Kosten"></span>';
-                        }
-
-                        return new HtmlString(
-                            '<div class="flex flex-col gap-0.5">' .
-                            '<div class="flex items-center gap-1">' .
-                            '<span class="font-semibold" title="' . $tooltipText . '">' . $formattedCost . '€</span>' .
-                            ($profitCost > 0 ? '<span class="text-green-600 text-xs font-medium">(+' . $formattedProfit . '€)</span>' : '') .
-                            $statusDot .
-                            '</div>' .
-                            '<span class="text-xs text-gray-600">' . $costType . ($profitLabel ? ' / ' . $profitLabel : '') . '</span>' .
-                            '</div>'
-                        );
-                    })
-                    ->html()
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return $query->orderBy('customer_cost', $direction);
-                    })
-                    ->extraAttributes(['class' => 'font-mono'])
-                    ->toggleable(),
-
-            ])
+            ->columns(
+                self::getUserViewMode() === 'compact' 
+                    ? self::getCompactColumns() 
+                    : self::getClassicColumns()
+            )
             ->filters([
                 Tables\Filters\Filter::make('created_at')
                     ->form([
@@ -864,6 +393,24 @@ class CallResource extends Resource
                     ->label('Rückruf erforderlich')
                     ->query(fn (Builder $query): Builder => $query->where('session_outcome', 'callback_requested'))
                     ->toggle(),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('toggle_view_mode')
+                    ->label(fn() => self::getUserViewMode() === 'compact' ? '📋 Klassische Ansicht' : '⚡ Kompakte Ansicht')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('gray')
+                    ->action(function() {
+                        $current = self::getUserViewMode();
+                        $new = $current === 'compact' ? 'classic' : 'compact';
+
+                        \App\Models\UserPreference::set(
+                            auth()->id(),
+                            'call_list_view_mode',
+                            ['mode' => $new]
+                        );
+                    })
+                    ->after(fn() => redirect()->to(CallResource::getUrl('index')))
+                    ->requiresConfirmation(false),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -1054,6 +601,91 @@ class CallResource extends Resource
                                     })
                                     ->columnSpanFull(),
 
+                                // 🚫 CANCELLATION BANNER - Shows if call HAS cancelled appointments OR PERFORMED cancellations
+                                ViewEntry::make('cancellation_banner')
+                                    ->view('filament.cancellation-banner')
+                                    ->viewData(function ($record) {
+                                        $appointmentsData = [];
+                                        $bannerType = null;
+
+                                        // Case 1: This call HAS cancelled appointments (booking call)
+                                        $cancelledAppointments = $record->appointments()
+                                            ->where('status', 'cancelled')
+                                            ->with(['service', 'modifications' => function ($q) {
+                                                $q->where('modification_type', 'cancel')
+                                                  ->latest('created_at')
+                                                  ->limit(1);
+                                            }])
+                                            ->get();
+
+                                        if ($cancelledAppointments->isNotEmpty()) {
+                                            $bannerType = 'booking_call';
+                                            foreach ($cancelledAppointments as $appointment) {
+                                                $summary = $appointment->getCancellationSummary();
+                                                $appointmentsData[] = [
+                                                    'service_name' => $appointment->service?->name ?? 'Unbekannter Service',
+                                                    'appointment_time' => $appointment->starts_at?->format('d.m.Y H:i') ?? 'Unbekannt',
+                                                    'cancelled_at' => $summary['cancelled_at'],
+                                                    'cancelled_by' => $summary['cancelled_by'],
+                                                    'reason' => $summary['reason'],
+                                                    'fee' => $summary['fee'],
+                                                    'within_policy' => $summary['within_policy'],
+                                                    'hours_notice' => $summary['hours_notice'],
+                                                    'cancellation_call_id' => $summary['cancellation_call_id'],
+                                                    'booking_call_id' => $summary['booking_call_id'],
+                                                ];
+                                            }
+                                        }
+                                        // Case 2: This call PERFORMED cancellations (cancellation call)
+                                        elseif ($record->retell_call_id) {
+                                            $performedMods = \App\Models\AppointmentModification::query()
+                                                ->where('modification_type', 'cancel')
+                                                ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                                ->with(['appointment.service'])
+                                                ->get();
+
+                                            if ($performedMods->isNotEmpty()) {
+                                                $bannerType = 'cancellation_call';
+                                                foreach ($performedMods as $mod) {
+                                                    $appointment = $mod->appointment;
+                                                    if (!$appointment) continue;
+
+                                                    $appointmentsData[] = [
+                                                        'service_name' => $appointment->service?->name ?? 'Unbekannter Service',
+                                                        'appointment_time' => $appointment->starts_at?->format('d.m.Y H:i') ?? 'Unbekannt',
+                                                        'cancelled_at' => $mod->created_at->format('d.m.Y H:i'),
+                                                        'cancelled_by' => match($mod->modified_by_type) {
+                                                            'User' => 'Admin',
+                                                            'Staff' => 'Mitarbeiter',
+                                                            'Customer' => 'Kunde',
+                                                            'System' => 'System/AI',
+                                                            default => $mod->modified_by_type ?? 'Unbekannt',
+                                                        },
+                                                        'reason' => $mod->reason ?? 'Kein Grund angegeben',
+                                                        'fee' => (float) $mod->fee_charged,
+                                                        'within_policy' => (bool) $mod->within_policy,
+                                                        'hours_notice' => $mod->metadata['hours_notice'] ?? null,
+                                                        'cancellation_call_id' => $record->id,
+                                                        'booking_call_id' => $appointment->call_id,
+                                                    ];
+                                                }
+                                            }
+                                        }
+
+                                        if (empty($appointmentsData)) {
+                                            return ['show' => false];
+                                        }
+
+                                        return [
+                                            'show' => true,
+                                            'banner_type' => $bannerType,
+                                            'count' => count($appointmentsData),
+                                            'appointments' => $appointmentsData,
+                                        ];
+                                    })
+                                    ->columnSpanFull()
+                                    ->hidden(fn ($state) => !($state['show'] ?? false)),
+
                                 // KPI Cards at the top - Optimized responsive grid
                                 Grid::make(['default' => 1, 'sm' => 2, 'lg' => 2, 'xl' => 4])
                                     ->schema([
@@ -1130,133 +762,21 @@ class CallResource extends Resource
                                 Grid::make(1)
                                     ->extraAttributes(['class' => '!max-w-full w-full'])
                                     ->schema([
-                                        InfoSection::make('Termin Details')
+                                        // 🆕 2025-11-24: ENHANCED - Support multiple appointments & composite services
+                                        InfoSection::make('Gebuchte Termine & Segmente')
                                             ->icon('heroicon-m-calendar-days')
                                             ->extraAttributes(['class' => '!max-w-full w-full'])
                                             ->schema([
-                                                TextEntry::make('appointment_status')
-                                                    ->label('Termin Status')
-                                            ->badge()
-                                            ->getStateUsing(function ($record) {
-                                                $appointment = $record->appointment;
-
-                                                if (!$appointment) {
-                                                    return $record->appointment_made
-                                                        ? 'Geplant (noch nicht erstellt)'
-                                                        : 'Kein Termin';
-                                                }
-
-                                                return match($appointment->status) {
-                                                    'confirmed' => 'Bestätigt',
-                                                    'pending' => 'Ausstehend',
-                                                    'cancelled' => 'Abgesagt',
-                                                    'completed' => 'Abgeschlossen',
-                                                    'scheduled' => 'Geplant',
-                                                    default => $appointment->status
-                                                };
-                                            })
-                                            ->color(function ($record) {
-                                                $appointment = $record->appointment;
-
-                                                if (!$appointment) {
-                                                    return $record->appointment_made ? 'warning' : 'gray';
-                                                }
-
-                                                return match($appointment->status) {
-                                                    'confirmed', 'completed', 'scheduled' => 'success',
-                                                    'pending' => 'warning',
-                                                    'cancelled' => 'danger',
-                                                    default => 'gray'
-                                                };
-                                            })
-                                            ->icon('heroicon-m-calendar-days'),
-
-                                        Grid::make(2)
-                                            ->schema([
-                                                TextEntry::make('appointment.starts_at')
-                                                    ->label('Startzeit')
-                                                    ->dateTime('d.m.Y H:i')
-                                                    ->placeholder('-')
-                                                    ->getStateUsing(fn ($record) => $record->appointment?->starts_at)
-                                                    ->icon('heroicon-m-clock'),
-
-                                                TextEntry::make('appointment.ends_at')
-                                                    ->label('Endzeit')
-                                                    ->dateTime('d.m.Y H:i')
-                                                    ->placeholder('-')
-                                                    ->getStateUsing(fn ($record) => $record->appointment?->ends_at)
-                                                    ->icon('heroicon-m-clock'),
-
-                                                TextEntry::make('appointment.staff.name')
-                                                    ->label('Mitarbeiter')
-                                                    ->placeholder('Nicht zugewiesen')
-                                                    ->getStateUsing(function ($record) {
-                                                        $appointment = $record->appointment;
-                                                        if (!$appointment) return null;
-
-                                                        if (!$appointment->relationLoaded('staff')) {
-                                                            $appointment->load('staff');
-                                                        }
-
-                                                        return $appointment->staff?->name;
-                                                    })
-                                                    ->icon('heroicon-m-user-circle'),
-
-                                                TextEntry::make('appointment.service.name')
-                                                    ->label('Service')
-                                                    ->placeholder('Kein Service')
-                                                    ->getStateUsing(function ($record) {
-                                                        $appointment = $record->appointment;
-                                                        if (!$appointment) return null;
-
-                                                        if (!$appointment->relationLoaded('service')) {
-                                                            $appointment->load('service');
-                                                        }
-
-                                                        return $appointment->service?->name;
-                                                    })
-                                                    ->icon('heroicon-m-wrench-screwdriver'),
-                                            ]),
-
-                                        TextEntry::make('appointment.notes')
-                                            ->label('Notizen')
-                                            ->placeholder('Keine Notizen')
-                                            ->columnSpanFull()
-                                            ->getStateUsing(fn ($record) => $record->appointment?->notes),
-
-                                        TextEntry::make('appointment_link')
-                                            ->label('Termin verwalten')
-                                            ->getStateUsing(function ($record) {
-                                                $appointment = $record->appointment;
-
-                                                if (!$appointment) {
-                                                    return '-';
-                                                }
-
-                                                try {
-                                                    $url = route('filament.admin.resources.appointments.view',
-                                                        ['record' => $appointment->id]);
-
-                                                    return new HtmlString(
-                                                        '<a href="' . $url . '" ' .
-                                                        'class="text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline font-medium" ' .
-                                                        'target="_blank">' .
-                                                        '🔗 Termin #' . $appointment->id . ' öffnen' .
-                                                        '</a>'
-                                                    );
-                                                } catch (\Exception $e) {
-                                                    return 'Termin #' . $appointment->id;
-                                                }
-                                            })
-                                                ->html()
-                                                ->visible(fn ($record) => $record->appointment !== null),
+                                                ViewEntry::make('appointments_composite')
+                                                    ->view('filament.infolists.appointments-composite-section')
+                                                    ->columnSpanFull(),
                                             ])
-                                            ->visible(fn ($record) => $record->appointment !== null)
+                                            ->visible(fn ($record) => $record->appointments()->exists())
                                             ->collapsible()
                                             ->collapsed(false)
                                             ->columnSpanFull(),
                                     ])
-                                    ->visible(fn ($record) => $record->appointment !== null)
+                                    ->visible(fn ($record) => $record->appointments()->exists())
                                     ->columnSpanFull(),
 
                                 // Gesprächszusammenfassung - Prominent am Anfang (Grid-wrapped + CSS Override)
@@ -1765,6 +1285,1387 @@ class CallResource extends Resource
         // }
 
         return $query;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | View Mode Management (Compact vs Classic)
+    |--------------------------------------------------------------------------
+    | User preference system for toggling between:
+    | - Compact View (6 columns - optimized for speed)
+    | - Classic View (12 columns - full details)
+    */
+
+    /**
+     * Get classic columns (all 12 columns - existing implementation)
+     *
+     * @return array
+     */
+    protected static function getClassicColumns(): array
+    {
+        return [
+                    Tables\Columns\ViewColumn::make('status_time_duration')
+                        ->label('Ereignis / Zeit / Dauer')
+                        ->view('filament.columns.status-time-duration')
+                        ->sortable(query: fn($query, $direction) =>
+                            $query
+                                ->orderByRaw("CASE
+                                    WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
+                                    WHEN status = 'completed' THEN 1
+                                    WHEN status IN ('missed','busy') THEN 2
+                                    ELSE 3
+                                    END {$direction}")
+                                ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
+                        ),
+
+                    // 🆕 BOOKING STATUS: Now embedded in Status/Zeit/Dauer column
+                    // (Separate column kept for backwards compatibility but hidden)
+                    Tables\Columns\TextColumn::make('booking_status')
+                        ->label('Buchung')
+                        ->getStateUsing(function (Call $record) {
+                            if ($record->appointment && $record->appointment->starts_at) {
+                                return '✅ Gebucht';
+                            }
+                            // ❌ SKIPPED: appointmentWishes check (table missing from DB backup)
+                            // } elseif ($record->appointmentWishes()->where('status', 'pending')->exists()) {
+                            //     return '⏰ Wunsch';
+                            // }
+                            return '❓ Offen';
+                        })
+                        ->badge()
+                        ->color(function ($state) {
+                            return match($state) {
+                                '✅ Gebucht' => 'success',
+                                '⏰ Wunsch' => 'warning',
+                                '❓ Offen' => 'danger',
+                                default => 'gray',
+                            };
+                        })
+                        ->sortable(query: fn($query, $direction) =>
+                            $query->orderByRaw("CASE
+                                WHEN appointments.starts_at IS NOT NULL THEN 0
+                                ELSE 1
+                                END {$direction}")
+                                ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
+                        )
+                        ->hidden(),  // 🚫 Hidden - now integrated into Status/Zeit/Dauer column
+
+                    // Company/Branch column with Phone number
+                    Tables\Columns\ViewColumn::make('company_phone_display')
+                        ->label('Unternehmen/Filiale')
+                        ->view('filament.columns.company-phone')
+                        ->searchable(query: function (Builder $query, string $search): Builder {
+                            return $query
+                                ->orWhereHas('branch', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
+                                ->orWhereHas('company', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
+                        })
+                        ->toggleable(),
+
+                    // Optimized Customer column with 3-line layout
+                    Tables\Columns\ViewColumn::make('anrufer_display')
+                        ->label('Anrufer')
+                        ->view('filament.columns.anrufer-3lines')
+                        ->searchable(query: function (Builder $query, string $search): Builder {
+                            return $query
+                                // ✅ FIXED: customer_name is in metadata JSON, not a direct column
+                                ->where(function ($q) use ($search) {
+                                    $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
+                                      ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
+                                });
+                        })
+                        ->sortable()
+                        ->toggleable(),
+
+                    // 🎯 CALL TYPE (LEGACY: hidden - consolidated into Ereignis column)
+                    Tables\Columns\TextColumn::make('call_type')
+                        ->label('Aktion (Legacy)')
+                        ->getStateUsing(function (Call $record) {
+                            $hasActiveAppointments = $record->appointments()
+                                ->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])
+                                ->exists();
+
+                            $hasCancelledAppointments = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->exists();
+
+                            $performedCancellations = false;
+                            if ($record->retell_call_id) {
+                                $performedCancellations = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->exists();
+                            }
+
+                            $actions = [];
+
+                            // 🔥 2025-11-20: Enhanced labels with call ID references
+                            if ($hasActiveAppointments) {
+                                if ($hasCancelledAppointments) {
+                                    $actions[] = '✅ Buchung (später storniert)';
+                                } else {
+                                    $actions[] = '✅ Buchung';
+                                }
+                            }
+
+                            if ($performedCancellations && !$hasCancelledAppointments) {
+                                // This call ONLY performed cancellations (didn't book them)
+                                // Get the first cancelled appointment to show reference
+                                $performedMod = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment')
+                                    ->first();
+
+                                if ($performedMod && $performedMod->appointment && $performedMod->appointment->call_id) {
+                                    $bookingCallId = $performedMod->appointment->call_id;
+                                    if ($bookingCallId !== $record->id) {
+                                        $actions[] = "🚫 Storno (#$bookingCallId)";
+                                    } else {
+                                        $actions[] = '🚫 Storno';
+                                    }
+                                } else {
+                                    $actions[] = '🚫 Storno';
+                                }
+                            } elseif ($hasCancelledAppointments && !($hasActiveAppointments)) {
+                                // Has cancelled appointments but no active ones (could be self-cancellation)
+                                $actions[] = '🚫 Storno';
+                            }
+
+                            if (empty($actions)) {
+                                return null; // Don't show badge if no appointments
+                            }
+
+                            return implode(' + ', $actions);
+                        })
+                        ->badge()
+                        ->color(fn ($state) => match(true) {
+                            str_contains($state ?? '', '+') => 'info', // Both booking and cancellation
+                            str_contains($state ?? '', '✅') => 'success', // Just booking
+                            str_contains($state ?? '', '🚫') => 'warning', // Just cancellation
+                            default => 'gray',
+                        })
+                        ->tooltip(function (Call $record) {
+                            $lines = [];
+
+                            // Active appointments
+                            $activeAppointments = $record->appointments()
+                                ->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])
+                                ->with('service')
+                                ->get();
+
+                            if ($activeAppointments->isNotEmpty()) {
+                                $lines[] = '✅ GEBUCHTE TERMINE:';
+                                foreach ($activeAppointments as $appt) {
+                                    $service = $appt->service?->name ?? 'Unbekannt';
+                                    $time = $appt->starts_at?->format('d.m.Y H:i') ?? 'Unbekannt';
+                                    $lines[] = "  📅 {$service} - {$time}";
+                                }
+                                $lines[] = '';
+                            }
+
+                            // Cancelled appointments of this call
+                            $cancelledAppointments = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->with('service')
+                                ->get();
+
+                            if ($cancelledAppointments->isNotEmpty()) {
+                                $lines[] = '🚫 STORNIERTE TERMINE (dieses Calls):';
+                                foreach ($cancelledAppointments as $appt) {
+                                    $service = $appt->service?->name ?? 'Unbekannt';
+                                    $time = $appt->starts_at?->format('d.m.Y H:i') ?? 'Unbekannt';
+                                    $summary = $appt->getCancellationSummary();
+                                    $lines[] = "  📅 {$service} - {$time}";
+                                    $lines[] = "     Storniert: {$summary['cancelled_at']} von {$summary['cancelled_by']}";
+                                    if ($summary['cancellation_call_id'] && $summary['cancellation_call_id'] !== $record->id) {
+                                        $lines[] = "     → Storniert in Call #{$summary['cancellation_call_id']}";
+                                    }
+                                }
+                                $lines[] = '';
+                            }
+
+                            // Cancellations performed in this call
+                            if ($record->retell_call_id) {
+                                $performedMods = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment.service')
+                                    ->get();
+
+                                if ($performedMods->isNotEmpty()) {
+                                    $lines[] = '🚫 STORNIERUNGEN IN DIESEM CALL:';
+                                    foreach ($performedMods as $mod) {
+                                        $appointment = $mod->appointment;
+                                        if (!$appointment) continue;
+
+                                        $service = $appointment->service?->name ?? 'Unbekannt';
+                                        $time = $appointment->starts_at?->format('d.m.Y H:i') ?? 'Unbekannt';
+                                        $lines[] = "  📅 {$service} - {$time}";
+                                        if ($appointment->call_id && $appointment->call_id !== $record->id) {
+                                            $lines[] = "     → Ursprünglich gebucht in Call #{$appointment->call_id}";
+                                        }
+                                    }
+                                }
+                            }
+
+                            return !empty($lines) ? implode("\n", $lines) : null;
+                        })
+                        ->url(function (Call $record) {
+                            // Priority: Link to cancellation call if this is a booking call with cancelled appointments
+                            $cancelledAppointment = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->first();
+
+                            if ($cancelledAppointment) {
+                                $summary = $cancelledAppointment->getCancellationSummary();
+                                if ($summary['cancellation_call_id'] && $summary['cancellation_call_id'] !== $record->id) {
+                                    return CallResource::getUrl('view', ['record' => $summary['cancellation_call_id']]);
+                                }
+                            }
+
+                            // Or link to booking call if this is a cancellation call
+                            if ($record->retell_call_id) {
+                                $performedMod = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment')
+                                    ->first();
+
+                                if ($performedMod && $performedMod->appointment && $performedMod->appointment->call_id !== $record->id) {
+                                    return CallResource::getUrl('view', ['record' => $performedMod->appointment->call_id]);
+                                }
+                            }
+
+                            // Otherwise link to first active appointment's detail
+                            $activeAppointment = $record->appointments()
+                                ->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])
+                                ->first();
+
+                            if ($activeAppointment) {
+                                return \App\Filament\Resources\AppointmentResource::getUrl('view', ['record' => $activeAppointment->id]);
+                            }
+
+                            return null;
+                        }, shouldOpenInNewTab: false)
+                        ->hidden()  // 🚫 Hidden - consolidated into Ereignis column (rollback: remove this line)
+                        ->toggleable(),
+
+                    // 🆕 COMBINED: Appointment + Staff (Termin & Mitarbeiter)
+                    // 🔥 2025-11-20: Show ALL appointments, not just one
+                    Tables\Columns\TextColumn::make('appointment_summary')
+                        ->label('Termin & Mitarbeiter')
+                        ->getStateUsing(function (Call $record) {
+                            $appointments = $record->appointments;
+
+                            if ($appointments->isEmpty()) {
+                                return new HtmlString('<span class="text-xs text-gray-400">-</span>');
+                            }
+
+                            $lines = [];
+                            foreach ($appointments->take(3) as $appointment) {
+                                if (!$appointment->starts_at) {
+                                    continue;
+                                }
+
+                                $startDate = \Carbon\Carbon::parse($appointment->starts_at);
+                                $dateTime = $startDate->locale('de')->isoFormat('ddd DD.MM HH:mm');
+                                $serviceName = $appointment->service?->name ?? 'Service';
+                                $staffName = $appointment->staff?->name ?? 'Unzugewiesen';
+
+                                // 🆕 CANCELLED: Show cancelled status prominently
+                                if ($appointment->status === 'cancelled') {
+                                    // Shorten service name for display
+                                    if (strlen($serviceName) > 20) {
+                                        $serviceName = substr($serviceName, 0, 17) . '...';
+                                    }
+
+                                    $lines[] = '<span class="text-xs text-orange-700 font-semibold">' .
+                                        '🚫 ' . $serviceName . ' - ' . $dateTime .
+                                        '</span>';
+                                } else {
+                                    // 🆕 2025-11-24: COMPOSITE SUPPORT
+                                    $isComposite = $appointment->service && $appointment->service->composite;
+
+                                    if ($isComposite) {
+                                        // Show composite indicator
+                                        $phaseCount = 0;
+                                        try {
+                                            $phaseCount = $appointment->phases()->where('staff_required', true)->count();
+                                        } catch (\Exception $e) {
+                                            // Fallback
+                                        }
+
+                                        if (strlen($serviceName) > 15) {
+                                            $serviceName = substr($serviceName, 0, 12) . '...';
+                                        }
+
+                                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
+
+                                        $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">' .
+                                            '<strong>📦 ' . $serviceName . '</strong> (' . $phaseCount . ' Segmente)' .
+                                            '</span>';
+                                        $lines[] = '<span class="text-xs text-gray-500" style="margin-left: 1.5rem;">' .
+                                            '👤 ' . $staffName . ' • 🕐 ' . $dateTime .
+                                            '</span>';
+
+                                        // Show segments (up to 4)
+                                        if ($phaseCount > 0) {
+                                            try {
+                                                $phases = $appointment->phases()
+                                                    ->where('staff_required', true)
+                                                    ->orderBy('sequence_order')
+                                                    ->limit(4)
+                                                    ->get();
+
+                                                foreach ($phases as $phase) {
+                                                    $syncIcon = match($phase->calcom_sync_status) {
+                                                        'synced' => '✅',
+                                                        'failed' => '❌',
+                                                        'pending' => '⏳',
+                                                        default => '❓'
+                                                    };
+
+                                                    $phaseName = $phase->segment_name;
+                                                    if (strlen($phaseName) > 20) {
+                                                        $phaseName = substr($phaseName, 0, 17) . '...';
+                                                    }
+
+                                                    $lines[] = '<span class="text-xs text-gray-400" style="margin-left: 2.5rem;">' .
+                                                        $syncIcon . ' ' . $phaseName . ' (' . $phase->duration_minutes . 'min)' .
+                                                        '</span>';
+                                                }
+
+                                                if ($phaseCount > 4) {
+                                                    $lines[] = '<span class="text-xs text-gray-400 italic" style="margin-left: 2.5rem;">' .
+                                                        '... +' . ($phaseCount - 4) . ' weitere' .
+                                                        '</span>';
+                                                }
+                                            } catch (\Exception $e) {
+                                                // Fallback - no segments shown
+                                            }
+                                        }
+                                    } else {
+                                        // Standard appointment (non-composite)
+                                        if (strlen($serviceName) > 20) {
+                                            $serviceName = substr($serviceName, 0, 17) . '...';
+                                        }
+
+                                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
+
+                                        $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">' .
+                                            '✓ ' . $serviceName . ' - ' . $dateTime . ' → ' . $staffName .
+                                            '</span>';
+                                    }
+                                }
+
+                                // Add blank line between appointments
+                                if ($appointment !== $appointments->take(3)->last()) {
+                                    $lines[] = '';
+                                }
+                            }
+
+                            // Show "+X more" if there are more than 3 appointments
+                            if ($appointments->count() > 3) {
+                                $remaining = $appointments->count() - 3;
+                                $lines[] = '<span class="text-xs text-gray-500 italic">+' . $remaining . ' weitere</span>';
+                            }
+
+                            return new HtmlString(implode('<br>', $lines));
+                        })
+                        ->html()
+                        ->sortable(query: fn($query, $direction) =>
+                            $query->orderBy('appointments.starts_at', $direction)
+                                ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
+                        )
+                        ->tooltip(function (Call $record) {
+                            $appointments = $record->appointments;
+                            if ($appointments->isEmpty()) {
+                                return null;
+                            }
+
+                            $parts = [];
+                            $parts[] = '📋 TERMINE DIESES ANRUFS (' . $appointments->count() . '):';
+                            $parts[] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+
+                            foreach ($appointments as $index => $appointment) {
+                                if ($index > 0) {
+                                    $parts[] = '';
+                                    $parts[] = '---';
+                                    $parts[] = '';
+                                }
+
+                                // Status indicator
+                                $statusIcon = match($appointment->status) {
+                                    'cancelled' => '🚫',
+                                    'confirmed', 'scheduled', 'booked' => '✅',
+                                    'completed' => '✓',
+                                    default => '•'
+                                };
+
+                                $parts[] = $statusIcon . ' TERMIN #' . ($index + 1);
+
+                                // Service
+                                if ($appointment->service) {
+                                    $parts[] = '📋 Service: ' . $appointment->service->name;
+                                }
+
+                                // 🆕 CANCELLED: Show cancellation status first
+                                if ($appointment->status === 'cancelled') {
+                                    $parts[] = '⚠️ STATUS: STORNIERT';
+
+                                    // Get cancellation details
+                                    $cancellationSummary = $appointment->getCancellationSummary();
+                                    if ($cancellationSummary['cancelled_at']) {
+                                        $parts[] = '🚫 Storniert am: ' . $cancellationSummary['cancelled_at'];
+                                    }
+                                    if ($cancellationSummary['cancelled_by']) {
+                                        $parts[] = '👤 Storniert von: ' . $cancellationSummary['cancelled_by'];
+                                    }
+                                    if ($cancellationSummary['reason']) {
+                                        $parts[] = '💬 Grund: ' . $cancellationSummary['reason'];
+                                    }
+                                }
+
+                                // Date and time
+                                if ($appointment->starts_at) {
+                                    $start = \Carbon\Carbon::parse($appointment->starts_at);
+                                    $parts[] = '📅 Datum: ' . $start->format('d.m.Y');
+                                    $parts[] = '🕐 Zeit: ' . $start->format('H:i') . ($appointment->ends_at ? ' - ' . \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : '');
+                                }
+
+                                // Staff
+                                if ($appointment->staff) {
+                                    $parts[] = '👤 Mitarbeiter: ' . $appointment->staff->name;
+                                } else {
+                                    $parts[] = '⚠️ Mitarbeiter: Nicht zugewiesen';
+                                }
+                            }
+
+                            return implode("\n", $parts);
+                        }),
+
+                    // Staff column - DEPRECATED but kept for backwards compatibility (hidden)
+                    Tables\Columns\TextColumn::make('appointment_staff')
+                        ->label('Mitarbeiter:in')
+                        ->getStateUsing(function (Call $record) {
+                            // Smart accessor automatically loads appointment
+                            $appointment = $record->appointment;
+
+                            if (!$appointment) {
+                                return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
+                            }
+
+                            // Load appointment relationships if needed
+                            if (!$appointment->relationLoaded('service')) {
+                                $appointment->load(['service', 'staff']);
+                            }
+
+                            $output = [];
+
+                            // Show staff member prominently
+                            if ($appointment->staff) {
+                                $output[] = '<span class="text-xs font-medium text-blue-600">' . $appointment->staff->name . '</span>';
+                            } else {
+                                $output[] = '<span class="text-xs text-gray-400">Nicht zugewiesen</span>';
+                            }
+
+                            // Add service as secondary info (smaller, gray)
+                            if ($appointment->service) {
+                                $serviceName = \Str::limit($appointment->service->name, 20);
+                                $output[] = '<span class="text-xs text-gray-500">' . $serviceName . '</span>';
+                            }
+
+                            return new HtmlString(
+                                '<div class="flex flex-col gap-0.5">' .
+                                implode('', $output) .
+                                '</div>'
+                            );
+                        })
+                        ->html()
+                        ->tooltip(function (Call $record) {
+                            if (!$record->appointment) {
+                                return null;
+                            }
+
+                            $appointment = $record->appointment;
+
+                            $tooltip = "Mitarbeiter:innen-Details:\n";
+                            $tooltip .= "━━━━━━━━━━━━━━━━━━━\n";
+
+                            if ($appointment->staff) {
+                                $tooltip .= "Zuständige:r Mitarbeiter:in: " . $appointment->staff->name . "\n";
+                            } else {
+                                $tooltip .= "Status: Noch nicht zugewiesen\n";
+                            }
+
+                            if ($appointment->service) {
+                                $tooltip .= "\nService: " . $appointment->service->name . "\n";
+                                if ($appointment->service->duration) {
+                                    $tooltip .= "Standard-Dauer: " . $appointment->service->duration . " Min\n";
+                                }
+                            }
+
+                            return $tooltip;
+                        })
+                        ->toggleable()
+                        ->hidden(),  // 🚫 Hidden in favor of combined appointment_summary column
+
+                    // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
+                    Tables\Columns\TextColumn::make('service_type')
+                        ->label('Service / Preis')
+                        ->html()
+                        ->getStateUsing(function ($record) {
+                            try {
+                                // Use already-loaded appointments (eager-loaded on line 201)
+                                $appointments = $record->appointments ?? collect();
+
+                                // No appointments → show "-"
+                                if (!$appointments || $appointments->isEmpty()) {
+                                    return '<span class="text-gray-400 text-xs">-</span>';
+                                }
+
+                                // Build service + price display
+                                $lines = [];
+                                $seen = [];
+
+                                foreach ($appointments as $appt) {
+                                    if (!$appt || !$appt->service) continue;
+
+                                    $serviceId = $appt->service->id;
+                                    if (in_array($serviceId, $seen)) continue; // Skip duplicates
+                                    $seen[] = $serviceId;
+
+                                    // Use display_name if provided, otherwise use Cal.com name
+                                    $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
+                                        ? $appt->service->display_name
+                                        : $appt->service->name;
+                                    $price = $appt->service->price;
+
+                                    // 🔥 NEW 2025-11-20: Show cancelled status visually
+                                    $isCancelled = $appt->status === 'cancelled';
+                                    $textStyle = $isCancelled ? 'text-gray-400 line-through' : 'font-medium';
+                                    $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600';
+                                    $cancelIcon = $isCancelled ? ' 🚫' : '';
+
+                                    if ($price && $price > 0) {
+                                        // Price is stored as decimal(10,2) in EUR, not cents
+                                        // Display as full euros only (no cents)
+                                        $formattedPrice = number_format($price, 0, ',', '.');
+                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span><br>' .
+                                                  '<span class="text-xs ' . $priceColor . '">💰 ' . $formattedPrice . '€' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                    } else {
+                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span><br>' .
+                                                  '<span class="text-xs text-gray-400">Kein Preis' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                    }
+                                }
+
+                                if (empty($lines)) {
+                                    return '<span class="text-gray-400 text-xs">-</span>';
+                                }
+
+                                $text = implode('<br><br>', $lines);
+                                // Limit display length (increased for better readability)
+                                if (mb_strlen(strip_tags($text)) > 100) {
+                                    $text = mb_substr(strip_tags($text), 0, 100) . '...';
+                                }
+
+                                return '<div class="text-xs space-y-1 w-full">' . $text . '</div>';
+                            } catch (\Throwable $e) {
+                                return '<span class="text-gray-400 text-xs">-</span>';
+                            }
+                        })
+                        ->tooltip(function ($record) {
+                            try {
+                                // Use already-loaded appointments (eager-loaded on line 201)
+                                $appointments = $record->appointments ?? collect();
+
+                                if (!$appointments || $appointments->isEmpty()) {
+                                    return 'Kein Termin gebucht';
+                                }
+
+                                // Show details: Service name + Price + Duration
+                                $details = $appointments
+                                    ->filter(fn($appt) => $appt)
+                                    ->map(function ($appt) {
+                                        $name = $appt->service?->name ?? 'Unbekannt';
+                                        $duration = $appt->service?->duration ?? $appt->duration ?? '?';
+                                        $price = $appt->service?->price ?? 0;
+
+                                        if ($price && $price > 0) {
+                                            // Price is stored as decimal(10,2) in EUR, not cents
+                                            // Display as full euros only (no cents)
+                                            $formattedPrice = number_format($price, 0, ',', '.');
+                                            return "{$name} ({$duration} Min) - {$formattedPrice}€";
+                                        }
+                                        return "{$name} ({$duration} Min)";
+                                    })
+                                    ->implode("\n");
+
+                                return $details ?: 'Kein Termin gebucht';
+                            } catch (\Throwable $e) {
+                                return 'Fehler beim Laden';
+                            }
+                        })
+                        ->color(function ($state): string {
+                            if (strip_tags($state) === '-') return 'gray';
+                            return 'success';
+                        })
+                        ->icon(function ($state): ?string {
+                            if (strip_tags($state) === '-') return null;  // No icon for empty state
+                            return 'heroicon-m-calendar-days';
+                        })
+                        ->limit(150)
+                        ->wrap()
+                        ->searchable()
+                        ->sortable()
+                        ->toggleable(),
+
+                    // 🎙️ Combined: Summary + Audio Player (State of the Art)
+                    Tables\Columns\TextColumn::make('summary_audio')
+                        ->label('Zusammenfassung & Audio')
+                        ->html()
+                        ->getStateUsing(function ($record) {
+                            $summary = '';
+                            if ($record->summary) {
+                                $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                                $summaryDisplay = mb_strlen($summaryText) > 100 ? mb_substr($summaryText, 0, 100) . '...' : $summaryText;
+                                $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-2">' .
+                                          htmlspecialchars($summaryDisplay) .
+                                          '</div>';
+                            }
+
+                            $audio = '';
+                            if (!empty($record->recording_url)) {
+                                $url = $record->recording_url;
+                                $audio = '<div class="flex items-center gap-2 mt-2">
+                                            <audio controls preload="none"
+                                                   class="h-7 flex-shrink-0"
+                                                   style="height: 28px; max-width: 250px;"
+                                                   controlsList="nodownload">
+                                                <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
+                                                <source src="' . htmlspecialchars($url) . '" type="audio/wav">
+                                            </audio>
+                                          </div>';
+                            }
+
+                            if (empty($summary) && empty($audio)) {
+                                return '<span class="text-gray-400 text-xs">-</span>';
+                            }
+
+                            return '<div>' . $summary . $audio . '</div>';
+                        })
+                        ->tooltip(function ($record) {
+                            $lines = [];
+
+                            if ($record->summary) {
+                                $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                                $lines[] = "📝 Zusammenfassung:\n" . $summaryText;
+                            }
+
+                            if (!empty($record->recording_url)) {
+                                $lines[] = "🎙️ Audio-Aufnahme verfügbar";
+                            }
+
+                            // Add sentiment/mood information
+                            $sentiment = $record->sentiment;
+                            if ($sentiment) {
+                                $sentimentLabel = match(ucfirst(strtolower($sentiment))) {
+                                    'Positive' => '😊 Positiv',
+                                    'Neutral' => '😐 Neutral',
+                                    'Negative' => '😟 Negativ',
+                                    default => '❓ Unbekannt',
+                                };
+                                $lines[] = "💭 Stimmung: " . $sentimentLabel;
+                            }
+
+                            return !empty($lines) ? implode("\n\n", $lines) : 'Keine Informationen';
+                        })
+                        ->wrap()
+                        ->toggleable(),
+
+                    // 💰 SECURE Cost display with HIERARCHICAL access
+                    Tables\Columns\TextColumn::make('financials')
+                        ->label('Tel.-Kosten')
+                        ->getStateUsing(function (Call $record) {
+                            $user = auth()->user();
+
+                            // SECURITY: Verify tenant access before showing cost
+                            if (!$user) {
+                                return new HtmlString('<span class="text-gray-400">-</span>');
+                            }
+
+                            // COST HIERARCHY - 3 LEVELS:
+                            // Level 1 (AskProAI/Super-Admin): base_cost (OUR costs)
+                            // Level 2 (Reseller): reseller_cost (their costs from us)
+                            // Level 3 (Customer): customer_cost (what THEY charge their customers)
+
+                            // 🔐 LEVEL 1: Super-admin sees BASE costs + PROFIT
+                            if ($user->hasRole(['super-admin', 'super_admin', 'Super Admin'])) {
+                                $primaryCost = $record->base_cost ?? 0;
+                                // AskProAI's profit: what we charge reseller minus our cost
+                                $profitCost = ($record->reseller_cost ?? 0) - ($record->base_cost ?? 0);
+                                $costType = 'Cost';
+                                $profitLabel = 'AskProAI Profit';
+                            }
+                            // 🔐 LEVEL 2: Reseller can see RESELLER costs + PROFIT
+                            elseif ($user->hasRole(['reseller_admin', 'reseller_owner', 'reseller_support'])) {
+                                // Check if reseller owns this branch/company
+                                $canViewResellerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
+                                    || ($record->company_id && $user->company_id === $record->company_id);
+
+                                if ($canViewResellerCost) {
+                                    // Reseller sees THEIR cost
+                                    $primaryCost = $record->reseller_cost ?? $record->base_cost ?? 0;
+                                    // Reseller's profit: what customer pays minus what reseller pays us
+                                    $profitCost = ($record->customer_cost ?? 0) - ($record->reseller_cost ?? 0);
+                                    $costType = 'Your Cost';
+                                    $profitLabel = 'Your Profit';
+                                } else {
+                                    // SECURITY: Don't show costs for calls from other resellers
+                                    return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
+                                }
+                            }
+                            // 🔐 LEVEL 3: Customer can see THEIR costs only
+                            else {
+                                // Check if customer owns this branch (direct employee)
+                                $canViewCustomerCost = ($record->branch_id && $user->branches?->contains('id', $record->branch_id))
+                                    || ($record->company_id && $user->company_id === $record->company_id);
+
+                                if (!$canViewCustomerCost) {
+                                    // SECURITY: Don't show costs for calls from other customers/branches
+                                    return new HtmlString('<span class="text-gray-400 text-xs">-</span>');
+                                }
+
+                                // Customer sees what THEY are charged
+                                $primaryCost = $record->customer_cost ?? $record->cost ?? 0;
+                                if (is_numeric($record->cost) && $primaryCost == 0) {
+                                    $primaryCost = round($record->cost * 100);
+                                }
+                                $profitCost = 0; // Customer doesn't see profit
+                                $costType = 'Your Charge';
+                                $profitLabel = '';
+                            }
+
+                            $formattedCost = number_format($primaryCost / 100, 2, ',', '.');
+                            $formattedProfit = ($profitCost > 0) ? number_format($profitCost / 100, 2, ',', '.') : '0,00';
+
+                            // Build tooltip with cost breakdown
+                            $tooltipParts = [$costType . ': ' . $formattedCost . '€'];
+                            if ($profitCost > 0 && $profitLabel) {
+                                $tooltipParts[] = $profitLabel . ': ' . $formattedProfit . '€';
+                            }
+                            $tooltipText = implode(' | ', $tooltipParts);
+
+                            // Status indicator (actual vs estimated)
+                            $statusDot = '';
+                            if ($record->total_external_cost_eur_cents > 0) {
+                                // Green dot for actual costs
+                                $statusDot = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 ml-1" title="Tatsächliche Kosten"></span>';
+                            } else {
+                                // Yellow dot for estimated costs
+                                $statusDot = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400 ml-1" title="Geschätzte Kosten"></span>';
+                            }
+
+                            return new HtmlString(
+                                '<div class="flex flex-col gap-0.5">' .
+                                '<div class="flex items-center gap-1">' .
+                                '<span class="font-semibold" title="' . $tooltipText . '">' . $formattedCost . '€</span>' .
+                                ($profitCost > 0 ? '<span class="text-green-600 text-xs font-medium">(+' . $formattedProfit . '€)</span>' : '') .
+                                $statusDot .
+                                '</div>' .
+                                '<span class="text-xs text-gray-600">' . $costType . ($profitLabel ? ' / ' . $profitLabel : '') . '</span>' .
+                                '</div>'
+                            );
+                        })
+                        ->html()
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return $query->orderBy('customer_cost', $direction);
+                        })
+                        ->extraAttributes(['class' => 'font-mono'])
+                        ->toggleable(),
+
+                    // 🚫 CANCELLATION STATUS: Shows if call has cancelled appointments OR performed cancellations
+                    Tables\Columns\TextColumn::make('cancellation_status')
+                        ->label('Stornierungen')
+                        ->getStateUsing(function (Call $record) {
+                            // Case 1: This call HAS cancelled appointments (booking call)
+                            $cancelledAppointments = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->with(['modifications' => function ($q) {
+                                    $q->where('modification_type', 'cancel')
+                                      ->latest('created_at');
+                                }])
+                                ->get();
+
+                            if ($cancelledAppointments->isNotEmpty()) {
+                                $count = $cancelledAppointments->count();
+                                return $count === 1 ? 'Termin storniert' : "{$count} Termine storniert";
+                            }
+
+                            // Case 2: This call PERFORMED cancellations (cancellation call)
+                            // Find appointments cancelled via this call's retell_call_id
+                            if ($record->retell_call_id) {
+                                $performedCancellations = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->count();
+
+                                if ($performedCancellations > 0) {
+                                    return $performedCancellations === 1
+                                        ? 'Stornierung durchgeführt'
+                                        : "{$performedCancellations} Stornierungen durchgeführt";
+                                }
+                            }
+
+                            return null; // No cancellations related to this call
+                        })
+                        ->badge()
+                        ->color('warning') // Orange badge
+                        ->icon('heroicon-m-x-circle')
+                        ->tooltip(function (Call $record) {
+                            // Case 1: This call HAS cancelled appointments
+                            $cancelledAppointments = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->with(['modifications' => function ($q) {
+                                    $q->where('modification_type', 'cancel')
+                                      ->latest('created_at')
+                                      ->limit(1);
+                                }, 'service'])
+                                ->get();
+
+                            if ($cancelledAppointments->isNotEmpty()) {
+                                $lines = ['📋 TERMINE DIESES CALLS WURDEN STORNIERT:'];
+                                $lines[] = '';
+
+                                foreach ($cancelledAppointments as $appointment) {
+                                    $summary = $appointment->getCancellationSummary();
+
+                                    $lines[] = '━━━━━━━━━━━━━━━━━━━';
+                                    if ($appointment->service) {
+                                        $lines[] = '📋 Service: ' . $appointment->service->name;
+                                    }
+                                    if ($appointment->starts_at) {
+                                        $lines[] = '📅 Geplant: ' . $appointment->starts_at->format('d.m.Y H:i');
+                                    }
+                                    $lines[] = '🚫 Storniert am: ' . $summary['cancelled_at'];
+                                    $lines[] = '👤 Storniert von: ' . $summary['cancelled_by'];
+
+                                    if ($summary['reason']) {
+                                        $lines[] = '💬 Grund: ' . \Str::limit($summary['reason'], 50);
+                                    }
+                                    if ($summary['fee'] > 0) {
+                                        $lines[] = '💰 Gebühr: ' . number_format($summary['fee'], 2) . ' €';
+                                    }
+
+                                    $policyIcon = $summary['within_policy'] ? '✅' : '⚠️';
+                                    $policyText = $summary['within_policy'] ? 'Innerhalb Richtlinien' : 'Außerhalb Richtlinien';
+                                    $lines[] = $policyIcon . ' ' . $policyText;
+
+                                    if ($summary['cancellation_call_id'] && $summary['cancellation_call_id'] !== $record->id) {
+                                        $lines[] = '📞 Storniert in Anruf #' . $summary['cancellation_call_id'];
+                                        $lines[] = '   → Klick für Details zum Stornierungsanruf';
+                                    }
+                                }
+
+                                return implode("\n", $lines);
+                            }
+
+                            // Case 2: This call PERFORMED cancellations
+                            if ($record->retell_call_id) {
+                                $performedMods = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with(['appointment.service'])
+                                    ->get();
+
+                                if ($performedMods->isNotEmpty()) {
+                                    $lines = ['📞 IN DIESEM CALL WURDEN TERMINE STORNIERT:'];
+                                    $lines[] = '';
+
+                                    foreach ($performedMods as $mod) {
+                                        $appointment = $mod->appointment;
+                                        if (!$appointment) continue;
+
+                                        $lines[] = '━━━━━━━━━━━━━━━━━━━';
+                                        if ($appointment->service) {
+                                            $lines[] = '📋 Service: ' . $appointment->service->name;
+                                        }
+                                        if ($appointment->starts_at) {
+                                            $lines[] = '📅 War geplant: ' . $appointment->starts_at->format('d.m.Y H:i');
+                                        }
+                                        $lines[] = '🚫 Storniert am: ' . $mod->created_at->format('d.m.Y H:i');
+
+                                        if ($mod->reason) {
+                                            $lines[] = '💬 Grund: ' . \Str::limit($mod->reason, 50);
+                                        }
+                                        if ($mod->fee_charged > 0) {
+                                            $lines[] = '💰 Gebühr: ' . number_format($mod->fee_charged, 2) . ' €';
+                                        }
+
+                                        $policyIcon = $mod->within_policy ? '✅' : '⚠️';
+                                        $policyText = $mod->within_policy ? 'Innerhalb Richtlinien' : 'Außerhalb Richtlinien';
+                                        $lines[] = $policyIcon . ' ' . $policyText;
+
+                                        if ($appointment->call_id && $appointment->call_id !== $record->id) {
+                                            $lines[] = '📞 Ursprünglich gebucht in Anruf #' . $appointment->call_id;
+                                            $lines[] = '   → Klick für Details zum Buchungsanruf';
+                                        }
+                                    }
+
+                                    return implode("\n", $lines);
+                                }
+                            }
+
+                            return null;
+                        })
+                        ->url(function (Call $record) {
+                            // Case 1: If this call has cancelled appointments, link to cancellation call
+                            $cancelledAppointment = $record->appointments()
+                                ->where('status', 'cancelled')
+                                ->first();
+
+                            if ($cancelledAppointment) {
+                                $summary = $cancelledAppointment->getCancellationSummary();
+                                if ($summary['cancellation_call_id'] && $summary['cancellation_call_id'] !== $record->id) {
+                                    return CallResource::getUrl('view', ['record' => $summary['cancellation_call_id']]);
+                                }
+                            }
+
+                            // Case 2: If this call performed cancellations, link to booking call
+                            if ($record->retell_call_id) {
+                                $performedMod = \App\Models\AppointmentModification::query()
+                                    ->where('modification_type', 'cancel')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment')
+                                    ->first();
+
+                                if ($performedMod && $performedMod->appointment && $performedMod->appointment->call_id !== $record->id) {
+                                    return CallResource::getUrl('view', ['record' => $performedMod->appointment->call_id]);
+                                }
+                            }
+
+                            return null;
+                        }, shouldOpenInNewTab: false)
+                        ->toggleable(),
+
+                    // 🔥 NEW 2025-11-20: Call Relationships - Links between booking and cancellation calls
+                    Tables\Columns\ViewColumn::make('call_relationships')
+                        ->label('Verknüpfungen')
+                        ->view('filament.columns.call-relationships')
+                        ->toggleable(),
+        ];
+    }
+
+    /**
+     * Get compact columns (6 optimized columns)
+     *
+     * @return array
+     */
+    protected static function getCompactColumns(): array
+    {
+        return [
+// 1. Ereignis & Zeit (CONSOLIDATED: shows call outcome + appointment status)
+            Tables\Columns\ViewColumn::make('action_time_duration')
+                ->label('Ereignis / Zeit / Dauer')
+                ->view('filament.columns.action-time-duration')
+                ->sortable(query: fn($query, $direction) =>
+                    $query
+                        ->orderByRaw("CASE
+                            WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
+                            WHEN status = 'completed' THEN 1
+                            WHEN status IN ('missed','busy') THEN 2
+                            ELSE 3
+                            END {$direction}")
+                        ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
+                ),
+
+            // 2. Anrufer (unchanged from classic)
+            Tables\Columns\ViewColumn::make('anrufer_display')
+                ->label('Anrufer')
+                ->view('filament.columns.anrufer-3lines')
+                ->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query
+                        ->where(function ($q) use ($search) {
+                            $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
+                              ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
+                        });
+                })
+                ->sortable()
+                ->toggleable(),
+
+            // 3. Status (LEGACY: hidden - consolidated into Ereignis column)
+            Tables\Columns\TextColumn::make('booking_status')
+                ->label('Status (Legacy)')
+                ->getStateUsing(function (Call $record) {
+                    $appointments = $record->appointments;
+
+                    if ($appointments->isEmpty()) {
+                        return 'Offen';
+                    }
+
+                    // Check for active appointments
+                    $hasActive = $appointments->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])->isNotEmpty();
+                    $hasCancelled = $appointments->where('status', 'cancelled')->isNotEmpty();
+
+                    // Priority: Active > Cancelled > Offen
+                    if ($hasActive && $hasCancelled) {
+                        return 'Teilstorno';
+                    } elseif ($hasActive) {
+                        return 'Gebucht';
+                    } elseif ($hasCancelled) {
+                        return 'Storniert';
+                    }
+
+                    return 'Offen';
+                })
+                ->badge()
+                ->color(fn ($state) => match($state) {
+                    'Gebucht' => 'success',
+                    'Storniert' => 'warning',
+                    'Teilstorno' => 'info',
+                    'Offen' => 'danger',
+                    default => 'gray',
+                })
+                ->tooltip(function (Call $record) {
+                    $appointments = $record->appointments;
+                    if ($appointments->isEmpty()) {
+                        return 'Keine Termine in diesem Anruf';
+                    }
+
+                    $lines = ['📊 TERMIN-STATUS:'];
+                    $lines[] = '━━━━━━━━━━━━━━━━━━━';
+
+                    $active = $appointments->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending']);
+                    $cancelled = $appointments->where('status', 'cancelled');
+
+                    if ($active->isNotEmpty()) {
+                        $lines[] = "✅ Gebucht: {$active->count()} Termin" . ($active->count() > 1 ? 'e' : '');
+                    }
+
+                    if ($cancelled->isNotEmpty()) {
+                        $lines[] = "🚫 Storniert: {$cancelled->count()} Termin" . ($cancelled->count() > 1 ? 'e' : '');
+                    }
+
+                    return implode("\n", $lines);
+                })
+                ->hidden()  // 🚫 Hidden - consolidated into Ereignis column (rollback: remove this line)
+                ->toggleable(),
+
+            // 4. Termin (compact version of appointment_summary) - 🆕 2025-11-24: Enhanced for composite
+            Tables\Columns\TextColumn::make('appointment_summary')
+                ->label('Termin')
+                ->getStateUsing(function (Call $record) {
+                    $appointments = $record->appointments;
+
+                    if ($appointments->isEmpty()) {
+                        return new HtmlString('<span class="text-xs text-gray-400">-</span>');
+                    }
+
+                    $lines = [];
+                    foreach ($appointments->take(2) as $appointment) {
+                        if (!$appointment->starts_at) {
+                            continue;
+                        }
+
+                        $startDate = \Carbon\Carbon::parse($appointment->starts_at);
+                        $dateTime = $startDate->locale('de')->isoFormat('DD.MM HH:mm');
+
+                        if ($appointment->status === 'cancelled') {
+                            $lines[] = '<span class="text-xs text-orange-700">🚫 ' . $dateTime . '</span>';
+                        } else {
+                            // 🆕 2025-11-24: Check if composite
+                            $isComposite = $appointment->service && $appointment->service->composite;
+
+                            if ($isComposite) {
+                                $phaseCount = $appointment->phases()->where('staff_required', true)->count();
+                                $serviceName = \Str::limit($appointment->service->name, 15);
+                                $lines[] = '<span class="text-xs text-green-600 font-medium">📦 ' . $serviceName . ' (' . $phaseCount . ')</span>';
+                                $lines[] = '<span class="text-xs text-gray-500">   ' . $dateTime . '</span>';
+                            } else {
+                                $staffName = $appointment->staff ? \Str::limit($appointment->staff->name, 12) : 'Kein MA';
+                                $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
+                                $lines[] = '<span class="text-xs ' . $staffColor . '">✓ ' . $dateTime . ' → ' . $staffName . '</span>';
+                            }
+                        }
+                    }
+
+                    if ($appointments->count() > 2) {
+                        $remaining = $appointments->count() - 2;
+                        $lines[] = '<span class="text-xs text-gray-500">+' . $remaining . '</span>';
+                    }
+
+                    return new HtmlString(implode('<br>', $lines));
+                })
+                ->html()
+                ->sortable(query: fn($query, $direction) =>
+                    $query->orderBy('appointments.starts_at', $direction)
+                        ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
+                )
+                ->tooltip(function (Call $record) {
+                    $appointments = $record->appointments;
+                    if ($appointments->isEmpty()) {
+                        return null;
+                    }
+
+                    $parts = [];
+                    $parts[] = '📋 TERMINE (' . $appointments->count() . '):';
+                    $parts[] = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+
+                    foreach ($appointments as $index => $appointment) {
+                        if ($index > 0) {
+                            $parts[] = '';
+                            $parts[] = '---';
+                            $parts[] = '';
+                        }
+
+                        $statusIcon = match($appointment->status) {
+                            'cancelled' => '🚫',
+                            'confirmed', 'scheduled', 'booked' => '✅',
+                            'completed' => '✓',
+                            default => '•'
+                        };
+
+                        $parts[] = $statusIcon . ' TERMIN #' . ($index + 1);
+
+                        if ($appointment->service) {
+                            $parts[] = '📋 Service: ' . $appointment->service->name;
+
+                            // 🆕 2025-11-24: Show segments for composite services
+                            if ($appointment->service->composite) {
+                                try {
+                                    $phases = $appointment->phases()->where('staff_required', true)->orderBy('sequence_order')->get();
+                                    if ($phases->isNotEmpty()) {
+                                        $parts[] = '📦 Compound-Service (' . $phases->count() . ' Segmente):';
+                                        foreach ($phases as $phase) {
+                                            $syncIcon = match($phase->calcom_sync_status) {
+                                                'synced' => '✅',
+                                                'failed' => '❌',
+                                                'pending' => '⏳',
+                                                default => '❓'
+                                            };
+                                            $parts[] = '   ' . $syncIcon . ' ' . $phase->segment_name . ' (' . $phase->duration_minutes . 'min)';
+                                        }
+                                    }
+                                } catch (\Exception $e) {
+                                    // Silently handle if phases can't be loaded
+                                }
+                            }
+                        }
+
+                        if ($appointment->status === 'cancelled') {
+                            $parts[] = '⚠️ STATUS: STORNIERT';
+                            $cancellationSummary = $appointment->getCancellationSummary();
+                            if ($cancellationSummary['cancelled_at']) {
+                                $parts[] = '🚫 Storniert am: ' . $cancellationSummary['cancelled_at'];
+                            }
+                            if ($cancellationSummary['cancelled_by']) {
+                                $parts[] = '👤 Von: ' . $cancellationSummary['cancelled_by'];
+                            }
+                        }
+
+                        if ($appointment->starts_at) {
+                            $start = \Carbon\Carbon::parse($appointment->starts_at);
+                            $parts[] = '📅 Datum: ' . $start->format('d.m.Y');
+                            $parts[] = '🕐 Zeit: ' . $start->format('H:i') . ($appointment->ends_at ? ' - ' . \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : '');
+                        }
+
+                        if ($appointment->staff) {
+                            $parts[] = '👤 Mitarbeiter: ' . $appointment->staff->name;
+                        } else {
+                            $parts[] = '⚠️ Mitarbeiter: Nicht zugewiesen';
+                        }
+                    }
+
+                    return implode("\n", $parts);
+                }),
+
+            // 5. Service/Preis (unchanged from classic)
+            Tables\Columns\TextColumn::make('service_type')
+                ->label('Service')
+                ->html()
+                ->getStateUsing(function ($record) {
+                    try {
+                        $appointments = $record->appointments ?? collect();
+
+                        if (!$appointments || $appointments->isEmpty()) {
+                            return '<span class="text-gray-400 text-xs">-</span>';
+                        }
+
+                        $lines = [];
+                        $seen = [];
+
+                        foreach ($appointments as $appt) {
+                            if (!$appt || !$appt->service) continue;
+
+                            $serviceId = $appt->service->id;
+                            if (in_array($serviceId, $seen)) continue;
+                            $seen[] = $serviceId;
+
+                            $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
+                                ? $appt->service->display_name
+                                : $appt->service->name;
+                            $price = $appt->service->price;
+
+                            $isCancelled = $appt->status === 'cancelled';
+                            $textStyle = $isCancelled ? 'text-gray-400 line-through' : 'font-medium';
+                            $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600';
+                            $cancelIcon = $isCancelled ? ' 🚫' : '';
+
+                            if ($price && $price > 0) {
+                                $formattedPrice = number_format($price, 0, ',', '.');
+                                $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span><br>' .
+                                          '<span class="text-xs ' . $priceColor . '">💰 ' . $formattedPrice . '€</span>';
+                            } else {
+                                $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span>';
+                            }
+                        }
+
+                        if (empty($lines)) {
+                            return '<span class="text-gray-400 text-xs">-</span>';
+                        }
+
+                        return '<div class="text-xs space-y-1">' . implode('<br>', $lines) . '</div>';
+                    } catch (\Throwable $e) {
+                        return '<span class="text-gray-400 text-xs">-</span>';
+                    }
+                })
+                ->tooltip(function ($record) {
+                    try {
+                        $appointments = $record->appointments ?? collect();
+
+                        if (!$appointments || $appointments->isEmpty()) {
+                            return 'Kein Termin gebucht';
+                        }
+
+                        $details = $appointments
+                            ->filter(fn($appt) => $appt)
+                            ->map(function ($appt) {
+                                $name = $appt->service?->name ?? 'Unbekannt';
+                                $duration = $appt->service?->duration ?? $appt->duration ?? '?';
+                                $price = $appt->service?->price ?? 0;
+
+                                if ($price && $price > 0) {
+                                    $formattedPrice = number_format($price, 0, ',', '.');
+                                    return "{$name} ({$duration} Min) - {$formattedPrice}€";
+                                }
+                                return "{$name} ({$duration} Min)";
+                            })
+                            ->implode("\n");
+
+                        return $details ?: 'Kein Termin gebucht';
+                    } catch (\Throwable $e) {
+                        return 'Fehler beim Laden';
+                    }
+                })
+                ->wrap()
+                ->toggleable(),
+
+            // 6. Details (unchanged from classic - summary + audio)
+            Tables\Columns\TextColumn::make('summary_audio')
+                ->label('Details')
+                ->html()
+                ->getStateUsing(function ($record) {
+                    $summary = '';
+                    if ($record->summary) {
+                        $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                        $summaryDisplay = mb_strlen($summaryText) > 50 ? mb_substr($summaryText, 0, 50) . '...' : $summaryText;
+                        $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-1">' .
+                                  htmlspecialchars($summaryDisplay) .
+                                  '</div>';
+                    }
+
+                    $audio = '';
+                    if (!empty($record->recording_url)) {
+                        $url = $record->recording_url;
+
+                        // Show audio duration if available
+                        $durationLabel = '';
+                        if ($record->duration_sec) {
+                            $durationLabel = '<div class="text-xs text-gray-500 mb-1">🎙️ ' . gmdate("i:s", $record->duration_sec) . '</div>';
+                        }
+
+                        $audio = $durationLabel . '<div class="flex items-center gap-1 mt-1">
+                                    <audio controls preload="none"
+                                           class="h-6 flex-shrink-0"
+                                           style="height: 24px; max-width: 200px;"
+                                           controlsList="nodownload">
+                                        <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
+                                        <source src="' . htmlspecialchars($url) . '" type="audio/wav">
+                                    </audio>
+                                  </div>';
+                    }
+
+                    if (empty($summary) && empty($audio)) {
+                        return '<span class="text-gray-400 text-xs">-</span>';
+                    }
+
+                    return '<div>' . $summary . $audio . '</div>';
+                })
+                ->tooltip(function ($record) {
+                    $lines = [];
+
+                    if ($record->summary) {
+                        $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
+                        $lines[] = "📝 Zusammenfassung:\n" . $summaryText;
+                    }
+
+                    if (!empty($record->recording_url)) {
+                        $lines[] = "🎙️ Audio-Aufnahme verfügbar";
+                    }
+
+                    $sentiment = $record->sentiment;
+                    if ($sentiment) {
+                        $sentimentLabel = match(ucfirst(strtolower($sentiment))) {
+                            'Positive' => '😊 Positiv',
+                            'Neutral' => '😐 Neutral',
+                            'Negative' => '😟 Negativ',
+                            default => '❓ Unbekannt',
+                        };
+                        $lines[] = "💭 Stimmung: " . $sentimentLabel;
+                    }
+
+                    return !empty($lines) ? implode("\n\n", $lines) : 'Keine Informationen';
+                })
+                ->wrap()
+                ->toggleable(),
+        ];
+    }
+
+    /**
+     * Get user's preferred view mode
+     *
+     * @return string 'compact' or 'classic'
+     */
+    protected static function getUserViewMode(): string
+    {
+        if (!auth()->check()) {
+            return 'compact'; // Default for unauthenticated
+        }
+
+        return \App\Models\UserPreference::get(
+            auth()->id(),
+            'call_list_view_mode',
+            'compact' // DEFAULT: Compact view
+        )['mode'] ?? 'compact';
+    }
+
+    /**
+     * 🔧 FIX 2025-11-24: Resolve record route binding for Super Admin access
+     *
+     * Super Admins should see ALL calls across all companies,
+     * but Filament's default behavior filters by company_id.
+     */
+    public static function resolveRecordRouteBinding($key): ?\Illuminate\Database\Eloquent\Model
+    {
+        $user = auth()->user();
+
+        // Super Admins bypass company scoping
+        if ($user && $user->hasRole(['super_admin', 'Super Admin'])) {
+            return static::getModel()::withoutGlobalScopes()->find($key);
+        }
+
+        // Regular users get default scoped behavior
+        return parent::resolveRecordRouteBinding($key);
     }
 
     public static function getPages(): array

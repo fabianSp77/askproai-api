@@ -343,6 +343,103 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Customer Portal MVP - Detailed Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Detailed configuration for Customer Portal MVP features including
+    | invitation system, email templates, security, and integrations.
+    |
+    | @since 2025-11-24 (Customer Portal MVP)
+    */
+
+    'customer_portal_mvp' => [
+        /**
+         * Master switch - Enable MVP features
+         */
+        'enabled' => env('FEATURE_CUSTOMER_PORTAL_MVP', false),
+
+        /**
+         * Pilot Mode - Restrict to pilot companies
+         */
+        'pilot_mode' => env('CUSTOMER_PORTAL_PILOT_MODE', true),
+
+        /**
+         * Pilot company IDs
+         */
+        'pilot_companies' => array_filter(
+            array_map('intval', explode(',', env('CUSTOMER_PORTAL_PILOT_COMPANIES', '')))
+        ),
+
+        /**
+         * Invitation System
+         */
+        'invitations' => [
+            'token_lifetime_hours' => env('CUSTOMER_PORTAL_INVITATION_LIFETIME', 72),
+            'max_active_per_email' => env('CUSTOMER_PORTAL_MAX_INVITATIONS', 3),
+            'auto_expire_enabled' => true,
+        ],
+
+        /**
+         * Email Settings
+         */
+        'email' => [
+            'queue' => env('CUSTOMER_PORTAL_EMAIL_QUEUE', 'emails'),
+            'max_attempts' => 3,
+            'retry_backoff_minutes' => [5, 30, 120],
+            'from_name' => env('CUSTOMER_PORTAL_EMAIL_FROM_NAME', config('app.name')),
+        ],
+
+        /**
+         * Session & Authentication
+         */
+        'auth' => [
+            'sanctum_token_lifetime_minutes' => env('CUSTOMER_PORTAL_SESSION_LIFETIME', 10080), // 7 days
+            'require_email_verification' => false,
+            'two_factor_enabled' => false,
+        ],
+
+        /**
+         * Security
+         */
+        'security' => [
+            'rate_limit_per_minute' => env('CUSTOMER_PORTAL_RATE_LIMIT', 60),
+            'max_reschedules_per_month' => 3,
+            'max_cancellations_per_month' => 2,
+        ],
+
+        /**
+         * UI/UX Features
+         */
+        'ui' => [
+            'show_appointment_alternatives' => true,
+            'max_alternatives_displayed' => 5,
+            'enable_cancellation_reasons' => true,
+            'show_appointment_history' => true,
+            'enable_notifications' => false, // Phase 2
+        ],
+
+        /**
+         * Cal.com Integration
+         */
+        'calcom' => [
+            'sync_enabled' => true,
+            'circuit_breaker_enabled' => true,
+            'circuit_breaker_threshold' => 5,
+            'circuit_breaker_timeout' => 60,
+        ],
+
+        /**
+         * Monitoring
+         */
+        'monitoring' => [
+            'track_customer_actions' => true,
+            'log_appointment_changes' => true,
+            'send_analytics_events' => false,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Parallel Cal.com Booking (Performance Optimization)
     |--------------------------------------------------------------------------
     |

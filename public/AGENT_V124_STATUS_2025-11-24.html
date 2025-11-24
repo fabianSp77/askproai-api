@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent V124 - Deployment Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 20px 0;
+        }
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 6px solid #27ae60;
+        }
+        .status-section.warning {
+            border-left-color: #f39c12;
+        }
+        .status-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .check-item:hover {
+            transform: translateX(5px);
+        }
+        .check-icon {
+            font-size: 2em;
+            margin-right: 20px;
+            min-width: 40px;
+        }
+        .check-content {
+            flex: 1;
+        }
+        .check-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .check-detail {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .code-inline {
+            background: #ecf0f1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        .test-result {
+            background: linear-gradient(135deg, #e6f7ed 0%, #d4edda 100%);
+            border: 2px solid #27ae60;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .test-result h3 {
+            color: #27ae60;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .test-metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+        }
+        .test-metric-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .test-metric-value {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .next-steps {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 6px solid #f39c12;
+        }
+        .next-steps h2 {
+            color: #856404;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: flex;
+            align-items: start;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+        .step-number {
+            background: #f39c12;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .step-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .log-example {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+        .log-success {
+            color: #2ecc71;
+        }
+        .log-info {
+            color: #3498db;
+        }
+        .log-warning {
+            color: #f39c12;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+        .alert-box {
+            background: #e8f4f8;
+            border: 2px solid #3498db;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .alert-box strong {
+            color: #2874a6;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Agent V124 Deployment Status</h1>
+        <div style="text-align: center;">
+            <span class="version-badge">V124 - Staff-Specific Availability Fix</span>
+        </div>
+
+        <!-- Backend Status -->
+        <div class="status-section">
+            <h2>✅ Backend Status</h2>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Code Deployment</div>
+                    <div class="check-detail">
+                        <code class="code-inline">getEventTypeForStaff()</code> Methode gefunden in
+                        <code class="code-inline">RetellFunctionCallHandler.php</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Database Mapping</div>
+                    <div class="check-detail">
+                        CalcomEventMap für Service 444 (Dauerwelle) + Fabian Spitzer #2 existiert
+                        <br>Event Type ID: <code class="code-inline">3985915</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Unit Tests</div>
+                    <div class="check-detail">
+                        3/3 Tests PASSED - Methode funktioniert wie erwartet
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">preferred_staff_id Integration</div>
+                    <div class="check-detail">
+                        Parameter wird korrekt extrahiert und verwendet (Zeile 1020, 1066)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Status -->
+        <div class="status-section">
+            <h2>✅ Retell Agent Status</h2>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Agent Published</div>
+                    <div class="check-detail">
+                        Agent V124 ist aktiv und published
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Tool Definition</div>
+                    <div class="check-detail">
+                        <code class="code-inline">check_availability_v17</code> enthält
+                        <code class="code-inline">preferred_staff_id</code> Parameter
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Parameter Mapping</div>
+                    <div class="check-detail">
+                        <code class="code-inline">{{preferred_staff_id}}</code> wird korrekt gemappt
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">✅</div>
+                <div class="check-content">
+                    <div class="check-title">Customer Recognition</div>
+                    <div class="check-detail">
+                        <code class="code-inline">check_customer</code> setzt preferred_staff_id automatisch
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-result">
+            <h3>🧪 Automatische Tests - Alle PASSED</h3>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Test 1: Keine Staff-Präferenz</span>
+                <span class="test-metric-value">✅ PASS (Default Event Type)</span>
+            </div>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Test 2: Fabian Spitzer #2</span>
+                <span class="test-metric-value">✅ PASS (Event Type 3985915)</span>
+            </div>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Test 3: Emma Williams</span>
+                <span class="test-metric-value">✅ PASS (Event Type 3757803)</span>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="next-steps">
+            <h2>📋 Nächste Schritte - E2E Verifikation</h2>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Testanruf durchführen</div>
+                    <div class="step-description">
+                        Mit bekannter Telefonnummer anrufen (die einen preferred_staff hat)
+                        <br>z.B. Kunde der bereits bei Fabian Spitzer war
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Service anfragen</div>
+                    <div class="step-description">
+                        "Ich möchte morgen um 10 Uhr eine Dauerwelle"
+                        <br>Agent sollte check_availability aufrufen
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Logs überwachen</div>
+                    <div class="step-description">
+                        Terminal: <code class="code-inline">tail -f storage/logs/laravel.log</code>
+                        <br>Erwartete Log-Einträge siehe unten
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Verfügbarkeitsantwort prüfen</div>
+                    <div class="step-description">
+                        Agent sollte spezifisch sagen: "Fabian Spitzer hat um 10 Uhr..."
+                        <br>NICHT: "Der Termin ist frei" (generisch)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expected Logs -->
+        <div class="alert-box">
+            <strong>🔍 Erwartete Log-Einträge (Bei Staff-Präferenz):</strong>
+        </div>
+
+        <div class="log-example">
+<span class="log-info">👤 Staff preference received in check_availability</span>
+{
+  "call_id": "01234567-89ab-cdef-0123-456789abcdef",
+  "preferred_staff_id": "9f47fda1-977c-47aa-a87a-0e8cbeaeb119",
+  "service_name": "Dauerwelle",
+  "requested_time": "2025-11-25 10:00"
+}
+
+<span class="log-success">✅ Found staff-specific event type (composite)</span>
+{
+  "service_id": 444,
+  "staff_id": "9f47fda1-977c-47aa-a87a-0e8cbeaeb119",
+  "segment_key": "A",
+  "event_type_id": 3985915,
+  "event_type_slug": "dauerwelle-segment-a-fabian-spitzer-2"
+}
+
+<span class="log-info">Using event type for availability check</span>
+{
+  "event_type_id": 3985915,  <span class="log-success">← Staff-spezifisch!</span>
+  "preferred_staff_id": "9f47fda1-977c-47aa-a87a-0e8cbeaeb119",
+  "is_staff_specific": true
+}
+        </div>
+
+        <div class="alert-box">
+            <strong>⚠️ Mögliche Warnung (nicht kritisch):</strong>
+        </div>
+
+        <div class="log-example">
+<span class="log-warning">⚠️ Fallback to default event type</span>
+{
+  "reason": "No CalcomEventMap entry found for this staff/service combination"
+}
+
+<span style="color: #ecf0f1;">→ URSACHE: Staff noch nicht diesem Service zugewiesen
+→ LÖSUNG: CalcomEventMap Eintrag erstellen
+→ VERHALTEN: System verwendet Default Event Type (funktioniert trotzdem)</span>
+        </div>
+
+        <!-- Monitoring Commands -->
+        <div class="status-section warning">
+            <h2>📊 Monitoring Befehle</h2>
+
+            <div class="check-item">
+                <div class="check-icon">🔍</div>
+                <div class="check-content">
+                    <div class="check-title">Live Logs anzeigen</div>
+                    <div class="check-detail">
+                        <code class="code-inline">tail -f storage/logs/laravel.log | grep -E "(Staff preference|staff-specific|preferred_staff_id)"</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">📈</div>
+                <div class="check-content">
+                    <div class="check-title">Fehlende Mappings finden</div>
+                    <div class="check-detail">
+                        <code class="code-inline">php artisan tinker</code> und Query aus Dokumentation ausführen
+                    </div>
+                </div>
+            </div>
+
+            <div class="check-item">
+                <div class="check-icon">🎯</div>
+                <div class="check-content">
+                    <div class="check-title">Doppelbuchungs-Rate prüfen</div>
+                    <div class="check-detail">
+                        Filament Dashboard → Calls → Filter by Status "failed_sync"
+                        <br>Erwartung: 0% (vorher: ~2-5%)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Criteria -->
+        <div class="test-result">
+            <h3>✅ Erfolgs-Kriterien</h3>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Log zeigt "Staff preference received"</span>
+                <span class="test-metric-value">✅ MUSS VORHANDEN SEIN</span>
+            </div>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Event Type ID ist staff-spezifisch (3985915)</span>
+                <span class="test-metric-value">✅ NICHT Default (3757773)</span>
+            </div>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Agent nennt Staff-Namen in Antwort</span>
+                <span class="test-metric-value">✅ "Fabian Spitzer hat..."</span>
+            </div>
+
+            <div class="test-metric">
+                <span class="test-metric-label">Keine Doppelbuchungen</span>
+                <span class="test-metric-value">✅ Cal.com lehnt nicht mehr ab</span>
+            </div>
+        </div>
+
+        <!-- Documentation Links -->
+        <div class="alert-box">
+            <strong>📚 Weiterführende Dokumentation:</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                <li><a href="STAFF_AVAILABILITY_FIX_COMPLETE_GUIDE_2025-11-24.html" target="_blank">
+                    Vollständige Implementierungsanleitung
+                </a></li>
+                <li><a href="../STAFF_AVAILABILITY_FIX_IMPLEMENTATION_2025-11-24.md" target="_blank">
+                    Technische Implementation (Markdown)
+                </a></li>
+                <li><a href="../TECHNICAL_FIX_STAFF_AVAILABILITY.md" target="_blank">
+                    Original Technische Spezifikation
+                </a></li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>Status:</strong> ✅ DEPLOYMENT COMPLETE - READY FOR E2E TESTING</p>
+            <p><strong>Datum:</strong> 2025-11-24</p>
+            <p><strong>Version:</strong> Agent V124 + Backend Code deployed</p>
+            <p style="margin-top: 20px; color: #3498db;">
+                <strong>Bei Problemen:</strong> Logs prüfen oder die vollständige Dokumentation konsultieren
+            </p>
+        </div>
+    </div>
+</body>
+</html>

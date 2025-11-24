@@ -21,7 +21,7 @@ class CallPolicy
         }
 
         // Also allow full access for admin role
-        if ($user->hasRole(['admin', 'Admin'])) {
+        if ($user->hasRole(['admin', 'Admin', 'super_admin', 'Super Admin'])) {
             return true;
         }
 
@@ -40,6 +40,8 @@ class CallPolicy
         return $user->hasAnyRole([
             // Admin Panel roles
             'admin',
+            'super_admin',
+            'Super Admin',
             'manager',
             'staff',
             'receptionist',
@@ -63,8 +65,8 @@ class CallPolicy
      */
     public function view(User $user, Call $call): bool
     {
-        // Level 1: Admin can view all calls (including variations)
-        if ($user->hasRole(['admin', 'Admin'])) {
+        // Level 1: Admin/Super Admin can view all calls (including variations)
+        if ($user->hasRole(['admin', 'Admin', 'super_admin', 'Super Admin'])) {
             return true;
         }
 
@@ -98,7 +100,7 @@ class CallPolicy
         }
 
         // Allow viewing calls without company_id for admin users
-        if (!$call->company_id && $user->hasRole(['admin', 'Admin', 'manager'])) {
+        if (!$call->company_id && $user->hasRole(['admin', 'Admin', 'super_admin', 'Super Admin', 'manager'])) {
             return true;
         }
 
@@ -111,7 +113,7 @@ class CallPolicy
     public function create(User $user): bool
     {
         // Calls are usually created automatically by the system
-        return $user->hasRole('admin');
+        return $user->hasRole(['admin', 'super_admin', 'Super Admin']);
     }
 
     /**
@@ -120,7 +122,7 @@ class CallPolicy
     public function update(User $user, Call $call): bool
     {
         // Admin can update all calls
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole(['admin', 'super_admin', 'Super Admin'])) {
             return true;
         }
 
@@ -151,7 +153,7 @@ class CallPolicy
     public function delete(User $user, Call $call): bool
     {
         // Only admins can delete call records
-        return $user->hasRole('admin');
+        return $user->hasRole(['admin', 'super_admin', 'Super Admin']);
     }
 
     /**
@@ -159,7 +161,7 @@ class CallPolicy
      */
     public function restore(User $user, Call $call): bool
     {
-        return $user->hasRole('admin');
+        return $user->hasRole(['admin', 'super_admin', 'Super Admin']);
     }
 
     /**
@@ -181,7 +183,7 @@ class CallPolicy
         }
 
         // Admin can play all recordings
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole(['admin', 'super_admin', 'Super Admin'])) {
             return true;
         }
 
