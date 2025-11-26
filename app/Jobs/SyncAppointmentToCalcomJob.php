@@ -564,25 +564,76 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
     /**
      * Sync RESCHEDULE action to Cal.com
      *
+     * 🔧 FIX 2025-11-25: Use UID instead of numeric ID for PATCH endpoint
+     * Root cause: Cal.com V2 API returns 404 when using numeric ID
+     * Solution: Use calcom_v2_booking_uid (string) for reschedule
+     *
+     * 🔧 FIX 2025-11-25: Fallback to CREATE only if booking truly doesn't exist
+     *
      * @param CalcomV2Client $client Cal.com API client
      * @return \Illuminate\Http\Client\Response
      */
     protected function syncReschedule(CalcomV2Client $client)
     {
+        // 🔧 FIX 2025-11-25: Use UID (string) instead of ID (int)
+        // Cal.com V2 API requires UID for PATCH endpoint
+        $calcomBookingUid = $this->appointment->calcom_v2_booking_uid;
         $calcomBookingId = $this->appointment->calcom_v2_booking_id;
 
-        if (!$calcomBookingId) {
-            throw new \RuntimeException("No Cal.com booking ID to reschedule (appointment_id: {$this->appointment->id})");
+        // If no booking UID exists, try to find it in Cal.com
+        // DO NOT fall back to CREATE - this would send "Neuer Termin" email!
+        if (!$calcomBookingUid) {
+            $this->safeWarning('⚠️ No Cal.com booking UID for reschedule - searching Cal.com', [
+                'appointment_id' => $this->appointment->id,
+                'calcom_booking_id' => $calcomBookingId,
+            ], 'calcom');
+
+            // Try to find the booking in Cal.com
+            $foundBooking = $this->tryFindBookingInCalcom($client);
+
+            if ($foundBooking) {
+                // Found it! Update our record and use it
+                $calcomBookingUid = $foundBooking['uid'];
+                $this->appointment->update([
+                    'calcom_v2_booking_id' => $foundBooking['id'],
+                    'calcom_v2_booking_uid' => $foundBooking['uid'],
+                ]);
+                $this->safeInfo('✅ Found booking UID in Cal.com', [
+                    'appointment_id' => $this->appointment->id,
+                    'found_uid' => $calcomBookingUid,
+                ], 'calcom');
+            } else {
+                // No booking found - mark for manual review
+                $this->safeError('❌ No Cal.com booking found for reschedule', [
+                    'appointment_id' => $this->appointment->id,
+                    'action' => 'Marked for manual review',
+                ], 'calcom');
+
+                $this->appointment->update([
+                    'calcom_sync_status' => 'failed',
+                    'sync_error_message' => 'Reschedule failed: No Cal.com booking exists. Manual sync required.',
+                    'requires_manual_review' => true,
+                    'manual_review_flagged_at' => now(),
+                ]);
+
+                // Return a fake 404 response to trigger error handling
+                return new \Illuminate\Http\Client\Response(
+                    new \GuzzleHttp\Psr7\Response(404, [], json_encode([
+                        'error' => 'No Cal.com booking found for reschedule'
+                    ]))
+                );
+            }
         }
 
         $this->safeDebug('📤 Sending RESCHEDULE to Cal.com', [
             'appointment_id' => $this->appointment->id,
+            'calcom_booking_uid' => $calcomBookingUid,
             'calcom_booking_id' => $calcomBookingId,
             'new_start' => $this->appointment->starts_at->toIso8601String(),
         ], 'calcom');
 
-        return $client->rescheduleBooking(
-            bookingId: (int) $calcomBookingId,
+        $response = $client->rescheduleBooking(
+            bookingUid: $calcomBookingUid,  // 🔧 FIX: Use UID, not ID
             data: [
                 'start' => $this->appointment->starts_at->toIso8601String(),
                 'end' => $this->appointment->ends_at->toIso8601String(),
@@ -590,6 +641,184 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
                 'reason' => 'Rescheduled via CRM',
             ]
         );
+
+        // 🔧 FIX 2025-11-25: Handle 404 - booking not found in Cal.com
+        //
+        // CRITICAL: Do NOT fall back to syncCreate() here!
+        // Reason: syncCreate() sends a "Neuer Termin" email from Cal.com,
+        // which confuses customers who expect a "Verschoben" email.
+        //
+        // Instead:
+        // 1. Try to find the booking in Cal.com by searching
+        // 2. If found → update our UID and retry reschedule
+        // 3. If not found → mark for manual review (do NOT create new booking)
+        if ($response->status() === 404) {
+            $this->safeWarning('⚠️ Cal.com booking not found (404) during reschedule', [
+                'appointment_id' => $this->appointment->id,
+                'old_booking_uid' => $calcomBookingUid,
+                'old_booking_id' => $calcomBookingId,
+                'new_start' => $this->appointment->starts_at->toIso8601String(),
+            ], 'calcom');
+
+            // Try to find the correct booking in Cal.com
+            $foundBooking = $this->tryFindBookingInCalcom($client);
+
+            if ($foundBooking) {
+                // Found the booking! Update our UID and retry
+                $this->safeInfo('✅ Found booking in Cal.com, retrying reschedule', [
+                    'appointment_id' => $this->appointment->id,
+                    'found_booking_id' => $foundBooking['id'],
+                    'found_booking_uid' => $foundBooking['uid'],
+                ], 'calcom');
+
+                $this->appointment->update([
+                    'calcom_v2_booking_id' => $foundBooking['id'],
+                    'calcom_v2_booking_uid' => $foundBooking['uid'],
+                ]);
+
+                // Retry reschedule with correct UID
+                return $client->rescheduleBooking(
+                    bookingUid: $foundBooking['uid'],
+                    data: [
+                        'start' => $this->appointment->starts_at->toIso8601String(),
+                        'end' => $this->appointment->ends_at->toIso8601String(),
+                        'timeZone' => $this->appointment->booking_timezone ?? 'Europe/Berlin',
+                        'reason' => 'Rescheduled via CRM',
+                    ]
+                );
+            }
+
+            // Booking truly doesn't exist - mark for manual review
+            // DO NOT create new booking (würde "Neuer Termin" Email senden!)
+            $this->safeError('❌ Cal.com booking not found and cannot be recovered', [
+                'appointment_id' => $this->appointment->id,
+                'old_booking_uid' => $calcomBookingUid,
+                'action' => 'Marked for manual review - please create booking manually in Cal.com',
+            ], 'calcom');
+
+            $this->appointment->update([
+                'calcom_sync_status' => 'failed',
+                'sync_error_message' => 'Reschedule failed: Booking not found in Cal.com (404). Manual sync required.',
+                'requires_manual_review' => true,
+                'manual_review_flagged_at' => now(),
+            ]);
+
+            // Return the original 404 response to trigger proper error handling
+            return $response;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Try to find the booking in Cal.com by searching
+     *
+     * When our stored booking UID is invalid/stale, we try to find the correct
+     * booking by matching customer email and approximate time.
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @return array|null Found booking data or null
+     */
+    protected function tryFindBookingInCalcom(CalcomV2Client $client): ?array
+    {
+        try {
+            $this->appointment->load('customer');
+
+            if (!$this->appointment->customer || !$this->appointment->customer->email) {
+                $this->safeWarning('⚠️ Cannot search Cal.com: No customer email', [
+                    'appointment_id' => $this->appointment->id,
+                ], 'calcom');
+                return null;
+            }
+
+            // Search for bookings around the appointment time
+            // Note: We use a wider time range because the appointment might have been
+            // rescheduled in Cal.com but our DB wasn't updated
+            $searchStart = $this->appointment->starts_at->copy()->subDays(7)->startOfDay();
+            $searchEnd = $this->appointment->starts_at->copy()->addDays(7)->endOfDay();
+
+            $response = $client->getBookings([
+                'afterStart' => $searchStart->toIso8601String(),
+                'beforeEnd' => $searchEnd->toIso8601String(),
+                'status' => 'upcoming',
+            ]);
+
+            if (!$response->successful()) {
+                $this->safeWarning('⚠️ Cal.com booking search failed', [
+                    'appointment_id' => $this->appointment->id,
+                    'status' => $response->status(),
+                ], 'calcom');
+                return null;
+            }
+
+            $bookings = $response->json('data', []);
+
+            if (empty($bookings)) {
+                $this->safeInfo('ℹ️ No bookings found in Cal.com search', [
+                    'appointment_id' => $this->appointment->id,
+                    'search_range' => "{$searchStart->toDateString()} - {$searchEnd->toDateString()}",
+                ], 'calcom');
+                return null;
+            }
+
+            // Find booking matching our customer email
+            $customerEmail = strtolower($this->appointment->customer->email);
+
+            foreach ($bookings as $booking) {
+                // Check if attendee email matches
+                $attendees = $booking['attendees'] ?? [];
+                foreach ($attendees as $attendee) {
+                    if (isset($attendee['email']) && strtolower($attendee['email']) === $customerEmail) {
+                        // Found matching booking!
+                        $this->safeInfo('🔍 Found matching booking in Cal.com', [
+                            'appointment_id' => $this->appointment->id,
+                            'found_booking_id' => $booking['id'],
+                            'found_booking_uid' => $booking['uid'],
+                            'booking_start' => $booking['start'] ?? null,
+                            'customer_email' => $customerEmail,
+                        ], 'calcom');
+
+                        return [
+                            'id' => $booking['id'],
+                            'uid' => $booking['uid'],
+                            'start' => $booking['start'] ?? null,
+                        ];
+                    }
+                }
+
+                // Also check metadata for our CRM appointment ID
+                $metadata = $booking['metadata'] ?? [];
+                if (isset($metadata['crm_appointment_id']) &&
+                    (string)$metadata['crm_appointment_id'] === (string)$this->appointment->id) {
+                    $this->safeInfo('🔍 Found booking by CRM appointment ID in metadata', [
+                        'appointment_id' => $this->appointment->id,
+                        'found_booking_id' => $booking['id'],
+                        'found_booking_uid' => $booking['uid'],
+                    ], 'calcom');
+
+                    return [
+                        'id' => $booking['id'],
+                        'uid' => $booking['uid'],
+                        'start' => $booking['start'] ?? null,
+                    ];
+                }
+            }
+
+            $this->safeInfo('ℹ️ No matching booking found for customer', [
+                'appointment_id' => $this->appointment->id,
+                'customer_email' => $customerEmail,
+                'bookings_checked' => count($bookings),
+            ], 'calcom');
+
+            return null;
+
+        } catch (\Exception $e) {
+            $this->safeError('❌ Error searching Cal.com bookings', [
+                'appointment_id' => $this->appointment->id,
+                'error' => $e->getMessage(),
+            ], 'calcom');
+            return null;
+        }
     }
 
     /**

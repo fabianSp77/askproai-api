@@ -81,7 +81,7 @@ class EventServiceProvider extends ServiceProvider
         AppointmentRescheduled::class => [
             UpdateModificationStats::class,
             AppointmentNotificationListener::class . '@handleRescheduled',
-            // SyncToCalcomOnRescheduled::class,  // ⚠️ TEMPORARILY DISABLED - migration pending
+            SyncToCalcomOnRescheduled::class,  // ✅ RE-ENABLED 2025-11-25: Sync reschedules to Cal.com
             // SendRescheduleNotifications::class, // TODO: Create this listener
             InvalidateWeekCacheListener::class . '@handleRescheduled', // Clear week availability cache
         ],

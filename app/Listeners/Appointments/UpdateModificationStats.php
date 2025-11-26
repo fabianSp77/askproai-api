@@ -53,10 +53,14 @@ class UpdateModificationStats implements ShouldQueue
 
     /**
      * Update cancellation statistics
+     *
+     * FIX 2025-11-25: Include company_id in updateOrCreate to prevent
+     * "Field 'company_id' doesn't have a default value" error
      */
     private function updateCancellationStats(AppointmentCancellationRequested $event): void
     {
         $customerId = $event->customer->id;
+        $companyId = $event->appointment->company_id ?? $event->customer->company_id;
         $now = Carbon::now();
         $periodStart = $now->copy()->subDays(30);
         $periodEnd = $now->copy();
@@ -68,10 +72,11 @@ class UpdateModificationStats implements ShouldQueue
             ->where('created_at', '>=', $periodStart)
             ->count();
 
-        // Update or create stat record
+        // Update or create stat record with company_id (required field)
         AppointmentModificationStat::updateOrCreate(
             [
                 'customer_id' => $customerId,
+                'company_id' => $companyId,
                 'stat_type' => 'cancellation_count',
                 'period_start' => $periodStart->toDateString(),
                 'period_end' => $periodEnd->toDateString(),
@@ -84,16 +89,21 @@ class UpdateModificationStats implements ShouldQueue
 
         Log::debug('📊 Updated cancellation stats', [
             'customer_id' => $customerId,
+            'company_id' => $companyId,
             'count' => $cancellationCount,
         ]);
     }
 
     /**
      * Update reschedule statistics
+     *
+     * FIX 2025-11-25: Include company_id in updateOrCreate to prevent
+     * "Field 'company_id' doesn't have a default value" error
      */
     private function updateRescheduleStats(AppointmentRescheduled $event): void
     {
         $customerId = $event->appointment->customer_id;
+        $companyId = $event->appointment->company_id;
         $now = Carbon::now();
         $periodStart = $now->copy()->subDays(30);
         $periodEnd = $now->copy();
@@ -105,10 +115,11 @@ class UpdateModificationStats implements ShouldQueue
             ->where('created_at', '>=', $periodStart)
             ->count();
 
-        // Update customer stat
+        // Update customer stat with company_id (required field)
         AppointmentModificationStat::updateOrCreate(
             [
                 'customer_id' => $customerId,
+                'company_id' => $companyId,
                 'stat_type' => 'reschedule_count',
                 'period_start' => $periodStart->toDateString(),
                 'period_end' => $periodEnd->toDateString(),
@@ -121,6 +132,7 @@ class UpdateModificationStats implements ShouldQueue
 
         Log::debug('📊 Updated reschedule stats', [
             'customer_id' => $customerId,
+            'company_id' => $companyId,
             'customer_count' => $rescheduleCount,
         ]);
     }

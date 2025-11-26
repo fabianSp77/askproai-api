@@ -72,6 +72,10 @@ class Appointment extends Model
         // Customer Portal: Cal.com sync status tracking
         'calcom_sync_attempts' => 'integer',
         'calcom_last_sync_at' => 'datetime',
+        // Reschedule tracking (2025-11-25)
+        'rescheduled_at' => 'datetime',
+        'rescheduled_count' => 'integer',
+        'previous_starts_at' => 'datetime',
     ];
 
     /**
@@ -399,6 +403,56 @@ class Appointment extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    /**
+     * Check if appointment was rescheduled
+     *
+     * @return bool
+     */
+    public function wasRescheduled(): bool
+    {
+        return $this->rescheduled_at !== null || $this->rescheduled_count > 0;
+    }
+
+    /**
+     * Get the latest reschedule modification record
+     *
+     * @return \App\Models\AppointmentModification|null
+     */
+    public function getLastRescheduleRecord(): ?AppointmentModification
+    {
+        return $this->modifications()
+            ->where('modification_type', 'reschedule')
+            ->latest('created_at')
+            ->first();
+    }
+
+    /**
+     * Get the display badge for appointment status
+     *
+     * Returns the appropriate badge text for Admin Portal:
+     * - "Verschoben" if rescheduled
+     * - "Storniert" if cancelled
+     * - Status name otherwise
+     *
+     * @return string
+     */
+    public function getStatusBadge(): string
+    {
+        if ($this->wasRescheduled() && !$this->isCancelled()) {
+            return 'Verschoben';
+        }
+
+        return match($this->status) {
+            'cancelled' => 'Storniert',
+            'confirmed' => 'Bestätigt',
+            'completed' => 'Abgeschlossen',
+            'pending' => 'Ausstehend',
+            'no_show' => 'Nicht erschienen',
+            'in_progress' => 'In Bearbeitung',
+            default => ucfirst($this->status ?? 'Unbekannt'),
+        };
     }
 
     /**
