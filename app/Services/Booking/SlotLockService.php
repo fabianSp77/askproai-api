@@ -96,16 +96,18 @@ class SlotLockService
 
         Cache::put($lockKey, $lockData, self::DEFAULT_TTL);
 
-        // Optional: Log to database for metrics/debugging
-        $this->logReservationToDatabase(
-            $companyId,
-            $serviceId,
-            $startTime,
-            $endTime,
-            $callId,
-            $customerPhone,
-            $metadata
-        );
+        // Optional: Log to database for metrics/debugging (respects feature flag)
+        if (config('features.slot_locking.log_to_database', true)) {
+            $this->logReservationToDatabase(
+                $companyId,
+                $serviceId,
+                $startTime,
+                $endTime,
+                $callId,
+                $customerPhone,
+                $metadata
+            );
+        }
 
         // Track metrics
         $this->metricsCollector->trackCreated(
@@ -360,12 +362,17 @@ class SlotLockService
 
     /**
      * Mark database reservation as converted
+     *
+     * Note: call_id is retrieved from Redis lock data, NOT parsed from lock key.
+     * Lock key format is: slot_lock:c{company}:s{service}:t{YmdHi}
+     * where parts[1] = "c123" (company_id with prefix), NOT call_id!
      */
     private function markReservationAsConverted(string $lockKey, int $appointmentId): void
     {
         try {
-            $parts = explode(':', $lockKey);
-            $callId = $parts[1] ?? null;
+            // Get call_id from Redis lock data (NOT from parsing lock key!)
+            $lockData = Cache::get($lockKey);
+            $callId = $lockData['call_id'] ?? null;
 
             if ($callId) {
                 AppointmentReservation::where('call_id', $callId)
@@ -383,12 +390,15 @@ class SlotLockService
 
     /**
      * Mark database reservation as cancelled
+     *
+     * Note: call_id is retrieved from Redis lock data, NOT parsed from lock key.
      */
     private function markReservationAsCancelled(string $lockKey, string $reason): void
     {
         try {
-            $parts = explode(':', $lockKey);
-            $callId = $parts[1] ?? null;
+            // Get call_id from Redis lock data (NOT from parsing lock key!)
+            $lockData = Cache::get($lockKey);
+            $callId = $lockData['call_id'] ?? null;
 
             if ($callId) {
                 AppointmentReservation::where('call_id', $callId)

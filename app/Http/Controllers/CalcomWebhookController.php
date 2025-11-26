@@ -232,6 +232,7 @@ class CalcomWebhookController extends Controller
             // PHASE 2: Staff Assignment Integration
             // Attempt to assign staff using multi-model assignment system
             $staffId = null;
+            $branchId = null;  // Initialize early - will be set later based on service/staff
             $assignmentMetadata = [];
 
             if ($service) {
@@ -345,7 +346,7 @@ class CalcomWebhookController extends Controller
                     'status' => 'confirmed',
                     'source' => 'cal.com',
                     'notes' => $payload['description'] ?? $payload['additionalNotes'] ?? null,
-                    'metadata' => json_encode([
+                    'metadata' => $this->safeJsonEncode([
                         'cal_com_data' => $payload,
                         'booking_uid' => $payload['uid'] ?? null,
                         'event_type' => $payload['eventType'] ?? null,
@@ -692,5 +693,56 @@ class CalcomWebhookController extends Controller
         }
 
         return $phone;
+    }
+
+    /**
+     * Safely encode data to JSON with error handling
+     *
+     * Prevents corrupt metadata from crashing appointment creation
+     *
+     * @param array $data Data to encode
+     * @return string|null JSON string or null on failure
+     */
+    private function safeJsonEncode(array $data): ?string
+    {
+        try {
+            $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            if ($json === false) {
+                Log::warning('[Cal.com] JSON encode failed', [
+                    'error' => json_last_error_msg(),
+                    'data_keys' => array_keys($data),
+                ]);
+                // Fallback: encode without problematic payload data
+                return json_encode([
+                    'booking_uid' => $data['booking_uid'] ?? null,
+                    'event_type' => $data['event_type'] ?? null,
+                    'encode_error' => json_last_error_msg(),
+                ]);
+            }
+
+            // Safety limit: 64KB max for metadata
+            if (strlen($json) > 65536) {
+                Log::warning('[Cal.com] Metadata too large, truncating cal_com_data', [
+                    'original_size' => strlen($json),
+                ]);
+                // Store only essential fields
+                return json_encode([
+                    'booking_uid' => $data['booking_uid'] ?? null,
+                    'event_type' => $data['event_type'] ?? null,
+                    'location' => $data['location'] ?? null,
+                    'meeting_url' => $data['meeting_url'] ?? null,
+                    'truncated' => true,
+                    'original_size' => strlen($json),
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            return $json;
+        } catch (\Exception $e) {
+            Log::error('[Cal.com] JSON encode exception', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }

@@ -188,9 +188,14 @@ class BookingNoticeValidator
      * When a requested time is too soon, this method suggests alternative times
      * that meet the minimum booking notice requirement.
      *
+     * 🔧 FIX 2025-11-26: Added conflict filtering against existing appointments
+     * PROBLEM: Suggested alternatives (e.g., 12:15, 12:30) overlapped with existing
+     *          appointments like Dauerwelle 11:00-13:15, causing "wurde gerade vergeben"
+     * SOLUTION: Check each candidate slot against local DB before suggesting
+     *
      * Strategy:
      * 1. Try to find slots today (after minimum notice)
-     * 2. If no slots today, suggest tomorrow at requested time
+     * 2. Filter out slots that conflict with existing appointments
      * 3. Round to nearest slot interval (typically 15 or 30 minutes)
      *
      * @param Carbon $requestedTime Original requested time
@@ -216,19 +221,89 @@ class BookingNoticeValidator
             $slotInterval - ($earliestBookable->minute % $slotInterval)
         );
 
-        // Strategy 1: Suggest slots starting from next available
-        for ($i = 0; $i < $count; $i++) {
-            $suggestionTime = $nextSlot->copy()->addMinutes($slotInterval * $i);
+        // 🔧 FIX 2025-11-26: Calculate full service duration for composite services
+        // PROBLEM: Dauerwelle is 135 min, but Cal.com slot interval is 15 min
+        // Slot 12:15 + 135 min = 14:30, which overlaps with appointment 11:00-13:15
+        $serviceDuration = $this->getFullServiceDuration($service);
 
-            $alternatives[] = [
-                'datetime' => $suggestionTime,
-                'date' => $suggestionTime->format('Y-m-d'),
-                'time' => $suggestionTime->format('H:i'),
-                'formatted_de' => $suggestionTime->locale('de')->isoFormat('dddd, D. MMMM [um] HH:mm [Uhr]'),
-                'formatted_short' => $suggestionTime->locale('de')->isoFormat('dd D.MM. HH:mm'),
-                'is_same_day' => $suggestionTime->isSameDay($requestedTime),
-                'is_next_day' => $suggestionTime->isSameDay($requestedTime->copy()->addDay()),
-            ];
+        // 🔧 FIX 2025-11-26: Get existing appointments for conflict checking
+        $existingAppointments = $this->getExistingAppointments(
+            $service->company_id,
+            $branchId,
+            $nextSlot->format('Y-m-d')
+        );
+
+        // 🔧 FIX 2025-11-26: Multi-day alternative search with business hours
+        // PROBLEM: maxAttempts=15 was too small to span multiple days
+        // SOLUTION: Search across 7 days with proper business hours (08:00-20:00)
+        $businessHourStart = 8;  // 08:00
+        $businessHourEnd = 20;   // 20:00 (last slot must END before this + buffer)
+        $daysToSearch = 7;
+        $maxSlotsPerDay = 50;    // Safety limit per day
+
+        // Adjust nextSlot to business hours if needed
+        if ($nextSlot->hour < $businessHourStart) {
+            $nextSlot->setTime($businessHourStart, 0);
+        } elseif ($nextSlot->hour >= $businessHourEnd) {
+            // Move to next day
+            $nextSlot->addDay()->setTime($businessHourStart, 0);
+        }
+
+        $currentDay = $nextSlot->copy();
+        $daysSearched = 0;
+
+        while (count($alternatives) < $count && $daysSearched < $daysToSearch) {
+            $dayStart = $currentDay->copy();
+            if ($dayStart->isSameDay($nextSlot)) {
+                // First day: start from nextSlot
+                $dayStart = $nextSlot->copy();
+            } else {
+                $dayStart->setTime($businessHourStart, 0);
+            }
+
+            // Calculate last possible slot start time for this day
+            // Last slot must END before business hour end
+            $latestSlotStart = $businessHourEnd * 60 - $serviceDuration;
+            $slotAttempts = 0;
+
+            while ($slotAttempts < $maxSlotsPerDay) {
+                $suggestionTime = $dayStart->copy()->addMinutes($slotInterval * $slotAttempts);
+                $slotAttempts++;
+
+                // Check if slot is within business hours
+                $slotMinutes = $suggestionTime->hour * 60 + $suggestionTime->minute;
+                if ($slotMinutes >= $latestSlotStart) {
+                    break; // Move to next day
+                }
+
+                // Check for conflicts with existing appointments
+                if ($this->hasConflict($suggestionTime, $serviceDuration, $existingAppointments)) {
+                    Log::debug('🚫 Skipping conflicting slot in suggestAlternatives', [
+                        'slot_time' => $suggestionTime->format('Y-m-d H:i'),
+                        'slot_end' => $suggestionTime->copy()->addMinutes($serviceDuration)->format('H:i'),
+                        'service_duration' => $serviceDuration,
+                    ]);
+                    continue;
+                }
+
+                $alternatives[] = [
+                    'datetime' => $suggestionTime,
+                    'date' => $suggestionTime->format('Y-m-d'),
+                    'time' => $suggestionTime->format('H:i'),
+                    'formatted_de' => $suggestionTime->locale('de')->isoFormat('dddd, D. MMMM [um] HH:mm [Uhr]'),
+                    'formatted_short' => $suggestionTime->locale('de')->isoFormat('dd D.MM. HH:mm'),
+                    'is_same_day' => $suggestionTime->isSameDay($requestedTime),
+                    'is_next_day' => $suggestionTime->isSameDay($requestedTime->copy()->addDay()),
+                ];
+
+                if (count($alternatives) >= $count) {
+                    break;
+                }
+            }
+
+            // Move to next day
+            $currentDay->addDay();
+            $daysSearched++;
         }
 
         Log::debug('💡 Alternative times suggested', [
@@ -236,9 +311,132 @@ class BookingNoticeValidator
             'requested_time' => $requestedTime->toDateTimeString(),
             'earliest_bookable' => $earliestBookable->toDateTimeString(),
             'alternatives_count' => count($alternatives),
+            'days_searched' => $daysSearched,
+            'service_duration' => $serviceDuration,
         ]);
 
         return $alternatives;
+    }
+
+    /**
+     * Get full service duration, including composite segments
+     *
+     * 🔧 FIX 2025-11-26: ROOT CAUSE FIX for overlap detection
+     *
+     * @param Service $service
+     * @return int Duration in minutes
+     */
+    protected function getFullServiceDuration(Service $service): int
+    {
+        // Check for composite service with segments
+        // 🔧 FIX 2025-11-26: Use isComposite() method instead of is_composite property
+        // Property access returns NULL, method correctly checks DB column 'composite'
+        if ($service->isComposite() && !empty($service->segments)) {
+            return collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+        }
+
+        // Check for duration_minutes field (with null safety)
+        if ($service->duration_minutes !== null && $service->duration_minutes > 0) {
+            return $service->duration_minutes;
+        }
+
+        // Default fallback
+        return 60;
+    }
+
+    /**
+     * Get existing appointments for conflict checking
+     *
+     * 🔧 FIX 2025-11-26: Changed from single date to date RANGE query
+     * PROBLEM: suggestAlternatives() iterates over multiple days but only queried one day
+     * This caused alternatives on day 2+ to be offered without conflict checking!
+     * Example: User requests 26.11 16:00, alternatives generated for 27.11 09:00
+     *          But Appointment #782 (27.11 08:00-10:15) was never queried → conflict missed
+     *
+     * @param int $companyId
+     * @param string|null $branchId
+     * @param string $startDate Y-m-d format (start of range)
+     * @param int $daysToCheck Number of days to include (default: 8 for full week coverage)
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getExistingAppointments(int $companyId, ?string $branchId, string $startDate, int $daysToCheck = 8)
+    {
+        $endDate = Carbon::parse($startDate)->addDays($daysToCheck)->format('Y-m-d');
+
+        // Memory safety: Limit results to prevent OOM with enterprise accounts
+        $maxAppointments = 2000;
+
+        $query = \App\Models\Appointment::where('company_id', $companyId)
+            ->whereIn('status', ['scheduled', 'confirmed', 'pending', 'in_progress', 'booked'])
+            ->whereDate('starts_at', '>=', $startDate)
+            ->whereDate('starts_at', '<=', $endDate);
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        // Get count first to check if limit is hit
+        $totalCount = $query->count();
+
+        Log::debug('📅 Loading appointments for conflict check', [
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'date_range' => "{$startDate} to {$endDate}",
+            'days' => $daysToCheck,
+            'total_appointments' => $totalCount,
+        ]);
+
+        // Warn if limit is reached (conflict detection may be incomplete)
+        if ($totalCount > $maxAppointments) {
+            Log::warning('⚠️ Appointment query limit reached - conflict detection may be incomplete', [
+                'company_id' => $companyId,
+                'total_found' => $totalCount,
+                'limit_applied' => $maxAppointments,
+            ]);
+        }
+
+        return $query->limit($maxAppointments)->get(['id', 'starts_at', 'ends_at']);
+    }
+
+    /**
+     * Check if a suggested slot conflicts with existing appointments
+     *
+     * 🔧 FIX 2025-11-26: Overlap detection using standard interval math
+     * Two ranges overlap if: start1 < end2 AND start2 < end1
+     *
+     * @param Carbon $slotStart Suggested slot start time
+     * @param int $duration Service duration in minutes
+     * @param \Illuminate\Support\Collection $existingAppointments
+     * @return bool True if conflict exists
+     */
+    protected function hasConflict(Carbon $slotStart, int $duration, $existingAppointments): bool
+    {
+        $slotEnd = $slotStart->copy()->addMinutes($duration);
+        $slotDate = $slotStart->format('Y-m-d');
+
+        foreach ($existingAppointments as $appt) {
+            $apptStart = Carbon::parse($appt->starts_at);
+            $apptEnd = Carbon::parse($appt->ends_at);
+
+            // 🔧 FIX 2025-11-26: Only check appointments on the SAME day as the slot
+            // This prevents false positives from multi-day appointment queries
+            if ($apptStart->format('Y-m-d') !== $slotDate) {
+                continue;
+            }
+
+            // Overlap check: start1 < end2 AND start2 < end1
+            if ($slotStart < $apptEnd && $apptStart < $slotEnd) {
+                Log::debug('🔍 Conflict detected in hasConflict', [
+                    'slot_date' => $slotDate,
+                    'slot' => $slotStart->format('H:i') . '-' . $slotEnd->format('H:i'),
+                    'appointment_id' => $appt->id,
+                    'appointment' => $apptStart->format('Y-m-d H:i') . '-' . $apptEnd->format('H:i'),
+                ]);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

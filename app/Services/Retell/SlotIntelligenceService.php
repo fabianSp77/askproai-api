@@ -413,11 +413,22 @@ class SlotIntelligenceService
     /**
      * Get next N available slots for a date (for offering alternatives)
      *
+     * 🔧 FIX 2025-11-26: Added local DB validation to prevent offering slots
+     * that overlap with existing appointments.
+     *
+     * ROOT CAUSE: Slots were offered from cached Cal.com data without checking
+     * if they conflict with recently booked appointments in the local DB.
+     * This caused "Dieser Termin wurde gerade vergeben" errors when user
+     * selected an alternative that overlapped with existing bookings.
+     *
      * @param string $callId Retell call ID
      * @param string $date Target date (Y-m-d)
      * @param int $serviceId Service ID
      * @param int $count Number of slots to return
      * @param string|null $afterTime Only return slots after this time (H:i)
+     * @param int|null $companyId Company ID for DB filtering (CRITICAL for multi-tenant)
+     * @param string|null $branchId Branch ID for DB filtering
+     * @param int|null $serviceDuration Full service duration in minutes (for composite services)
      * @return array Available slots
      */
     public function getNextAvailableSlots(
@@ -425,7 +436,10 @@ class SlotIntelligenceService
         string $date,
         int $serviceId,
         int $count = 3,
-        ?string $afterTime = null
+        ?string $afterTime = null,
+        ?int $companyId = null,
+        ?string $branchId = null,
+        ?int $serviceDuration = null
     ): array {
         $slots = $this->getCachedSlots($callId, $date, $serviceId);
 
@@ -443,7 +457,114 @@ class SlotIntelligenceService
             });
         }
 
+        // 🔧 FIX 2025-11-26: Filter against local DB appointments
+        // CRITICAL: This prevents offering slots that overlap with existing bookings
+        if ($companyId && $branchId) {
+            $collection = $this->filterSlotsAgainstLocalAppointments(
+                $collection,
+                $date,
+                $companyId,
+                $branchId,
+                $serviceDuration ?? 60 // Default to 60 min if not specified
+            );
+        } else {
+            // 🔴 CRITICAL: Missing multi-tenant context will cause slot conflicts!
+            Log::error('🔴 SlotIntelligence: CRITICAL - getNextAvailableSlots called without company/branch context', [
+                'call_id' => $callId,
+                'date' => $date,
+                'service_id' => $serviceId,
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'warning' => 'Slots may overlap with existing appointments! This WILL cause booking failures.',
+                'fix' => 'Caller MUST pass companyId and branchId parameters',
+            ]);
+        }
+
         return $collection->take($count)->values()->toArray();
+    }
+
+    /**
+     * Filter slots against existing appointments in local database
+     *
+     * 🔧 FIX 2025-11-26: ROOT CAUSE FIX for "Termin wurde gerade vergeben" errors
+     *
+     * PROBLEM: Cal.com cached slots didn't account for:
+     * 1. Recently booked appointments (cache lag)
+     * 2. Full duration of composite services (135 min Dauerwelle vs 50 min Cal.com slot)
+     *
+     * SOLUTION: Check each slot against local DB before offering as alternative
+     *
+     * @param Collection $slots Cal.com cached slots
+     * @param string $date Date in Y-m-d format
+     * @param int $companyId Company ID for tenant isolation
+     * @param string $branchId Branch ID for location isolation
+     * @param int $serviceDuration Full service duration in minutes
+     * @return Collection Filtered slots without conflicts
+     */
+    protected function filterSlotsAgainstLocalAppointments(
+        Collection $slots,
+        string $date,
+        int $companyId,
+        string $branchId,
+        int $serviceDuration
+    ): Collection {
+        // Get all active appointments for this date, company, and branch
+        $existingAppointments = \App\Models\Appointment::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->whereIn('status', ['scheduled', 'confirmed', 'pending', 'in_progress'])
+            ->whereDate('starts_at', $date)
+            ->get(['id', 'starts_at', 'ends_at']);
+
+        if ($existingAppointments->isEmpty()) {
+            Log::debug('✅ SlotIntelligence: No existing appointments on date, all slots valid', [
+                'date' => $date,
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+            ]);
+            return $slots;
+        }
+
+        $beforeCount = $slots->count();
+
+        $filtered = $slots->filter(function ($slot) use ($existingAppointments, $date, $serviceDuration) {
+            // Parse slot time
+            $slotStart = Carbon::parse($date . ' ' . $slot['time_display'], 'Europe/Berlin');
+            $slotEnd = $slotStart->copy()->addMinutes($serviceDuration);
+
+            // Check for overlap with any existing appointment
+            foreach ($existingAppointments as $appt) {
+                $apptStart = Carbon::parse($appt->starts_at);
+                $apptEnd = Carbon::parse($appt->ends_at);
+
+                // Overlap check: two ranges overlap if start1 < end2 AND start2 < end1
+                if ($slotStart < $apptEnd && $apptStart < $slotEnd) {
+                    Log::debug('🚫 SlotIntelligence: Filtering out conflicting slot', [
+                        'slot_time' => $slot['time_display'],
+                        'slot_range' => $slotStart->format('H:i') . '-' . $slotEnd->format('H:i'),
+                        'conflicts_with' => $appt->id,
+                        'appointment_range' => $apptStart->format('H:i') . '-' . $apptEnd->format('H:i'),
+                    ]);
+                    return false; // Exclude this slot
+                }
+            }
+
+            return true; // No conflict, keep slot
+        });
+
+        $afterCount = $filtered->count();
+
+        if ($beforeCount > $afterCount) {
+            Log::info('🔒 SlotIntelligence: Filtered out conflicting slots', [
+                'date' => $date,
+                'before_count' => $beforeCount,
+                'after_count' => $afterCount,
+                'removed' => $beforeCount - $afterCount,
+                'service_duration' => $serviceDuration,
+                'existing_appointments' => $existingAppointments->count(),
+            ]);
+        }
+
+        return $filtered;
     }
 
     /**

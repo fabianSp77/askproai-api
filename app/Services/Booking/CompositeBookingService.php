@@ -451,6 +451,8 @@ class CompositeBookingService
     {
         Log::info('Starting compensation saga', ['bookings' => count($bookings)]);
 
+        $failedCompensations = [];
+
         foreach ($bookings as $booking) {
             if ($booking['booking_id']) {
                 try {
@@ -461,12 +463,26 @@ class CompositeBookingService
 
                     Log::info('Compensated booking', ['booking_id' => $booking['booking_id']]);
                 } catch (Exception $e) {
+                    $failedCompensations[] = [
+                        'booking_id' => $booking['booking_id'],
+                        'error' => $e->getMessage()
+                    ];
                     Log::error('Failed to compensate booking', [
                         'booking_id' => $booking['booking_id'],
                         'error' => $e->getMessage()
                     ]);
                 }
             }
+        }
+
+        // Alert if any compensations failed - these need manual cleanup!
+        if (!empty($failedCompensations)) {
+            Log::critical('🚨 COMPENSATION SAGA INCOMPLETE - Manual cleanup required!', [
+                'failed_count' => count($failedCompensations),
+                'total_bookings' => count($bookings),
+                'failed_bookings' => $failedCompensations,
+                'action_required' => 'Manually cancel these bookings in Cal.com dashboard',
+            ]);
         }
     }
 

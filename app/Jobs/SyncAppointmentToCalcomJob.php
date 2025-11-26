@@ -169,7 +169,9 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
     private function getJobId(): string
     {
         if ($this->jobId === null) {
-            $this->jobId = $this->job?->uuid() ?? uniqid('job_');
+            // Prefer queue job UUID, fallback to cryptographically secure random ID
+            // Note: uniqid() is not collision-safe under high concurrency
+            $this->jobId = $this->job?->uuid() ?? ('sync_' . bin2hex(random_bytes(12)));
         }
         return $this->jobId;
     }
@@ -294,9 +296,18 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             ->get();
 
         if ($phases->isEmpty()) {
-            throw new \RuntimeException(
-                "Composite appointment #{$this->appointment->id} has no active phases (staff_required=true)"
-            );
+            // 🔧 FIX 2025-11-26: Fallback to single booking when composite service has no phases
+            // This handles cases where services are marked composite: true but phases weren't created
+            // (e.g., Service 441 "Dauerwelle" - composite flag without phase configuration)
+            $this->safeInfo("⚠️ Composite service has no phases - falling back to single booking", [
+                'appointment_id' => $this->appointment->id,
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'note' => 'Service marked as composite but no phases with staff_required=true'
+            ], 'calcom');
+
+            // Delegate to standard single-booking method
+            return $this->syncCreate($client);
         }
 
         $this->safeInfo("🔧 Syncing composite appointment: {$phases->count()} active segments", [

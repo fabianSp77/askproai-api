@@ -86,7 +86,8 @@ class CalcomWebhookRequest extends FormRequest
      */
     public function sanitized(): array
     {
-        $validated = $this->validated();
+        // Handle case where validator hasn't been run (e.g., programmatic creation)
+        $validated = $this->validator ? $this->validated() : $this->all();
 
         // Sanitize string fields
         if (isset($validated['payload']['title'])) {

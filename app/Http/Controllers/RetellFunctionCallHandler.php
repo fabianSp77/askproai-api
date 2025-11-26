@@ -544,16 +544,38 @@ class RetellFunctionCallHandler extends Controller
         // PLACEHOLDERS: "dummy_call_id" (old), "None" (Python), "current" (V121 12:33), "current_call" (V121 14:28+)
         // IMPACT: getCallContext($parameters['call_id']) fails → "Call context not available" errors
         // SOLUTION: Replace ALL known placeholders with extracted real call_id
-        if (isset($parameters['call_id']) && in_array($parameters['call_id'], ['dummy_call_id', 'None', 'current', 'current_call'], true) && $callId) {
-            $originalCallId = $parameters['call_id'];
-            $parameters['call_id'] = $callId;
+        //
+        // 🔧 FIX 2025-11-26: ALWAYS replace parameters['call_id'] with extracted $callId
+        // PROBLEM: Call #11044 had truncated call_id (31 chars instead of 32) causing "Call context not available"
+        // The truncated call_id wasn't in the placeholder list, so it wasn't replaced
+        // SOLUTION: Always trust $callId from the request, not parameters['call_id']
+        $knownPlaceholders = ['dummy_call_id', 'None', 'current', 'current_call'];
 
-            Log::info('🔧 Replaced placeholder call_id in parameters', [
+        if (isset($parameters['call_id']) && $callId) {
+            $originalCallId = $parameters['call_id'];
+            $isPlaceholder = in_array($originalCallId, $knownPlaceholders, true);
+            $isTruncated = strlen($originalCallId) !== strlen($callId);
+            $isMismatch = $originalCallId !== $callId;
+
+            if ($isPlaceholder || $isTruncated || $isMismatch) {
+                $parameters['call_id'] = $callId;
+
+                Log::info('🔧 Replaced call_id in parameters', [
+                    'function' => $functionName,
+                    'original_call_id' => $originalCallId,
+                    'real_call_id' => $callId,
+                    'reason' => $isPlaceholder ? 'placeholder' : ($isTruncated ? 'truncated' : 'mismatch'),
+                    'original_length' => strlen($originalCallId),
+                    'real_length' => strlen($callId),
+                    'source' => 'data.call.call_id'
+                ]);
+            }
+        } elseif (!isset($parameters['call_id']) && $callId) {
+            // If no call_id in parameters at all, add it
+            $parameters['call_id'] = $callId;
+            Log::info('🔧 Added missing call_id to parameters', [
                 'function' => $functionName,
-                'original_call_id' => $originalCallId,
-                'real_call_id' => $callId,
-                'placeholder_type' => $originalCallId,
-                'source' => 'data.call.call_id'
+                'call_id' => $callId
             ]);
         }
 
@@ -1113,6 +1135,22 @@ class RetellFunctionCallHandler extends Controller
                         'slots' => $validatedSlots,
                         'ttl_minutes' => 5,
                     ]);
+
+                    // 🔒 FIX 2025-11-26: Lock alternatives to prevent race conditions
+                    // PROBLEM: 44-second window between check_availability and start_booking
+                    // SOLUTION: Soft-lock alternatives when presenting them
+                    $serviceDuration = $service->duration_minutes ?? 60;
+                    if ($service->isComposite() && !empty($service->segments)) {
+                        $serviceDuration = collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+                    }
+                    $this->lockAlternativeSlots(
+                        $alternatives,
+                        $companyId,
+                        $service->id,
+                        $serviceDuration,
+                        $callId,
+                        $params['customer_phone'] ?? $params['phone'] ?? 'unknown'
+                    );
                 }
 
                 return [
@@ -1950,12 +1988,26 @@ class RetellFunctionCallHandler extends Controller
 
                 if (isset($preloadResult) && $preloadResult['success']) {
                     $requestedTimeStr = $requestedDate->format('H:i');
+
+                    // 🔧 FIX 2025-11-26: Calculate full service duration for composite services
+                    // PROBLEM: Cal.com slots are based on first segment (50 min), but Dauerwelle is 135 min
+                    // SOLUTION: Use actual service duration for conflict detection
+                    $serviceDuration = $duration; // Default from earlier in function
+                    if (method_exists($service, 'getTotalDuration')) {
+                        $serviceDuration = $service->getTotalDuration();
+                    } elseif ($service->isComposite() && !empty($service->segments)) {
+                        $serviceDuration = collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+                    }
+
                     $nextSlots = $this->slotIntelligence->getNextAvailableSlots(
                         $callId,
                         $requestedDate->format('Y-m-d'),
                         $service->id,
                         3, // Get 3 alternatives
-                        $requestedTimeStr // After the requested time
+                        $requestedTimeStr, // After the requested time
+                        $companyId,       // 🔧 FIX: Multi-tenant isolation
+                        $branchId,        // 🔧 FIX: Branch isolation
+                        $serviceDuration  // 🔧 FIX: Full composite duration for overlap check
                     );
 
                     if (!empty($nextSlots)) {
@@ -1983,6 +2035,22 @@ class RetellFunctionCallHandler extends Controller
                                 return $requestedDate->format('Y-m-d') . ' ' . $alt['time'];
                             }, $intelligentAlternatives);
                             Cache::put("call:{$callId}:validated_alternatives", $validatedSlots, now()->addMinutes(5));
+
+                            // 🔒 FIX 2025-11-26: Lock alternatives to prevent race conditions
+                            $lockAlternatives = array_map(function($alt) use ($requestedDate) {
+                                return [
+                                    'date' => $requestedDate->format('Y-m-d'),
+                                    'time' => $alt['time'],
+                                ];
+                            }, $intelligentAlternatives);
+                            $this->lockAlternativeSlots(
+                                $lockAlternatives,
+                                $companyId,
+                                $service->id,
+                                $serviceDuration,
+                                $callId,
+                                $params['customer_phone'] ?? $params['phone'] ?? 'unknown'
+                            );
                         }
 
                         Log::info('🧠 SlotIntelligence: Alternatives from pre-loaded cache', [
@@ -2040,6 +2108,29 @@ class RetellFunctionCallHandler extends Controller
                             'ttl_minutes' => 30
                         ]);
                     }
+                }
+
+                // 🔒 FIX 2025-11-26: Lock alternatives to prevent race conditions
+                $lockAlternatives = array_map(function($alt) {
+                    if (isset($alt['datetime']) && $alt['datetime'] instanceof \Carbon\Carbon) {
+                        return [
+                            'date' => $alt['datetime']->format('Y-m-d'),
+                            'time' => $alt['datetime']->format('H:i'),
+                        ];
+                    }
+                    return null;
+                }, $alternatives['alternatives']);
+                $lockAlternatives = array_filter($lockAlternatives);
+
+                if (!empty($lockAlternatives)) {
+                    $this->lockAlternativeSlots(
+                        $lockAlternatives,
+                        $companyId,
+                        $service->id,
+                        $duration,
+                        $callId,
+                        $params['customer_phone'] ?? $params['phone'] ?? 'unknown'
+                    );
                 }
             }
 
@@ -2551,6 +2642,73 @@ class RetellFunctionCallHandler extends Controller
                 'call_id' => $callId
             ]);
 
+            // 🔒 FIX 2025-11-26: Check if slot is locked by ANOTHER call
+            // PROBLEM: Alternatives are presented to caller, but during decision window
+            // another caller could book the same slot via their own call
+            // SOLUTION: Check alt_lock ownership before proceeding with booking
+            if (config('features.slot_locking.enabled', false) && $appointmentTime) {
+                $altLockKey = "alt_lock:c{$companyId}:s{$service->id}:t{$appointmentTime->format('YmdHi')}";
+                $existingLock = Cache::get($altLockKey);
+
+                if ($existingLock && ($existingLock['call_id'] ?? null) !== $callId) {
+                    Log::warning('🔒 SLOT LOCKED BY ANOTHER CALL - Generating new alternatives', [
+                        'call_id' => $callId,
+                        'blocking_call' => $existingLock['call_id'] ?? 'unknown',
+                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'lock_key' => $altLockKey,
+                        'locked_at' => $existingLock['locked_at'] ?? null,
+                    ]);
+
+                    // Calculate service duration (including composite services)
+                    $serviceDuration = $service->duration_minutes ?? 60;
+                    if ($service->isComposite() && !empty($service->segments)) {
+                        $serviceDuration = collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+                    }
+
+                    // Generate new alternatives from SlotIntelligence
+                    $newAlternatives = $this->slotIntelligence->getNextAvailableSlots(
+                        $callId,
+                        $appointmentTime->format('Y-m-d'),
+                        $service->id,
+                        3,
+                        $appointmentTime->format('H:i'),
+                        $companyId,
+                        $branchId,
+                        $serviceDuration
+                    );
+
+                    $formattedAlts = array_map(function($slot) use ($appointmentTime) {
+                        return [
+                            'date' => $appointmentTime->format('Y-m-d'),
+                            'time' => $slot['time_display'],
+                            'formatted' => $slot['time_display'] . ' Uhr',
+                        ];
+                    }, $newAlternatives);
+
+                    // Lock these new alternatives for this call
+                    $this->lockAlternativeSlots(
+                        $formattedAlts,
+                        $companyId,
+                        $service->id,
+                        $serviceDuration,
+                        $callId,
+                        $customerPhone
+                    );
+
+                    return $this->responseFormatter->error(
+                        'Dieser Termin wurde gerade von einem anderen Kunden reserviert. ' .
+                        (!empty($formattedAlts)
+                            ? 'Ich habe andere freie Termine gefunden.'
+                            : 'Welche Zeit würde Ihnen alternativ passen?'),
+                        [
+                            'available' => false,
+                            'reason' => 'slot_locked_by_other',
+                            'alternatives' => $formattedAlts,
+                        ]
+                    );
+                }
+            }
+
             // 🔧 FIX 2025-11-14: Multi-Layer Race Condition Defense
             // LAYER 1: Prevention - Re-validate availability before booking
             // LAYER 2: Smart Recovery - Find new alternatives on race condition
@@ -2949,13 +3107,14 @@ class RetellFunctionCallHandler extends Controller
                         ]);
                     }
 
-                    // 🔧 FIX 2025-11-25 (Bug 4): Update has_appointment flag on Call record
+                    // 🔧 FIX 2025-11-26: Update appointment_made flag on Call record
+                    // BUGFIX: Changed from has_appointment (wrong) to appointment_made (correct DB column)
                     if ($call) {
                         $call->update([
-                            'has_appointment' => true,
+                            'appointment_made' => true,
                             'converted_appointment_id' => $appointment->id,
                         ]);
-                        Log::info('✅ Updated call has_appointment flag (ASYNC)', [
+                        Log::info('✅ Updated call appointment_made flag (ASYNC)', [
                             'call_id' => $callId,
                             'appointment_id' => $appointment->id
                         ]);
@@ -3293,12 +3452,13 @@ class RetellFunctionCallHandler extends Controller
                             ]);
                         }
 
-                        // 🔧 FIX 2025-11-25 (Bug 4): Update has_appointment flag on Call record
+                        // 🔧 FIX 2025-11-26: Update appointment_made flag on Call record
+                        // BUGFIX: Changed from has_appointment (wrong) to appointment_made (correct DB column)
                         $call->update([
-                            'has_appointment' => true,
+                            'appointment_made' => true,
                             'converted_appointment_id' => $appointment->id,
                         ]);
-                        Log::info('✅ Updated call has_appointment flag (SYNC)', [
+                        Log::info('✅ Updated call appointment_made flag (SYNC)', [
                             'call_id' => $callId,
                             'appointment_id' => $appointment->id
                         ]);
@@ -8599,5 +8759,140 @@ class RetellFunctionCallHandler extends Controller
                 'Öffnungszeiten konnten nicht abgerufen werden.'
             );
         }
+    }
+
+    /**
+     * 🔒 Lock alternative slots to prevent race conditions
+     *
+     * 🔧 FIX 2025-11-26: ROOT CAUSE FIX for "wurde gerade vergeben" errors
+     *
+     * PROBLEM: Alternatives are presented to caller without locking them.
+     * During 10-60 second decision window, another caller could book the slot.
+     * Result: "Dieser Termin wurde gerade vergeben" when trying to book presented alternative.
+     *
+     * SOLUTION: Lock each alternative for 2 minutes (soft lock) when presenting.
+     * This reserves the slots for THIS call_id only.
+     *
+     * @param array $alternatives Array of alternatives with 'date' and 'time' keys
+     * @param int $companyId Company context for multi-tenant isolation
+     * @param int $serviceId Service being booked
+     * @param int $duration Service duration in minutes
+     * @param string $callId Retell call ID for lock ownership
+     * @param string $customerPhone Customer phone for logging
+     * @return array Array of locked slot keys for potential release
+     */
+    private function lockAlternativeSlots(
+        array $alternatives,
+        int $companyId,
+        int $serviceId,
+        int $duration,
+        string $callId,
+        string $customerPhone = 'unknown'
+    ): array {
+        // Only lock if feature is enabled
+        if (!config('features.slot_locking.enabled', false)) {
+            Log::debug('🔓 Slot locking disabled, skipping alternative locks', [
+                'call_id' => $callId,
+                'alternatives_count' => count($alternatives),
+            ]);
+            return [];
+        }
+
+        $lockedKeys = [];
+        $lockTtl = 120; // 2 minutes soft lock for alternatives
+
+        foreach ($alternatives as $alternative) {
+            try {
+                // Parse alternative time
+                $dateStr = $alternative['date'] ?? null;
+                $timeStr = $alternative['time'] ?? null;
+
+                if (!$dateStr || !$timeStr) {
+                    continue;
+                }
+
+                $slotStart = Carbon::parse("{$dateStr} {$timeStr}", 'Europe/Berlin');
+                $slotEnd = $slotStart->copy()->addMinutes($duration);
+
+                // Generate lock key (using soft lock prefix to differentiate from hard locks)
+                $lockKey = "alt_lock:c{$companyId}:s{$serviceId}:t{$slotStart->format('YmdHi')}";
+
+                // Check if already locked by another call
+                if (Cache::has($lockKey)) {
+                    $existingLock = Cache::get($lockKey);
+                    if (($existingLock['call_id'] ?? null) !== $callId) {
+                        Log::debug('🔒 Alternative already locked by another call', [
+                            'call_id' => $callId,
+                            'blocking_call' => $existingLock['call_id'] ?? 'unknown',
+                            'slot' => "{$dateStr} {$timeStr}",
+                        ]);
+                        continue; // Skip this alternative, don't present it
+                    }
+                }
+
+                // Acquire soft lock
+                Cache::put($lockKey, [
+                    'call_id' => $callId,
+                    'customer_phone' => $customerPhone,
+                    'locked_at' => now()->toIso8601String(),
+                    'slot_time' => $slotStart->toIso8601String(),
+                    'type' => 'alternative_soft_lock',
+                ], $lockTtl);
+
+                $lockedKeys[] = $lockKey;
+
+                Log::debug('🔒 Alternative slot soft-locked', [
+                    'call_id' => $callId,
+                    'lock_key' => $lockKey,
+                    'slot' => "{$dateStr} {$timeStr}",
+                    'ttl_seconds' => $lockTtl,
+                ]);
+
+            } catch (\Exception $e) {
+                Log::warning('⚠️ Failed to lock alternative slot', [
+                    'call_id' => $callId,
+                    'alternative' => $alternative,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!empty($lockedKeys)) {
+            // Cache the locked keys for this call for later release
+            Cache::put("call:{$callId}:alternative_locks", $lockedKeys, $lockTtl + 60);
+
+            Log::info('🔒 Alternatives soft-locked for call', [
+                'call_id' => $callId,
+                'locked_count' => count($lockedKeys),
+                'ttl_seconds' => $lockTtl,
+            ]);
+        }
+
+        return $lockedKeys;
+    }
+
+    /**
+     * Check if an alternative slot is locked by another call
+     *
+     * @param int $companyId Company ID
+     * @param int $serviceId Service ID
+     * @param Carbon $slotTime Slot start time
+     * @param string $callId Current call ID (to check ownership)
+     * @return bool True if locked by ANOTHER call
+     */
+    private function isAlternativeLockedByOther(
+        int $companyId,
+        int $serviceId,
+        Carbon $slotTime,
+        string $callId
+    ): bool {
+        $lockKey = "alt_lock:c{$companyId}:s{$serviceId}:t{$slotTime->format('YmdHi')}";
+
+        if (!Cache::has($lockKey)) {
+            return false;
+        }
+
+        $lockData = Cache::get($lockKey);
+        return ($lockData['call_id'] ?? null) !== $callId;
     }
 }
