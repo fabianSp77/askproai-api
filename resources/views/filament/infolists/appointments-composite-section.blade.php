@@ -12,17 +12,24 @@
         @php
             $isComposite = $appointment->service && $appointment->service->composite;
             $isCancelled = $appointment->status === 'cancelled';
+            $isRescheduled = $appointment->wasRescheduled();
 
-            // Status badge configuration
-            $statusConfig = match($appointment->status) {
-                'confirmed', 'scheduled', 'booked' => ['label' => 'Bestätigt', 'color' => 'success', 'icon' => '✓'],
-                'pending' => ['label' => 'Ausstehend', 'color' => 'warning', 'icon' => '⏳'],
-                'cancelled' => ['label' => 'Storniert', 'color' => 'danger', 'icon' => '🚫'],
-                'completed' => ['label' => 'Abgeschlossen', 'color' => 'gray', 'icon' => '✓'],
-                default => ['label' => $appointment->status, 'color' => 'gray', 'icon' => '?']
-            };
+            // Status badge configuration - 🆕 2025-11-25: Added rescheduled status
+            if ($isRescheduled && !$isCancelled) {
+                $statusConfig = ['label' => 'Verschoben', 'color' => 'amber', 'icon' => '🔄'];
+            } else {
+                $statusConfig = match($appointment->status) {
+                    'confirmed', 'scheduled', 'booked' => ['label' => 'Bestätigt', 'color' => 'success', 'icon' => '✓'],
+                    'pending' => ['label' => 'Ausstehend', 'color' => 'warning', 'icon' => '⏳'],
+                    'cancelled' => ['label' => 'Storniert', 'color' => 'danger', 'icon' => '🚫'],
+                    'completed' => ['label' => 'Abgeschlossen', 'color' => 'gray', 'icon' => '✓'],
+                    default => ['label' => $appointment->status, 'color' => 'gray', 'icon' => '?']
+                };
+            }
 
-            $bgColor = $isCancelled ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+            $bgColor = $isCancelled
+                ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                : ($isRescheduled ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700');
         @endphp
 
         <div class="mb-4 p-4 border rounded-lg {{ $bgColor }}">
@@ -72,11 +79,61 @@
                     @if($statusConfig['color'] === 'success') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                     @elseif($statusConfig['color'] === 'warning') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                     @elseif($statusConfig['color'] === 'danger') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                    @elseif($statusConfig['color'] === 'amber') bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200
                     @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200
                     @endif">
                     {{ $statusConfig['icon'] }} {{ $statusConfig['label'] }}
                 </span>
             </div>
+
+            {{-- 🆕 2025-11-25: Reschedule Info Section --}}
+            @if($isRescheduled)
+                <div class="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+                    <div class="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wide mb-2">
+                        🔄 Verschiebungs-Info
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        @if($appointment->previous_starts_at)
+                            <div class="flex items-center gap-2">
+                                <span class="text-red-600 dark:text-red-400 font-medium" style="text-decoration: line-through;">
+                                    ❌ Alt: {{ \Carbon\Carbon::parse($appointment->previous_starts_at)->format('d.m.Y H:i') }}
+                                </span>
+                            </div>
+                        @endif
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-600 dark:text-green-400 font-semibold">
+                                ✅ Neu: {{ \Carbon\Carbon::parse($appointment->starts_at)->format('d.m.Y H:i') }}
+                            </span>
+                        </div>
+                        @if($appointment->rescheduled_count > 1)
+                            <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                📊 {{ $appointment->rescheduled_count }}x verschoben
+                            </div>
+                        @endif
+                        @if($appointment->rescheduled_by)
+                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                👤 Verschoben von:
+                                @switch($appointment->rescheduled_by)
+                                    @case('retell_ai')
+                                        KI-Assistent
+                                        @break
+                                    @case('staff')
+                                        Mitarbeiter
+                                        @break
+                                    @case('customer')
+                                        Kunde
+                                        @break
+                                    @case('system')
+                                        System
+                                        @break
+                                    @default
+                                        {{ $appointment->rescheduled_by }}
+                                @endswitch
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             {{-- Composite: Show Segments --}}
             @if($isComposite)

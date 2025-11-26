@@ -9,6 +9,22 @@
     $appointments = $record->appointments;
     $hasAppointments = $appointments->isNotEmpty();
 
+    // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+    // Match via retell_call_id in modification metadata
+    $thisCallPerformedReschedule = false;
+    $rescheduleDetails = null;
+    if ($record->retell_call_id) {
+        try {
+            $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                ->with('appointment.service')
+                ->first();
+            $thisCallPerformedReschedule = $rescheduleDetails !== null;
+        } catch (\Exception $e) {
+            // Silently ignore
+        }
+    }
+
     // Determine display badge: Show LIVE if active, otherwise show BOOKING STATUS
     if ($isLive) {
         // Calculate elapsed time for LIVE calls
@@ -28,13 +44,19 @@
         $cancelledAppointments = $appointments->where('status', 'cancelled');
 
         // Booking Status Logic
+        // 🆕 PRIORITY 0: Check if THIS call performed a reschedule (highest priority)
+        if ($thisCallPerformedReschedule) {
+            $displayText = '🔄 Verschoben';
+            $badgeColor = 'success';  // Green like "Gebucht" - reschedule is still a success
+            $accentColor = '#f59e0b'; // amber-500 border to indicate reschedule
+        }
         // 🆕 PRIORITY 1: Check if appointment was cancelled
-        if ($cancelledAppointments->isNotEmpty() && $activeAppointments->isEmpty()) {
+        elseif ($cancelledAppointments->isNotEmpty() && $activeAppointments->isEmpty()) {
             $displayText = 'Storniert';
             $badgeColor = 'warning';  // Filament warning = orange
             $accentColor = '#f97316'; // orange-500
         }
-        // PRIORITY 2: Check if appointment is booked
+        // PRIORITY 2: Check if appointment is booked (by THIS call)
         elseif ($activeAppointments->isNotEmpty()) {
             // 🆕 2025-11-24: Check if ANY appointment is composite
             $hasComposite = $activeAppointments->first(fn($appt) => $appt->service && $appt->service->composite);
@@ -44,7 +66,7 @@
                 $badgeColor = 'success';
                 $accentColor = '#22c55e'; // green-500
             } else {
-                $displayText = 'Gebucht';
+                $displayText = '✅ Gebucht';
                 $badgeColor = 'success';  // Filament success = green
                 $accentColor = '#22c55e'; // green-500
             }
@@ -87,6 +109,28 @@
     $badgeTooltip = '';
     if ($isLive) {
         $badgeTooltip = 'Anruf läuft gerade';
+    } elseif ($thisCallPerformedReschedule && $rescheduleDetails) {
+        // 🆕 2025-11-25: Show reschedule details for THIS call
+        $tooltipLines = [];
+        $appt = $rescheduleDetails->appointment;
+        $serviceName = $appt?->service?->name ?? 'Service';
+        $metadata = $rescheduleDetails->metadata ?? [];
+
+        $oldTime = isset($metadata['original_time'])
+            ? \Carbon\Carbon::parse($metadata['original_time'])->format('d.m.Y H:i')
+            : ($appt?->previous_starts_at ? \Carbon\Carbon::parse($appt->previous_starts_at)->format('d.m.Y H:i') : null);
+        $newTime = isset($metadata['new_time'])
+            ? \Carbon\Carbon::parse($metadata['new_time'])->format('d.m.Y H:i')
+            : ($appt?->starts_at ? \Carbon\Carbon::parse($appt->starts_at)->format('d.m.Y H:i') : 'unbekannt');
+
+        $tooltipLines[] = "🔄 VERSCHIEBUNG durch diesen Anruf:";
+        $tooltipLines[] = "📋 Service: {$serviceName}";
+        if ($oldTime) {
+            $tooltipLines[] = "❌ Alt: {$oldTime}";
+        }
+        $tooltipLines[] = "✅ Neu: {$newTime}";
+
+        $badgeTooltip = implode("\n", $tooltipLines);
     } elseif ($hasAppointments && !$isLive) {
         $tooltipLines = [];
 
@@ -94,6 +138,7 @@
             $serviceName = $appt->service?->name ?? 'Service';
             $startTime = $appt->starts_at ? \Carbon\Carbon::parse($appt->starts_at)->format('d.m.Y H:i') : 'Zeit unbekannt';
 
+            // Standard booking display (not showing reschedule details here - that's for the reschedule call)
             if ($appt->service && $appt->service->composite) {
                 // 🆕 Composite appointment - show segments
                 try {

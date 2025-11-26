@@ -5,6 +5,27 @@
     // Check if call is LIVE
     $isLive = in_array($status, ['ongoing', 'in_progress', 'active', 'ringing']);
 
+    // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+    $thisCallPerformedReschedule = false;
+    $rescheduleDetails = null;
+    if ($record->retell_call_id) {
+        try {
+            $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                ->with('appointment.service')
+                ->first();
+            $thisCallPerformedReschedule = $rescheduleDetails !== null;
+        } catch (\Exception $e) {
+            // Silently ignore
+        }
+    }
+
+    // 🔧 FIX 2025-11-25: Initialize variables BEFORE if/else to prevent undefined variable errors
+    // These need to be available for tooltip generation regardless of $isLive status
+    $hasActiveAppointments = false;
+    $hasCancelledAppointments = false;
+    $performedCancellations = false;
+
     // Determine ACTION badge (what happened in this call)
     if ($isLive) {
         // Calculate elapsed time for LIVE calls
@@ -28,7 +49,6 @@
             ->where('status', 'cancelled')
             ->exists();
 
-        $performedCancellations = false;
         if ($record->retell_call_id) {
             $performedCancellations = \App\Models\AppointmentModification::query()
                 ->where('modification_type', 'cancel')
@@ -36,10 +56,25 @@
                 ->exists();
         }
 
-        // Determine badge based on action (NO EMOJIS - clean design)
-        if ($hasActiveAppointments) {
-            $count = $record->appointments()->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])->count();
-            $displayText = "{$count} Termin" . ($count > 1 ? 'e' : '') . " gebucht";
+        // 🆕 PRIORITY 0: Check if THIS call performed a reschedule (highest priority)
+        if ($thisCallPerformedReschedule) {
+            $displayText = '🔄 Verschoben';
+            $badgeColor = 'success';  // Green like "Gebucht" - reschedule is still a success
+            $accentColor = '#f59e0b'; // amber-500 border to indicate reschedule
+        }
+        // Determine badge based on action
+        elseif ($hasActiveAppointments) {
+            // Check for composite services
+            $hasComposite = $record->appointments()
+                ->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])
+                ->whereHas('service', fn($q) => $q->where('composite', true))
+                ->exists();
+
+            if ($hasComposite) {
+                $displayText = '✅ Gebucht (Compound)';
+            } else {
+                $displayText = '✅ Gebucht';
+            }
             $badgeColor = 'success';  // Filament success = green
             $accentColor = '#22c55e'; // green-500
 
@@ -74,7 +109,20 @@
 
     // Badge tooltip - shows appointment details
     $badgeTooltip = '';
-    if ($hasActiveAppointments) {
+    if ($thisCallPerformedReschedule && $rescheduleDetails) {
+        // 🆕 2025-11-25: Show reschedule details
+        $metadata = $rescheduleDetails->metadata ?? [];
+        $lines = ['🔄 Termin verschoben:'];
+
+        if (isset($metadata['original_time'])) {
+            $lines[] = '❌ Von: ' . \Carbon\Carbon::parse($metadata['original_time'])->format('d.m.Y H:i');
+        }
+        if (isset($metadata['new_time'])) {
+            $lines[] = '✅ Auf: ' . \Carbon\Carbon::parse($metadata['new_time'])->format('d.m.Y H:i');
+        }
+
+        $badgeTooltip = implode("\n", $lines);
+    } elseif ($hasActiveAppointments) {
         $appointments = $record->appointments()->whereIn('status', ['scheduled', 'confirmed', 'booked', 'pending'])->get();
         $lines = ['Gebuchte Termine:'];
         foreach ($appointments as $appt) {
