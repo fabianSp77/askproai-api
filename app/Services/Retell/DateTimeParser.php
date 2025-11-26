@@ -95,6 +95,33 @@ class DateTimeParser
         $time = $params['time'] ?? $params['uhrzeit'] ?? null;
         $date = $params['date'] ?? $params['datum'] ?? null;
 
+        // 🔧 FIX 2025-11-25: Convert vague German time periods to concrete times
+        // Bug: "vormittags", "nachmittags" etc. are not parseable by Carbon
+        // Solution: Map to default times for these periods
+        $vagueTimeMap = [
+            'vormittags' => '10:00',
+            'mittags' => '12:00',
+            'nachmittags' => '14:00',
+            'abends' => '18:00',
+            'morgens' => '08:00',
+            'früh' => '08:00',
+            'spät' => '17:00',
+        ];
+
+        if ($time) {
+            $normalizedTime = strtolower(trim($time));
+            if (isset($vagueTimeMap[$normalizedTime])) {
+                Log::info('🕐 Converting vague time period to concrete time', [
+                    'original' => $time,
+                    'converted' => $vagueTimeMap[$normalizedTime],
+                    'call_id' => $params['call_id'] ?? 'unknown'
+                ]);
+                $time = $vagueTimeMap[$normalizedTime];
+                $params['time'] = $time;
+                $params['uhrzeit'] = $time;
+            }
+        }
+
         // 🔧 FIX 2025-11-17: Validate vague date input without time
         // Bug: "diese Woche" without time defaulted to 10:00, causing confusion
         // Solution: Return null to signal caller to ask for time explicitly

@@ -863,6 +863,33 @@ class RetellWebhookController extends Controller
                 ]);
             }
 
+            // 🔧 FIX 2025-11-25 (Bug 5): Update RetellCallSession status to 'completed'
+            // Problem: RetellCallSession stays in 'in_progress' even after call ends
+            // Solution: Call endCallSession to update status and calculate metrics
+            try {
+                $retellCallId = $callData['call_id'] ?? null;
+                if ($retellCallId) {
+                    $sessionData = [
+                        'status' => 'completed',
+                        'disconnection_reason' => $callData['disconnection_reason'] ?? null,
+                        'metadata' => [
+                            'end_timestamp' => $callData['end_timestamp'] ?? now()->timestamp * 1000,
+                            'cost' => $callData['call_cost'] ?? null,
+                        ]
+                    ];
+                    $this->callTracking->endCallSession($retellCallId, $sessionData);
+                    Log::info('✅ RetellCallSession status updated to completed (Bug 5 fix)', [
+                        'retell_call_id' => $retellCallId,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Non-critical - session may not exist or already be ended
+                Log::warning('⚠️ Could not update RetellCallSession status', [
+                    'call_id' => $callData['call_id'] ?? null,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             // If we STILL don't have a call after all attempts, log warning
             if (!$call) {
                 Log::warning('⚠️ No call record found or created for call_ended event', [
