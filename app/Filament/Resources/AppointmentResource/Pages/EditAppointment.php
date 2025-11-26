@@ -78,7 +78,17 @@ class EditAppointment extends EditRecord
 
         if ($originalStartsAt && $newStartsAt && $originalStartsAt !== $newStartsAt->toDateTimeString()) {
             // Time was changed - this is a reschedule
-            $this->record->update(['sync_origin' => 'admin']);
+            $oldCalcomBookingUid = $this->record->calcom_v2_booking_uid;
+
+            // Update with reschedule tracking fields (2025-11-25)
+            $this->record->update([
+                'sync_origin' => 'admin',
+                'rescheduled_at' => now(),
+                'rescheduled_by' => 'staff',
+                'rescheduled_count' => ($this->record->rescheduled_count ?? 0) + 1,
+                'previous_starts_at' => Carbon::parse($originalStartsAt),
+                'calcom_previous_booking_uid' => $oldCalcomBookingUid,
+            ]);
 
             // 🔄 Fire AppointmentRescheduled event for Cal.com sync
             event(new AppointmentRescheduled(

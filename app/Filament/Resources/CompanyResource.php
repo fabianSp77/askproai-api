@@ -326,6 +326,11 @@ class CompanyResource extends Resource
                                                         ->label('Default Retell Agent ID')
                                                         ->maxLength(255)
                                                         ->helperText('Standard Agent für neue Telefonnummern'),
+
+                                                    Forms\Components\TextInput::make('retell_conversation_flow_id')
+                                                        ->label('Conversation Flow ID')
+                                                        ->maxLength(100)
+                                                        ->helperText('Retell Conversation Flow ID (z.B. conversation_flow_xxx)'),
                                                 ]),
 
                                                 Forms\Components\Toggle::make('retell_enabled')

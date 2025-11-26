@@ -802,6 +802,40 @@ class AppointmentResource extends Resource
                         default => $state,
                     }),
 
+                // Reschedule indicator badge (2025-11-25)
+                Tables\Columns\TextColumn::make('rescheduled_count')
+                    ->label('Verschoben')
+                    ->badge()
+                    ->color('warning')
+                    ->icon('heroicon-m-arrow-path-rounded-square')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (!$state || $state == 0) {
+                            return null;
+                        }
+                        return $state > 1 ? "Verschoben ({$state}x)" : 'Verschoben';
+                    })
+                    ->tooltip(function ($record) {
+                        if (!$record->rescheduled_at) {
+                            return null;
+                        }
+                        $info = "Zuletzt verschoben: " . $record->rescheduled_at->format('d.m.Y H:i');
+                        if ($record->previous_starts_at) {
+                            $info .= "\nUrsprünglich: " . $record->previous_starts_at->format('d.m.Y H:i');
+                        }
+                        if ($record->rescheduled_by) {
+                            $info .= "\nVon: " . match($record->rescheduled_by) {
+                                'retell_ai' => 'KI-Assistent',
+                                'staff' => 'Mitarbeiter',
+                                'customer' => 'Kunde',
+                                'system' => 'System',
+                                default => $record->rescheduled_by,
+                            };
+                        }
+                        return $info;
+                    })
+                    ->visible(fn ($record) => $record && $record->rescheduled_count > 0)
+                    ->toggleable(isToggledHiddenByDefault: false),
+
                 Tables\Columns\TextColumn::make('duration')
                     ->label('Dauer')
                     ->getStateUsing(fn ($record) =>
@@ -1056,11 +1090,19 @@ class AppointmentResource extends Resource
                                 return;
                             }
 
-                            // Update appointment and set sync origin
+                            // Update appointment with reschedule tracking (2025-11-25)
+                            $oldCalcomBookingUid = $record->calcom_v2_booking_uid;
+
                             $record->update([
                                 'starts_at' => $data['starts_at'],
                                 'ends_at' => $newStartTime->copy()->addMinutes($duration),
-                                'sync_origin' => 'admin',  // Mark as admin-initiated
+                                'sync_origin' => 'admin',
+                                // Reschedule tracking fields
+                                'rescheduled_at' => now(),
+                                'rescheduled_by' => 'staff',
+                                'rescheduled_count' => ($record->rescheduled_count ?? 0) + 1,
+                                'previous_starts_at' => $oldStartTime,
+                                'calcom_previous_booking_uid' => $oldCalcomBookingUid,
                             ]);
 
                             // 🔄 Fire AppointmentRescheduled event for Cal.com sync
@@ -1234,6 +1276,51 @@ class AppointmentResource extends Resource
                     ])
                     ->icon('heroicon-o-calendar-days')
                     ->collapsible(),
+
+                // Verschiebungs-Info (nur sichtbar wenn verschoben)
+                InfoSection::make('Verschiebungs-Info')
+                    ->schema([
+                        InfoGrid::make(2)
+                            ->schema([
+                                TextEntry::make('rescheduled_count')
+                                    ->label('Anzahl Verschiebungen')
+                                    ->badge()
+                                    ->color('warning')
+                                    ->icon('heroicon-m-arrow-path-rounded-square')
+                                    ->formatStateUsing(fn ($state) => $state ? "{$state}x verschoben" : '-'),
+
+                                TextEntry::make('rescheduled_at')
+                                    ->label('Zuletzt verschoben')
+                                    ->dateTime('d.m.Y H:i')
+                                    ->icon('heroicon-o-clock')
+                                    ->placeholder('-'),
+                            ]),
+
+                        InfoGrid::make(2)
+                            ->schema([
+                                TextEntry::make('previous_starts_at')
+                                    ->label('Ursprüngliche Zeit')
+                                    ->dateTime('d.m.Y H:i')
+                                    ->icon('heroicon-o-calendar')
+                                    ->placeholder('-'),
+
+                                TextEntry::make('rescheduled_by')
+                                    ->label('Verschoben von')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->formatStateUsing(fn ($state) => match($state) {
+                                        'retell_ai' => '🤖 KI-Assistent',
+                                        'staff' => '👤 Mitarbeiter',
+                                        'customer' => '👥 Kunde',
+                                        'system' => '⚙️ System',
+                                        default => $state ?? '-',
+                                    }),
+                            ]),
+                    ])
+                    ->icon('heroicon-o-arrow-path-rounded-square')
+                    ->iconColor('warning')
+                    ->collapsible()
+                    ->visible(fn ($record): bool => $record->wasRescheduled()),
 
                 // Teilnehmer
                 InfoSection::make('Teilnehmer')

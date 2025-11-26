@@ -128,6 +128,29 @@ class AppointmentsRelationManager extends RelationManager
                         'no_show' => 'Nicht erschienen',
                         default => $state,
                     }),
+                Tables\Columns\TextColumn::make('rescheduled_count')
+                    ->label('Verschoben')
+                    ->badge()
+                    ->color('warning')
+                    ->icon('heroicon-m-arrow-path-rounded-square')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (!$state || $state == 0) {
+                            return null;
+                        }
+                        return $state > 1 ? "Verschoben ({$state}x)" : 'Verschoben';
+                    })
+                    ->tooltip(function ($record) {
+                        if (!$record->rescheduled_at) {
+                            return null;
+                        }
+                        $info = "Zuletzt verschoben: " . $record->rescheduled_at->format('d.m.Y H:i');
+                        if ($record->previous_starts_at) {
+                            $info .= "\nUrsprünglich: " . $record->previous_starts_at->format('d.m.Y H:i');
+                        }
+                        return $info;
+                    })
+                    ->visible(fn ($record) => $record && $record->rescheduled_count > 0)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Preis')
                     ->money('EUR')

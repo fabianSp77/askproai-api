@@ -1557,6 +1557,42 @@ class CallResource extends Resource
                         ->getStateUsing(function (Call $record) {
                             $appointments = $record->appointments;
 
+                            // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                            $rescheduleDetails = null;
+                            if ($record->retell_call_id) {
+                                try {
+                                    $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                        ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                        ->with('appointment.service', 'appointment.staff')
+                                        ->first();
+                                } catch (\Exception $e) {
+                                    // Silently ignore
+                                }
+                            }
+
+                            // If this call performed a reschedule, show old/new time + staff (service is in Service/Preis column)
+                            if ($rescheduleDetails && $rescheduleDetails->appointment) {
+                                $appt = $rescheduleDetails->appointment;
+                                $metadata = $rescheduleDetails->metadata ?? [];
+                                $staffName = $appt->staff?->name ?? 'Unzugewiesen';
+                                $staffColor = $appt->staff ? 'text-green-600' : 'text-orange-600';
+
+                                $oldDateTime = isset($metadata['original_time'])
+                                    ? \Carbon\Carbon::parse($metadata['original_time'])->locale('de')->isoFormat('ddd DD.MM HH:mm')
+                                    : null;
+                                $newDateTime = isset($metadata['new_time'])
+                                    ? \Carbon\Carbon::parse($metadata['new_time'])->locale('de')->isoFormat('ddd DD.MM HH:mm')
+                                    : ($appt->starts_at ? \Carbon\Carbon::parse($appt->starts_at)->locale('de')->isoFormat('ddd DD.MM HH:mm') : 'unbekannt');
+
+                                $lines = [];
+                                if ($oldDateTime) {
+                                    $lines[] = '<span class="text-xs text-gray-400" style="text-decoration: line-through;">❌ ' . $oldDateTime . '</span>';
+                                }
+                                $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">✅ ' . $newDateTime . ' → ' . $staffName . '</span>';
+
+                                return new HtmlString(implode('<br>', $lines));
+                            }
+
                             if ($appointments->isEmpty()) {
                                 return new HtmlString('<span class="text-xs text-gray-400">-</span>');
                             }
@@ -1646,6 +1682,8 @@ class CallResource extends Resource
                                         }
                                     } else {
                                         // Standard appointment (non-composite)
+                                        // Note: Reschedule display is now handled at the top of this function
+                                        // This shows what was BOOKED by this call
                                         if (strlen($serviceName) > 20) {
                                             $serviceName = substr($serviceName, 0, 17) . '...';
                                         }
@@ -1678,6 +1716,41 @@ class CallResource extends Resource
                                 ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
                         )
                         ->tooltip(function (Call $record) {
+                            // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                            $rescheduleDetails = null;
+                            if ($record->retell_call_id) {
+                                try {
+                                    $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                        ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                        ->with('appointment.service', 'appointment.staff')
+                                        ->first();
+                                } catch (\Exception $e) {
+                                    // Silently ignore
+                                }
+                            }
+
+                            // If this call performed a reschedule, show reschedule details
+                            if ($rescheduleDetails && $rescheduleDetails->appointment) {
+                                $appt = $rescheduleDetails->appointment;
+                                $metadata = $rescheduleDetails->metadata ?? [];
+
+                                $parts = [];
+                                $parts[] = '🔄 Termin verschoben:';
+                                $parts[] = '━━━━━━━━━━━━━━━━━━━━━━━━';
+
+                                if (isset($metadata['original_time'])) {
+                                    $parts[] = '❌ Von: ' . \Carbon\Carbon::parse($metadata['original_time'])->format('d.m.Y H:i');
+                                }
+                                if (isset($metadata['new_time'])) {
+                                    $parts[] = '✅ Auf: ' . \Carbon\Carbon::parse($metadata['new_time'])->format('d.m.Y H:i');
+                                }
+                                if ($appt->staff) {
+                                    $parts[] = '👤 Mitarbeiter: ' . $appt->staff->name;
+                                }
+
+                                return implode("\n", $parts);
+                            }
+
                             $appointments = $record->appointments;
                             if ($appointments->isEmpty()) {
                                 return null;
@@ -1816,6 +1889,40 @@ class CallResource extends Resource
                         ->html()
                         ->getStateUsing(function ($record) {
                             try {
+                                // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                                $rescheduleDetails = null;
+                                if ($record->retell_call_id) {
+                                    try {
+                                        $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                            ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                            ->with('appointment.service')
+                                            ->first();
+                                    } catch (\Exception $e) {
+                                        // Silently ignore
+                                    }
+                                }
+
+                                // If this call performed a reschedule, show the service normally (no special icon - badge already shows it's a reschedule)
+                                if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
+                                    $service = $rescheduleDetails->appointment->service;
+                                    $name = ($service->display_name && trim($service->display_name) !== '')
+                                        ? $service->display_name
+                                        : $service->name;
+                                    $price = $service->price;
+
+                                    if ($price && $price > 0) {
+                                        $formattedPrice = number_format($price, 0, ',', '.');
+                                        return '<div class="text-xs space-y-1 w-full">' .
+                                            '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
+                                            '<span class="text-xs text-green-600">' . $formattedPrice . ' €</span>' .
+                                            '</div>';
+                                    } else {
+                                        return '<div class="text-xs space-y-1 w-full">' .
+                                            '<span class="font-medium">' . htmlspecialchars($name) . '</span>' .
+                                            '</div>';
+                                    }
+                                }
+
                                 // Use already-loaded appointments (eager-loaded on line 201)
                                 $appointments = $record->appointments ?? collect();
 
@@ -1852,10 +1959,9 @@ class CallResource extends Resource
                                         // Display as full euros only (no cents)
                                         $formattedPrice = number_format($price, 0, ',', '.');
                                         $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span><br>' .
-                                                  '<span class="text-xs ' . $priceColor . '">💰 ' . $formattedPrice . '€' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                                  '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €' . ($isCancelled ? ' (storniert)' : '') . '</span>';
                                     } else {
-                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span><br>' .
-                                                  '<span class="text-xs text-gray-400">Kein Preis' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span>';
                                     }
                                 }
 
@@ -1876,6 +1982,28 @@ class CallResource extends Resource
                         })
                         ->tooltip(function ($record) {
                             try {
+                                // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                                if ($record->retell_call_id) {
+                                    try {
+                                        $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                            ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                            ->with('appointment.service')
+                                            ->first();
+
+                                        if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
+                                            $service = $rescheduleDetails->appointment->service;
+                                            $name = $service->name ?? 'Service';
+                                            $duration = $service->duration ?? '?';
+                                            $price = $service->price ?? 0;
+                                            $formattedPrice = ($price && $price > 0) ? number_format($price, 0, ',', '.') . '€' : 'Kein Preis';
+
+                                            return "{$name}\nDauer: {$duration} Min\nPreis: {$formattedPrice}";
+                                        }
+                                    } catch (\Exception $e) {
+                                        // Silently ignore
+                                    }
+                                }
+
                                 // Use already-loaded appointments (eager-loaded on line 201)
                                 $appointments = $record->appointments ?? collect();
 
@@ -1910,10 +2038,7 @@ class CallResource extends Resource
                             if (strip_tags($state) === '-') return 'gray';
                             return 'success';
                         })
-                        ->icon(function ($state): ?string {
-                            if (strip_tags($state) === '-') return null;  // No icon for empty state
-                            return 'heroicon-m-calendar-days';
-                        })
+                        ->icon(null)  // No icon - cleaner display
                         ->limit(150)
                         ->wrap()
                         ->searchable()
@@ -2357,6 +2482,42 @@ class CallResource extends Resource
                 ->getStateUsing(function (Call $record) {
                     $appointments = $record->appointments;
 
+                    // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                    $rescheduleDetails = null;
+                    if ($record->retell_call_id) {
+                        try {
+                            $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                ->with('appointment.service', 'appointment.staff')
+                                ->first();
+                        } catch (\Exception $e) {
+                            // Silently ignore
+                        }
+                    }
+
+                    // If this call performed a reschedule, show old/new time + staff (compact)
+                    if ($rescheduleDetails && $rescheduleDetails->appointment) {
+                        $appt = $rescheduleDetails->appointment;
+                        $metadata = $rescheduleDetails->metadata ?? [];
+                        $staffName = $appt->staff ? \Str::limit($appt->staff->name, 12) : 'Kein MA';
+                        $staffColor = $appt->staff ? 'text-green-600' : 'text-orange-600';
+
+                        $oldDateTime = isset($metadata['original_time'])
+                            ? \Carbon\Carbon::parse($metadata['original_time'])->locale('de')->isoFormat('DD.MM HH:mm')
+                            : null;
+                        $newDateTime = isset($metadata['new_time'])
+                            ? \Carbon\Carbon::parse($metadata['new_time'])->locale('de')->isoFormat('DD.MM HH:mm')
+                            : ($appt->starts_at ? \Carbon\Carbon::parse($appt->starts_at)->locale('de')->isoFormat('DD.MM HH:mm') : 'unbekannt');
+
+                        $lines = [];
+                        if ($oldDateTime) {
+                            $lines[] = '<span class="text-xs text-gray-400" style="text-decoration: line-through;">❌ ' . $oldDateTime . '</span>';
+                        }
+                        $lines[] = '<span class="text-xs ' . $staffColor . '">✅ ' . $newDateTime . ' → ' . $staffName . '</span>';
+
+                        return new HtmlString(implode('<br>', $lines));
+                    }
+
                     if ($appointments->isEmpty()) {
                         return new HtmlString('<span class="text-xs text-gray-400">-</span>');
                     }
@@ -2382,6 +2543,7 @@ class CallResource extends Resource
                                 $lines[] = '<span class="text-xs text-green-600 font-medium">📦 ' . $serviceName . ' (' . $phaseCount . ')</span>';
                                 $lines[] = '<span class="text-xs text-gray-500">   ' . $dateTime . '</span>';
                             } else {
+                                // Standard booking display
                                 $staffName = $appointment->staff ? \Str::limit($appointment->staff->name, 12) : 'Kein MA';
                                 $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
                                 $lines[] = '<span class="text-xs ' . $staffColor . '">✓ ' . $dateTime . ' → ' . $staffName . '</span>';
@@ -2402,6 +2564,41 @@ class CallResource extends Resource
                         ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
                 )
                 ->tooltip(function (Call $record) {
+                    // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                    $rescheduleDetails = null;
+                    if ($record->retell_call_id) {
+                        try {
+                            $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                ->with('appointment.service', 'appointment.staff')
+                                ->first();
+                        } catch (\Exception $e) {
+                            // Silently ignore
+                        }
+                    }
+
+                    // If this call performed a reschedule, show reschedule details
+                    if ($rescheduleDetails && $rescheduleDetails->appointment) {
+                        $appt = $rescheduleDetails->appointment;
+                        $metadata = $rescheduleDetails->metadata ?? [];
+
+                        $parts = [];
+                        $parts[] = '🔄 Termin verschoben:';
+                        $parts[] = '━━━━━━━━━━━━━━━━━━━━━━━━';
+
+                        if (isset($metadata['original_time'])) {
+                            $parts[] = '❌ Von: ' . \Carbon\Carbon::parse($metadata['original_time'])->format('d.m.Y H:i');
+                        }
+                        if (isset($metadata['new_time'])) {
+                            $parts[] = '✅ Auf: ' . \Carbon\Carbon::parse($metadata['new_time'])->format('d.m.Y H:i');
+                        }
+                        if ($appt->staff) {
+                            $parts[] = '👤 Mitarbeiter: ' . $appt->staff->name;
+                        }
+
+                        return implode("\n", $parts);
+                    }
+
                     $appointments = $record->appointments;
                     if ($appointments->isEmpty()) {
                         return null;
@@ -2479,12 +2676,46 @@ class CallResource extends Resource
                     return implode("\n", $parts);
                 }),
 
-            // 5. Service/Preis (unchanged from classic)
+            // 5. Service/Preis - 🆕 2025-11-25: Updated for reschedule calls
             Tables\Columns\TextColumn::make('service_type')
                 ->label('Service')
                 ->html()
                 ->getStateUsing(function ($record) {
                     try {
+                        // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                        $rescheduleDetails = null;
+                        if ($record->retell_call_id) {
+                            try {
+                                $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment.service')
+                                    ->first();
+                            } catch (\Exception $e) {
+                                // Silently ignore
+                            }
+                        }
+
+                        // If this call performed a reschedule, show the service normally (no icon - badge shows it's a reschedule)
+                        if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
+                            $service = $rescheduleDetails->appointment->service;
+                            $name = ($service->display_name && trim($service->display_name) !== '')
+                                ? $service->display_name
+                                : $service->name;
+                            $price = $service->price;
+
+                            if ($price && $price > 0) {
+                                $formattedPrice = number_format($price, 0, ',', '.');
+                                return '<div class="text-xs">' .
+                                    '<span class="font-medium">' . htmlspecialchars(\Str::limit($name, 15)) . '</span><br>' .
+                                    '<span class="text-xs text-green-600">' . $formattedPrice . ' €</span>' .
+                                    '</div>';
+                            } else {
+                                return '<div class="text-xs">' .
+                                    '<span class="font-medium">' . htmlspecialchars(\Str::limit($name, 15)) . '</span>' .
+                                    '</div>';
+                            }
+                        }
+
                         $appointments = $record->appointments ?? collect();
 
                         if (!$appointments || $appointments->isEmpty()) {
@@ -2514,7 +2745,7 @@ class CallResource extends Resource
                             if ($price && $price > 0) {
                                 $formattedPrice = number_format($price, 0, ',', '.');
                                 $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span><br>' .
-                                          '<span class="text-xs ' . $priceColor . '">💰 ' . $formattedPrice . '€</span>';
+                                          '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €</span>';
                             } else {
                                 $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span>';
                             }
@@ -2531,6 +2762,28 @@ class CallResource extends Resource
                 })
                 ->tooltip(function ($record) {
                     try {
+                        // 🆕 2025-11-25: Check if THIS CALL performed a reschedule
+                        if ($record->retell_call_id) {
+                            try {
+                                $rescheduleDetails = \App\Models\AppointmentModification::where('modification_type', 'reschedule')
+                                    ->whereJsonContains('metadata->call_id', $record->retell_call_id)
+                                    ->with('appointment.service')
+                                    ->first();
+
+                                if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
+                                    $service = $rescheduleDetails->appointment->service;
+                                    $name = $service->name ?? 'Service';
+                                    $duration = $service->duration ?? '?';
+                                    $price = $service->price ?? 0;
+                                    $formattedPrice = ($price && $price > 0) ? number_format($price, 0, ',', '.') . '€' : 'Kein Preis';
+
+                                    return "{$name}\nDauer: {$duration} Min\nPreis: {$formattedPrice}";
+                                }
+                            } catch (\Exception $e) {
+                                // Silently ignore
+                            }
+                        }
+
                         $appointments = $record->appointments ?? collect();
 
                         if (!$appointments || $appointments->isEmpty()) {
