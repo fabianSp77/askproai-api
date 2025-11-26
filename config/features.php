@@ -558,4 +558,62 @@ return [
          */
         'log_to_database' => env('SLOT_LOCK_DB_LOG', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Slot Intelligence System (2025-11-25)
+    |--------------------------------------------------------------------------
+    |
+    | Intelligent slot management for Retell AI voice calls:
+    | - Pre-loads 7 days of slots at first availability check (cached 15 min)
+    | - Handles vague time periods ("vormittags" → 09:00-12:00)
+    | - Fuzzy matches specific times (10:00 → finds 10:05 within ±30min)
+    | - Positive framing: "Ja, 10:05 hätte ich" instead of "10:00 nicht frei"
+    |
+    | Benefits:
+    |   - Faster responses (5ms cache vs 800ms API call)
+    |   - Better UX with positive messaging
+    |   - Fewer redundant Cal.com API calls per call
+    |   - Smart handling of vague time requests
+    |
+    | @default true (enabled by default for better UX)
+    | @since 2025-11-25
+    */
+    'slot_intelligence' => [
+        /**
+         * Master Toggle - Enable slot intelligence system
+         */
+        'enabled' => env('FEATURE_SLOT_INTELLIGENCE', true),
+
+        /**
+         * Fuzzy Match Toggle - Allow matching nearby times
+         *
+         * When TRUE: 10:00 request can match 10:05, 10:15 etc.
+         * When FALSE: Only exact time matches
+         */
+        'fuzzy_match' => env('SLOT_INTELLIGENCE_FUZZY_MATCH', true),
+
+        /**
+         * Fuzzy Match Tolerance - Max minutes difference for fuzzy matching
+         *
+         * @default 30 (±30 minutes)
+         */
+        'fuzzy_tolerance_minutes' => env('SLOT_INTELLIGENCE_TOLERANCE', 30),
+
+        /**
+         * Pre-load Days - Number of days to pre-load at call start
+         *
+         * @default 7 (one week ahead)
+         */
+        'preload_days' => env('SLOT_INTELLIGENCE_PRELOAD_DAYS', 7),
+
+        /**
+         * Cache TTL - Time-to-live for cached slots (in seconds)
+         *
+         * Should cover typical call duration (max ~15 minutes)
+         *
+         * @default 900 (15 minutes)
+         */
+        'cache_ttl_seconds' => env('SLOT_INTELLIGENCE_CACHE_TTL', 900),
+    ],
 ];
