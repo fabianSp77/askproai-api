@@ -66,7 +66,10 @@ class CalcomV2Client
                         CURLOPT_TCP_KEEPINTVL => 60,
                     ],
                 ])
-                ->timeout(30)
+                // 🔧 FIX 2025-11-26: Reduced timeout from 30s to 10s to prevent Retell duplicate calls
+                // Retell AI may retry function calls if response takes too long
+                // 10s is sufficient for Cal.com API while preventing timeout-triggered retries
+                ->timeout(10)
                 ->connectTimeout(5);
         }
 
@@ -316,16 +319,22 @@ class CalcomV2Client
     }
 
     /**
-     * PATCH /v2/bookings/{id} - Reschedule a booking
+     * POST /v2/bookings/{uid}/reschedule - Reschedule a booking
+     *
+     * 🔧 FIX 2025-11-25: Cal.com V2 API uses POST /reschedule endpoint, NOT PATCH
+     * PATCH returns 404 for all bookings - it's not supported in V2
+     *
+     * @see https://cal.com/docs/api-reference/v2/bookings/reschedule-a-booking
+     *
+     * @param string $bookingUid Cal.com booking UID (e.g., "x6N4ojo4ijd2WTnhyHgnre")
+     * @param array $data Reschedule data (start, reschedulingReason)
      */
-    public function rescheduleBooking(int $bookingId, array $data): Response
+    public function rescheduleBooking(string $bookingUid, array $data): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->patch("{$this->baseUrl}/bookings/{$bookingId}", [
+            ->post("{$this->baseUrl}/bookings/{$bookingUid}/reschedule", [
                 'start' => $data['start'],
-                'end' => $data['end'],
-                'timeZone' => $data['timeZone'],
-                'reason' => $data['reason'] ?? 'Customer requested reschedule'
+                'reschedulingReason' => $data['reason'] ?? 'Customer requested reschedule'
             ]);
     }
 
