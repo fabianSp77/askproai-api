@@ -51,8 +51,8 @@ class AuthController extends Controller
 
             if (!$invitation) {
                 return response()->json([
-                    'valid' => false,
-                    'error' => 'Invalid invitation token.',
+                    'success' => false,
+                    'message' => 'Diese Einladung wurde nicht gefunden.',
                     'error_code' => 'TOKEN_NOT_FOUND',
                 ], 404);
             }
@@ -60,8 +60,8 @@ class AuthController extends Controller
             // Check if already accepted
             if ($invitation->accepted_at) {
                 return response()->json([
-                    'valid' => false,
-                    'error' => 'This invitation has already been used.',
+                    'success' => false,
+                    'message' => 'Diese Einladung wurde bereits verwendet.',
                     'error_code' => 'TOKEN_ALREADY_USED',
                 ], 422);
             }
@@ -69,17 +69,17 @@ class AuthController extends Controller
             // Check if expired
             if ($invitation->isExpired()) {
                 return response()->json([
-                    'valid' => false,
-                    'error' => 'This invitation has expired. Please request a new one.',
+                    'success' => false,
+                    'message' => 'Diese Einladung ist abgelaufen. Bitte fordern Sie eine neue an.',
                     'error_code' => 'TOKEN_EXPIRED',
                     'expired_at' => $invitation->expires_at->toIso8601String(),
                 ], 422);
             }
 
-            // Token is valid
+            // Token is valid - return in format expected by frontend
             return response()->json([
-                'valid' => true,
-                'invitation' => new InvitationResource($invitation),
+                'success' => true,
+                'data' => new InvitationResource($invitation),
             ], 200);
 
         } catch (\Exception $e) {
@@ -90,8 +90,8 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
-                'valid' => false,
-                'error' => 'Unable to validate token. Please try again.',
+                'success' => false,
+                'message' => 'Die Einladung konnte nicht überprüft werden. Bitte versuchen Sie es später erneut.',
                 'error_code' => 'VALIDATION_ERROR',
             ], 500);
         }

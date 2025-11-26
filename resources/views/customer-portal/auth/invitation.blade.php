@@ -18,7 +18,8 @@
         </div>
 
         <div x-data="invitationForm"
-             x-init="init('{{ $token }}')"
+             data-token="{{ $token }}"
+             x-init="initFromElement($el)"
              x-cloak>
 
             <!-- Loading State -->
@@ -50,18 +51,50 @@
                   @submit.prevent="submitForm"
                   class="mt-8 space-y-6">
 
+                <!-- Invitation Context Banner -->
+                <div class="bg-gradient-to-r from-primary/10 to-purple-100 rounded-lg p-4 border border-primary/20">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-hand-holding-heart text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-700">
+                                <span class="font-semibold text-gray-900" x-text="invitation?.invited_by || 'Jemand'"></span>
+                                hat Sie eingeladen, dem Kundenportal von
+                                <span class="font-semibold text-primary" x-text="invitation?.company?.name || ''"></span>
+                                beizutreten.
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-calendar-alt mr-1"></i>
+                                Eingeladen am <span x-text="invitation ? new Date(invitation.invited_at).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : ''"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Pre-filled Info (Read-only) -->
                 <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p class="text-sm font-medium text-gray-700 mb-2">Ihre Daten:</p>
-                    <div class="space-y-1 text-sm">
-                        <p class="text-gray-600">
-                            <i class="fas fa-phone w-5"></i>
-                            <span x-text="invitation ? invitation.phone : ''"></span>
-                        </p>
-                        <p class="text-gray-600">
-                            <i class="fas fa-envelope w-5"></i>
-                            <span x-text="invitation ? invitation.email : ''"></span>
-                        </p>
+                    <p class="text-sm font-medium text-gray-700 mb-3">
+                        <i class="fas fa-info-circle text-primary mr-1"></i>
+                        Ihre Kontodaten:
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-envelope w-5 text-primary"></i>
+                            <span class="ml-2" x-text="invitation ? invitation.email : ''"></span>
+                        </div>
+                        <div class="flex items-center text-gray-600" x-show="invitation && invitation.phone">
+                            <i class="fas fa-phone w-5 text-primary"></i>
+                            <span class="ml-2" x-text="invitation ? invitation.phone : ''"></span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-building w-5 text-primary"></i>
+                            <span class="ml-2" x-text="invitation && invitation.company ? invitation.company.name : ''"></span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-user-tag w-5 text-primary"></i>
+                            <span class="ml-2">Rolle: <span class="font-medium text-gray-900" x-text="invitation && invitation.role ? invitation.role.display_name : ''"></span></span>
+                        </div>
                     </div>
                 </div>
 
@@ -217,12 +250,27 @@
 
             errors: {},
 
-            init(token) {
+            initFromElement(el) {
+                // Read token from data attribute to avoid Alpine timing issues
+                const token = el.dataset.token;
+
+                if (!token || token === 'undefined' || token === '') {
+                    this.error = 'Ungültiger Einladungslink.';
+                    this.loading = false;
+                    return;
+                }
                 this.token = token;
-                this.validateToken();
+                // Delay to ensure axios is fully initialized by parent app component
+                setTimeout(() => this.validateToken(), 200);
             },
 
             async validateToken() {
+                if (!this.token || this.token === 'undefined') {
+                    this.error = 'Ungültiger Einladungslink.';
+                    this.loading = false;
+                    return;
+                }
+
                 this.loading = true;
                 this.error = null;
 
@@ -237,7 +285,6 @@
                         this.error = response.data.message || 'Einladung ungültig oder abgelaufen.';
                     }
                 } catch (error) {
-                    console.error('Validation error:', error);
                     if (error.response?.status === 404) {
                         this.error = 'Diese Einladung wurde nicht gefunden oder ist bereits abgelaufen.';
                     } else if (error.response?.data?.message) {
@@ -268,22 +315,37 @@
                     );
 
                     if (response.data.success) {
-                        // Store token and user data
-                        const token = response.data.data.token;
-                        const user = response.data.data.user;
+                        // Store token and user data (handle both response formats)
+                        const token = response.data.access_token || response.data.data?.token;
+                        const user = response.data.user || response.data.data?.user;
 
-                        // Use the parent app's login method
-                        this.$root.login(token, user);
+                        if (token && this.$root && typeof this.$root.login === 'function') {
+                            // Use the parent app's login method if available
+                            this.$root.login(token, user);
+                        } else if (token) {
+                            // Fallback: store token directly
+                            localStorage.setItem('customer_portal_token', token);
+                            if (user) {
+                                localStorage.setItem('customer_portal_user', JSON.stringify(user));
+                            }
+                        }
 
                         // Show success message
-                        this.$root.showToast('Willkommen! Ihr Konto wurde erfolgreich erstellt.', 'success');
+                        if (this.$root && typeof this.$root.showToast === 'function') {
+                            this.$root.showToast('Willkommen! Ihr Konto wurde erfolgreich erstellt.', 'success');
+                        }
 
                         // Redirect to appointments page
                         setTimeout(() => {
                             window.location.href = '/meine-termine';
                         }, 1000);
                     } else {
-                        this.$root.showToast(response.data.message || 'Ein Fehler ist aufgetreten.', 'error');
+                        const errorMsg = response.data.message || response.data.error || 'Ein Fehler ist aufgetreten.';
+                        if (this.$root && typeof this.$root.showToast === 'function') {
+                            this.$root.showToast(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
                     }
                 } catch (error) {
                     console.error('Registration error:', error);

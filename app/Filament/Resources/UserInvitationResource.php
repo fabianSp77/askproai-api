@@ -40,16 +40,63 @@ class UserInvitationResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->label('E-Mail-Adresse')
-                            ->unique(table: 'user_invitations', ignorable: fn ($record) => $record)
+                            ->unique(
+                                table: 'user_invitations',
+                                ignorable: fn ($record) => $record,
+                                modifyRuleUsing: fn ($rule) => $rule
+                                    ->where('company_id', auth()->user()->company_id)
+                                    ->whereNull('deleted_at')
+                                    ->whereNull('accepted_at')
+                                    ->where('expires_at', '>', now())
+                            )
                             ->helperText('E-Mail-Adresse des einzuladenden Kunden'),
 
                         Forms\Components\Select::make('role_id')
-                            ->relationship('role', 'name')
+                            ->relationship(
+                                name: 'role',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn ($query) => $query->whereIn('name', [
+                                    'viewer',      // Nur Leserechte
+                                    'operator',    // Operative Tätigkeiten
+                                    'manager',     // Management
+                                ])
+                            )
                             ->required()
-                            ->label('Rolle')
-                            ->helperText('Zugewiesene Rolle für den Kunden'),
+                            ->label('Kundenrolle')
+                            ->helperText('Wählen Sie die passende Rolle für den Kunden')
+                            ->getOptionLabelFromRecordUsing(fn ($record) =>
+                                $record->name . ' – ' . ($record->description ?? 'Keine Beschreibung')
+                            )
+                            ->searchable()
+                            ->native(false),
                     ])
                     ->columns(2),
+
+                Forms\Components\Section::make('Rollen-Erklärung')
+                    ->schema([
+                        Forms\Components\Placeholder::make('role_info')
+                            ->label('')
+                            ->content(new \Illuminate\Support\HtmlString('
+                                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 16px; border-radius: 6px;">
+                                    <h4 style="margin: 0 0 12px 0; color: #0c4a6e; font-weight: 600;">📌 Verfügbare Kundenrollen:</h4>
+                                    <div style="display: grid; gap: 10px;">
+                                        <div style="background: white; padding: 10px; border-radius: 4px; border-left: 3px solid #10b981;">
+                                            <strong style="color: #065f46;">👁️ Viewer (Betrachter)</strong><br>
+                                            <span style="font-size: 0.9em; color: #374151;">Nur Leserechte – Kann eigene Termine ansehen, aber keine Änderungen vornehmen.</span>
+                                        </div>
+                                        <div style="background: white; padding: 10px; border-radius: 4px; border-left: 3px solid #f59e0b;">
+                                            <strong style="color: #92400e;">⚙️ Operator (Bearbeiter)</strong><br>
+                                            <span style="font-size: 0.9em; color: #374151;">Operative Tätigkeiten – Kann Termine ansehen, buchen, verschieben und stornieren.</span>
+                                        </div>
+                                        <div style="background: white; padding: 10px; border-radius: 4px; border-left: 3px solid #8b5cf6;">
+                                            <strong style="color: #5b21b6;">👔 Manager (Verwalter)</strong><br>
+                                            <span style="font-size: 0.9em; color: #374151;">Management-Rechte – Vollständige Kontrolle über Termine und erweiterte Funktionen.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ')),
+                    ])
+                    ->collapsed(false),
 
                 Forms\Components\Section::make('Persönliche Nachricht')
                     ->schema([

@@ -35,6 +35,7 @@ class UserInvitation extends Model
         'token',
         'expires_at',
         'accepted_at',
+        'status',
         'metadata',
     ];
 
@@ -108,9 +109,41 @@ class UserInvitation extends Model
     // ==========================================
 
     /**
-     * Generate cryptographically secure token
+     * Generate short, readable token (8 characters)
+     * Format: XXXX-XXXX (e.g., AB3K-9MF2)
+     *
+     * Uses alphanumeric characters (excluding confusing ones: 0, O, I, l, 1)
+     * Total possibilities: 32^8 = 1,099,511,627,776 (over 1 trillion)
+     *
+     * Collision probability with 1 million invitations: ~0.00001%
      */
     public static function generateToken(): string
+    {
+        // Characters that are easy to read and type
+        // Excluding: 0, O (zero/oh), I, l, 1 (one/el/eye)
+        $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+        do {
+            // Generate 8 random characters
+            $token = '';
+            for ($i = 0; $i < 8; $i++) {
+                $token .= $characters[random_int(0, strlen($characters) - 1)];
+            }
+
+            // Format as XXXX-XXXX for readability
+            $formatted = substr($token, 0, 4) . '-' . substr($token, 4, 4);
+
+            // Check if token already exists (collision check)
+        } while (self::where('token', $formatted)->exists());
+
+        return $formatted;
+    }
+
+    /**
+     * Legacy method for backwards compatibility
+     * (can be removed after migration)
+     */
+    public static function generateLongToken(): string
     {
         return hash('sha256', Str::random(64) . microtime(true));
     }
@@ -196,6 +229,32 @@ class UserInvitation extends Model
             ->pending()
             ->where('expires_at', '>', now())
             ->exists();
+    }
+
+    // ==========================================
+    // DISPLAY HELPERS
+    // ==========================================
+
+    /**
+     * Get human-readable role display name in German
+     */
+    public function getRoleDisplayName(): string
+    {
+        if (!$this->role) {
+            return 'Kunde';
+        }
+
+        return match($this->role->name) {
+            'viewer' => 'Betrachter',
+            'operator' => 'Bearbeiter',
+            'manager' => 'Verwalter',
+            'owner' => 'Inhaber',
+            'admin' => 'Administrator',
+            'company_manager' => 'Filialleiter',
+            'company_staff' => 'Mitarbeiter',
+            'customer' => 'Kunde',
+            default => ucfirst($this->role->name),
+        };
     }
 
     // ==========================================

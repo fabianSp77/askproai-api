@@ -128,9 +128,9 @@ class ViewUserInvitation extends ViewRecord
 
                         Infolists\Components\TextEntry::make('url')
                             ->label('Einladungslink')
-                            ->state(fn () => route('customer-portal.invitation.show', ['token' => $this->record->token]))
+                            ->state(fn () => url('/kundenportal/einladung/' . $this->record->token))
                             ->copyable()
-                            ->url(fn () => route('customer-portal.invitation.show', ['token' => $this->record->token]))
+                            ->url(fn () => url('/kundenportal/einladung/' . $this->record->token))
                             ->openUrlInNewTab()
                             ->columnSpanFull(),
                     ])

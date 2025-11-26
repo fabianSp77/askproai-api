@@ -29,6 +29,7 @@ class InvitationResource extends JsonResource
     {
         return [
             'email' => $this->email,
+            'phone' => $this->metadata['phone'] ?? null,
             'status' => $this->getStatus(),
             'expires_at' => $this->expires_at->toIso8601String(),
             'expires_at_human' => $this->expires_at->locale('de')->diffForHumans(),
@@ -76,6 +77,9 @@ class InvitationResource extends JsonResource
     private function getRoleDisplayName(): string
     {
         return match($this->role->name) {
+            'viewer' => 'Betrachter',
+            'operator' => 'Bearbeiter',
+            'manager' => 'Verwalter',
             'owner' => 'Inhaber',
             'admin' => 'Administrator',
             'company_manager' => 'Filialleiter',

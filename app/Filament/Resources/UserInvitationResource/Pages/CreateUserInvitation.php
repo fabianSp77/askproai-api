@@ -25,15 +25,17 @@ class CreateUserInvitation extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Queue the invitation email
-        $this->record->inviter->notify(
-            new \App\Notifications\UserInvitationNotification($this->record)
-        );
+        // Send invitation email to the invited customer (not the inviter!)
+        \Illuminate\Support\Facades\Notification::route('mail', $this->record->email)
+            ->notify(new \App\Notifications\UserInvitationNotification($this->record));
+
+        // Update status to 'sent'
+        $this->record->update(['status' => 'sent']);
 
         // Show success notification
         \Filament\Notifications\Notification::make()
             ->title('Einladung erfolgreich erstellt')
-            ->body('Die Einladungs-E-Mail wurde in die Warteschlange gestellt.')
+            ->body('Die Einladungs-E-Mail wurde an ' . $this->record->email . ' versendet.')
             ->success()
             ->send();
     }
