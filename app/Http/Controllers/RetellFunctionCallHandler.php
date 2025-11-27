@@ -1852,46 +1852,72 @@ class RetellFunctionCallHandler extends Controller
                     }
                 }
 
-                // 🔧 FIX 2025-11-24: HYBRID SOLUTION - Check local DB for pending/failed sync appointments
-                // CRITICAL: Cal.com says "available" but local DB may have appointments not yet synced
-                // This prevents race conditions and false-positive availability responses
-                $pendingAppointment = Appointment::where('company_id', $companyId)
+                // 🔧 FIX 2025-11-27: COMPREHENSIVE LOCAL DB CONFLICT CHECK
+                // CRITICAL: Cal.com API may return "available" due to:
+                //   1. Sync delays (local appointment not yet synced)
+                //   2. API caching (stale availability data)
+                //   3. Duration calculation differences (Cal.com slot vs actual service duration)
+                //
+                // SOLUTION: Check ALL local appointments (regardless of sync status)
+                // with the FULL service duration for accurate overlap detection.
+                //
+                // Example: Service = 55 min, Request 13:15
+                // - Requested window: 13:15 - 14:10
+                // - Existing appointment 13:30 - 14:25 OVERLAPS (13:30 - 14:10)
+                // - Cal.com might say "13:15 available" but booking would fail
+
+                // Calculate full appointment window
+                $serviceDuration = $service->duration_minutes ?? $duration;
+                $requestedEndTime = $requestedDate->copy()->addMinutes($serviceDuration);
+
+                Log::debug('🔍 LOCAL DB CONFLICT CHECK - Full duration overlap detection', [
+                    'call_id' => $callId,
+                    'requested_start' => $requestedDate->format('Y-m-d H:i'),
+                    'requested_end' => $requestedEndTime->format('Y-m-d H:i'),
+                    'service_duration' => $serviceDuration,
+                    'company_id' => $companyId,
+                    'branch_id' => $branchId,
+                ]);
+
+                $conflictingAppointment = Appointment::where('company_id', $companyId)
                     ->where('branch_id', $branchId)
                     ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
-                    ->whereIn('calcom_sync_status', ['pending', 'failed'])  // Not synced to Cal.com yet!
-                    ->where(function($query) use ($requestedDate, $duration) {
-                        // Check for overlapping appointments
-                        $query->where(function($q) use ($requestedDate, $duration) {
-                            // Appointment starts within requested window
-                            $q->where('starts_at', '>=', $requestedDate)
-                              ->where('starts_at', '<', $requestedDate->copy()->addMinutes($duration));
-                        })
-                        ->orWhere(function($q) use ($requestedDate) {
-                            // Requested time falls within existing appointment
-                            $q->where('starts_at', '<=', $requestedDate)
-                              ->where('ends_at', '>', $requestedDate);
-                        })
-                        ->orWhere(function($q) use ($requestedDate, $duration) {
-                            // Appointment ends within requested window
-                            $q->where('ends_at', '>', $requestedDate)
-                              ->where('ends_at', '<=', $requestedDate->copy()->addMinutes($duration));
-                        });
+                    // 🔧 FIX 2025-11-27: Removed sync_status filter - check ALL appointments
+                    // Previously: ->whereIn('calcom_sync_status', ['pending', 'failed'])
+                    // This missed synced appointments that Cal.com returned as "available"
+                    ->where(function($query) use ($requestedDate, $requestedEndTime) {
+                        // Comprehensive overlap detection using proper interval logic
+                        // Two intervals [A_start, A_end) and [B_start, B_end) overlap if:
+                        // A_start < B_end AND B_start < A_end
+
+                        $query->where('starts_at', '<', $requestedEndTime)  // Existing starts before new ends
+                              ->where('ends_at', '>', $requestedDate);       // Existing ends after new starts
                     })
                     ->first();
 
-                if ($pendingAppointment) {
-                    Log::warning('⚠️ LOCAL DB CONFLICT: Pending sync appointment blocks slot', [
+                if ($conflictingAppointment) {
+                    Log::warning('🚨 LOCAL DB CONFLICT: Appointment blocks requested slot', [
                         'call_id' => $callId,
                         'calcom_said' => 'available',
                         'local_db_said' => 'blocked',
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'blocking_appointment_id' => $pendingAppointment->id,
-                        'blocking_appointment_status' => $pendingAppointment->status,
-                        'blocking_appointment_sync_status' => $pendingAppointment->sync_status,
-                        'blocking_appointment_time' => $pendingAppointment->starts_at->format('Y-m-d H:i'),
-                        'blocking_customer' => $pendingAppointment->customer?->name,
-                        'fix' => 'Hybrid solution: Cal.com + Local DB check prevents race condition',
-                        'reason' => 'Appointment exists locally but not yet synced to Cal.com'
+                        'requested_window' => [
+                            'start' => $requestedDate->format('Y-m-d H:i'),
+                            'end' => $requestedEndTime->format('Y-m-d H:i'),
+                            'duration' => $serviceDuration,
+                        ],
+                        'blocking_appointment' => [
+                            'id' => $conflictingAppointment->id,
+                            'status' => $conflictingAppointment->status,
+                            'sync_status' => $conflictingAppointment->calcom_sync_status ?? 'unknown',
+                            'start' => $conflictingAppointment->starts_at->format('Y-m-d H:i'),
+                            'end' => $conflictingAppointment->ends_at->format('Y-m-d H:i'),
+                            'customer' => $conflictingAppointment->customer?->name,
+                        ],
+                        'overlap_analysis' => [
+                            'new_starts_before_existing_ends' => $requestedDate < $conflictingAppointment->ends_at,
+                            'existing_starts_before_new_ends' => $conflictingAppointment->starts_at < $requestedEndTime,
+                        ],
+                        'fix' => 'FIX 2025-11-27: Comprehensive local DB check with full duration overlap',
                     ]);
 
                     return $this->responseFormatter->success([
@@ -1900,7 +1926,10 @@ class RetellFunctionCallHandler extends Controller
                         'requested_time' => $requestedDate->format('Y-m-d H:i'),
                         'alternatives' => [],
                         'reason' => 'local_db_conflict',
-                        'suggest_user_alternative' => true
+                        'suggest_user_alternative' => true,
+                        'conflict_info' => [
+                            'existing_appointment_time' => $conflictingAppointment->starts_at->format('H:i') . ' - ' . $conflictingAppointment->ends_at->format('H:i'),
+                        ],
                     ]);
                 }
 
