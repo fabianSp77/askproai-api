@@ -3531,13 +3531,25 @@ class RetellFunctionCallHandler extends Controller
                         'trace' => $e->getTraceAsString()
                     ]);
 
-                    // 🚨 FIX: Return error instead of success to prevent silent failures
-                    // Cal.com booking succeeded but local record creation failed
-                    // This requires manual intervention or webhook sync
-                    return $this->responseFormatter->error(
-                        'Die Terminbuchung wurde im Kalender erstellt, aber es gab ein Problem beim Speichern. ' .
-                        'Bitte kontaktieren Sie uns direkt zur Bestätigung. Booking-ID: ' . $calcomBookingId
-                    );
+                    // 🔧 FIX 2025-11-27: Cal.com booking EXISTS - don't tell user there was an error!
+                    // The booking is in Cal.com, it will sync via webhook or manual process.
+                    // Return SUCCESS to user because their appointment IS booked.
+                    Log::warning('⚠️ Returning SUCCESS despite local save failure - Cal.com booking exists', [
+                        'calcom_booking_id' => $calcomBookingId,
+                        'call_id' => $callId,
+                        'reason' => 'Cal.com booking confirmed, local sync will happen via webhook'
+                    ]);
+
+                    // Return success - the appointment IS booked in Cal.com
+                    $partialSuccessResponse = [
+                        'success' => true,
+                        'message' => 'Ihr Termin wurde erfolgreich gebucht. Sie erhalten eine Bestätigung per E-Mail.',
+                        'booking_id' => $calcomBookingId,
+                        'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'note' => 'Booking confirmed in calendar system'
+                    ];
+
+                    return $this->responseFormatter->success($partialSuccessResponse);
                 }
             }
 

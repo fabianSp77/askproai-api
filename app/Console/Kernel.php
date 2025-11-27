@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ConfigureRetellWebhook::class,
         \App\Console\Commands\MonitorProcessingTimeHealth::class,
         \App\Console\Commands\AlertAppointmentSyncFailures::class, // 🆕 PHASE 3 (2025-11-24)
+        \App\Console\Commands\ReconcileCallSuccess::class, // 🆕 2025-11-27: Fix false negatives
     ];
 
     public function schedule(Schedule $schedule): void
@@ -203,6 +204,21 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/appointment-sync-alerts.log'));
+
+        // 🛡️ CALL SUCCESS RECONCILIATION (2025-11-27) - FALSE NEGATIVE FIX
+        //
+        // Safety net for race condition between booking and Retell sync:
+        // 1. Booking creates appointment with call_successful = true
+        // 2. Retell sync job runs (every 15 min) and overwrites with call_successful = false
+        //    (because transcript says "error" even though booking succeeded)
+        // 3. This reconciliation job runs AFTER sync and corrects false negatives
+        //
+        // Runs every 10 minutes (after the 15-minute sync window)
+        $schedule->command('calls:reconcile-success --days=2')
+            ->everyTenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/call-reconciliation.log'));
 
         // Collect appointment sync metrics - runs every 5 minutes
         // Caches metrics for dashboard widget (5-minute TTL)

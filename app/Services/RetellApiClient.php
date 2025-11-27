@@ -323,6 +323,37 @@ class RetellApiClient
             // Create or update the call record
             // NOTE: Some fields are guarded (cost, cost_cents, cost_breakdown) to prevent mass assignment
             // We need to use unguard() temporarily since we're syncing from trusted Retell API
+
+            // 🛡️ FIX 2025-11-27: Preserve call_successful if appointment exists
+            // Problem: Retell's AI analysis may mark call as "unsuccessful" based on transcript
+            // even when an appointment was successfully created. The scheduled sync job
+            // (retell:sync-calls) runs every 15 minutes and would overwrite our correct value.
+            $existingCall = Call::where('retell_call_id', $callId)->first();
+
+            if ($existingCall) {
+                // Check if this call has an appointment (either via flag or relationship)
+                $hasAppointment = $existingCall->appointment_made
+                    || $existingCall->appointments()->exists()
+                    || $existingCall->converted_appointment_id;
+
+                if ($hasAppointment) {
+                    // Preserve our call_successful value - don't let Retell's analysis overwrite it
+                    unset($callRecord['call_successful']);
+
+                    // Also preserve appointment_made flag
+                    unset($callRecord['appointment_made']);
+
+                    Log::info('🛡️ Preserving call_successful due to existing appointment', [
+                        'call_id' => $existingCall->id,
+                        'retell_call_id' => $callId,
+                        'existing_call_successful' => $existingCall->call_successful,
+                        'existing_appointment_made' => $existingCall->appointment_made,
+                        'retell_analysis_call_successful' => $callData['call_analysis']['call_successful'] ?? 'null',
+                        'reason' => 'Appointment exists, preserving our authoritative value'
+                    ]);
+                }
+            }
+
             Call::unguard();
             $call = Call::updateOrCreate(
                 ['retell_call_id' => $callId],
