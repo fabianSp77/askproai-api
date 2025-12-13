@@ -17,6 +17,7 @@ use App\Services\Retell\CustomerDataValidator;
 use App\Services\Retell\AppointmentCustomerResolver;
 use App\Services\Retell\DateTimeParser;
 use App\Services\Retell\SlotIntelligenceService;
+use App\Services\Booking\CompositeBookingService;
 use App\Models\Service;
 use App\Models\Customer;
 use App\Models\Appointment;
@@ -44,6 +45,7 @@ class RetellFunctionCallHandler extends Controller
     private \App\Services\Booking\AvailabilityWithLockService $lockWrapper;
     private \App\Services\Booking\SlotLockService $lockService;
     private SlotIntelligenceService $slotIntelligence;
+    private ?CompositeBookingService $compositeBookingService = null;
     private array $callContextCache = []; // DEPRECATED: Use CallLifecycleService caching instead
 
     public function __construct(
@@ -57,7 +59,8 @@ class RetellFunctionCallHandler extends Controller
         DateTimeParser $dateTimeParser,
         \App\Services\Booking\AvailabilityWithLockService $lockWrapper,
         \App\Services\Booking\SlotLockService $lockService,
-        SlotIntelligenceService $slotIntelligence
+        SlotIntelligenceService $slotIntelligence,
+        CompositeBookingService $compositeBookingService
     ) {
         $this->serviceSelector = $serviceSelector;
         $this->serviceExtractor = $serviceExtractor;
@@ -70,6 +73,7 @@ class RetellFunctionCallHandler extends Controller
         $this->lockWrapper = $lockWrapper;
         $this->lockService = $lockService;
         $this->slotIntelligence = $slotIntelligence;
+        $this->compositeBookingService = $compositeBookingService;
         $this->alternativeFinder = new AppointmentAlternativeFinder();
         $this->calcomService = new CalcomService();
     }
@@ -113,7 +117,40 @@ class RetellFunctionCallHandler extends Controller
         $source = 'unknown';
 
         // ============================================
-        // LAYER 1: Request Header (MOST RELIABLE)
+        // LAYER 0: Request Body call.call_id (SOURCE OF TRUTH)
+        // ============================================
+        // 🔥 FIX 2025-12-13: Retell ALWAYS sends call.call_id in the request body
+        // for custom function calls. This is the authoritative source - args.call_id
+        // is just a convenience copy that may contain placeholders like "123", "12345", etc.
+        // See: https://docs.retellai.com/api-references/custom-functions
+        //
+        // Note: Not constraining to strlen===32 to avoid fragility if Retell changes format
+        $bodyCallId = $data['call']['call_id'] ?? null;
+        $paramCallId = $parameters['call_id'] ?? $data['call_id'] ?? null;
+
+        if (is_string($bodyCallId) && $bodyCallId !== '') {
+            // Exclude obvious placeholders that might leak into call.call_id
+            $isBodyPlaceholder = preg_match('/^\d{1,5}$/', $bodyCallId) || $bodyCallId === 'undefined';
+
+            if (!$isBodyPlaceholder) {
+                // Log mismatch for debugging Flow configuration issues
+                if ($paramCallId && $paramCallId !== $bodyCallId) {
+                    Log::debug('📋 call_id arg differs from payload call_id (expected with placeholders)', [
+                        'arg_call_id' => $paramCallId,
+                        'payload_call_id' => $bodyCallId,
+                        'using' => 'payload (source of truth)'
+                    ]);
+                }
+                Log::info('✅ Layer 0: Call ID from Request Body (Source of Truth)', [
+                    'call_id' => $bodyCallId,
+                    'source' => 'data.call.call_id'
+                ]);
+                return $bodyCallId;
+            }
+        }
+
+        // ============================================
+        // LAYER 1: Request Header (FALLBACK)
         // ============================================
         $headerCallId = $request->header('X-Retell-Call-Id');
         if ($headerCallId && strlen($headerCallId) === 32) {
@@ -128,41 +165,27 @@ class RetellFunctionCallHandler extends Controller
         }
 
         // ============================================
-        // LAYER 2: Function Parameters (STANDARD)
+        // LAYER 2: Function Parameters (LEGACY FALLBACK)
         // ============================================
-        // 🔥 FIX 2025-11-19: Check for placeholders FIRST, then try data.call.call_id
-        $paramCallId = $parameters['call_id'] ?? $data['call_id'] ?? null;
+        // Note: With Layer 0, this should rarely be needed. Kept for edge cases/tests.
 
-        // Define all known placeholders
-        $placeholders = ['dummy_call_id', 'None', 'current', 'current_call', 'call_1', 'call_001'];
+        // Define all known placeholders (fallback detection)
+        // These are kept as safety net but Layer 0 handles them automatically
+        $placeholders = ['dummy_call_id', 'None', 'current', 'current_call', 'call_1', 'call_001', '1', 'undefined', '12345', '123'];
 
-        // If parameter is a placeholder, try to get real call_id from data.call.call_id
-        if ($paramCallId && in_array($paramCallId, $placeholders, true)) {
-            Log::info('🔍 Layer 2: Parameter is placeholder, checking data.call.call_id', [
+        // Conservative placeholder heuristic: any 1-5 digit number is likely a placeholder
+        $isNumericPlaceholder = $paramCallId && preg_match('/^\d{1,5}$/', $paramCallId);
+
+        if ($paramCallId && (in_array($paramCallId, $placeholders, true) || $isNumericPlaceholder)) {
+            Log::warning('⚠️ Layer 2: Parameter is placeholder and Layer 0 failed', [
                 'placeholder' => $paramCallId,
-                'checking' => '$data[\'call\'][\'call_id\']'
+                'is_numeric_placeholder' => $isNumericPlaceholder,
+                'layer_0_failed' => 'data.call.call_id was empty or invalid'
             ]);
-
-            // Try to extract real call_id from nested data structure
-            $realCallId = $data['call']['call_id'] ?? null;
-            if ($realCallId && strlen($realCallId) === 32) {
-                Log::info('✅ Layer 2: Real Call ID extracted from data.call.call_id', [
-                    'placeholder' => $paramCallId,
-                    'real_call_id' => $realCallId,
-                    'source' => 'data.call.call_id'
-                ]);
-                return $realCallId;
-            } else {
-                Log::warning('⚠️ Layer 2: data.call.call_id not found or invalid', [
-                    'placeholder' => $paramCallId,
-                    'data_call_call_id' => $realCallId,
-                    'will_try_layer_4' => true
-                ]);
-                $paramCallId = null; // Clear placeholder so Layer 4 can try
-            }
+            $paramCallId = null; // Clear placeholder so Layer 4 can try
         }
 
-        if ($paramCallId && !in_array($paramCallId, $placeholders, true)) {
+        if ($paramCallId && !in_array($paramCallId, $placeholders, true) && !$isNumericPlaceholder) {
             $callId = $paramCallId;
             $source = 'parameter';
 
@@ -299,7 +322,9 @@ class RetellFunctionCallHandler extends Controller
 
         // 🔧 FIX: Race Condition - Retry with exponential backoff
         // The call session might not be committed yet when function is called
-        $maxAttempts = 5;
+        // 🔧 FIX 2025-12-07: Increased retries to handle slow webhooks/cold starts
+        // Previous: 5 attempts (~750ms). New: 10 attempts (~5.5s)
+        $maxAttempts = 10;
         $call = null;
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
@@ -317,7 +342,8 @@ class RetellFunctionCallHandler extends Controller
 
             // Not found, wait and retry
             if ($attempt < $maxAttempts) {
-                $delayMs = 50 * $attempt; // 50ms, 100ms, 150ms, 200ms, 250ms
+                // Increase delay: 100ms * attempt (100, 200, 300... 1000ms)
+                $delayMs = 100 * $attempt; 
                 Log::info('⏳ getCallContext retry ' . $attempt . '/' . $maxAttempts, [
                     'call_id' => $callId,
                     'delay_ms' => $delayMs
@@ -327,7 +353,38 @@ class RetellFunctionCallHandler extends Controller
         }
 
         if (!$call) {
-            Log::error('❌ getCallContext failed after ' . $maxAttempts . ' attempts', [
+            // 🔧 FIX 2025-12-07: JIT (Just-In-Time) Call Creation Fallback
+            // If webhook is retarded/missing, fetch directly from Retell API
+            Log::warning('⚠️ getCallContext failed after retries. Attempting JIT creation via Retell API...', [
+                'call_id' => $callId
+            ]);
+
+            try {
+                /** @var \App\Services\RetellApiClient $retellClient */
+                $retellClient = app(\App\Services\RetellApiClient::class);
+                $callData = $retellClient->getCallDetail($callId);
+
+                if ($callData) {
+                    $call = $retellClient->syncCallToDatabase($callData);
+                    
+                    if ($call) {
+                        Log::info('✅ JIT Call Creation successful', [
+                            'call_id' => $call->id, 
+                            'retell_id' => $callId,
+                            'company_id' => $call->company_id
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('❌ JIT Call Creation failed', [
+                    'call_id' => $callId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        if (!$call) {
+            Log::error('❌ getCallContext failed completely after ' . $maxAttempts . ' attempts + JIT', [
                 'call_id' => $callId
             ]);
             return null;
@@ -549,7 +606,8 @@ class RetellFunctionCallHandler extends Controller
         // PROBLEM: Call #11044 had truncated call_id (31 chars instead of 32) causing "Call context not available"
         // The truncated call_id wasn't in the placeholder list, so it wasn't replaced
         // SOLUTION: Always trust $callId from the request, not parameters['call_id']
-        $knownPlaceholders = ['dummy_call_id', 'None', 'current', 'current_call'];
+        // 🔥 FIX 2025-12-07: Added 'undefined' - Retell sends this when {{call_id}} variable is not set in conversation flow
+        $knownPlaceholders = ['dummy_call_id', 'None', 'current', 'current_call', 'undefined'];
 
         if (isset($parameters['call_id']) && $callId) {
             $originalCallId = $parameters['call_id'];
@@ -609,6 +667,10 @@ class RetellFunctionCallHandler extends Controller
 
                     $companyId = $callContext['company_id'] ?? null;
                     $customerId = $callContext['customer_id'] ?? null;
+                    // 🔧 FIX 2025-11-28: Extract branch_id for session creation
+                    // BUG: branch_id was not being propagated to retell_call_sessions
+                    // causing AppointmentAlternativeFinder to fail with "Tenant context required"
+                    $branchId = $callContext['branch_id'] ?? null;
 
                     // Fallback: Get company_id from agent_id if context unavailable
                     if (!$companyId && isset($data['agent_id'])) {
@@ -623,10 +685,12 @@ class RetellFunctionCallHandler extends Controller
                     }
 
                     // Auto-create session on first function call
+                    // 🔧 FIX 2025-11-28: Include branch_id to ensure tenant context available
                     $existingSession = $this->callTracking->startCallSession([
                         'call_id' => $callId,
                         'company_id' => $companyId,
                         'customer_id' => $customerId,
+                        'branch_id' => $branchId,
                         'agent_id' => $data['agent_id'] ?? null,
                     ]);
 
@@ -635,6 +699,7 @@ class RetellFunctionCallHandler extends Controller
                         'session_id' => $existingSession->id,
                         'first_function' => $functionName,
                         'company_id' => $companyId,
+                        'branch_id' => $branchId,
                         'context_available' => $callContext ? 'yes' : 'no (used fallback)'
                     ]);
                 }
@@ -654,6 +719,28 @@ class RetellFunctionCallHandler extends Controller
                     'stack_trace' => $e->getTraceAsString()
                 ]);
             }
+        }
+
+        // ========================================================================
+        // SERVICE GATEWAY: Mode-based routing (Phase 1)
+        // Feature-flag controlled: GATEWAY_MODE_ENABLED (default: false)
+        // @see docs/SERVICE_GATEWAY_IMPLEMENTATION_PLAN.md
+        // ========================================================================
+        if (config('gateway.mode_enabled') && $callId) {
+            $gatewayMode = app(\App\Services\Gateway\GatewayModeResolver::class)->resolve($callId);
+
+            if ($gatewayMode === 'service_desk') {
+                Log::info('[Gateway] Routing to ServiceDeskHandler', [
+                    'call_id' => $callId,
+                    'function' => $baseFunctionName,
+                    'mode' => $gatewayMode,
+                ]);
+
+                // Phase 2: ServiceDeskHandler aktiv
+                return app(\App\Http\Controllers\ServiceDeskHandler::class)
+                    ->handle($baseFunctionName, $parameters, $callId);
+            }
+            // 'appointment' and 'hybrid' modes continue with normal flow below
         }
 
         // Route to appropriate function handler
@@ -681,6 +768,11 @@ class RetellFunctionCallHandler extends Controller
             'get_opening_hours' => $this->getOpeningHours($parameters, $callId),
             // 🔧 FIX 2025-10-24: Add initialize_call to support V39 flow Function Node
             'initialize_call' => $this->initializeCall($parameters, $callId),
+            // Alias for get_current_context tool used in some flows
+            'get_current_context' => $this->initializeCall($parameters, $callId),
+            // 🔧 FIX 2025-12-13: Slot reservation for race-condition prevention
+            'reserve_slot' => $this->reserveSlot($parameters, $callId),
+            'release_slot_reservation' => $this->releaseSlotReservation($parameters, $callId),
             default => $this->handleUnknownFunction($functionName, $parameters, $callId)
             };
 
@@ -1044,6 +1136,38 @@ class RetellFunctionCallHandler extends Controller
             // 🔧 FIX 2025-11-24: Staff preference for availability checking
             // Allows checking availability for specific staff member instead of any staff
             $preferredStaffId = $params['preferred_staff_id'] ?? null;
+            $mitarbeiterName = $params['mitarbeiter'] ?? null;
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX 2025-12-08: Support both UUID and staff NAME for preferred_staff_id
+            // ═══════════════════════════════════════════════════════════════════════════
+            // PROBLEM: Retell agent sometimes sends staff NAME ("Udo Walz") instead of UUID
+            //          in preferred_staff_id parameter due to extraction config
+            // SOLUTION: Detect non-UUID values and use mapStaffNameToId() for conversion
+            // RCA: Call #85183 - "Udo Walz" sent as preferred_staff_id, failed silently
+            // ═══════════════════════════════════════════════════════════════════════════
+            if ($preferredStaffId && !\Illuminate\Support\Str::isUuid($preferredStaffId)) {
+                // It's a name, not a UUID - convert it
+                $staffNameInput = $preferredStaffId;
+                $preferredStaffId = $this->mapStaffNameToId($staffNameInput, $callId);
+
+                Log::info('🔄 Converted staff name to ID in check_availability', [
+                    'call_id' => $callId,
+                    'input_name' => $staffNameInput,
+                    'resolved_staff_id' => $preferredStaffId,
+                    'fix' => 'FIX 2025-12-08: Name-to-UUID conversion'
+                ]);
+            } elseif (!$preferredStaffId && $mitarbeiterName) {
+                // Legacy: mitarbeiter parameter (name-based)
+                $preferredStaffId = $this->mapStaffNameToId($mitarbeiterName, $callId);
+
+                Log::info('📌 Using mitarbeiter name mapping (legacy) in check_availability', [
+                    'call_id' => $callId,
+                    'mitarbeiter_name' => $mitarbeiterName,
+                    'mapped_staff_id' => $preferredStaffId
+                ]);
+            }
+            // ═══════════════════════════════════════════════════════════════════════════
 
             if ($preferredStaffId) {
                 Log::info('👤 Staff preference received in check_availability', [
@@ -1087,6 +1211,39 @@ class RetellFunctionCallHandler extends Controller
                 ]);
                 return $this->responseFormatter->error('Service nicht verfügbar für diese Filiale');
             }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX 2025-12-08: Staff-Service Capability Check (Prevent Silent Fallback)
+            // ═══════════════════════════════════════════════════════════════════════════
+            // Check if requested staff can actually provide this service BEFORE
+            // checking availability. Return helpful message with alternatives if not.
+            // ═══════════════════════════════════════════════════════════════════════════
+            if ($preferredStaffId) {
+                $capabilityCheck = $this->validateStaffCanProvideService($preferredStaffId, $service, $callId);
+
+                if (!$capabilityCheck['valid']) {
+                    Log::warning('⚠️ Staff cannot provide requested service - returning alternatives', [
+                        'call_id' => $callId,
+                        'staff_id' => $preferredStaffId,
+                        'staff_name' => $capabilityCheck['staff_name'],
+                        'service_name' => $service->name,
+                        'alternatives_count' => count($capabilityCheck['alternatives'] ?? []),
+                        'fix' => 'FIX 2025-12-08: Prevent Silent Fallback'
+                    ]);
+
+                    // Return informative error with alternatives
+                    return $this->responseFormatter->formatResponse([
+                        'available' => false,
+                        'reason' => 'staff_cannot_provide_service',
+                        'message' => $capabilityCheck['message'],
+                        'requested_staff' => $capabilityCheck['staff_name'],
+                        'requested_service' => $service->name,
+                        'alternative_staff' => $capabilityCheck['alternatives'],
+                        'call_id' => $callId
+                    ]);
+                }
+            }
+            // ═══════════════════════════════════════════════════════════════════════════
 
             // 🔧 FIX 2025-11-24: Use staff-specific event type if preference exists
             $eventTypeId = $this->getEventTypeForStaff($service, $preferredStaffId, $branchId);
@@ -1255,42 +1412,16 @@ class RetellFunctionCallHandler extends Controller
                         'message' => sprintf(
                             'Ja, %s ist verfügbar am %s um %s Uhr.',
                             $service->name,
-                            $requestedDate->locale('de')->isoFormat('dddd, [den] D. MMMM'),
+                            $requestedDate->format('d.m.Y'),
                             $requestedDate->format('H:i')
                         ),
                     ];
                 } else {
-                    Log::warning('⚠️ Processing time service not available at requested time', [
+                    Log::warning('⚠️ Processing time availability check failed (phase conflict) - falling through to composite check', [
                         'call_id' => $callId,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'note' => 'Staff busy during initial or final phase'
+                        'staff_id' => $staff->id,
+                        'requested_time' => $requestedDate->format('Y-m-d H:i')
                     ]);
-
-                    // Find alternative times (reuse composite service logic)
-                    $alternatives = $this->findAlternativesForCompositeService(
-                        $service,
-                        $staff,
-                        $requestedDate,
-                        $branchId
-                    );
-
-                    // 🔧 FIX 2025-11-25: Cache validated alternatives with slot locking
-                    $this->cacheValidatedAlternatives($callId, $alternatives, [
-                        'company_id' => $companyId,
-                        'service_id' => $service->id,
-                        'duration' => $service->duration_minutes ?? $duration,
-                        'customer_phone' => $params['customer_phone'] ?? null,
-                        'customer_name' => $params['name'] ?? null,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'available' => false,
-                        'service' => $service->name,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'alternatives' => $alternatives,
-                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
-                    ];
                 }
             }
 
@@ -1298,307 +1429,86 @@ class RetellFunctionCallHandler extends Controller
             // ⚠️ CRITICAL: Local DB only contains OUR bookings, Cal.com may have external bookings
             // Phase-aware availability checking for composite services
             // Composite services have segments with gaps where staff is available
-            if ($service->composite && !empty($service->segments)) {
-                Log::info('🎨 Composite service detected - using Cal.com + phase-aware availability check', [
+            // 🔧 FIX 2025-12-07: COMPOSITE SERVICE AVAILABILITY CHECK
+            // Use specific CompositeBookingService to check ALL segments
+            if ($service->isComposite()) {
+                Log::info('🧩 Composite Service detected - using specialized availability check', [
                     'call_id' => $callId,
                     'service_id' => $service->id,
                     'service_name' => $service->name,
-                    'segments_count' => count($service->segments),
                     'requested_time' => $requestedDate->format('Y-m-d H:i')
                 ]);
 
-                // 🔧 FIX 2025-11-25: Use preferred staff if provided, otherwise fallback to first available
-                // BUG: Was ignoring $preferredStaffId, causing alternatives to be generated for wrong staff
-                // This led to offering slots that weren't actually available for the preferred staff
-                $staff = null;
-
-                if ($preferredStaffId) {
-                    $staff = \App\Models\Staff::where('id', $preferredStaffId)
-                        ->where('branch_id', $branchId)
-                        ->where('is_active', true)
-                        ->whereHas('services', function($q) use ($service) {
-                            $q->where('service_id', $service->id);
-                        })
-                        ->first();
-
-                    if ($staff) {
-                        Log::info('✅ Using preferred staff for composite service availability', [
-                            'preferred_staff_id' => $preferredStaffId,
-                            'staff_name' => $staff->name,
-                            'service_id' => $service->id
-                        ]);
-                    } else {
-                        Log::warning('⚠️ Preferred staff not found or not eligible for service', [
-                            'preferred_staff_id' => $preferredStaffId,
-                            'service_id' => $service->id,
-                            'branch_id' => $branchId
-                        ]);
-                    }
-                }
-
-                // Fallback: Get first available staff if no preference or preference not valid
-                if (!$staff) {
-                    $staff = \App\Models\Staff::where('branch_id', $branchId)
-                        ->where('is_active', true)
-                        ->whereHas('services', function($q) use ($service) {
-                            $q->where('service_id', $service->id);
-                        })
-                        ->first();
-
-                    Log::info('ℹ️ Using first available staff for composite service (no valid preference)', [
-                        'staff_id' => $staff?->id,
-                        'staff_name' => $staff?->name,
-                        'preferred_staff_id' => $preferredStaffId,
-                        'service_id' => $service->id
-                    ]);
-                }
-
-                if (!$staff) {
-                    Log::error('❌ No staff found for composite service', [
-                        'service_id' => $service->id,
-                        'branch_id' => $branchId
-                    ]);
-                    return $this->responseFormatter->error('Kein Mitarbeiter für diesen Service verfügbar');
-                }
-
-                // STEP 1: Check Cal.com availability (SOURCE OF TRUTH) ✅
-                // 🔧 FIX 2025-11-25: Use isCompositeServiceAvailable for ALL segment validation
-                // PROBLEM: Old code only checked START time, causing sync failures for segments B, C, D
-                // SOLUTION: Check availability for EACH active segment's time slot separately
-                $calcomAvailabilityService = app(\App\Services\Appointments\CalcomAvailabilityService::class);
-
-                $calcomStartTime = microtime(true);
-                $calcomAvailable = false;
-                $compositeCheckResult = null;
-
+                // Define search window (exact time requested +/- 0 to force exact match check first)
+                // Actually, checkAvailability is usually for a specific time.
+                // findCompositeSlots takes a start/end range.
+                // We'll create a small window around the requested time to see if IT works starting at that time.
+                
                 try {
-                    // 🎨 NEW: Check ALL segments, not just start time
-                    $compositeCheckResult = $calcomAvailabilityService->isCompositeServiceAvailable(
-                        $requestedDate,
-                        $service,
-                        $staff->id,
-                        $service->company->calcom_team_id
-                    );
-
-                    $calcomAvailable = $compositeCheckResult['available'];
-                    $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
-
-                    Log::info('✅ Cal.com availability checked (composite service - ALL SEGMENTS)', [
-                        'call_id' => $callId,
-                        'available' => $calcomAvailable,
-                        'duration_ms' => $calcomDuration,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'staff_id' => $staff->id,
-                        'segments_checked' => count($compositeCheckResult['checked_segments'] ?? []),
-                        'conflicts' => $compositeCheckResult['conflicts'] ?? [],
+                    $slots = $this->compositeBookingService->findCompositeSlots($service, [
+                        'start' => $requestedDate->copy()->toIso8601String(),
+                        'end' => $requestedDate->copy()->addMinutes(120)->toIso8601String(), // Sufficient window for slots
                     ]);
-
-                    // 🔧 FIX 2025-11-14: Cache availability check timestamp for race condition prevention
-                    Cache::put("call:{$callId}:last_availability_check", now(), now()->addMinutes(10));
-
-                    // 🚀 PHASE 1 OPTIMIZATION (2025-11-17): Cache validated slot for fast booking
-                    // Eliminates redundant availability re-check in bookAppointment() (saves 300-800ms)
-                    // TTL: 90s covers typical voice conversation latency between check and booking
-                    if ($calcomAvailable && $callId) {
-                        $validationCacheKey = "booking_validation:{$callId}:" . $requestedDate->format('YmdHi');
-                        Cache::put($validationCacheKey, [
-                            'available' => true,
-                            'validated_at' => now(),
-                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                            'service_id' => $service->id,
-                            'event_type_id' => $service->calcom_event_type_id
-                        ], now()->addSeconds(90));
-
-                        Log::info('⚡ PHASE 1: Cached availability validation for fast booking (composite)', [
+                    
+                    // Filter for slots exactly matching requested start time
+                    $exactSlot = $slots->first(function($slot) use ($requestedDate) {
+                         return Carbon::parse($slot['starts_at'])->eq($requestedDate);
+                    });
+    
+                    if ($exactSlot) {
+                        $staffId = $exactSlot['segments'][0]['staff_id'] ?? null;
+                        
+                        Log::info('✅ Composite availability confirmed', [
                             'call_id' => $callId,
-                            'cache_key' => $validationCacheKey,
-                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                            'ttl_seconds' => 90,
-                            'optimization' => 'Eliminates redundant re-check in bookAppointment'
+                            'slot' => $exactSlot,
+                            'pinned_staff_id' => $staffId
                         ]);
+    
+                        // Pin the staff ID for subsequent booking
+                        if ($staffId && $callId) {
+                            Cache::put("call:{$callId}:pinned_staff_id", $staffId, now()->addMinutes(30));
+                             Log::info('📌 Pinned staff ID for composite booking', [
+                                'call_id' => $callId,
+                                'staff_id' => $staffId
+                            ]);
+                        }
+    
+                        $staffName = $exactSlot['segments'][0]['staff_name'] ?? 'einen Mitarbeiter';
+
+                        return [
+                            'success' => true,
+                            'available' => true,
+                            'service' => $service->name,
+                            'staff' => $staffName,
+                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                            'message' => sprintf(
+                                'Ja, %s ist verfügbar am %s um %s Uhr.',
+                                $service->name,
+                                $requestedDate->format('d.m.Y'),
+                                $requestedDate->format('H:i')
+                            )
+                        ];
+                    } else {
+                         Log::warning('❌ Composite check failed - no valid slot sequence found', [
+                            'call_id' => $callId,
+                            'requested_time' => $requestedDate->format('Y-m-d H:i')
+                        ]);
+                        
+                        return [
+                            'success' => true,
+                            'available' => false,
+                            'service' => $service->name,
+                            'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                            'message' => 'Leider ist dieser Termin nicht möglich. Soll ich nach Alternativen schauen?'
+                        ];
                     }
                 } catch (\Exception $e) {
-                    $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
-
-                    Log::error('❌ Cal.com availability check failed (composite service)', [
+                    Log::error('❌ Composite availability check exception', [
                         'call_id' => $callId,
-                        'error' => $e->getMessage(),
-                        'duration_ms' => $calcomDuration
+                        'message' => $e->getMessage()
                     ]);
-
-                    // Conservative: if Cal.com check fails, assume not available
-                    return $this->responseFormatter->error('Verfügbarkeitsprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
-                }
-
-                // STEP 2: If Cal.com says NO → find alternatives immediately
-                if (!$calcomAvailable) {
-                    // 🔧 FIX 2025-11-25: Enhanced logging with segment conflict details
-                    Log::warning('⚠️ Cal.com says slot NOT available (composite service - segment conflicts)', [
-                        'call_id' => $callId,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'service' => $service->name,
-                        'conflicts' => $compositeCheckResult['conflicts'] ?? [],
-                        'checked_segments' => $compositeCheckResult['checked_segments'] ?? [],
-                        'note' => 'One or more segments have time conflicts with existing bookings',
-                    ]);
-
-                    // Find alternatives considering phase-aware availability
-                    $alternatives = $this->findAlternativesForCompositeService(
-                        $service,
-                        $staff,
-                        $requestedDate,
-                        $branchId
-                    );
-
-                    // 🔧 FIX 2025-11-25: Cache validated alternatives with slot locking
-                    $this->cacheValidatedAlternatives($callId, $alternatives, [
-                        'company_id' => $companyId,
-                        'service_id' => $service->id,
-                        'duration' => $service->duration_minutes ?? $duration,
-                        'customer_phone' => $params['customer_phone'] ?? null,
-                        'customer_name' => $params['name'] ?? null,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'available' => false,
-                        'service' => $service->name,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'alternatives' => $alternatives,
-                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
-                    ];
-                }
-
-                // STEP 2.5: 🔧 FIX 2025-11-24: HYBRID SOLUTION - Check local DB for pending sync
-                // Same logic as regular services - prevents race conditions
-                $pendingAppointment = Appointment::where('company_id', $companyId)
-                    ->where('branch_id', $branchId)
-                    ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
-                    ->whereIn('calcom_sync_status', ['pending', 'failed'])
-                    ->where(function($query) use ($requestedDate, $service) {
-                        $duration = $service->duration_minutes ?? 60;
-                        $query->where(function($q) use ($requestedDate, $duration) {
-                            $q->where('starts_at', '>=', $requestedDate)
-                              ->where('starts_at', '<', $requestedDate->copy()->addMinutes($duration));
-                        })
-                        ->orWhere(function($q) use ($requestedDate) {
-                            $q->where('starts_at', '<=', $requestedDate)
-                              ->where('ends_at', '>', $requestedDate);
-                        })
-                        ->orWhere(function($q) use ($requestedDate, $duration) {
-                            $q->where('ends_at', '>', $requestedDate)
-                              ->where('ends_at', '<=', $requestedDate->copy()->addMinutes($duration));
-                        });
-                    })
-                    ->first();
-
-                if ($pendingAppointment) {
-                    Log::warning('⚠️ LOCAL DB CONFLICT (composite service): Pending sync blocks slot', [
-                        'call_id' => $callId,
-                        'calcom_said' => 'available',
-                        'local_db_said' => 'blocked',
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'blocking_appointment_id' => $pendingAppointment->id,
-                        'blocking_appointment_sync_status' => $pendingAppointment->sync_status,
-                        'fix' => 'Hybrid solution prevents race condition for composite services'
-                    ]);
-
-                    $alternatives = $this->findAlternativesForCompositeService(
-                        $service,
-                        $staff,
-                        $requestedDate,
-                        $branchId
-                    );
-
-                    // 🔧 FIX 2025-11-25: Cache validated alternatives with slot locking
-                    $this->cacheValidatedAlternatives($callId, $alternatives, [
-                        'company_id' => $companyId,
-                        'service_id' => $service->id,
-                        'duration' => $service->duration_minutes ?? $duration,
-                        'customer_phone' => $params['customer_phone'] ?? null,
-                        'customer_name' => $params['name'] ?? null,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'available' => false,
-                        'service' => $service->name,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'alternatives' => $alternatives,
-                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
-                        'reason' => 'local_db_conflict'
-                    ];
-                }
-
-                // STEP 3: Cal.com says YES → verify phase-aware availability for gaps
-                Log::info('✅ Cal.com says available - now checking phase-aware gaps', [
-                    'call_id' => $callId,
-                    'requested_time' => $requestedDate->format('Y-m-d H:i')
-                ]);
-
-                $availabilityService = app(\App\Services\ProcessingTimeAvailabilityService::class);
-
-                $isPhaseAvailable = $availabilityService->isStaffAvailable(
-                    $staff->id,
-                    $requestedDate,
-                    $service
-                );
-
-                if ($isPhaseAvailable) {
-                    Log::info('✅ Phase-aware availability confirmed (composite service)', [
-                        'call_id' => $callId,
-                        'staff_id' => $staff->id,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'service' => $service->name,
-                        'checks_passed' => ['calcom' => true, 'local_db' => true, 'phase_aware' => true]
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'available' => true,
-                        'service' => $service->name,
-                        'staff' => $staff->name,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'message' => sprintf(
-                            'Ja, %s ist verfügbar am %s um %s Uhr.',
-                            $service->name,
-                            $requestedDate->locale('de')->isoFormat('dddd, [den] D. MMMM'),
-                            $requestedDate->format('H:i')
-                        ),
-                    ];
-                } else {
-                    // Cal.com says available, but local phase check says no
-                    // This could mean staff has internal conflicts during gaps
-                    Log::warning('⚠️ Cal.com available but phase-aware check failed', [
-                        'call_id' => $callId,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'note' => 'Staff may have conflicts during processing time gaps'
-                    ]);
-
-                    $alternatives = $this->findAlternativesForCompositeService(
-                        $service,
-                        $staff,
-                        $requestedDate,
-                        $branchId
-                    );
-
-                    // 🔧 FIX 2025-11-25: Cache validated alternatives with slot locking
-                    $this->cacheValidatedAlternatives($callId, $alternatives, [
-                        'company_id' => $companyId,
-                        'service_id' => $service->id,
-                        'duration' => $service->duration_minutes ?? $duration,
-                        'customer_phone' => $params['customer_phone'] ?? null,
-                        'customer_name' => $params['name'] ?? null,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'available' => false,
-                        'service' => $service->name,
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'alternatives' => $alternatives,
-                        'message' => $this->formatAlternativesMessage($requestedDate, $alternatives),
-                    ];
+                    // Fallback to error response
+                    return $this->responseFormatter->error('Fehler bei der Verfügbarkeitsprüfung.');
                 }
             }
 
@@ -1688,6 +1598,13 @@ class RetellFunctionCallHandler extends Controller
             // Pre-load slots (cached for 15 minutes, shared across all checks in this call)
             $preloadResult = $this->slotIntelligence->preloadSlotsForCall($callId, $service);
 
+            // 🔧 FIX 2025-12-01: Preserve original requested time for accurate response
+            // Previously, fuzzy matching modified $requestedDate which caused confusion
+            // Now we keep $originalRequestedDate for reporting and use $requestedDate for validation
+            $originalRequestedDate = $requestedDate->copy();
+            $fuzzyMatchApplied = false;
+            $fuzzyMatchDiff = 0;
+
             if ($preloadResult['success'] && config('features.slot_intelligence.fuzzy_match', true)) {
                 // Try fuzzy matching first (much faster than Cal.com API)
                 $requestedTimeStr = $requestedDate->format('H:i');
@@ -1715,21 +1632,60 @@ class RetellFunctionCallHandler extends Controller
                         'response_type' => $fuzzyResult['response_type'],
                     ]);
 
-                    // For close matches (≤15 min), use the found time directly
-                    if ($fuzzyResult['difference_minutes'] <= 15) {
-                        $requestedDate = $foundTime;
+                    // 🔧 FIX 2025-12-08: ALWAYS use fuzzy-matched time when found
+                    // BUG FIXED: Previously only applied for ≤15 min difference, causing:
+                    // - message: "16:25 Uhr" (from SlotIntelligence)
+                    // - slot_time: "16:00" (unchanged original)
+                    // - Customer told 16:25, but agent confirmed 16:00 based on slot_time
+                    //
+                    // Now: ALWAYS update requestedDate AND track fuzzy match for ANY difference
+                    // This ensures slot_time matches what the message tells the customer
+                    $requestedDate = $foundTime;
+                    $fuzzyMatchApplied = !$fuzzyResult['exact']; // true if not exact match
+                    $fuzzyMatchDiff = $fuzzyResult['difference_minutes'];
 
-                        Log::info('⚡ SlotIntelligence: Using fuzzy-matched time for Cal.com validation', [
-                            'call_id' => $callId,
-                            'original_request' => $requestedTimeStr,
-                            'using_time' => $foundSlot['time_display'],
-                        ]);
-                    }
+                    Log::info('⚡ SlotIntelligence: Using fuzzy-matched time for Cal.com validation', [
+                        'call_id' => $callId,
+                        'original_request' => $requestedTimeStr,
+                        'using_time' => $foundSlot['time_display'],
+                        'fuzzy_match_applied' => $fuzzyMatchApplied,
+                        'diff_minutes' => $fuzzyMatchDiff,
+                        'original_preserved' => $originalRequestedDate->format('Y-m-d H:i'),
+                    ]);
                 }
             }
 
             // Use new CalcomAvailabilityService for direct slot checking
             $calcomAvailabilityService = app(\App\Services\Appointments\CalcomAvailabilityService::class);
+
+            // 🔧 FIX 2025-12-05: Resolve preferred_staff_id (UUID) to calcom_host_id (integer)
+            // This allows Cal.com API to filter availability by specific staff member
+            // See: CalcomHostMapping table for mapping between internal staff and Cal.com users
+            $calcomUserId = null;
+            if ($preferredStaffId) {
+                $hostMapping = \App\Models\CalcomHostMapping::where('staff_id', $preferredStaffId)
+                    ->where('company_id', $service->company_id)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($hostMapping) {
+                    $calcomUserId = $hostMapping->calcom_host_id;
+                    Log::info('👤 Resolved preferred_staff_id to Cal.com userId', [
+                        'call_id' => $callId,
+                        'preferred_staff_id' => $preferredStaffId,
+                        'calcom_user_id' => $calcomUserId,
+                        'calcom_name' => $hostMapping->calcom_name,
+                        'calcom_email' => $hostMapping->calcom_email,
+                    ]);
+                } else {
+                    Log::warning('⚠️ No CalcomHostMapping found for preferred_staff_id', [
+                        'call_id' => $callId,
+                        'preferred_staff_id' => $preferredStaffId,
+                        'company_id' => $service->company_id,
+                        'note' => 'Falling back to any available staff (Round Robin)',
+                    ]);
+                }
+            }
 
             $calcomStartTime = microtime(true);
             $isAvailable = false;
@@ -1740,8 +1696,9 @@ class RetellFunctionCallHandler extends Controller
                     $requestedDate,
                     $eventTypeId,  // ✅ Staff-specific if preference exists
                     $service->duration_minutes ?? $duration,
-                    null, // staff_id - not specified for regular services yet
-                    $service->company->calcom_team_id
+                    null, // legacy staff_id (UUID) - deprecated, use calcomUserId instead
+                    $service->company->calcom_team_id,
+                    $calcomUserId  // 🔧 FIX 2025-12-05: Pass Cal.com user ID for staff filtering
                 );
 
                 $calcomDuration = round((microtime(true) - $calcomStartTime) * 1000, 2);
@@ -1752,6 +1709,7 @@ class RetellFunctionCallHandler extends Controller
                     'duration_ms' => $calcomDuration,
                     'requested_time' => $requestedDate->format('Y-m-d H:i'),
                     'event_type_id' => $eventTypeId,  // ✅ Staff-specific if preference exists
+                    'calcom_user_id' => $calcomUserId,  // 🔧 FIX 2025-12-05: Log Cal.com user ID
                     'performance_target' => '< 1000ms',
                     'performance_status' => $calcomDuration < 1000 ? 'GOOD' : 'NEEDS_OPTIMIZATION'
                 ]);
@@ -1769,13 +1727,15 @@ class RetellFunctionCallHandler extends Controller
                         'validated_at' => now(),
                         'requested_time' => $requestedDate->format('Y-m-d H:i'),
                         'service_id' => $service->id,
-                        'event_type_id' => $eventTypeId  // ✅ Staff-specific if preference exists
+                        'event_type_id' => $eventTypeId,  // ✅ Staff-specific if preference exists
+                        'calcom_user_id' => $calcomUserId  // 🔧 FIX 2025-12-05: Include Cal.com user ID in cache
                     ], now()->addSeconds(90));
 
                     Log::info('⚡ PHASE 1: Cached availability validation for fast booking', [
                         'call_id' => $callId,
                         'cache_key' => $validationCacheKey,
                         'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                        'calcom_user_id' => $calcomUserId,
                         'ttl_seconds' => 90,
                         'optimization' => 'Eliminates redundant re-check in bookAppointment'
                     ]);
@@ -1867,7 +1827,15 @@ class RetellFunctionCallHandler extends Controller
                 // - Cal.com might say "13:15 available" but booking would fail
 
                 // Calculate full appointment window
+                // 🔧 FIX 2025-11-27: Calculate correct duration for COMPOSITE services
                 $serviceDuration = $service->duration_minutes ?? $duration;
+                $isComposite = false;
+
+                if ($service->isComposite() && !empty($service->segments)) {
+                    $isComposite = true;
+                    $serviceDuration = collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+                }
+
                 $requestedEndTime = $requestedDate->copy()->addMinutes($serviceDuration);
 
                 Log::debug('🔍 LOCAL DB CONFLICT CHECK - Full duration overlap detection', [
@@ -1875,13 +1843,30 @@ class RetellFunctionCallHandler extends Controller
                     'requested_start' => $requestedDate->format('Y-m-d H:i'),
                     'requested_end' => $requestedEndTime->format('Y-m-d H:i'),
                     'service_duration' => $serviceDuration,
+                    'is_composite' => $isComposite,
+                    'segments_count' => $isComposite ? count($service->segments) : 0,
                     'company_id' => $companyId,
                     'branch_id' => $branchId,
                 ]);
 
-                $conflictingAppointment = Appointment::where('company_id', $companyId)
+                // 🔧 FIX 2025-12-08: Add staff_id filter to prevent cross-staff conflicts
+                // Previously: Checked ALL appointments in branch, blocking slots for wrong staff
+                // Now: Only check conflicts for the REQUESTED staff member
+                $conflictQuery = Appointment::where('company_id', $companyId)
                     ->where('branch_id', $branchId)
-                    ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                    ->whereIn('status', ['scheduled', 'confirmed', 'booked']);
+
+                // Only filter by staff if a preferred staff was specified
+                if ($preferredStaffId) {
+                    $conflictQuery->where('staff_id', $preferredStaffId);
+                    Log::debug('🔍 Checking conflicts for specific staff only', [
+                        'call_id' => $callId,
+                        'staff_id' => $preferredStaffId,
+                        'time_window' => $requestedDate->format('H:i') . ' - ' . $requestedEndTime->format('H:i'),
+                    ]);
+                }
+
+                $conflictingAppointment = $conflictQuery
                     // 🔧 FIX 2025-11-27: Removed sync_status filter - check ALL appointments
                     // Previously: ->whereIn('calcom_sync_status', ['pending', 'failed'])
                     // This missed synced appointments that Cal.com returned as "available"
@@ -1920,15 +1905,72 @@ class RetellFunctionCallHandler extends Controller
                         'fix' => 'FIX 2025-11-27: Comprehensive local DB check with full duration overlap',
                     ]);
 
+                    // 🔧 FIX 2025-12-08: Search for alternatives within customer's time preference
+                    // Instead of returning empty alternatives, use TimePreference to find slots in the preferred window
+                    $timeInput = $params['uhrzeit'] ?? $params['time'] ?? null;
+                    $timePreference = $this->dateTimeParser->parseTimePreference($timeInput);
+
+                    $alternativesResult = [];
+                    $alternativeMessage = "Dieser Termin ist leider nicht verfügbar.";
+
+                    // Only search for alternatives if we have valid service and event type
+                    if ($service && $service->calcom_event_type_id) {
+                        try {
+                            $alternatives = $this->alternativeFinder
+                                ->setTenantContext($companyId, $branchId ?? null)
+                                ->findAlternatives(
+                                    $requestedDate,
+                                    $serviceDuration,
+                                    $service->calcom_event_type_id,
+                                    null, // customerId
+                                    'de',
+                                    $timePreference
+                                );
+
+                            $alternativesResult = $this->formatAlternativesForRetell($alternatives['alternatives'] ?? []);
+
+                            // Generate appropriate message based on TimePreference
+                            if (!empty($alternativesResult)) {
+                                $preferenceLabel = $timePreference->getGermanLabel();
+                                if ($timePreference->isTimeWindow()) {
+                                    $alternativeMessage = "{$preferenceLabel} ist zu dieser Zeit leider belegt.";
+                                } else {
+                                    $alternativeMessage = "Um {$requestedDate->format('H:i')} Uhr ist leider schon ein Termin.";
+                                }
+                            } else {
+                                $alternativeMessage = "Dieser Termin ist leider nicht verfügbar. Welche Zeit würde Ihnen alternativ passen?";
+                            }
+
+                            Log::info('🔍 LOCAL DB CONFLICT: Found alternatives with TimePreference', [
+                                'call_id' => $callId,
+                                'time_preference_type' => $timePreference->type,
+                                'time_preference_window' => $timePreference->windowStart . '-' . $timePreference->windowEnd,
+                                'alternatives_found' => count($alternativesResult),
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::warning('⚠️ LOCAL DB CONFLICT: Failed to find alternatives', [
+                                'call_id' => $callId,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
                     return $this->responseFormatter->success([
                         'available' => false,
-                        'message' => "Dieser Termin ist leider nicht verfügbar. Welche Zeit würde Ihnen alternativ passen?",
-                        'requested_time' => $requestedDate->format('Y-m-d H:i'),
-                        'alternatives' => [],
+                        'message' => $alternativeMessage,
+                        'requested_time' => $originalRequestedDate->format('Y-m-d H:i'),  // Original user request
+                        'alternatives' => $alternativesResult,
                         'reason' => 'local_db_conflict',
-                        'suggest_user_alternative' => true,
+                        'suggest_user_alternative' => empty($alternativesResult),
                         'conflict_info' => [
                             'existing_appointment_time' => $conflictingAppointment->starts_at->format('H:i') . ' - ' . $conflictingAppointment->ends_at->format('H:i'),
+                            'staff_id' => $preferredStaffId,  // Include for debugging
+                        ],
+                        'time_preference' => [
+                            'type' => $timePreference->type,
+                            'label' => $timePreference->label,
+                            'window_start' => $timePreference->windowStart,
+                            'window_end' => $timePreference->windowEnd,
                         ],
                     ]);
                 }
@@ -1957,10 +1999,14 @@ class RetellFunctionCallHandler extends Controller
                 }
 
                 // Prepare availability result
+                // 🔧 FIX 2025-12-01: Include both original request and matched slot for clarity
                 $availabilityResult = [
                     'available' => true,
                     'message' => $positiveMessage,
-                    'requested_time' => $requestedDate->format('Y-m-d H:i'),
+                    'requested_time' => $originalRequestedDate->format('Y-m-d H:i'), // Original user request
+                    'slot_time' => $requestedDate->format('Y-m-d H:i'), // Actual slot to book (may differ)
+                    'fuzzy_match_applied' => $fuzzyMatchApplied,
+                    'fuzzy_match_diff_minutes' => $fuzzyMatchDiff,
                     'alternatives' => [],
                     'intelligent_response' => isset($fuzzyResult) && $fuzzyResult['found'],
                 ];
@@ -2309,6 +2355,20 @@ class RetellFunctionCallHandler extends Controller
             $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
             $maxAlternatives = $params['max_alternatives'] ?? 3;
 
+            // 🔧 NEW 2025-12-08: Extract TimePreference from customer's input
+            // Supports: "vormittags", "ab 16 Uhr", "zwischen 10 und 16 Uhr", etc.
+            $timeInput = $params['time'] ?? $params['uhrzeit'] ?? $params['zeitraum'] ?? null;
+            $timePreference = $this->dateTimeParser->parseTimePreference($timeInput);
+
+            Log::info('🕐 TimePreference parsed for alternatives', [
+                'call_id' => $callId,
+                'time_input' => $timeInput,
+                'preference_type' => $timePreference->type,
+                'window_start' => $timePreference->windowStart,
+                'window_end' => $timePreference->windowEnd,
+                'label' => $timePreference->label
+            ]);
+
             // FEATURE: Branch-aware service selection for alternatives
             $callContext = $this->getCallContext($callId);
 
@@ -2342,10 +2402,16 @@ class RetellFunctionCallHandler extends Controller
                 return $this->responseFormatter->error('Service nicht verfügbar für diese Filiale');
             }
 
+            // 🔧 FIX 2025-12-07: Use cached event_type_id if available (preserves staff selection)
+            // This ensures consistency with check_availability which pins the specific event type
+            $eventTypeId = \Illuminate\Support\Facades\Cache::get("call:{$callId}:event_type_id") ?? $service->calcom_event_type_id;
+
             Log::info('Using service for alternatives', [
                 'service_id' => $service->id,
                 'service_name' => $service->name,
-                'event_type_id' => $service->calcom_event_type_id,
+                'default_event_type_id' => $service->calcom_event_type_id,
+                'used_event_type_id' => $eventTypeId,
+                'from_cache' => \Illuminate\Support\Facades\Cache::has("call:{$callId}:event_type_id"),
                 'call_id' => $callId
             ]);
 
@@ -2355,22 +2421,100 @@ class RetellFunctionCallHandler extends Controller
             $call = $this->callLifecycle->findCallByRetellId($callId);
             $customerId = $call?->customer_id;
 
+            // 🔧 FIX 2025-12-02: IDEMPOTENCY CHECK - Prevent offering alternatives when booking already exists
+            // This fixes race condition where Retell timeout causes agent to think booking failed,
+            // but the booking actually succeeded in the background. Without this check, the agent
+            // would incorrectly offer alternatives for an already-booked appointment.
+            if ($call) {
+                // Check 1: Call already has a converted appointment
+                if ($call->converted_appointment_id) {
+                    $existingAppointment = \App\Models\Appointment::find($call->converted_appointment_id);
+                    if ($existingAppointment && in_array($existingAppointment->status, ['booked', 'confirmed', 'pending'])) {
+                        Log::info('🛡️ [IDEMPOTENCY] Booking already exists for this call - skipping alternatives', [
+                            'call_id' => $callId,
+                            'appointment_id' => $existingAppointment->id,
+                            'appointment_status' => $existingAppointment->status,
+                            'starts_at' => $existingAppointment->starts_at?->format('Y-m-d H:i'),
+                        ]);
+
+                        return $this->responseFormatter->success([
+                            'found' => true,
+                            'already_booked' => true,
+                            'message' => 'Der Termin wurde bereits erfolgreich gebucht.',
+                            'existing_appointment' => [
+                                'id' => $existingAppointment->id,
+                                'date' => $existingAppointment->starts_at?->format('d.m.Y'),
+                                'time' => $existingAppointment->starts_at?->format('H:i'),
+                                'service' => $existingAppointment->service?->name ?? 'Termin',
+                            ],
+                            'alternatives' => [], // No alternatives needed
+                        ]);
+                    }
+                }
+
+                // Check 2: Appointment exists with this call_id (set in CompositeBookingService)
+                $appointmentByCallId = \App\Models\Appointment::where('call_id', $call->id)
+                    ->whereIn('status', ['booked', 'confirmed', 'pending'])
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($appointmentByCallId) {
+                    Log::info('🛡️ [IDEMPOTENCY] Appointment found by call_id - skipping alternatives', [
+                        'call_id' => $callId,
+                        'db_call_id' => $call->id,
+                        'appointment_id' => $appointmentByCallId->id,
+                        'appointment_status' => $appointmentByCallId->status,
+                        'starts_at' => $appointmentByCallId->starts_at?->format('Y-m-d H:i'),
+                    ]);
+
+                    return $this->responseFormatter->success([
+                        'found' => true,
+                        'already_booked' => true,
+                        'message' => 'Der Termin wurde bereits erfolgreich gebucht.',
+                        'existing_appointment' => [
+                            'id' => $appointmentByCallId->id,
+                            'date' => $appointmentByCallId->starts_at?->format('d.m.Y'),
+                            'time' => $appointmentByCallId->starts_at?->format('H:i'),
+                            'service' => $appointmentByCallId->service?->name ?? 'Termin',
+                        ],
+                        'alternatives' => [],
+                    ]);
+                }
+            }
+
             // 🐛 FIX 2025-11-25: Use $service->calcom_event_type_id instead of undefined $eventTypeId
+            // 🔧 FIX 2025-12-07: Using resolved $eventTypeId (from cache or default)
+            // 🔧 NEW 2025-12-08: Pass TimePreference for window-aware search
             $alternatives = $this->alternativeFinder
                 ->setTenantContext($companyId, $branchId)
                 ->findAlternatives(
                     $requestedDate,
                     $duration,
-                    $service->calcom_event_type_id,  // ✅ Fixed: was undefined $eventTypeId
-                    $customerId  // Pass customer ID to prevent offering conflicting times
+                    $eventTypeId,  // ✅ Fixed: using correctly resolved eventTypeId
+                    $customerId,   // Pass customer ID to prevent offering conflicting times
+                    'de',          // Preferred language
+                    $timePreference // 🔧 NEW: Time window preference for targeted search
                 );
 
             // Format response for natural conversation
+            // 🔧 NEW 2025-12-08: Include preference context for intelligent follow-ups
+            $preferenceContext = $alternatives['preference_context'] ?? null;
+
             $responseData = [
                 'found' => !empty($alternatives['alternatives']),
                 'message' => $alternatives['responseText'] ?? "Ich suche nach verfügbaren Terminen...",
                 'alternatives' => $this->formatAlternativesForRetell($alternatives['alternatives'] ?? []),
-                'original_request' => $requestedDate->format('Y-m-d H:i')
+                'original_request' => $requestedDate->format('Y-m-d H:i'),
+                // 🔧 NEW: Preference context for agent decision-making
+                'preference_context' => $preferenceContext ? [
+                    'type' => $preferenceContext['type'] ?? null,
+                    'label' => $preferenceContext['label'] ?? null,
+                    'window' => ($preferenceContext['window_start'] ?? null) && ($preferenceContext['window_end'] ?? null)
+                        ? "{$preferenceContext['window_start']}-{$preferenceContext['window_end']}"
+                        : null,
+                    'all_match_preference' => $preferenceContext['all_match_preference'] ?? true,
+                    'suggested_followup' => $preferenceContext['suggested_followup'] ?? null
+                ] : null
             ];
 
             // 🔧 FIX 2025-11-25: Cache alternatives with slot locking to prevent race conditions
@@ -2390,9 +2534,13 @@ class RetellFunctionCallHandler extends Controller
         } catch (\Exception $e) {
             Log::error('Error getting alternatives', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'call_id' => $callId
             ]);
-            return $this->responseFormatter->error('Fehler beim Suchen von Alternativen');
+            // 🔧 FIX 2025-12-07: Return detailed error in local env or log for debugging, provide friendly message
+            // For now, keep friendly message but maybe add detail if debug mode?
+            // Retell sees the string in "error" field.
+            return $this->responseFormatter->error('Fehler beim Suchen von Alternativen: ' . $e->getMessage()); // Temporary: Include error for debugging
         }
     }
 
@@ -2476,6 +2624,37 @@ class RetellFunctionCallHandler extends Controller
             $call = $this->callLifecycle->findCallByRetellId($callId);
             $customerId = $call?->customer_id;
 
+            // 🔧 FIX 2025-12-13: Check for existing slot reservation
+            // If reserve_slot was called earlier, the slot is already held in Cal.com
+            $reservationKey = "call:{$callId}:reservation";
+            $existingReservation = Cache::get($reservationKey);
+            $hasActiveReservation = false;
+
+            if ($existingReservation) {
+                // Check if reservation is still valid
+                $reservationUntil = isset($existingReservation['until'])
+                    ? \Carbon\Carbon::parse($existingReservation['until'])
+                    : null;
+
+                if ($reservationUntil && $reservationUntil->isFuture()) {
+                    $hasActiveReservation = true;
+                    Log::info('🔒 Active slot reservation found - skipping availability double-check', [
+                        'call_id' => $callId,
+                        'reservation_uid' => $existingReservation['uid'] ?? null,
+                        'reservation_until' => $reservationUntil->toIso8601String(),
+                        'reserved_datetime' => $existingReservation['datetime'] ?? null,
+                        'service_id' => $existingReservation['service_id'] ?? null,
+                    ]);
+                } else {
+                    // Reservation expired, clear it
+                    Cache::forget($reservationKey);
+                    Log::warning('🔓 Slot reservation expired', [
+                        'call_id' => $callId,
+                        'reservation_until' => $reservationUntil?->toIso8601String(),
+                    ]);
+                }
+            }
+
             // 🔧 FIX 2025-11-19: Map "datetime" parameter to "date" + "time" for dateTimeParser
             // PROBLEM: Retell agent V117+ sends "datetime" but dateTimeParser expects "date" + "time"
             // SOLUTION: Parse datetime string into separate parameters
@@ -2526,15 +2705,147 @@ class RetellFunctionCallHandler extends Controller
             $appointmentTime = $this->dateTimeParser->parseDateTime($params);
             $duration = $params['duration'] ?? 60;
             $customerName = $params['customer_name'] ?? '';
+
+            // 🔧 FIX 2025-12-04: Validate customer_name is not a time expression
+            // BUG: Retell agent sometimes sends time slot (e.g., "Acht Uhr") as customer_name
+            // instead of actual customer name (e.g., "Franziska Siebert")
+            if ($customerName && $this->isTimeExpression($customerName)) {
+                Log::warning('⚠️ Time expression detected as customer_name - rejecting', [
+                    'call_id' => $callId,
+                    'invalid_name' => $customerName,
+                    'fix' => 'Name will be extracted from transcript instead'
+                ]);
+                $customerName = ''; // Reset so name extraction from transcript takes over
+            }
+
+            // 🔥 NEW 2025-11-16: Customer Recognition - Support both preferred_staff_id and legacy mitarbeiter
+            // ⚠️ V128: Moved earlier to be available for customer name validation
+            $preferredStaffId = $params['preferred_staff_id'] ?? null;
+            $mitarbeiterName = $params['mitarbeiter'] ?? null;
+
+            // 🔧 FIX 2025-12-08: Convert staff name to UUID if Retell sends name instead of ID
+            // Bug: Retell agent sometimes sends preferred_staff_id as name (e.g., "Mario Basler")
+            // instead of UUID, causing DB query failure: WHERE id = 'Mario Basler'
+            if ($preferredStaffId && !\Illuminate\Support\Str::isUuid($preferredStaffId)) {
+                $staffNameInput = $preferredStaffId;
+                $preferredStaffId = $this->mapStaffNameToId($staffNameInput, $callId);
+
+                Log::info('🔄 Converted staff name to ID in start_booking', [
+                    'call_id' => $callId,
+                    'input_name' => $staffNameInput,
+                    'resolved_staff_id' => $preferredStaffId,
+                ]);
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX V128 2025-12-08: Enhanced Customer Name Validation
+            // ═══════════════════════════════════════════════════════════════════════════
+            // Problems identified in Call #85212 and #85213:
+            // 1. Agent sends empty or "anonymous" customer_name
+            // 2. Agent confuses "bei Mario Basler" (staff preference) with customer name
+            // Solution: Backend validation to catch these issues and return informative errors
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            // Check 1: Reject anonymous/placeholder names
+            $invalidNames = ['anonymous', 'anonym', 'unbekannt', 'unknown', 'gast', 'guest', 'kunde', 'customer', 'n/a', 'na', '-', ''];
+            $cleanedName = strtolower(trim($customerName));
+
+            if (in_array($cleanedName, $invalidNames) || strlen($cleanedName) < 2) {
+                Log::warning('⚠️ V128: Invalid customer_name detected - booking blocked', [
+                    'call_id' => $callId,
+                    'customer_name' => $customerName,
+                    'cleaned_name' => $cleanedName,
+                    'reason' => 'anonymous_or_placeholder',
+                    'fix' => 'FIX V128: Agent must ask for customer name'
+                ]);
+
+                return $this->responseFormatter->formatResponse([
+                    'success' => false,
+                    'reason' => 'customer_name_required',
+                    'message' => 'Ich brauche noch Ihren Namen für die Buchung. Auf welchen Namen darf ich den Termin eintragen?',
+                    'call_id' => $callId,
+                    'error_type' => 'validation'
+                ]);
+            }
+
+            // Check 2: Reject if customer_name looks like a staff preference pattern
+            // Patterns: "bei Mario Basler", "zu Udo Walz", "mit Frau Mueller"
+            $staffPrefixPatterns = [
+                '/^bei\s+/i',        // "bei Mario"
+                '/^zu\s+/i',         // "zu Udo"
+                '/^mit\s+/i',        // "mit Frau Mueller"
+                '/^beim\s+/i',       // "beim Mario"
+                '/^zur\s+/i',        // "zur Frau Meyer"
+                '/^bei\s+der\s+/i',  // "bei der Frau Schmidt"
+                '/^zum\s+/i',        // "zum Herrn Mueller"
+            ];
+
+            foreach ($staffPrefixPatterns as $pattern) {
+                if (preg_match($pattern, $customerName)) {
+                    // Extract the actual staff name for preference
+                    $extractedStaffName = preg_replace($pattern, '', $customerName);
+
+                    Log::warning('⚠️ V128: Staff preference detected in customer_name field', [
+                        'call_id' => $callId,
+                        'customer_name' => $customerName,
+                        'extracted_staff' => $extractedStaffName,
+                        'reason' => 'staff_preference_in_customer_name',
+                        'fix' => 'FIX V128: Should be preferred_staff_id, not customer_name'
+                    ]);
+
+                    return $this->responseFormatter->formatResponse([
+                        'success' => false,
+                        'reason' => 'staff_preference_confused_with_customer_name',
+                        'message' => "'{$customerName}' klingt nach einer Mitarbeiter-Präferenz. Wie ist Ihr Name für die Buchung?",
+                        'detected_staff_preference' => $extractedStaffName,
+                        'call_id' => $callId,
+                        'error_type' => 'validation'
+                    ]);
+                }
+            }
+
+            // Check 3: Reject if customer_name matches a known staff member
+            $potentialStaffName = preg_replace('/^(herr|frau|mr|mrs|ms)\s+/i', '', $cleanedName);
+            $staffWithName = \App\Models\Staff::where('company_id', $companyId)
+                ->where('is_active', true)
+                ->whereRaw('LOWER(name) LIKE ?', ['%' . $potentialStaffName . '%'])
+                ->first();
+
+            if ($staffWithName && $potentialStaffName === strtolower($staffWithName->name)) {
+                Log::warning('⚠️ V128: Staff member name detected as customer_name', [
+                    'call_id' => $callId,
+                    'customer_name' => $customerName,
+                    'matched_staff' => $staffWithName->name,
+                    'staff_id' => $staffWithName->id,
+                    'fix' => 'FIX V128: Customer likely wants this staff, not their name'
+                ]);
+
+                // Auto-set as preferred_staff_id if not already set
+                if (!$preferredStaffId && !$mitarbeiterName) {
+                    $preferredStaffId = $staffWithName->id;
+                    Log::info('✅ V128: Auto-converted staff name to preferred_staff_id', [
+                        'call_id' => $callId,
+                        'staff_id' => $preferredStaffId,
+                        'staff_name' => $staffWithName->name
+                    ]);
+                }
+
+                return $this->responseFormatter->formatResponse([
+                    'success' => false,
+                    'reason' => 'staff_name_as_customer_name',
+                    'message' => "'{$staffWithName->name}' ist einer unserer Mitarbeiter. Wie ist Ihr eigener Name für die Buchung?",
+                    'detected_staff' => $staffWithName->name,
+                    'call_id' => $callId,
+                    'error_type' => 'validation'
+                ]);
+            }
+            // ═══════════════════════════════════════════════════════════════════════════
+
             $customerEmail = $params['customer_email'] ?? '';
             $customerPhone = $params['customer_phone'] ?? '';
             $serviceId = $params['service_id'] ?? null;
             $serviceName = $params['service_name'] ?? $params['dienstleistung'] ?? null;
             $notes = $params['notes'] ?? '';
-
-            // 🔥 NEW 2025-11-16: Customer Recognition - Support both preferred_staff_id and legacy mitarbeiter
-            $preferredStaffId = $params['preferred_staff_id'] ?? null;
-            $mitarbeiterName = $params['mitarbeiter'] ?? null;
 
             if ($preferredStaffId) {
                 // Direct ID provided (new way from customer recognition)
@@ -2565,6 +2876,18 @@ class RetellFunctionCallHandler extends Controller
                     'mitarbeiter_name' => $mitarbeiterName,
                     'mapped_staff_id' => $preferredStaffId,
                     'call_id' => $callId
+                ]);
+            }
+
+            // 🔧 FIX 2025-12-07: Use pinned staff from availability check (Highest Priority)
+            // Ensures that the exact staff member found during checkAvailability is used for booking
+            $pinnedStaffId = $callId ? Cache::get("call:{$callId}:pinned_staff_id") : null;
+            if ($pinnedStaffId) {
+                $preferredStaffId = $pinnedStaffId;
+                Log::info('📌 Using pinned staff ID for booking (from cache)', [
+                    'call_id' => $callId,
+                    'staff_id' => $preferredStaffId,
+                    'source' => 'checkAvailability'
                 ]);
             }
 
@@ -2663,6 +2986,39 @@ class RetellFunctionCallHandler extends Controller
                 ]);
                 return $this->responseFormatter->error('Service nicht verfügbar für diese Filiale');
             }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // ✅ FIX 2025-12-08: Staff-Service Capability Check (Prevent Silent Fallback)
+            // ═══════════════════════════════════════════════════════════════════════════
+            // Validate that requested staff can provide this service BEFORE booking.
+            // This is a safety net - primary check happens in checkAvailability()
+            // ═══════════════════════════════════════════════════════════════════════════
+            if ($preferredStaffId) {
+                $capabilityCheck = $this->validateStaffCanProvideService($preferredStaffId, $service, $callId);
+
+                if (!$capabilityCheck['valid']) {
+                    Log::warning('⚠️ bookAppointment: Staff cannot provide service - blocking booking', [
+                        'call_id' => $callId,
+                        'staff_id' => $preferredStaffId,
+                        'staff_name' => $capabilityCheck['staff_name'],
+                        'service_name' => $service->name,
+                        'alternatives_count' => count($capabilityCheck['alternatives'] ?? []),
+                        'fix' => 'FIX 2025-12-08: Prevent Silent Fallback in bookAppointment'
+                    ]);
+
+                    // Return informative error with alternatives
+                    return $this->responseFormatter->formatResponse([
+                        'success' => false,
+                        'reason' => 'staff_cannot_provide_service',
+                        'message' => $capabilityCheck['message'],
+                        'requested_staff' => $capabilityCheck['staff_name'],
+                        'requested_service' => $service->name,
+                        'alternative_staff' => $capabilityCheck['alternatives'],
+                        'call_id' => $callId
+                    ]);
+                }
+            }
+            // ═══════════════════════════════════════════════════════════════════════════
 
             Log::info('Using service for booking', [
                 'service_id' => $service->id,
@@ -2805,9 +3161,45 @@ class RetellFunctionCallHandler extends Controller
 
                     // Quick availability re-check for exact requested time
                     try {
+                        // 🔧 FIX 2025-12-01: Use segment A event type for composite services
+                        // ROOT CAUSE: Parent event type (3757758) returns different slots than
+                        // segment A child event type (3976747) which is used for booking
+                        $reCheckEventTypeId = $service->calcom_event_type_id;
+
+                        if ($service->isComposite() && !empty($service->segments)) {
+                            // Get first available staff for composite re-check
+                            $reCheckStaff = $preferredStaffId
+                                ? \App\Models\Staff::find($preferredStaffId)
+                                : \App\Models\Staff::where('branch_id', $branchId)
+                                    ->where('is_active', true)
+                                    ->whereHas('services', fn($q) => $q->where('service_id', $service->id))
+                                    ->first();
+
+                            if ($reCheckStaff) {
+                                $segmentAMapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                                    ->where('segment_key', 'A')
+                                    ->where('staff_id', $reCheckStaff->id)
+                                    ->first();
+
+                                if ($segmentAMapping) {
+                                    $reCheckEventTypeId = $segmentAMapping->child_event_type_id
+                                        ?? $segmentAMapping->event_type_id
+                                        ?? $reCheckEventTypeId;
+
+                                    Log::info('🎨 Using segment A event type for composite service re-check', [
+                                        'call_id' => $callId,
+                                        'service_id' => $service->id,
+                                        'staff_id' => $reCheckStaff->id,
+                                        'original_event_type' => $service->calcom_event_type_id,
+                                        'segment_a_event_type' => $reCheckEventTypeId,
+                                    ]);
+                                }
+                            }
+                        }
+
                         // 🔧 FIX 2025-11-16: Cal.com expects Y-m-d format, not ISO 8601
                         $reCheckResponse = $this->calcomService->getAvailableSlots(
-                            $service->calcom_event_type_id,
+                            $reCheckEventTypeId,
                             $appointmentTime->copy()->startOfDay()->format('Y-m-d'),
                             $appointmentTime->copy()->endOfDay()->format('Y-m-d')
                         );
@@ -2821,21 +3213,32 @@ class RetellFunctionCallHandler extends Controller
                             Log::warning('⚠️ Slot no longer available - preventing booking attempt', [
                                 'call_id' => $callId,
                                 'requested_time' => $appointmentTime->format('Y-m-d H:i'),
-                                'time_since_check' => $timeSinceCheck
+                                'time_since_check' => $timeSinceCheck,
+                                'event_type_checked' => $reCheckEventTypeId,
+                                'slots_available' => count($reCheckSlots),
                             ]);
 
                             // Find new alternatives
-                            // 🔧 FIX 2025-11-14: Correct parameter order for findAlternatives()
-                            // 🔒 FIX 2025-11-19: Set tenant context before calling findAlternatives()
-                            // CRITICAL: Prevents "SECURITY: Tenant context required" error
-                            $alternatives = $this->alternativeFinder
-                                ->setTenantContext($companyId, $branchId)
-                                ->findAlternatives(
-                                    $appointmentTime,                   // Carbon $desiredDateTime
-                                    $service->duration_minutes,         // int $durationMinutes
-                                    $service->calcom_event_type_id,    // int $eventTypeId
-                                    $customerId                         // ?int $customerId
+                            // 🔧 FIX 2025-12-01: Use composite service alternatives for composite services
+                            if ($service->isComposite() && !empty($service->segments) && isset($reCheckStaff)) {
+                                $alternatives = $this->findAlternativesForCompositeService(
+                                    $service,
+                                    $reCheckStaff,
+                                    $appointmentTime,
+                                    $branchId
                                 );
+                            } else {
+                                // 🔧 FIX 2025-11-14: Correct parameter order for findAlternatives()
+                                // 🔒 FIX 2025-11-19: Set tenant context before calling findAlternatives()
+                                $alternatives = $this->alternativeFinder
+                                    ->setTenantContext($companyId, $branchId)
+                                    ->findAlternatives(
+                                        $appointmentTime,                   // Carbon $desiredDateTime
+                                        $service->duration_minutes,         // int $durationMinutes
+                                        $reCheckEventTypeId,                // int $eventTypeId
+                                        $customerId                         // ?int $customerId
+                                    );
+                            }
 
                             return $this->responseFormatter->error(
                                 'Dieser Termin wurde gerade vergeben. Ich habe neue Alternativen für Sie.',
@@ -2852,7 +3255,8 @@ class RetellFunctionCallHandler extends Controller
 
                         Log::info('✅ Availability re-validated - proceeding with booking', [
                             'call_id' => $callId,
-                            'requested_time' => $appointmentTime->format('Y-m-d H:i')
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'event_type_checked' => $reCheckEventTypeId,
                         ]);
 
                     } catch (\Exception $e) {
@@ -2948,6 +3352,35 @@ class RetellFunctionCallHandler extends Controller
                         'note' => 'Slot was not locked during check_availability - race condition possible'
                     ]);
                 }
+            }
+
+            // 🎨 COMPOSITE SERVICE SUPPORT (2025-11-27)
+            // If service is composite (e.g., Dauerwelle with 6 segments), use CompositeBookingService
+            // This creates multiple linked appointments with proper Cal.com segment bookings
+            if ($service->isComposite() && !empty($service->segments)) {
+                Log::info('🎨 COMPOSITE SERVICE DETECTED - Using specialized booking flow', [
+                    'call_id' => $callId,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'segments_count' => count($service->segments),
+                    'total_duration' => $service->duration_minutes,
+                    'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                    'segment_names' => collect($service->segments)->pluck('name')->toArray()
+                ]);
+
+                return $this->bookCompositeAppointment(
+                    $service,
+                    $appointmentTime,
+                    $customerName,
+                    $customerEmail,
+                    $customerPhone,
+                    $preferredStaffId,
+                    $callId,
+                    $companyId,
+                    $branchId,
+                    $lockKey ?? null,
+                    $lockInfo ?? null
+                );
             }
 
             // 🚀 PHASE 2 OPTIMIZATION (2025-11-17): ASYNC CAL.COM SYNC
@@ -3080,6 +3513,33 @@ class RetellFunctionCallHandler extends Controller
                         }
                     }
 
+                    // 🔧 FIX 2025-12-03: Check for existing appointment with same call_id (idempotency)
+                    // Prevents duplicate appointments when Retell sends duplicate function calls
+                    $existingCallAppointment = Appointment::where('call_id', $call->id)
+                        ->whereIn('status', ['confirmed', 'booked', 'pending', 'scheduled'])
+                        ->first();
+
+                    if ($existingCallAppointment) {
+                        Log::warning('🛡️ Duplicate booking attempt blocked (ASYNC) - returning existing appointment', [
+                            'call_id' => $call->id,
+                            'retell_call_id' => $callId,
+                            'existing_appointment_id' => $existingCallAppointment->id,
+                            'existing_status' => $existingCallAppointment->status,
+                            'existing_time' => $existingCallAppointment->starts_at->format('Y-m-d H:i')
+                        ]);
+
+                        // Return success with existing appointment (idempotent response)
+                        return $this->responseFormatter->success([
+                            'booked' => true,
+                            'appointment_id' => $existingCallAppointment->id,
+                            'message' => "Perfekt! Ihr Termin am {$existingCallAppointment->starts_at->format('d.m.')} um {$existingCallAppointment->starts_at->format('H:i')} Uhr ist bereits gebucht.",
+                            'appointment_time' => $existingCallAppointment->starts_at->format('Y-m-d H:i'),
+                            'confirmation' => "Sie erhalten eine Bestätigung per SMS.",
+                            'sync_mode' => 'async',
+                            'idempotent_response' => true  // Flag for debugging
+                        ]);
+                    }
+
                     // Create local appointment with status "pending_sync"
                     $appointment = new Appointment();
                     $appointment->forceFill([
@@ -3120,11 +3580,25 @@ class RetellFunctionCallHandler extends Controller
                         'sync_status' => $appointment->calcom_sync_status
                     ]);
 
-                    // Load service relation before dispatching job (required for Cal.com sync)
+                    // Load service relation (may be needed for downstream processing)
                     $appointment->load('service', 'customer', 'company');
 
-                    // Dispatch background job to sync to Cal.com
-                    \App\Jobs\SyncAppointmentToCalcomJob::dispatch($appointment, 'create');
+                    // ═══════════════════════════════════════════════════════════════════════════
+                    // 🔧 FIX 2025-12-01: REMOVED direct sync job dispatch - causes DOUBLE BOOKING!
+                    // ═══════════════════════════════════════════════════════════════════════════
+                    // The Cal.com sync is now handled EXCLUSIVELY by the AppointmentObserver:
+                    // 1. AppointmentObserver::created() fires AppointmentBooked event
+                    // 2. AppointmentBooked event triggers SyncToCalcomOnBooked listener
+                    // 3. Listener dispatches SyncAppointmentToCalcomJob
+                    //
+                    // REMOVED CODE (caused double booking bug):
+                    // \App\Jobs\SyncAppointmentToCalcomJob::dispatch($appointment, 'create');
+                    //
+                    // RCA: With both dispatches active, two sync jobs ran simultaneously:
+                    // - Job #1 booked slot A (e.g., 16:55)
+                    // - Job #2 found slot A blocked, booked slot B (e.g., 17:50)
+                    // Result: TWO Cal.com bookings for ONE appointment
+                    // ═══════════════════════════════════════════════════════════════════════════
 
                     // 🔧 FIX 2025-11-25 (Bug 2): Release slot lock after successful booking
                     if ($lockInfo) {
@@ -3138,15 +3612,59 @@ class RetellFunctionCallHandler extends Controller
 
                     // 🔧 FIX 2025-11-26: Update appointment_made flag on Call record
                     // BUGFIX: Changed from has_appointment (wrong) to appointment_made (correct DB column)
+                    // 🔧 FIX 2025-12-01: Wrap in try-catch to prevent non-critical failure from failing booking
+
+                    // 🔍 CHECKPOINT 1: Before Call-Flag Update (ASYNC booking)
+                    Log::channel('stack')->info('🔍 CHECKPOINT:BEFORE_FLAGS_UPDATE', [
+                        'location' => 'ASYNC_BOOKING',
+                        'call_id' => $callId,
+                        'appointment_id' => $appointment->id ?? null,
+                        'current_flags' => [
+                            'appointment_made' => $call?->appointment_made,
+                            'converted_appointment_id' => $call?->converted_appointment_id,
+                        ],
+                        'timestamp' => now()->toIso8601String(),
+                    ]);
+
                     if ($call) {
-                        $call->update([
-                            'appointment_made' => true,
-                            'converted_appointment_id' => $appointment->id,
-                        ]);
-                        Log::info('✅ Updated call appointment_made flag (ASYNC)', [
-                            'call_id' => $callId,
-                            'appointment_id' => $appointment->id
-                        ]);
+                        try {
+                            $call->update([
+                                'appointment_made' => true,
+                                'converted_appointment_id' => $appointment->id,
+                            ]);
+                            Log::info('✅ Updated call appointment_made flag (ASYNC)', [
+                                'call_id' => $callId,
+                                'appointment_id' => $appointment->id
+                            ]);
+
+                            // 🔍 CHECKPOINT 2: After Call-Flag Update SUCCESS
+                            Log::channel('stack')->info('🔍 CHECKPOINT:AFTER_FLAGS_UPDATE', [
+                                'location' => 'ASYNC_BOOKING',
+                                'call_id' => $callId,
+                                'update_success' => true,
+                                'flags_after' => [
+                                    'appointment_made' => $call->fresh()->appointment_made,
+                                    'converted_appointment_id' => $call->fresh()->converted_appointment_id,
+                                ],
+                                'timestamp' => now()->toIso8601String(),
+                            ]);
+                        } catch (\Exception $callUpdateException) {
+                            // Non-critical: Log but don't fail the booking
+                            Log::warning('⚠️ Failed to update call flags (non-blocking)', [
+                                'call_id' => $callId,
+                                'appointment_id' => $appointment->id,
+                                'error' => $callUpdateException->getMessage()
+                            ]);
+
+                            // 🔍 CHECKPOINT 2: After Call-Flag Update FAILED
+                            Log::channel('stack')->info('🔍 CHECKPOINT:AFTER_FLAGS_UPDATE', [
+                                'location' => 'ASYNC_BOOKING',
+                                'call_id' => $callId,
+                                'update_success' => false,
+                                'error' => $callUpdateException->getMessage(),
+                                'timestamp' => now()->toIso8601String(),
+                            ]);
+                        }
                     }
 
                     // Return SUCCESS immediately (user doesn't wait for Cal.com)
@@ -3160,6 +3678,27 @@ class RetellFunctionCallHandler extends Controller
                     ]);
 
                 } catch (\Exception $e) {
+                    // 🔧 FIX 2025-12-01: Check if appointment was already created before returning error
+                    // This handles the case where appointment was saved but a subsequent operation failed
+                    if (isset($appointment) && $appointment->id) {
+                        Log::warning('⚠️ Async booking partial success: appointment created but error occurred', [
+                            'call_id' => $callId,
+                            'appointment_id' => $appointment->id,
+                            'error' => $e->getMessage(),
+                            'note' => 'Returning success since appointment exists'
+                        ]);
+
+                        return $this->responseFormatter->success([
+                            'booked' => true,
+                            'appointment_id' => $appointment->id,
+                            'message' => "Ihr Termin am {$appointmentTime->format('d.m.')} um {$appointmentTime->format('H:i')} Uhr ist gebucht.",
+                            'appointment_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'confirmation' => "Sie erhalten eine Bestätigung per SMS.",
+                            'sync_mode' => 'async',
+                            'partial_success' => true
+                        ]);
+                    }
+
                     Log::error('❌ Async booking failed', [
                         'call_id' => $callId,
                         'error' => $e->getMessage(),
@@ -3173,6 +3712,38 @@ class RetellFunctionCallHandler extends Controller
             }
 
             // SYNC PATH (FALLBACK): Original synchronous booking
+
+            // 🔧 FIX 2025-12-03: Check for existing appointment with same call_id (idempotency)
+            // This check runs BEFORE conflict detection and BEFORE Cal.com API call
+            // Prevents duplicate appointments when Retell sends duplicate function calls
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+            if ($call) {
+                $existingCallAppointment = Appointment::where('call_id', $call->id)
+                    ->whereIn('status', ['confirmed', 'booked', 'pending', 'scheduled'])
+                    ->first();
+
+                if ($existingCallAppointment) {
+                    Log::warning('🛡️ Duplicate booking attempt blocked (SYNC) - returning existing appointment', [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $callId,
+                        'existing_appointment_id' => $existingCallAppointment->id,
+                        'existing_status' => $existingCallAppointment->status,
+                        'existing_time' => $existingCallAppointment->starts_at->format('Y-m-d H:i')
+                    ]);
+
+                    // Return success with existing appointment (idempotent response)
+                    return $this->responseFormatter->success([
+                        'booked' => true,
+                        'appointment_id' => $existingCallAppointment->id,
+                        'message' => "Perfekt! Ihr Termin am {$existingCallAppointment->starts_at->format('d.m.')} um {$existingCallAppointment->starts_at->format('H:i')} Uhr ist bereits gebucht.",
+                        'appointment_time' => $existingCallAppointment->starts_at->format('Y-m-d H:i'),
+                        'confirmation' => "Sie erhalten eine Bestätigung per SMS.",
+                        'sync_mode' => 'sync',
+                        'idempotent_response' => true  // Flag for debugging
+                    ]);
+                }
+            }
+
             // 🔒 SECURITY FIX 2025-11-19: PRE-SYNC VALIDATION (SYNC path)
             // 🔧 FIX 2025-11-25: TIMEZONE BUG - Database stores times in local timezone (Europe/Berlin)
             // DO NOT convert to UTC - compare in local timezone for consistency
@@ -3275,56 +3846,66 @@ class RetellFunctionCallHandler extends Controller
                 $attempt++;
 
                 try {
-                    // 🔧 FIX 2025-11-21: DOUBLE-CHECK PATTERN
-                    // Re-check availability with Cal.com API immediately before booking
-                    // This eliminates the race condition window between check_availability and start_booking
-                    Log::debug('🔄 DOUBLE-CHECK: Re-verifying availability before booking', [
-                        'call_id' => $callId,
-                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
-                        'service' => $service->name
-                    ]);
+                    // 🔧 FIX 2025-12-13: Skip double-check if we have an active reservation
+                    // The slot is already held in Cal.com, no need to re-verify
+                    if ($hasActiveReservation) {
+                        Log::info('🔒 RESERVATION ACTIVE: Skipping double-check (slot already held)', [
+                            'call_id' => $callId,
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'reservation_uid' => $existingReservation['uid'] ?? null,
+                        ]);
+                    } else {
+                        // 🔧 FIX 2025-11-21: DOUBLE-CHECK PATTERN
+                        // Re-check availability with Cal.com API immediately before booking
+                        // This eliminates the race condition window between check_availability and start_booking
+                        Log::debug('🔄 DOUBLE-CHECK: Re-verifying availability before booking', [
+                            'call_id' => $callId,
+                            'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                            'service' => $service->name
+                        ]);
 
-                    try {
-                        $freshAvailability = $this->calcomService->getAvailableSlots(
-                            eventTypeId: $service->calcom_event_type_id,
-                            startDate: $appointmentTime->format('Y-m-d'),
-                            endDate: $appointmentTime->format('Y-m-d'),
-                            teamId: $company->calcom_team_id ?? null
-                        );
+                        try {
+                            $freshAvailability = $this->calcomService->getAvailableSlots(
+                                eventTypeId: $service->calcom_event_type_id,
+                                startDate: $appointmentTime->format('Y-m-d'),
+                                endDate: $appointmentTime->format('Y-m-d'),
+                                teamId: $company->calcom_team_id ?? null
+                            );
 
-                        $requestedSlot = $appointmentTime->format('Y-m-d\TH:i:s');
-                        $slotAvailable = false;
+                            $requestedSlot = $appointmentTime->format('Y-m-d\TH:i:s');
+                            $slotAvailable = false;
 
-                        foreach ($freshAvailability as $slot) {
-                            if (str_starts_with($slot['time'], $requestedSlot)) {
-                                $slotAvailable = true;
-                                break;
+                            foreach ($freshAvailability as $slot) {
+                                if (str_starts_with($slot['time'], $requestedSlot)) {
+                                    $slotAvailable = true;
+                                    break;
+                                }
                             }
-                        }
 
-                        if (!$slotAvailable) {
-                            Log::warning('⚠️ DOUBLE-CHECK FAILED: Slot no longer available', [
+                            if (!$slotAvailable) {
+                                Log::warning('⚠️ DOUBLE-CHECK FAILED: Slot no longer available', [
+                                    'call_id' => $callId,
+                                    'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                                    'service' => $service->name
+                                ]);
+
+                                return $this->responseFormatter->error(
+                                    'Dieser Termin wurde gerade vergeben. Möchten Sie einen anderen Zeitpunkt wählen?'
+                                );
+                            }
+
+                            Log::info('✅ DOUBLE-CHECK PASSED: Slot confirmed available', [
                                 'call_id' => $callId,
-                                'requested_time' => $appointmentTime->format('Y-m-d H:i'),
-                                'service' => $service->name
+                                'requested_time' => $appointmentTime->format('Y-m-d H:i')
                             ]);
 
-                            return $this->responseFormatter->error(
-                                'Dieser Termin wurde gerade vergeben. Möchten Sie einen anderen Zeitpunkt wählen?'
-                            );
+                        } catch (\Exception $doubleCheckError) {
+                            // If double-check fails, log but continue (don't block booking)
+                            Log::warning('⚠️ DOUBLE-CHECK ERROR: Continuing with booking attempt', [
+                                'call_id' => $callId,
+                                'error' => $doubleCheckError->getMessage()
+                            ]);
                         }
-
-                        Log::info('✅ DOUBLE-CHECK PASSED: Slot confirmed available', [
-                            'call_id' => $callId,
-                            'requested_time' => $appointmentTime->format('Y-m-d H:i')
-                        ]);
-
-                    } catch (\Exception $doubleCheckError) {
-                        // If double-check fails, log but continue (don't block booking)
-                        Log::warning('⚠️ DOUBLE-CHECK ERROR: Continuing with booking attempt', [
-                            'call_id' => $callId,
-                            'error' => $doubleCheckError->getMessage()
-                        ]);
                     }
 
                     // Create booking via Cal.com
@@ -3417,6 +3998,66 @@ class RetellFunctionCallHandler extends Controller
             if ($booking->successful()) {
                 $bookingData = $booking->json();
                 $calcomBookingId = $bookingData['data']['id'] ?? $bookingData['id'] ?? null;
+
+                // ═══════════════════════════════════════════════════════════════════════════
+                // ✅ FIX 2025-12-08: Extract staff from Cal.com host response (SYNC path)
+                // ═══════════════════════════════════════════════════════════════════════════
+                // PROBLEM: staff_id was NULL when agent didn't send 'mitarbeiter' parameter
+                //          but Cal.com successfully assigned a host to the booking
+                // SOLUTION: Use CalcomHostMappingService to resolve staff from Cal.com hosts
+                // RCA: Call #83396 - Heinrich Heine booking had NULL staff_id despite
+                //      Cal.com assigning host 1414768 (Udo Walz)
+                // ═══════════════════════════════════════════════════════════════════════════
+                if (!$preferredStaffId && $bookingData && $companyId) {
+                    try {
+                        $hostMappingService = app(\App\Services\CalcomHostMappingService::class);
+                        $calcomData = $bookingData['data'] ?? $bookingData;
+                        $hostData = $hostMappingService->extractHostFromBooking($calcomData);
+
+                        if ($hostData && isset($hostData['id'])) {
+                            $hostContext = new \App\Services\Strategies\HostMatchContext(
+                                companyId: $companyId,
+                                branchId: $branchId,
+                                serviceId: $service?->id,
+                                calcomBooking: $calcomData
+                            );
+
+                            $resolvedStaffId = $hostMappingService->resolveStaffForHost($hostData, $hostContext);
+
+                            if ($resolvedStaffId) {
+                                $preferredStaffId = $resolvedStaffId;
+
+                                Log::info('✅ SYNC: Staff resolved from Cal.com host', [
+                                    'call_id' => $callId,
+                                    'staff_id' => $resolvedStaffId,
+                                    'calcom_host_id' => $hostData['id'],
+                                    'host_name' => $hostData['name'] ?? 'unknown',
+                                    'host_email' => $hostData['email'] ?? null,
+                                    'booking_id' => $calcomBookingId,
+                                    'fix' => 'FIX 2025-12-08: SYNC path staff resolution'
+                                ]);
+                            } else {
+                                Log::warning('⚠️ SYNC: No staff match for Cal.com host', [
+                                    'call_id' => $callId,
+                                    'calcom_host_id' => $hostData['id'],
+                                    'host_name' => $hostData['name'] ?? null,
+                                    'host_email' => $hostData['email'] ?? null,
+                                    'note' => 'Check CalcomHostMapping table for missing entry'
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Non-blocking: Log error but continue with booking
+                        // Staff assignment is important but not critical for booking success
+                        Log::warning('⚠️ SYNC: Staff resolution failed (non-blocking)', [
+                            'call_id' => $callId,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                            'note' => 'Booking will proceed with staff_id=NULL'
+                        ]);
+                    }
+                }
+                // ═══════════════════════════════════════════════════════════════════════════
 
                 // 🔥 PHASE 1 FIX: Create local appointment immediately after Cal.com success
                 try {
@@ -4140,6 +4781,190 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
+     * Reserve a slot in Cal.com (prevents race conditions)
+     *
+     * UX: Agent says "Ich halte den Termin kurz fest" (truthful - slot IS reserved)
+     * Then collects remaining data while reservation is active (5 min default)
+     *
+     * @param array $parameters {datetime: string, service_name?: string, service_id?: int}
+     * @param string|null $callId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function reserveSlot(array $parameters, ?string $callId)
+    {
+        Log::info('🔒 reserve_slot called', [
+            'call_id' => $callId,
+            'params' => $parameters,
+        ]);
+
+        // Get call context
+        $callContext = $this->getCallContext($callId);
+        if (!$callContext) {
+            return $this->responseFormatter->error(
+                'Ich kann den Termin gerade nicht reservieren. Bitte versuchen Sie es erneut.',
+                'call_context_unavailable'
+            );
+        }
+
+        // Extract datetime
+        $datetime = $parameters['datetime'] ?? $parameters['date_time'] ?? null;
+        if (!$datetime) {
+            return $this->responseFormatter->error(
+                'Bitte nennen Sie mir den gewünschten Termin.',
+                'missing_datetime'
+            );
+        }
+
+        // Get service (from parameters or session)
+        $serviceId = $parameters['service_id'] ?? null;
+        $serviceName = $parameters['service_name'] ?? null;
+
+        if (!$serviceId && !$serviceName) {
+            // Try to get from session
+            $sessionService = Cache::get("call:{$callId}:service");
+            if ($sessionService) {
+                $serviceId = $sessionService['id'] ?? null;
+            }
+        }
+
+        // Resolve service
+        $service = null;
+        if ($serviceId) {
+            $service = \App\Models\Service::find($serviceId);
+        } elseif ($serviceName) {
+            $service = \App\Models\Service::where('company_id', $callContext['company_id'])
+                ->where(function($q) use ($serviceName) {
+                    $q->where('name', 'ILIKE', "%{$serviceName}%")
+                      ->orWhere('display_name', 'ILIKE', "%{$serviceName}%");
+                })
+                ->first();
+        }
+
+        if (!$service || !$service->calcom_event_type_id) {
+            return $this->responseFormatter->error(
+                'Ich konnte die Dienstleistung nicht finden. Welchen Service möchten Sie buchen?',
+                'service_not_found'
+            );
+        }
+
+        // Call Cal.com reservation API
+        $calcomService = app(\App\Services\CalcomService::class);
+        $result = $calcomService->reserveSlot(
+            eventTypeId: $service->calcom_event_type_id,
+            slotStart: $datetime,
+            reservationDuration: 5 // 5 minutes default
+        );
+
+        if (!$result['success']) {
+            Log::warning('🔒 Slot reservation failed', [
+                'call_id' => $callId,
+                'datetime' => $datetime,
+                'error' => $result['error'],
+            ]);
+
+            return $this->responseFormatter->error(
+                'Dieser Termin ist leider nicht mehr verfügbar. Soll ich Ihnen Alternativen anbieten?',
+                $result['error'] ?? 'reservation_failed'
+            );
+        }
+
+        // Store reservation in session for later use in start_booking
+        $reservationKey = "call:{$callId}:reservation";
+        Cache::put($reservationKey, [
+            'uid' => $result['reservationUid'],
+            'until' => $result['reservationUntil'],
+            'datetime' => $datetime,
+            'service_id' => $service->id,
+            'event_type_id' => $service->calcom_event_type_id,
+            'created_at' => now()->toIso8601String(),
+        ], now()->addMinutes(6)); // Slightly longer than reservation
+
+        Log::info('🔒 ✅ Slot reserved successfully', [
+            'call_id' => $callId,
+            'reservation_uid' => $result['reservationUid'],
+            'reservation_until' => $result['reservationUntil'],
+            'datetime' => $datetime,
+            'service' => $service->name,
+        ]);
+
+        return $this->responseFormatter->success([
+            'reserved' => true,
+            'message' => 'Alles klar, ich halte den Termin kurz für Sie fest.',
+            'reservation_uid' => $result['reservationUid'],
+            'reservation_until' => $result['reservationUntil'],
+            'datetime' => $datetime,
+            'service' => $service->name,
+        ]);
+    }
+
+    /**
+     * Release a slot reservation (e.g., customer changed their mind)
+     *
+     * @param array $parameters {reservation_uid?: string}
+     * @param string|null $callId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function releaseSlotReservation(array $parameters, ?string $callId)
+    {
+        Log::info('🔓 release_slot_reservation called', [
+            'call_id' => $callId,
+            'params' => $parameters,
+        ]);
+
+        // Get reservation UID from parameters or session
+        $reservationUid = $parameters['reservation_uid'] ?? null;
+
+        if (!$reservationUid && $callId) {
+            // Try to get from session
+            $reservationKey = "call:{$callId}:reservation";
+            $sessionReservation = Cache::get($reservationKey);
+            if ($sessionReservation) {
+                $reservationUid = $sessionReservation['uid'] ?? null;
+            }
+        }
+
+        if (!$reservationUid) {
+            return $this->responseFormatter->success([
+                'released' => false,
+                'message' => 'Keine aktive Reservierung gefunden.',
+            ]);
+        }
+
+        // Call Cal.com release API
+        $calcomService = app(\App\Services\CalcomService::class);
+        $result = $calcomService->releaseSlotReservation($reservationUid);
+
+        // Clear session reservation
+        if ($callId) {
+            Cache::forget("call:{$callId}:reservation");
+        }
+
+        if (!$result['success']) {
+            Log::warning('🔓 Slot release failed (non-critical)', [
+                'call_id' => $callId,
+                'reservation_uid' => $reservationUid,
+                'error' => $result['error'],
+            ]);
+
+            // Still return success to agent - reservation will expire anyway
+            return $this->responseFormatter->success([
+                'released' => true,
+                'message' => 'Reservierung wurde freigegeben.',
+            ]);
+        }
+
+        Log::info('🔓 ✅ Slot reservation released', [
+            'call_id' => $callId,
+            'reservation_uid' => $reservationUid,
+        ]);
+
+        return $this->responseFormatter->success([
+            'released' => true,
+            'message' => 'Der Termin wurde wieder freigegeben.',
+        ]);
+    }
+
+    /**
      * Handle unknown function calls
      */
     private function handleUnknownFunction(string $functionName, array $params, ?string $callId)
@@ -4152,7 +4977,8 @@ class RetellFunctionCallHandler extends Controller
             'registered_functions' => [
                 'check_customer', 'parse_date', 'check_availability', 'book_appointment',
                 'query_appointment', 'get_alternatives', 'list_services',
-                'cancel_appointment', 'reschedule_appointment', 'request_callback', 'find_next_available'
+                'cancel_appointment', 'reschedule_appointment', 'request_callback', 'find_next_available',
+                'reserve_slot', 'release_slot_reservation'
             ],
             'hint' => 'Check if function name has version suffix (e.g., _v17) or typo',
             'impact' => 'If this is book_appointment, the booking WILL NOT BE CREATED!',
@@ -4205,11 +5031,30 @@ class RetellFunctionCallHandler extends Controller
 
             // Extract validated data
             $datum = $validatedData['datum'];
-            $uhrzeit = $validatedData['uhrzeit'];
+            $uhrzeitRaw = $validatedData['uhrzeit'];
             $name = $validatedData['name'];
             $dienstleistung = $validatedData['dienstleistung'];
             $email = $validatedData['email'];
             $mitarbeiter = $validatedData['mitarbeiter'] ?? null; // PHASE 2: Staff preference
+
+            // 🔧 FIX 2025-12-08: Parse TimePreference from uhrzeit to handle "ab X Uhr", "so gegen X Uhr", etc.
+            // This extracts both the base time AND the customer's time preference (exact, from, window, approximate)
+            $timePreference = $this->dateTimeParser->parseTimePreference($uhrzeitRaw);
+
+            // Extract the base time for appointment scheduling
+            // For "ab 14:00" → use "14:00" as starting point
+            // For "so gegen 15:00" → use "15:00" as anchor
+            // For "vormittags" → use anchor time (e.g., "10:30")
+            $uhrzeit = $this->extractBaseTimeFromPreference($uhrzeitRaw, $timePreference);
+
+            Log::info('🕐 TimePreference parsed for booking', [
+                'raw_input' => $uhrzeitRaw,
+                'preference_type' => $timePreference->type,
+                'window_start' => $timePreference->windowStart,
+                'window_end' => $timePreference->windowEnd,
+                'extracted_base_time' => $uhrzeit,
+                'label' => $timePreference->label,
+            ]);
 
             // 🔧 BUG FIX (Call 776): Auto-fill customer name if "Unbekannt" or empty
             // If agent didn't provide name but customer exists, use database name
@@ -4520,6 +5365,70 @@ class RetellFunctionCallHandler extends Controller
                         'final_datetime' => $appointmentDate->format('Y-m-d H:i'),
                         'used_cached_alternative' => $cachedAlternativeDate !== null
                     ]);
+
+                    // 🔒 FIX (Call 88964): Validate booking date matches checked availability
+                    // PROBLEM: check_availability_v17(datum=2025-12-13) → start_booking(datetime=2025-12-12)
+                    // SOLUTION: Compare with cached checked_availability and use it if mismatch detected
+                    // This prevents booking wrong dates when AI misinterprets date between function calls
+                    if ($callId && $confirmBooking === true) {
+                        $checkedAvailabilityCacheKey = "call:{$callId}:checked_availability";
+                        $checkedData = Cache::get($checkedAvailabilityCacheKey);
+
+                        if ($checkedData) {
+                            $checkedDatetime = Carbon::parse($checkedData['datetime']);
+                            $bookingDatetime = $appointmentDate;
+
+                            // Check if dates match (allow small time differences for flexibility)
+                            $dateMismatch = $checkedDatetime->format('Y-m-d') !== $bookingDatetime->format('Y-m-d');
+                            $timeMismatch = $checkedDatetime->format('H:i') !== $bookingDatetime->format('H:i');
+
+                            if ($dateMismatch || $timeMismatch) {
+                                Log::critical('🚨 DATE-MISMATCH DETECTED between check_availability and start_booking', [
+                                    'call_id' => $callId,
+                                    'mismatch_type' => $dateMismatch ? 'DATE' : 'TIME',
+                                    'checked_availability' => [
+                                        'datum_input' => $checkedData['datum'],
+                                        'datum_parsed' => $checkedData['datum_parsed'],
+                                        'uhrzeit' => $checkedData['uhrzeit'],
+                                        'datetime' => $checkedData['datetime'],
+                                        'checked_at' => $checkedData['checked_at'],
+                                    ],
+                                    'start_booking_attempt' => [
+                                        'datum_input' => $datum,
+                                        'uhrzeit_input' => $uhrzeit,
+                                        'parsed_datetime' => $bookingDatetime->format('Y-m-d H:i:s'),
+                                    ],
+                                    'action' => 'Using checked_availability datetime to prevent wrong booking',
+                                    'bug_reference' => 'Call 88964 - Samstag 13.12 checked but Freitag 12.12 attempted'
+                                ]);
+
+                                // CORRECTION: Use the checked datetime instead of misparsed one
+                                $appointmentDate = $checkedDatetime;
+
+                                Log::info('✅ CORRECTED appointment datetime using checked_availability cache', [
+                                    'call_id' => $callId,
+                                    'corrected_from' => $bookingDatetime->format('Y-m-d H:i'),
+                                    'corrected_to' => $appointmentDate->format('Y-m-d H:i'),
+                                    'source' => 'checked_availability_cache'
+                                ]);
+                            } else {
+                                Log::info('✅ Date validation passed: booking matches checked availability', [
+                                    'call_id' => $callId,
+                                    'checked_datetime' => $checkedDatetime->format('Y-m-d H:i'),
+                                    'booking_datetime' => $bookingDatetime->format('Y-m-d H:i'),
+                                    'status' => 'MATCH'
+                                ]);
+                            }
+                        } else {
+                            Log::warning('⚠️ No checked_availability cache found for booking validation', [
+                                'call_id' => $callId,
+                                'cache_key' => $checkedAvailabilityCacheKey,
+                                'reason' => 'Either cache expired (>10min) or check_availability was not called',
+                                'booking_datetime' => $appointmentDate->format('Y-m-d H:i'),
+                                'proceeding_with' => 'parsed datetime (no validation possible)'
+                            ]);
+                        }
+                    }
 
                     // 🔧 FIX (Call 863): Past-Time-Validation
                     // Reject appointments in the past
@@ -4838,6 +5747,80 @@ class RetellFunctionCallHandler extends Controller
                     ]);
                 }
 
+                // 🔧 FIX 2025-11-27: LOCAL DB CONFLICT CHECK in collectAppointment
+                // CRITICAL: Cal.com API may return "available" even when:
+                //   1. Local appointment exists but hasn't synced to Cal.com yet
+                //   2. Cal.com cache is stale
+                //   3. Appointment was just created in another call
+                //
+                // This prevents the "wurde gerade vergeben" error that occurs when:
+                //   check_availability_v17 → says "available"
+                //   start_booking → finds local conflict → fails
+                //
+                // Now both paths check the same local DB constraint.
+                if ($exactTimeAvailable && $companyId && $branchId && $service) {
+                    // 🔧 FIX 2025-11-27: Calculate correct duration for COMPOSITE services
+                    // Composite services (e.g., Dauerwelle) have multiple segments with gaps
+                    // Total duration = sum of all segment durations
+                    $serviceDuration = $service->duration_minutes ?? 60;
+                    $isComposite = false;
+
+                    if ($service->isComposite() && !empty($service->segments)) {
+                        $isComposite = true;
+                        $serviceDuration = collect($service->segments)->sum(fn($s) => $s['durationMin'] ?? $s['duration'] ?? 0);
+                    }
+
+                    $requestedEndTime = $appointmentDate->copy()->addMinutes($serviceDuration);
+
+                    Log::debug('🔍 LOCAL DB CONFLICT CHECK in collectAppointment', [
+                        'call_id' => $callId,
+                        'requested_start' => $appointmentDate->format('Y-m-d H:i'),
+                        'requested_end' => $requestedEndTime->format('Y-m-d H:i'),
+                        'service_duration' => $serviceDuration,
+                        'is_composite' => $isComposite,
+                        'segments_count' => $isComposite ? count($service->segments) : 0,
+                        'company_id' => $companyId,
+                        'branch_id' => $branchId,
+                    ]);
+
+                    $localConflict = Appointment::where('company_id', $companyId)
+                        ->where('branch_id', $branchId)
+                        ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                        ->where(function($query) use ($appointmentDate, $requestedEndTime) {
+                            // Comprehensive overlap detection:
+                            // Two intervals [A_start, A_end) and [B_start, B_end) overlap if:
+                            // A_start < B_end AND B_start < A_end
+                            $query->where('starts_at', '<', $requestedEndTime)
+                                  ->where('ends_at', '>', $appointmentDate);
+                        })
+                        ->first();
+
+                    if ($localConflict) {
+                        Log::warning('🚨 LOCAL DB CONFLICT in collectAppointment: Cal.com said available but local DB has conflict!', [
+                            'call_id' => $callId,
+                            'calcom_said' => 'available',
+                            'local_db_said' => 'blocked',
+                            'requested_window' => [
+                                'start' => $appointmentDate->format('Y-m-d H:i'),
+                                'end' => $requestedEndTime->format('Y-m-d H:i'),
+                                'duration' => $serviceDuration,
+                            ],
+                            'blocking_appointment' => [
+                                'id' => $localConflict->id,
+                                'status' => $localConflict->status,
+                                'sync_status' => $localConflict->calcom_sync_status ?? 'unknown',
+                                'start' => $localConflict->starts_at->format('Y-m-d H:i'),
+                                'end' => $localConflict->ends_at->format('Y-m-d H:i'),
+                                'customer' => $localConflict->customer?->name ?? 'unknown',
+                            ],
+                            'fix' => 'FIX 2025-11-27: Added local DB check to collectAppointment',
+                        ]);
+
+                        // Override Cal.com result - slot is NOT available
+                        $exactTimeAvailable = false;
+                    }
+                }
+
                 // STEP 2: If exact time is NOT available, search for alternatives
                 // OPTIMIZATION: Cache alternatives to avoid duplicate calls
                 $alternatives = [];
@@ -5063,7 +6046,9 @@ class RetellFunctionCallHandler extends Controller
                                 $requestedTimeStr = $appointmentDate->format('H:i');
 
                                 foreach ($recheckSlots as $slot) {
-                                    $slotTime = Carbon::parse($slot['time']);
+                                    // 🔧 FIX 2025-12-01: Cal.com returns UTC times, convert to Berlin for comparison
+                                    // $requestedTimeStr is Berlin time from $appointmentDate
+                                    $slotTime = Carbon::parse($slot['time'])->setTimezone('UTC')->setTimezone('Europe/Berlin');
                                     if ($slotTime->format('H:i') === $requestedTimeStr) {
                                         $stillAvailable = true;
                                         Log::info('✅ V85: Slot STILL available - proceeding with booking', [
@@ -5455,6 +6440,33 @@ class RetellFunctionCallHandler extends Controller
                             'requested_time' => $appointmentDate->format('Y-m-d H:i'),
                             'bestaetigung' => $confirmBooking,
                             'next_step' => 'Wait for user confirmation, then call with bestaetigung: true'
+                        ]);
+                    }
+
+                    // 🔒 FIX (Call 88964): Cache checked availability date/time for validation in start_booking
+                    // PROBLEM: check_availability checked 2025-12-13, but start_booking tried to book 2025-12-12
+                    // SOLUTION: Cache the checked datetime with call_id binding for validation in booking phase
+                    // TTL: 10 minutes (reasonable time for user to confirm)
+                    if ($callId) {
+                        $checkedAvailabilityCacheKey = "call:{$callId}:checked_availability";
+                        $checkedData = [
+                            'datum' => $datum,                                   // Original input ("Samstag", "2025-12-13", etc.)
+                            'datum_parsed' => $appointmentDate->format('Y-m-d'), // Normalized date (2025-12-13)
+                            'uhrzeit' => $uhrzeit,                              // Time input ("9 Uhr", "09:00")
+                            'datetime' => $appointmentDate->format('Y-m-d H:i:s'), // Full datetime for exact comparison
+                            'service_id' => $service->id,
+                            'event_type_id' => $service->calcom_event_type_id,
+                            'checked_at' => now()->toIso8601String(),
+                        ];
+
+                        Cache::put($checkedAvailabilityCacheKey, $checkedData, now()->addMinutes(10));
+
+                        Log::info('🔒 Cached checked availability for validation', [
+                            'call_id' => $callId,
+                            'cache_key' => $checkedAvailabilityCacheKey,
+                            'cached_data' => $checkedData,
+                            'ttl' => '10 minutes',
+                            'purpose' => 'Validate start_booking uses same date as check_availability'
                         ]);
                     }
 
@@ -5897,60 +6909,313 @@ class RetellFunctionCallHandler extends Controller
         $cleaned = preg_replace('/^(bei|mit|von|bei der|beim)\s+/i', '', $cleaned);
         $cleaned = strtolower(trim($cleaned));
 
-        // Friseur 1 (Agent: agent_f1ce85d06a84afb989dfbb16a9) staff mapping
-        $staffMapping = [
-            'emma' => '010be4a7-3468-4243-bb0a-2223b8e5878c',
-            'emma williams' => '010be4a7-3468-4243-bb0a-2223b8e5878c',
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ✅ FIX 2025-12-08: Dynamic staff mapping from database
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PROBLEM: Static mapping didn't include "Udo Walz", "Mario Basler" etc.
+        // SOLUTION: Query database for staff by name (case-insensitive)
+        // RCA: Call #85183 - "Udo Walz" couldn't be resolved
+        // ═══════════════════════════════════════════════════════════════════════════
 
-            'fabian' => '9f47fda1-977c-47aa-a87a-0e8cbeaeb119',
-            'fabian spitzer' => '9f47fda1-977c-47aa-a87a-0e8cbeaeb119',
+        // Try to get company context from call
+        $companyId = null;
+        if ($callId) {
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+            $companyId = $call?->company_id;
+        }
 
-            'david' => 'c4a19739-4824-46b2-8a50-72b9ca23e013',
-            'david martinez' => 'c4a19739-4824-46b2-8a50-72b9ca23e013',
+        // 1. Try exact name match from database (case-insensitive)
+        $staffQuery = \App\Models\Staff::where('is_active', true)
+            ->whereRaw('LOWER(name) = ?', [$cleaned]);
 
-            'michael' => 'ce3d932c-52d1-4c15-a7b9-686a29babf0a',
-            'michael chen' => 'ce3d932c-52d1-4c15-a7b9-686a29babf0a',
+        if ($companyId) {
+            $staffQuery->where('company_id', $companyId);
+        }
 
-            'sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
-            'sarah johnson' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
-            'dr. sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
-            'dr sarah' => 'f9d4d054-1ccd-4b60-87b9-c9772d17c892',
-        ];
+        $staff = $staffQuery->first();
 
-        // Try exact match first
-        if (isset($staffMapping[$cleaned])) {
-            Log::info('✅ Staff name matched exactly', [
+        if ($staff) {
+            Log::info('✅ Staff name matched from database (exact)', [
                 'input' => $staffName,
                 'cleaned' => $cleaned,
-                'staff_id' => $staffMapping[$cleaned],
+                'staff_id' => $staff->id,
+                'staff_name' => $staff->name,
+                'company_id' => $companyId,
                 'call_id' => $callId
             ]);
-            return $staffMapping[$cleaned];
+            return $staff->id;
         }
 
-        // Try partial match (for cases like "Fabian" when full name is "Fabian Spitzer")
-        foreach ($staffMapping as $key => $staffId) {
-            if (str_contains($key, $cleaned) || str_contains($cleaned, $key)) {
-                Log::info('✅ Staff name matched partially', [
+        // 2. Try partial match from database (first name only)
+        $staffQuery = \App\Models\Staff::where('is_active', true)
+            ->whereRaw('LOWER(name) LIKE ?', ['%' . $cleaned . '%']);
+
+        if ($companyId) {
+            $staffQuery->where('company_id', $companyId);
+        }
+
+        $staff = $staffQuery->first();
+
+        if ($staff) {
+            Log::info('✅ Staff name matched from database (partial)', [
+                'input' => $staffName,
+                'cleaned' => $cleaned,
+                'staff_id' => $staff->id,
+                'staff_name' => $staff->name,
+                'company_id' => $companyId,
+                'call_id' => $callId
+            ]);
+            return $staff->id;
+        }
+
+        // 3. Fallback: Try first name only (e.g., "Udo" -> "Udo Walz")
+        $firstName = explode(' ', $cleaned)[0];
+        if ($firstName !== $cleaned) {
+            $staffQuery = \App\Models\Staff::where('is_active', true)
+                ->whereRaw('LOWER(name) LIKE ?', [$firstName . '%']);
+
+            if ($companyId) {
+                $staffQuery->where('company_id', $companyId);
+            }
+
+            $staff = $staffQuery->first();
+
+            if ($staff) {
+                Log::info('✅ Staff name matched from database (first name)', [
                     'input' => $staffName,
-                    'cleaned' => $cleaned,
-                    'matched_key' => $key,
-                    'staff_id' => $staffId,
+                    'first_name' => $firstName,
+                    'staff_id' => $staff->id,
+                    'staff_name' => $staff->name,
+                    'company_id' => $companyId,
                     'call_id' => $callId
                 ]);
-                return $staffId;
+                return $staff->id;
             }
         }
+
+        // Log failure with available staff names
+        $availableStaff = \App\Models\Staff::where('is_active', true)
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->pluck('name')
+            ->toArray();
 
         Log::warning('❌ Staff name could not be mapped', [
             'input' => $staffName,
             'cleaned' => $cleaned,
             'call_id' => $callId,
-            'available_names' => array_keys($staffMapping)
+            'company_id' => $companyId,
+            'available_staff' => $availableStaff
         ]);
 
         return null;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ✅ FIX 2025-12-08: Staff-Service Capability Validation
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PROBLEM: Silent Fallback - When customer requests specific staff who can't
+    //          provide a service, system silently books with another staff
+    // SOLUTION: Validate staff capability upfront and return informative message
+    //           with alternative staff suggestions
+    // EXAMPLE: "Mario Basler bietet leider keine Dauerwelle an. Aber Udo Walz kann das."
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Extract base time from TimePreference for appointment scheduling
+     *
+     * Handles time formats with prefixes like "ab 14:00", "so gegen 15:00", "vormittags"
+     * Returns the base time string (HH:MM format) for scheduling.
+     *
+     * @param string|null $rawInput Original input string
+     * @param \App\ValueObjects\TimePreference $timePreference Parsed time preference
+     * @return string|null Time in HH:MM format or null
+     *
+     * @since 2025-12-08 Fix for time preference extraction
+     */
+    private function extractBaseTimeFromPreference(?string $rawInput, \App\ValueObjects\TimePreference $timePreference): ?string
+    {
+        // If no input, return null
+        if (empty($rawInput)) {
+            return null;
+        }
+
+        // For TYPE_ANY, try to extract any time from the raw input
+        if ($timePreference->type === \App\ValueObjects\TimePreference::TYPE_ANY) {
+            // Fallback: Try to extract numeric time from raw input
+            if (preg_match('/(\d{1,2})(?::(\d{2}))?/', $rawInput, $m)) {
+                return sprintf('%02d:%s', $m[1], !empty($m[2]) ? $m[2] : '00');
+            }
+            return null;
+        }
+
+        // For EXACT type, use the exact time
+        if ($timePreference->type === \App\ValueObjects\TimePreference::TYPE_EXACT) {
+            return $timePreference->windowStart;
+        }
+
+        // For FROM type ("ab X Uhr"), use the start time
+        if ($timePreference->type === \App\ValueObjects\TimePreference::TYPE_FROM) {
+            return $timePreference->windowStart;
+        }
+
+        // For APPROXIMATE type ("so gegen X Uhr"), use anchor time (middle of window)
+        if ($timePreference->type === \App\ValueObjects\TimePreference::TYPE_APPROXIMATE) {
+            return $timePreference->getAnchorTime();
+        }
+
+        // For WINDOW and RANGE types, use the anchor time (middle of window)
+        if (in_array($timePreference->type, [
+            \App\ValueObjects\TimePreference::TYPE_WINDOW,
+            \App\ValueObjects\TimePreference::TYPE_RANGE
+        ])) {
+            return $timePreference->getAnchorTime();
+        }
+
+        // Fallback: Try to extract from raw input
+        if (preg_match('/(\d{1,2})(?::(\d{2}))?/', $rawInput, $m)) {
+            return sprintf('%02d:%s', $m[1], !empty($m[2]) ? $m[2] : '00');
+        }
+
+        return $timePreference->windowStart;
+    }
+
+    /**
+     * Validates if a staff member can provide a specific service
+     * Returns validation result with alternative staff suggestions if invalid
+     *
+     * @param string $staffId The staff member's UUID
+     * @param Service $service The service to check
+     * @param string|null $callId Optional call ID for logging
+     * @return array{
+     *   valid: bool,
+     *   staff_name: string|null,
+     *   service_name: string,
+     *   alternatives: array<array{id: string, name: string}>|null,
+     *   message: string|null
+     * }
+     */
+    private function validateStaffCanProvideService(string $staffId, Service $service, ?string $callId = null): array
+    {
+        $result = [
+            'valid' => false,
+            'staff_name' => null,
+            'service_name' => $service->name,
+            'alternatives' => null,
+            'message' => null,
+        ];
+
+        try {
+            // Get staff with their bookable services
+            $staff = \App\Models\Staff::find($staffId);
+
+            if (!$staff) {
+                Log::warning('❌ Staff not found for capability check', [
+                    'staff_id' => $staffId,
+                    'service_id' => $service->id,
+                    'call_id' => $callId
+                ]);
+                // Let it pass - don't block on data issues
+                $result['valid'] = true;
+                return $result;
+            }
+
+            $result['staff_name'] = $staff->name;
+
+            // Check if staff can book this service (pivot: can_book = true, is_active = true)
+            $canProvide = $staff->services()
+                ->where('services.id', $service->id)
+                ->wherePivot('can_book', true)
+                ->wherePivot('is_active', true)
+                ->exists();
+
+            if ($canProvide) {
+                Log::info('✅ Staff can provide service', [
+                    'staff_id' => $staffId,
+                    'staff_name' => $staff->name,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'call_id' => $callId
+                ]);
+                $result['valid'] = true;
+                return $result;
+            }
+
+            // Staff cannot provide this service - find alternatives
+            Log::warning('⚠️ Staff cannot provide requested service', [
+                'staff_id' => $staffId,
+                'staff_name' => $staff->name,
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'call_id' => $callId
+            ]);
+
+            // Find alternative staff who CAN provide this service
+            $alternativeStaff = $service->staff()
+                ->wherePivot('can_book', true)
+                ->wherePivot('is_active', true)
+                ->where('staff.id', '!=', $staffId)
+                ->where('staff.is_active', true)
+                ->limit(3)
+                ->get(['staff.id', 'staff.name']);
+
+            if ($alternativeStaff->isNotEmpty()) {
+                $result['alternatives'] = $alternativeStaff->map(fn($s) => [
+                    'id' => $s->id,
+                    'name' => $s->name
+                ])->toArray();
+
+                // Build German message
+                $altNames = $alternativeStaff->pluck('name')->toArray();
+                if (count($altNames) === 1) {
+                    $altText = $altNames[0];
+                } elseif (count($altNames) === 2) {
+                    $altText = $altNames[0] . ' oder ' . $altNames[1];
+                } else {
+                    $last = array_pop($altNames);
+                    $altText = implode(', ', $altNames) . ' oder ' . $last;
+                }
+
+                $result['message'] = sprintf(
+                    '%s bietet leider keine %s an. Aber %s kann das. Soll ich bei %s buchen?',
+                    $staff->name,
+                    $service->name,
+                    $altText,
+                    count($result['alternatives']) === 1 ? $result['alternatives'][0]['name'] : 'einem davon'
+                );
+            } else {
+                // No alternatives available
+                $result['message'] = sprintf(
+                    'Leider kann %s keine %s durchführen, und aktuell ist auch kein anderer Mitarbeiter für diesen Service verfügbar.',
+                    $staff->name,
+                    $service->name
+                );
+            }
+
+            Log::info('📋 Staff capability validation result', [
+                'valid' => $result['valid'],
+                'staff_name' => $result['staff_name'],
+                'service_name' => $result['service_name'],
+                'alternatives_count' => count($result['alternatives'] ?? []),
+                'message' => $result['message'],
+                'call_id' => $callId
+            ]);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('❌ Staff capability validation error', [
+                'staff_id' => $staffId,
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+                'call_id' => $callId
+            ]);
+            // Non-blocking: Let it pass on errors
+            $result['valid'] = true;
+            return $result;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Handle cancellation attempt from Retell AI
@@ -6682,8 +7947,11 @@ class RetellFunctionCallHandler extends Controller
             $oldStartsAt = $appointment->starts_at->copy();
             $oldCalcomBookingUid = $appointment->calcom_v2_booking_uid;
 
+            // 🔧 FIX 2025-12-01: Calculate time offset for composite segments
+            $timeOffset = $oldStartsAt->diffInMinutes($newDateTime, false); // Positive = moved later, negative = moved earlier
+
             // Update appointment with reschedule tracking
-            $appointment->update([
+            $updateData = [
                 'starts_at' => $newDateTime,
                 'ends_at' => $newDateTime->copy()->addMinutes($service->duration ?? 60),
                 'updated_at' => now(),
@@ -6693,7 +7961,46 @@ class RetellFunctionCallHandler extends Controller
                 'rescheduled_count' => ($appointment->rescheduled_count ?? 0) + 1,
                 'previous_starts_at' => $oldStartsAt,
                 'calcom_previous_booking_uid' => $oldCalcomBookingUid,
-            ]);
+            ];
+
+            // 🔧 FIX 2025-12-01: Update composite segment times
+            // Each segment needs its starts_at/ends_at shifted by the same time offset
+            $isComposite = $appointment->is_composite || (method_exists($appointment, 'isComposite') && $appointment->isComposite());
+
+            if ($isComposite) {
+                $segments = $appointment->segments;
+                if (is_string($segments)) {
+                    $segments = json_decode($segments, true);
+                }
+
+                if (is_array($segments) && !empty($segments)) {
+                    $updatedSegments = [];
+                    foreach ($segments as $segment) {
+                        if (isset($segment['starts_at'])) {
+                            $oldSegmentStart = Carbon::parse($segment['starts_at']);
+                            $newSegmentStart = $oldSegmentStart->copy()->addMinutes($timeOffset);
+                            $segment['starts_at'] = $newSegmentStart->toIso8601String();
+                        }
+                        if (isset($segment['ends_at'])) {
+                            $oldSegmentEnd = Carbon::parse($segment['ends_at']);
+                            $newSegmentEnd = $oldSegmentEnd->copy()->addMinutes($timeOffset);
+                            $segment['ends_at'] = $newSegmentEnd->toIso8601String();
+                        }
+                        $updatedSegments[] = $segment;
+                    }
+                    $updateData['segments'] = $updatedSegments;
+
+                    Log::info('🔄 Composite segments updated for reschedule', [
+                        'appointment_id' => $appointment->id,
+                        'time_offset_minutes' => $timeOffset,
+                        'segments_count' => count($updatedSegments),
+                        'old_start' => $oldStartsAt->toIso8601String(),
+                        'new_start' => $newDateTime->toIso8601String()
+                    ]);
+                }
+            }
+
+            $appointment->update($updateData);
 
             // Track modification
             \App\Models\AppointmentModification::create([
@@ -6781,6 +8088,31 @@ class RetellFunctionCallHandler extends Controller
      */
     private function findAppointmentFromCall(Call $call, array $data): ?Appointment
     {
+        // 🔧 FIX 2025-12-01: Strategy -1: Direct appointment_id lookup (HIGHEST PRIORITY)
+        // When appointment_id is provided explicitly, use it directly without other lookups
+        $appointmentId = $data['appointment_id'] ?? $data['termin_id'] ?? null;
+        if ($appointmentId) {
+            $appointment = Appointment::where('id', $appointmentId)
+                ->where('company_id', $call->company_id)
+                ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                ->first();
+
+            if ($appointment) {
+                Log::info('✅ Found appointment via appointment_id (direct lookup)', [
+                    'appointment_id' => $appointment->id,
+                    'company_id' => $call->company_id,
+                    'status' => $appointment->status
+                ]);
+                return $appointment;
+            } else {
+                Log::warning('⚠️ appointment_id provided but not found or wrong company', [
+                    'provided_id' => $appointmentId,
+                    'company_id' => $call->company_id
+                ]);
+                // Fall through to other strategies in case ID was wrong
+            }
+        }
+
         // Parse date
         $dateString = $data['appointment_date'] ?? $data['datum'] ?? null;
 
@@ -8526,6 +9858,166 @@ class RetellFunctionCallHandler extends Controller
      */
     private function findAlternativesForCompositeService($service, $staff, $requestedDate, $branchId)
     {
+        // 🔧 FIX 2025-12-01: Use Cal.com slots instead of internal availability check
+        // ROOT CAUSE: ProcessingTimeAvailabilityService generates alternatives that don't exist in Cal.com
+        // PROBLEM: System offered 08:00, 08:15, 08:30 but Cal.com only had 07:00, 11:00, 13:15 (UTC → Berlin)
+        // SOLUTION: Fetch actual Cal.com slots for segment A event type and return those as alternatives
+
+        $alternatives = [];
+
+        // Get segment A event type ID from CalcomEventMap for this staff
+        $segmentAMapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+            ->where('segment_key', 'A')
+            ->where('staff_id', $staff->id)
+            ->first();
+
+        if (!$segmentAMapping) {
+            Log::warning('⚠️ findAlternativesForCompositeService: No CalcomEventMap for segment A', [
+                'service_id' => $service->id,
+                'staff_id' => $staff->id,
+                'fallback' => 'Using internal availability check (may cause booking failures)',
+            ]);
+
+            // Fallback to original internal availability check
+            return $this->findAlternativesForCompositeServiceLegacy($service, $staff, $requestedDate, $branchId);
+        }
+
+        // Use child_event_type_id if available (staff-specific), otherwise use parent
+        $eventTypeId = $segmentAMapping->child_event_type_id ?? $segmentAMapping->event_type_id;
+
+        Log::info('🔍 findAlternativesForCompositeService: Fetching Cal.com slots for segment A', [
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'staff_id' => $staff->id,
+            'staff_name' => $staff->name,
+            'event_type_id' => $eventTypeId,
+            'requested_date' => $requestedDate->format('Y-m-d H:i'),
+        ]);
+
+        try {
+            // Fetch slots from Cal.com for same day
+            $sameDayResponse = $this->calcomService->getAvailableSlots(
+                $eventTypeId,
+                $requestedDate->copy()->startOfDay()->format('Y-m-d'),
+                $requestedDate->copy()->endOfDay()->format('Y-m-d')
+            );
+
+            // Parse the response - slots are grouped by date: {"data": {"slots": {"2025-12-02": [{...}]}}}
+            $responseData = $sameDayResponse->json();
+            $dateKey = $requestedDate->format('Y-m-d');
+            $slots = $responseData['data']['slots'][$dateKey] ?? [];
+
+            Log::info('📅 Cal.com returned slots for composite service', [
+                'event_type_id' => $eventTypeId,
+                'date' => $dateKey,
+                'slot_count' => count($slots),
+                'slots_preview' => array_slice(array_column($slots, 'time'), 0, 5),
+                'response_keys' => array_keys($responseData['data']['slots'] ?? []),
+            ]);
+
+            // Convert Cal.com slots to alternatives format
+            // 🔧 FIX 2025-12-03: Ensure consistent timezone for comparison to avoid contradictory responses
+            $requestedTimeStr = $requestedDate->copy()->setTimezone('Europe/Berlin')->format('Y-m-d H:i');
+
+            foreach ($slots as $slot) {
+                $slotTime = Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
+                $slotTimeStr = $slotTime->format('Y-m-d H:i');
+
+                // Skip the originally requested time (we know it's not available for the full service)
+                // Both times are now guaranteed to be in Europe/Berlin timezone
+                if ($slotTimeStr === $requestedTimeStr) {
+                    Log::debug('🔧 Filtering out requested time from alternatives', [
+                        'requested_time' => $requestedTimeStr,
+                        'slot_time' => $slotTimeStr,
+                        'match' => true
+                    ]);
+                    continue;
+                }
+
+                // Skip past times
+                if ($slotTime->isPast()) {
+                    continue;
+                }
+
+                $alternatives[] = [
+                    'time' => $slotTime->format('Y-m-d H:i'),
+                    'spoken' => $slotTime->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
+                    'available' => true,
+                    'type' => $slotTime->isSameDay($requestedDate) ? 'same_day' : 'next_day',
+                    'source' => 'calcom', // Mark as coming from Cal.com (for debugging)
+                ];
+
+                if (count($alternatives) >= 3) {
+                    break;
+                }
+            }
+
+            // If not enough same-day alternatives, check next few days
+            if (count($alternatives) < 3) {
+                for ($dayOffset = 1; $dayOffset <= 3 && count($alternatives) < 5; $dayOffset++) {
+                    $nextDay = $requestedDate->copy()->addDays($dayOffset);
+
+                    $nextDayResponse = $this->calcomService->getAvailableSlots(
+                        $eventTypeId,
+                        $nextDay->copy()->startOfDay()->format('Y-m-d'),
+                        $nextDay->copy()->endOfDay()->format('Y-m-d')
+                    );
+
+                    $nextDayData = $nextDayResponse->json();
+                    $nextDateKey = $nextDay->format('Y-m-d');
+                    $slots = $nextDayData['data']['slots'][$nextDateKey] ?? [];
+
+                    foreach ($slots as $slot) {
+                        $slotTime = Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
+
+                        if ($slotTime->isPast()) {
+                            continue;
+                        }
+
+                        $alternatives[] = [
+                            'time' => $slotTime->format('Y-m-d H:i'),
+                            'spoken' => $slotTime->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
+                            'available' => true,
+                            'type' => 'next_day',
+                            'source' => 'calcom',
+                        ];
+
+                        if (count($alternatives) >= 5) {
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            Log::info('✅ findAlternativesForCompositeService: Generated Cal.com-based alternatives', [
+                'service_id' => $service->id,
+                'alternatives_count' => count($alternatives),
+                'alternatives_times' => array_column($alternatives, 'time'),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ findAlternativesForCompositeService: Cal.com API error', [
+                'service_id' => $service->id,
+                'event_type_id' => $eventTypeId,
+                'error' => $e->getMessage(),
+                'fallback' => 'Using internal availability check',
+            ]);
+
+            // Fallback to original internal availability check
+            return $this->findAlternativesForCompositeServiceLegacy($service, $staff, $requestedDate, $branchId);
+        }
+
+        return $alternatives;
+    }
+
+    /**
+     * Legacy alternative finder for composite services (fallback when Cal.com unavailable)
+     *
+     * ⚠️ WARNING: This method uses internal availability checking which may not match Cal.com
+     * Only use as fallback when CalcomEventMap is missing or Cal.com API fails
+     */
+    private function findAlternativesForCompositeServiceLegacy($service, $staff, $requestedDate, $branchId)
+    {
         $availabilityService = app(\App\Services\ProcessingTimeAvailabilityService::class);
         $alternatives = [];
 
@@ -8543,7 +10035,8 @@ class RetellFunctionCallHandler extends Controller
                     'time' => $time->format('Y-m-d H:i'),
                     'spoken' => $time->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
                     'available' => true,
-                    'type' => 'same_day'
+                    'type' => 'same_day',
+                    'source' => 'internal_legacy', // Mark as legacy (may not match Cal.com)
                 ];
 
                 if (count($alternatives) >= 3) {
@@ -8564,7 +10057,8 @@ class RetellFunctionCallHandler extends Controller
                             'time' => $time->format('Y-m-d H:i'),
                             'spoken' => $time->locale('de')->isoFormat('dddd, [den] D. MMMM [um] H:mm [Uhr]'),
                             'available' => true,
-                            'type' => 'next_day'
+                            'type' => 'next_day',
+                            'source' => 'internal_legacy',
                         ];
 
                         if (count($alternatives) >= 5) {
@@ -8682,10 +10176,23 @@ class RetellFunctionCallHandler extends Controller
                 'ttl_minutes' => 5,
             ]);
 
-            // 🔧 FIX 2025-11-25: Acquire Redis slot locks for alternatives to prevent race conditions
-            // PROBLEM: Between check_availability and start_booking, another call can book the same slot
-            // SOLUTION: Lock alternatives for this call session (5 min TTL, auto-cleanup)
+            // 🔧 FIX 2025-12-11: Release previous locks BEFORE acquiring new ones
+            // PROBLEM: Same call invokes get_alternatives multiple times → blocks itself with old locks
+            // EXAMPLE: Customer changes mind: "Actually, I want a different time" → new alternatives needed
+            // SOLUTION: Cleanup old locks first, then acquire new ones
             if ($lockContext && isset($lockContext['company_id']) && isset($lockContext['service_id'])) {
+                // Step 1: Release all previous locks owned by this call
+                $cleanupResult = $this->lockService->releaseAllCallLocks($callId, 'alternatives_refresh');
+
+                if ($cleanupResult['released_count'] > 0) {
+                    Log::info('🧹 Released previous slot locks before acquiring new alternatives', [
+                        'call_id' => $callId,
+                        'released_count' => $cleanupResult['released_count'],
+                        'failed_count' => $cleanupResult['failed_count'],
+                    ]);
+                }
+
+                // Step 2: Acquire new locks for the new alternatives
                 $lockedSlots = [];
                 $duration = $lockContext['duration'] ?? 60;
 
@@ -8704,12 +10211,22 @@ class RetellFunctionCallHandler extends Controller
 
                         if ($lockResult['success']) {
                             $lockedSlots[] = $slot;
+                        } else {
+                            // Log detailed conflict information for debugging
+                            Log::warning('⚠️ Failed to acquire slot lock after cleanup', [
+                                'call_id' => $callId,
+                                'slot' => $slot,
+                                'reason' => $lockResult['reason'] ?? 'unknown',
+                                'locked_by' => $lockResult['locked_by'] ?? 'unknown',
+                                'cleanup_result' => $cleanupResult,
+                            ]);
                         }
                     } catch (\Exception $e) {
-                        Log::warning('⚠️ Failed to acquire slot lock', [
+                        Log::warning('⚠️ Exception during slot lock acquisition', [
                             'call_id' => $callId,
                             'slot' => $slot,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
                         ]);
                     }
                 }
@@ -8800,6 +10317,618 @@ class RetellFunctionCallHandler extends Controller
                 'Öffnungszeiten konnten nicht abgerufen werden.'
             );
         }
+    }
+
+    /**
+     * 🎨 COMPOSITE SERVICE BOOKING (2025-11-27)
+     *
+     * Handles booking for multi-segment services like Dauerwelle.
+     * Creates multiple linked appointments with proper Cal.com integration.
+     *
+     * FEATURES:
+     * - Builds segments from service definition with proper timing
+     * - Auto-assigns staff if not specified
+     * - SAGA pattern for rollback on partial failure
+     * - Comprehensive logging for debugging
+     * - Proper slot lock release after booking
+     *
+     * @param Service $service The composite service to book
+     * @param Carbon $startTime Desired start time
+     * @param string|null $customerName Customer name
+     * @param string|null $customerEmail Customer email
+     * @param string|null $customerPhone Customer phone
+     * @param string|null $preferredStaffId Preferred staff ID
+     * @param string $callId Retell call ID
+     * @param int $companyId Company context
+     * @param string $branchId Branch context
+     * @param string|null $lockKey Slot lock key for release
+     * @param array|null $lockInfo Slot lock info
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function bookCompositeAppointment(
+        Service $service,
+        Carbon $startTime,
+        ?string $customerName,
+        ?string $customerEmail,
+        ?string $customerPhone,
+        ?string $preferredStaffId,
+        string $callId,
+        int $companyId,
+        string $branchId,
+        ?string $lockKey,
+        ?array $lockInfo
+    ): \Illuminate\Http\JsonResponse {
+        $bookingStartTime = microtime(true);
+
+        try {
+            Log::info('🎨 [COMPOSITE] Starting composite booking flow', [
+                'call_id' => $callId,
+                'service' => $service->name,
+                'segments' => count($service->segments),
+                'start_time' => $startTime->format('Y-m-d H:i'),
+                'customer_name' => $customerName
+            ]);
+
+            // STEP 1: Get call record
+            $call = $this->callLifecycle->findCallByRetellId($callId);
+            if (!$call) {
+                Log::error('🎨 [COMPOSITE] ❌ Call not found', ['call_id' => $callId]);
+                return $this->responseFormatter->error('Call context not available');
+            }
+
+            // STEP 2: Ensure customer exists
+            $customer = $this->customerResolver->ensureCustomerFromCall($call, $customerName, $customerEmail);
+            if (!$customer) {
+                Log::error('🎨 [COMPOSITE] ❌ Customer resolution failed', [
+                    'call_id' => $callId,
+                    'customer_name' => $customerName
+                ]);
+                return $this->responseFormatter->error('Kundeninformationen konnten nicht verarbeitet werden.');
+            }
+
+            Log::info('🎨 [COMPOSITE] Customer resolved', [
+                'customer_id' => $customer->id,
+                'customer_name' => $customer->name
+            ]);
+
+            // STEP 3: Build segments from service definition
+            // 🔧 FIX 2025-11-28: Pass preferred staff ID to ensure CalcomEventMap compatibility
+            $segments = $this->buildCompositeSegments($service, $startTime, $preferredStaffId);
+            if (empty($segments)) {
+                Log::error('🎨 [COMPOSITE] ❌ Failed to build segments', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name
+                ]);
+                return $this->responseFormatter->error('Terminsegmente konnten nicht erstellt werden.');
+            }
+
+            Log::info('🎨 [COMPOSITE] Segments built', [
+                'segment_count' => count($segments),
+                'total_duration' => collect($segments)->sum(fn($s) =>
+                    Carbon::parse($s['starts_at'])->diffInMinutes(Carbon::parse($s['ends_at']))
+                ),
+                'first_segment' => $segments[0]['name'] ?? 'unknown',
+                'last_segment' => end($segments)['name'] ?? 'unknown'
+            ]);
+
+            // STEP 4: Get or create CompositeBookingService
+            if (!$this->compositeBookingService) {
+                $this->compositeBookingService = app(CompositeBookingService::class);
+            }
+
+            // STEP 5: Prepare booking data
+            // 🔧 FIX 2025-12-01: Use provided customerName if customer.name is empty
+            // ROOT CAUSE: Customer records may exist with empty name (e.g., ID 1279 had phone but no name)
+            // When this happens, Cal.com rejects the booking with "responses - {name}error_required_field"
+            // SOLUTION: Fall back to the provided customerName parameter from the booking request
+            $effectiveCustomerName = !empty($customer->name) ? $customer->name : ($customerName ?? 'Kunde');
+
+            // 🔧 FIX 2025-12-03: Use !empty() instead of ?? for email validation
+            // ROOT CAUSE (Call 62692): Retell passes empty string "" for customerEmail, not NULL
+            // The ?? operator only checks for NULL, so "" passes through and Cal.com rejects it
+            // Cal.com V2 API requires valid email for attendee: "Attendee must have at least one contact method"
+            // SOLUTION: Generate unique placeholder email if both customer.email and customerEmail are empty
+            $effectiveCustomerEmail = !empty($customer->email)
+                ? $customer->email
+                : (!empty($customerEmail)
+                    ? $customerEmail
+                    : 'booking_' . time() . '_' . substr(md5(($customerName ?? 'customer') . $call->id), 0, 8) . '@noreply.askproai.de');
+
+            $bookingData = [
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'service_id' => $service->id,
+                'customer_id' => $customer->id,
+                'service_name' => $service->name, // 🔧 FIX: Pass service name for bookingFieldsResponses.title
+                'customer' => [
+                    'name' => $effectiveCustomerName,
+                    'email' => $effectiveCustomerEmail,
+                    'phone' => $customerPhone ?? $customer->phone
+                ],
+                'segments' => $segments,
+                'preferred_staff_id' => $preferredStaffId,
+                'timeZone' => 'Europe/Berlin',
+                'source' => 'retell_ai',
+                'metadata' => [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $callId,
+                    'booked_via' => 'retell_composite_booking',
+                    'created_at' => now()->toIso8601String()
+                ]
+            ];
+
+            Log::info('🎨 [COMPOSITE] Customer name resolution', [
+                'call_id' => $callId,
+                'customer_id' => $customer->id,
+                'db_customer_name' => $customer->name ?: '(empty)',
+                'provided_customer_name' => $customerName ?: '(not provided)',
+                'effective_name' => $effectiveCustomerName,
+            ]);
+
+            Log::info('🎨 [COMPOSITE] Calling CompositeBookingService', [
+                'call_id' => $callId,
+                'segments' => count($segments),
+                'preferred_staff' => $preferredStaffId ?? 'auto-assign'
+            ]);
+
+            // STEP 6: Execute composite booking (with SAGA pattern)
+            $appointment = $this->compositeBookingService->bookComposite($bookingData);
+
+            $bookingDuration = round((microtime(true) - $bookingStartTime) * 1000);
+
+            Log::info('🎨 [COMPOSITE] ✅ Composite booking successful', [
+                'call_id' => $callId,
+                'appointment_id' => $appointment->id,
+                'composite_uid' => $appointment->composite_group_uid,
+                'is_composite' => $appointment->is_composite,
+                'segments_booked' => count($appointment->segments ?? []),
+                'starts_at' => $appointment->starts_at->format('Y-m-d H:i'),
+                'ends_at' => $appointment->ends_at->format('Y-m-d H:i'),
+                'duration_ms' => $bookingDuration
+            ]);
+
+            // STEP 7: Release slot lock if it exists
+            if ($lockKey && $lockInfo) {
+                try {
+                    $this->lockService->releaseLock($lockKey, $callId, $appointment->id);
+                    Log::info('🎨 [COMPOSITE] 🔓 Slot lock released', [
+                        'lock_key' => $lockKey,
+                        'appointment_id' => $appointment->id
+                    ]);
+                } catch (\Exception $lockException) {
+                    // Non-blocking - lock will expire anyway
+                    Log::warning('🎨 [COMPOSITE] ⚠️ Lock release failed (non-blocking)', [
+                        'lock_key' => $lockKey,
+                        'error' => $lockException->getMessage()
+                    ]);
+                }
+            }
+
+            // STEP 8: Update call record
+            $call->update([
+                'appointment_made' => true,
+                'converted_appointment_id' => $appointment->id,
+            ]);
+
+            // STEP 9: Build segment summary for voice response
+            $activeSegments = collect($service->segments)
+                ->filter(fn($s) => ($s['staff_required'] ?? false) || ($s['type'] ?? '') === 'active')
+                ->values();
+
+            $segmentSummary = $activeSegments->count() > 1
+                ? sprintf('%d Termine', $activeSegments->count())
+                : 'Termin';
+
+            // Calculate end time for response
+            $endTime = $appointment->ends_at ?? $startTime->copy()->addMinutes($service->duration_minutes);
+
+            return $this->responseFormatter->success([
+                'booked' => true,
+                'appointment_id' => $appointment->id,
+                'composite_uid' => $appointment->composite_group_uid,
+                'is_composite' => true,
+                'segments_count' => count($appointment->segments ?? []),
+                'message' => sprintf(
+                    'Perfekt! Ihre %s am %s von %s bis %s Uhr ist gebucht.',
+                    $service->name,
+                    $startTime->format('d.m.'),
+                    $startTime->format('H:i'),
+                    $endTime->format('H:i')
+                ),
+                'appointment_time' => $startTime->format('Y-m-d H:i'),
+                'appointment_end' => $endTime->format('Y-m-d H:i'),
+                'total_duration_minutes' => $service->duration_minutes,
+                'confirmation' => sprintf(
+                    'Der komplette Termin dauert %d Minuten mit %s.',
+                    $service->duration_minutes,
+                    $segmentSummary
+                ),
+                'sync_mode' => 'composite'
+            ]);
+
+        } catch (\App\Services\Booking\BookingConflictException $e) {
+            // Slot was taken during booking
+            Log::warning('🎨 [COMPOSITE] ⚠️ Booking conflict', [
+                'call_id' => $callId,
+                'error' => $e->getMessage(),
+                'service' => $service->name
+            ]);
+
+            return $this->responseFormatter->error(
+                'Dieser Termin wurde leider gerade vergeben. Bitte wählen Sie eine andere Zeit.'
+            );
+
+        } catch (\Exception $e) {
+            $bookingDuration = round((microtime(true) - $bookingStartTime) * 1000);
+
+            // ═══════════════════════════════════════════════════════════════════
+            // 🛡️ FIX 2025-12-03: Post-Timeout Success Check
+            // PROBLEM: Booking succeeds but takes >15s → Retell timeout → success:false
+            //          Agent thinks booking failed, but appointment exists in DB
+            // SOLUTION: Check if appointment was created despite exception
+            // BENEFIT: Returns correct success:true for successful bookings
+            // ═══════════════════════════════════════════════════════════════════
+            // 🔧 FIX 2025-12-03: Changed $appointmentTime to $startTime (correct variable name)
+            // BUG: $appointmentTime was undefined in this method scope, causing PHP error
+            $existingAppointment = Appointment::where('call_id', $call->id)
+                ->where('service_id', $service->id)
+                ->where('starts_at', $startTime)
+                ->whereIn('status', ['booked', 'confirmed', 'scheduled'])
+                ->first();
+
+            if ($existingAppointment) {
+                Log::warning('🎨 [COMPOSITE] ⚠️ Exception occurred but booking SUCCEEDED (timeout recovery)', [
+                    'call_id' => $callId,
+                    'appointment_id' => $existingAppointment->id,
+                    'composite_uid' => $existingAppointment->composite_group_uid,
+                    'duration_ms' => $bookingDuration,
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                    'recovery_type' => 'post_timeout_success_check'
+                ]);
+
+                // Return SUCCESS since booking actually completed
+                return $this->responseFormatter->success([
+                    'booked' => true,
+                    'appointment_id' => $existingAppointment->id,
+                    'composite_uid' => $existingAppointment->composite_group_uid,
+                    'is_composite' => true,
+                    'service' => $service->name,
+                    'staff' => $existingAppointment->staff?->name ?? 'Mitarbeiter',
+                    'appointment_time' => $existingAppointment->starts_at->format('Y-m-d H:i'),
+                    'message' => sprintf(
+                        'Ihr %s-Termin am %s um %s Uhr wurde erfolgreich gebucht.',
+                        $service->name,
+                        $existingAppointment->starts_at->format('d.m.Y'),
+                        $existingAppointment->starts_at->format('H:i')
+                    ),
+                    'recovered_from_timeout' => true
+                ]);
+            }
+
+            Log::error('🎨 [COMPOSITE] ❌ Composite booking failed', [
+                'call_id' => $callId,
+                'service' => $service->name,
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'duration_ms' => $bookingDuration,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->responseFormatter->error(
+                'Bei der Terminbuchung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.'
+            );
+        }
+    }
+
+    /**
+     * 🎨 Build segment array from composite service definition
+     *
+     * Converts service.segments JSON into booking segments with calculated timestamps.
+     * Only includes "active" segments that require staff (skips processing/wait times).
+     *
+     * 🔧 FIX 2025-11-28: Accept optional staff_id to pre-assign staff to all segments
+     * This ensures CalcomEventMap lookup succeeds by using a staff member known to have mappings.
+     *
+     * @param Service $service Composite service with segments JSON
+     * @param Carbon $startTime Desired start time
+     * @param string|null $staffId Optional staff ID to assign to all segments
+     * @return array Array of segments for CompositeBookingService
+     */
+    private function buildCompositeSegments(Service $service, Carbon $startTime, ?string $staffId = null): array
+    {
+        $serviceSegments = $service->segments;
+
+        if (empty($serviceSegments)) {
+            Log::warning('🎨 [COMPOSITE] Service has no segments defined', [
+                'service_id' => $service->id,
+                'service_name' => $service->name
+            ]);
+            return [];
+        }
+
+        // 🔧 FIX 2025-11-28: If no staff provided, find one with CalcomEventMap entries
+        if (!$staffId) {
+            $staffId = $this->findStaffWithCompositeMapping($service);
+            if ($staffId) {
+                Log::info('🎨 [COMPOSITE] Auto-assigned staff with CalcomEventMap entries', [
+                    'service_id' => $service->id,
+                    'staff_id' => $staffId
+                ]);
+            }
+        }
+
+        // 🔧 FIX 2025-12-03: Check if consolidated booking should be used
+        // This reduces Cal.com API calls by merging segments not separated by useful gaps
+        if ($this->shouldUseConsolidatedBooking($service)) {
+            return $this->buildConsolidatedSegments($service, $startTime, $staffId);
+        }
+
+        // Legacy: Build individual segments
+        return $this->buildIndividualSegments($service, $serviceSegments, $startTime, $staffId);
+    }
+
+    /**
+     * 🔧 FIX 2025-12-03: Build consolidated segments for Cal.com booking
+     *
+     * Uses SegmentConsolidationService to merge consecutive segments
+     * that are not separated by useful gaps (≥15 min).
+     *
+     * Example: Dauerwelle [A][gap15][B][gap10][C][D]
+     * → Consolidated: [A, gap_after:15], [B_C_D, duration:70]
+     *
+     * @param Service $service The composite service
+     * @param Carbon $startTime Start time for first segment
+     * @param string|null $staffId Staff ID to assign
+     * @return array Consolidated booking segments
+     */
+    private function buildConsolidatedSegments(Service $service, Carbon $startTime, ?string $staffId): array
+    {
+        $consolidator = app(\App\Services\Booking\SegmentConsolidationService::class);
+        $consolidated = $consolidator->consolidateForBooking($service->segments);
+
+        Log::info('🎨 [COMPOSITE] Building CONSOLIDATED segments', [
+            'service' => $service->name,
+            'original_segments' => count($service->segments),
+            'consolidated_count' => count($consolidated),
+            'consolidated_keys' => array_column($consolidated, 'key'),
+            'start_time' => $startTime->format('Y-m-d H:i')
+        ]);
+
+        $segments = [];
+        $currentTime = $startTime->copy();
+
+        foreach ($consolidated as $index => $group) {
+            $duration = $group['duration'] ?? $group['durationMin'] ?? 60;
+            $endTime = $currentTime->copy()->addMinutes($duration);
+
+            $segments[] = [
+                'key' => $group['key'],
+                'name' => $group['combined_title'] ?? $group['name'] ?? $group['key'],
+                'starts_at' => $currentTime->toIso8601String(),
+                'ends_at' => $endTime->toIso8601String(),
+                'duration' => $duration,
+                'staff_id' => $staffId,
+                'order' => $index + 1,
+                'merged_from' => $group['merged_from'] ?? null,
+            ];
+
+            Log::debug('🎨 [COMPOSITE] Added consolidated segment', [
+                'key' => $group['key'],
+                'title' => $group['combined_title'] ?? $group['name'],
+                'time' => $currentTime->format('H:i') . ' - ' . $endTime->format('H:i'),
+                'duration' => $duration,
+                'merged_from' => $group['merged_from'],
+                'gap_after' => $group['gap_after'] ?? 0
+            ]);
+
+            // Move current time forward including gap_after
+            $gapAfter = $group['gap_after'] ?? 0;
+            $currentTime = $endTime->copy()->addMinutes($gapAfter);
+        }
+
+        Log::info('🎨 [COMPOSITE] Consolidated segments built successfully', [
+            'segment_count' => count($segments),
+            'total_duration' => $startTime->diffInMinutes($currentTime),
+            'assigned_staff' => $staffId
+        ]);
+
+        return $segments;
+    }
+
+    /**
+     * Build individual segments (legacy method)
+     *
+     * @param Service $service The composite service
+     * @param array $serviceSegments Raw segment definitions
+     * @param Carbon $startTime Start time for first segment
+     * @param string|null $staffId Staff ID to assign
+     * @return array Individual booking segments
+     */
+    private function buildIndividualSegments(Service $service, array $serviceSegments, Carbon $startTime, ?string $staffId): array
+    {
+        $segments = [];
+        $currentTime = $startTime->copy();
+
+        Log::debug('🎨 [COMPOSITE] Building individual segments (legacy)', [
+            'service' => $service->name,
+            'segment_definitions' => count($serviceSegments),
+            'start_time' => $startTime->format('Y-m-d H:i'),
+            'pre_assigned_staff' => $staffId
+        ]);
+
+        foreach ($serviceSegments as $index => $segment) {
+            // Get duration (supports both durationMin and duration keys)
+            $duration = $segment['durationMin'] ?? $segment['duration'] ?? 60;
+
+            // Calculate end time for this segment
+            $endTime = $currentTime->copy()->addMinutes($duration);
+
+            // Only include segments that require staff (active segments)
+            $requiresStaff = $segment['staff_required'] ?? (($segment['type'] ?? '') === 'active');
+
+            if ($requiresStaff) {
+                $segments[] = [
+                    'key' => $segment['key'] ?? "segment_{$index}",
+                    'name' => $segment['name'] ?? "Segment " . ($index + 1),
+                    'starts_at' => $currentTime->toIso8601String(),
+                    'ends_at' => $endTime->toIso8601String(),
+                    'duration' => $duration,
+                    'staff_id' => $staffId,
+                    'order' => $segment['order'] ?? $index + 1
+                ];
+
+                Log::debug('🎨 [COMPOSITE] Added active segment', [
+                    'key' => $segment['key'],
+                    'name' => $segment['name'],
+                    'time' => $currentTime->format('H:i') . ' - ' . $endTime->format('H:i'),
+                    'duration' => $duration,
+                    'staff_id' => $staffId
+                ]);
+            } else {
+                Log::debug('🎨 [COMPOSITE] Skipped processing segment', [
+                    'key' => $segment['key'],
+                    'name' => $segment['name'],
+                    'duration' => $duration,
+                    'type' => $segment['type'] ?? 'unknown'
+                ]);
+            }
+
+            // Move current time forward (including processing segments)
+            $currentTime = $endTime->copy();
+        }
+
+        Log::info('🎨 [COMPOSITE] Segments built successfully', [
+            'active_segments' => count($segments),
+            'total_segments' => count($serviceSegments),
+            'total_duration' => $startTime->diffInMinutes($currentTime),
+            'assigned_staff' => $staffId
+        ]);
+
+        return $segments;
+    }
+
+    /**
+     * Check if consolidated booking should be used for a service.
+     *
+     * @param Service $service The service to check
+     * @return bool True if consolidated booking should be used
+     */
+    private function shouldUseConsolidatedBooking(Service $service): bool
+    {
+        if (!$this->compositeBookingService) {
+            $this->compositeBookingService = app(\App\Services\Booking\CompositeBookingService::class);
+        }
+
+        return $this->compositeBookingService->shouldUseConsolidatedBooking($service);
+    }
+
+    /**
+     * 🔧 FIX 2025-11-28: Find staff member with CalcomEventMap entries for composite service
+     *
+     * Queries CalcomEventMap to find staff who have ALL segment mappings configured.
+     * This prevents booking failures due to missing CalcomEventMap entries.
+     *
+     * @param Service $service Composite service
+     * @return string|null Staff ID with complete mappings, or null if none found
+     */
+    private function findStaffWithCompositeMapping(Service $service): ?string
+    {
+        $serviceSegments = $service->segments ?? [];
+        if (empty($serviceSegments)) {
+            return null;
+        }
+
+        // 🔧 FIX 2025-12-04: Use CONSOLIDATED segment keys, not original segment keys
+        // BUG: Original code searched for ["A","B","C","D"] but CalcomEventMap has ["A","B_C_D"]
+        // This caused "No staff found with complete CalcomEventMap entries" errors
+        $consolidator = app(\App\Services\Booking\SegmentConsolidationService::class);
+        $consolidatedSegments = $consolidator->consolidateForBooking($serviceSegments);
+
+        // Get CONSOLIDATED active segment keys (e.g., ["A", "B_C_D"])
+        $activeSegmentKeys = collect($consolidatedSegments)
+            ->filter(fn($seg) => ($seg['staff_required'] ?? true) === true && ($seg['type'] ?? 'active') !== 'gap')
+            ->pluck('key')
+            ->toArray();
+
+        if (empty($activeSegmentKeys)) {
+            Log::warning('🎨 [COMPOSITE] No active consolidated segments found', [
+                'service_id' => $service->id,
+                'original_segments' => count($serviceSegments),
+            ]);
+            return null;
+        }
+
+        Log::debug('🎨 [COMPOSITE] Searching CalcomEventMap with consolidated keys', [
+            'service_id' => $service->id,
+            'consolidated_keys' => $activeSegmentKeys,
+        ]);
+
+        // Find staff who have mappings for ALL CONSOLIDATED active segments
+        $staffWithMappings = \App\Models\CalcomEventMap::where('service_id', $service->id)
+            ->whereIn('segment_key', $activeSegmentKeys)
+            ->select('staff_id')
+            ->selectRaw('COUNT(DISTINCT segment_key) as segment_count')
+            ->groupBy('staff_id')
+            ->havingRaw('COUNT(DISTINCT segment_key) = ?', [count($activeSegmentKeys)])
+            ->pluck('staff_id')
+            ->toArray();
+
+        if (empty($staffWithMappings)) {
+            Log::warning('🎨 [COMPOSITE] No staff found with complete CalcomEventMap entries', [
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'required_consolidated_segments' => $activeSegmentKeys
+            ]);
+            return null;
+        }
+
+        // Prefer first available staff from the list
+        $selectedStaff = $staffWithMappings[0];
+
+        Log::debug('🎨 [COMPOSITE] Found staff with complete CalcomEventMap entries', [
+            'service_id' => $service->id,
+            'staff_id' => $selectedStaff,
+            'total_qualified_staff' => count($staffWithMappings)
+        ]);
+
+        return $selectedStaff;
+    }
+
+    /**
+     * 🔧 FIX 2025-11-28: Calculate total duration for composite service
+     *
+     * Sums all segment durations including processing/gap times.
+     * This is used for slot locking to reserve the entire composite time block.
+     *
+     * @param Service $service Composite service
+     * @return int Total duration in minutes
+     */
+    private function calculateCompositeTotalDuration(Service $service): int
+    {
+        // Fast path: Use service duration_minutes if available
+        if (!$service->isComposite() || empty($service->segments)) {
+            return $service->duration_minutes ?? 60;
+        }
+
+        // Calculate from segments
+        $totalDuration = collect($service->segments)->sum(function($segment) {
+            return $segment['durationMin'] ?? $segment['duration'] ?? 0;
+        });
+
+        // Fallback to service duration if segments don't add up
+        if ($totalDuration <= 0) {
+            return $service->duration_minutes ?? 60;
+        }
+
+        Log::debug('🎨 [COMPOSITE] Calculated total duration', [
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'total_duration' => $totalDuration,
+            'segment_count' => count($service->segments)
+        ]);
+
+        return $totalDuration;
     }
 
     /**
@@ -8935,5 +11064,58 @@ class RetellFunctionCallHandler extends Controller
 
         $lockData = Cache::get($lockKey);
         return ($lockData['call_id'] ?? null) !== $callId;
+    }
+
+    /**
+     * Check if a value is a time expression (not a valid customer name)
+     * FIX 2025-12-04: Prevents time slots like "Acht Uhr" being stored as customer names
+     *
+     * @param string|null $value The value to check
+     * @return bool True if the value is a time expression
+     */
+    private function isTimeExpression(?string $value): bool
+    {
+        if (!$value) {
+            return false;
+        }
+
+        // German number words used in time expressions
+        $timeWords = [
+            'null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben',
+            'acht', 'neun', 'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn',
+            'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn',
+            'zwanzig', 'einundzwanzig', 'zweiundzwanzig', 'dreiundzwanzig',
+            'ein', 'eine', 'halb', 'viertel', 'halbe'
+        ];
+
+        $lowerValue = mb_strtolower(trim($value));
+
+        // Pattern 1: Ends with "uhr" (e.g., "Acht Uhr", "Vierzehn Uhr")
+        if (str_ends_with($lowerValue, ' uhr') || $lowerValue === 'uhr') {
+            return true;
+        }
+
+        // Pattern 2: Just a number word (e.g., "Acht", "Vierzehn")
+        if (in_array($lowerValue, $timeWords)) {
+            return true;
+        }
+
+        // Pattern 3: Number word + "uhr" (e.g., "acht uhr", "vierzehn uhr")
+        $pattern = '/^(' . implode('|', $timeWords) . ')\s*(uhr)?$/iu';
+        if (preg_match($pattern, $lowerValue)) {
+            return true;
+        }
+
+        // Pattern 4: Digital time format (e.g., "8:00", "14:30")
+        if (preg_match('/^\d{1,2}(:\d{2})?\s*(uhr)?$/i', $lowerValue)) {
+            return true;
+        }
+
+        // Pattern 5: "um X Uhr" pattern
+        if (preg_match('/^um\s+\d{1,2}/i', $lowerValue)) {
+            return true;
+        }
+
+        return false;
     }
 }
