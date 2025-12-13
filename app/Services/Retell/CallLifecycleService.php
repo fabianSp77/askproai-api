@@ -104,11 +104,16 @@ class CallLifecycleService implements CallLifecycleInterface
                 $createData['start_timestamp'] = Carbon::createFromTimestampMs($callData['start_timestamp']);
             }
 
-            // 🔧 FIX 2025-12-13: Use firstOrCreate to prevent unique constraint violations
+            // 🔧 FIX 2025-12-13: Use updateOrCreate to handle race conditions properly
             // BACKGROUND: ensureCallRecordExists() in RetellFunctionCallHandler may have already
             // created the Call record before this webhook is processed (race condition).
-            // Using firstOrCreate ensures idempotency - if record exists, we just get it.
-            $call = Call::firstOrCreate(
+            //
+            // WHY updateOrCreate() instead of firstOrCreate():
+            // - ensureCallRecordExists() only sets: from_number, to_number, status, direction
+            // - Webhook provides ADDITIONAL critical fields: agent_id, external_id, start_timestamp
+            // - firstOrCreate() would NOT update agent_id if Call already exists
+            // - updateOrCreate() ensures webhook fields are always applied
+            $call = Call::updateOrCreate(
                 ['retell_call_id' => $createData['retell_call_id']],
                 $createData
             );
@@ -140,15 +145,17 @@ class CallLifecycleService implements CallLifecycleInterface
                 $this->callCache[$call->retell_call_id] = $call;
             }
 
-            // 🔧 FIX 2025-12-13: Log whether call was created or already existed
-            $logMessage = $call->wasRecentlyCreated ? '📞 Call created' : '📞 Call found (already existed)';
+            // 🔧 FIX 2025-12-13: Log whether call was created or updated
+            // With updateOrCreate(): created = new record, updated = existing record enriched with webhook data
+            $logMessage = $call->wasRecentlyCreated ? '📞 Call created' : '📞 Call updated (enriched with webhook data)';
             Log::info($logMessage, [
                 'call_id' => $call->id,
                 'retell_call_id' => $call->retell_call_id,
                 'status' => $call->status,
-                'company_id' => $call->company_id,         // Log actual saved value
-                'branch_id' => $call->branch_id,           // Log actual saved value
-                'phone_number_id' => $call->phone_number_id, // Log actual saved value
+                'agent_id' => $call->agent_id,             // Critical field from webhook
+                'company_id' => $call->company_id,
+                'branch_id' => $call->branch_id,
+                'phone_number_id' => $call->phone_number_id,
                 'from_number' => $call->from_number,
                 'to_number' => $call->to_number,
                 'was_recently_created' => $call->wasRecentlyCreated,
