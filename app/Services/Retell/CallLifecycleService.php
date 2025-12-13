@@ -104,7 +104,14 @@ class CallLifecycleService implements CallLifecycleInterface
                 $createData['start_timestamp'] = Carbon::createFromTimestampMs($callData['start_timestamp']);
             }
 
-            $call = Call::create($createData);
+            // 🔧 FIX 2025-12-13: Use firstOrCreate to prevent unique constraint violations
+            // BACKGROUND: ensureCallRecordExists() in RetellFunctionCallHandler may have already
+            // created the Call record before this webhook is processed (race condition).
+            // Using firstOrCreate ensures idempotency - if record exists, we just get it.
+            $call = Call::firstOrCreate(
+                ['retell_call_id' => $createData['retell_call_id']],
+                $createData
+            );
 
             // 🔥 FIX: Manually set company_id, branch_id, and phone_number_id to bypass $guarded protection
             // These fields are guarded to prevent mass assignment vulnerabilities,
@@ -133,7 +140,9 @@ class CallLifecycleService implements CallLifecycleInterface
                 $this->callCache[$call->retell_call_id] = $call;
             }
 
-            Log::info('📞 Call created', [
+            // 🔧 FIX 2025-12-13: Log whether call was created or already existed
+            $logMessage = $call->wasRecentlyCreated ? '📞 Call created' : '📞 Call found (already existed)';
+            Log::info($logMessage, [
                 'call_id' => $call->id,
                 'retell_call_id' => $call->retell_call_id,
                 'status' => $call->status,
@@ -142,6 +151,7 @@ class CallLifecycleService implements CallLifecycleInterface
                 'phone_number_id' => $call->phone_number_id, // Log actual saved value
                 'from_number' => $call->from_number,
                 'to_number' => $call->to_number,
+                'was_recently_created' => $call->wasRecentlyCreated,
             ]);
 
             return $call;

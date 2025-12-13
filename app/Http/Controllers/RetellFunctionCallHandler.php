@@ -291,6 +291,73 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
+     * 🔧 FIX 2025-12-13: Ensure Call record exists in database BEFORE function routing
+     *
+     * This replaces the need for get_current_context/initializeCall as first tool.
+     * By creating the Call record before any function handler runs, we guarantee
+     * that getCallContext() will always find the call.
+     *
+     * Moved from initializeCall() to run on EVERY function call, not just when
+     * the agent explicitly calls get_current_context.
+     *
+     * @param string|null $callId Resolved call ID from extractCallIdLayered()
+     * @param array $data Full request data (for from_number/to_number from call.*)
+     * @param array $parameters Function parameters (fallback for from_number/to_number)
+     * @return \App\Models\Call|null
+     */
+    private function ensureCallRecordExists(?string $callId, array $data = [], array $parameters = []): ?\App\Models\Call
+    {
+        if (!$callId || $callId === 'None') {
+            return null;
+        }
+
+        // Check if this is a test call
+        $isTestCall = str_starts_with($callId, 'flow_test_') ||
+                      str_starts_with($callId, 'test_') ||
+                      str_starts_with($callId, 'phase1_test_');
+
+        // 🔧 Härtung B: Pull metadata from data.call FIRST, fallback to parameters
+        $createData = [
+            'from_number' => $data['call']['from_number'] ?? $parameters['from_number'] ?? $parameters['caller_number'] ?? null,
+            'to_number' => $data['call']['to_number'] ?? $parameters['to_number'] ?? $parameters['called_number'] ?? null,
+            'status' => $isTestCall ? 'test' : 'ongoing',
+            'call_status' => $isTestCall ? 'test' : 'ongoing',
+            'start_timestamp' => now(),
+            'direction' => 'inbound'
+        ];
+
+        $call = \App\Models\Call::firstOrCreate(
+            ['retell_call_id' => $callId],
+            $createData
+        );
+
+        // 🔧 Härtung C: Set test-call company/branch even for existing records without company_id
+        if ($isTestCall && !$call->company_id) {
+            $call->company_id = 1; // Friseur 1 for testing
+            $call->branch_id = '34c4d48e-4753-4715-9c30-c55843a943e8'; // Main branch
+            $call->save();
+
+            Log::debug('🔧 ensureCallRecordExists: Test call company/branch set', [
+                'call_id' => $callId,
+                'call_db_id' => $call->id,
+                'was_recently_created' => $call->wasRecentlyCreated,
+                'company_id' => 1
+            ]);
+        }
+
+        if ($call->wasRecentlyCreated) {
+            Log::info('✅ ensureCallRecordExists: Call record created', [
+                'call_id' => $callId,
+                'call_db_id' => $call->id,
+                'from_number' => $call->from_number,
+                'to_number' => $call->to_number
+            ]);
+        }
+
+        return $call;
+    }
+
+    /**
      * Get call context (company_id, branch_id) from call ID or phone number
      *
      * Loads the Call record with related PhoneNumber to determine
@@ -595,6 +662,12 @@ class RetellFunctionCallHandler extends Controller
             ]);
             // Continue processing - some functions may not need call context
         }
+
+        // 🔧 FIX 2025-12-13: Ensure Call record exists BEFORE routing
+        // This replaces the need for get_current_context/initializeCall as first tool.
+        // By creating the Call record here, we guarantee getCallContext() will always find it.
+        // Benefit: Agent can skip get_current_context → saves 1 roundtrip (~500-1000ms latency)
+        $this->ensureCallRecordExists($callId, $data, $parameters);
 
         // 🔥 CRITICAL FIX 2025-11-19: Replace placeholder call_ids with real call_id in parameters
         // ROOT CAUSE: Retell sends placeholders in args.call_id but real call_id in call.call_id
@@ -4132,6 +4205,28 @@ class RetellFunctionCallHandler extends Controller
                             'call_id' => $callId,
                             'appointment_id' => $appointment->id
                         ]);
+
+                        // 🔧 FIX 2025-12-13 (Patch B): Release slot reservation after successful booking
+                        // BACKGROUND: reserve_slot holds the time slot for 5 minutes to prevent race conditions.
+                        // After successful booking, we MUST release it so the slot count is accurate.
+                        if ($hasActiveReservation && isset($existingReservation['uid'])) {
+                            try {
+                                $this->calcomService->releaseSlotReservation($existingReservation['uid']);
+                                Cache::forget($reservationKey);
+                                Log::info('🔓 Slot reservation released after successful booking', [
+                                    'call_id' => $callId,
+                                    'reservation_uid' => $existingReservation['uid'],
+                                    'appointment_id' => $appointment->id
+                                ]);
+                            } catch (\Exception $e) {
+                                Log::warning('⚠️ Failed to release slot reservation (non-critical)', [
+                                    'call_id' => $callId,
+                                    'reservation_uid' => $existingReservation['uid'],
+                                    'error' => $e->getMessage()
+                                ]);
+                                // Don't fail the booking - reservation will auto-expire after 5 minutes
+                            }
+                        }
 
                         // 🔧 FIX 2025-11-26: Cache successful booking for idempotency
                         $successResponse = [
