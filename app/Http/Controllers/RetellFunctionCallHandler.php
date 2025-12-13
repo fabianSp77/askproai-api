@@ -4927,10 +4927,13 @@ class RetellFunctionCallHandler extends Controller
         if ($serviceId) {
             $service = \App\Models\Service::find($serviceId);
         } elseif ($serviceName) {
+            // 🔧 FIX 2025-12-13: Changed ILIKE to LIKE for MySQL compatibility
+            // MySQL's LIKE is case-insensitive by default with utf8 collations
+            // PostgreSQL's ILIKE is not supported in MySQL
             $service = \App\Models\Service::where('company_id', $callContext['company_id'])
                 ->where(function($q) use ($serviceName) {
-                    $q->where('name', 'ILIKE', "%{$serviceName}%")
-                      ->orWhere('display_name', 'ILIKE', "%{$serviceName}%");
+                    $q->where('name', 'LIKE', "%{$serviceName}%")
+                      ->orWhere('display_name', 'LIKE', "%{$serviceName}%");
                 })
                 ->first();
         }
