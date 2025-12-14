@@ -3673,7 +3673,9 @@ class RetellFunctionCallHandler extends Controller
                         'source' => 'retell_phone',
                         'booking_type' => 'single',
                         'notes' => $notes,
-                        'metadata' => json_encode($appointmentMetadata)
+                        // 🔧 FIX 2025-12-14: Don't json_encode - model cast 'array' handles it
+                        // BUG: Double-encoding caused sync job to read metadata as string
+                        'metadata' => $appointmentMetadata
                     ]);
                     $appointment->save();
 
