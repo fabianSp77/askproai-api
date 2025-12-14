@@ -2583,7 +2583,19 @@ class RetellFunctionCallHandler extends Controller
             // If alternatives don't match preference (e.g., customer wanted morning, got evening)
             // 🔧 V128: Read config from company settings (Admin-configurable)
             $company = \App\Models\Company::find($companyId);
-            $v128Config = $company?->getV128ConfigWithDefaults() ?? [];
+
+            // 🔧 FIX 2025-12-14: Log warning if company not found (debugging aid)
+            if (!$company) {
+                Log::warning('🚨 V128: Company not found, using defaults', [
+                    'company_id' => $companyId,
+                    'call_id' => $callId,
+                ]);
+            }
+
+            $v128Config = $company?->getV128ConfigWithDefaults() ?? [
+                'time_shift_enabled' => true,
+                'time_shift_message' => '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.',
+            ];
             $timeShiftEnabled = $v128Config['time_shift_enabled'] ?? true;
 
             if ($timeShiftEnabled &&
@@ -2597,27 +2609,39 @@ class RetellFunctionCallHandler extends Controller
                 $altTimes = array_map(fn($a) => $a['spoken'] ?? $a['time'] ?? '', $formattedAlternatives);
                 $altTimesText = implode(' oder ', array_filter($altTimes));
 
-                // Create natural message that explains the time shift
-                // 🔧 V128: Use custom template from admin settings if available
+                // 🔧 FIX 2025-12-14: Only use template if we have valid data
+                // Skip if either $preferenceLabel or $altTimesText is empty
                 if ($preferenceLabel && $altTimesText) {
-                    $messageTemplate = $v128Config['time_shift_message'] ?? '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.';
+                    // 🔧 V128: Use custom template from admin settings if available
+                    // 🔒 SECURITY: strip_tags to prevent XSS (double protection with Filament)
+                    $messageTemplate = strip_tags(
+                        $v128Config['time_shift_message'] ?? '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.'
+                    );
                     $finalMessage = str_replace(
                         ['{label}', '{alternatives}'],
                         [$preferenceLabel, $altTimesText],
                         $messageTemplate
                     );
-                }
 
-                Log::info('🕐 V128 Time preference mismatch - using contextual message', [
-                    'call_id' => $callId,
-                    'company_id' => $companyId,
-                    'preference_label' => $preferenceLabel,
-                    'all_match_preference' => false,
-                    'suggested_followup' => $preferenceContext['suggested_followup'],
-                    'time_shift_enabled' => $timeShiftEnabled,
-                    'custom_template' => isset($v128Config['time_shift_message']),
-                    'final_message' => $finalMessage
-                ]);
+                    Log::info('🕐 V128 Time preference mismatch - using contextual message', [
+                        'call_id' => $callId,
+                        'company_id' => $companyId,
+                        'preference_label' => $preferenceLabel,
+                        'all_match_preference' => false,
+                        'suggested_followup' => $preferenceContext['suggested_followup'],
+                        'time_shift_enabled' => $timeShiftEnabled,
+                        'custom_template' => !empty($v128Config['time_shift_message']),
+                        'final_message' => $finalMessage
+                    ]);
+                } else {
+                    // 🔧 FIX 2025-12-14: Log warning if data missing for template
+                    Log::warning('🚨 V128: Skipping time-shift message due to missing data', [
+                        'call_id' => $callId,
+                        'preference_label' => $preferenceLabel,
+                        'alt_times_text' => $altTimesText,
+                        'reason' => !$preferenceLabel ? 'missing_preference_label' : 'empty_alternatives',
+                    ]);
+                }
             }
 
             $responseData = [

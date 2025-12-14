@@ -15,6 +15,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -26,8 +27,9 @@ use Illuminate\Support\HtmlString;
  * - Full booking confirmation
  * - Silence handling
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2025-12-14
+ * @security IDOR protection added, XSS sanitization, input validation
  */
 class RetellV128Settings extends Page implements HasForms
 {
@@ -73,12 +75,64 @@ class RetellV128Settings extends Page implements HasForms
     }
 
     /**
+     * 🔒 SECURITY: Verify user has permission to access this company
+     */
+    protected function authorizeCompanyAccess(?int $companyId): bool
+    {
+        if (!$companyId) {
+            return false;
+        }
+
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return false;
+        }
+
+        // Super admin can access any company
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        // Company admin can ONLY access their own company
+        if ($user->hasRole('company_admin')) {
+            if ($user->company_id !== $companyId) {
+                Log::warning('🚨 SECURITY: IDOR attempt detected in V128 settings', [
+                    'user_id' => $user->id,
+                    'user_company_id' => $user->company_id,
+                    'attempted_company_id' => $companyId,
+                    'ip' => request()->ip(),
+                ]);
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Load V128 settings from company
+     * 🔒 SECURITY: Added authorization check
      */
     protected function loadSettings(): void
     {
         if (!$this->selectedCompanyId) {
             $this->data = [];
+            return;
+        }
+
+        // 🔒 SECURITY: Verify authorization before loading
+        if (!$this->authorizeCompanyAccess($this->selectedCompanyId)) {
+            $this->data = [];
+            Notification::make()
+                ->title('Nicht autorisiert')
+                ->body('Sie haben keine Berechtigung, diese Firma zu bearbeiten')
+                ->danger()
+                ->send();
+
+            // Reset to user's own company
+            $user = Auth::guard('admin')->user();
+            $this->selectedCompanyId = $user?->company_id;
             return;
         }
 
@@ -125,6 +179,20 @@ class RetellV128Settings extends Page implements HasForms
                             ->helperText('Platzhalter: {label} = Tageszeit (z.B. "Vormittags"), {alternatives} = verfügbare Zeiten')
                             ->placeholder('{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.')
                             ->rows(3)
+                            ->maxLength(500)
+                            // 🔒 SECURITY: XSS protection - strip HTML tags
+                            ->dehydrateStateUsing(fn ($state) => $state ? strip_tags($state) : null)
+                            ->rules([
+                                'nullable',
+                                'string',
+                                'max:500',
+                                function ($attribute, $value, $fail) {
+                                    // Block any potential XSS patterns
+                                    if ($value && preg_match('/<|>|javascript:|on\w+=/i', $value)) {
+                                        $fail('Der Text enthält unzulässige Zeichen.');
+                                    }
+                                },
+                            ])
                             ->visible(fn ($get) => $get('time_shift_enabled')),
                     ])
                     ->collapsible(),
@@ -167,6 +235,8 @@ class RetellV128Settings extends Page implements HasForms
                             ->maxValue(60)
                             ->default(20)
                             ->suffix('Sekunden')
+                            // 🔒 SECURITY: Server-side validation
+                            ->rules(['nullable', 'integer', 'min:10', 'max:60'])
                             ->visible(fn ($get) => $get('silence_handling_enabled')),
 
                         TextInput::make('max_silence_repeats')
@@ -176,6 +246,8 @@ class RetellV128Settings extends Page implements HasForms
                             ->maxValue(5)
                             ->default(2)
                             ->helperText('Nach so vielen Stille-Nachfragen wird aufgelegt')
+                            // 🔒 SECURITY: Server-side validation
+                            ->rules(['nullable', 'integer', 'min:1', 'max:5'])
                             ->visible(fn ($get) => $get('silence_handling_enabled')),
                     ])
                     ->collapsible(),
@@ -217,7 +289,7 @@ class RetellV128Settings extends Page implements HasForms
                     ->options(Company::pluck('name', 'id'))
                     ->searchable()
                     ->live()
-                    ->afterStateUpdated(fn () => $this->loadSettings()),
+                    ->afterStateUpdated(fn ($state) => $this->selectedCompanyId = (int) $state),
             ])
             ->visible($isSuperAdmin)
             ->collapsed(false);
@@ -225,78 +297,141 @@ class RetellV128Settings extends Page implements HasForms
 
     /**
      * Save settings to company
+     * 🔒 SECURITY: Added authorization check and exception handling
      */
     public function save(): void
     {
-        if (!$this->selectedCompanyId) {
+        try {
+            if (!$this->selectedCompanyId) {
+                Notification::make()
+                    ->title('Fehler')
+                    ->body('Keine Firma ausgewählt')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            // 🔒 SECURITY: CRITICAL - Verify user has permission to modify this company
+            if (!$this->authorizeCompanyAccess($this->selectedCompanyId)) {
+                Notification::make()
+                    ->title('Nicht autorisiert')
+                    ->body('Sie haben keine Berechtigung, diese Firma zu bearbeiten')
+                    ->danger()
+                    ->send();
+
+                abort(403, 'Unauthorized access attempt');
+            }
+
+            $company = Company::find($this->selectedCompanyId);
+            if (!$company) {
+                Notification::make()
+                    ->title('Fehler')
+                    ->body('Firma nicht gefunden')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            // Get form data with validation
+            $formData = $this->form->getState();
+
+            // Remove the company selector from saved data (if present)
+            unset($formData['selectedCompanyId']);
+
+            // 🔒 SECURITY: Sanitize time_shift_message (double protection)
+            if (isset($formData['time_shift_message'])) {
+                $formData['time_shift_message'] = strip_tags($formData['time_shift_message']);
+            }
+
+            // Save to company
+            $company->v128_config = $formData;
+            $company->save();
+
             Notification::make()
-                ->title('Fehler')
-                ->body('Keine Firma ausgewählt')
+                ->title('Gespeichert')
+                ->body('V128 Einstellungen wurden aktualisiert')
+                ->success()
+                ->send();
+
+            // Log the change (without exposing full config values)
+            activity()
+                ->performedOn($company)
+                ->causedBy(Auth::guard('admin')->user())
+                ->withProperties([
+                    'updated_fields' => array_keys($formData),
+                    'timestamp' => now()->toIso8601String(),
+                ])
+                ->log('V128 settings updated');
+
+        } catch (\Exception $e) {
+            Log::error('V128 settings save failed', [
+                'company_id' => $this->selectedCompanyId,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::guard('admin')->id(),
+            ]);
+
+            Notification::make()
+                ->title('Speichern fehlgeschlagen')
+                ->body('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.')
                 ->danger()
                 ->send();
-            return;
         }
-
-        $company = Company::find($this->selectedCompanyId);
-        if (!$company) {
-            Notification::make()
-                ->title('Fehler')
-                ->body('Firma nicht gefunden')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        // Get form data
-        $formData = $this->form->getState();
-
-        // Remove the company selector from saved data
-        unset($formData['selectedCompanyId']);
-
-        // Save to company
-        $company->v128_config = $formData;
-        $company->save();
-
-        Notification::make()
-            ->title('Gespeichert')
-            ->body('V128 Einstellungen wurden aktualisiert')
-            ->success()
-            ->send();
-
-        // Log the change
-        activity()
-            ->performedOn($company)
-            ->causedBy(Auth::guard('admin')->user())
-            ->withProperties(['v128_config' => $formData])
-            ->log('V128 settings updated');
     }
 
     /**
      * Reset to defaults
+     * 🔒 SECURITY: Added authorization check
      */
     public function resetToDefaults(): void
     {
-        if (!$this->selectedCompanyId) {
-            return;
+        try {
+            if (!$this->selectedCompanyId) {
+                return;
+            }
+
+            // 🔒 SECURITY: Verify authorization
+            if (!$this->authorizeCompanyAccess($this->selectedCompanyId)) {
+                Notification::make()
+                    ->title('Nicht autorisiert')
+                    ->body('Sie haben keine Berechtigung, diese Firma zu bearbeiten')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            $company = Company::find($this->selectedCompanyId);
+            if (!$company) {
+                return;
+            }
+
+            // Clear custom config (defaults will be used)
+            $company->v128_config = null;
+            $company->save();
+
+            // Reload settings
+            $this->loadSettings();
+
+            // Force Livewire re-render
+            $this->dispatch('$refresh');
+
+            Notification::make()
+                ->title('Zurückgesetzt')
+                ->body('Einstellungen wurden auf Standard zurückgesetzt')
+                ->info()
+                ->send();
+
+        } catch (\Exception $e) {
+            Log::error('V128 settings reset failed', [
+                'company_id' => $this->selectedCompanyId,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title('Zurücksetzen fehlgeschlagen')
+                ->body('Ein Fehler ist aufgetreten.')
+                ->danger()
+                ->send();
         }
-
-        $company = Company::find($this->selectedCompanyId);
-        if (!$company) {
-            return;
-        }
-
-        // Clear custom config (defaults will be used)
-        $company->v128_config = null;
-        $company->save();
-
-        // Reload
-        $this->loadSettings();
-
-        Notification::make()
-            ->title('Zurückgesetzt')
-            ->body('Einstellungen wurden auf Standard zurückgesetzt')
-            ->info()
-            ->send();
     }
 
     /**
