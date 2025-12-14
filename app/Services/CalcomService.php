@@ -1769,16 +1769,35 @@ class CalcomService
             // Cal.com returns: { "status": "success", "data": { "uid": "...", "reservationUntil": "..." } }
             $reservationData = $data['data'] ?? $data;
 
-            Log::channel('calcom')->info('[Cal.com V2] ✅ Slot reserved successfully', [
-                'reservation_uid' => $reservationData['uid'] ?? null,
-                'reservation_until' => $reservationData['reservationUntil'] ?? null,
-            ]);
+            $reservationUid = $reservationData['uid'] ?? null;
+            $reservationUntil = $reservationData['reservationUntil'] ?? null;
 
+            // 🔧 FIX 2025-12-14: Validate reservation UID exists
+            // ROOT CAUSE (Call #89576): Cal.com returned reservationUntil but NO uid
+            // This caused start_booking to fail with "wurde gerade vergeben" because
+            // the Layer 1 re-check didn't know a reservation existed.
+            // Now we properly detect this anomaly and still return success if we have reservationUntil.
+            if (!$reservationUid && $reservationUntil) {
+                Log::channel('calcom')->warning('[Cal.com V2] ⚠️ Reservation created WITHOUT uid - anomaly detected', [
+                    'reservation_uid' => null,
+                    'reservation_until' => $reservationUntil,
+                    'raw_response' => $data,
+                    'note' => 'Cal.com returned reservationUntil but no uid - treating as valid reservation',
+                ]);
+            } else {
+                Log::channel('calcom')->info('[Cal.com V2] ✅ Slot reserved successfully', [
+                    'reservation_uid' => $reservationUid,
+                    'reservation_until' => $reservationUntil,
+                ]);
+            }
+
+            // Return success if we have EITHER uid OR reservationUntil
+            // The reservation is valid as long as Cal.com gave us an expiry time
             return [
-                'success' => true,
-                'reservationUid' => $reservationData['uid'] ?? null,
-                'reservationUntil' => $reservationData['reservationUntil'] ?? null,
-                'error' => null,
+                'success' => ($reservationUid !== null || $reservationUntil !== null),
+                'reservationUid' => $reservationUid,
+                'reservationUntil' => $reservationUntil,
+                'error' => (!$reservationUid && !$reservationUntil) ? 'no_reservation_data' : null,
             ];
 
         } catch (CircuitBreakerOpenException $e) {

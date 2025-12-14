@@ -3224,12 +3224,17 @@ class RetellFunctionCallHandler extends Controller
                     }
                 }
 
-                if ($timeSinceCheck > 30) {
+                // 🔧 FIX 2025-12-14: Skip Layer 1 re-check if we have an active slot reservation
+                // ROOT CAUSE (Call #89576): reserve_slot created reservation, but Layer 1 re-check
+                // was NOT checking $hasActiveReservation, causing Cal.com to say "not available"
+                // even though the slot was reserved. The reservation HOLDS the slot - no need to re-verify.
+                if ($timeSinceCheck > 30 && !$hasActiveReservation) {
                     Log::info('⏱️ Re-validating availability before booking (>30s since last check, no cache)', [
                         'call_id' => $callId,
                         'time_since_check' => $timeSinceCheck,
                         'requested_time' => $appointmentTime->format('Y-m-d H:i'),
-                        'cache_miss' => true
+                        'cache_miss' => true,
+                        'has_reservation' => false
                     ]);
 
                     // Quick availability re-check for exact requested time
@@ -3338,6 +3343,16 @@ class RetellFunctionCallHandler extends Controller
                             'error' => $e->getMessage()
                         ]);
                     }
+                } elseif ($timeSinceCheck > 30 && $hasActiveReservation) {
+                    // 🔧 FIX 2025-12-14: Log when Layer 1 re-check is skipped due to active reservation
+                    Log::info('🔒 SKIP Layer 1 re-check: Active slot reservation holds the slot', [
+                        'call_id' => $callId,
+                        'time_since_check' => $timeSinceCheck,
+                        'requested_time' => $appointmentTime->format('Y-m-d H:i'),
+                        'reservation_uid' => $existingReservation['uid'] ?? null,
+                        'reservation_until' => $existingReservation['until'] ?? null,
+                        'fix' => 'FIX 2025-12-14: Prevents false "slot taken" when reservation exists'
+                    ]);
                 }
             }
 
