@@ -271,7 +271,8 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             'name' => $this->appointment->customer->name ?? 'Customer',
             'email' => $this->appointment->customer->email ?? 'noreply@example.com',
             'metadata' => [
-                'crm_appointment_id' => $this->appointment->id,
+                'crm_appointment_id' => (string) $this->appointment->id,
+                'call_id' => $this->appointment->call_id ? (string) $this->appointment->call_id : null,
                 'sync_origin' => $this->appointment->sync_origin ?? 'system',
                 'created_via' => 'crm_sync',
                 'synced_at' => now()->toIso8601String(),
@@ -298,6 +299,17 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
         // Add notes if available
         if ($this->appointment->notes) {
             $payload['bookingFieldsResponses']['notes'] = $this->appointment->notes;
+        }
+
+        // 🔧 FIX 2025-12-14: Include reservationUid if available from reserve_slot call
+        // This links the booking to the existing Cal.com reservation
+        $appointmentMetadata = $this->appointment->metadata ?? [];
+        if (isset($appointmentMetadata['reservation_uid']) && !empty($appointmentMetadata['reservation_uid'])) {
+            $payload['reservationUid'] = $appointmentMetadata['reservation_uid'];
+            $this->safeInfo('🔒 Including reservationUid in booking payload', [
+                'appointment_id' => $this->appointment->id,
+                'reservation_uid' => $appointmentMetadata['reservation_uid'],
+            ], 'calcom');
         }
 
         $this->safeDebug('📤 Sending CREATE to Cal.com', [
@@ -1864,6 +1876,42 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
     protected function validateAndAdjustSlot(CalcomV2Client $client, $service): ?Carbon
     {
         $requestedStart = $this->appointment->starts_at->copy();
+
+        // 🔧 FIX 2025-12-14: Skip re-validation if we have a valid reservation_uid
+        // ROOT CAUSE (Call #89689): reserve_slot creates a Cal.com reservation that BLOCKS
+        // the slot. When we later query availability, our own reservation makes the slot
+        // appear "blocked", causing sync failure with "All slots blocked" error.
+        //
+        // IMPORTANT: This does NOT contradict "Cal.com is source of truth" because:
+        // 1. The reservation IS stored on Cal.com's side (they validated when we reserved)
+        // 2. We're trusting Cal.com's existing reservation, not our local data
+        // 3. The actual booking will use this reservation_uid
+        $metadata = $this->appointment->metadata ?? [];
+        if (isset($metadata['reservation_uid']) && !empty($metadata['reservation_uid'])) {
+            $reservationUntil = isset($metadata['reservation_until'])
+                ? Carbon::parse($metadata['reservation_until'])
+                : null;
+
+            // Check if reservation is still valid (not expired)
+            $isReservationValid = !$reservationUntil || $reservationUntil->isFuture();
+
+            if ($isReservationValid) {
+                $this->safeInfo('✅ PRE-SYNC: Skipping availability re-check - valid Cal.com reservation exists', [
+                    'appointment_id' => $this->appointment->id,
+                    'reservation_uid' => $metadata['reservation_uid'],
+                    'reservation_until' => $reservationUntil?->toIso8601String(),
+                    'requested_start' => $requestedStart->toIso8601String(),
+                ], 'calcom');
+
+                return $requestedStart; // Trust Cal.com's reservation
+            }
+
+            $this->safeWarning('⚠️ PRE-SYNC: Reservation expired, will re-check availability', [
+                'appointment_id' => $this->appointment->id,
+                'reservation_uid' => $metadata['reservation_uid'],
+                'reservation_until' => $reservationUntil?->toIso8601String(),
+            ], 'calcom');
+        }
 
         // 🔧 FIX 2025-12-05: Validate date is within reasonable booking window
         // RCA: Call 73526 - Date 2026-11-07 was >12 months in future, Cal.com returned no slots

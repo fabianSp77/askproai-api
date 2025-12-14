@@ -3630,6 +3630,32 @@ class RetellFunctionCallHandler extends Controller
 
                     // Create local appointment with status "pending_sync"
                     $appointment = new Appointment();
+
+                    // 🔧 FIX 2025-12-14: Include reservation_uid in metadata for sync job
+                    // ROOT CAUSE (Call #89689): Sync job re-checked availability AFTER reserve_slot
+                    // blocked the slot, causing "All slots blocked" error. By passing the
+                    // reservation_uid, the sync job can skip validation and use the reservation.
+                    $appointmentMetadata = [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $callId,
+                        'customer_name' => $customerName,
+                        'customer_email' => $customerEmail,
+                        'customer_phone' => $customerPhone,
+                        'booked_via' => 'retell_ai_async',
+                        'sync_method' => 'async_job',
+                        'created_at' => now()->toIso8601String()
+                    ];
+
+                    // Add reservation UID if reserve_slot was called
+                    if ($hasActiveReservation && isset($existingReservation['uid'])) {
+                        $appointmentMetadata['reservation_uid'] = $existingReservation['uid'];
+                        $appointmentMetadata['reservation_until'] = $existingReservation['until'] ?? null;
+                        Log::info('🔒 Including reservation_uid in appointment metadata for sync job', [
+                            'call_id' => $callId,
+                            'reservation_uid' => $existingReservation['uid'],
+                        ]);
+                    }
+
                     $appointment->forceFill([
                         'customer_id' => $customer->id,
                         'company_id' => $customer->company_id,
@@ -3647,16 +3673,7 @@ class RetellFunctionCallHandler extends Controller
                         'source' => 'retell_phone',
                         'booking_type' => 'single',
                         'notes' => $notes,
-                        'metadata' => json_encode([
-                            'call_id' => $call->id,
-                            'retell_call_id' => $callId,
-                            'customer_name' => $customerName,
-                            'customer_email' => $customerEmail,
-                            'customer_phone' => $customerPhone,
-                            'booked_via' => 'retell_ai_async',
-                            'sync_method' => 'async_job',
-                            'created_at' => now()->toIso8601String()
-                        ])
+                        'metadata' => json_encode($appointmentMetadata)
                     ]);
                     $appointment->save();
 
