@@ -2573,9 +2573,42 @@ class RetellFunctionCallHandler extends Controller
             // 🔧 NEW 2025-12-08: Include preference context for intelligent follow-ups
             $preferenceContext = $alternatives['preference_context'] ?? null;
 
+            // 🔧 FIX 2025-12-14: Integrate suggested_followup directly into message
+            // Problem: Agent ignored preference_context and just read alternatives without context
+            // Solution: Build intelligent message that includes time-shift warning
+            $baseMessage = $alternatives['responseText'] ?? "Ich suche nach verfügbaren Terminen...";
+            $finalMessage = $baseMessage;
+
+            // If alternatives don't match preference (e.g., customer wanted morning, got evening)
+            if ($preferenceContext &&
+                !empty($preferenceContext['suggested_followup']) &&
+                ($preferenceContext['all_match_preference'] ?? true) === false) {
+
+                // Build contextual message for time-shift scenarios
+                $preferenceLabel = $preferenceContext['label'] ?? null;
+                $formattedAlternatives = $this->formatAlternativesForRetell($alternatives['alternatives'] ?? []);
+                $altTimes = array_map(fn($a) => $a['spoken'] ?? $a['time'] ?? '', $formattedAlternatives);
+                $altTimesText = implode(' oder ', array_filter($altTimes));
+
+                // Create natural message that explains the time shift
+                if ($preferenceLabel && $altTimesText) {
+                    $finalMessage = "{$preferenceLabel} ist leider schon ausgebucht. " .
+                                    "Soll ich am nächsten Tag {$preferenceLabel} schauen, oder würde heute Abend auch passen? " .
+                                    "Heute hätte ich noch {$altTimesText} frei.";
+                }
+
+                Log::info('🕐 Time preference mismatch - using contextual message', [
+                    'call_id' => $callId,
+                    'preference_label' => $preferenceLabel,
+                    'all_match_preference' => false,
+                    'suggested_followup' => $preferenceContext['suggested_followup'],
+                    'final_message' => $finalMessage
+                ]);
+            }
+
             $responseData = [
                 'found' => !empty($alternatives['alternatives']),
-                'message' => $alternatives['responseText'] ?? "Ich suche nach verfügbaren Terminen...",
+                'message' => $finalMessage,
                 'alternatives' => $this->formatAlternativesForRetell($alternatives['alternatives'] ?? []),
                 'original_request' => $requestedDate->format('Y-m-d H:i'),
                 // 🔧 NEW: Preference context for agent decision-making
