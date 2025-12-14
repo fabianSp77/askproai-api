@@ -66,6 +66,7 @@ class Company extends Model
         'is_white_label' => 'boolean',
         'can_make_outbound_calls' => 'boolean',
         'is_active' => 'boolean',
+        'is_system' => 'boolean',
         'active' => 'boolean',
         'alerts_enabled' => 'boolean',
         'send_call_summaries' => 'boolean',
@@ -85,6 +86,7 @@ class Company extends Model
         'call_notification_settings' => 'json',
         'retell_default_settings' => 'json',
         'settings' => 'json',
+        'v128_config' => 'json',  // V128 Retell AI conversation flow settings
         'metadata' => 'json',
         'alert_preferences' => 'json',
         'supported_languages' => 'json',
@@ -391,5 +393,34 @@ class Company extends Model
             'pending' => 'Pending',
             default => 'Unknown'
         };
+    }
+
+    /**
+     * Get V128 config with defaults
+     *
+     * Returns merged config with sensible defaults for Retell AI conversation flow.
+     */
+    public function getV128ConfigWithDefaults(): array
+    {
+        $defaults = [
+            'time_shift_enabled' => true,
+            'time_shift_message' => '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.',
+            'name_skip_enabled' => true,
+            'full_confirmation_enabled' => true,
+            'silence_handling_enabled' => true,
+            'silence_timeout_seconds' => 20,
+            'max_silence_repeats' => 2,
+        ];
+
+        return array_merge($defaults, $this->v128_config ?? []);
+    }
+
+    /**
+     * Get a specific V128 config value with default fallback
+     */
+    public function getV128Config(string $key, mixed $default = null): mixed
+    {
+        $config = $this->getV128ConfigWithDefaults();
+        return $config[$key] ?? $default;
     }
 }

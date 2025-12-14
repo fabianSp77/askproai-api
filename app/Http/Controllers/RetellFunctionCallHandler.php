@@ -2581,7 +2581,13 @@ class RetellFunctionCallHandler extends Controller
             $finalMessage = $baseMessage;
 
             // If alternatives don't match preference (e.g., customer wanted morning, got evening)
-            if ($preferenceContext &&
+            // 🔧 V128: Read config from company settings (Admin-configurable)
+            $company = \App\Models\Company::find($companyId);
+            $v128Config = $company?->getV128ConfigWithDefaults() ?? [];
+            $timeShiftEnabled = $v128Config['time_shift_enabled'] ?? true;
+
+            if ($timeShiftEnabled &&
+                $preferenceContext &&
                 !empty($preferenceContext['suggested_followup']) &&
                 ($preferenceContext['all_match_preference'] ?? true) === false) {
 
@@ -2592,17 +2598,24 @@ class RetellFunctionCallHandler extends Controller
                 $altTimesText = implode(' oder ', array_filter($altTimes));
 
                 // Create natural message that explains the time shift
+                // 🔧 V128: Use custom template from admin settings if available
                 if ($preferenceLabel && $altTimesText) {
-                    $finalMessage = "{$preferenceLabel} ist leider schon ausgebucht. " .
-                                    "Soll ich am nächsten Tag {$preferenceLabel} schauen, oder würde heute Abend auch passen? " .
-                                    "Heute hätte ich noch {$altTimesText} frei.";
+                    $messageTemplate = $v128Config['time_shift_message'] ?? '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.';
+                    $finalMessage = str_replace(
+                        ['{label}', '{alternatives}'],
+                        [$preferenceLabel, $altTimesText],
+                        $messageTemplate
+                    );
                 }
 
-                Log::info('🕐 Time preference mismatch - using contextual message', [
+                Log::info('🕐 V128 Time preference mismatch - using contextual message', [
                     'call_id' => $callId,
+                    'company_id' => $companyId,
                     'preference_label' => $preferenceLabel,
                     'all_match_preference' => false,
                     'suggested_followup' => $preferenceContext['suggested_followup'],
+                    'time_shift_enabled' => $timeShiftEnabled,
+                    'custom_template' => isset($v128Config['time_shift_message']),
                     'final_message' => $finalMessage
                 ]);
             }
