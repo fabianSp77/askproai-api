@@ -46,7 +46,8 @@ class RetellV128Settings extends Page implements HasForms
     public ?array $data = [];
 
     /**
-     * Authorization check - company_admin and super_admin only
+     * Authorization check - super_admin, company_admin, company_owner only
+     * Supports multiple role name formats (legacy compatibility)
      */
     public static function canAccess(): bool
     {
@@ -55,7 +56,16 @@ class RetellV128Settings extends Page implements HasForms
             return false;
         }
 
-        return $user->hasAnyRole(['super_admin', 'company_admin']);
+        // Support all role name variations (legacy + new)
+        return $user->hasAnyRole([
+            'super_admin',
+            'Super Admin',
+            'super-admin',
+            'company_admin',
+            'company_owner',
+            'company_manager',
+            'Admin',
+        ]);
     }
 
     /**
@@ -88,13 +98,13 @@ class RetellV128Settings extends Page implements HasForms
             return false;
         }
 
-        // Super admin can access any company
-        if ($user->hasRole('super_admin')) {
+        // Super admin can access any company (all role name variations)
+        if ($user->hasAnyRole(['super_admin', 'Super Admin', 'super-admin', 'Admin'])) {
             return true;
         }
 
-        // Company admin can ONLY access their own company
-        if ($user->hasRole('company_admin')) {
+        // Company admin/owner/manager can ONLY access their own company
+        if ($user->hasAnyRole(['company_admin', 'company_owner', 'company_manager'])) {
             if ($user->company_id !== $companyId) {
                 Log::warning('🚨 SECURITY: IDOR attempt detected in V128 settings', [
                     'user_id' => $user->id,
