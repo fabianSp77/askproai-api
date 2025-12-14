@@ -51,7 +51,8 @@ class RetellV128Settings extends Page implements HasForms
      */
     public static function canAccess(): bool
     {
-        $user = Auth::guard('admin')->user();
+        // Use 'web' guard (configured in AdminPanelProvider)
+        $user = Auth::guard('web')->user();
         if (!$user) {
             return false;
         }
@@ -73,7 +74,7 @@ class RetellV128Settings extends Page implements HasForms
      */
     public function mount(): void
     {
-        $user = Auth::guard('admin')->user();
+        $user = Auth::guard('web')->user();
 
         if ($user && $user->hasRole('super_admin')) {
             $this->selectedCompanyId = Company::first()?->id;
@@ -93,7 +94,7 @@ class RetellV128Settings extends Page implements HasForms
             return false;
         }
 
-        $user = Auth::guard('admin')->user();
+        $user = Auth::guard('web')->user();
         if (!$user) {
             return false;
         }
@@ -141,7 +142,7 @@ class RetellV128Settings extends Page implements HasForms
                 ->send();
 
             // Reset to user's own company
-            $user = Auth::guard('admin')->user();
+            $user = Auth::guard('web')->user();
             $this->selectedCompanyId = $user?->company_id;
             return;
         }
@@ -289,7 +290,7 @@ class RetellV128Settings extends Page implements HasForms
      */
     protected function getCompanySelectorSection(): Section
     {
-        $user = Auth::guard('admin')->user();
+        $user = Auth::guard('web')->user();
         $isSuperAdmin = $user && $user->hasRole('super_admin');
 
         return Section::make('Firma auswählen')
@@ -366,7 +367,7 @@ class RetellV128Settings extends Page implements HasForms
             // Log the change (without exposing full config values)
             activity()
                 ->performedOn($company)
-                ->causedBy(Auth::guard('admin')->user())
+                ->causedBy(Auth::guard('web')->user())
                 ->withProperties([
                     'updated_fields' => array_keys($formData),
                     'timestamp' => now()->toIso8601String(),
@@ -377,7 +378,7 @@ class RetellV128Settings extends Page implements HasForms
             Log::error('V128 settings save failed', [
                 'company_id' => $this->selectedCompanyId,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::guard('admin')->id(),
+                'user_id' => Auth::guard('web')->id(),
             ]);
 
             Notification::make()
