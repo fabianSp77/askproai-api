@@ -2430,7 +2430,8 @@ class RetellFunctionCallHandler extends Controller
 
             // 🔧 NEW 2025-12-08: Extract TimePreference from customer's input
             // Supports: "vormittags", "ab 16 Uhr", "zwischen 10 und 16 Uhr", etc.
-            $timeInput = $params['time'] ?? $params['uhrzeit'] ?? $params['zeitraum'] ?? null;
+            // 🔧 FIX 2025-12-14: Add 'preferred_time' - Retell sends this parameter name!
+            $timeInput = $params['preferred_time'] ?? $params['time'] ?? $params['uhrzeit'] ?? $params['zeitraum'] ?? null;
             $timePreference = $this->dateTimeParser->parseTimePreference($timeInput);
 
             Log::info('🕐 TimePreference parsed for alternatives', [
