@@ -1766,10 +1766,12 @@ class CalcomService
 
             $data = $resp->json();
 
-            // Cal.com returns: { "status": "success", "data": { "uid": "...", "reservationUntil": "..." } }
+            // Cal.com V2 returns: { "status": "success", "data": { "reservationUid": "...", "reservationUntil": "..." } }
+            // 🔧 FIX 2025-12-14: Cal.com uses "reservationUid" (camelCase), NOT "uid"
+            // Bug found: We looked for 'uid' but Cal.com returns 'reservationUid'
             $reservationData = $data['data'] ?? $data;
 
-            $reservationUid = $reservationData['uid'] ?? null;
+            $reservationUid = $reservationData['reservationUid'] ?? $reservationData['uid'] ?? null;
             $reservationUntil = $reservationData['reservationUntil'] ?? null;
 
             // 🔧 FIX 2025-12-14: Validate reservation UID exists
