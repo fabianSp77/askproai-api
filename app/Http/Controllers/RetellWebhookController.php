@@ -232,7 +232,11 @@ class RetellWebhookController extends Controller
                     ]);
                 }
 
-                return $this->responseFormatter->webhookSuccess('call_inbound');
+                // 🔧 FIX 2025-12-14: CRITICAL - Return dynamic variables with temporal context
+                // BUG: Agent was hallucinating dates (e.g., "Montag" → "17. Juni 2024")
+                // CAUSE: Agent had no knowledge of current date
+                // FIX: Return dynamic_variables with date/time information
+                return $this->buildInboundResponseWithDateContext($agentId, $fromNumber);
             } catch (\Exception $e) {
                 return $this->responseFormatter->serverError($e, ['call_data' => $callData]);
             }
@@ -1433,43 +1437,165 @@ class RetellWebhookController extends Controller
      * 🔧 EMERGENCY FIX #3: This method determines call_successful field
      * based on various signals (appointment, duration, transcript, etc.)
      *
+     * 🔥 BUG FIX 2025-12-11: Prioritize Retell's call_analysis.call_successful
+     * Previously: Heuristics could override Retell's analysis causing false positives (Call 88964)
+     * Now: Retell analysis is authoritative when booking intent detected
+     *
      * @param Call $call
      * @return void
      */
     private function determineCallSuccess(\App\Models\Call $call): void
     {
-        // Skip if already set (e.g., by appointment booking)
+        // 🔧 FIX 2025-12-11 (Call 89077): Don't skip if Retell analysis can override
+        // PROBLEM: syncCallToDatabase() sets call_successful BEFORE this method runs
+        // SOLUTION: Allow Retell analysis to override even if already set
         if ($call->call_successful !== null) {
-            return;
+            // Check if we have Retell analysis that could override
+            $hasRetellAnalysis = !empty($call->analysis) && isset($call->analysis['call_successful']);
+
+            if (!$hasRetellAnalysis) {
+                // No Retell data → keep existing value
+                Log::channel('stack')->info('🔍 CHECKPOINT:DETERMINE_SUCCESS_SKIPPED', [
+                    'call_id' => $call->id,
+                    'existing_value' => $call->call_successful,
+                    'reason' => 'already_set_no_retell_analysis',
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+                return;
+            }
+
+            // Retell analysis available → continue to check for override
+            Log::channel('stack')->info('🔍 CHECKPOINT:DETERMINE_SUCCESS_RETELL_OVERRIDE_CHECK', [
+                'call_id' => $call->id,
+                'existing_value' => $call->call_successful,
+                'retell_says' => $call->analysis['call_successful'],
+                'reason' => 'checking_retell_override',
+                'timestamp' => now()->toIso8601String(),
+            ]);
         }
+
+        // 🔍 CHECKPOINT 3: determineCallSuccess INPUT STATE
+        // Refresh from DB to get latest state (race condition detection)
+        $call->refresh();
+        Log::channel('stack')->info('🔍 CHECKPOINT:DETERMINE_SUCCESS_INPUT', [
+            'call_id' => $call->id,
+            'input_flags' => [
+                'appointment_made' => $call->appointment_made,
+                'converted_appointment_id' => $call->converted_appointment_id,
+                'session_outcome' => $call->session_outcome,
+                'appointments_exist' => $call->appointments()->exists(),
+                'duration_sec' => $call->duration_sec,
+                'has_retell_analysis' => !empty($call->analysis),
+                'retell_call_successful' => $call->analysis['call_successful'] ?? null,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
 
         $successful = false;
         $reason = 'unknown';
+        $retellOverride = false;
 
-        // Success criteria (in priority order)
-        if ($call->appointment_made || $call->appointments()->exists()) {
-            $successful = true;
-            $reason = 'appointment_made';
-        } elseif ($call->session_outcome === 'appointment_booked') {
-            $successful = true;
-            $reason = 'appointment_booked';
-        } elseif ($call->session_outcome === 'information_only' && $call->duration_sec >= 30) {
-            $successful = true;
-            $reason = 'information_provided';
-        } elseif ($call->customer_id && $call->duration_sec >= 20) {
-            $successful = true;
-            $reason = 'customer_interaction';
-        } elseif ($call->duration_sec < 10) {
-            $successful = false;
-            $reason = 'too_short';
-        } elseif (!$call->transcript || strlen($call->transcript) < 50) {
-            $successful = false;
-            $reason = 'no_meaningful_interaction';
-        } else {
-            // Default: if we got a transcript and >20s, consider it successful
-            $successful = ($call->duration_sec >= 20 && $call->transcript);
-            $reason = $successful ? 'completed_interaction' : 'unclear';
+        // 🎯 PRIORITY 0: Check Retell's AI Analysis (AUTHORITATIVE SOURCE)
+        // Retell's analysis includes call_successful boolean + call_summary
+        // This is the most reliable indicator of call success
+        if (!empty($call->analysis) && isset($call->analysis['call_successful'])) {
+            $retellCallSuccessful = $call->analysis['call_successful'];
+            $hasBookingIntent = $this->hasBookingIntent($call);
+
+            // If Retell says unsuccessful AND booking intent detected, trust Retell
+            // This prevents false positives from customer_interaction heuristic
+            if (!$retellCallSuccessful && $hasBookingIntent) {
+                $successful = false;
+                $reason = 'retell_analysis_booking_intent_unfulfilled';
+                $retellOverride = true;
+
+                Log::warning('⚠️ Retell Analysis Override: Booking intent detected but call unsuccessful', [
+                    'call_id' => $call->id,
+                    'retell_call_successful' => false,
+                    'booking_intent' => true,
+                    'call_summary' => $call->analysis['call_summary'] ?? 'N/A',
+                ]);
+            }
+            // If Retell says successful, trust it (unless appointment heuristics contradict)
+            elseif ($retellCallSuccessful) {
+                // Only override Retell if we have definitive appointment evidence
+                if (($call->appointment_made && $call->converted_appointment_id) || $call->appointments()->exists()) {
+                    $successful = true;
+                    $reason = 'appointment_made';
+                } elseif ($call->session_outcome === 'appointment_booked') {
+                    $successful = true;
+                    $reason = 'appointment_booked';
+                } else {
+                    // Trust Retell's analysis
+                    $successful = true;
+                    $reason = 'retell_analysis_successful';
+                    $retellOverride = true;
+
+                    Log::info('✅ Retell Analysis: Call successful', [
+                        'call_id' => $call->id,
+                        'retell_call_successful' => true,
+                        'call_summary' => $call->analysis['call_summary'] ?? 'N/A',
+                    ]);
+                }
+            }
         }
+
+        // 🎯 FALLBACK: Heuristic-based success determination (only if Retell analysis not used)
+        if (!$retellOverride) {
+            // Success criteria (in priority order)
+            // 🔧 FIX 2025-12-04: Verify converted_appointment_id exists, not just appointment_made flag
+            // BUG: appointment_made can be true even when no actual appointment was created
+            // This caused false successful calls for failed bookings (e.g., Call 69214)
+            if (($call->appointment_made && $call->converted_appointment_id) || $call->appointments()->exists()) {
+                $successful = true;
+                $reason = 'appointment_made';
+            } elseif ($call->session_outcome === 'appointment_booked') {
+                $successful = true;
+                $reason = 'appointment_booked';
+            } elseif ($call->session_outcome === 'information_only' && $call->duration_sec >= 30) {
+                $successful = true;
+                $reason = 'information_provided';
+            } elseif ($call->customer_id && $call->duration_sec >= 20) {
+                // 🔥 BUG FIX: Disable customer_interaction heuristic if booking intent detected
+                // This prevents false positives for calls where customer wanted to book but couldn't
+                $hasBookingIntent = $this->hasBookingIntent($call);
+
+                if (!$hasBookingIntent) {
+                    $successful = true;
+                    $reason = 'customer_interaction';
+                } else {
+                    // Booking intent detected but no appointment made = unsuccessful
+                    $successful = false;
+                    $reason = 'booking_intent_unfulfilled';
+
+                    Log::warning('⚠️ Booking intent detected but no appointment made', [
+                        'call_id' => $call->id,
+                        'customer_id' => $call->customer_id,
+                        'duration_sec' => $call->duration_sec,
+                        'reason' => 'customer_interaction_override_prevented',
+                    ]);
+                }
+            } elseif ($call->duration_sec < 10) {
+                $successful = false;
+                $reason = 'too_short';
+            } elseif (!$call->transcript || strlen($call->transcript) < 50) {
+                $successful = false;
+                $reason = 'no_meaningful_interaction';
+            } else {
+                // Default: if we got a transcript and >20s, consider it successful
+                $successful = ($call->duration_sec >= 20 && $call->transcript);
+                $reason = $successful ? 'completed_interaction' : 'unclear';
+            }
+        }
+
+        // 🔍 CHECKPOINT 3: determineCallSuccess DECISION
+        Log::channel('stack')->info('🔍 CHECKPOINT:DETERMINE_SUCCESS_DECISION', [
+            'call_id' => $call->id,
+            'decision' => $successful ? 'SUCCESS' : 'FAIL',
+            'reason' => $reason,
+            'retell_override' => $retellOverride,
+            'timestamp' => now()->toIso8601String(),
+        ]);
 
         $call->call_successful = $successful;
         $call->save();
@@ -1477,9 +1603,95 @@ class RetellWebhookController extends Controller
         Log::info($successful ? '✅ Call marked successful' : '❌ Call marked failed', [
             'call_id' => $call->id,
             'reason' => $reason,
+            'retell_override' => $retellOverride,
             'duration' => $call->duration_sec,
-            'has_transcript' => !empty($call->transcript)
+            'has_transcript' => !empty($call->transcript),
+            'has_retell_analysis' => !empty($call->analysis),
         ]);
+    }
+
+    /**
+     * Detect booking intent in call transcript
+     *
+     * Analyzes transcript for keywords indicating customer wanted to book appointment.
+     * Used to prevent false positive success marking when booking intent unfulfilled.
+     *
+     * 🎯 Detection Strategy:
+     * - Primary: German booking keywords (termin, buchen, reservieren, etc.)
+     * - Secondary: Question patterns about availability
+     * - Fallback: Check Retell's call_summary for booking-related content
+     *
+     * @param Call $call
+     * @return bool True if booking intent detected
+     */
+    private function hasBookingIntent(\App\Models\Call $call): bool
+    {
+        // No transcript available
+        if (empty($call->transcript)) {
+            return false;
+        }
+
+        $transcript = strtolower($call->transcript);
+
+        // German booking intent keywords (common patterns in appointment booking calls)
+        $bookingKeywords = [
+            'termin',           // appointment
+            'buchen',           // book
+            'buchung',          // booking
+            'reservieren',      // reserve
+            'reservierung',     // reservation
+            'vereinbaren',      // arrange
+            'anmelden',         // register
+            'planen',           // plan
+            'zeitpunkt',        // time slot
+            'verfügbar',        // available
+            'verfügbarkeit',    // availability
+            'wann',             // when
+            'möglich',          // possible
+            'frei',             // free (available)
+        ];
+
+        // Check for booking keywords in transcript
+        foreach ($bookingKeywords as $keyword) {
+            if (str_contains($transcript, $keyword)) {
+                Log::debug('📋 Booking intent detected', [
+                    'call_id' => $call->id,
+                    'keyword' => $keyword,
+                    'source' => 'transcript_keyword',
+                ]);
+                return true;
+            }
+        }
+
+        // Fallback: Check Retell's call_summary for booking-related content
+        if (!empty($call->analysis['call_summary'])) {
+            $summary = strtolower($call->analysis['call_summary']);
+
+            // Booking-related phrases in summary (English since Retell summaries are in English)
+            $summaryKeywords = [
+                'appointment',
+                'booking',
+                'schedule',
+                'reservation',
+                'book',
+                'time slot',
+                'availability',
+                'available',
+            ];
+
+            foreach ($summaryKeywords as $keyword) {
+                if (str_contains($summary, $keyword)) {
+                    Log::debug('📋 Booking intent detected in summary', [
+                        'call_id' => $call->id,
+                        'keyword' => $keyword,
+                        'source' => 'call_summary',
+                    ]);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1551,5 +1763,62 @@ class RetellWebhookController extends Controller
             // Fail safe: return 0 instead of breaking the webhook
             return 0;
         }
+    }
+
+    /**
+     * Build inbound webhook response with temporal context for Retell agent
+     *
+     * 🔧 FIX 2025-12-14: CRITICAL - Prevents agent date hallucination
+     *
+     * BUG CONTEXT:
+     * - User says "Montag" expecting next Monday (Dec 15, 2025)
+     * - Agent had no date context, hallucinated "Montag, 17. Juni 2024"
+     * - This caused incorrect availability queries and booking attempts
+     *
+     * FIX:
+     * - Inject heute_datum, current_date, current_weekday into dynamic_variables
+     * - Agent now knows today's date and can correctly interpret "Montag", "morgen", etc.
+     *
+     * @param string|null $agentId The Retell agent ID
+     * @param string|null $fromNumber Caller's phone number
+     * @return Response JSON response with dynamic_variables
+     */
+    private function buildInboundResponseWithDateContext(?string $agentId, ?string $fromNumber): Response
+    {
+        $now = Carbon::now('Europe/Berlin');
+
+        $dynamicVariables = [
+            'customer_phone' => $fromNumber ?? 'unknown',
+
+            // 🔧 FIX 2025-12-14: CRITICAL - Temporal context for agent
+            // Without this, agent hallucinates dates when user says "Montag", "morgen", etc.
+            'heute_datum' => $now->format('d.m.Y'),           // "14.12.2025" - German format
+            'current_date' => $now->format('Y-m-d'),          // "2025-12-14" - ISO format
+            'current_weekday' => $now->locale('de')->dayName, // "Samstag"
+            'current_time' => $now->format('H:i'),            // "12:30"
+            'current_year' => $now->format('Y'),              // "2025"
+            'current_month' => $now->locale('de')->monthName, // "Dezember"
+
+            // 🔧 Pre-calculated common relative dates to help agent
+            'naechster_montag' => $now->copy()->next(Carbon::MONDAY)->format('d.m.Y'),
+            'morgen' => $now->copy()->addDay()->format('d.m.Y'),
+            'uebermorgen' => $now->copy()->addDays(2)->format('d.m.Y'),
+        ];
+
+        Log::info('🕐 Building inbound response with temporal context', [
+            'dynamic_variables' => $dynamicVariables,
+            'agent_id' => $agentId,
+        ]);
+
+        $response = [
+            'dynamic_variables' => $dynamicVariables,
+        ];
+
+        // Only include override_agent_id if provided
+        if ($agentId) {
+            $response['override_agent_id'] = $agentId;
+        }
+
+        return response()->json($response);
     }
 }
