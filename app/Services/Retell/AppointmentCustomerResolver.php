@@ -18,6 +18,26 @@ use Illuminate\Support\Facades\Log;
 class AppointmentCustomerResolver
 {
     /**
+     * Generate placeholder email for customers without email
+     *
+     * Cal.com requires email addresses for bookings, but not all customers
+     * want to share their email for phone appointments.
+     *
+     * Pattern: booking_[timestamp]_[hash]@noreply.askproai.de
+     * Example: booking_1731500400_a8f3c2d5@noreply.askproai.de
+     *
+     * @param Call $call Call record for uniqueness
+     * @param string $name Customer name for additional uniqueness
+     * @return string Unique placeholder email address
+     */
+    private function generatePlaceholderEmail(Call $call, string $name): string
+    {
+        $timestamp = time();
+        $hash = substr(md5($name . $call->id . $timestamp), 0, 8);
+        return "booking_{$timestamp}_{$hash}@noreply.askproai.de";
+    }
+
+    /**
      * Ensure customer exists for the call
      *
      * Strategy:
@@ -143,11 +163,14 @@ class AppointmentCustomerResolver
         // Generate unique phone placeholder
         $uniquePhone = 'anonymous_' . time() . '_' . substr(md5($name . $call->id), 0, 8);
 
+        // 🔧 FIX 2025-11-13: Use NULL instead of empty string for email (UNIQUE constraint)
+        $emailValue = (!empty($email) && $email !== '') ? $email : null;
+
         $customer = new Customer();
         $customer->company_id = $call->company_id;
         $customer->forceFill([
             'name' => $name,
-            'email' => $email,
+            'email' => $emailValue,  // NULL instead of empty string
             'phone' => $uniquePhone,
             'source' => 'retell_webhook_anonymous',
             'status' => 'active',
@@ -194,11 +217,15 @@ class AppointmentCustomerResolver
      */
     private function createRegularCustomer(Call $call, string $name, ?string $email): Customer
     {
+        // 🔧 FIX 2025-11-13: Use NULL instead of empty string for email to avoid UNIQUE constraint violation
+        // BUG: customers.email has UNIQUE constraint, empty string '' violates when multiple customers have no email
+        $emailValue = (!empty($email) && $email !== '') ? $email : null;
+
         $customer = new Customer();
         $customer->company_id = $call->company_id;
         $customer->forceFill([
             'name' => $name,
-            'email' => $email,
+            'email' => $emailValue,  // NULL instead of empty string
             'phone' => $call->from_number,
             'source' => 'retell_webhook',
             'status' => 'active'

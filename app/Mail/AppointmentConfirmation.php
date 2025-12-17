@@ -72,4 +72,5 @@ class AppointmentConfirmation extends Mailable implements ShouldQueue
             Attachment::fromData(fn () => $this->icsContent, 'termin_' . $this->appointment->id . '.ics')
                 ->withMime('text/calendar')
         ];
+    }
 }

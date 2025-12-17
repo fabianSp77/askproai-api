@@ -127,6 +127,11 @@ class RetellApiController extends Controller
                         ->update(['customer_id' => $customer->id]);
                 }
 
+                // 🔥 NEW: Analyze customer preferences (service prediction + staff preference)
+                $recognitionService = app(\App\Services\Retell\CustomerRecognitionService::class);
+                $preferences = $recognitionService->analyzeCustomerPreferences($customer);
+                $smartGreeting = $recognitionService->generateSmartGreeting($customer, $preferences);
+
                 return response()->json([
                     'success' => true,
                     'status' => 'found',
@@ -136,32 +141,77 @@ class RetellApiController extends Controller
                         'phone' => $customer->phone,
                         'email' => $customer->email,
                         'last_visit' => $customer->last_appointment_at?->format('d.m.Y'),
-                        'notes' => $customer->notes
+                        'notes' => $customer->notes,
+                        // 🔥 NEW: Smart predictions based on appointment history
+                        'predicted_service' => $preferences['predicted_service'],
+                        'service_confidence' => $preferences['service_confidence'],
+                        'preferred_staff' => $preferences['preferred_staff'],
+                        'preferred_staff_id' => $preferences['preferred_staff_id'],
+                        'appointment_history' => $preferences['appointment_history']
                     ],
-                    'message' => "Willkommen zurück, {$customer->name}!"
+                    'customer_exists' => true,   // ← For consistency
+                    'customer_found' => true,    // ← IMPORTANT for Flow boolean variable
+                    'message' => $smartGreeting
                 ], 200);
             }
 
+            // 🔧 FIX 2025-11-16: Return ALL expected fields for new_customer/anonymous
+            // Agent Flow expects these fields to extract as variables
+            // Missing fields cause extract_dynamic_variables to fail → Flow stops!
+            //
+            // 🔧 FIX 2025-11-18: Updated message and suggested_prompt to comply with Flow V72 policy
+            // POLICY: Neukunden (customer_found=false) → NICHT proaktiv nach Telefonnummer/E-Mail fragen!
+            // Only collect passively if customer provides it themselves
             return response()->json([
                 'success' => true,  // ✅ NOT an error - just a new customer scenario
                 'status' => 'new_customer',
-                'message' => 'Dies ist ein neuer Kunde. Bitte fragen Sie nach Name und E-Mail-Adresse.',
+                'message' => 'Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen.',
+                'customer' => [
+                    'id' => null,
+                    'name' => null,
+                    'phone' => $phoneNumber === 'anonymous' ? null : $phoneNumber,
+                    'email' => null,
+                    'last_visit' => null,
+                    'notes' => null,
+                    // 🔥 CRITICAL: These fields MUST be present for Flow variable extraction
+                    'predicted_service' => null,
+                    'service_confidence' => 0.0,
+                    'preferred_staff' => null,
+                    'preferred_staff_id' => null,
+                    'appointment_history' => []
+                ],
                 'customer_exists' => false,
-                'customer_name' => null,
+                'customer_found' => false,  // ← IMPORTANT for Flow boolean variable
                 'next_steps' => 'ask_for_customer_details',
-                'suggested_prompt' => 'Kein Problem! Darf ich Ihren Namen und Ihre E-Mail-Adresse haben?'
+                'suggested_prompt' => 'Wie kann ich Ihnen helfen?'  // ✅ Neutral - kein proaktives Fragen nach Telefon/E-Mail
             ], 200);
 
         } catch (\Exception $e) {
             Log::error('❌ Error checking customer', [
                 'error' => $e->getMessage(),
-                'call_id' => $callId
+                'call_id' => $callId ?? 'unknown'
             ]);
 
+            // 🔧 FIX 2025-11-16: Even on error, return expected fields so Flow continues
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Fehler beim Prüfen der Kundendaten'
+                'message' => 'Fehler beim Prüfen der Kundendaten',
+                'customer' => [
+                    'id' => null,
+                    'name' => null,
+                    'phone' => null,
+                    'email' => null,
+                    'last_visit' => null,
+                    'notes' => null,
+                    'predicted_service' => null,
+                    'service_confidence' => 0.0,
+                    'preferred_staff' => null,
+                    'preferred_staff_id' => null,
+                    'appointment_history' => []
+                ],
+                'customer_exists' => false,
+                'customer_found' => false
             ], 200);
         }
     }
@@ -189,6 +239,51 @@ class RetellApiController extends Controller
                 'call_id' => $callId,
                 'timestamp' => now()->toIso8601String()
             ]);
+
+            // 🔧 FIX 2025-11-16: Ensure call record exists for test calls
+            Log::info('🔍 RetellApiController::initializeCall - Checking if test call', [
+                'call_id' => $callId,
+                'starts_with_flow_test' => $callId ? str_starts_with($callId, 'flow_test_') : false,
+                'starts_with_test' => $callId ? str_starts_with($callId, 'test_') : false
+            ]);
+
+            if ($callId && (str_starts_with($callId, 'flow_test_') || str_starts_with($callId, 'test_'))) {
+                Log::info('✅ IS TEST CALL - checking if exists in database');
+                $existingCall = \App\Models\Call::where('retell_call_id', $callId)->first();
+
+                Log::info('🔍 Database check result', [
+                    'exists' => $existingCall ? 'YES' : 'NO',
+                    'call_db_id' => $existingCall?->id ?? 'null'
+                ]);
+
+                if (!$existingCall) {
+                    Log::info('🔧 CREATING TEST CALL WITH COMPANY_ID AND BRANCH_ID');
+                    // Create test call - company_id and branch_id are GUARDED, so set them explicitly
+                    $call = \App\Models\Call::create([
+                        'retell_call_id' => $callId,
+                        'from_number' => 'unknown',
+                        'to_number' => '+4915112345678', // Test number
+                        'call_status' => 'ongoing',
+                        'start_timestamp' => now()
+                    ]);
+
+                    // Set guarded fields explicitly (they're protected for security)
+                    $call->company_id = 1; // Friseur 1 for testing
+                    $call->branch_id = '34c4d48e-4753-4715-9c30-c55843a943e8'; // Main branch
+                    $call->save();
+
+                    Log::info('✅ Created test call record with company_id=1 and branch_id', [
+                        'call_id' => $callId,
+                        'call_db_id' => $call->id,
+                        'company_id' => $call->company_id,
+                        'branch_id' => $call->branch_id
+                    ]);
+                } else {
+                    Log::info('⚠️ Test call already exists - skipping creation');
+                }
+            } else {
+                Log::info('❌ NOT A TEST CALL - skipping auto-creation');
+            }
 
             // ═══════════════════════════════════════════════════════
             // PARALLEL OPERATIONS (optimized for speed)
@@ -441,7 +536,7 @@ class RetellApiController extends Controller
             ]);
 
             // 🔧 FIX 2025-10-20: Get company_id from call context for proper service selection
-            $companyId = 15; // Default to AskProAI
+            $companyId = 1; // Default Friseur 1 (for testing with real Cal.com services)
             if ($callId) {
                 $call = Call::where('retell_call_id', $callId)->first();
                 if ($call && $call->company_id) {

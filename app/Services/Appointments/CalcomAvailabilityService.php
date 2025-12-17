@@ -149,10 +149,16 @@ class CalcomAvailabilityService
         ?int $teamId = null
     ): array {
         // Build Cal.com API request
+        // 🔧 FIX 2025-11-14: Cal.com V2 API requires ISO8601 in UTC for TIME-based queries
+        // Doc: "Must be in UTC timezone as ISO 8601 datestring" - https://cal.com/docs/api-reference/v2/slots
+        // Convert to UTC before sending (API requirement)
+        $startUtc = $startDate->copy()->setTimezone('UTC');
+        $endUtc = $endDate->copy()->setTimezone('UTC');
+
         $params = [
             'eventTypeId' => $eventTypeId,
-            'startTime' => $startDate->toIso8601String(),
-            'endTime' => $endDate->toIso8601String(),
+            'startTime' => $startUtc->toIso8601String(),  // 2024-08-13T09:00:00Z
+            'endTime' => $endUtc->toIso8601String(),      // 2024-08-13T18:00:00Z
         ];
 
         if ($teamId) {
@@ -165,28 +171,44 @@ class CalcomAvailabilityService
 
         Log::debug('[CalcomAvailability] Fetching from Cal.com API', [
             'event_type_id' => $eventTypeId,
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
+            'start_berlin' => $startDate->format('Y-m-d H:i'),
+            'end_berlin' => $endDate->format('Y-m-d H:i'),
+            'start_utc' => $startUtc->toIso8601String(),
+            'end_utc' => $endUtc->toIso8601String(),
             'staff_id' => $staffId,
         ]);
 
         // Cal.com availability endpoint (✅ V2 API - v1 deprecated end of 2025)
+        // 🔧 FIX 2025-11-14: Corrected endpoint from /v2/availability to /v2/slots/available
         $apiVersion = config('services.calcom.api_version', '2024-08-13');
         $response = $this->calcomService->httpClient()
             ->withHeaders([
                 'cal-api-version' => $apiVersion,
             ])
-            ->get('https://api.cal.com/v2/availability', $params);
+            ->get('https://api.cal.com/v2/slots/available', $params);
 
         if (!$response->successful()) {
             Log::warning('[CalcomAvailability] Cal.com API error', [
                 'status' => $response->status(),
                 'error' => $response->json()['message'] ?? 'Unknown error',
+                'params' => $params,
             ]);
             return [];
         }
 
-        return $response->json()['slots'] ?? [];
+        // 🔧 FIX 2025-11-14: V2 API returns {data: {slots: {date: [...]}}} format
+        $data = $response->json()['data'] ?? [];
+        $dateSlots = $data['slots'] ?? [];
+
+        // Flatten date-keyed slots into single array
+        $allSlots = [];
+        foreach ($dateSlots as $date => $slots) {
+            foreach ($slots as $slot) {
+                $allSlots[] = $slot['time'];
+            }
+        }
+
+        return $allSlots;
     }
 
     /**
@@ -276,6 +298,151 @@ class CalcomAvailabilityService
         }
 
         return $key;
+    }
+
+    /**
+     * Check if a specific time slot is available via Cal.com API
+     *
+     * This is the SOURCE OF TRUTH for availability.
+     * Local DB only reflects our bookings, but Cal.com may have external bookings.
+     *
+     * @param Carbon $datetime Exact datetime to check
+     * @param int $eventTypeId Cal.com event type ID
+     * @param int $durationMinutes Service duration
+     * @param string|null $staffId Specific staff member (optional)
+     * @param int|null $teamId Cal.com team ID
+     *
+     * @return bool True if slot is available
+     */
+    public function isTimeSlotAvailable(
+        Carbon $datetime,
+        int $eventTypeId,
+        int $durationMinutes,
+        ?string $staffId = null,
+        ?int $teamId = null
+    ): bool {
+        // Build cache key for this specific slot
+        $cacheKey = "calcom_slot:{$eventTypeId}:{$datetime->format('Y-m-d_H:i')}";
+        if ($staffId) {
+            $cacheKey .= ":{$staffId}";
+        }
+
+        // Check cache (30 second TTL - short because availability changes frequently)
+        if (Cache::has($cacheKey)) {
+            Log::debug('[CalcomAvailability] Using cached slot availability', [
+                'cache_key' => $cacheKey,
+            ]);
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            // 🔧 FIX 2025-11-14: Cal.com generates slots dynamically based on query window
+            // Query must START at target slot AND provide enough duration for the service
+            // Cal.com only returns slots where the FULL service duration fits in the window
+            // Testing verified: 22:55 + 55min service = 23:50, so window must extend to at least 23:50
+            $startTime = $datetime->copy();
+            $endTime = $datetime->copy()->addMinutes($durationMinutes); // Exact duration needed
+
+            Log::debug('[CalcomAvailability] Checking specific time slot', [
+                'datetime' => $datetime->format('Y-m-d H:i'),
+                'event_type_id' => $eventTypeId,
+                'duration_minutes' => $durationMinutes,
+                'staff_id' => $staffId,
+                'query_window' => [
+                    'start' => $startTime->format('Y-m-d H:i'),
+                    'end' => $endTime->format('Y-m-d H:i'),
+                ],
+            ]);
+
+            $slots = $this->fetchFromCalcom(
+                $eventTypeId,
+                $startTime,
+                $endTime,
+                $staffId,
+                $teamId
+            );
+
+            // Check if our specific datetime is in the available slots
+            $available = false;
+
+            // 🔧 FIX 2025-11-14: CRITICAL TIMEZONE BUG
+            // PROBLEM: Cal.com returns UTC times, but $datetime is in Europe/Berlin
+            // SYMPTOM: 22:15 Berlin (21:15 UTC) was not matched because we compared:
+            //   - Target: "2025-11-14 22:15" (Berlin)
+            //   - Slot:   "2025-11-14 21:15" (UTC parsed as local)
+            // SOLUTION: Convert both to same timezone (Europe/Berlin) before comparing
+
+            // Get target time in Berlin timezone (already set, but make explicit)
+            $targetTimezone = 'Europe/Berlin';
+            $targetTimeBerlin = $datetime->copy()->setTimezone($targetTimezone);
+            $targetTimeStr = $targetTimeBerlin->format('Y-m-d H:i');
+
+            Log::debug('[CalcomAvailability] Timezone-aware slot comparison', [
+                'target_datetime' => $datetime->toIso8601String(),
+                'target_berlin' => $targetTimeStr,
+                'target_timezone' => $targetTimezone,
+                'slots_to_check' => count($slots),
+            ]);
+
+            foreach ($slots as $slot) {
+                try {
+                    // Parse slot (comes as UTC from Cal.com: "2025-11-14T21:15:00.000Z")
+                    $slotTime = Carbon::parse($slot);
+
+                    // Convert to Berlin timezone for comparison
+                    $slotTimeBerlin = $slotTime->copy()->setTimezone($targetTimezone);
+                    $slotTimeStr = $slotTimeBerlin->format('Y-m-d H:i');
+
+                    // Match to the minute (both now in same timezone)
+                    if ($slotTimeStr === $targetTimeStr) {
+                        Log::info('[CalcomAvailability] ✅ SLOT MATCH FOUND!', [
+                            'target_berlin' => $targetTimeStr,
+                            'slot_utc' => $slot,
+                            'slot_berlin' => $slotTimeStr,
+                            'matched' => true,
+                        ]);
+                        $available = true;
+                        break;
+                    } else {
+                        Log::debug('[CalcomAvailability] Slot no match', [
+                            'target' => $targetTimeStr,
+                            'slot' => $slotTimeStr,
+                            'diff_minutes' => $targetTimeBerlin->diffInMinutes($slotTimeBerlin),
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('[CalcomAvailability] Error parsing slot in availability check', [
+                        'slot' => $slot,
+                        'error' => $e->getMessage(),
+                    ]);
+                    continue;
+                }
+            }
+
+            // Cache result (short TTL since availability changes)
+            Cache::put($cacheKey, $available, 30); // 30 seconds
+
+            Log::info('[CalcomAvailability] ✅ Slot availability checked', [
+                'datetime' => $datetime->format('Y-m-d H:i'),
+                'event_type_id' => $eventTypeId,
+                'available' => $available,
+                'staff_id' => $staffId,
+                'slots_returned' => count($slots),
+            ]);
+
+            return $available;
+
+        } catch (\Exception $e) {
+            Log::error('[CalcomAvailability] ❌ Error checking slot availability', [
+                'datetime' => $datetime->format('Y-m-d H:i'),
+                'event_type_id' => $eventTypeId,
+                'error' => $e->getMessage(),
+            ]);
+
+            // On error, be conservative: return false (not available)
+            // Better to say "not available" than to book and fail
+            return false;
+        }
     }
 
     /**

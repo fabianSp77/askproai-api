@@ -34,8 +34,11 @@ class CalcomV2Service
 
     /**
      * Create HTTP client with V2 API headers
+     *
+     * 🔧 FIX 2025-11-13: Changed from protected to public
+     * CalcomAvailabilityService needs access to make direct API calls
      */
-    protected function httpClient(): PendingRequest
+    public function httpClient(): PendingRequest
     {
         return Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,

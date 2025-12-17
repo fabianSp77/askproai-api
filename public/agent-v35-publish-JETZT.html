@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 KRITISCH: Agent V35 Publishen - JETZT!</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .container { max-width: 1000px; }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .critical-box {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .success-box {
+            background: #d1ecf1;
+            border: 3px solid #0c5460;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .step-box {
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #e06c75;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .timeline {
+            border-left: 3px solid #dee2e6;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+        .timeline-item {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.4rem;
+            top: 0.5rem;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #e74c3c;
+            border: 3px solid white;
+        }
+        .btn-huge {
+            font-size: 1.5rem;
+            padding: 1rem 2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4">
+            <h1 class="text-white mb-3">🚨 KRITISCH: Agent Version 35 PUBLISHEN!</h1>
+            <p class="text-white-50">Warum dein Testanruf nicht funktioniert hat</p>
+        </div>
+
+        <!-- Root Cause -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🔍 ROOT CAUSE - Warum Call call_68e31e4 fehlschlug</h3>
+            </div>
+            <div class="card-body">
+                <div class="critical-box">
+                    <h4>🚨 DAS PROBLEM:</h4>
+                    <h5>Version 35 ist NICHT PUBLISHED!</h5>
+                    <p class="mb-0">
+                        Obwohl Version 35 existiert und alle Fixes enthält, wurde sie <strong>NIE publisht</strong>!<br>
+                        Dein Testanruf nutzte eine <strong>ALTE VERSION</strong> (wahrscheinlich 31, 32, oder 33) mit den BUGS!
+                    </p>
+                </div>
+
+                <h5 class="mt-4">📊 Was in deinem Testanruf passierte:</h5>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <strong>00:00</strong> - Agent: "Willkommen bei Friseur 1!"
+                    </div>
+                    <div class="timeline-item">
+                        <strong>05:19</strong> - Du: "Ich hätte gern einen Friseurtermin in Herrenhaarschnitt am Montag um sechzehn Uhr zehn."
+                    </div>
+                    <div class="timeline-item">
+                        <strong>14:66</strong> - ✅ Variablen PERFEKT extrahiert!<br>
+                        <small>service_name: "Herrenhaarschnitt", date: "2025-11-17", time: "16:10"</small>
+                    </div>
+                    <div class="timeline-item" style="color: #dc3545;">
+                        <strong>14:66 - 43:70</strong> - 🚨 <strong>30 SEKUNDEN STILLE</strong><br>
+                        <small>Agent stuck in node_smart_intent_extract - KEINE Edge Transition!</small>
+                    </div>
+                    <div class="timeline-item">
+                        <strong>43:70</strong> - Du hast frustriert aufgelegt
+                    </div>
+                </div>
+
+                <h5 class="mt-4">🔬 Beweis: Alte Version wurde genutzt</h5>
+                <ul>
+                    <li>❌ <code>parameter_mapping</code> funktionierte NICHT (call_id: "1" statt echte ID)</li>
+                    <li>❌ Edge Transition feuerte NICHT (trotz korrekter Daten)</li>
+                    <li>✅ Service Mapping funktionierte ("Friseurtermin" → "Herrenhaarschnitt")</li>
+                </ul>
+
+                <p>
+                    <strong>Schlussfolgerung:</strong> Eine Version <em>zwischen</em> den Fixes wurde genutzt -
+                    wahrscheinlich Version 31-33, die <strong>teilweise</strong> gefixt war, aber noch Bugs hatte.
+                </p>
+            </div>
+        </div>
+
+        <!-- The Fix -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">✅ VERSION 35 - ALLE PROBLEME GEFIXT!</h3>
+            </div>
+            <div class="card-body">
+                <div class="success-box">
+                    <h5>🎉 Was Version 35 enthält:</h5>
+                    <ul class="mb-0">
+                        <li>✅ <strong>Edge Fix:</strong> <code>node_smart_intent_extract</code> nutzt <code>!= ""</code> (nicht <code>exists</code>)</li>
+                        <li>✅ <strong>Edge Fix:</strong> <code>node_clarify_booking_data</code> nutzt <code>!= ""</code> (nicht <code>exists</code>)</li>
+                        <li>✅ <strong>Parameter Mapping:</strong> Alle 10 Tools haben <code>call_id: "{{call_id}}"</code></li>
+                        <li>✅ <strong>Zeit-Parsing:</strong> "acht Uhr" = "08:00" (nicht "20:45"!)</li>
+                        <li>✅ <strong>Service Mapping:</strong> "Friseurtermin" → "Herrenhaarschnitt"</li>
+                        <li>✅ <strong>Intent Erkennung:</strong> Klare Beispiele für jeden Intent</li>
+                    </ul>
+                </div>
+
+                <h5 class="mt-4">🔧 Verifiziert:</h5>
+                <pre>Priority 1 Edge: ✅ KORREKT
+  intent_type == "booking"      ✅
+  service_name != ""             ✅ (nutzt !=, nicht exists!)
+  appointment_date != ""         ✅
+  appointment_time != ""         ✅
+  → Destination: func_check_availability ✅
+
+Parameter Mapping: ✅ ALLE 10 TOOLS
+  get_current_context            ✅
+  check_customer                 ✅
+  check_availability_v17         ✅
+  get_alternatives               ✅
+  start_booking                  ✅
+  get_customer_appointments      ✅
+  cancel_appointment             ✅
+  reschedule_appointment         ✅
+  get_available_services         ✅
+  request_callback               ✅</pre>
+            </div>
+        </div>
+
+        <!-- PUBLISH NOW -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🚀 JETZT: Version 35 Publishen!</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5>⚠️ KRITISCH: Du MUSST Version 35 manuell publishen!</h5>
+                    <p class="mb-0">Die Retell API hat keinen Publish-Endpoint. Publishen geht nur über das Dashboard.</p>
+                </div>
+
+                <div class="text-center my-4">
+                    <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank" class="btn btn-danger btn-huge">
+                        🔗 RETELL DASHBOARD ÖFFNEN
+                    </a>
+                </div>
+
+                <hr class="my-4">
+
+                <h5>Schritt-für-Schritt Anleitung:</h5>
+
+                <div class="step-box">
+                    <span class="step-number">1</span>
+                    <strong>Dashboard öffnen</strong>
+                    <p class="mt-2 mb-0">
+                        Klicke auf den Button oben oder gehe zu:<br>
+                        <code>https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f</code>
+                    </p>
+                </div>
+
+                <div class="step-box">
+                    <span class="step-number">2</span>
+                    <strong>Publish Button klicken</strong>
+                    <p class="mt-2 mb-0">
+                        Rechts oben im Dashboard findest du den <strong>"Publish"</strong> Button.
+                    </p>
+                </div>
+
+                <div class="step-box">
+                    <span class="step-number">3</span>
+                    <strong>Version 35 auswählen</strong>
+                    <p class="mt-2 mb-0">
+                        Im Publish-Dialog sollte Version 35 automatisch ausgewählt sein.<br>
+                        Falls nicht: Wähle <strong>Version 35</strong> manuell aus.
+                    </p>
+                </div>
+
+                <div class="step-box">
+                    <span class="step-number">4</span>
+                    <strong>Bestätigen</strong>
+                    <p class="mt-2 mb-0">
+                        Klicke auf "Confirm" oder "Publish".
+                    </p>
+                </div>
+
+                <div class="step-box">
+                    <span class="step-number">5</span>
+                    <strong>⏳ 60 Sekunden warten</strong>
+                    <p class="mt-2 mb-0">
+                        <strong>WICHTIG:</strong> Warte 60 Sekunden für CDN-Propagation!<br>
+                        Die neue Version muss sich über Retells CDN verteilen.
+                    </p>
+                </div>
+
+                <div class="step-box">
+                    <span class="step-number">6</span>
+                    <strong>🧪 Testen</strong>
+                    <p class="mt-2 mb-0">
+                        Jetzt ist Version 35 live und du kannst testen!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🧪 NACH DEM PUBLISHEN: Testen</h3>
+            </div>
+            <div class="card-body">
+                <h5>Option 1: Playground Test (Schnell)</h5>
+                <div class="step-box">
+                    <p>
+                        <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f/playground" target="_blank" class="btn btn-primary">
+                            🔬 Playground öffnen
+                        </a>
+                    </p>
+                    <p><strong>Test-Input:</strong></p>
+                    <pre>Hans Schuster, mein Name. Ich hätte gern einen Herrenhaarschnitt am Montag um acht Uhr fünfundvierzig.</pre>
+                    <p><strong>Erwartetes Verhalten:</strong></p>
+                    <ul>
+                        <li>✅ Zeit: <code>"08:45"</code> (NICHT "20:45"!)</li>
+                        <li>✅ Service: <code>"Herrenhaarschnitt"</code></li>
+                        <li>✅ Geht DIREKT zu <code>func_check_availability</code></li>
+                        <li>❌ KEINE Endlosschleife!</li>
+                        <li>❌ KEINE 30 Sekunden Stille!</li>
+                    </ul>
+                </div>
+
+                <hr>
+
+                <h5>Option 2: Echter Testanruf (Realistisch)</h5>
+                <div class="step-box">
+                    <p><strong>Nummer:</strong> <code>+493033081738</code></p>
+                    <p><strong>Sage:</strong></p>
+                    <pre>Hans Schuster, ich hätte gern Herrenhaarschnitt am Montag um acht Uhr</pre>
+                    <p><strong>Erwartetes Verhalten:</strong></p>
+                    <ul>
+                        <li>✅ Agent versteht sofort</li>
+                        <li>✅ Prüft Verfügbarkeit</li>
+                        <li>✅ Antwortet innerhalb von 1-2 Sekunden</li>
+                        <li>❌ KEINE Stille!</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <strong>📊 Nach dem Test:</strong><br>
+                    Gib mir Bescheid, ob es funktioniert hat! Falls Probleme auftreten, analysiere ich weiter.
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional: Fine-tuning -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🎓 OPTIONAL: Fine-tuning Examples hinzufügen</h3>
+            </div>
+            <div class="card-body">
+                <p>
+                    Nach erfolgreichem Test kannst du <strong>optional</strong> Fine-tuning Examples hinzufügen,
+                    um die Genauigkeit weiter zu verbessern.
+                </p>
+                <p>
+                    Ich habe bereits <strong>10 Trainingsbeispiele</strong> erstellt:<br>
+                    <code>/tmp/FINE_TUNING_EXAMPLES.md</code>
+                </p>
+                <p>
+                    Vollständige Anleitung siehe:<br>
+                    <a href="https://api.askproai.de/agent-v34-complete-fix-anleitung.html" target="_blank">
+                        agent-v34-complete-fix-anleitung.html
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📋 Zusammenfassung</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>✅ ERLEDIGT:</h5>
+                        <ul>
+                            <li>✅ Call call_68e31e4 analysiert</li>
+                            <li>✅ Root Cause identifiziert</li>
+                            <li>✅ Version 35 mit ALLEN Fixes erstellt</li>
+                            <li>✅ Alle 5 Probleme gefixt</li>
+                            <li>✅ Verifiziert: Edges korrekt</li>
+                            <li>✅ Verifiziert: Parameter Mapping korrekt</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>⏳ DU MUSST TUN:</h5>
+                        <ul>
+                            <li>✋ Version 35 publishen (Dashboard)</li>
+                            <li>⏳ 60 Sekunden warten</li>
+                            <li>🧪 Playground Test</li>
+                            <li>📞 Echter Testanruf</li>
+                            <li>📊 Feedback geben</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-success mt-4">
+                    <h5>🎯 Erwartetes Ergebnis:</h5>
+                    <p class="mb-0">
+                        Nach dem Publishen sollte der Agent <strong>perfekt funktionieren</strong>:<br>
+                        ✅ Keine Endlosschleifen<br>
+                        ✅ Keine Stille<br>
+                        ✅ Korrekte Zeit-Parsing<br>
+                        ✅ Direkter Übergang zur Verfügbarkeitsprüfung
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-white-50">
+                Flow ID: <code style="color: #fff;">conversation_flow_ec9a4cdef77e</code><br>
+                Agent ID: <code style="color: #fff;">agent_7a24afda65b04d1cd79fa11e8f</code><br>
+                Version: <strong style="color: #fff;">35</strong> (UNPUBLISHED - JETZT PUBLISHEN!)
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

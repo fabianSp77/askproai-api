@@ -83,12 +83,14 @@ class CallbackRequest extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'company_id',      // ✅ Required for API contexts (Retell) without Auth
         'customer_id',
         'branch_id',
         'service_id',
         'staff_id',
         'phone_number',
         'customer_name',
+        'customer_email',  // ✅ Phase 1: Email capture for callback requests
         'preferred_time_window',
         'priority',
         'status',
@@ -307,6 +309,35 @@ class CallbackRequest extends Model
     {
         parent::boot();
 
+        // ✅ PHASE 3: Duplicate Detection (Prevent Spam)
+        static::creating(function ($model) {
+            // Check for duplicate callback requests
+            // Criteria: Same phone + same status (pending/assigned) + created within last 30 minutes
+            $duplicate = self::where('phone_number', $model->phone_number)
+                ->whereIn('status', [self::STATUS_PENDING, self::STATUS_ASSIGNED])
+                ->where('created_at', '>=', now()->subMinutes(30))
+                ->first();
+
+            if ($duplicate) {
+                \Illuminate\Support\Facades\Log::warning('Duplicate callback request detected', [
+                    'phone_number' => $model->phone_number,
+                    'customer_name' => $model->customer_name,
+                    'existing_callback_id' => $duplicate->id,
+                    'existing_created_at' => $duplicate->created_at,
+                ]);
+
+                // Update existing callback instead of creating new one
+                $duplicate->priority = $model->priority; // Use higher priority if urgent
+                $duplicate->notes = ($duplicate->notes ? $duplicate->notes . "\n\n" : '') .
+                    '**Duplicate Request**: ' . now()->format('Y-m-d H:i:s') .
+                    ($model->notes ? ' - ' . $model->notes : '');
+                $duplicate->save();
+
+                // Prevent creation of new callback
+                return false;
+            }
+        });
+
         static::saving(function ($model) {
             if ($model->priority && !in_array($model->priority, self::PRIORITIES)) {
                 throw new \InvalidArgumentException("Invalid priority: {$model->priority}");
@@ -317,12 +348,77 @@ class CallbackRequest extends Model
             }
         });
 
-        // Invalidate caches when status changes
+        // Invalidate caches when relevant fields change OR on create
         static::saved(function ($model) {
-            if ($model->wasChanged('status')) {
+            // Invalidate on create (wasRecentlyCreated) OR when key fields change
+            if ($model->wasRecentlyCreated ||
+                $model->wasChanged('status') ||
+                $model->wasChanged('priority') ||
+                $model->wasChanged('expires_at') ||
+                $model->wasChanged('assigned_to')) {
                 \Illuminate\Support\Facades\Cache::forget('nav_badge_callbacks_pending');
                 \Illuminate\Support\Facades\Cache::forget('overdue_callbacks_count');
                 \Illuminate\Support\Facades\Cache::forget('callback_stats_widget');
+                \Illuminate\Support\Facades\Cache::forget('callback_tabs_counts');
+            }
+
+            // ✅ PHASE 3: Webhook Dispatching
+            // Dispatch webhooks for callback events (async via queue)
+            try {
+                // callback.created - new callback created
+                if ($model->wasRecentlyCreated) {
+                    \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                        \App\Models\WebhookConfiguration::EVENT_CALLBACK_CREATED,
+                        $model
+                    );
+                }
+
+                // callback.assigned - callback assigned to staff
+                if ($model->wasChanged('assigned_to') && $model->assigned_to) {
+                    \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                        \App\Models\WebhookConfiguration::EVENT_CALLBACK_ASSIGNED,
+                        $model
+                    );
+                }
+
+                // Status change webhooks
+                if ($model->wasChanged('status')) {
+                    switch ($model->status) {
+                        case self::STATUS_CONTACTED:
+                            \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                                \App\Models\WebhookConfiguration::EVENT_CALLBACK_CONTACTED,
+                                $model
+                            );
+                            break;
+
+                        case self::STATUS_COMPLETED:
+                            \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                                \App\Models\WebhookConfiguration::EVENT_CALLBACK_COMPLETED,
+                                $model
+                            );
+                            break;
+
+                        case self::STATUS_CANCELLED:
+                            \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                                \App\Models\WebhookConfiguration::EVENT_CALLBACK_CANCELLED,
+                                $model
+                            );
+                            break;
+
+                        case self::STATUS_EXPIRED:
+                            \App\Services\Webhooks\CallbackWebhookService::dispatch(
+                                \App\Models\WebhookConfiguration::EVENT_CALLBACK_EXPIRED,
+                                $model
+                            );
+                            break;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Non-blocking: webhook dispatch failures should not prevent callback save
+                \Illuminate\Support\Facades\Log::error('[Webhook] Failed to dispatch webhook', [
+                    'callback_id' => $model->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         });
 
@@ -330,6 +426,7 @@ class CallbackRequest extends Model
             \Illuminate\Support\Facades\Cache::forget('nav_badge_callbacks_pending');
             \Illuminate\Support\Facades\Cache::forget('overdue_callbacks_count');
             \Illuminate\Support\Facades\Cache::forget('callback_stats_widget');
+            \Illuminate\Support\Facades\Cache::forget('callback_tabs_counts');
         });
     }
 }

@@ -501,9 +501,9 @@ class CallLifecycleService implements CallLifecycleInterface
                 'customer' => function ($query) {
                     $query->select('id', 'name', 'phone', 'email')
                         ->with(['appointments' => function ($q) {
-                            $q->where('start', '>=', now())
-                                ->select('id', 'customer_id', 'start', 'end', 'service_id', 'status')
-                                ->orderBy('start')
+                            $q->where('starts_at', '>=', now())
+                                ->select('id', 'customer_id', 'starts_at', 'ends_at', 'service_id', 'status')
+                                ->orderBy('starts_at')
                                 ->limit(5);
                         }]);
                 }

@@ -18,7 +18,8 @@ use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+// ❌ REMOVED: SoftDeletingScope import - CallbackRequest doesn't use SoftDeletes
+// use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
 
 class CallbackRequestResource extends Resource
@@ -111,7 +112,7 @@ class CallbackRequestResource extends Resource
                                                     ->helperText('Filiale für den Rückruf'),
                                             ]),
 
-                                        Forms\Components\Grid::make(2)
+                                        Forms\Components\Grid::make(3)
                                             ->schema([
                                                 Forms\Components\TextInput::make('phone_number')
                                                     ->label('Telefonnummer')
@@ -119,14 +120,25 @@ class CallbackRequestResource extends Resource
                                                     ->required()
                                                     ->maxLength(255)
                                                     ->prefixIcon('heroicon-o-phone')
-                                                    ->helperText('Primäre Kontaktnummer'),
+                                                    ->helperText('Primäre Kontaktnummer')
+                                                    ->columnSpan(1),
 
                                                 Forms\Components\TextInput::make('customer_name')
                                                     ->label('Kundenname')
                                                     ->required()
                                                     ->maxLength(255)
                                                     ->prefixIcon('heroicon-o-user')
-                                                    ->helperText('Name des Kunden für den Rückruf'),
+                                                    ->helperText('Name des Kunden für den Rückruf')
+                                                    ->columnSpan(1),
+
+                                                // ✅ Phase 4: Email field for callback confirmation
+                                                Forms\Components\TextInput::make('customer_email')
+                                                    ->label('E-Mail')
+                                                    ->email()
+                                                    ->maxLength(255)
+                                                    ->prefixIcon('heroicon-o-envelope')
+                                                    ->helperText('Optional: Für Terminbestätigungen per E-Mail')
+                                                    ->columnSpan(1),
                                             ]),
                                     ]),
                             ]),
@@ -237,6 +249,37 @@ class CallbackRequestResource extends Resource
     {
         return $table
             ->columns([
+                // ✅ PHASE 2: Urgency Indicator (Visual Priority at a Glance)
+                Tables\Columns\ViewColumn::make('urgency_indicator')
+                    ->label('')
+                    ->view('filament.tables.columns.callback-urgency')
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // Sort by urgency: overdue+urgent > overdue > urgent > high > normal
+                        return $query
+                            ->orderByRaw('
+                                CASE
+                                    WHEN expires_at < NOW() AND status NOT IN (?, ?, ?) AND priority = ? THEN 0
+                                    WHEN expires_at < NOW() AND status NOT IN (?, ?, ?) THEN 1
+                                    WHEN priority = ? THEN 2
+                                    WHEN priority = ? THEN 3
+                                    ELSE 4
+                                END ' . $direction,
+                                [
+                                    CallbackRequest::STATUS_COMPLETED,
+                                    CallbackRequest::STATUS_EXPIRED,
+                                    CallbackRequest::STATUS_CANCELLED,
+                                    CallbackRequest::PRIORITY_URGENT,
+                                    CallbackRequest::STATUS_COMPLETED,
+                                    CallbackRequest::STATUS_EXPIRED,
+                                    CallbackRequest::STATUS_CANCELLED,
+                                    CallbackRequest::PRIORITY_URGENT,
+                                    CallbackRequest::PRIORITY_HIGH,
+                                ]
+                            );
+                    })
+                    ->alignCenter()
+                    ->width('60px'),
+
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->badge()
@@ -247,55 +290,88 @@ class CallbackRequestResource extends Resource
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Kunde')
                     ->weight('bold')
-                    ->description(fn (CallbackRequest $record): string => $record->phone_number)
+                    ->description(fn (CallbackRequest $record): string =>
+                        implode(' • ', array_filter([
+                            $record->phone_number,
+                            $record->customer_email,
+                            $record->branch?->name,
+                            $record->service?->name,
+                        ]))
+                    )
                     ->icon('heroicon-o-user')
-                    ->searchable(['customer_name', 'phone_number'])
+                    ->searchable(['customer_name', 'phone_number', 'customer_email'])
                     ->sortable()
                     ->wrap(),
 
-                Tables\Columns\TextColumn::make('status')
+                // ✅ Phase 4: Email column for callback confirmation
+                Tables\Columns\TextColumn::make('customer_email')
+                    ->label('E-Mail')
+                    ->icon('heroicon-o-envelope')
+                    ->copyable()
+                    ->placeholder('—')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'),
+
+                // ✅ PHASE 2: Inline Quick Status Change (1-Click statt 5+ Clicks)
+                Tables\Columns\SelectColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->options([
                         CallbackRequest::STATUS_PENDING => 'Ausstehend',
                         CallbackRequest::STATUS_ASSIGNED => 'Zugewiesen',
                         CallbackRequest::STATUS_CONTACTED => 'Kontaktiert',
                         CallbackRequest::STATUS_COMPLETED => 'Abgeschlossen',
-                        CallbackRequest::STATUS_EXPIRED => 'Abgelaufen',
                         CallbackRequest::STATUS_CANCELLED => 'Abgebrochen',
-                        default => $state,
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->beforeStateUpdated(function (CallbackRequest $record, $state) {
+                        // Auto-set timestamps based on status change
+                        if ($state === CallbackRequest::STATUS_CONTACTED && !$record->contacted_at) {
+                            $record->contacted_at = now();
+                        }
+                        if ($state === CallbackRequest::STATUS_COMPLETED && !$record->completed_at) {
+                            $record->completed_at = now();
+                        }
                     })
-                    ->color(fn (string $state): string => match ($state) {
-                        CallbackRequest::STATUS_PENDING => 'warning',
-                        CallbackRequest::STATUS_ASSIGNED => 'info',
-                        CallbackRequest::STATUS_CONTACTED => 'primary',
-                        CallbackRequest::STATUS_COMPLETED => 'success',
-                        CallbackRequest::STATUS_EXPIRED => 'danger',
-                        CallbackRequest::STATUS_CANCELLED => 'gray',
-                        default => 'gray',
+                    ->afterStateUpdated(function (CallbackRequest $record, $state) {
+                        $statusLabels = [
+                            CallbackRequest::STATUS_PENDING => 'Ausstehend',
+                            CallbackRequest::STATUS_ASSIGNED => 'Zugewiesen',
+                            CallbackRequest::STATUS_CONTACTED => 'Kontaktiert',
+                            CallbackRequest::STATUS_COMPLETED => 'Abgeschlossen',
+                            CallbackRequest::STATUS_CANCELLED => 'Abgebrochen',
+                        ];
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Status geändert')
+                            ->success()
+                            ->body("Status auf \"{$statusLabels[$state]}\" gesetzt")
+                            ->send();
                     })
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('priority')
+                // ✅ PHASE 2: Inline Quick Priority Change
+                Tables\Columns\SelectColumn::make('priority')
                     ->label('Priorität')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->options([
                         CallbackRequest::PRIORITY_NORMAL => 'Normal',
                         CallbackRequest::PRIORITY_HIGH => 'Hoch',
                         CallbackRequest::PRIORITY_URGENT => 'Dringend',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        CallbackRequest::PRIORITY_NORMAL => 'gray',
-                        CallbackRequest::PRIORITY_HIGH => 'warning',
-                        CallbackRequest::PRIORITY_URGENT => 'danger',
-                        default => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        CallbackRequest::PRIORITY_URGENT => 'heroicon-o-exclamation-triangle',
-                        CallbackRequest::PRIORITY_HIGH => 'heroicon-o-arrow-up',
-                        default => 'heroicon-o-minus',
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->afterStateUpdated(function (CallbackRequest $record, $state) {
+                        $priorityLabels = [
+                            CallbackRequest::PRIORITY_NORMAL => 'Normal',
+                            CallbackRequest::PRIORITY_HIGH => 'Hoch',
+                            CallbackRequest::PRIORITY_URGENT => 'Dringend',
+                        ];
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Priorität geändert')
+                            ->success()
+                            ->body("Priorität auf \"{$priorityLabels[$state]}\" gesetzt")
+                            ->send();
                     })
                     ->sortable()
                     ->toggleable(),
@@ -304,22 +380,48 @@ class CallbackRequestResource extends Resource
                     ->label('Filiale')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'), // Hide on mobile (already shown in customer_name description)
 
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Service')
                     ->searchable()
                     ->sortable()
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md') // Hide on mobile (already shown in customer_name description)
                     ->default('—'),
 
-                Tables\Columns\TextColumn::make('assignedTo.name')
+                // ✅ PHASE 2: Inline Quick Assignment (1-Click statt 6-9 Clicks)
+                Tables\Columns\SelectColumn::make('assigned_to')
                     ->label('Zugewiesen an')
+                    ->options(fn () => \App\Models\Staff::query()
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray()
+                    )
                     ->searchable()
+                    ->selectablePlaceholder(false)
+                    ->placeholder('Nicht zugewiesen')
+                    ->beforeStateUpdated(function (CallbackRequest $record, $state) {
+                        // Auto-set status to assigned when staff is assigned
+                        if ($state && $record->status === CallbackRequest::STATUS_PENDING) {
+                            $record->status = CallbackRequest::STATUS_ASSIGNED;
+                            $record->assigned_at = now();
+                        }
+                    })
+                    ->afterStateUpdated(function (CallbackRequest $record, $state) {
+                        // Show success notification
+                        if ($state) {
+                            $staffName = \App\Models\Staff::find($state)?->name;
+                            \Filament\Notifications\Notification::make()
+                                ->title('Zugewiesen')
+                                ->success()
+                                ->body("Callback wurde an {$staffName} zugewiesen")
+                                ->send();
+                        }
+                    })
                     ->sortable()
-                    ->toggleable()
-                    ->default('—')
-                    ->icon('heroicon-o-user'),
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('expires_at')
                     ->label('Läuft ab')
@@ -329,6 +431,9 @@ class CallbackRequestResource extends Resource
                     )
                     ->sortable()
                     ->toggleable()
+                    ->icon(fn (CallbackRequest $record): string =>
+                        $record->is_overdue ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-clock'
+                    )
                     ->color(fn (CallbackRequest $record): string =>
                         $record->is_overdue ? 'danger' : 'gray'
                     ),
@@ -375,6 +480,17 @@ class CallbackRequestResource extends Resource
                     ->relationship('branch', 'name')
                     ->searchable()
                     ->preload(),
+
+                // ✅ Phase 4: Email filter
+                Tables\Filters\TernaryFilter::make('has_email')
+                    ->label('Mit E-Mail')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('customer_email'),
+                        false: fn (Builder $query) => $query->whereNull('customer_email'),
+                    )
+                    ->placeholder('Alle anzeigen')
+                    ->trueLabel('Nur mit E-Mail')
+                    ->falseLabel('Ohne E-Mail'),
 
                 Tables\Filters\TernaryFilter::make('overdue')
                     ->label('Überfällig')
@@ -428,7 +544,8 @@ class CallbackRequestResource extends Resource
                         return $indicators;
                     }),
 
-                Tables\Filters\TrashedFilter::make(),
+                // ❌ REMOVED: TrashedFilter - CallbackRequest model doesn't use SoftDeletes
+                // Tables\Filters\TrashedFilter::make(),
             ], layout: Tables\Enums\FiltersLayout::AboveContent)
             ->filtersFormColumns(3)
             ->actions([
@@ -562,6 +679,29 @@ class CallbackRequestResource extends Resource
                         ->successNotificationTitle('Erfolgreich eskaliert')
                         ->requiresConfirmation(),
 
+                    // ✅ PHASE 3: Link to Appointment System
+                    Tables\Actions\Action::make('createAppointment')
+                        ->label('Termin erstellen')
+                        ->icon('heroicon-o-calendar-days')
+                        ->color('success')
+                        ->visible(fn (CallbackRequest $record): bool =>
+                            $record->status === CallbackRequest::STATUS_CONTACTED ||
+                            $record->status === CallbackRequest::STATUS_COMPLETED
+                        )
+                        ->url(fn (CallbackRequest $record): string =>
+                            AppointmentResource::getUrl('create', [
+                                'callback_id' => $record->id,
+                                'customer_id' => $record->customer_id,
+                                'customer_name' => $record->customer_name,
+                                'phone_number' => $record->phone_number,
+                                'branch_id' => $record->branch_id,
+                                'service_id' => $record->service_id,
+                                'staff_id' => $record->staff_id ?? $record->assigned_to,
+                            ])
+                        )
+                        ->openUrlInNewTab()
+                        ->tooltip('Erstellt einen Termin mit den Callback-Daten'),
+
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                 ]),
@@ -641,6 +781,111 @@ class CallbackRequestResource extends Resource
                         })
                         ->deselectRecordsAfterCompletion(),
 
+                    // ✅ PHASE 3: Callback Batching Workflow
+                    Tables\Actions\BulkAction::make('bulkBatchCall')
+                        ->label('Batch-Call starten')
+                        ->icon('heroicon-o-phone')
+                        ->color('info')
+                        ->form([
+                            Forms\Components\Placeholder::make('info')
+                                ->label('Batch-Call Modus')
+                                ->content(fn (\Illuminate\Database\Eloquent\Collection $records) =>
+                                    "Sie sind dabei, **{$records->count()} Callback(s)** im Batch-Modus zu bearbeiten.\n\n" .
+                                    "**Workflow:**\n" .
+                                    "1. Alle ausgewählten Callbacks werden als 'kontaktiert' markiert\n" .
+                                    "2. Sie können danach einzeln als 'abgeschlossen' oder 'abgebrochen' markieren\n" .
+                                    "3. Notizen können Sie direkt in der Detail-Ansicht hinzufügen"
+                                ),
+                            Forms\Components\Select::make('batch_outcome')
+                                ->label('Standard-Ergebnis nach Anruf')
+                                ->options([
+                                    'contacted_only' => 'Nur als kontaktiert markieren',
+                                    'completed' => 'Direkt als abgeschlossen markieren',
+                                ])
+                                ->default('contacted_only')
+                                ->required()
+                                ->helperText('Wählen Sie das Standard-Ergebnis für alle Anrufe'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                            $contacted = 0;
+                            $completed = 0;
+                            $failed = 0;
+
+                            foreach ($records as $record) {
+                                try {
+                                    if ($data['batch_outcome'] === 'completed') {
+                                        $record->markCompleted();
+                                        $completed++;
+                                    } else {
+                                        $record->markContacted();
+                                        $contacted++;
+                                    }
+                                } catch (\Exception $e) {
+                                    \Illuminate\Support\Facades\Log::error('[BatchCall] Failed to process callback', [
+                                        'callback_id' => $record->id,
+                                        'error' => $e->getMessage(),
+                                    ]);
+                                    $failed++;
+                                }
+                            }
+
+                            $message = [];
+                            if ($contacted > 0) {
+                                $message[] = "$contacted kontaktiert";
+                            }
+                            if ($completed > 0) {
+                                $message[] = "$completed abgeschlossen";
+                            }
+                            if ($failed > 0) {
+                                $message[] = "$failed fehlgeschlagen";
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Batch-Call abgeschlossen')
+                                ->success()
+                                ->body(implode(', ', $message))
+                                ->send();
+                        })
+                        ->successNotificationTitle('Batch-Call erfolgreich')
+                        ->deselectRecordsAfterCompletion()
+                        ->requiresConfirmation()
+                        ->modalHeading('Batch-Call Modus starten')
+                        ->modalDescription('Bearbeiten Sie mehrere Callbacks in einem durchgehenden Workflow')
+                        ->modalSubmitActionLabel('Batch starten'),
+
+                    Tables\Actions\BulkAction::make('bulkContact')
+                        ->label('Als kontaktiert markieren')
+                        ->icon('heroicon-o-phone-arrow-up-right')
+                        ->color('warning')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                            $contacted = 0;
+                            $failed = 0;
+
+                            foreach ($records as $record) {
+                                try {
+                                    $record->markContacted();
+                                    $contacted++;
+                                } catch (\Exception $e) {
+                                    \Illuminate\Support\Facades\Log::error('[BulkContact] Failed to mark callback', [
+                                        'callback_id' => $record->id,
+                                        'error' => $e->getMessage(),
+                                    ]);
+                                    $failed++;
+                                }
+                            }
+
+                            if ($contacted > 0) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Als kontaktiert markiert')
+                                    ->success()
+                                    ->body("$contacted Callback(s) erfolgreich kontaktiert" . ($failed > 0 ? ", $failed fehlgeschlagen" : ''))
+                                    ->send();
+                            }
+                        })
+                        ->successNotificationTitle('Als kontaktiert markiert')
+                        ->deselectRecordsAfterCompletion()
+                        ->requiresConfirmation(),
+
                     Tables\Actions\BulkAction::make('bulkComplete')
                         ->label('Als abgeschlossen markieren')
                         ->icon('heroicon-o-check-badge')
@@ -657,10 +902,11 @@ class CallbackRequestResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()
                         ->requiresConfirmation(),
 
-                    Tables\Actions\ForceDeleteBulkAction::make()
-                        ->requiresConfirmation(),
-
-                    Tables\Actions\RestoreBulkAction::make(),
+                    // ❌ REMOVED: Force delete and restore - CallbackRequest doesn't use SoftDeletes
+                    // Tables\Actions\ForceDeleteBulkAction::make()
+                    //     ->requiresConfirmation(),
+                    //
+                    // Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ])
             ->modifyQueryUsing(fn (Builder $query) =>
@@ -736,11 +982,20 @@ class CallbackRequestResource extends Resource
                                     ->icon('heroicon-o-phone')
                                     ->copyable(),
 
-                                Infolists\Components\TextEntry::make('customer.email')
-                                    ->label('E-Mail')
+                                // ✅ Phase 4: Email field for callback confirmation
+                                Infolists\Components\TextEntry::make('customer_email')
+                                    ->label('E-Mail (Callback)')
                                     ->icon('heroicon-o-envelope')
                                     ->copyable()
-                                    ->placeholder('—'),
+                                    ->placeholder('Nicht angegeben')
+                                    ->helperText('Für Terminbestätigungen'),
+
+                                Infolists\Components\TextEntry::make('customer.email')
+                                    ->label('E-Mail (Kunde)')
+                                    ->icon('heroicon-o-envelope')
+                                    ->copyable()
+                                    ->placeholder('—')
+                                    ->helperText('Aus Kundenprofil'),
 
                                 Infolists\Components\TextEntry::make('branch.name')
                                     ->label('Filiale')
@@ -881,13 +1136,15 @@ class CallbackRequestResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
+    // ❌ REMOVED: getEloquentQuery override - CallbackRequest doesn't use SoftDeletes
+    // No need to remove SoftDeletingScope since the model doesn't use it
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     return parent::getEloquentQuery()
+    //         ->withoutGlobalScopes([
+    //             SoftDeletingScope::class,
+    //         ]);
+    // }
 
     public static function getRecordTitle($record): ?string
     {

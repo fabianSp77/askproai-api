@@ -201,10 +201,8 @@ class CallResource extends Resource
                     // ->with('appointmentWishes', function ($q) {
                     //     $q->where('status', 'pending')->latest();
                     // })
-                    // ❌ SKIPPED: appointments (call_id foreign key missing from appointments table)
-                    // ->with('appointments', function ($q) {
-                    //     $q->with('service');
-                    // })
+                    // ✅ FIX 2025-11-12: Enable appointments eager loading for name display
+                    ->with('appointments.customer')
                     ->with('customer')
                     ->with('company')
                     ->with('branch')

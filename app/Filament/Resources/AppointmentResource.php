@@ -97,6 +97,11 @@ class AppointmentResource extends Resource
                             ->required()
                             ->reactive()
                             ->default(function ($context, $record) {
+                                // ✅ PHASE 3: Pre-fill from callback request
+                                if ($context === 'create' && request()->query('branch_id')) {
+                                    return request()->query('branch_id');
+                                }
+
                                 if ($context === 'edit' && $record) {
                                     return $record->branch_id;
                                 }
@@ -104,10 +109,11 @@ class AppointmentResource extends Resource
                                 $branches = \App\Models\Branch::where('company_id', $companyId)->get();
                                 return $branches->count() === 1 ? $branches->first()->id : null;
                             })
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                             ->helperText(fn ($context) =>
-                                $context === 'create'
-                                    ? '⚠️ Wählen Sie zuerst die Filiale aus'
-                                    : null
+                                $context === 'create' && request()->query('callback_id')
+                                    ? '📞 Daten aus Callback-Anfrage übernommen'
+                                    : ($context === 'create' ? '⚠️ Wählen Sie zuerst die Filiale aus' : null)
                             ),
                     ])
                     ->collapsible()
@@ -133,13 +139,21 @@ class AppointmentResource extends Resource
                             ->required()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
-                                    ->required(),
+                                    ->required()
+                                    ->default(fn () => request()->query('customer_name')), // ✅ PHASE 3: Pre-fill name
                                 Forms\Components\TextInput::make('phone')
-                                    ->tel(),
+                                    ->tel()
+                                    ->default(fn () => request()->query('phone_number')), // ✅ PHASE 3: Pre-fill phone
                                 Forms\Components\TextInput::make('email')
                                     ->email(),
                             ])
                             ->reactive()
+                            ->default(fn ($context) =>
+                                // ✅ PHASE 3: Pre-fill customer from callback
+                                $context === 'create' && request()->query('customer_id')
+                                    ? request()->query('customer_id')
+                                    : null
+                            )
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
                                     $customer = Customer::find($state);
@@ -224,6 +238,12 @@ class AppointmentResource extends Resource
                                     ->preload()
                                     ->required()
                                     ->reactive()
+                                    ->default(fn ($context) =>
+                                        // ✅ PHASE 3: Pre-fill service from callback
+                                        $context === 'create' && request()->query('service_id')
+                                            ? request()->query('service_id')
+                                            : null
+                                    )
                                     ->afterStateUpdated(function ($state, callable $set) {
                                         if ($state) {
                                             $service = Service::find($state);
@@ -260,6 +280,12 @@ class AppointmentResource extends Resource
                                     ->searchable()
                                     ->preload()
                                     ->required()
+                                    ->default(fn ($context) =>
+                                        // ✅ PHASE 3: Pre-fill staff from callback
+                                        $context === 'create' && request()->query('staff_id')
+                                            ? request()->query('staff_id')
+                                            : null
+                                    )
                                     ->helperText(function (callable $get) {
                                         $branchId = $get('branch_id');
                                         $serviceId = $get('service_id');

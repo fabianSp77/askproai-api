@@ -453,7 +453,10 @@ class AppointmentCreationService implements AppointmentCreationInterface
             'calcom_v2_booking_id' => $calcomBookingId,  // ✅ Correct column for V2 UIDs
             'external_id' => $calcomBookingId,            // ✅ Backup reference
             'metadata' => json_encode($metadataWithCallId),  // ✅ FIX: Include call_id for reschedule/cancel
-            'sync_origin' => 'retell',  // ← Mark origin for bidirectional sync (Phase 2: Loop Prevention)
+            // 🔧 FIX 2025-11-19: Correct sync_origin semantics
+            // If we created booking in Cal.com, origin is 'calcom' (not 'retell')
+            // This prevents shouldSkipSync() from incorrectly skipping valid syncs
+            'sync_origin' => $calcomBookingId ? 'calcom' : 'system',
             'calcom_sync_status' => $calcomBookingId ? 'synced' : 'pending',  // If has Cal.com ID, already synced
         ]);
 
@@ -893,7 +896,9 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 'email' => $sanitizedEmail,
                 'phone' => $sanitizedPhone,
                 'timeZone' => self::DEFAULT_TIMEZONE,
-                'language' => self::DEFAULT_LANGUAGE
+                'language' => self::DEFAULT_LANGUAGE,
+                'title' => $service->name,          // Required for Cal.com bookingFieldsResponses
+                'service_name' => $service->name    // Fallback
             ];
 
             Log::info('📞 Attempting Cal.com booking (lock acquired)', [
@@ -902,6 +907,33 @@ class AppointmentCreationService implements AppointmentCreationInterface
                 'start_time' => $startTime->format('Y-m-d H:i'),
                 'lock_key' => $lockKey
             ]);
+
+            // 🔧 FIX 2025-11-19: PRE-SYNC VALIDATION - Check DB for conflicts BEFORE calling Cal.com
+            // Prevents race condition where two requests book the same slot concurrently
+            // CRITICAL: Use lockForUpdate() for pessimistic locking
+            $conflictingAppointment = Appointment::where('branch_id', $call->branch_id ?? $customer->branch_id)
+                ->where('company_id', $customer->company_id)
+                ->where('starts_at', $startTime)
+                ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($conflictingAppointment) {
+                Log::warning('🚨 PRE-SYNC CONFLICT: Slot already booked in database', [
+                    'requested_time' => $startTime->format('Y-m-d H:i'),
+                    'existing_appointment_id' => $conflictingAppointment->id,
+                    'existing_customer' => $conflictingAppointment->customer->name ?? 'Unknown',
+                    'existing_status' => $conflictingAppointment->status,
+                    'branch_id' => $call->branch_id ?? $customer->branch_id,
+                    'company_id' => $customer->company_id
+                ]);
+
+                // Release lock and return null (booking failed)
+                $lock->release();
+                return null;
+            }
+
+            Log::debug('✅ PRE-SYNC VALIDATION passed: No conflicting appointments in DB');
 
             $response = $this->calcomService->createBooking($bookingData);
 

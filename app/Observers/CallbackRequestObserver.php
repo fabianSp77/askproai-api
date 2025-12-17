@@ -3,10 +3,19 @@
 namespace App\Observers;
 
 use App\Models\CallbackRequest;
+use App\Services\Notifications\CallbackNotificationService;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class CallbackRequestObserver
 {
+    protected CallbackNotificationService $notificationService;
+
+    public function __construct(CallbackNotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Handle the CallbackRequest "creating" event.
      */
@@ -14,6 +23,40 @@ class CallbackRequestObserver
     {
         $this->sanitizeUserInput($callbackRequest);
         $this->validatePhoneNumber($callbackRequest);
+    }
+
+    /**
+     * 🔧 FIX 2025-11-18: Send multi-channel notifications when callback request is created
+     *
+     * Root Cause: Team was not being notified about callback requests
+     * Solution: Trigger notifications through all configured channels (Filament, Email, Slack)
+     */
+    public function created(CallbackRequest $callbackRequest): void
+    {
+        try {
+            Log::info('📧 CallbackRequest created, triggering team notifications', [
+                'callback_id' => $callbackRequest->id,
+                'company_id' => $callbackRequest->company_id,
+                'customer' => $callbackRequest->customer_name,
+                'action' => $callbackRequest->metadata['action_requested'] ?? 'unknown'
+            ]);
+
+            // Send notifications through all configured channels
+            $results = $this->notificationService->notifyTeam($callbackRequest);
+
+            Log::info('✅ Team notifications completed', [
+                'callback_id' => $callbackRequest->id,
+                'channels_sent' => count(array_filter($results)),
+                'results' => $results
+            ]);
+        } catch (\Exception $e) {
+            // Never fail the callback creation due to notification errors
+            Log::error('❌ Failed to send team notifications', [
+                'callback_id' => $callbackRequest->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
@@ -58,6 +101,7 @@ class CallbackRequestObserver
 
     /**
      * Validate phone number format (E.164).
+     * ✅ FIX 2025-11-18: Allow anonymous placeholders for callback requests from anonymous callers
      */
     protected function validatePhoneNumber(CallbackRequest $callbackRequest): void
     {
@@ -67,6 +111,12 @@ class CallbackRequestObserver
             throw ValidationException::withMessages([
                 'phone_number' => 'Phone number is required.',
             ]);
+        }
+
+        // ✅ FIX: Allow anonymous placeholder phone numbers (for reschedule/cancel callback requests)
+        // Pattern: anonymous_[timestamp]_[hash] or anonymous_[timestamp]
+        if (preg_match('/^anonymous_\d+(_[a-z0-9]+)?$/', $phoneNumber)) {
+            return; // Valid anonymous placeholder - skip E.164 validation
         }
 
         // E.164 format: +[country code][number] (max 15 digits)

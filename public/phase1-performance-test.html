@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phase 1 Performance Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .info { color: #dcdcaa; }
+        .performance { color: #569cd6; font-weight: bold; }
+        pre { background: #252526; padding: 10px; border-left: 3px solid #007acc; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Phase 1 Cache Performance Test</h1>
+    <div id="output"></div>
+    <script>
+        const log = (msg, type = 'info') => {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = msg;
+            document.getElementById('output').appendChild(div);
+        };
+
+        async function runTest() {
+            const callId = 'phase1_test_' + Date.now();
+            log('=== PHASE 1 PERFORMANCE TEST ===', 'performance');
+            log('Call ID: ' + callId);
+            log('');
+
+            try {
+                // Step 1: Create Call record
+                log('Step 1: Creating Call record...');
+                const callRes = await fetch('/api/test/create-call-record', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        call_id: callId,
+                        from_number: '+491604366218',
+                        to_number: '+493033081738'
+                    })
+                });
+                const callData = await callRes.json();
+                log(callData.success ? '✅ Call created' : '❌ Call creation failed', callData.success ? 'success' : 'error');
+                log('');
+
+                // Step 2: check_availability (SHOULD CACHE)
+                log('Step 2: check_availability (CACHING)...');
+                const availStart = performance.now();
+                const availRes = await fetch('/api/retell/function-call', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function_name: 'check_availability',
+                        call_id: callId,
+                        parameters: {
+                            datum: 'morgen',
+                            uhrzeit: '10:00',
+                            service_name: 'Herrenhaarschnitt'
+                        }
+                    })
+                });
+                const availData = await availRes.json();
+                const availDuration = Math.round(performance.now() - availStart);
+                
+                log('Available: ' + (availData.data?.available ?? 'N/A'));
+                log('Duration: ' + availDuration + 'ms', 'performance');
+                log('');
+
+                // Step 3: start_booking (SHOULD USE CACHE)
+                log('Step 3: start_booking (USING CACHE)...');
+                const bookStart = performance.now();
+                const bookRes = await fetch('/api/retell/function-call', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function_name: 'start_booking',
+                        call_id: callId,
+                        parameters: {
+                            date: 'morgen',
+                            time: '10:00',
+                            service_name: 'Herrenhaarschnitt',
+                            customer_name: 'Hans Schuster',
+                            customer_phone: '+491604366218'
+                        }
+                    })
+                });
+                const bookData = await bookRes.json();
+                const bookDuration = Math.round(performance.now() - bookStart);
+                
+                log('Success: ' + (bookData.success ?? false));
+                log('Duration: ' + bookDuration + 'ms', 'performance');
+                log('');
+
+                // Analysis
+                log('=== PERFORMANCE ANALYSIS ===', 'performance');
+                log('check_availability: ' + availDuration + 'ms');
+                log('start_booking: ' + bookDuration + 'ms');
+                
+                const baseline = 3200;
+                if (bookDuration < 2500) {
+                    const improvement = Math.round(((baseline - bookDuration) / baseline) * 100);
+                    log('✅ PHASE 1 SUCCESS: ' + improvement + '% faster than baseline (3200ms)', 'success');
+                } else {
+                    log('⚠️ WARNING: Performance not improved (expected < 2500ms)', 'error');
+                }
+
+                log('');
+                log('Check logs with: tail -f storage/logs/laravel-$(date +%Y-%m-%d).log | grep "' + callId + '"');
+                log('Look for: "⚡ PHASE 1" markers in logs');
+
+                // Cleanup
+                await fetch('/api/test/delete-call-record', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ call_id: callId })
+                });
+
+            } catch (e) {
+                log('❌ ERROR: ' + e.message, 'error');
+            }
+        }
+
+        runTest();
+    </script>
+</body>
+</html>

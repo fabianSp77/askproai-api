@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Facades\Filament;
+
 use App\Filament\Resources\CompanyAssignmentConfigResource\Pages;
 use App\Models\CompanyAssignmentConfig;
 use Filament\Forms;
@@ -30,13 +32,19 @@ class CompanyAssignmentConfigResource extends Resource
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        // ✅ Super admin can see all resources
+        $user = Filament::auth()->user();
+        return $user && $user->hasRole('super_admin');
     }
+
 
     public static function canViewAny(): bool
     {
-        return false; // Prevents all access to this resource
+        // ✅ Super admin can access all resources
+        $user = Filament::auth()->user();
+        return $user && $user->hasRole('super_admin');
     }
+
 
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
     protected static ?string $navigationGroup = 'Mitarbeiter-Verwaltung';

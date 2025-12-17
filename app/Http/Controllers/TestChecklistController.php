@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\PhoneNumber;
 use App\Models\RetellAgent;
 use App\Models\Call;
 use App\Models\Service;
 use App\Services\CalcomService;
+use App\Services\Retell\CallLifecycleService;
 use Carbon\Carbon;
 
 class TestChecklistController extends Controller
@@ -444,6 +446,188 @@ class TestChecklistController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create test Call record for E2E testing
+     *
+     * IMPORTANT: Only available in local/testing environment
+     * Creates a Call record with proper company/branch matching
+     * Used by E2E test HTML to simulate real call context
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createTestCallRecord(Request $request)
+    {
+        try {
+            $callId = $request->input('call_id', 'flow_test_' . time());
+            $fromNumber = $request->input('from_number', '+491604366218');
+            $toNumber = $request->input('to_number', '+493033081738');
+
+            // 🔒 SECURITY: Only allow test Call IDs (starting with test prefixes)
+            // This prevents misuse of test endpoints for real calls
+            $allowedPrefixes = ['flow_test_', 'phase1_test_', 'phase2_test_', 'phase3_test_', 'e2e_test_', 'test_'];
+            $isTestCallId = false;
+            foreach ($allowedPrefixes as $prefix) {
+                if (str_starts_with($callId, $prefix)) {
+                    $isTestCallId = true;
+                    break;
+                }
+            }
+
+            if (!$isTestCallId) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Test endpoints only accept call_id starting with: ' . implode(', ', $allowedPrefixes)
+                ], 403);
+            }
+
+            // Create Call record
+            $callLifecycle = app(CallLifecycleService::class);
+
+            // Check if Call already exists (e.g., created by call_inbound webhook)
+            $call = Call::where('retell_call_id', $callId)
+                        ->orWhere('external_id', $callId)
+                        ->first();
+
+            if ($call) {
+                // Call already exists - update it with test data
+                // IMPORTANT: Always ensure company_id and branch_id are set for E2E tests
+                // Use direct assignment to ensure values are set in model instance
+                $call->from_number = $fromNumber;
+                $call->to_number = $toNumber;
+                $call->direction = 'inbound';
+                $call->status = 'ongoing';
+                $call->call_status = 'ongoing';
+                $call->agent_id = 'agent_7a24afda65b04d1cd79fa11e8f';
+                $call->company_id = 1; // Always set to default for E2E tests
+                $call->branch_id = 1;  // Always set to default for E2E tests
+                $call->save();
+
+                Log::info('🔄 Test Call record updated (already existed)', [
+                    'call_id' => $callId,
+                    'id' => $call->id,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id
+                ]);
+            } else {
+                // Create new Call record
+                $call = Call::create([
+                    'retell_call_id' => $callId,
+                    'external_id' => $callId,
+                    'from_number' => $fromNumber,
+                    'to_number' => $toNumber,
+                    'direction' => 'inbound',
+                    'status' => 'ongoing',
+                    'call_status' => 'ongoing',
+                    'agent_id' => 'agent_7a24afda65b04d1cd79fa11e8f',
+                    'start_timestamp' => now(),
+                    'company_id' => 1, // Default company
+                    'branch_id' => 1,  // Default branch
+                ]);
+
+                Log::info('✅ Test Call record created (new)', [
+                    'call_id' => $callId,
+                    'id' => $call->id,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id
+                ]);
+            }
+
+            // No refresh needed - values are already set in model instance
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test Call record ready (created or updated)',
+                'call' => [
+                    'id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'company_id' => $call->company_id,
+                    'branch_id' => $call->branch_id,
+                    'customer_id' => $call->customer_id,
+                    'from_number' => $call->from_number,
+                    'to_number' => $call->to_number,
+                    'status' => $call->status
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to create test Call record: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete test Call record for E2E testing cleanup
+     *
+     * IMPORTANT: Only available in local/testing environment
+     * Cleans up test Call records after E2E test completion
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteTestCallRecord(Request $request)
+    {
+        try {
+            $callId = $request->input('call_id');
+
+            if (!$callId) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'call_id is required'
+                ], 400);
+            }
+
+            // 🔒 SECURITY: Only allow test Call IDs (starting with test prefixes)
+            // This prevents accidental deletion of real calls
+            $allowedPrefixes = ['flow_test_', 'phase1_test_', 'phase2_test_', 'phase3_test_', 'e2e_test_', 'test_'];
+            $isTestCallId = false;
+            foreach ($allowedPrefixes as $prefix) {
+                if (str_starts_with($callId, $prefix)) {
+                    $isTestCallId = true;
+                    break;
+                }
+            }
+
+            if (!$isTestCallId) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Test endpoints only accept call_id starting with: ' . implode(', ', $allowedPrefixes)
+                ], 403);
+            }
+
+            // Find and delete Call record
+            $call = Call::where('retell_call_id', $callId)
+                        ->orWhere('external_id', $callId)
+                        ->first();
+
+            if ($call) {
+                // Delete associated appointments first (if any)
+                $call->appointments()->delete();
+
+                // Delete the call
+                $call->delete();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Test Call record deleted successfully',
+                    'deleted_call_id' => $callId
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call record not found (already deleted or never existed)',
+                'call_id' => $callId
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to delete test Call record: ' . $e->getMessage()
             ], 500);
         }
     }

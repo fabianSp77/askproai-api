@@ -90,44 +90,132 @@ class CalcomV2Client
 
     /**
      * POST /v2/bookings - Create a booking with retry logic
+     *
+     * Cal.com V2 API Format (2024-08-13):
+     * @see https://cal.com/docs/api-reference/v2/bookings/create-a-booking
      */
     public function createBooking(array $data): Response
     {
-        return Http::withHeaders($this->getHeaders())
-            ->retry(3, 200, function ($exception, $request) {
-                $status = optional($exception->response)->status();
-                if (in_array($status, [409, 429])) {
-                    // Exponential backoff outside the closure
-                    usleep(pow(2, $request->retries) * 1000000); // 2s, 4s, 8s
-                    return true;
+        // 🔧 FIX 2025-11-17: Use correct Cal.com V2 API format
+        // OLD V1 FORMAT (WRONG): end, timeZone, language, responses, instant, noEmail
+        // NEW V2 FORMAT: start, attendee{name, email, timeZone}, eventTypeId (integer)
+
+        $payload = [
+            'eventTypeId' => (int) $data['eventTypeId'], // MUST be integer
+            'start' => $data['start'], // ISO8601 timestamp
+            'attendee' => [
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'timeZone' => $data['timeZone'] ?? 'Europe/Berlin',
+            ],
+        ];
+
+        // 🚧 TEMPORARY FIX 2025-11-17: SKIP phone due to Cal.com validation
+        // Cal.com rejects format: "responses - {attendeePhoneNumber}invalid_number"
+        // Tested formats that FAIL: +491604366218, +491234567890
+        // Phone is OPTIONAL - bookings work perfectly without it
+        // TODO: Research correct phone number format (E.164? Cal.com specific?)
+        /*
+        if (!empty($data['phone'])) {
+            $payload['attendee']['phoneNumber'] = $data['phone'];
+        }
+        */
+
+        // Add metadata if provided
+        // 🔧 FIX 2025-11-17: Cal.com requires metadata values to be STRINGS
+        // Convert all values to strings to avoid "Expected string, received boolean" errors
+        if (!empty($data['metadata'])) {
+            $payload['metadata'] = array_map(function($value) {
+                if (is_bool($value)) {
+                    return $value ? 'true' : 'false';
                 }
-                return false;
-            })
-            ->post("{$this->baseUrl}/bookings", [
-                'eventTypeId' => $data['eventTypeId'],
-                'start' => $data['start'],
-                'end' => $data['end'],
-                'timeZone' => $data['timeZone'], // camelCase!
-                'language' => 'de',
-                'metadata' => $data['metadata'] ?? (object)[],
-                'responses' => [
-                    'name' => $data['name'],
-                    'email' => $data['email'],
-                    'guests' => [],
-                    'location' => ['optionValue' => '', 'value' => 'Vor Ort']
-                ],
-                'instant' => false,
-                'noEmail' => true // No Cal.com emails!
+                return (string) $value;
+            }, $data['metadata']);
+        }
+
+        // Add booking field responses (e.g., custom fields, notes)
+        if (!empty($data['bookingFieldsResponses'])) {
+            $payload['bookingFieldsResponses'] = $data['bookingFieldsResponses'];
+        }
+
+        // 🚧 TEMPORARY FIX 2025-11-17: Phone validation disabled
+        // Cal.com rejects all tested phone formats with "invalid_number" error
+        // Phone is optional, so we skip it entirely until correct format is found
+        // TODO: Find correct phone format that Cal.com accepts
+        /*
+        if (!empty($data['phone'])) {
+            if (!isset($payload['bookingFieldsResponses']['phone'])) {
+                $payload['bookingFieldsResponses']['phone'] = $data['phone'];
+            }
+            if (!isset($payload['bookingFieldsResponses']['attendeePhoneNumber'])) {
+                $payload['bookingFieldsResponses']['attendeePhoneNumber'] = $data['phone'];
+            }
+        }
+        */
+
+        \Log::channel('calcom')->info('🔍 Cal.com CREATE Booking Request', [
+            'url' => "{$this->baseUrl}/bookings",
+            'payload' => $payload,
+        ]);
+
+        try {
+            $retryCount = 0;
+            $response = Http::withHeaders($this->getHeaders())
+                ->retry(3, 200, function ($exception, $request) use (&$retryCount) {
+                    $status = optional($exception->response)->status();
+                    $retryCount++;
+
+                    // 🐛 DEBUG: Log retry attempt with full error
+                    if ($exception && $exception->response) {
+                        \Log::channel('calcom')->error('🔍 Cal.com API Error (Retry Attempt)', [
+                            'status' => $exception->response->status(),
+                            'body' => $exception->response->body(),
+                            'json' => $exception->response->json(),
+                            'attempt' => $retryCount,
+                        ]);
+                    }
+
+                    if (in_array($status, [409, 429])) {
+                        // Exponential backoff
+                        usleep(pow(2, $retryCount) * 1000000); // 2s, 4s, 8s
+                        return true;
+                    }
+                    return false;
+                })
+                ->post("{$this->baseUrl}/bookings", $payload);
+
+            if (!$response->successful()) {
+                \Log::channel('calcom')->error('🔍 Cal.com CREATE Booking FAILED (Response)', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'json' => $response->json(),
+                ]);
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            \Log::channel('calcom')->error('🔍 Cal.com CREATE Booking EXCEPTION', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
             ]);
+            throw $e;
+        }
     }
 
     /**
-     * DELETE /v2/bookings/{id} - Cancel a booking
+     * POST /v2/bookings/{uid}/cancel - Cancel a booking
+     *
+     * 🔧 FIX 2025-11-17: Cal.com V2 uses POST /cancel endpoint (not DELETE)
+     * 🔧 FIX 2025-11-17: Cal.com requires UID (string), not ID (integer)
+     * @see https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking
+     *
+     * @param string $bookingUidOrId Cal.com booking UID (preferred) or ID
+     * @param string $reason Cancellation reason
      */
-    public function cancelBooking(int $bookingId, string $reason = ''): Response
+    public function cancelBooking(string $bookingUidOrId, string $reason = ''): Response
     {
         return Http::withHeaders($this->getHeaders())
-            ->delete("{$this->baseUrl}/bookings/{$bookingId}", [
+            ->post("{$this->baseUrl}/bookings/{$bookingUidOrId}/cancel", [
                 'cancellationReason' => $reason
             ]);
     }

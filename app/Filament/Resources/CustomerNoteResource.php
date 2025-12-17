@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Facades\Filament;
+
 use App\Filament\Resources\CustomerNoteResource\Pages;
 use App\Filament\Resources\CustomerNoteResource\RelationManagers;
 use App\Models\CustomerNote;
@@ -29,13 +31,19 @@ class CustomerNoteResource extends Resource
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        // ✅ Super admin can see all resources
+        $user = Filament::auth()->user();
+        return $user && $user->hasRole('super_admin');
     }
+
 
     public static function canViewAny(): bool
     {
-        return false; // Prevents all access to this resource
+        // ✅ Super admin can access all resources
+        $user = Filament::auth()->user();
+        return $user && $user->hasRole('super_admin');
     }
+
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
