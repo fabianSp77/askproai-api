@@ -19,7 +19,11 @@ class CurrencyExchangeRateResource extends Resource
     protected static ?string $navigationGroup = 'Abrechnung';
     protected static ?int $navigationSort = 6;
 
-    // No company scoping - this is a global reference table
+    /**
+     * SECURITY: Safe scope bypass - Global reference table (no company_id column)
+     * Pattern: withoutGlobalScopes() for tenant-agnostic system data
+     * This table contains system-wide exchange rates shared across all tenants.
+     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->withoutGlobalScopes();

@@ -363,10 +363,15 @@ class CustomerNoteResource extends Resource
         ];
     }
 
+    /**
+     * SECURITY: Safe scope bypass - CustomerNote has no direct company_id FK
+     * Pattern: withoutGlobalScopes() + whereHas on tenant-scoped relation
+     * @see HasSecureScopeBypass::relatedTenantQuery()
+     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withoutGlobalScopes() // Remove CompanyScope as no direct FK exists
+            ->withoutGlobalScopes()
             ->whereHas('customer', fn ($query) =>
                 $query->where('company_id', auth()->user()->company_id)
             )

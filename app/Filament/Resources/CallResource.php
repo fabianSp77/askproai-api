@@ -506,7 +506,7 @@ class CallResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\AppointmentsRelationManager::class,
         ];
     }
 
@@ -788,110 +788,155 @@ class CallResource extends Resource
                                             ->extraAttributes(['class' => '!max-w-full w-full'])
                                             ->schema([
                                                 TextEntry::make('summary')
-                                            ->label('')
-                                            ->getStateUsing(function ($record) {
-                                                if (empty($record->summary)) {
-                                                    return '<div class="text-gray-500 dark:text-gray-400 italic">Keine Zusammenfassung vorhanden</div>';
-                                                }
+                                                    ->label('')
+                                                    ->getStateUsing(function ($record) {
+                                                        if (empty($record->summary)) {
+                                                            return '<div class="text-gray-500 dark:text-gray-400 italic">Keine Zusammenfassung vorhanden</div>';
+                                                        }
 
-                                                $summary = $record->summary;
-                                                if (is_array($summary)) {
-                                                    $summary = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-                                                }
+                                                        $summary = $record->summary;
+                                                        
+                                                        // Ensure string and handle arrays
+                                                        if (is_array($summary) || is_object($summary)) {
+                                                            $summary = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                                                        } else {
+                                                            $summary = (string) $summary;
+                                                        }
+                                                        
+                                                        // Ensure valid UTF-8
+                                                        $summary = mb_convert_encoding($summary, 'UTF-8', 'UTF-8');
 
-                                                // Auto-translate to German if needed (with error handling)
-                                                try {
-                                                    $translationService = app(\App\Services\FreeTranslationService::class);
-                                                    $translatedSummary = $translationService->translateToGerman($summary);
-                                                    $isTranslated = ($translatedSummary !== $summary);
-                                                } catch (\Exception $e) {
-                                                    // Fallback to original if translation fails
-                                                    \Log::warning('Translation failed for call ' . $record->id, [
-                                                        'error' => $e->getMessage()
-                                                    ]);
-                                                    $translatedSummary = $summary;
-                                                    $isTranslated = false;
-                                                }
+                                                        $callId = $record->id;
+                                                        
+                                                        // JSON for JS
+                                                        $summaryJson = json_encode($summary, JSON_UNESCAPED_UNICODE);
+                                                        if ($summaryJson === false) {
+                                                            $summaryJson = json_encode('Kodierungsfehler in Originaltext');
+                                                        }
+                                                        
+                                                        // Escape for HTML Attribute
+                                                        $summaryAttr = htmlspecialchars($summaryJson, ENT_QUOTES, 'UTF-8');
+                                                        
+                                                        $staticSummary = e($summary); 
 
-                                                $callId = $record->id;
+                                                        return <<<HTML
+<div 
+    x-data='{
+        lang: "de",
+        translations: {
+            de: null,
+            original: {$summaryAttr},
+            tr: null,
+            ar: null
+        },
+        isLoading: false,
+        error: null,
+        init() {
+            // Auto-fetch German translation on load
+            this.switchLang("de");
+        },
+        switchLang: async function(target) {
+            this.lang = target;
+            this.error = null;
+            
+            // Allow showing original immediately
+            if (target === "original") {
+                return;
+            }
+            
+            // If content is missing, fetch it
+            if (!this.translations[target]) {
+                this.isLoading = true;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(function() { 
+                    controller.abort(); 
+                }, 10000);
+                
+                try {
+                    const response = await fetch("/api/translate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                        body: JSON.stringify({ 
+                            text: this.translations.original, 
+                            target: target, 
+                            call_id: {$callId} 
+                        }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    
+                    const data = await response.json();
+                    if (data.success === false) throw new Error(data.error || "API Error");
+                    
+                    this.translations[target] = data.translation;
+                } catch (e) {
+                    console.error(e);
+                    const errorMsg = e.name === "AbortError" ? "Zeitüberschreitung" : (e.message || "Fehler");
+                    this.error = "Übersetzungsfehler: " + errorMsg;
+                    // Fallback to original if translation fails
+                    if (target === "de") {
+                        this.translations.de = this.translations.original + " (Übersetzung fehlgeschlagen)";
+                    }
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        }
+    }'
+    class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800"
+>
+    <!-- Header -->
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Zusammenfassung</span>
+            
+            <!-- Loader in Header -->
+            <div x-show="isLoading" class="flex items-center ml-2" style="display: none;">
+                <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
+        </div>
+        
+        <div class="flex gap-1">
+             <button type="button" @click="switchLang('de')" 
+                :class="lang === 'de' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+                class="px-2 py-1 text-xs font-medium rounded-md border transition-colors shadow-sm">
+                🇩🇪 Deutsch
+             </button>
+             <button type="button" @click="switchLang('tr')" 
+                :class="lang === 'tr' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+                class="px-2 py-1 text-xs font-medium rounded-md border transition-colors shadow-sm">
+                🇹🇷 Türkçe
+             </button>
+             <button type="button" @click="switchLang('ar')" 
+                :class="lang === 'ar' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+                class="px-2 py-1 text-xs font-medium rounded-md border transition-colors shadow-sm">
+                🇸🇦 العربية
+             </button>
+             <button type="button" @click="switchLang('original')" 
+                :class="lang === 'original' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+                class="px-2 py-1 text-xs font-medium rounded-md border transition-colors shadow-sm">
+                🇬🇧 Original
+             </button>
+        </div>
+    </div>
 
-                                                return '<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">' .
-                                                       '<div class="mb-3">' .
-                                                       '<div class="flex items-center justify-between flex-wrap gap-2">' .
-                                                       '<div class="flex items-center gap-2">' .
-                                                       '<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
-                                                       '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />' .
-                                                       '</svg>' .
-                                                       '<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Zusammenfassung</span>' .
-                                                       ($isTranslated ? '<span class="text-xs bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200 px-2 py-0.5 rounded-full">Übersetzt</span>' : '') .
-                                                       '</div>' .
-                                                       '<div class="flex gap-1" id="lang-buttons-' . $callId . '">' .
-                                                       '<button type="button" onclick="window.showTranslation_' . $callId . '(\'de\')" class="lang-btn-' . $callId . ' lang-btn-de-' . $callId . ' px-2 py-1 text-xs font-medium rounded-md bg-blue-600 text-white border border-blue-600 transition-colors">🇩🇪 Deutsch</button>' .
-                                                       '<button type="button" onclick="window.showTranslation_' . $callId . '(\'tr\')" class="lang-btn-' . $callId . ' lang-btn-tr-' . $callId . ' px-2 py-1 text-xs font-medium rounded-md bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">🇹🇷 Türkçe</button>' .
-                                                       '<button type="button" onclick="window.showTranslation_' . $callId . '(\'ar\')" class="lang-btn-' . $callId . ' lang-btn-ar-' . $callId . ' px-2 py-1 text-xs font-medium rounded-md bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">🇸🇦 العربية</button>' .
-                                                       '<button type="button" onclick="window.showTranslation_' . $callId . '(\'original\')" class="lang-btn-' . $callId . ' lang-btn-original-' . $callId . ' px-2 py-1 text-xs font-medium rounded-md bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">🇬🇧 Original</button>' .
-                                                       '</div>' .
-                                                       '</div>' .
-                                                       '</div>' .
-                                                       '<div id="summary-content-' . $callId . '" class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">' .
-                                                       '<div class="summary-de-' . $callId . '">' . nl2br(htmlspecialchars($translatedSummary)) . '</div>' .
-                                                       '<div class="summary-tr-' . $callId . ' hidden"><div class="text-center py-4"><svg class="animate-spin h-5 w-5 mx-auto text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-xs text-gray-500 mt-2 block">Übersetzung lädt...</span></div></div>' .
-                                                       '<div class="summary-ar-' . $callId . ' hidden"><div class="text-center py-4"><svg class="animate-spin h-5 w-5 mx-auto text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-xs text-gray-500 mt-2 block">Übersetzung lädt...</span></div></div>' .
-                                                       '<div class="summary-original-' . $callId . ' hidden">' . nl2br(htmlspecialchars($summary)) . '</div>' .
-                                                       '</div>' .
-                                                       '<script>' .
-                                                       '(function() {' .
-                                                       '  const callId = ' . $callId . ';' .
-                                                       '  window.translations_' . $callId . ' = {};' .
-                                                       '  window.translations_' . $callId . '[\'de\'] = ' . json_encode($translatedSummary) . ';' .
-                                                       '  window.translations_' . $callId . '[\'original\'] = ' . json_encode($summary) . ';' .
-                                                       '  window.showTranslation_' . $callId . ' = function(lang) {' .
-                                                       '    console.log("showTranslation_' . $callId . ' called with lang:", lang);' .
-                                                       '    const buttons = document.querySelectorAll(".lang-btn-' . $callId . '");' .
-                                                       '    buttons.forEach(btn => {' .
-                                                       '      btn.classList.remove("bg-blue-600", "text-white");' .
-                                                       '      btn.classList.add("bg-white", "text-gray-700", "dark:bg-gray-700", "dark:text-gray-300");' .
-                                                       '    });' .
-                                                       '    const activeBtn = document.querySelector(".lang-btn-" + lang + "-' . $callId . '");' .
-                                                       '    if (activeBtn) {' .
-                                                       '      activeBtn.classList.remove("bg-white", "text-gray-700", "dark:bg-gray-700", "dark:text-gray-300");' .
-                                                       '      activeBtn.classList.add("bg-blue-600", "text-white");' .
-                                                       '    }' .
-                                                       '    const summaryDivs = document.querySelectorAll(".summary-de-' . $callId . ', .summary-tr-' . $callId . ', .summary-ar-' . $callId . ', .summary-original-' . $callId . '");' .
-                                                       '    console.log("Found divs to hide:", summaryDivs.length);' .
-                                                       '    summaryDivs.forEach(div => div.classList.add("hidden"));' .
-                                                       '    const targetDiv = document.querySelector(".summary-" + lang + "-' . $callId . '");' .
-                                                       '    console.log("Target div to show:", targetDiv ? ".summary-" + lang + "-' . $callId . '" : "not found");' .
-                                                       '    if (targetDiv) targetDiv.classList.remove("hidden");' .
-                                                       '    if ((lang === "tr" || lang === "ar") && !window.translations_' . $callId . '[lang]) {' .
-                                                       '      console.log("Fetching translation for:", lang);' .
-                                                       '      const loadingDiv = document.querySelector(".summary-" + lang + "-' . $callId . '");' .
-                                                       '      if (loadingDiv) loadingDiv.innerHTML = "<div class=\'text-center py-4\'><svg class=\'animate-spin h-5 w-5 mx-auto text-gray-500\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\'><circle class=\'opacity-25\' cx=\'12\' cy=\'12\' r=\'10\' stroke=\'currentColor\' stroke-width=\'4\'></circle><path class=\'opacity-75\' fill=\'currentColor\' d=\'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\'></path></svg><span class=\'text-xs text-gray-500 mt-2 block\'>Übersetzung lädt...</span></div>";' .
-                                                       '      fetch("/api/translate", {' .
-                                                       '        method: "POST",' .
-                                                       '        headers: {"Content-Type": "application/json", "Accept": "application/json"},' .
-                                                       '        body: JSON.stringify({text: window.translations_' . $callId . '[\'original\'], target: lang, call_id: ' . $callId . '})' .
-                                                       '      })' .
-                                                       '      .then(r => r.json())' .
-                                                       '      .then(data => {' .
-                                                       '        console.log("Translation received:", data);' .
-                                                       '        window.translations_' . $callId . '[lang] = data.translation;' .
-                                                       '        const div = document.querySelector(".summary-" + lang + "-' . $callId . '");' .
-                                                       '        if (div) div.innerHTML = data.translation.replace(/\\n/g, "<br>");' .
-                                                       '      })' .
-                                                       '      .catch(err => {' .
-                                                       '        console.error("Translation error:", err);' .
-                                                       '        const div = document.querySelector(".summary-" + lang + "-' . $callId . '");' .
-                                                       '        if (div) div.innerHTML = "<span class=\'text-red-500\'>Übersetzung fehlgeschlagen</span>";' .
-                                                       '      });' .
-                                                       '    }' .
-                                                       '  };' .
-                                                       '})();' .
-                                                       '</script>' .
-                                                       '</div>';
-                                            })
-                                            ->html()
-                                            ->columnSpanFull(),
+    <!-- Error Message -->
+    <div x-show="error" x-text="error" class="mb-2 text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded" style="display: none;"></div>
+
+    <!-- Content Area -->
+    <div class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed min-h-[3rem]">
+        <!-- Fallback to static summary (Original) only if lang is original OR if de translation hasn't loaded yet and specific condition met -->
+        <div x-text="translations[lang] || (lang === 'original' ? '$staticSummary' : '')" class="whitespace-pre-wrap">{$staticSummary}</div>
+    </div>
+</div>
+HTML;
+                                                    })
+                                                    ->html()
+                                                    ->columnSpanFull(),
                                             ])
                                             ->collapsible()
                                             ->collapsed(false)
@@ -1304,6 +1349,33 @@ class CallResource extends Resource
     protected static function getClassicColumns(): array
     {
         return [
+                    // 1️⃣ Company/Branch column with Phone number
+                    Tables\Columns\ViewColumn::make('company_phone_display')
+                        ->label('Unternehmen/Filiale')
+                        ->view('filament.columns.company-phone')
+                        ->searchable(query: function (Builder $query, string $search): Builder {
+                            return $query
+                                ->orWhereHas('branch', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
+                                ->orWhereHas('company', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
+                        })
+                        ->toggleable(),
+
+                    // 2️⃣ Optimized Customer column with 3-line layout
+                    Tables\Columns\ViewColumn::make('anrufer_display')
+                        ->label('Anrufer')
+                        ->view('filament.columns.anrufer-3lines')
+                        ->searchable(query: function (Builder $query, string $search): Builder {
+                            return $query
+                                // ✅ FIXED: customer_name is in metadata JSON, not a direct column
+                                ->where(function ($q) use ($search) {
+                                    $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
+                                      ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
+                                });
+                        })
+                        ->sortable()
+                        ->toggleable(),
+
+                    // 3️⃣ Ereignis / Zeit / Dauer - 🔄 2025-11-26: Verschoben vor Termin/Mitarbeiter
                     Tables\Columns\ViewColumn::make('status_time_duration')
                         ->label('Ereignis / Zeit / Dauer')
                         ->view('filament.columns.status-time-duration')
@@ -1316,7 +1388,8 @@ class CallResource extends Resource
                                     ELSE 3
                                     END {$direction}")
                                 ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
-                        ),
+                        )
+                        ->toggleable(isToggledHiddenByDefault: false),
 
                     // 🆕 BOOKING STATUS: Now embedded in Status/Zeit/Dauer column
                     // (Separate column kept for backwards compatibility but hidden)
@@ -1349,32 +1422,6 @@ class CallResource extends Resource
                                 ->leftJoin('appointments', 'calls.id', '=', 'appointments.call_id')
                         )
                         ->hidden(),  // 🚫 Hidden - now integrated into Status/Zeit/Dauer column
-
-                    // Company/Branch column with Phone number
-                    Tables\Columns\ViewColumn::make('company_phone_display')
-                        ->label('Unternehmen/Filiale')
-                        ->view('filament.columns.company-phone')
-                        ->searchable(query: function (Builder $query, string $search): Builder {
-                            return $query
-                                ->orWhereHas('branch', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
-                                ->orWhereHas('company', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
-                        })
-                        ->toggleable(),
-
-                    // Optimized Customer column with 3-line layout
-                    Tables\Columns\ViewColumn::make('anrufer_display')
-                        ->label('Anrufer')
-                        ->view('filament.columns.anrufer-3lines')
-                        ->searchable(query: function (Builder $query, string $search): Builder {
-                            return $query
-                                // ✅ FIXED: customer_name is in metadata JSON, not a direct column
-                                ->where(function ($q) use ($search) {
-                                    $q->whereRaw("JSON_EXTRACT(metadata, '$.customer_name') LIKE ?", ["%{$search}%"])
-                                      ->orWhereHas('customer', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
-                                });
-                        })
-                        ->sortable()
-                        ->toggleable(),
 
                     // 🎯 CALL TYPE (LEGACY: hidden - consolidated into Ereignis column)
                     Tables\Columns\TextColumn::make('call_type')
@@ -1553,7 +1600,7 @@ class CallResource extends Resource
                     // 🆕 COMBINED: Appointment + Staff (Termin & Mitarbeiter)
                     // 🔥 2025-11-20: Show ALL appointments, not just one
                     Tables\Columns\TextColumn::make('appointment_summary')
-                        ->label('Termin & Mitarbeiter')
+                        ->label('Termin / Mitarbeiter')
                         ->getStateUsing(function (Call $record) {
                             $appointments = $record->appointments;
 
@@ -1570,31 +1617,35 @@ class CallResource extends Resource
                                 }
                             }
 
-                            // If this call performed a reschedule, show old/new time + staff (service is in Service/Preis column)
+                            // If this call performed a reschedule, show old/new time + staff
                             if ($rescheduleDetails && $rescheduleDetails->appointment) {
                                 $appt = $rescheduleDetails->appointment;
                                 $metadata = $rescheduleDetails->metadata ?? [];
-                                $staffName = $appt->staff?->name ?? 'Unzugewiesen';
-                                $staffColor = $appt->staff ? 'text-green-600' : 'text-orange-600';
+                                $staffName = $appt->staff?->name ?? 'Kein MA';
 
                                 $oldDateTime = isset($metadata['original_time'])
-                                    ? \Carbon\Carbon::parse($metadata['original_time'])->locale('de')->isoFormat('ddd DD.MM HH:mm')
+                                    ? \Carbon\Carbon::parse($metadata['original_time'])->locale('de')->isoFormat('dd. D. MMM HH:mm')
                                     : null;
-                                $newDateTime = isset($metadata['new_time'])
-                                    ? \Carbon\Carbon::parse($metadata['new_time'])->locale('de')->isoFormat('ddd DD.MM HH:mm')
-                                    : ($appt->starts_at ? \Carbon\Carbon::parse($appt->starts_at)->locale('de')->isoFormat('ddd DD.MM HH:mm') : 'unbekannt');
+                                $newDt = isset($metadata['new_time'])
+                                    ? \Carbon\Carbon::parse($metadata['new_time'])
+                                    : ($appt->starts_at ? \Carbon\Carbon::parse($appt->starts_at) : null);
 
                                 $lines = [];
                                 if ($oldDateTime) {
-                                    $lines[] = '<span class="text-xs text-gray-400" style="text-decoration: line-through;">❌ ' . $oldDateTime . '</span>';
+                                    $lines[] = '<span class="text-xs text-gray-500 dark:text-gray-400" style="text-decoration: line-through;">Alt: ' . $oldDateTime . '</span>';
                                 }
-                                $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">✅ ' . $newDateTime . ' → ' . $staffName . '</span>';
+                                if ($newDt) {
+                                    $endTime = $appt->ends_at ? \Carbon\Carbon::parse($appt->ends_at)->format('H:i') : null;
+                                    $newDateTime = $newDt->locale('de')->isoFormat('dd. D. MMM') . ' ' . $newDt->format('H:i') . ($endTime ? ' - ' . $endTime : '') . ' Uhr';
+                                    $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . $newDateTime . '</span>';
+                                }
+                                $lines[] = '<span class="text-xs text-gray-700 dark:text-gray-300" title="Mitarbeiter">MA: ' . $staffName . '</span>';
 
                                 return new HtmlString(implode('<br>', $lines));
                             }
 
                             if ($appointments->isEmpty()) {
-                                return new HtmlString('<span class="text-xs text-gray-400">-</span>');
+                                return new HtmlString('<span class="text-xs text-gray-500 dark:text-gray-400">-</span>');
                             }
 
                             $lines = [];
@@ -1603,97 +1654,23 @@ class CallResource extends Resource
                                     continue;
                                 }
 
-                                $startDate = \Carbon\Carbon::parse($appointment->starts_at);
-                                $dateTime = $startDate->locale('de')->isoFormat('ddd DD.MM HH:mm');
-                                $serviceName = $appointment->service?->name ?? 'Service';
-                                $staffName = $appointment->staff?->name ?? 'Unzugewiesen';
+                                $startDt = \Carbon\Carbon::parse($appointment->starts_at)->locale('de');
+                                $endTime = $appointment->ends_at ? \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : null;
+                                $fullDateTime = $startDt->isoFormat('dd. D. MMM') . ' ' . $startDt->format('H:i') . ($endTime ? ' - ' . $endTime : '') . ' Uhr';
+                                $staffName = $appointment->staff?->name ?? 'Kein MA';
 
-                                // 🆕 CANCELLED: Show cancelled status prominently
+                                // 🆕 CANCELLED: Show cancelled status
                                 if ($appointment->status === 'cancelled') {
-                                    // Shorten service name for display
-                                    if (strlen($serviceName) > 20) {
-                                        $serviceName = substr($serviceName, 0, 17) . '...';
-                                    }
-
-                                    $lines[] = '<span class="text-xs text-orange-700 font-semibold">' .
-                                        '🚫 ' . $serviceName . ' - ' . $dateTime .
-                                        '</span>';
+                                    $lines[] = '<span class="text-xs text-orange-600 dark:text-orange-400 font-semibold">Storniert</span>';
+                                    $lines[] = '<span class="text-xs text-gray-500 dark:text-gray-400" style="text-decoration: line-through;">' . $fullDateTime . '</span>';
                                 } else {
-                                    // 🆕 2025-11-24: COMPOSITE SUPPORT
-                                    $isComposite = $appointment->service && $appointment->service->composite;
-
-                                    if ($isComposite) {
-                                        // Show composite indicator
-                                        $phaseCount = 0;
-                                        try {
-                                            $phaseCount = $appointment->phases()->where('staff_required', true)->count();
-                                        } catch (\Exception $e) {
-                                            // Fallback
-                                        }
-
-                                        if (strlen($serviceName) > 15) {
-                                            $serviceName = substr($serviceName, 0, 12) . '...';
-                                        }
-
-                                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
-
-                                        $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">' .
-                                            '<strong>📦 ' . $serviceName . '</strong> (' . $phaseCount . ' Segmente)' .
-                                            '</span>';
-                                        $lines[] = '<span class="text-xs text-gray-500" style="margin-left: 1.5rem;">' .
-                                            '👤 ' . $staffName . ' • 🕐 ' . $dateTime .
-                                            '</span>';
-
-                                        // Show segments (up to 4)
-                                        if ($phaseCount > 0) {
-                                            try {
-                                                $phases = $appointment->phases()
-                                                    ->where('staff_required', true)
-                                                    ->orderBy('sequence_order')
-                                                    ->limit(4)
-                                                    ->get();
-
-                                                foreach ($phases as $phase) {
-                                                    $syncIcon = match($phase->calcom_sync_status) {
-                                                        'synced' => '✅',
-                                                        'failed' => '❌',
-                                                        'pending' => '⏳',
-                                                        default => '❓'
-                                                    };
-
-                                                    $phaseName = $phase->segment_name;
-                                                    if (strlen($phaseName) > 20) {
-                                                        $phaseName = substr($phaseName, 0, 17) . '...';
-                                                    }
-
-                                                    $lines[] = '<span class="text-xs text-gray-400" style="margin-left: 2.5rem;">' .
-                                                        $syncIcon . ' ' . $phaseName . ' (' . $phase->duration_minutes . 'min)' .
-                                                        '</span>';
-                                                }
-
-                                                if ($phaseCount > 4) {
-                                                    $lines[] = '<span class="text-xs text-gray-400 italic" style="margin-left: 2.5rem;">' .
-                                                        '... +' . ($phaseCount - 4) . ' weitere' .
-                                                        '</span>';
-                                                }
-                                            } catch (\Exception $e) {
-                                                // Fallback - no segments shown
-                                            }
-                                        }
-                                    } else {
-                                        // Standard appointment (non-composite)
-                                        // Note: Reschedule display is now handled at the top of this function
-                                        // This shows what was BOOKED by this call
-                                        if (strlen($serviceName) > 20) {
-                                            $serviceName = substr($serviceName, 0, 17) . '...';
-                                        }
-
-                                        $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
-
-                                        $lines[] = '<span class="text-xs ' . $staffColor . ' font-medium">' .
-                                            '✓ ' . $serviceName . ' - ' . $dateTime . ' → ' . $staffName .
-                                            '</span>';
-                                    }
+                                    // 🆕 2025-11-26: Simplified - only date/time + staff
+                                    // Service info + segments now in "Service / Preis" column
+                                    // Line 1: Date/Time (bold)
+                                    $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . $fullDateTime . '</span>';
+                                    // Line 2: Staff
+                                    $staffColor = $appointment->staff ? 'text-gray-700 dark:text-gray-300' : 'text-orange-600';
+                                    $lines[] = '<span class="text-xs ' . $staffColor . '" title="Mitarbeiter">MA: ' . $staffName . '</span>';
                                 }
 
                                 // Add blank line between appointments
@@ -1815,7 +1792,8 @@ class CallResource extends Resource
                             }
 
                             return implode("\n", $parts);
-                        }),
+                        })
+                        ->toggleable(isToggledHiddenByDefault: false),  // 🆕 2025-11-26: Im Spalten-Selector anzeigen
 
                     // Staff column - DEPRECATED but kept for backwards compatibility (hidden)
                     Tables\Columns\TextColumn::make('appointment_staff')
@@ -1883,7 +1861,7 @@ class CallResource extends Resource
                         ->toggleable()
                         ->hidden(),  // 🚫 Hidden in favor of combined appointment_summary column
 
-                    // 💾 OPTIMIZED: Show ACTUAL booked services + prices from appointments
+                    // 💾 OPTIMIZED: Show ACTUAL booked services + prices + segments from appointments
                     Tables\Columns\TextColumn::make('service_type')
                         ->label('Service / Preis')
                         ->html()
@@ -1902,25 +1880,36 @@ class CallResource extends Resource
                                     }
                                 }
 
-                                // If this call performed a reschedule, show the service normally (no special icon - badge already shows it's a reschedule)
+                                // If this call performed a reschedule, show the service
                                 if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
-                                    $service = $rescheduleDetails->appointment->service;
+                                    $appt = $rescheduleDetails->appointment;
+                                    $service = $appt->service;
                                     $name = ($service->display_name && trim($service->display_name) !== '')
                                         ? $service->display_name
                                         : $service->name;
                                     $price = $service->price;
+                                    $isComposite = $service->composite ?? false;
 
+                                    $lines = [];
+
+                                    // Service name (+ segment count if composite)
+                                    if ($isComposite) {
+                                        $phaseCount = 0;
+                                        try {
+                                            $phaseCount = $appt->phases()->where('staff_required', true)->count();
+                                        } catch (\Exception $e) {}
+                                        $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . htmlspecialchars($name) . ' (' . $phaseCount . ' Segmente)</span>';
+                                    } else {
+                                        $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . htmlspecialchars($name) . '</span>';
+                                    }
+
+                                    // Price
                                     if ($price && $price > 0) {
                                         $formattedPrice = number_format($price, 0, ',', '.');
-                                        return '<div class="text-xs space-y-1 w-full">' .
-                                            '<span class="font-medium">' . htmlspecialchars($name) . '</span><br>' .
-                                            '<span class="text-xs text-green-600">' . $formattedPrice . ' €</span>' .
-                                            '</div>';
-                                    } else {
-                                        return '<div class="text-xs space-y-1 w-full">' .
-                                            '<span class="font-medium">' . htmlspecialchars($name) . '</span>' .
-                                            '</div>';
+                                        $lines[] = '<span class="text-xs text-green-600 dark:text-green-400">' . $formattedPrice . ' €</span>';
                                     }
+
+                                    return '<div>' . implode('<br>', $lines) . '</div>';
                                 }
 
                                 // Use already-loaded appointments (eager-loaded on line 201)
@@ -1928,11 +1917,11 @@ class CallResource extends Resource
 
                                 // No appointments → show "-"
                                 if (!$appointments || $appointments->isEmpty()) {
-                                    return '<span class="text-gray-400 text-xs">-</span>';
+                                    return '<span class="text-gray-500 dark:text-gray-400 text-xs">-</span>';
                                 }
 
-                                // Build service + price display
-                                $lines = [];
+                                // Build service + price + segments display
+                                $allLines = [];
                                 $seen = [];
 
                                 foreach ($appointments as $appt) {
@@ -1942,40 +1931,70 @@ class CallResource extends Resource
                                     if (in_array($serviceId, $seen)) continue; // Skip duplicates
                                     $seen[] = $serviceId;
 
-                                    // Use display_name if provided, otherwise use Cal.com name
                                     $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
                                         ? $appt->service->display_name
                                         : $appt->service->name;
                                     $price = $appt->service->price;
-
-                                    // 🔥 NEW 2025-11-20: Show cancelled status visually
+                                    $isComposite = $appt->service->composite ?? false;
                                     $isCancelled = $appt->status === 'cancelled';
-                                    $textStyle = $isCancelled ? 'text-gray-400 line-through' : 'font-medium';
-                                    $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600';
-                                    $cancelIcon = $isCancelled ? ' 🚫' : '';
 
-                                    if ($price && $price > 0) {
-                                        // Price is stored as decimal(10,2) in EUR, not cents
-                                        // Display as full euros only (no cents)
-                                        $formattedPrice = number_format($price, 0, ',', '.');
-                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span><br>' .
-                                                  '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                    $lines = [];
+
+                                    // Line 1: Service name (+ segment count if composite)
+                                    $textStyle = $isCancelled ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-800 dark:text-gray-200 font-semibold';
+                                    if ($isComposite) {
+                                        $phaseCount = 0;
+                                        try {
+                                            $phaseCount = $appt->phases()->where('staff_required', true)->count();
+                                        } catch (\Exception $e) {}
+                                        $lines[] = '<span class="text-xs ' . $textStyle . '">' . htmlspecialchars($name) . ' (' . $phaseCount . ' Segmente)</span>';
                                     } else {
-                                        $lines[] = '<span class="' . $textStyle . '">' . htmlspecialchars($name) . $cancelIcon . '</span>';
+                                        $lines[] = '<span class="text-xs ' . $textStyle . '">' . htmlspecialchars($name) . '</span>';
                                     }
+
+                                    // Line 2: Price
+                                    if ($price && $price > 0) {
+                                        $formattedPrice = number_format($price, 0, ',', '.');
+                                        $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600 dark:text-green-400';
+                                        $lines[] = '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €' . ($isCancelled ? ' (storniert)' : '') . '</span>';
+                                    }
+
+                                    // Lines 3+: Segments (for composite services, max 4)
+                                    if ($isComposite && !$isCancelled) {
+                                        try {
+                                            $phases = $appt->phases()
+                                                ->where('staff_required', true)
+                                                ->orderBy('sequence_order')
+                                                ->limit(4)
+                                                ->get();
+
+                                            foreach ($phases as $index => $phase) {
+                                                $number = $index + 1;
+                                                $phaseName = $phase->segment_name;
+                                                if (strlen($phaseName) > 20) {
+                                                    $phaseName = substr($phaseName, 0, 17) . '...';
+                                                }
+                                                $lines[] = '<span class="text-xs text-gray-600 dark:text-gray-400" style="margin-left: 0.5rem;">' .
+                                                    $number . '. ' . $phaseName . ' (' . $phase->duration_minutes . ' min)</span>';
+                                            }
+
+                                            $totalPhases = $appt->phases()->where('staff_required', true)->count();
+                                            if ($totalPhases > 4) {
+                                                $lines[] = '<span class="text-xs text-gray-500 italic" style="margin-left: 0.5rem;">... +' . ($totalPhases - 4) . ' weitere</span>';
+                                            }
+                                        } catch (\Exception $e) {
+                                            // Silently ignore
+                                        }
+                                    }
+
+                                    $allLines[] = implode('<br>', $lines);
                                 }
 
-                                if (empty($lines)) {
-                                    return '<span class="text-gray-400 text-xs">-</span>';
+                                if (empty($allLines)) {
+                                    return '<span class="text-gray-500 dark:text-gray-400 text-xs">-</span>';
                                 }
 
-                                $text = implode('<br><br>', $lines);
-                                // Limit display length (increased for better readability)
-                                if (mb_strlen(strip_tags($text)) > 100) {
-                                    $text = mb_substr(strip_tags($text), 0, 100) . '...';
-                                }
-
-                                return '<div class="text-xs space-y-1 w-full">' . $text . '</div>';
+                                return '<div class="text-xs">' . implode('<br><br>', $allLines) . '</div>';
                             } catch (\Throwable $e) {
                                 return '<span class="text-gray-400 text-xs">-</span>';
                             }
@@ -2039,7 +2058,7 @@ class CallResource extends Resource
                             return 'success';
                         })
                         ->icon(null)  // No icon - cleaner display
-                        ->limit(150)
+                        // 🔧 FIX 2025-11-26: Removed ->limit(150) - was truncating HTML before price could show
                         ->wrap()
                         ->searchable()
                         ->sortable()
@@ -2053,8 +2072,15 @@ class CallResource extends Resource
                             $summary = '';
                             if ($record->summary) {
                                 $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
-                                $summaryDisplay = mb_strlen($summaryText) > 100 ? mb_substr($summaryText, 0, 100) . '...' : $summaryText;
-                                $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-2">' .
+
+                                // Show up to 3 lines (~150 chars for classic view)
+                                $maxLength = 150;
+                                $summaryDisplay = mb_strlen($summaryText) > $maxLength
+                                    ? mb_substr($summaryText, 0, $maxLength) . '...'
+                                    : $summaryText;
+
+                                // 3-line display with CSS line-clamp
+                                $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-tight mb-2" style="max-width: 220px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">' .
                                           htmlspecialchars($summaryDisplay) .
                                           '</div>';
                             }
@@ -2062,10 +2088,11 @@ class CallResource extends Resource
                             $audio = '';
                             if (!empty($record->recording_url)) {
                                 $url = $record->recording_url;
-                                $audio = '<div class="flex items-center gap-2 mt-2">
+                                // Audio player width matches text width
+                                $audio = '<div class="mt-1">
                                             <audio controls preload="none"
-                                                   class="h-7 flex-shrink-0"
-                                                   style="height: 28px; max-width: 250px;"
+                                                   class="h-6"
+                                                   style="height: 24px; width: 220px; max-width: 100%;"
                                                    controlsList="nodownload">
                                                 <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
                                                 <source src="' . htmlspecialchars($url) . '" type="audio/wav">
@@ -2077,7 +2104,7 @@ class CallResource extends Resource
                                 return '<span class="text-gray-400 text-xs">-</span>';
                             }
 
-                            return '<div>' . $summary . $audio . '</div>';
+                            return '<div style="max-width: 220px;">' . $summary . $audio . '</div>';
                         })
                         ->tooltip(function ($record) {
                             $lines = [];
@@ -2389,25 +2416,11 @@ class CallResource extends Resource
     protected static function getCompactColumns(): array
     {
         return [
-// 1. Ereignis & Zeit (CONSOLIDATED: shows call outcome + appointment status)
-            Tables\Columns\ViewColumn::make('action_time_duration')
-                ->label('Ereignis / Zeit / Dauer')
-                ->view('filament.columns.action-time-duration')
-                ->sortable(query: fn($query, $direction) =>
-                    $query
-                        ->orderByRaw("CASE
-                            WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
-                            WHEN status = 'completed' THEN 1
-                            WHEN status IN ('missed','busy') THEN 2
-                            ELSE 3
-                            END {$direction}")
-                        ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
-                ),
-
-            // 2. Anrufer (unchanged from classic)
+            // 1️⃣ Anrufer - 🔄 2025-11-26: Als erste Spalte
             Tables\Columns\ViewColumn::make('anrufer_display')
                 ->label('Anrufer')
                 ->view('filament.columns.anrufer-3lines')
+                ->width('140px')
                 ->searchable(query: function (Builder $query, string $search): Builder {
                     return $query
                         ->where(function ($q) use ($search) {
@@ -2417,6 +2430,23 @@ class CallResource extends Resource
                 })
                 ->sortable()
                 ->toggleable(),
+
+            // 2️⃣ Ereignis & Zeit - 🔄 2025-11-26: Verschoben vor Termin/Mitarbeiter
+            Tables\Columns\ViewColumn::make('action_time_duration')
+                ->label('Ereignis / Zeit / Dauer')
+                ->view('filament.columns.action-time-duration')
+                ->width('100px')
+                ->sortable(query: fn($query, $direction) =>
+                    $query
+                        ->orderByRaw("CASE
+                            WHEN status IN ('ongoing','in_progress','active','ringing') THEN 0
+                            WHEN status = 'completed' THEN 1
+                            WHEN status IN ('missed','busy') THEN 2
+                            ELSE 3
+                            END {$direction}")
+                        ->orderBy('created_at', $direction === 'desc' ? 'desc' : 'asc')
+                )
+                ->toggleable(isToggledHiddenByDefault: false),
 
             // 3. Status (LEGACY: hidden - consolidated into Ereignis column)
             Tables\Columns\TextColumn::make('booking_status')
@@ -2476,9 +2506,10 @@ class CallResource extends Resource
                 ->hidden()  // 🚫 Hidden - consolidated into Ereignis column (rollback: remove this line)
                 ->toggleable(),
 
-            // 4. Termin (compact version of appointment_summary) - 🆕 2025-11-24: Enhanced for composite
+            // 4. Termin / Mitarbeiter (compact version of appointment_summary) - 🆕 2025-11-24: Enhanced for composite
             Tables\Columns\TextColumn::make('appointment_summary')
-                ->label('Termin')
+                ->label('Termin / Mitarbeiter')
+                ->width('150px')  // 🆕 2025-11-26: Moderate Breite für Termin + MA
                 ->getStateUsing(function (Call $record) {
                     $appointments = $record->appointments;
 
@@ -2532,22 +2563,21 @@ class CallResource extends Resource
                         $dateTime = $startDate->locale('de')->isoFormat('DD.MM HH:mm');
 
                         if ($appointment->status === 'cancelled') {
-                            $lines[] = '<span class="text-xs text-orange-700">🚫 ' . $dateTime . '</span>';
+                            $lines[] = '<span class="text-xs text-orange-600 dark:text-orange-400 font-semibold">Storniert</span>';
+                            $lines[] = '<span class="text-xs text-gray-500 dark:text-gray-400" style="text-decoration: line-through;">' . $dateTime . '</span>';
                         } else {
-                            // 🆕 2025-11-24: Check if composite
-                            $isComposite = $appointment->service && $appointment->service->composite;
+                            // 🆕 2025-11-26: Simplified - only date/time + staff
+                            // Service info + segments now in "Service / Preis" column
+                            $startDt = \Carbon\Carbon::parse($appointment->starts_at)->locale('de');
+                            $endTime = $appointment->ends_at ? \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') : null;
+                            $fullDateTime = $startDt->isoFormat('dd. D.M.') . ' ' . $startDt->format('H:i') . ($endTime ? '-' . $endTime : '');
+                            $staffName = $appointment->staff ? \Str::limit($appointment->staff->name, 12) : 'Kein MA';
 
-                            if ($isComposite) {
-                                $phaseCount = $appointment->phases()->where('staff_required', true)->count();
-                                $serviceName = \Str::limit($appointment->service->name, 15);
-                                $lines[] = '<span class="text-xs text-green-600 font-medium">📦 ' . $serviceName . ' (' . $phaseCount . ')</span>';
-                                $lines[] = '<span class="text-xs text-gray-500">   ' . $dateTime . '</span>';
-                            } else {
-                                // Standard booking display
-                                $staffName = $appointment->staff ? \Str::limit($appointment->staff->name, 12) : 'Kein MA';
-                                $staffColor = $appointment->staff ? 'text-green-600' : 'text-orange-600';
-                                $lines[] = '<span class="text-xs ' . $staffColor . '">✓ ' . $dateTime . ' → ' . $staffName . '</span>';
-                            }
+                            // Line 1: Date/Time (bold)
+                            $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . $fullDateTime . ' Uhr</span>';
+                            // Line 2: Staff
+                            $staffColor = $appointment->staff ? 'text-gray-700 dark:text-gray-300' : 'text-orange-600';
+                            $lines[] = '<span class="text-xs ' . $staffColor . '" title="Mitarbeiter">MA: ' . $staffName . '</span>';
                         }
                     }
 
@@ -2627,20 +2657,15 @@ class CallResource extends Resource
                         if ($appointment->service) {
                             $parts[] = '📋 Service: ' . $appointment->service->name;
 
-                            // 🆕 2025-11-24: Show segments for composite services
+                            // 🆕 2025-11-24: Show segments for composite services (numbered list)
                             if ($appointment->service->composite) {
                                 try {
                                     $phases = $appointment->phases()->where('staff_required', true)->orderBy('sequence_order')->get();
                                     if ($phases->isNotEmpty()) {
-                                        $parts[] = '📦 Compound-Service (' . $phases->count() . ' Segmente):';
-                                        foreach ($phases as $phase) {
-                                            $syncIcon = match($phase->calcom_sync_status) {
-                                                'synced' => '✅',
-                                                'failed' => '❌',
-                                                'pending' => '⏳',
-                                                default => '❓'
-                                            };
-                                            $parts[] = '   ' . $syncIcon . ' ' . $phase->segment_name . ' (' . $phase->duration_minutes . 'min)';
+                                        $parts[] = 'Compound-Service (' . $phases->count() . ' Schritte):';
+                                        foreach ($phases as $index => $phase) {
+                                            $number = $index + 1;
+                                            $parts[] = '   ' . $number . '. ' . $phase->segment_name . ' (' . $phase->duration_minutes . ' min)';
                                         }
                                     }
                                 } catch (\Exception $e) {
@@ -2674,11 +2699,13 @@ class CallResource extends Resource
                     }
 
                     return implode("\n", $parts);
-                }),
+                })
+                ->toggleable(isToggledHiddenByDefault: false),  // 🆕 2025-11-26: Im Spalten-Selector anzeigen
 
-            // 5. Service/Preis - 🆕 2025-11-25: Updated for reschedule calls
+            // 5. Service/Preis - 🆕 2025-11-26: Show service + price + segments (compact)
             Tables\Columns\TextColumn::make('service_type')
-                ->label('Service')
+                ->label('Service / Preis')
+                ->width('180px')  // 🆕 2025-11-26: Mehr Platz für Service + Segmente
                 ->html()
                 ->getStateUsing(function ($record) {
                     try {
@@ -2695,34 +2722,40 @@ class CallResource extends Resource
                             }
                         }
 
-                        // If this call performed a reschedule, show the service normally (no icon - badge shows it's a reschedule)
+                        // If this call performed a reschedule, show the service
                         if ($rescheduleDetails && $rescheduleDetails->appointment && $rescheduleDetails->appointment->service) {
-                            $service = $rescheduleDetails->appointment->service;
+                            $appt = $rescheduleDetails->appointment;
+                            $service = $appt->service;
                             $name = ($service->display_name && trim($service->display_name) !== '')
                                 ? $service->display_name
                                 : $service->name;
                             $price = $service->price;
+                            $isComposite = $service->composite ?? false;
+
+                            $lines = [];
+                            if ($isComposite) {
+                                $phaseCount = 0;
+                                try { $phaseCount = $appt->phases()->where('staff_required', true)->count(); } catch (\Exception $e) {}
+                                $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . htmlspecialchars(\Str::limit($name, 15)) . ' (' . $phaseCount . ')</span>';
+                            } else {
+                                $lines[] = '<span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">' . htmlspecialchars(\Str::limit($name, 15)) . '</span>';
+                            }
 
                             if ($price && $price > 0) {
                                 $formattedPrice = number_format($price, 0, ',', '.');
-                                return '<div class="text-xs">' .
-                                    '<span class="font-medium">' . htmlspecialchars(\Str::limit($name, 15)) . '</span><br>' .
-                                    '<span class="text-xs text-green-600">' . $formattedPrice . ' €</span>' .
-                                    '</div>';
-                            } else {
-                                return '<div class="text-xs">' .
-                                    '<span class="font-medium">' . htmlspecialchars(\Str::limit($name, 15)) . '</span>' .
-                                    '</div>';
+                                $lines[] = '<span class="text-xs text-green-600 dark:text-green-400">' . $formattedPrice . ' €</span>';
                             }
+
+                            return '<div>' . implode('<br>', $lines) . '</div>';
                         }
 
                         $appointments = $record->appointments ?? collect();
 
                         if (!$appointments || $appointments->isEmpty()) {
-                            return '<span class="text-gray-400 text-xs">-</span>';
+                            return '<span class="text-gray-500 dark:text-gray-400 text-xs">-</span>';
                         }
 
-                        $lines = [];
+                        $allLines = [];
                         $seen = [];
 
                         foreach ($appointments as $appt) {
@@ -2736,26 +2769,61 @@ class CallResource extends Resource
                                 ? $appt->service->display_name
                                 : $appt->service->name;
                             $price = $appt->service->price;
-
+                            $isComposite = $appt->service->composite ?? false;
                             $isCancelled = $appt->status === 'cancelled';
-                            $textStyle = $isCancelled ? 'text-gray-400 line-through' : 'font-medium';
-                            $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600';
-                            $cancelIcon = $isCancelled ? ' 🚫' : '';
 
+                            $lines = [];
+
+                            // Line 1: Service name (+ segment count if composite)
+                            $textStyle = $isCancelled ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-800 dark:text-gray-200 font-semibold';
+                            if ($isComposite) {
+                                $phaseCount = 0;
+                                try { $phaseCount = $appt->phases()->where('staff_required', true)->count(); } catch (\Exception $e) {}
+                                $lines[] = '<span class="text-xs ' . $textStyle . '">' . htmlspecialchars(\Str::limit($name, 15)) . ' (' . $phaseCount . ')</span>';
+                            } else {
+                                $lines[] = '<span class="text-xs ' . $textStyle . '">' . htmlspecialchars(\Str::limit($name, 18)) . '</span>';
+                            }
+
+                            // Line 2: Price
                             if ($price && $price > 0) {
                                 $formattedPrice = number_format($price, 0, ',', '.');
-                                $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span><br>' .
-                                          '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €</span>';
-                            } else {
-                                $lines[] = '<span class="' . $textStyle . ' text-xs">' . htmlspecialchars(\Str::limit($name, 20)) . $cancelIcon . '</span>';
+                                $priceColor = $isCancelled ? 'text-gray-400' : 'text-green-600 dark:text-green-400';
+                                $lines[] = '<span class="text-xs ' . $priceColor . '">' . $formattedPrice . ' €' . ($isCancelled ? ' (storniert)' : '') . '</span>';
                             }
+
+                            // Lines 3+: Segments (for composite services, max 3 in compact view)
+                            if ($isComposite && !$isCancelled) {
+                                try {
+                                    $phases = $appt->phases()
+                                        ->where('staff_required', true)
+                                        ->orderBy('sequence_order')
+                                        ->limit(3)
+                                        ->get();
+
+                                    foreach ($phases as $index => $phase) {
+                                        $number = $index + 1;
+                                        $phaseName = $phase->segment_name;
+                                        if (strlen($phaseName) > 18) {
+                                            $phaseName = substr($phaseName, 0, 15) . '...';
+                                        }
+                                        $lines[] = '<span class="text-xs text-gray-600 dark:text-gray-400">' . $number . '. ' . $phaseName . '</span>';
+                                    }
+
+                                    $totalPhases = $appt->phases()->where('staff_required', true)->count();
+                                    if ($totalPhases > 3) {
+                                        $lines[] = '<span class="text-xs text-gray-500 italic">+' . ($totalPhases - 3) . ' weitere</span>';
+                                    }
+                                } catch (\Exception $e) {}
+                            }
+
+                            $allLines[] = implode('<br>', $lines);
                         }
 
-                        if (empty($lines)) {
-                            return '<span class="text-gray-400 text-xs">-</span>';
+                        if (empty($allLines)) {
+                            return '<span class="text-gray-500 dark:text-gray-400 text-xs">-</span>';
                         }
 
-                        return '<div class="text-xs space-y-1">' . implode('<br>', $lines) . '</div>';
+                        return '<div class="text-xs">' . implode('<br><br>', $allLines) . '</div>';
                     } catch (\Throwable $e) {
                         return '<span class="text-gray-400 text-xs">-</span>';
                     }
@@ -2813,16 +2881,24 @@ class CallResource extends Resource
                 ->wrap()
                 ->toggleable(),
 
-            // 6. Details (unchanged from classic - summary + audio)
+            // 6. Details (summary text + audio player)
             Tables\Columns\TextColumn::make('summary_audio')
                 ->label('Details')
+                ->width('200px')  // 🆕 2025-11-26: Mehr Platz für Zusammenfassung + Audio
                 ->html()
                 ->getStateUsing(function ($record) {
                     $summary = '';
                     if ($record->summary) {
                         $summaryText = is_string($record->summary) ? $record->summary : json_encode($record->summary);
-                        $summaryDisplay = mb_strlen($summaryText) > 50 ? mb_substr($summaryText, 0, 50) . '...' : $summaryText;
-                        $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed mb-1">' .
+
+                        // Show up to 3 lines (~120 chars) of summary text
+                        $maxLength = 120;
+                        $summaryDisplay = mb_strlen($summaryText) > $maxLength
+                            ? mb_substr($summaryText, 0, $maxLength) . '...'
+                            : $summaryText;
+
+                        // Wrap into 3 lines max
+                        $summary = '<div class="text-xs text-gray-700 dark:text-gray-300 leading-tight mb-1" style="max-width: 180px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">' .
                                   htmlspecialchars($summaryDisplay) .
                                   '</div>';
                     }
@@ -2831,16 +2907,11 @@ class CallResource extends Resource
                     if (!empty($record->recording_url)) {
                         $url = $record->recording_url;
 
-                        // Show audio duration if available
-                        $durationLabel = '';
-                        if ($record->duration_sec) {
-                            $durationLabel = '<div class="text-xs text-gray-500 mb-1">🎙️ ' . gmdate("i:s", $record->duration_sec) . '</div>';
-                        }
-
-                        $audio = $durationLabel . '<div class="flex items-center gap-1 mt-1">
+                        // Audio player width matches text width
+                        $audio = '<div class="mt-1">
                                     <audio controls preload="none"
-                                           class="h-6 flex-shrink-0"
-                                           style="height: 24px; max-width: 200px;"
+                                           class="h-6"
+                                           style="height: 24px; width: 180px; max-width: 100%;"
                                            controlsList="nodownload">
                                         <source src="' . htmlspecialchars($url) . '" type="audio/mpeg">
                                         <source src="' . htmlspecialchars($url) . '" type="audio/wav">
@@ -2852,7 +2923,7 @@ class CallResource extends Resource
                         return '<span class="text-gray-400 text-xs">-</span>';
                     }
 
-                    return '<div>' . $summary . $audio . '</div>';
+                    return '<div style="max-width: 180px;">' . $summary . $audio . '</div>';
                 })
                 ->tooltip(function ($record) {
                     $lines = [];
@@ -2903,17 +2974,19 @@ class CallResource extends Resource
     }
 
     /**
-     * 🔧 FIX 2025-11-24: Resolve record route binding for Super Admin access
+     * SECURITY: Safe scope bypass - Super Admin role-based authorization
+     * Pattern: withoutGlobalScopes() with explicit role check before bypass
+     * @see HasSecureScopeBypass::resolveRecordWithAdminBypass()
      *
-     * Super Admins should see ALL calls across all companies,
-     * but Filament's default behavior filters by company_id.
+     * 🔧 FIX 2025-11-24: Resolve record route binding for Super Admin access
+     * Super Admins see ALL calls across all companies for system-wide support.
      */
     public static function resolveRecordRouteBinding($key): ?\Illuminate\Database\Eloquent\Model
     {
         $user = auth()->user();
 
-        // Super Admins bypass company scoping
-        if ($user && $user->hasRole(['super_admin', 'Super Admin'])) {
+        // Super Admins bypass company scoping - supports all role name variations
+        if ($user && $user->hasRole(['super_admin', 'Super Admin', 'superadmin'])) {
             return static::getModel()::withoutGlobalScopes()->find($key);
         }
 

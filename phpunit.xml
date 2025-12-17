@@ -31,5 +31,6 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="CALCOM_API_KEY" value="test-api-key-for-testing"/>
     </php>
 </phpunit>
