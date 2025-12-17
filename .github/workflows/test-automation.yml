@@ -10,7 +10,7 @@ on:
     - cron: '0 2 * * *'
 
 env:
-  PHP_VERSION: '8.2'
+  PHP_VERSION: '8.3'
   NODE_VERSION: '18'
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -58,7 +58,7 @@ jobs:
           ini-values: memory_limit=512M
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -87,7 +87,7 @@ jobs:
           name: unit-tests-coverage
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage-report/
@@ -118,7 +118,7 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -166,7 +166,7 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -197,7 +197,7 @@ jobs:
     needs: [unit-tests, integration-tests]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup K6
         run: |
@@ -238,7 +238,7 @@ jobs:
           echo "✅ Performance tests passed - booking flow < 45s" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Performance Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: performance-results
@@ -255,10 +255,10 @@ jobs:
     needs: [unit-tests, integration-tests]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -288,7 +288,7 @@ jobs:
         run: npx playwright test tests/E2E/playwright/
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -304,7 +304,7 @@ jobs:
     needs: [unit-tests]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
