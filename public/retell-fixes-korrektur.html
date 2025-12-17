@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent V67 - KORREKTUR (3 Fehler beheben)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .critical-warning {
+            background: #fff3cd;
+            border: 5px solid #c0392b;
+            padding: 30px;
+            margin: 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .critical-warning strong {
+            color: #c0392b;
+            font-size: 1.3em;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .dashboard-link {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .dashboard-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+        }
+
+        .fix-section {
+            margin: 40px 0;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .fix-header {
+            padding: 20px;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .fix-header input[type="checkbox"] {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .fix1 .fix-header { background: #e74c3c; }
+        .fix2 .fix-header { background: #c0392b; }
+        .fix3 .fix-header { background: #e67e22; }
+
+        .fix-body {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #c0392b;
+        }
+
+        .step-number {
+            background: #c0392b;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-description {
+            margin: 15px 0;
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        .copyable {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .copyable pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: #27ae60;
+        }
+
+        .screenshot-hint {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .screenshot-hint::before {
+            content: "💡 ";
+            font-size: 1.2em;
+        }
+
+        .wrong-field {
+            background: #ffebee;
+            border: 3px solid #c0392b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .wrong-field h3 {
+            color: #c0392b;
+            margin-bottom: 15px;
+        }
+
+        .field-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .field-box {
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .field-box.wrong {
+            background: #ffebee;
+            border: 2px solid #c0392b;
+        }
+
+        .field-box.correct {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+
+        .field-box h4 {
+            margin-bottom: 10px;
+        }
+
+        .field-box code {
+            background: #333;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .tool-mapping {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .tool-mapping table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tool-mapping th {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tool-mapping td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .old-value {
+            color: #e74c3c;
+            text-decoration: line-through;
+            font-family: monospace;
+        }
+
+        .new-value {
+            color: #27ae60;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .publish-section {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .publish-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 KORREKTUR: 3 Verbleibende Fehler</h1>
+            <div class="version">Agent V67 - Nachbesserung erforderlich</div>
+        </div>
+
+        <div class="content">
+            <div class="critical-warning">
+                <strong>🚨 KRITISCH: Fix 2 wurde FALSCH angewendet!</strong>
+                <p>Du hast das <code>name</code> Feld geändert, aber Retell sendet das <code>tool_id</code> Feld ans Backend!</p>
+                <p><strong>ALLE TOOL CALLS SCHLAGEN DERZEIT WEITERHIN FEHL!</strong></p>
+                <p>Ohne Korrektur: Keine Terminbuchungen möglich! 🚫</p>
+            </div>
+
+            <div class="dashboard-link">
+                <strong>🔗 Dashboard URL:</strong><br>
+                <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </a>
+            </div>
+
+            <!-- FIX 1 KORREKTUR -->
+            <div class="fix-section fix1">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix1-done">
+                    <span>KORREKTUR 1: node_greeting löschen</span>
+                </div>
+                <div class="fix-body">
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Gehe zum Conversation Flow Editor</span>
+                        </div>
+                        <div class="step-description">
+                            Dashboard → Tab "Conversation Flow"
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Finde die Node "node_greeting" (oder "Begrüßung")</span>
+                        </div>
+                        <div class="step-description">
+                            Suche im Flow-Editor nach der Box mit ID <strong>"node_greeting"</strong> oder Name <strong>"Begrüßung"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Diese Node sollte NICHT mehr existieren, da sie eine doppelte Begrüßung verursacht
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">3</span>
+                            <span>LÖSCHE die Node komplett</span>
+                        </div>
+                        <div class="step-description">
+                            Rechtsklick auf die Node → "Delete" oder "Remove"<br>
+                            Oder: Node auswählen und <strong>Entf-Taste</strong> drücken
+                        </div>
+                        <div class="screenshot-hint">
+                            Der Start Node ist bereits korrekt auf "func_initialize_context" gesetzt (✓)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIX 2 KORREKTUR - KRITISCH -->
+            <div class="fix-section fix2">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix2-done">
+                    <span>KORREKTUR 2: Tool IDs korrigieren (KRITISCH!)</span>
+                </div>
+                <div class="fix-body">
+                    <div class="wrong-field">
+                        <h3>⚠️ DU HAST DAS FALSCHE FELD GEÄNDERT!</h3>
+
+                        <div class="field-comparison">
+                            <div class="field-box wrong">
+                                <h4>❌ Du hast geändert:</h4>
+                                <p><code>name</code> Feld</p>
+                                <p style="margin-top: 10px; color: #666;">
+                                    Das <code>name</code> Feld ist nur zur Anzeige!<br>
+                                    Retell sendet es NICHT ans Backend!
+                                </p>
+                            </div>
+                            <div class="field-box correct">
+                                <h4>✅ Du musst ändern:</h4>
+                                <p><code>tool_id</code> Feld</p>
+                                <p style="margin-top: 10px; color: #155724;">
+                                    Das <code>tool_id</code> Feld wird ans Backend gesendet!<br>
+                                    Nur diese Änderung zählt!
+                                </p>
+                            </div>
+                        </div>
+
+                        <p style="margin-top: 20px; font-weight: bold; color: #c0392b;">
+                            ALLE 10 Tools müssen korrigiert werden - TOOL_ID ÄNDERN, NICHT NAME!
+                        </p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Gehe zum Tools/Functions Bereich</span>
+                        </div>
+                        <div class="step-description">
+                            Dashboard → Tab <strong>"Tools"</strong> oder <strong>"Functions"</strong>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Für JEDES Tool: Klicke es an und finde das Feld "Tool ID"</span>
+                        </div>
+                        <div class="screenshot-hint">
+                            <strong>NICHT das "Name" oder "Function Name" Feld!</strong><br>
+                            Du suchst das Feld <strong>"Tool ID"</strong> (manchmal auch "ID" oder "Identifier" genannt)
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">3</span>
+                            <span>Ändere NUR das "Tool ID" Feld für alle 10 Tools</span>
+                        </div>
+
+                        <div class="tool-mapping">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Tool ID ALT (❌ aktuell falsch)</th>
+                                        <th>Tool ID NEU (✅ korrekt)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td><span class="old-value">tool-get-current-context</span></td>
+                                        <td>
+                                            <span class="new-value">get_current_context</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_current_context')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td><span class="old-value">tool-check-customer</span></td>
+                                        <td>
+                                            <span class="new-value">check_customer</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'check_customer')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td><span class="old-value">tool-check-availability</span></td>
+                                        <td>
+                                            <span class="new-value">check_availability_v17</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'check_availability_v17')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td><span class="old-value">tool-start-booking</span></td>
+                                        <td>
+                                            <span class="new-value">start_booking</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'start_booking')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td><span class="old-value">tool-get-appointments</span></td>
+                                        <td>
+                                            <span class="new-value">query_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'query_appointment')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td><span class="old-value">tool-cancel-appointment</span></td>
+                                        <td>
+                                            <span class="new-value">cancel_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'cancel_appointment')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td><span class="old-value">tool-reschedule-appointment</span></td>
+                                        <td>
+                                            <span class="new-value">reschedule_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'reschedule_appointment')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td><span class="old-value">tool-get-alternatives</span></td>
+                                        <td>
+                                            <span class="new-value">get_alternatives</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_alternatives')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td><span class="old-value">tool-get-services</span></td>
+                                        <td>
+                                            <span class="new-value">get_available_services</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_available_services')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>10</td>
+                                        <td><span class="old-value">tool-request-callback</span></td>
+                                        <td>
+                                            <span class="new-value">request_callback</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'request_callback')" style="position: relative; float: right;">📋</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="screenshot-hint">
+                            <strong>WICHTIG:</strong> Klicke jeden der 10 Tools einzeln an → Ändere <strong>NUR</strong> das "Tool ID" Feld → Speichern
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIX 3 KORREKTUR -->
+            <div class="fix-section fix3">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix3-done">
+                    <span>KORREKTUR 3: customer_found Logic (Text korrigieren)</span>
+                </div>
+                <div class="fix-body">
+                    <div class="wrong-field">
+                        <h3>⚠️ HTML-CODE IM TEXT!</h3>
+                        <p>Der aktuelle Text enthält HTML-Artefakte vom Copy-Button:</p>
+                        <code style="color: #c0392b;">"= 0.8: Sage: \"Guten Tag!...">Kopieren\nSTRIKT PRÜFEN..."</code>
+                        <p style="margin-top: 15px;">
+                            <strong>Das passiert wenn du den Copy-Button-Bereich mit-markierst beim Kopieren!</strong>
+                        </p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Gehe zu node_personalized_greeting</span>
+                        </div>
+                        <div class="step-description">
+                            Conversation Flow Editor → Node "node_personalized_greeting" anklicken
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>LÖSCHE den kompletten aktuellen Text</span>
+                        </div>
+                        <div class="step-description">
+                            Im "Instruction" oder "Prompt" Feld:<br>
+                            <strong>Alles markieren (Strg+A) → Löschen</strong>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">3</span>
+                            <span>Füge den SAUBEREN Text ein</span>
+                        </div>
+                        <div class="step-description">
+                            <strong>Klicke NUR auf den Kopieren-Button (📋), NICHT den Text markieren!</strong>
+                        </div>
+                        <div class="copyable" style="margin-top: 20px;">
+                            <button class="copy-btn" onclick="copyToClipboard(this, `STRIKT PRÜFEN - Boolean UND String Varianten:
+
+IF {{customer_found}} === \"false\" OR {{customer_found}} === false OR NOT {{customer_found}}:
+  Sage: \"Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?\"
+
+ELSE IF {{customer_found}} === \"true\" OR {{customer_found}} === true:
+  IF {{service_confidence}} >= 0.8:
+    Sage: \"Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen {{predicted_service}} buchen?\"
+  ELSE:
+    Sage: \"Guten Tag, {{customer_name}}! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?\"
+
+WICHTIG: Dies ist die EINZIGE personalisierte Begrüßung. Danach SOFORT zur Intent-Erkennung (NICHT noch einmal begrüßen!).`)">📋 Kopieren</button>
+                            <pre>STRIKT PRÜFEN - Boolean UND String Varianten:
+
+IF {{customer_found}} === "false" OR {{customer_found}} === false OR NOT {{customer_found}}:
+  Sage: "Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?"
+
+ELSE IF {{customer_found}} === "true" OR {{customer_found}} === true:
+  IF {{service_confidence}} >= 0.8:
+    Sage: "Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen {{predicted_service}} buchen?"
+  ELSE:
+    Sage: "Guten Tag, {{customer_name}}! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?"
+
+WICHTIG: Dies ist die EINZIGE personalisierte Begrüßung. Danach SOFORT zur Intent-Erkennung (NICHT noch einmal begrüßen!).</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publish Section -->
+            <div class="publish-section">
+                <h2>🚀 NACH ALLEN KORREKTUREN: PUBLISHEN!</h2>
+                <p style="font-size: 1.1em; margin: 20px 0;">
+                    ✅ Korrektur 1: node_greeting gelöscht<br>
+                    ✅ Korrektur 2: Alle 10 Tool IDs korrigiert<br>
+                    ✅ Korrektur 3: customer_found Logic sauber eingefügt
+                </p>
+                <p style="font-size: 1.3em; font-weight: bold; margin-top: 30px;">
+                    → Klicke "Publish" oder "Save & Publish"<br>
+                    → V68 wird published, V69 wird als Draft erstellt<br>
+                    → DANN sofort testen!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Kopieren fehlgeschlagen. Bitte manuell kopieren.');
+                console.error('Copy failed:', err);
+            });
+        }
+
+        // Save checkbox states
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            const savedState = localStorage.getItem(checkbox.id);
+            if (savedState === 'true') {
+                checkbox.checked = true;
+            }
+
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem(checkbox.id, checkbox.checked);
+            });
+        });
+    </script>
+</body>
+</html>

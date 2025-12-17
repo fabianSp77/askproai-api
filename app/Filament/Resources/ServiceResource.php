@@ -722,6 +722,7 @@ class ServiceResource extends Resource
                     ->searchable()
                     ->weight('bold')
                     ->color(fn ($record) => $record->assignment_method ? 'primary' : 'danger')
+                    ->tooltip('Zeigt das zugeordnete Unternehmen. "Not assigned" bedeutet, dass der Service noch keinem Unternehmen zugewiesen wurde.')
                     ->description(function ($record) {
                         $parts = [];
 
@@ -769,7 +770,12 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('display_name')
                     ->label('Dienstleistung')
                     ->getStateUsing(fn ($record) => $record->display_name ?? $record->name)
-                    ->searchable()
+                    ->searchable(query: function ($query, string $search) {
+                        return $query->where(function ($q) use ($search) {
+                            $q->where('display_name', 'like', "%{$search}%")
+                              ->orWhere('name', 'like', "%{$search}%");
+                        });
+                    })
                     ->sortable()
                     ->wrap()
                     ->lineClamp(2)
@@ -842,7 +848,46 @@ class ServiceResource extends Resource
                         'success' => fn ($state) => $state >= 80,
                         'warning' => fn ($state) => $state >= 60 && $state < 80,
                         'danger' => fn ($state) => $state > 0 && $state < 60,
-                    ]),
+                    ])
+                    ->tooltip(function ($record): string {
+                        if (!$record->assignment_confidence) {
+                            return "➖ Keine Konfidenz\n\n" .
+                                   "Dieser Service wurde entweder:\n" .
+                                   "• Manuell zugewiesen (keine automatische Analyse)\n" .
+                                   "• Noch nicht zugewiesen\n" .
+                                   "• Direkt aus Cal.com importiert";
+                        }
+
+                        $confidence = $record->assignment_confidence;
+                        $color = $confidence >= 80 ? '🟢' : ($confidence >= 60 ? '🟡' : '🔴');
+                        $rating = $confidence >= 80 ? 'HOCH' : ($confidence >= 60 ? 'MITTEL' : 'NIEDRIG');
+
+                        $explanation = "Was bedeutet {$confidence}%?\n\n";
+
+                        if ($confidence >= 80) {
+                            $explanation .= "🟢 HOHE KONFIDENZ (≥80%)\n\n" .
+                                           "Die automatische Zuweisung ist sehr sicher.\n" .
+                                           "Service-Name passt eindeutig zum Unternehmen.\n\n" .
+                                           "Empfehlung: Kann ohne Prüfung akzeptiert werden.";
+                        } elseif ($confidence >= 60) {
+                            $explanation .= "🟡 MITTLERE KONFIDENZ (60-79%)\n\n" .
+                                           "Die Zuweisung ist wahrscheinlich korrekt.\n" .
+                                           "Es gibt einige Ähnlichkeiten, aber keine 100%ige Übereinstimmung.\n\n" .
+                                           "Empfehlung: Kurz überprüfen, dann akzeptieren.";
+                        } else {
+                            $explanation .= "🔴 NIEDRIGE KONFIDENZ (<60%)\n\n" .
+                                           "Die Zuweisung ist unsicher.\n" .
+                                           "Service-Name passt nicht eindeutig.\n\n" .
+                                           "Empfehlung: Unbedingt manuell überprüfen!\n" .
+                                           "Möglicherweise muss neu zugewiesen werden.";
+                        }
+
+                        if ($record->assignment_method) {
+                            $explanation .= "\n\nZuweisungsmethode: " . strtoupper($record->assignment_method);
+                        }
+
+                        return $explanation;
+                    }),
 
                 Tables\Columns\TextColumn::make('sync_status')
                     ->label('Synchronisierungsstatus')
@@ -930,10 +975,14 @@ class ServiceResource extends Resource
                                 : $record->segments;
 
                             if (is_array($segments)) {
-                                foreach ($segments as $index => $segment) {
-                                    $totalActive += (int)($segment['duration'] ?? 0);
-                                    if ($index < count($segments) - 1) {
-                                        $totalGaps += (int)($segment['gap_after'] ?? 0);
+                                foreach ($segments as $segment) {
+                                    $duration = (int)($segment['durationMin'] ?? $segment['duration_minutes'] ?? $segment['duration'] ?? 0);
+
+                                    // Check segment type for gaps (processing = gap/Einwirkzeit)
+                                    if (($segment['type'] ?? 'active') === 'processing') {
+                                        $totalGaps += $duration;
+                                    } else {
+                                        $totalActive += $duration;
                                     }
                                 }
                                 $total = $totalActive + $totalGaps;
@@ -957,10 +1006,14 @@ class ServiceResource extends Resource
                                 : $record->segments;
 
                             if (is_array($segments)) {
-                                foreach ($segments as $index => $segment) {
-                                    $activeDuration += (int)($segment['duration'] ?? 0);
-                                    if ($index < count($segments) - 1) {
-                                        $gapDuration += (int)($segment['gap_after'] ?? 0);
+                                foreach ($segments as $segment) {
+                                    $duration = (int)($segment['durationMin'] ?? $segment['duration_minutes'] ?? $segment['duration'] ?? 0);
+
+                                    // Check segment type for gaps (processing = gap/Einwirkzeit)
+                                    if (($segment['type'] ?? 'active') === 'processing') {
+                                        $gapDuration += $duration;
+                                    } else {
+                                        $activeDuration += $duration;
                                     }
                                 }
                             }
@@ -1026,7 +1079,23 @@ class ServiceResource extends Resource
                     ->trueIcon('heroicon-o-squares-2x2')
                     ->falseIcon('heroicon-o-stop')
                     ->trueColor('info')
-                    ->sortable(),
+                    ->sortable()
+                    ->tooltip(function ($record): string {
+                        if ($record->composite) {
+                            $segmentCount = count($record->segments ?? []);
+                            $gapCount = collect($record->segments ?? [])->where('type', 'processing')->count();
+                            return "🟦 Komposite Dienstleistung\n\n" .
+                                   "Dieser Service besteht aus {$segmentCount} Segmenten mit {$gapCount} Einwirkzeit(en).\n\n" .
+                                   "Vorteile:\n" .
+                                   "• Mitarbeiter sind während Einwirkzeiten VERFÜGBAR\n" .
+                                   "• Optimale Auslastung durch parallele Buchungen\n" .
+                                   "• Automatische Phasen-Erstellung bei Terminbuchung";
+                        } else {
+                            return "⏹️ Einfacher Service\n\n" .
+                                   "Dieser Service ist ein einfacher Durchlauf ohne Segmente.\n" .
+                                   "Mitarbeiter sind während der gesamten Dauer beschäftigt.";
+                        }
+                    }),
 
                 Tables\Columns\TextColumn::make('pricing')
                     ->label('Preis')
@@ -1076,12 +1145,50 @@ class ServiceResource extends Resource
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
-                    ->sortable(),
+                    ->sortable()
+                    ->tooltip(function ($record): string {
+                        if ($record->is_active) {
+                            return "✅ Service ist AKTIV\n\n" .
+                                   "• Kann gebucht werden (Telefon, Admin, ggf. Online)\n" .
+                                   "• Erscheint in Auswahllisten\n" .
+                                   "• Retell AI kann diesen Service anbieten";
+                        } else {
+                            return "❌ Service ist INAKTIV\n\n" .
+                                   "• Kann NICHT gebucht werden\n" .
+                                   "• Nicht sichtbar für Kunden\n" .
+                                   "• Retell AI bietet diesen Service NICHT an\n" .
+                                   "• Nützlich für saisonale Services oder Wartung";
+                        }
+                    }),
 
                 Tables\Columns\IconColumn::make('is_online')
                     ->label('Online')
                     ->boolean()
-                    ->sortable(),
+                    ->sortable()
+                    ->tooltip(function ($record): string {
+                        if ($record->is_online) {
+                            return "✅ Online-Buchung AKTIVIERT\n\n" .
+                                   "Was funktioniert:\n" .
+                                   "• Kunden können SELBST über Buchungs-Website buchen\n" .
+                                   "• Cal.com zeigt diesen Service im Widget an\n" .
+                                   "• Telefon-Buchungen (Retell AI) funktionieren\n" .
+                                   "• Manuelle Admin-Buchungen funktionieren\n\n" .
+                                   "⚠️ Bei Composite Services:\n" .
+                                   "Cal.com zeigt NUR einen Block, KEINE Segmente!";
+                        } else {
+                            return "❌ Online-Buchung DEAKTIVIERT\n\n" .
+                                   "Was funktioniert:\n" .
+                                   "• Telefon-Buchungen (Retell AI) ✅\n" .
+                                   "• Manuelle Admin-Buchungen ✅\n\n" .
+                                   "Was NICHT funktioniert:\n" .
+                                   "• Kunden können NICHT selbst online buchen ❌\n" .
+                                   "• Service erscheint NICHT im Cal.com Widget ❌\n\n" .
+                                   "💡 Empfohlen für:\n" .
+                                   "• Komplexe/teure Services (z.B. Dauerwelle)\n" .
+                                   "• Composite Services mit Segmenten\n" .
+                                   "• Services, die Beratung benötigen";
+                        }
+                    }),
 
                 Tables\Columns\TextColumn::make('appointment_stats')
                     ->label('Termine & Umsatz')
@@ -1168,7 +1275,14 @@ class ServiceResource extends Resource
                         $staff = $record->allowedStaff;
 
                         if ($staff->isEmpty()) {
-                            return TooltipBuilder::simple('Keine Mitarbeiter für diesen Service zugewiesen', '👥');
+                            return "👥 Keine Mitarbeiter zugewiesen\n\n" .
+                                   "Was bedeutet das?\n" .
+                                   "• ALLE Mitarbeiter können diesen Service durchführen\n" .
+                                   "• Bei Buchung wird automatisch zugewiesen\n" .
+                                   "• Keine Einschränkung nach Qualifikation\n\n" .
+                                   "💡 Empfehlung:\n" .
+                                   "Für spezialisierte Services (z.B. Dauerwelle)\n" .
+                                   "sollten qualifizierte Mitarbeiter zugewiesen werden.";
                         }
 
                         $builder = TooltipBuilder::make();

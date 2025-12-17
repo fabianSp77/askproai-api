@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class UserPreference extends Model
 {
-    use BelongsToCompany;
     protected $fillable = [
         'user_id',
         'user_type',

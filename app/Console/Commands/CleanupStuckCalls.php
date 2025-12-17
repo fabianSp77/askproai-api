@@ -100,11 +100,14 @@ class CleanupStuckCalls extends Command
                 // to avoid negative or incorrect values
                 $duration = null;
                 if ($call->start_timestamp && $call->end_timestamp) {
-                    // If we have both timestamps, use them
-                    $duration = $call->end_timestamp->diffInSeconds($call->start_timestamp);
+                    // If we have both timestamps, use them (parse strings to Carbon)
+                    $startTime = $call->start_timestamp instanceof Carbon ? $call->start_timestamp : Carbon::parse($call->start_timestamp);
+                    $endTime = $call->end_timestamp instanceof Carbon ? $call->end_timestamp : Carbon::parse($call->end_timestamp);
+                    $duration = $endTime->diffInSeconds($startTime);
                 } elseif ($call->start_timestamp) {
-                    // If only start, calculate from start to now
-                    $duration = $call->start_timestamp->diffInSeconds(now());
+                    // If only start, calculate from start to now (parse strings to Carbon)
+                    $startTime = $call->start_timestamp instanceof Carbon ? $call->start_timestamp : Carbon::parse($call->start_timestamp);
+                    $duration = $startTime->diffInSeconds(now());
                 } elseif ($call->created_at) {
                     // Fallback: use created_at as start time
                     $duration = $call->created_at->diffInSeconds(now());

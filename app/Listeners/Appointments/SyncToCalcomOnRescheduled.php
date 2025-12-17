@@ -32,20 +32,13 @@ class SyncToCalcomOnRescheduled implements ShouldQueue
     /**
      * Handle the event
      *
-     * ⚠️ TEMPORARILY DISABLED - Missing database columns for Cal.com sync
+     * ✅ RE-ENABLED 2025-11-25: All required database columns now exist
      *
      * @param AppointmentRescheduled $event
      * @return void
      */
     public function handle(AppointmentRescheduled $event): void
     {
-        // ⚠️ TEMPORARILY DISABLED - Migration pending
-        // Required columns (sync_job_id, calcom_sync_status, etc.) don't exist yet
-        Log::channel('calcom')->info('⏭️ Cal.com reschedule sync DISABLED (migration pending)', [
-            'appointment_id' => $event->appointment->id,
-        ]);
-        return;
-
         $appointment = $event->appointment;
 
         Log::channel('calcom')->info('📨 AppointmentRescheduled event received', [

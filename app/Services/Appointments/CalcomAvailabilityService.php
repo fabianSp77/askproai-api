@@ -336,14 +336,23 @@ class CalcomAvailabilityService
         }
 
         try {
-            // 🔧 FIX 2025-11-14: Cal.com generates slots dynamically based on query window
-            // Query must START at target slot AND provide enough duration for the service
-            // Cal.com only returns slots where the FULL service duration fits in the window
-            // Testing verified: 22:55 + 55min service = 23:50, so window must extend to at least 23:50
-            $startTime = $datetime->copy();
-            $endTime = $datetime->copy()->addMinutes($durationMinutes); // Exact duration needed
+            // 🔧 FIX 2025-11-25: WIDER QUERY WINDOW for composite service segments
+            // PROBLEM: Previous implementation only queried [target, target + duration]
+            // This failed for composite segments that don't align with slot boundaries.
+            // Example: Segment D starts at 12:35, but Cal.com only has slots at 12:20, 13:00
+            //          Querying 12:35-13:15 returns NO slots even though 12:20 slot covers 12:35
+            //
+            // SOLUTION: Query a wider window to capture slots that would COVER our target time
+            // - Start: target - duration (to catch earlier slots that extend to our target)
+            // - End: target + duration (to catch our exact slot if it exists)
+            //
+            // For target=12:35 with duration=40min:
+            // - Query window: 11:55 - 13:15
+            // - This captures slot 12:20 which ends at 13:00, covering 12:35
+            $startTime = $datetime->copy()->subMinutes($durationMinutes);
+            $endTime = $datetime->copy()->addMinutes($durationMinutes);
 
-            Log::debug('[CalcomAvailability] Checking specific time slot', [
+            Log::debug('[CalcomAvailability] Checking specific time slot (wide query)', [
                 'datetime' => $datetime->format('Y-m-d H:i'),
                 'event_type_id' => $eventTypeId,
                 'duration_minutes' => $durationMinutes,
@@ -351,6 +360,7 @@ class CalcomAvailabilityService
                 'query_window' => [
                     'start' => $startTime->format('Y-m-d H:i'),
                     'end' => $endTime->format('Y-m-d H:i'),
+                    'note' => 'Wide window to capture overlapping slots'
                 ],
             ]);
 
@@ -362,26 +372,30 @@ class CalcomAvailabilityService
                 $teamId
             );
 
-            // Check if our specific datetime is in the available slots
+            // Check if our specific datetime is available
             $available = false;
 
             // 🔧 FIX 2025-11-14: CRITICAL TIMEZONE BUG
             // PROBLEM: Cal.com returns UTC times, but $datetime is in Europe/Berlin
-            // SYMPTOM: 22:15 Berlin (21:15 UTC) was not matched because we compared:
-            //   - Target: "2025-11-14 22:15" (Berlin)
-            //   - Slot:   "2025-11-14 21:15" (UTC parsed as local)
             // SOLUTION: Convert both to same timezone (Europe/Berlin) before comparing
 
-            // Get target time in Berlin timezone (already set, but make explicit)
+            // 🔧 FIX 2025-11-25: RANGE-BASED MATCHING for composite services
+            // PROBLEM: Cal.com returns slots at fixed intervals (e.g., every 40min for 40min event)
+            // Composite service segments may start at arbitrary times (e.g., 12:35) that don't
+            // align with slot boundaries.
+            // SOLUTION: Check if requested time falls WITHIN an available slot's window
+            // Available if: any slot where slot_start <= requested_time < slot_end
+
             $targetTimezone = 'Europe/Berlin';
             $targetTimeBerlin = $datetime->copy()->setTimezone($targetTimezone);
             $targetTimeStr = $targetTimeBerlin->format('Y-m-d H:i');
 
-            Log::debug('[CalcomAvailability] Timezone-aware slot comparison', [
+            Log::debug('[CalcomAvailability] Timezone-aware slot comparison (range-based)', [
                 'target_datetime' => $datetime->toIso8601String(),
                 'target_berlin' => $targetTimeStr,
                 'target_timezone' => $targetTimezone,
                 'slots_to_check' => count($slots),
+                'segment_duration' => $durationMinutes,
             ]);
 
             foreach ($slots as $slot) {
@@ -393,23 +407,43 @@ class CalcomAvailabilityService
                     $slotTimeBerlin = $slotTime->copy()->setTimezone($targetTimezone);
                     $slotTimeStr = $slotTimeBerlin->format('Y-m-d H:i');
 
-                    // Match to the minute (both now in same timezone)
+                    // 🔧 FIX 2025-11-25: DUAL MATCHING STRATEGY
+                    // Strategy 1: Exact match (original behavior)
                     if ($slotTimeStr === $targetTimeStr) {
-                        Log::info('[CalcomAvailability] ✅ SLOT MATCH FOUND!', [
+                        Log::info('[CalcomAvailability] ✅ EXACT SLOT MATCH FOUND!', [
                             'target_berlin' => $targetTimeStr,
-                            'slot_utc' => $slot,
                             'slot_berlin' => $slotTimeStr,
-                            'matched' => true,
+                            'match_type' => 'exact',
                         ]);
                         $available = true;
                         break;
-                    } else {
-                        Log::debug('[CalcomAvailability] Slot no match', [
-                            'target' => $targetTimeStr,
-                            'slot' => $slotTimeStr,
-                            'diff_minutes' => $targetTimeBerlin->diffInMinutes($slotTimeBerlin),
-                        ]);
                     }
+
+                    // Strategy 2: Range-based match for composite service segments
+                    // Check if target time falls within this slot's available window
+                    // The slot is available from slot_start to slot_start + slot_interval
+                    // We use the EARLIER slot that covers our target time
+                    $diffMinutes = $slotTimeBerlin->diffInMinutes($targetTimeBerlin, false); // signed diff
+
+                    // If slot starts BEFORE target and target is within reasonable range (< duration)
+                    // then the slot window likely covers our target time
+                    // Example: slot=12:20, target=12:35, diff=15min, duration=40min → covered
+                    if ($diffMinutes > 0 && $diffMinutes < $durationMinutes) {
+                        // Target time is AFTER this slot starts but within its duration window
+                        // This means the staff WOULD be available at our target time
+                        // because they'd still be within this slot's booking window
+                        Log::info('[CalcomAvailability] ✅ RANGE-BASED MATCH FOUND!', [
+                            'target_berlin' => $targetTimeStr,
+                            'slot_berlin' => $slotTimeStr,
+                            'diff_minutes' => $diffMinutes,
+                            'duration' => $durationMinutes,
+                            'match_type' => 'range',
+                            'explanation' => 'Target time falls within slot window',
+                        ]);
+                        $available = true;
+                        break;
+                    }
+
                 } catch (\Exception $e) {
                     Log::warning('[CalcomAvailability] Error parsing slot in availability check', [
                         'slot' => $slot,
@@ -443,6 +477,203 @@ class CalcomAvailabilityService
             // Better to say "not available" than to book and fail
             return false;
         }
+    }
+
+    /**
+     * Check if ALL segments of a composite service are available
+     *
+     * 🔧 FIX 2025-11-25: Root cause fix for composite service sync failures
+     *
+     * PROBLEM: Previous implementation only checked if the START TIME was available,
+     * ignoring subsequent segment times. This caused sync failures when other
+     * bookings existed during segment B, C, D times.
+     *
+     * SOLUTION: Check availability for EACH active segment's time slot separately.
+     * Only return true if ALL segments can be booked.
+     *
+     * Example (Dauerwelle at 11:00):
+     * - Segment A (11:00-11:50): Check Cal.com for event type A
+     * - Gap A (11:50-12:05): No booking needed
+     * - Segment B (12:05-12:10): Check Cal.com for event type B
+     * - Gap B (12:10-12:20): No booking needed
+     * - Segment C (12:20-12:35): Check Cal.com for event type C
+     * - Segment D (12:35-13:15): Check Cal.com for event type D
+     *
+     * @param Carbon $startTime Appointment start time
+     * @param Service $service The composite service
+     * @param string $staffId Staff UUID
+     * @param int|null $teamId Cal.com team ID
+     *
+     * @return array{available: bool, conflicts: array, checked_segments: array}
+     */
+    public function isCompositeServiceAvailable(
+        Carbon $startTime,
+        \App\Models\Service $service,
+        string $staffId,
+        ?int $teamId = null
+    ): array {
+        if (!$service->isComposite() || empty($service->segments)) {
+            Log::warning('[CalcomAvailability] isCompositeServiceAvailable called for non-composite service', [
+                'service_id' => $service->id,
+                'is_composite' => $service->isComposite(),
+            ]);
+
+            // Fallback to standard check
+            $available = $this->isTimeSlotAvailable(
+                $startTime,
+                $service->calcom_event_type_id,
+                $service->getTotalDuration(),
+                null, // No staff filter for standard check
+                $teamId
+            );
+
+            return [
+                'available' => $available,
+                'conflicts' => [],
+                'checked_segments' => [],
+            ];
+        }
+
+        Log::info('[CalcomAvailability] 🎨 Checking composite service availability (ALL segments)', [
+            'service_id' => $service->id,
+            'service_name' => $service->name,
+            'staff_id' => $staffId,
+            'start_time' => $startTime->format('Y-m-d H:i'),
+            'total_segments' => count($service->segments),
+        ]);
+
+        $segments = collect($service->segments)->sortBy('order');
+        $currentTime = $startTime->copy();
+        $checkedSegments = [];
+        $conflicts = [];
+        $allAvailable = true;
+
+        foreach ($segments as $segment) {
+            $segmentKey = $segment['key'] ?? null;
+            $segmentName = $segment['name'] ?? $segmentKey;
+            $duration = $segment['durationMin'] ?? $segment['duration'] ?? 0;
+            $staffRequired = $segment['staff_required'] ?? true;
+
+            // Calculate segment times
+            $segmentStart = $currentTime->copy();
+            $segmentEnd = $segmentStart->copy()->addMinutes($duration);
+
+            // Only check segments where staff is required (active segments, not gaps)
+            if ($staffRequired && $duration > 0) {
+                // Get CalcomEventMap for this segment + staff
+                $mapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                    ->where('segment_key', $segmentKey)
+                    ->where('staff_id', $staffId)
+                    ->first();
+
+                if (!$mapping) {
+                    Log::error('[CalcomAvailability] ❌ Missing CalcomEventMap for segment', [
+                        'service_id' => $service->id,
+                        'segment_key' => $segmentKey,
+                        'staff_id' => $staffId,
+                    ]);
+
+                    $conflicts[] = [
+                        'segment_key' => $segmentKey,
+                        'segment_name' => $segmentName,
+                        'start_time' => $segmentStart->format('Y-m-d H:i'),
+                        'error' => 'Missing CalcomEventMap configuration',
+                    ];
+                    $allAvailable = false;
+                    $currentTime->addMinutes($duration);
+                    continue;
+                }
+
+                // Use child event type ID if available, otherwise use parent
+                $eventTypeId = $mapping->child_event_type_id ?? $mapping->event_type_id;
+
+                Log::debug('[CalcomAvailability] Checking segment availability', [
+                    'segment_key' => $segmentKey,
+                    'segment_name' => $segmentName,
+                    'start_time' => $segmentStart->format('Y-m-d H:i'),
+                    'end_time' => $segmentEnd->format('Y-m-d H:i'),
+                    'duration' => $duration,
+                    'event_type_id' => $eventTypeId,
+                ]);
+
+                // Check Cal.com availability for this specific segment
+                $segmentAvailable = $this->isTimeSlotAvailable(
+                    $segmentStart,
+                    $eventTypeId,
+                    $duration,
+                    null, // Staff already selected via event type
+                    $teamId
+                );
+
+                $checkedSegments[] = [
+                    'segment_key' => $segmentKey,
+                    'segment_name' => $segmentName,
+                    'start_time' => $segmentStart->format('Y-m-d H:i'),
+                    'end_time' => $segmentEnd->format('Y-m-d H:i'),
+                    'duration' => $duration,
+                    'event_type_id' => $eventTypeId,
+                    'available' => $segmentAvailable,
+                ];
+
+                if (!$segmentAvailable) {
+                    $allAvailable = false;
+                    $conflicts[] = [
+                        'segment_key' => $segmentKey,
+                        'segment_name' => $segmentName,
+                        'start_time' => $segmentStart->format('Y-m-d H:i'),
+                        'end_time' => $segmentEnd->format('Y-m-d H:i'),
+                        'reason' => 'Cal.com reports slot not available (staff may have other booking)',
+                    ];
+
+                    Log::warning('[CalcomAvailability] ⚠️ Segment NOT available - EARLY EXIT', [
+                        'segment_key' => $segmentKey,
+                        'start_time' => $segmentStart->format('Y-m-d H:i'),
+                        'event_type_id' => $eventTypeId,
+                        'optimization' => 'Skipping remaining segments to save API calls',
+                    ]);
+
+                    // 🔧 FIX 2025-11-26: EARLY EXIT OPTIMIZATION
+                    // If one segment is unavailable, the entire composite service is unavailable.
+                    // No point checking remaining segments - exit immediately to save API calls.
+                    // Expected savings: 1-3 API calls (800-4500ms) when first segment conflicts
+                    break;
+                } else {
+                    Log::debug('[CalcomAvailability] ✅ Segment available', [
+                        'segment_key' => $segmentKey,
+                        'start_time' => $segmentStart->format('Y-m-d H:i'),
+                    ]);
+                }
+            } else {
+                // Gap segment - no Cal.com check needed, but track for logging
+                $checkedSegments[] = [
+                    'segment_key' => $segmentKey,
+                    'segment_name' => $segmentName,
+                    'start_time' => $segmentStart->format('Y-m-d H:i'),
+                    'end_time' => $segmentEnd->format('Y-m-d H:i'),
+                    'duration' => $duration,
+                    'staff_required' => false,
+                    'available' => true, // Gaps are always "available"
+                    'note' => 'Gap segment - no Cal.com booking needed',
+                ];
+            }
+
+            // Move to next segment
+            $currentTime->addMinutes($duration);
+        }
+
+        Log::info('[CalcomAvailability] 🎨 Composite availability check complete', [
+            'service_id' => $service->id,
+            'all_available' => $allAvailable,
+            'total_checked' => count(array_filter($checkedSegments, fn($s) => $s['staff_required'] ?? true)),
+            'conflicts_count' => count($conflicts),
+            'conflicts' => $conflicts,
+        ]);
+
+        return [
+            'available' => $allAvailable,
+            'conflicts' => $conflicts,
+            'checked_segments' => $checkedSegments,
+        ];
     }
 
     /**

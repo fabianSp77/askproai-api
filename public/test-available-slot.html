@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Available Slot Booking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Booking with Available Slot</h1>
+
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Configuration</h2>
+            <div class="space-y-2 text-sm">
+                <p><strong>Company ID:</strong> 1</p>
+                <p><strong>Branch ID:</strong> 34c4d48e-4753-4715-9c30-c55843a943e8</p>
+                <p><strong>Service:</strong> Herrenhaarschnitt</p>
+                <p><strong>Date:</strong> 2025-11-20</p>
+                <p><strong>Time:</strong> <span id="selected-time" class="text-yellow-400">Loading...</span></p>
+            </div>
+
+            <div class="mt-4">
+                <label class="block text-sm font-medium mb-2">Available Time Slots (Live from Cal.com):</label>
+                <select id="time-select" class="bg-gray-700 text-white rounded px-3 py-2 w-full" disabled>
+                    <option>Click "Get Available Slots" first...</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="fetch-slots"
+                class="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-all mb-4">
+            📅 Get Available Slots (check_availability)
+        </button>
+
+        <button id="run-test"
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                disabled>
+            🚀 Run Test with Selected Time
+        </button>
+
+        <div id="output" class="mt-6 bg-gray-800 rounded-lg p-4 font-mono text-sm hidden"></div>
+    </div>
+
+    <script>
+        const timeSelect = document.getElementById('time-select');
+        const selectedTimeDisplay = document.getElementById('selected-time');
+        const fetchSlotsBtn = document.getElementById('fetch-slots');
+        const runTestBtn = document.getElementById('run-test');
+        const output = document.getElementById('output');
+
+        let callId = null;
+        let availableSlots = [];
+
+        timeSelect.addEventListener('change', (e) => {
+            selectedTimeDisplay.textContent = e.target.value;
+        });
+
+        fetchSlotsBtn.addEventListener('click', async () => {
+            output.classList.remove('hidden');
+            output.innerHTML = '<div class="text-yellow-400">⏳ Fetching available slots...</div>';
+            fetchSlotsBtn.disabled = true;
+
+            try {
+                // Create call record
+                callId = `test_check_avail_${Date.now()}`;
+                log('Creating call record...', 'info');
+                const createRes = await fetch('/api/test/create-call-record', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        call_id: callId,
+                        from_number: '+491604366218',
+                        to_number: '+493033081738',
+                        company_id: 1,
+                        branch_id: '34c4d48e-4753-4715-9c30-c55843a943e8',
+                        phone_number_id: '5b449e91-5376-11f0-b773-0ad77e7a9793'
+                    })
+                });
+                const createData = await createRes.json();
+                if (!createData.success) throw new Error('Failed to create call');
+                log('✅ Call created: ' + callId, 'success');
+
+                // Check availability
+                log('\\nChecking availability for 2025-11-20...', 'info');
+                const availRes = await fetch('/api/retell/function-call', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function_name: 'check_availability',
+                        call: {call_id: callId},
+                        parameters: {
+                            datum: '2025-11-20',
+                            uhrzeit: '10:00',
+                            dienstleistung: 'Herrenhaarschnitt'
+                        }
+                    })
+                });
+                const availData = await availRes.json();
+
+                if (availData.success && availData.data) {
+                    // Check for available_slots (when date is checked without specific time)
+                    // OR alternatives (when specific time is checked but not available)
+                    const rawSlots = availData.data.available_slots ||
+                                    (availData.data.alternatives || []).map(alt => {
+                                        // Extract time from "2025-11-20 09:55" format
+                                        const timePart = alt.time.split(' ')[1];
+                                        return timePart;
+                                    });
+
+                    availableSlots = rawSlots;
+
+                    if (availableSlots.length > 0) {
+                        log(`✅ Found ${availableSlots.length} available slots`, 'success');
+
+                        // Populate dropdown
+                        timeSelect.innerHTML = '';
+                        availableSlots.slice(0, 10).forEach(slot => {
+                            const option = document.createElement('option');
+                            option.value = slot;
+                            option.textContent = slot + ' Uhr';
+                            timeSelect.appendChild(option);
+                        });
+                        timeSelect.disabled = false;
+                        timeSelect.selectedIndex = 0;
+                        selectedTimeDisplay.textContent = timeSelect.value;
+                        runTestBtn.disabled = false;
+
+                        log(`\\n📅 Available slots: ${availableSlots.slice(0, 5).join(', ')}...`, 'info');
+                        log(`Availability: ${availData.data.available ? 'Exact time available' : 'Alternatives found'}`, 'info');
+                    } else {
+                        log('❌ No slots available for this date', 'error');
+                    }
+                } else {
+                    log('❌ Availability check failed', 'error');
+                    if (availData.error) log(`   Error: ${availData.error}`, 'error');
+                }
+            } catch (e) {
+                log('❌ ERROR: ' + e.message, 'error');
+            } finally {
+                fetchSlotsBtn.disabled = false;
+            }
+        });
+
+        runTestBtn.addEventListener('click', async () => {
+            const selectedTime = timeSelect.value;
+
+            if (!callId) {
+                alert('Please fetch available slots first!');
+                return;
+            }
+
+            output.innerHTML = '';
+            log('═'.repeat(60), 'info');
+            log('🚀 BOOKING TEST - Using cached availability', 'info');
+            log('═'.repeat(60), 'info');
+            log('', 'info');
+            log(`Call ID: ${callId}`, 'info');
+            log(`Selected Time: ${selectedTime}`, 'info');
+            log(`Time since check_availability: ~${Math.round((Date.now() - parseInt(callId.split('_')[3])) / 1000)}s`, 'info');
+            log('', 'info');
+
+            runTestBtn.disabled = true;
+
+            try {
+                // Book appointment using the same call_id
+                log('📞 Calling start_booking...', 'info');
+                const bookRes = await fetch('/api/retell/function-call', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function_name: 'start_booking',
+                        call: {call_id: callId},
+                        parameters: {
+                            datetime: `2025-11-20 ${selectedTime}`,
+                            service_name: 'Herrenhaarschnitt',
+                            customer_name: 'Test User',
+                            customer_phone: '+491604366218'
+                        }
+                    })
+                });
+                const bookData = await bookRes.json();
+
+                log('', 'info');
+                log('═'.repeat(60), 'info');
+                if (bookData.success) {
+                    log('✅ BOOKING SUCCESSFUL!', 'success');
+                    log('   Message: ' + (bookData.message || 'Termin erfolgreich gebucht'), 'success');
+                    if (bookData.data) {
+                        log('   Booking Data:', 'success');
+                        log('   ' + JSON.stringify(bookData.data, null, 2), 'info');
+                    }
+                } else {
+                    log('❌ BOOKING FAILED', 'error');
+                    log('   Error: ' + (bookData.error || bookData.message || 'Unknown error'), 'error');
+                    if (bookData.data) {
+                        log('   Details:', 'error');
+                        log('   ' + JSON.stringify(bookData.data, null, 2), 'info');
+                    }
+                }
+                log('═'.repeat(60), 'info');
+
+            } catch (e) {
+                log('', 'error');
+                log('❌ ERROR: ' + e.message, 'error');
+            } finally {
+                runTestBtn.disabled = false;
+            }
+        });
+
+        // Cleanup when page is closed
+        window.addEventListener('beforeunload', () => {
+            if (callId) {
+                navigator.sendBeacon('/api/test/delete-call-record', JSON.stringify({call_id: callId}));
+            }
+        });
+
+        function log(message, type = 'info') {
+            const colors = {
+                info: 'text-gray-300',
+                success: 'text-green-400',
+                error: 'text-red-400'
+            };
+            const div = document.createElement('div');
+            div.className = colors[type];
+            div.textContent = message;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+    </script>
+</body>
+</html>

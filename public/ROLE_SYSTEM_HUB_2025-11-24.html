@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollensystem Documentation Hub - AskPro AI Gateway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        .container-custom {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .header-card h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .header-card .subtitle {
+            font-size: 1.25rem;
+            color: #6b7280;
+        }
+
+        .progress-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            background: #f9fafb;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .progress-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .progress-item.completed {
+            border-left-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .progress-item.in-progress {
+            border-left-color: var(--warning);
+            background: #fffbeb;
+        }
+
+        .progress-item.pending {
+            border-left-color: var(--info);
+            background: #eff6ff;
+        }
+
+        .progress-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .progress-item.completed .progress-icon {
+            background: var(--success);
+            color: white;
+        }
+
+        .progress-item.in-progress .progress-icon {
+            background: var(--warning);
+            color: white;
+        }
+
+        .progress-item.pending .progress-icon {
+            background: var(--info);
+            color: white;
+        }
+
+        .progress-content {
+            flex: 1;
+        }
+
+        .progress-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .progress-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .progress-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .doc-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .doc-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .doc-card {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .doc-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .doc-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .doc-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .doc-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .doc-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .doc-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .doc-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        .quick-links {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .quick-link-btn {
+            display: block;
+            padding: 16px 24px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .quick-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .timestamp {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: inline-block;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-custom px-4">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1><i class="bi bi-shield-lock-fill"></i> Rollensystem Documentation Hub</h1>
+                    <p class="subtitle mb-0">
+                        Zentrale Wissensbasis für Rollen, Berechtigungen und Customer Portal
+                    </p>
+                    <div class="timestamp">
+                        <i class="bi bi-calendar3"></i> Erstellt: 24. November 2025 |
+                        <i class="bi bi-arrow-repeat"></i> Letztes Update: 24. November 2025, 10:30 Uhr
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html" class="quick-link-btn">
+                        <i class="bi bi-file-text"></i> Zur Strategischen Analyse
+                    </a>
+                    <a href="https://github.com/fabianSp77/askproai-api/issues/740" class="quick-link-btn" target="_blank">
+                        <i class="bi bi-github"></i> GitHub Issue #740
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Tracking -->
+        <div class="progress-card">
+            <h3><i class="bi bi-graph-up"></i> Fortschritt & Status</h3>
+
+            <div class="progress-item completed">
+                <div class="progress-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 1: Umfassende Analyse</div>
+                    <p class="progress-desc">
+                        Vollständige Codebase-Analyse, 37 Admin Resources, 11 Portal Resources,
+                        22 Policies analysiert
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-success">✅ Abgeschlossen</span>
+                        <span class="doc-badge badge-primary">90 Min Analysezeit</span>
+                        <span class="doc-badge badge-primary">8.000+ LOC geprüft</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-item completed">
+                <div class="progress-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 2: Strategische Dokumentation</div>
+                    <p class="progress-desc">
+                        State-of-the-art HTML-Dokumentation mit 10 kritischen Entscheidungsfragen,
+                        IST/SOLL-Vergleich, Feature-Matrix, Roadmap
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-success">✅ Abgeschlossen</span>
+                        <span class="doc-badge badge-primary">Interaktiv & Exportierbar</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-item completed">
+                <div class="progress-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 3: Business Decisions & Requirements Analysis</div>
+                    <p class="progress-desc">
+                        Business Decisions empfangen via GitHub #741: Pilot mit 2-3 Kunden, MVP Features (Reschedule/Cancel + User Mgmt),
+                        73 Requirements identifiziert, 42 Edge Cases, 18 Risks analysiert
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-success">✅ Abgeschlossen</span>
+                        <span class="doc-badge badge-primary">73 Requirements</span>
+                        <span class="doc-badge badge-warning">18 Risks Mitigated</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-item completed">
+                <div class="progress-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 3.5: Architecture Design</div>
+                    <p class="progress-desc">
+                        Bulletproof Architecture (94 Seiten): SYNCHRONOUS Cal.com Sync, Optimistic Locking,
+                        Circuit Breaker Pattern, Multi-Layer Authorization, 3 neue DB Tables, 5 Service Classes
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-success">✅ Abgeschlossen</span>
+                        <span class="doc-badge badge-danger">Risk Score: 94/100</span>
+                        <span class="doc-badge badge-primary">160+ Tests Planned</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-item in-progress">
+                <div class="progress-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 4: Implementation (Quick Wins MVP)</div>
+                    <p class="progress-desc">
+                        <strong>READY TO START:</strong> Appointment Reschedule/Cancel + User Management Implementation
+                        <br>Timeline: 12-17 Tage Development + 5-7 Tage Testing
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-warning">🔄 Bereit zur Umsetzung</span>
+                        <span class="doc-badge badge-primary">Implementation Plan erstellt</span>
+                        <span class="doc-badge badge-info">Awaiting Approval</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-item pending">
+                <div class="progress-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div class="progress-content">
+                    <div class="progress-title">Phase 5: Pilot Rollout</div>
+                    <p class="progress-desc">
+                        Deploy to 2-3 Pilot Companies: Onboarding, Monitoring, Feedback Collection, Iteration
+                    </p>
+                    <div class="progress-meta">
+                        <span class="doc-badge badge-primary">⏳ Ausstehend</span>
+                        <span class="doc-badge badge-primary">Timeline: 7 Tage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="quick-links">
+                    <h5 class="mb-3"><i class="bi bi-lightning-fill text-warning"></i> Quick Links</h5>
+                    <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html#tab-decisions" class="quick-link-btn">
+                        <i class="bi bi-question-circle"></i> Kritische Fragen
+                    </a>
+                    <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html#tab-comparison" class="quick-link-btn">
+                        <i class="bi bi-arrow-left-right"></i> IST vs SOLL
+                    </a>
+                    <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html#tab-features" class="quick-link-btn">
+                        <i class="bi bi-puzzle"></i> Feature-Status
+                    </a>
+                    <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html#tab-roadmap" class="quick-link-btn">
+                        <i class="bi bi-map"></i> Roadmap
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="quick-links">
+                    <h5 class="mb-3"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Kritische Erkenntnisse</h5>
+                    <div class="alert alert-success mb-2">
+                        <strong>✅ Gute Nachricht:</strong> Customer Portal ist technisch zu 90% fertig!
+                    </div>
+                    <div class="alert alert-danger mb-2">
+                        <strong>❌ Blocker:</strong> 2 kritische Features fehlen für MVP (Termine bearbeiten + User Management)
+                    </div>
+                    <div class="alert alert-warning mb-0">
+                        <strong>⚠️ Status:</strong> Warten auf Business Decisions (10 Fragen) bevor Entwicklung startet
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Library -->
+        <div class="doc-section">
+            <h3><i class="bi bi-book"></i> Relevante Dokumentationen</h3>
+
+            <h5 class="mt-4 mb-3">🎯 Haupt-Dokumentationen (diese Session)</h5>
+            <div class="doc-grid">
+                <a href="STRATEGIC_ROLE_SYSTEM_ANALYSIS_2025-11-24.html" class="doc-card text-decoration-none">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-file-earmark-text"></i></div>
+                        <h6 class="doc-title">Strategische Analyse</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Umfassende Analyse mit 10 kritischen Entscheidungsfragen, IST/SOLL-Vergleich,
+                        Feature-Status, Roadmap
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">State-of-the-Art</span>
+                        <span class="doc-badge badge-primary">Interaktiv</span>
+                    </div>
+                </a>
+
+                <a href="ROLLENSYSTEM_ANALYSE_2025-11-24.html" class="doc-card text-decoration-none">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-file-earmark-text"></i></div>
+                        <h6 class="doc-title">Rollensystem-Analyse (v1)</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Erste Version der Analyse mit Rollenhierarchie, Berechtigungs-Matrix,
+                        Feature-Berechtigungen
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-warning">Ersetzt durch v2</span>
+                    </div>
+                </a>
+
+                <a href="https://github.com/fabianSp77/askproai-api/issues/740" class="doc-card text-decoration-none" target="_blank">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-github"></i></div>
+                        <h6 class="doc-title">GitHub Issue #740</h6>
+                    </div>
+                    <p class="doc-desc">
+                        User Feedback zur Dokumentation - Anforderungen für Progress Tracking
+                        und Dokumentations-Links
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-primary">Feedback</span>
+                    </div>
+                </a>
+
+                <a href="https://github.com/fabianSp77/askproai-api/issues/741" class="doc-card text-decoration-none" target="_blank">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-github"></i></div>
+                        <h6 class="doc-title">GitHub Issue #741</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Business Decisions: Pilot Strategie, MVP Features, Pricing, Phase 2 Prioritäten
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">Decisions Received</span>
+                    </div>
+                </a>
+
+                <a href="CUSTOMER_PORTAL_MVP_IMPLEMENTATION_PLAN_2025-11-24.html" class="doc-card text-decoration-none">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                        <h6 class="doc-title">Implementation Plan - Customer Portal MVP</h6>
+                    </div>
+                    <p class="doc-desc">
+                        <strong>🔥 READY TO START:</strong> Bulletproof Implementation Plan mit 73 Requirements,
+                        160+ Tests, 12-17 Tage Timeline
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">Risk Score: 94/100</span>
+                        <span class="doc-badge badge-warning">Awaiting Approval</span>
+                    </div>
+                </a>
+
+                <a href="CUSTOMER_PORTAL_MVP_REQUIREMENTS_ANALYSIS_2025-11-24.md" class="doc-card text-decoration-none">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-clipboard-data"></i></div>
+                        <h6 class="doc-title">Requirements Analysis - MVP</h6>
+                    </div>
+                    <p class="doc-desc">
+                        73 Requirements, 42 Edge Cases, 18 Critical Risks, 29 Open Questions
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">Comprehensive</span>
+                    </div>
+                </a>
+
+                <a href="claudedocs/07_ARCHITECTURE/CUSTOMER_PORTAL_MVP_ARCHITECTURE_2025-11-24.md" class="doc-card text-decoration-none">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-diagram-3"></i></div>
+                        <h6 class="doc-title">Architecture Design - MVP (94 Pages)</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Complete architecture: Database schema, Service layer, API design, Circuit breaker,
+                        Optimistic locking, Multi-layer authorization
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">Production-Ready</span>
+                        <span class="doc-badge badge-primary">94 Pages</span>
+                    </div>
+                </a>
+            </div>
+
+            <h5 class="mt-5 mb-3">🔐 Security & Permissions</h5>
+            <div class="doc-grid">
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-shield-check"></i></div>
+                        <h6 class="doc-title">Appointment Modification Permissions</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Berechtigungen für Termin-Modifikationen (Umbuchen, Stornieren, Bestätigen)
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-primary">claudedocs/08_REFERENCE/</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-phone"></i></div>
+                        <h6 class="doc-title">Phone Auth Security Audit</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Sicherheits-Audit für telefon-basierte Authentifizierung und Kundenidentifikation
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">claudedocs/06_SECURITY/</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-person-lock"></i></div>
+                        <h6 class="doc-title">Phone-Based Cancellation Policy</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Sicherheitsrichtlinie für Stornierungen via Telefon (Extended Policy)
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">claudedocs/06_SECURITY/</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-5 mb-3">👥 Customer Portal</h5>
+            <div class="doc-grid">
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-person-circle"></i></div>
+                        <h6 class="doc-title">Customer Portal Critical Architecture Findings</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Kritische Architektur-Befunde (2025-10-27): UUID vs Auto-Increment,
+                        fehlende Spalten, Migrations-Probleme
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">Root Directory</span>
+                        <span class="doc-badge badge-warning">Architektur-Issues</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-check2-square"></i></div>
+                        <h6 class="doc-title">Customer Portal Phase 1 Deployment</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Phase 1 Deployment-Dokumentation (2025-10-26): Foundation Complete
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">Root Directory</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-shield-lock"></i></div>
+                        <h6 class="doc-title">Customer Portal Security Audit</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Sicherheits-Audit für Customer Portal (2025-10-26): Policies, Isolation, Testing
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-success">Root Directory</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-list-check"></i></div>
+                        <h6 class="doc-title">Customer Portal Testing Guide</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Testing Guide für Customer Portal (2025-10-26): Manual Tests, Automated Tests
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-primary">Root Directory</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-5 mb-3">🏗️ Architecture & Design</h5>
+            <div class="doc-grid">
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-diagram-3"></i></div>
+                        <h6 class="doc-title">Staff Assignment Comprehensive Design</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Umfassendes Design für Staff-Assignments (2025-11-22): Multi-branch, permissions
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-primary">claudedocs/07_ARCHITECTURE/</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-person-badge"></i></div>
+                        <h6 class="doc-title">Anonymous Booking Architecture Assessment</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Architektur-Assessment für anonyme Buchungen: Security, UX, Implementation
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-warning">claudedocs/07_ARCHITECTURE/</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-5 mb-3">🐛 Root Cause Analyses (RCAs)</h5>
+            <div class="doc-grid">
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-bug"></i></div>
+                        <h6 class="doc-title">RCA: Anonymous Booking Failure</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Root Cause Analysis für fehlgeschlagene anonyme Buchungen (2025-11-18)
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">claudedocs/08_REFERENCE/RCA/</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-bug"></i></div>
+                        <h6 class="doc-title">RCA: Staff Assignment Retell Bookings</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Root Cause Analysis für Staff-Assignment-Probleme bei Retell-Buchungen (2025-11-20)
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">claudedocs/08_REFERENCE/RCA/</span>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="doc-icon"><i class="bi bi-bug"></i></div>
+                        <h6 class="doc-title">RCA: Composite Appointment Phases</h6>
+                    </div>
+                    <p class="doc-desc">
+                        Root Cause Analysis für Composite-Service-Appointment-Phasen (2025-11-20)
+                    </p>
+                    <div class="doc-meta">
+                        <span class="doc-badge badge-danger">claudedocs/08_REFERENCE/RCA/</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-5 mb-3">📝 Weitere Dokumentationen (Root Directory)</h5>
+            <div class="alert alert-info">
+                <strong><i class="bi bi-info-circle"></i> Hinweis:</strong>
+                Es existieren <strong>600+ Markdown-Dokumentationen</strong> im Root Directory.
+                Die wichtigsten sind oben verlinkt. Für vollständige Liste siehe:
+                <code>/var/www/api-gateway/*.md</code>
+            </div>
+        </div>
+
+        <!-- Knowledge Base for New Sessions -->
+        <div class="doc-section">
+            <h3><i class="bi bi-brain"></i> Knowledge Base für neue Chat-Sessions</h3>
+
+            <div class="alert alert-primary">
+                <h5><i class="bi bi-info-circle"></i> Für KI-Assistenten in neuen Sessions</h5>
+                <p class="mb-2">
+                    Wenn Sie eine neue Chat-Session starten und Kontext zum Rollensystem benötigen,
+                    referenzieren Sie diese Seite:
+                </p>
+                <code>https://api.askproai.de/ROLE_SYSTEM_HUB_2025-11-24.html</code>
+            </div>
+
+            <h5 class="mt-4">🎯 Quick Context Summary</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-diagram-3"></i> System Architecture</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Framework:</strong> Laravel 11 + Filament 3</li>
+                                <li><strong>Permissions:</strong> Spatie Laravel Permission</li>
+                                <li><strong>Panels:</strong> Admin Panel + Customer Portal (dual)</li>
+                                <li><strong>Resources:</strong> 37 Admin + 11 Customer Portal</li>
+                                <li><strong>Policies:</strong> 22 Policy-Klassen</li>
+                                <li><strong>Isolation:</strong> 5-Level Security Model</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-people"></i> Role Structure</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Platform:</strong> super_admin, Admin, manager, operator, viewer</li>
+                                <li><strong>Customer:</strong> company_owner, company_admin, company_manager, company_staff</li>
+                                <li><strong>Isolation:</strong> Company → Branch → Staff</li>
+                                <li><strong>Issues:</strong> Inkonsistente Naming, Legacy-Rollen</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-exclamation-triangle"></i> Current Blockers</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Portal Status:</strong> 90% fertig, aber DEAKTIVIERT</li>
+                                <li><strong>Feature Flag:</strong> <code>FEATURE_CUSTOMER_PORTAL=false</code></li>
+                                <li><strong>MVP Blocker 1:</strong> Appointments read-only (kein Reschedule)</li>
+                                <li><strong>MVP Blocker 2:</strong> Kein User Management</li>
+                                <li><strong>Decision Needed:</strong> 10 Business Questions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-rocket"></i> Next Steps</h6>
+                            <ul class="small mb-0">
+                                <li><strong>✅ Phase 3:</strong> Business Decisions RECEIVED (GitHub #741)</li>
+                                <li><strong>✅ Phase 3.5:</strong> Architecture Design COMPLETE (94 pages)</li>
+                                <li><strong>🔄 Phase 4:</strong> Review & Approve Implementation Plan</li>
+                                <li><strong>⏳ Phase 4.1:</strong> Implementation Start (12-17 Tage Dev + 5-7 Tage Test)</li>
+                                <li><strong>⏳ Phase 5:</strong> Pilot Rollout (2-3 Companies, 7 Tage)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Log -->
+        <div class="doc-section">
+            <h3><i class="bi bi-clock-history"></i> Session Log</h3>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>2025-11-24, 10:30 Uhr</strong> - Documentation Hub erstellt
+                    <p class="text-muted small mb-0">
+                        Zentraler Hub für alle Rollensystem-Dokumentationen mit Progress Tracking
+                        und Links zu allen relevanten Docs
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <strong>2025-11-24, 10:05 Uhr</strong> - Strategische Analyse v2 erstellt
+                    <p class="text-muted small mb-0">
+                        State-of-the-art HTML mit 10 kritischen Fragen, interaktiven Elementen,
+                        Charts, IST/SOLL-Vergleich
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <strong>2025-11-24, 08:30 Uhr</strong> - Erste Rollensystem-Analyse
+                    <p class="text-muted small mb-0">
+                        Umfassende Analyse von 37 Resources, 22 Policies, 11 Portal Resources
+                    </p>
+                </div>
+            </div>
+
+            <style>
+                .timeline { border-left: 3px solid #e5e7eb; padding-left: 24px; margin-top: 20px; }
+                .timeline-item { position: relative; padding-bottom: 24px; }
+                .timeline-item::before {
+                    content: '';
+                    position: absolute;
+                    left: -30px;
+                    top: 6px;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: var(--primary);
+                    border: 3px solid white;
+                }
+            </style>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-5 text-white">
+            <p class="mb-0">
+                <strong>Living Documentation</strong> - Diese Seite wird kontinuierlich aktualisiert
+            </p>
+            <p class="small opacity-75">
+                Letzte Aktualisierung: 24. November 2025, 10:30 Uhr
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Make doc cards clickable
+        document.querySelectorAll('.doc-card[href]').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.closest('a')) {
+                    window.location.href = this.getAttribute('href');
+                }
+            });
+        });
+
+        console.log('Role System Documentation Hub loaded successfully');
+    </script>
+</body>
+</html>

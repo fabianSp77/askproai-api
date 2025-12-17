@@ -466,6 +466,12 @@ class TestChecklistController extends Controller
             $fromNumber = $request->input('from_number', '+491604366218');
             $toNumber = $request->input('to_number', '+493033081738');
 
+            // 🏢 Multi-Tenant Support (NEW V4!)
+            // Accept company_id, branch_id, phone_number_id from request for multi-tenant testing
+            $companyId = $request->input('company_id', 1);
+            $branchId = $request->input('branch_id', '34c4d48e-4753-4715-9c30-c55843a943e8');
+            $phoneNumberId = $request->input('phone_number_id', '5b449e91-5376-11f0-b773-0ad77e7a9793');
+
             // 🔒 SECURITY: Only allow test Call IDs (starting with test prefixes)
             // This prevents misuse of test endpoints for real calls
             $allowedPrefixes = ['flow_test_', 'phase1_test_', 'phase2_test_', 'phase3_test_', 'e2e_test_', 'test_'];
@@ -494,58 +500,75 @@ class TestChecklistController extends Controller
 
             if ($call) {
                 // Call already exists - update it with test data
-                // IMPORTANT: Always ensure company_id and branch_id are set for E2E tests
-                // Use direct assignment to ensure values are set in model instance
-                $call->from_number = $fromNumber;
-                $call->to_number = $toNumber;
-                $call->direction = 'inbound';
-                $call->status = 'ongoing';
-                $call->call_status = 'ongoing';
-                $call->agent_id = 'agent_7a24afda65b04d1cd79fa11e8f';
-                $call->company_id = 1; // Always set to default for E2E tests
-                $call->branch_id = 1;  // Always set to default for E2E tests
-                $call->save();
+                // IMPORTANT: Use forceFill() to bypass $guarded protection for test calls
+                // company_id and branch_id are normally protected but test calls need them
+                $call->forceFill([
+                    'from_number' => $fromNumber,
+                    'to_number' => $toNumber,
+                    'direction' => 'inbound',
+                    'status' => 'test',
+                    'call_status' => 'test',
+                    'agent_id' => 'agent_7a24afda65b04d1cd79fa11e8f',
+                    'company_id' => $companyId,      // ✅ forceFill bypasses $guarded
+                    'branch_id' => $branchId,        // ✅ forceFill bypasses $guarded
+                    'phone_number_id' => $phoneNumberId,
+                ])->save();
 
                 Log::info('🔄 Test Call record updated (already existed)', [
                     'call_id' => $callId,
                     'id' => $call->id,
                     'company_id' => $call->company_id,
-                    'branch_id' => $call->branch_id
+                    'branch_id' => $call->branch_id,
+                    'phone_number_id' => $call->phone_number_id,
+                    'multi_tenant' => true
                 ]);
             } else {
-                // Create new Call record
-                $call = Call::create([
-                    'retell_call_id' => $callId,
-                    'external_id' => $callId,
-                    'from_number' => $fromNumber,
-                    'to_number' => $toNumber,
-                    'direction' => 'inbound',
-                    'status' => 'ongoing',
-                    'call_status' => 'ongoing',
-                    'agent_id' => 'agent_7a24afda65b04d1cd79fa11e8f',
-                    'start_timestamp' => now(),
-                    'company_id' => 1, // Default company
-                    'branch_id' => 1,  // Default branch
-                ]);
+                // Create new Call record with multi-tenant support
+                // IMPORTANT: Use unguard() to bypass $guarded protection for test calls
+                // company_id and branch_id are normally protected but test calls need them
+                Call::unguard();  // Temporarily disable mass assignment protection
+
+                try {
+                    $call = Call::create([
+                        'retell_call_id' => $callId,
+                        'external_id' => $callId,
+                        'from_number' => $fromNumber,
+                        'to_number' => $toNumber,
+                        'direction' => 'inbound',
+                        'status' => 'test',
+                        'call_status' => 'test',
+                        'agent_id' => 'agent_7a24afda65b04d1cd79fa11e8f',
+                        'start_timestamp' => now(),
+                        'company_id' => $companyId,      // ✅ Can be set when unguarded
+                        'branch_id' => $branchId,        // ✅ Can be set when unguarded
+                        'phone_number_id' => $phoneNumberId,
+                    ]);
+                } finally {
+                    Call::reguard();  // Always re-enable protection, even on error
+                }
 
                 Log::info('✅ Test Call record created (new)', [
                     'call_id' => $callId,
                     'id' => $call->id,
                     'company_id' => $call->company_id,
-                    'branch_id' => $call->branch_id
+                    'branch_id' => $call->branch_id,
+                    'phone_number_id' => $call->phone_number_id,
+                    'multi_tenant' => true
                 ]);
             }
 
-            // No refresh needed - values are already set in model instance
+            // Refresh model to ensure response shows actual DB values
+            $call->refresh();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Test Call record ready (created or updated)',
+                'message' => 'Test Call record ready (created or updated) with multi-tenant context',
                 'call' => [
                     'id' => $call->id,
                     'retell_call_id' => $call->retell_call_id,
                     'company_id' => $call->company_id,
                     'branch_id' => $call->branch_id,
+                    'phone_number_id' => $call->phone_number_id,
                     'customer_id' => $call->customer_id,
                     'from_number' => $call->from_number,
                     'to_number' => $call->to_number,

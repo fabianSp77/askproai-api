@@ -179,12 +179,16 @@ class CalcomMetricsCollector
 
     /**
      * Synchronization Metrics
+     *
+     * 🔧 ENHANCED 2025-11-24: Added appointment-specific sync monitoring (Phase 3)
+     * Tracks both service mappings AND appointment sync status for comprehensive monitoring
      */
     private function collectSyncMetrics(): array
     {
         $mappings = CalcomEventMap::all();
 
         return [
+            // Service-level metrics (existing)
             'total_mappings' => $mappings->count(),
             'synced' => $mappings->where('sync_status', 'synced')->count(),
             'pending' => $mappings->where('sync_status', 'pending')->count(),
@@ -192,8 +196,221 @@ class CalcomMetricsCollector
             'out_of_sync' => $this->detectOutOfSyncMappings(),
             'orphaned_appointments' => $this->detectOrphanedAppointments(),
             'last_sync_check' => Cache::get('calcom:last_sync_check'),
-            'sync_lag_minutes' => $this->calculateSyncLag()
+            'sync_lag_minutes' => $this->calculateSyncLag(),
+
+            // 🆕 PHASE 3 FIX (2025-11-24): Appointment-specific sync metrics
+            'appointments' => $this->collectAppointmentSyncMetrics(),
         ];
+    }
+
+    /**
+     * Appointment-Specific Sync Metrics
+     *
+     * 🆕 PHASE 3 FIX (2025-11-24): Comprehensive appointment sync monitoring
+     * Tracks sync failures, manual review flags, and success rates to prevent
+     * situations like the Siebert appointment (pending for 5 days undetected)
+     *
+     * @return array Detailed appointment sync metrics
+     */
+    private function collectAppointmentSyncMetrics(): array
+    {
+        $now = Carbon::now();
+
+        // Get recent appointments (last 24 hours)
+        $recentAppointments = Appointment::where('created_at', '>=', $now->subDay())
+            ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+            ->get();
+
+        // Get all pending/failed appointments (all time - critical for detection)
+        $pendingAppointments = Appointment::where('calcom_sync_status', 'pending')
+            ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+            ->get();
+
+        $failedAppointments = Appointment::where('calcom_sync_status', 'failed')
+            ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+            ->get();
+
+        // Manual review flags (CRITICAL)
+        $requiresManualReview = Appointment::where('requires_manual_review', true)
+            ->whereIn('status', ['scheduled', 'confirmed', 'booked'])
+            ->get();
+
+        // Calculate sync success rate (24h)
+        $syncedRecent = $recentAppointments->where('calcom_sync_status', 'synced')->count();
+        $totalRecent = $recentAppointments->count();
+        $successRate = $totalRecent > 0
+            ? round(($syncedRecent / $totalRecent) * 100, 2)
+            : 100;
+
+        // Detect stale pending appointments (>1 hour old = problem)
+        $stalePending = $pendingAppointments->filter(function($apt) {
+            return $apt->created_at && Carbon::parse($apt->created_at)->lt(Carbon::now()->subHour());
+        });
+
+        // Detect ancient failed appointments (>24h old = CRITICAL)
+        $ancientFailed = $failedAppointments->filter(function($apt) {
+            if (!$apt->last_sync_attempt_at) {
+                return false;
+            }
+            return Carbon::parse($apt->last_sync_attempt_at)->lt(Carbon::now()->subDay());
+        });
+
+        return [
+            // Overall sync status
+            'success_rate_24h' => $successRate,
+            'total_24h' => $totalRecent,
+            'synced_24h' => $syncedRecent,
+
+            // Pending sync (may still succeed)
+            'pending_total' => $pendingAppointments->count(),
+            'pending_stale' => $stalePending->count(), // >1h old
+            'pending_oldest_hours' => $this->getOldestPendingAge($pendingAppointments),
+
+            // Failed sync (needs attention)
+            'failed_total' => $failedAppointments->count(),
+            'failed_recent_24h' => $failedAppointments->filter(function($a) {
+                if (!$a->last_sync_attempt_at) {
+                    return false;
+                }
+                return Carbon::parse($a->last_sync_attempt_at)->gte(Carbon::now()->subDay());
+            })->count(),
+            'failed_ancient' => $ancientFailed->count(), // >24h old = CRITICAL
+
+            // Manual review (CRITICAL)
+            'requires_manual_review' => $requiresManualReview->count(),
+            'manual_review_oldest_hours' => $this->getOldestManualReviewAge($requiresManualReview),
+
+            // Health indicators
+            'health_status' => $this->determineAppointmentSyncHealth(
+                $successRate,
+                $stalePending->count(),
+                $ancientFailed->count(),
+                $requiresManualReview->count()
+            ),
+
+            // Alert triggers
+            'alerts' => $this->generateSyncAlerts(
+                $stalePending,
+                $ancientFailed,
+                $requiresManualReview
+            ),
+        ];
+    }
+
+    /**
+     * Get age of oldest pending appointment in hours
+     */
+    private function getOldestPendingAge($appointments): ?float
+    {
+        $oldest = $appointments->sortBy('created_at')->first();
+
+        if (!$oldest || !$oldest->created_at) {
+            return null;
+        }
+
+        return round(Carbon::parse($oldest->created_at)->diffInHours(Carbon::now()), 1);
+    }
+
+    /**
+     * Get age of oldest manual review appointment in hours
+     */
+    private function getOldestManualReviewAge($appointments): ?float
+    {
+        $oldest = $appointments->sortBy('manual_review_flagged_at')->first();
+
+        if (!$oldest || !$oldest->manual_review_flagged_at) {
+            return null;
+        }
+
+        return round(Carbon::parse($oldest->manual_review_flagged_at)->diffInHours(Carbon::now()), 1);
+    }
+
+    /**
+     * Determine overall appointment sync health
+     *
+     * @return string 'healthy' | 'degraded' | 'critical'
+     */
+    private function determineAppointmentSyncHealth(
+        float $successRate,
+        int $stalePending,
+        int $ancientFailed,
+        int $requiresManualReview
+    ): string {
+        // CRITICAL: Systemic sync failures (technical issues)
+        // - Ancient failures indicate long-standing sync problems
+        // - Many stale pending indicates broken sync process
+        // - Very low success rate indicates system-wide failure
+        // - Too many manual review indicates systemic issue (>= 20)
+        if ($ancientFailed > 0 || $stalePending > 20 || $successRate < 50 || $requiresManualReview >= 20) {
+            return 'critical';
+        }
+
+        // DEGRADED: Normal business operations requiring attention
+        // - Low success rate (< 80%) but not critical
+        // - Some stale pending (5-20) that need investigation
+        // - Manual review appointments (1-19) - normal host conflicts, data issues
+        if ($successRate < 80 || $stalePending > 5 || $requiresManualReview > 0) {
+            return 'degraded';
+        }
+
+        return 'healthy';
+    }
+
+    /**
+     * Generate alert messages for sync issues
+     *
+     * 🔧 PHASE 3 FIX (2025-11-24): Actionable alerts for monitoring dashboard
+     * Returns array of alert messages that should trigger notifications
+     *
+     * @return array Alert messages with severity levels
+     */
+    private function generateSyncAlerts($stalePending, $ancientFailed, $requiresManualReview): array
+    {
+        $alerts = [];
+
+        // WARNING: Manual review required (normal business operations)
+        // These are typically host conflicts, data validation issues, or business logic
+        // Not technical failures - classified as "warning" not "critical"
+        if ($requiresManualReview->count() > 0 && $requiresManualReview->count() < 20) {
+            $alerts[] = [
+                'severity' => 'warning',
+                'message' => "{$requiresManualReview->count()} appointment(s) require manual review",
+                'action' => 'Check Appointments → Filter by requires_manual_review',
+                'appointment_ids' => $requiresManualReview->pluck('id')->take(5)->toArray(),
+            ];
+        }
+
+        // CRITICAL: Too many manual review (systemic issue)
+        if ($requiresManualReview->count() >= 20) {
+            $alerts[] = [
+                'severity' => 'critical',
+                'message' => "{$requiresManualReview->count()} appointment(s) require manual review (systemic issue)",
+                'action' => 'Investigate root cause - too many failures',
+                'appointment_ids' => $requiresManualReview->pluck('id')->take(5)->toArray(),
+            ];
+        }
+
+        // CRITICAL: Ancient failures (>24h old)
+        if ($ancientFailed->count() > 0) {
+            $alerts[] = [
+                'severity' => 'critical',
+                'message' => "{$ancientFailed->count()} appointment(s) failed sync >24h ago",
+                'action' => 'Investigate sync_error_message in database',
+                'appointment_ids' => $ancientFailed->pluck('id')->take(5)->toArray(),
+            ];
+        }
+
+        // WARNING: Stale pending (>1h old)
+        if ($stalePending->count() > 10) {
+            $alerts[] = [
+                'severity' => 'warning',
+                'message' => "{$stalePending->count()} appointment(s) stuck in pending >1h",
+                'action' => 'Check queue workers: php artisan queue:work',
+                'suggestion' => 'May indicate queue worker not running or overloaded',
+            ];
+        }
+
+        return $alerts;
     }
 
     /**
@@ -394,13 +611,13 @@ class CalcomMetricsCollector
     private function detectOutOfSyncMappings(): int
     {
         return CalcomEventMap::where('sync_status', 'synced')
-            ->where('last_synced_at', '<', Carbon::now()->subHours(24))
+            ->where('last_sync_at', '<', Carbon::now()->subHours(24))
             ->count();
     }
 
     private function detectOrphanedAppointments(): int
     {
-        return Appointment::whereNull('cal_booking_id')
+        return Appointment::whereNull('calcom_v2_booking_id')
             ->where('status', 'booked')
             ->where('created_at', '<', Carbon::now()->subHour())
             ->count();
@@ -409,7 +626,7 @@ class CalcomMetricsCollector
     private function calculateSyncLag(): float
     {
         $lastSync = CalcomEventMap::where('sync_status', 'synced')
-            ->max('last_synced_at');
+            ->max('last_sync_at');
 
         if (!$lastSync) return 0;
 

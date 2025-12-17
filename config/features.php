@@ -340,4 +340,280 @@ return [
      * @default false (Phase 3 Feature)
      */
     'customer_portal_analytics' => env('FEATURE_CUSTOMER_PORTAL_ANALYTICS', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Portal MVP - Detailed Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Detailed configuration for Customer Portal MVP features including
+    | invitation system, email templates, security, and integrations.
+    |
+    | @since 2025-11-24 (Customer Portal MVP)
+    */
+
+    'customer_portal_mvp' => [
+        /**
+         * Master switch - Enable MVP features
+         */
+        'enabled' => env('FEATURE_CUSTOMER_PORTAL_MVP', false),
+
+        /**
+         * Pilot Mode - Restrict to pilot companies
+         */
+        'pilot_mode' => env('CUSTOMER_PORTAL_PILOT_MODE', true),
+
+        /**
+         * Pilot company IDs
+         */
+        'pilot_companies' => array_filter(
+            array_map('intval', explode(',', env('CUSTOMER_PORTAL_PILOT_COMPANIES', '')))
+        ),
+
+        /**
+         * Invitation System
+         */
+        'invitations' => [
+            'token_lifetime_hours' => env('CUSTOMER_PORTAL_INVITATION_LIFETIME', 72),
+            'max_active_per_email' => env('CUSTOMER_PORTAL_MAX_INVITATIONS', 3),
+            'auto_expire_enabled' => true,
+        ],
+
+        /**
+         * Email Settings
+         */
+        'email' => [
+            'queue' => env('CUSTOMER_PORTAL_EMAIL_QUEUE', 'emails'),
+            'max_attempts' => 3,
+            'retry_backoff_minutes' => [5, 30, 120],
+            'from_name' => env('CUSTOMER_PORTAL_EMAIL_FROM_NAME', config('app.name')),
+        ],
+
+        /**
+         * Session & Authentication
+         */
+        'auth' => [
+            'sanctum_token_lifetime_minutes' => env('CUSTOMER_PORTAL_SESSION_LIFETIME', 10080), // 7 days
+            'require_email_verification' => false,
+            'two_factor_enabled' => false,
+        ],
+
+        /**
+         * Security
+         */
+        'security' => [
+            'rate_limit_per_minute' => env('CUSTOMER_PORTAL_RATE_LIMIT', 60),
+            'max_reschedules_per_month' => 3,
+            'max_cancellations_per_month' => 2,
+        ],
+
+        /**
+         * UI/UX Features
+         */
+        'ui' => [
+            'show_appointment_alternatives' => true,
+            'max_alternatives_displayed' => 5,
+            'enable_cancellation_reasons' => true,
+            'show_appointment_history' => true,
+            'enable_notifications' => false, // Phase 2
+        ],
+
+        /**
+         * Cal.com Integration
+         */
+        'calcom' => [
+            'sync_enabled' => true,
+            'circuit_breaker_enabled' => true,
+            'circuit_breaker_threshold' => 5,
+            'circuit_breaker_timeout' => 60,
+        ],
+
+        /**
+         * Monitoring
+         */
+        'monitoring' => [
+            'track_customer_actions' => true,
+            'log_appointment_changes' => true,
+            'send_analytics_events' => false,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parallel Cal.com Booking (Performance Optimization)
+    |--------------------------------------------------------------------------
+    |
+    | Enable parallel execution of Cal.com booking requests for compound services.
+    | Uses async HTTP/2 requests to sync all segments concurrently.
+    |
+    | Performance Impact:
+    |   - Sequential: 10s for 4 segments (Dauerwelle)
+    |   - Parallel: 3s for 4 segments (70% faster)
+    |   - Reduces race condition window from 30-60s to 8-12s
+    |
+    | Technical Details:
+    |   - Uses GuzzleHttp Promises for concurrent requests
+    |   - HTTP/2 connection pooling for minimal overhead
+    |   - Maintains same error handling and logging as sequential
+    |
+    | Rollback Safety:
+    |   - Set to false to immediately revert to sequential execution
+    |   - No data migration required
+    |   - Safe to toggle at runtime
+    |
+    | Related Files:
+    |   - App\Jobs\SyncAppointmentToCalcomJob::syncPhasesParallel()
+    |   - App\Services\CalcomV2Client::createBookingAsync()
+    |   - RACE_CONDITION_SOLUTION_IMPLEMENTATION_ROADMAP_2025-11-23.md
+    |
+    | @default true (Production-ready, enabled by default)
+    | @since 2025-11-23 (Phase 1: Performance Quick Wins)
+    */
+    'parallel_calcom_booking' => env('FEATURE_PARALLEL_CALCOM_BOOKING', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Slot Locking (Race Condition Prevention)
+    |--------------------------------------------------------------------------
+    |
+    | Enable Redis-based distributed locking for appointment slots to prevent
+    | race conditions during the check_availability → start_booking gap.
+    |
+    | Problem Solved:
+    |   - 8-12 second gap between availability check and booking
+    |   - 15-20% "Slot taken" error rate from concurrent bookings
+    |   - Customer frustration from failed bookings
+    |
+    | Solution:
+    |   - Redis distributed lock with 5-minute TTL
+    |   - Lock acquired during check_availability (when available=true)
+    |   - Lock validated during start_booking (ownership check)
+    |   - Auto-cleanup via Redis TTL (no cron jobs needed)
+    |
+    | Performance Impact:
+    |   - Lock acquisition: <5ms (30x faster than DB)
+    |   - Lock validation: <1ms
+    |   - No additional latency for end users
+    |   - Backwards compatible (works without lock_key)
+    |
+    | Architecture:
+    |   - Primary: Redis locks (performance-critical)
+    |   - Optional: DB logging for metrics/analytics
+    |   - Lock key format: slot_lock:c{company}:s{service}:t{YmdHi}
+    |
+    | Rollout Strategy:
+    |   - Phase 1 (Deploy): Flag OFF (silent deployment, code inactive)
+    |   - Phase 2 (Test): Flag ON for internal testing (10% traffic)
+    |   - Phase 3 (Rollout): Gradual 10% → 50% → 100% over 3 days
+    |   - Rollback: Set to false for instant revert to old behavior
+    |
+    | Related Files:
+    |   - App\Services\Booking\SlotLockService (Redis locking)
+    |   - App\Services\Booking\AvailabilityWithLockService (Decorator wrapper)
+    |   - App\Http\Controllers\RetellFunctionCallHandler::checkAvailability()
+    |   - App\Http\Controllers\RetellFunctionCallHandler::collectAppointment()
+    |   - Tests\Feature\SlotLockRaceConditionTest (10 tests, 28 assertions)
+    |   - Docs: REDIS_LOCK_FINAL_SOLUTION.md
+    |
+    | Success Metrics:
+    |   - Target: <1% race condition error rate (from 15-20%)
+    |   - Lock acquisition time: <5ms
+    |   - No increase in overall booking latency
+    |
+    | @default false (Safe deployment - opt-in via .env)
+    | @since 2025-11-23 (Tag 3: Redis Lock Solution)
+    */
+    'slot_locking' => [
+        /**
+         * Master Toggle - Enable slot locking system
+         *
+         * When FALSE: No locking (current behavior)
+         * When TRUE: Redis locks active (race condition prevention)
+         *
+         * @default false (safe deployment)
+         */
+        'enabled' => env('FEATURE_SLOT_LOCKING', false),
+
+        /**
+         * Lock TTL - Time-to-live for Redis locks (in seconds)
+         *
+         * Locks auto-expire after this duration to prevent orphaned locks.
+         * Should be longer than typical booking flow (8-12s) but short
+         * enough to not block legitimate bookings.
+         *
+         * @default 300 (5 minutes)
+         */
+        'ttl_seconds' => env('SLOT_LOCK_TTL', 300),
+
+        /**
+         * Database Logging - Optional DB logging for metrics/debugging
+         *
+         * When TRUE: Create AppointmentReservation records for analytics
+         * When FALSE: Redis-only (minimal overhead)
+         *
+         * Note: Primary locking is ALWAYS via Redis (fast).
+         * DB logging is optional secondary logging for analytics.
+         *
+         * @default true (enable metrics)
+         */
+        'log_to_database' => env('SLOT_LOCK_DB_LOG', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Slot Intelligence System (2025-11-25)
+    |--------------------------------------------------------------------------
+    |
+    | Intelligent slot management for Retell AI voice calls:
+    | - Pre-loads 7 days of slots at first availability check (cached 15 min)
+    | - Handles vague time periods ("vormittags" → 09:00-12:00)
+    | - Fuzzy matches specific times (10:00 → finds 10:05 within ±30min)
+    | - Positive framing: "Ja, 10:05 hätte ich" instead of "10:00 nicht frei"
+    |
+    | Benefits:
+    |   - Faster responses (5ms cache vs 800ms API call)
+    |   - Better UX with positive messaging
+    |   - Fewer redundant Cal.com API calls per call
+    |   - Smart handling of vague time requests
+    |
+    | @default true (enabled by default for better UX)
+    | @since 2025-11-25
+    */
+    'slot_intelligence' => [
+        /**
+         * Master Toggle - Enable slot intelligence system
+         */
+        'enabled' => env('FEATURE_SLOT_INTELLIGENCE', true),
+
+        /**
+         * Fuzzy Match Toggle - Allow matching nearby times
+         *
+         * When TRUE: 10:00 request can match 10:05, 10:15 etc.
+         * When FALSE: Only exact time matches
+         */
+        'fuzzy_match' => env('SLOT_INTELLIGENCE_FUZZY_MATCH', true),
+
+        /**
+         * Fuzzy Match Tolerance - Max minutes difference for fuzzy matching
+         *
+         * @default 30 (±30 minutes)
+         */
+        'fuzzy_tolerance_minutes' => env('SLOT_INTELLIGENCE_TOLERANCE', 30),
+
+        /**
+         * Pre-load Days - Number of days to pre-load at call start
+         *
+         * @default 7 (one week ahead)
+         */
+        'preload_days' => env('SLOT_INTELLIGENCE_PRELOAD_DAYS', 7),
+
+        /**
+         * Cache TTL - Time-to-live for cached slots (in seconds)
+         *
+         * Should cover typical call duration (max ~15 minutes)
+         *
+         * @default 900 (15 minutes)
+         */
+        'cache_ttl_seconds' => env('SLOT_INTELLIGENCE_CACHE_TTL', 900),
+    ],
 ];

@@ -114,8 +114,9 @@ class AppointmentCreationService implements AppointmentCreationInterface
             $companyId = $call->company_id ?? $customer->company_id ?? 15;
             $branchId = $call->branch_id ?? $customer->branch_id ?? null;
 
-            // Get default service for company/branch
-            $service = $this->serviceSelector->getDefaultService($companyId, $branchId);
+            // 🔧 FIX 2025-11-21: Use findService() instead of getDefaultService()
+            // This respects the requested service name from bookingDetails instead of always using default
+            $service = $this->findService($bookingDetails, $companyId, $branchId);
             if (!$service) {
                 Log::error('No service found for booking', [
                     'service_name' => $bookingDetails['service'] ?? 'unknown',
@@ -531,36 +532,48 @@ class AppointmentCreationService implements AppointmentCreationInterface
         }
 
         // 🛡️ POST-BOOKING VALIDATION (2025-10-20): Verify appointment was actually created
+        // 🔧 FIX 2025-11-27: Validation should be NON-BLOCKING
+        // The appointment is already created at this point. Validation failures should NOT
+        // cause an error response to the user or mark the call as failed.
         if ($call) {
             try {
                 $validator = app(\App\Services\Validation\PostBookingValidationService::class);
                 $validation = $validator->validateAppointmentCreation($call, $appointment->id, $calcomBookingId);
 
                 if (!$validation->success) {
-                    Log::error('❌ Post-booking validation failed', [
+                    // 🔧 FIX: Log warning instead of error - appointment IS created!
+                    Log::warning('⚠️ Post-booking validation flagged issue (non-blocking)', [
                         'appointment_id' => $appointment->id,
                         'call_id' => $call->id,
-                        'reason' => $validation->reason
+                        'reason' => $validation->reason,
+                        'note' => 'Appointment was created successfully, flagging for review only'
                     ]);
 
-                    // Rollback call flags (appointment stays in DB for manual review)
-                    $validator->rollbackOnFailure($call, $validation->reason);
+                    // 🔧 FIX: DON'T rollback call flags - the appointment exists!
+                    // Instead, flag the appointment for manual review
+                    $appointment->update([
+                        'requires_manual_review' => true,
+                        'manual_review_flagged_at' => now(),
+                        'sync_error_message' => "Validation issue: {$validation->reason}"
+                    ]);
 
-                    throw new \Exception("Appointment validation failed: {$validation->reason}");
+                    // 🔧 FIX: DON'T throw exception - let the success flow continue
+                    // The user should hear "Termin gebucht" because it WAS booked!
+                } else {
+                    Log::info('✅ Post-booking validation successful', [
+                        'appointment_id' => $appointment->id,
+                        'call_id' => $call->id
+                    ]);
                 }
-
-                Log::info('✅ Post-booking validation successful', [
-                    'appointment_id' => $appointment->id,
-                    'call_id' => $call->id
-                ]);
             } catch (\Exception $e) {
-                Log::error('⚠️ Post-booking validation error', [
+                // Validation service itself failed - log but don't block
+                Log::warning('⚠️ Post-booking validation service error (non-blocking)', [
                     'appointment_id' => $appointment->id,
                     'call_id' => $call?->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'note' => 'Appointment was created, validation service had internal error'
                 ]);
-                // Don't throw - let appointment be created even if validation fails
-                // Manual review will catch issues
+                // Don't throw - appointment is already created successfully
             }
         }
 

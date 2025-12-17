@@ -284,7 +284,8 @@ class ServiceSelectionService implements ServiceSelectionInterface
                 ->where('services.company_id', $companyId)
                 ->where('services.is_active', true)
                 ->whereNotNull('services.calcom_event_type_id')
-                ->where('service_synonyms.synonym', 'ILIKE', $serviceName)
+                // FIX 2025-11-25: Use LIKE instead of ILIKE for MySQL/MariaDB compatibility
+                ->where('service_synonyms.synonym', 'LIKE', $serviceName)
                 ->select('services.*', 'service_synonyms.confidence')
                 ->orderBy('service_synonyms.confidence', 'desc')
                 ->first();

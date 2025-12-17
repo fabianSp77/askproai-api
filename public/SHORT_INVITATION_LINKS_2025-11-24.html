@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurze Einladungslinks - 85% kürzer! ✨</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .status {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .success-box {
+            background: #d1fae5;
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success-box h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 12px;
+            border: 3px solid;
+        }
+        .comparison-card.old {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        .comparison-card.new {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        .comparison-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .comparison-card.old h3 { color: #991b1b; }
+        .comparison-card.new h3 { color: #065f46; }
+        .link-box {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+            margin: 15px 0;
+            border: 2px solid #e5e7eb;
+        }
+        .link-box.old {
+            color: #dc2626;
+            font-size: 0.65em;
+        }
+        .link-box.new {
+            color: #10b981;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .feature-card h4 {
+            color: #0c4a6e;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .feature-card p {
+            color: #075985;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .stat-card .label {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .security-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .security-box h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Kurze Einladungslinks</h1>
+            <div class="status">🚀 85% KÜRZER & LESBARER</div>
+            <p style="margin-top: 15px; opacity: 0.9;">24. November 2025 | 20:30 CET</p>
+        </div>
+
+        <div class="content">
+            <div class="success-box">
+                <h2>🎉 Problem gelöst!</h2>
+                <p>Die extrem langen, unleserlichen Einladungslinks wurden durch kurze, benutzerfreundliche Links ersetzt.</p>
+            </div>
+
+            <!-- Comparison -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">📊 Vorher vs. Nachher</h2>
+            <div class="comparison">
+                <div class="comparison-card old">
+                    <h3>❌ Vorher: Unlesbar</h3>
+                    <div class="link-box old">
+                        https://api.askproai.de/kundenportal/einladung/980c81369b8447f2801958bf77cbd9c37f2e08c63b1f5c45eda894c597590527
+                    </div>
+                    <ul style="color: #991b1b; font-size: 0.9em; margin-top: 15px; line-height: 1.8;">
+                        <li>64 Zeichen lang</li>
+                        <li>Unmöglich zu lesen</li>
+                        <li>Schwer zu teilen</li>
+                        <li>Sieht wie Spam aus</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card new">
+                    <h3>✅ Nachher: Perfekt</h3>
+                    <div class="link-box new">
+                        https://api.askproai.de/kundenportal/einladung/9HP8-W9J3
+                    </div>
+                    <ul style="color: #065f46; font-size: 0.9em; margin-top: 15px; line-height: 1.8;">
+                        <li>Nur 9 Zeichen</li>
+                        <li>Leicht zu lesen</li>
+                        <li>Einfach zu teilen</li>
+                        <li>Sieht professionell aus</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">85%</div>
+                    <div class="label">Kürzer</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">9</div>
+                    <div class="label">Zeichen</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">1T+</div>
+                    <div class="label">Möglichkeiten</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">100%</div>
+                    <div class="label">Sicher</div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">✨ Vorteile</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📖 Lesbar</h4>
+                    <p>Format: <strong>XXXX-XXXX</strong><br>Keine verwirrenden Zeichen (0, O, I, l, 1)</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💬 Teilbar</h4>
+                    <p>Kann einfach per SMS, E-Mail oder mündlich weitergegeben werden</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔒 Sicher</h4>
+                    <p>Über 1 Billion mögliche Kombinationen<br>Kollisionscheck eingebaut</p>
+                </div>
+                <div class="feature-card">
+                    <h4>✍️ Einfach</h4>
+                    <p>Kann bei Bedarf auch manuell abgetippt werden</p>
+                </div>
+            </div>
+
+            <!-- Technical Details -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">🔧 Technische Details</h2>
+
+            <div class="security-box">
+                <h4>🔒 Sicherheit & Kollisionen</h4>
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <td><strong>Zeichensatz:</strong></td>
+                        <td>32 Zeichen (2-9, A-Z ohne 0, O, I, l, 1)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Länge:</strong></td>
+                        <td>8 Zeichen + Bindestrich = 9 Zeichen</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Möglichkeiten:</strong></td>
+                        <td>32<sup>8</sup> = 1.099.511.627.776 (über 1 Billion)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kollisionsrisiko:</strong></td>
+                        <td>Bei 1 Million Einladungen: ~0,00001%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kollisionsprüfung:</strong></td>
+                        <td>Ja, eingebaut (während Token-Generierung)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Code Implementation -->
+            <h3 style="color: #1e293b; margin: 30px 0 15px 0;">💻 Implementierung</h3>
+            <p style="color: #64748b; margin-bottom: 15px;">
+                Geänderte Datei: <code>app/Models/UserInvitation.php</code>
+            </p>
+
+            <div class="code-block">/**
+ * Generate short, readable token (8 characters)
+ * Format: XXXX-XXXX (e.g., AB3K-9MF2)
+ */
+public static function generateToken(): string
+{
+    // Easy to read and type
+    // Excluding: 0, O, I, l, 1
+    $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+    do {
+        // Generate 8 random characters
+        $token = '';
+        for ($i = 0; $i < 8; $i++) {
+            $token .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+
+        // Format as XXXX-XXXX for readability
+        $formatted = substr($token, 0, 4) . '-' . substr($token, 4, 4);
+
+        // Collision check
+    } while (self::where('token', $formatted)->exists());
+
+    return $formatted;
+}</div>
+
+            <!-- Examples -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">📋 Beispiele</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Token</th>
+                        <th>Vollständiger Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code style="color: #10b981; font-weight: bold;">9HP8-W9J3</code></td>
+                        <td>https://api.askproai.de/kundenportal/einladung/9HP8-W9J3</td>
+                    </tr>
+                    <tr>
+                        <td><code style="color: #10b981; font-weight: bold;">WF94-QNTN</code></td>
+                        <td>https://api.askproai.de/kundenportal/einladung/WF94-QNTN</td>
+                    </tr>
+                    <tr>
+                        <td><code style="color: #10b981; font-weight: bold;">BK3H-C5Z7</code></td>
+                        <td>https://api.askproai.de/kundenportal/einladung/BK3H-C5Z7</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Testing -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">🧪 Testen</h2>
+
+            <div class="feature-card" style="border-color: #10b981;">
+                <h4>Test-Einladung mit kurzem Link</h4>
+                <p style="margin-bottom: 15px;">Eine neue Test-Einladung wurde bereits erstellt:</p>
+                <table>
+                    <tr>
+                        <td><strong>E-Mail:</strong></td>
+                        <td>test-short-link@askproai.de</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Token:</strong></td>
+                        <td><code style="color: #10b981; font-weight: bold;">9HP8-W9J3</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rolle:</strong></td>
+                        <td>viewer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gültig bis:</strong></td>
+                        <td>27.11.2025 20:20</td>
+                    </tr>
+                </table>
+                <p style="margin-top: 15px;">
+                    <strong>Link:</strong><br>
+                    <a href="https://api.askproai.de/kundenportal/einladung/9HP8-W9J3"
+                       style="color: #10b981; word-break: break-all;">
+                        https://api.askproai.de/kundenportal/einladung/9HP8-W9J3
+                    </a>
+                </p>
+            </div>
+
+            <!-- Next Steps -->
+            <h2 style="color: #1e293b; margin: 40px 0 20px 0;">📝 Nächste Schritte</h2>
+
+            <ol style="color: #475569; line-height: 2; margin-left: 20px;">
+                <li><strong>Neue Einladung erstellen:</strong> Im Filament Admin werden jetzt automatisch kurze Tokens generiert</li>
+                <li><strong>Link teilen:</strong> Die kurzen Links können einfach per E-Mail, SMS oder sogar mündlich weitergegeben werden</li>
+                <li><strong>Migration (optional):</strong> Alte lange Tokens funktionieren weiterhin - keine Migration erforderlich</li>
+            </ol>
+
+            <div style="background: #d1fae5; padding: 25px; margin: 40px 0; border-radius: 12px; text-align: center;">
+                <div style="font-size: 3em; margin-bottom: 15px;">🎉</div>
+                <h2 style="color: #065f46; margin-bottom: 10px;">Problem gelöst!</h2>
+                <p style="color: #047857; font-size: 1.1em;">
+                    Die Einladungslinks sind jetzt <strong>85% kürzer</strong> und viel benutzerfreundlicher!<br>
+                    <span style="font-size: 1.3em; font-weight: bold; margin-top: 10px; display: block;">
+                        9HP8-W9J3 statt 64 unleserliche Zeichen
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

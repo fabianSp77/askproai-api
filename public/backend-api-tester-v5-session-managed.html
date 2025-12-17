@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester V5 - Session-Managed</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .pulse-success { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 0%, 100% { background-color: #D1FAE5; } 50% { background-color: #6EE7B7; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="apiTesterV5()" x-cloak>
+
+    <nav class="bg-gradient-to-r from-indigo-600 to-indigo-700 border-b border-indigo-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">🧪 Backend API Tester V5</h1>
+                    <span class="ml-3 px-3 py-1 text-xs font-medium bg-white text-indigo-600 rounded-full">Session-Managed</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                :disabled="!sessionActive"
+                                class="px-4 py-2 text-sm font-semibold bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition-all disabled:opacity-50 flex items-center space-x-2">
+                            <span>📥</span>
+                            <span>Export</span>
+                        </button>
+                        <div x-show="open" @click.away="open = false"
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <button @click="exportAsJSON(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3 border-b">
+                                <span class="text-xl">📄</span>
+                                <div><div class="font-semibold text-sm">Als JSON</div></div>
+                            </button>
+                            <button @click="exportAsMarkdown(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3 border-b">
+                                <span class="text-xl">📝</span>
+                                <div><div class="font-semibold text-sm">Als Markdown</div></div>
+                            </button>
+                            <button @click="copyToClipboard(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3">
+                                <span class="text-xl">📋</span>
+                                <div><div class="font-semibold text-sm">In Zwischenablage</div></div>
+                            </button>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-mono bg-indigo-800 text-indigo-100 rounded">v5.0.0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Session Management -->
+        <div class="bg-white rounded-lg shadow-lg border-2 p-6"
+             :class="sessionActive ? 'border-green-400' : 'border-gray-200'">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">📞 Test-Session</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Session Status -->
+                <div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 rounded-lg"
+                             :class="sessionActive ? 'bg-green-50' : 'bg-gray-50'">
+                            <span class="text-sm font-semibold">Status:</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold"
+                                  :class="sessionActive ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'">
+                                <span x-show="sessionActive">🟢 AKTIV</span>
+                                <span x-show="!sessionActive">⚪ INAKTIV</span>
+                            </span>
+                        </div>
+                        <div x-show="sessionActive" class="text-xs space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Call ID:</span>
+                                <code class="text-blue-700" x-text="callId"></code>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Telefon:</span>
+                                <code class="text-blue-700" x-text="sessionPhone"></code>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Dauer:</span>
+                                <code class="text-blue-700" x-text="sessionDuration"></code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Controls -->
+                <div>
+                    <div class="space-y-3">
+                        <select x-model="selectedPhone"
+                                :disabled="sessionActive"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50">
+                            <option value="+4916043662218">+49 160 4366 218 (Hans Schuster)</option>
+                            <option value="+491519999999">+49 151 9999 999 (Neukunde)</option>
+                            <option value="anonymous">Anonym</option>
+                        </select>
+
+                        <button @click="startSession()"
+                                :disabled="sessionActive || loading"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 transition-all">
+                            <span x-show="!loading">🚀 Session starten</span>
+                            <span x-show="loading">⏳ Wird gestartet...</span>
+                        </button>
+
+                        <button @click="endSession()"
+                                :disabled="!sessionActive || loading"
+                                class="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 disabled:opacity-50 transition-all">
+                            <span x-show="!loading">🛑 Session beenden</span>
+                            <span x-show="loading">⏳ Wird beendet...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="!sessionActive" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm text-yellow-800">
+                    ⚠️ <strong>Hinweis:</strong> Starten Sie zuerst eine Test-Session, bevor Sie Funktionen testen.
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Test: Reschedule E2E -->
+        <div class="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-red-900">🔄 Quick Test: Reschedule E2E</h2>
+                <span class="px-3 py-1 text-xs font-bold bg-red-600 text-white rounded-full">CRITICAL FIX V61</span>
+            </div>
+            <div class="bg-white rounded-lg p-3 mb-4 text-sm text-gray-700">
+                <strong>Was dieser Test macht:</strong>
+                <ol class="list-decimal ml-5 mt-2 space-y-1">
+                    <li>Bucht automatisch einen Test-Termin (morgen 10:00)</li>
+                    <li>Identifiziert den Kunden</li>
+                    <li>Fragt gebuchte Termine ab</li>
+                    <li>Verschiebt den Termin auf die neue Zeit</li>
+                    <li><strong class="text-red-700">Validiert ob alle 4 Variablen vorhanden sind</strong> (neues_datum, neue_uhrzeit, altes_datum, alte_uhrzeit)</li>
+                </ol>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Test Controls -->
+                <div class="bg-white rounded-lg p-4 space-y-3">
+                    <h3 class="font-bold text-gray-900">Test-Parameter</h3>
+                    <input type="text" x-model="quickTest.newDate" placeholder="Neues Datum (z.B. morgen)"
+                           class="w-full px-3 py-2 border rounded text-sm">
+                    <input type="text" x-model="quickTest.newTime" placeholder="Neue Uhrzeit (z.B. 14:00)"
+                           class="w-full px-3 py-2 border rounded text-sm">
+                    <button @click="runQuickRescheduleTest()"
+                            :disabled="!sessionActive || loading"
+                            class="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">
+                        🚀 Reschedule E2E Test starten
+                    </button>
+                </div>
+
+                <!-- Test Progress -->
+                <div class="bg-white rounded-lg p-4">
+                    <h3 class="font-bold text-gray-900 mb-3">Fortschritt</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center space-x-2 text-blue-600">
+                            <span>⏳</span>
+                            <span>0. Termin buchen (morgen 10:00)</span>
+                        </div>
+                        <div class="flex items-center space-x-2" :class="quickTest.steps.customer ? 'text-green-600' : 'text-gray-400'">
+                            <span x-text="quickTest.steps.customer ? '✅' : '⏳'"></span>
+                            <span>1. Kunde identifiziert</span>
+                        </div>
+                        <div class="flex items-center space-x-2" :class="quickTest.steps.appointments ? 'text-green-600' : 'text-gray-400'">
+                            <span x-text="quickTest.steps.appointments ? '✅' : '⏳'"></span>
+                            <span>2. Termine abgerufen</span>
+                        </div>
+                        <div class="flex items-center space-x-2" :class="quickTest.steps.reschedule ? 'text-green-600' : 'text-gray-400'">
+                            <span x-text="quickTest.steps.reschedule ? '✅' : '⏳'"></span>
+                            <span>3. Termin verschoben</span>
+                        </div>
+                        <div class="flex items-center space-x-2"
+                             :class="quickTest.steps.validate === true ? 'text-green-600' : quickTest.steps.validate === false ? 'text-red-600' : 'text-gray-400'">
+                            <span x-text="quickTest.steps.validate === true ? '✅' : quickTest.steps.validate === false ? '❌' : '⏳'"></span>
+                            <span>4. Variablen validiert</span>
+                        </div>
+                    </div>
+
+                    <!-- Validation Details -->
+                    <div x-show="quickTest.result" class="mt-4 p-3 rounded-lg border"
+                         :class="quickTest.steps.validate ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
+                        <h4 class="text-sm font-bold mb-2" :class="quickTest.steps.validate ? 'text-green-800' : 'text-red-800'">
+                            Variable Validation
+                        </h4>
+                        <div class="text-xs space-y-1">
+                            <div :class="quickTest.validation?.neues_datum ? 'text-green-700' : 'text-red-700'">
+                                <span x-text="quickTest.validation?.neues_datum ? '✓' : '✗'"></span>
+                                neues_datum: <code x-text="quickTest.validation?.neues_datum_value || 'MISSING'"></code>
+                            </div>
+                            <div :class="quickTest.validation?.neue_uhrzeit ? 'text-green-700' : 'text-red-700'">
+                                <span x-text="quickTest.validation?.neue_uhrzeit ? '✓' : '✗'"></span>
+                                neue_uhrzeit: <code x-text="quickTest.validation?.neue_uhrzeit_value || 'MISSING'"></code>
+                            </div>
+                            <div :class="quickTest.validation?.altes_datum ? 'text-green-700' : 'text-red-700'">
+                                <span x-text="quickTest.validation?.altes_datum ? '✓' : '✗'"></span>
+                                altes_datum: <code x-text="quickTest.validation?.altes_datum_value || 'MISSING'"></code>
+                            </div>
+                            <div :class="quickTest.validation?.alte_uhrzeit ? 'text-green-700' : 'text-red-700'">
+                                <span x-text="quickTest.validation?.alte_uhrzeit ? '✓' : '✗'"></span>
+                                alte_uhrzeit: <code x-text="quickTest.validation?.alte_uhrzeit_value || 'MISSING'"></code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Results -->
+            <div x-show="quickTest.result" class="mt-6 bg-white rounded-lg p-4">
+                <h3 class="font-bold text-gray-900 mb-3">Komplettes Ergebnis</h3>
+                <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-60"
+                     x-html="formatJSON(quickTest.result)"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function apiTesterV5() {
+            return {
+                sessionActive: false,
+                sessionStartTime: null,
+                sessionDuration: '00:00',
+                selectedPhone: '+4916043662218',
+                sessionPhone: '',
+                callId: '',
+                loading: false,
+                durationInterval: null,
+
+                quickTest: {
+                    newDate: 'morgen',
+                    newTime: '14:00',
+                    result: null,
+                    validation: null,
+                    steps: {
+                        customer: false,
+                        appointments: false,
+                        reschedule: false,
+                        validate: null
+                    }
+                },
+
+                async startSession() {
+                    this.loading = true;
+                    try {
+                        // Generate unique call ID
+                        this.callId = `test_${Date.now()}`;
+                        this.sessionPhone = this.selectedPhone;
+
+                        // Create call via webhook (call_started)
+                        const response = await fetch('/api/webhooks/retell', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event: 'call_started',
+                                call: {
+                                    call_id: this.callId,
+                                    agent_id: 'agent_test',
+                                    from_number: this.sessionPhone,
+                                    to_number: '+493033081738',
+                                    start_timestamp: Math.floor(Date.now() / 1000)
+                                }
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.sessionActive = true;
+                            this.sessionStartTime = Date.now();
+                            this.startDurationTimer();
+                            alert('✅ Session erfolgreich gestartet!');
+                        } else {
+                            throw new Error('Session konnte nicht gestartet werden');
+                        }
+                    } catch (error) {
+                        alert('❌ Fehler beim Starten: ' + error.message);
+                    }
+                    this.loading = false;
+                },
+
+                async endSession() {
+                    this.loading = true;
+                    try {
+                        // End call via webhook (call_ended)
+                        await fetch('/api/webhooks/retell', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event: 'call_ended',
+                                call: {
+                                    call_id: this.callId,
+                                    end_timestamp: Math.floor(Date.now() / 1000),
+                                    call_analysis: {}
+                                }
+                            })
+                        });
+
+                        this.sessionActive = false;
+                        this.stopDurationTimer();
+                        this.resetQuickTest();
+                        alert('✅ Session beendet!');
+                    } catch (error) {
+                        alert('⚠️ Fehler beim Beenden: ' + error.message);
+                    }
+                    this.loading = false;
+                },
+
+                startDurationTimer() {
+                    this.durationInterval = setInterval(() => {
+                        const elapsed = Math.floor((Date.now() - this.sessionStartTime) / 1000);
+                        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                        const seconds = (elapsed % 60).toString().padStart(2, '0');
+                        this.sessionDuration = `${minutes}:${seconds}`;
+                    }, 1000);
+                },
+
+                stopDurationTimer() {
+                    if (this.durationInterval) {
+                        clearInterval(this.durationInterval);
+                        this.durationInterval = null;
+                    }
+                },
+
+                resetQuickTest() {
+                    this.quickTest.result = null;
+                    this.quickTest.validation = null;
+                    this.quickTest.steps = { customer: false, appointments: false, reschedule: false, validate: null };
+                },
+
+                async callFunction(functionName, params = {}) {
+                    const response = await fetch('/api/webhooks/retell/function', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            call_id: this.callId,
+                            function_name: functionName,
+                            ...params
+                        })
+                    });
+                    return await response.json();
+                },
+
+                async runQuickRescheduleTest() {
+                    if (!this.sessionActive) {
+                        alert('⚠️ Bitte starten Sie zuerst eine Test-Session!');
+                        return;
+                    }
+
+                    this.loading = true;
+                    this.resetQuickTest();
+
+                    const results = { steps: [] };
+
+                    try {
+                        // Step 0: Book appointment first (so we have something to reschedule)
+                        const now = new Date();
+                        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+                        const bookResult = await this.callFunction('book_appointment', {
+                            customer_name: 'Test Reschedule',
+                            customer_phone: this.sessionPhone,
+                            service_name: 'Herrenhaarschnitt',
+                            datetime: `${tomorrowStr} 10:00`
+                        });
+                        results.steps.push({ step: 'book_initial_appointment', result: bookResult });
+
+                        // Wait 1 second for DB
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        // Step 1: Check customer
+                        const customerResult = await this.callFunction('check_customer', {});
+                        this.quickTest.steps.customer = true;
+                        results.steps.push({ step: 'check_customer', result: customerResult });
+
+                        // Step 2: Query appointments (correct function name!)
+                        const appointmentsResult = await this.callFunction('query_appointment', {});
+                        this.quickTest.steps.appointments = true;
+                        results.steps.push({ step: 'query_appointment', result: appointmentsResult });
+
+                        // Step 3: Reschedule
+                        const rescheduleResult = await this.callFunction('reschedule_appointment', {
+                            new_datum: this.quickTest.newDate,
+                            new_uhrzeit: this.quickTest.newTime
+                        });
+                        this.quickTest.steps.reschedule = true;
+                        results.steps.push({ step: 'reschedule', result: rescheduleResult });
+
+                        // Step 4: Validate variables
+                        const data = rescheduleResult?.data || {};
+                        this.quickTest.validation = {
+                            neues_datum: !!data.neues_datum,
+                            neues_datum_value: data.neues_datum || 'MISSING',
+                            neue_uhrzeit: !!data.neue_uhrzeit,
+                            neue_uhrzeit_value: data.neue_uhrzeit || 'MISSING',
+                            altes_datum: !!data.altes_datum,
+                            altes_datum_value: data.altes_datum || 'MISSING',
+                            alte_uhrzeit: !!data.alte_uhrzeit,
+                            alte_uhrzeit_value: data.alte_uhrzeit || 'MISSING'
+                        };
+
+                        this.quickTest.steps.validate =
+                            this.quickTest.validation.neues_datum &&
+                            this.quickTest.validation.neue_uhrzeit &&
+                            this.quickTest.validation.altes_datum &&
+                            this.quickTest.validation.alte_uhrzeit;
+
+                        results.validation = this.quickTest.validation;
+                        results.validation_passed = this.quickTest.steps.validate;
+
+                        this.quickTest.result = results;
+
+                        if (this.quickTest.steps.validate) {
+                            alert('✅ RESCHEDULE TEST ERFOLGREICH!\n\nAlle Variablen vorhanden:\n' +
+                                  '✓ neues_datum\n✓ neue_uhrzeit\n✓ altes_datum\n✓ alte_uhrzeit');
+                        } else {
+                            alert('❌ RESCHEDULE TEST FEHLGESCHLAGEN!\n\nVariablen fehlen - siehe Details unten.');
+                        }
+
+                    } catch (error) {
+                        alert('❌ Fehler beim Test: ' + error.message);
+                    }
+
+                    this.loading = false;
+                },
+
+                exportAsJSON() {
+                    const data = {
+                        timestamp: new Date().toISOString(),
+                        call_id: this.callId,
+                        session_phone: this.sessionPhone,
+                        test_results: this.quickTest.result
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reschedule-test-${Date.now()}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+
+                exportAsMarkdown() {
+                    const data = this.quickTest.result;
+                    let md = `# Reschedule E2E Test Results\n\n`;
+                    md += `**Timestamp**: ${new Date().toISOString()}\n`;
+                    md += `**Call ID**: ${this.callId}\n`;
+                    md += `**Phone**: ${this.sessionPhone}\n\n`;
+                    md += `## Validation Result\n\n`;
+                    md += `**Status**: ${data?.validation_passed ? '✅ PASS' : '❌ FAIL'}\n\n`;
+                    md += `### Variables\n\n`;
+                    if (this.quickTest.validation) {
+                        md += `- neues_datum: ${this.quickTest.validation.neues_datum ? '✅' : '❌'} \`${this.quickTest.validation.neues_datum_value}\`\n`;
+                        md += `- neue_uhrzeit: ${this.quickTest.validation.neue_uhrzeit ? '✅' : '❌'} \`${this.quickTest.validation.neue_uhrzeit_value}\`\n`;
+                        md += `- altes_datum: ${this.quickTest.validation.altes_datum ? '✅' : '❌'} \`${this.quickTest.validation.altes_datum_value}\`\n`;
+                        md += `- alte_uhrzeit: ${this.quickTest.validation.alte_uhrzeit ? '✅' : '❌'} \`${this.quickTest.validation.alte_uhrzeit_value}\`\n`;
+                    }
+                    md += `\n## Full Results\n\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\`\n`;
+
+                    const blob = new Blob([md], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reschedule-test-${Date.now()}.md`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+
+                async copyToClipboard() {
+                    const data = this.quickTest.result;
+                    const text = JSON.stringify(data, null, 2);
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        alert('✅ In Zwischenablage kopiert!');
+                    } catch (err) {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        alert('✅ In Zwischenablage kopiert!');
+                    }
+                },
+
+                formatJSON(data) {
+                    if (!data) return '';
+                    return `<pre class="language-json"><code class="language-json">${JSON.stringify(data, null, 2)}</code></pre>`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

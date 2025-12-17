@@ -386,6 +386,42 @@ Route::middleware(['auth:sanctum'])->prefix('user-preferences')->group(function 
         ->name('api.preferences.columns.reset');
 });
 
+// ---- Customer Portal Routes -------------------------------------------
+Route::prefix('customer-portal')->group(function () {
+    // Public routes (no authentication required)
+    Route::get('/invitations/{token}/validate', [\App\Http\Controllers\CustomerPortal\AuthController::class, 'validateToken'])
+        ->name('api.customer-portal.invitations.validate')
+        ->middleware(['throttle:60,1']);
+
+    Route::post('/invitations/{token}/accept', [\App\Http\Controllers\CustomerPortal\AuthController::class, 'acceptInvitation'])
+        ->name('api.customer-portal.invitations.accept')
+        ->middleware(['throttle:10,1']);
+
+    // Protected routes (Sanctum authentication required)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        // Appointment list and detail
+        Route::get('/appointments', [\App\Http\Controllers\CustomerPortal\AppointmentController::class, 'index'])
+            ->name('api.customer-portal.appointments.index');
+
+        Route::get('/appointments/{id}', [\App\Http\Controllers\CustomerPortal\AppointmentController::class, 'show'])
+            ->name('api.customer-portal.appointments.show');
+
+        // Alternative time slots for rescheduling
+        Route::get('/appointments/{id}/alternatives', [\App\Http\Controllers\CustomerPortal\AppointmentController::class, 'alternatives'])
+            ->name('api.customer-portal.appointments.alternatives');
+
+        // Reschedule appointment (stricter rate limit)
+        Route::put('/appointments/{id}/reschedule', [\App\Http\Controllers\CustomerPortal\AppointmentController::class, 'reschedule'])
+            ->name('api.customer-portal.appointments.reschedule')
+            ->middleware('throttle:10,1');
+
+        // Cancel appointment (stricter rate limit)
+        Route::delete('/appointments/{id}', [\App\Http\Controllers\CustomerPortal\AppointmentController::class, 'cancel'])
+            ->name('api.customer-portal.appointments.cancel')
+            ->middleware('throttle:10,1');
+    });
+});
+
 // ---- Test Routes (Local/Testing Environment Only) -------------------------------------------
 // IMPORTANT: Only available in local/testing environments (see controller)
 Route::prefix('test')->group(function () {

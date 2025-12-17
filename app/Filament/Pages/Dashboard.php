@@ -58,10 +58,13 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        // Widgets disabled until database is fully migrated
-        // Some widgets query tables that don't exist yet
-        // Will be re-enabled once all migrations are complete
-        return [];
+        return [
+            // 🆕 PHASE 3 (2025-11-24): Appointment Sync Monitoring
+            \App\Filament\Widgets\AppointmentSyncStatusWidget::class,
+
+            // 📊 Cal.com Integration Status
+            \App\Filament\Widgets\CalcomSyncStatusWidget::class,
+        ];
     }
 
     protected function getViewData(): array

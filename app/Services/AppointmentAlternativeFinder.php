@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use App\Exceptions\CalcomApiException;
+use App\ValueObjects\TimePreference;
 
 class AppointmentAlternativeFinder
 {
@@ -19,6 +20,10 @@ class AppointmentAlternativeFinder
     const STRATEGY_NEXT_WORKDAY = 'next_workday_same_time';
     const STRATEGY_NEXT_WEEK = 'next_week_same_day';
     const STRATEGY_NEXT_AVAILABLE = 'next_available_workday';
+
+    // 🔧 NEW 2025-12-08: Time window-aware strategies
+    const STRATEGY_SAME_DAY_IN_WINDOW = 'same_day_in_window';      // Same day, within preferred window
+    const STRATEGY_SAME_WINDOW_OTHER_DAYS = 'same_window_other_days'; // Other days, same window
 
     // Multi-tenant context for cache isolation
     private ?int $companyId = null;
@@ -124,24 +129,49 @@ class AppointmentAlternativeFinder
      * @param int $eventTypeId Cal.com event type ID
      * @param int|null $customerId Customer ID to filter out existing appointments
      * @param string|null $preferredLanguage Preferred language for responses
-     * @return array Array with 'alternatives' and 'responseText'
+     * @param TimePreference|null $timePreference Customer's time preference (window, from, range, etc.)
+     * @return array Array with 'alternatives', 'responseText', and preference context
      */
     public function findAlternatives(
         Carbon $desiredDateTime,
         int $durationMinutes,
         int $eventTypeId,
         ?int $customerId = null,
-        ?string $preferredLanguage = 'de'
+        ?string $preferredLanguage = 'de',
+        ?TimePreference $timePreference = null
     ): array {
         // Use actual dates without year mapping
         // Cal.com should now handle 2025 dates correctly
+
+        // 🔧 NEW 2025-12-08: Default to ANY preference if not specified (backwards compatibility)
+        if ($timePreference === null) {
+            $timePreference = TimePreference::any();
+        }
+
+        // 🔍 Log TimePreference for debugging
+        Log::info('🕐 findAlternatives: TimePreference context', [
+            'type' => $timePreference->type,
+            'window_start' => $timePreference->windowStart,
+            'window_end' => $timePreference->windowEnd,
+            'label' => $timePreference->label,
+        ]);
 
         Log::info('🔍 Searching for appointment alternatives', [
             'desired' => $desiredDateTime->format('Y-m-d H:i'),
             'duration' => $durationMinutes,
             'eventTypeId' => $eventTypeId,
-            'customer_id' => $customerId
+            'customer_id' => $customerId,
+            'time_preference' => [
+                'type' => $timePreference->type,
+                'window_start' => $timePreference->windowStart,
+                'window_end' => $timePreference->windowEnd,
+                'label' => $timePreference->label,
+            ]
         ]);
+
+        // 🔧 FIX 2025-12-03: Store original requested time BEFORE any adjustments
+        // This is the time the user originally asked for - we should NEVER offer this as an alternative
+        $originalRequestedTimeStr = $desiredDateTime->copy()->setTimezone('Europe/Berlin')->format('Y-m-d H:i');
 
         // EDGE CASE FIX: Adjust times outside business hours to nearest business hour
         $adjustment = $this->adjustToBusinessHours($desiredDateTime);
@@ -157,14 +187,47 @@ class AppointmentAlternativeFinder
 
         try {
             $alternatives = collect();
+            $allMatchPreference = true; // Track if all alternatives match user's preference
 
-            foreach ($this->config['search_strategies'] as $strategy) {
+            // 🔧 NEW 2025-12-08: Use time window-aware strategies if preference specified
+            $strategies = $this->getStrategiesForPreference($timePreference);
+
+            foreach ($strategies as $strategy) {
                 if ($alternatives->count() >= $this->maxAlternatives) {
                     break;
                 }
 
-                $found = $this->executeStrategy($strategy, $desiredDateTime, $durationMinutes, $eventTypeId);
+                $found = $this->executeStrategyWithPreference(
+                    $strategy,
+                    $desiredDateTime,
+                    $durationMinutes,
+                    $eventTypeId,
+                    $timePreference
+                );
                 $alternatives = $alternatives->merge($found);
+            }
+
+            // 🔧 FIX 2025-12-03: Filter out the originally requested time from ALL alternatives
+            // Prevents contradictory responses like "16:00 is not available, but 16:00 is available"
+            $beforeFilterCount = $alternatives->count();
+            $alternatives = $alternatives->filter(function($alt) use ($originalRequestedTimeStr) {
+                $altTimeStr = $alt['datetime']->copy()->setTimezone('Europe/Berlin')->format('Y-m-d H:i');
+                $shouldKeep = $altTimeStr !== $originalRequestedTimeStr;
+                if (!$shouldKeep) {
+                    Log::debug('🔧 Filtering out originally requested time from alternatives', [
+                        'filtered_time' => $altTimeStr,
+                        'original_requested' => $originalRequestedTimeStr
+                    ]);
+                }
+                return $shouldKeep;
+            });
+            $afterFilterCount = $alternatives->count();
+
+            if ($beforeFilterCount > $afterFilterCount) {
+                Log::info('✅ Filtered out originally requested time from alternatives', [
+                    'original_time' => $originalRequestedTimeStr,
+                    'removed_count' => $beforeFilterCount - $afterFilterCount
+                ]);
             }
 
             // 🔧 FIX 2025-11-18: Filter ALL slot conflicts (not just customer's own appointments)
@@ -225,9 +288,30 @@ class AppointmentAlternativeFinder
             // Format the response with alternatives and response text
             $responseText = $this->formatResponseText($limited);
 
+            // 🔧 NEW 2025-12-08: Check if all alternatives match the user's preference
+            // Note: For ANY or EXACT preferences, legacy strategies are used and all alternatives implicitly match
+            $isLegacyPreference = $timePreference->type === TimePreference::TYPE_ANY ||
+                                  $timePreference->type === TimePreference::TYPE_EXACT;
+            $allMatchPreference = $isLegacyPreference ||
+                                  $limited->every(fn($alt) => $alt['matches_preference'] ?? false);
+
+            // If we have a time window preference but no matches inside it
+            $outsideWindowCount = $isLegacyPreference ? 0 :
+                                  $limited->filter(fn($alt) => !($alt['matches_preference'] ?? true))->count();
+
             return [
                 'alternatives' => $limited->toArray(),
-                'responseText' => $responseText
+                'responseText' => $responseText,
+                // NEW: Preference context for intelligent agent responses
+                'preference_context' => [
+                    'type' => $timePreference->type,
+                    'label' => $timePreference->label,
+                    'window_start' => $timePreference->windowStart,
+                    'window_end' => $timePreference->windowEnd,
+                    'all_match_preference' => $allMatchPreference,
+                    'outside_window_count' => $outsideWindowCount,
+                    'suggested_followup' => $this->generatePreferenceFollowup($timePreference, $allMatchPreference, $limited)
+                ]
             ];
 
         } catch (CalcomApiException $e) {
@@ -284,7 +368,12 @@ class AppointmentAlternativeFinder
         if ($earlierTime->format('H:i') >= $this->config['business_hours']['start']) {
             $slots = $this->getAvailableSlots($earlierTime, $desiredDateTime, $eventTypeId);
             foreach ($slots as $slot) {
-                $slotTime = isset($slot['datetime']) ? $slot['datetime'] : Carbon::parse($slot['time']);
+                // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                // Bug: Agent said "06:00 Uhr" when Cal.com website showed 07:00 (first slot)
+                // Root cause: Carbon::parse(UTC) was formatted without timezone conversion
+                $slotTime = isset($slot['datetime'])
+                    ? $slot['datetime']
+                    : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
                 $alternatives->push([
                     'datetime' => $slotTime,
                     'type' => 'same_day_earlier',
@@ -299,7 +388,10 @@ class AppointmentAlternativeFinder
         if ($laterTime->format('H:i') <= $this->config['business_hours']['end']) {
             $slots = $this->getAvailableSlots($desiredDateTime, $laterTime, $eventTypeId);
             foreach ($slots as $slot) {
-                $slotTime = isset($slot['datetime']) ? $slot['datetime'] : Carbon::parse($slot['time']);
+                // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                $slotTime = isset($slot['datetime'])
+                    ? $slot['datetime']
+                    : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
                 $alternatives->push([
                     'datetime' => $slotTime,
                     'type' => 'same_day_later',
@@ -423,7 +515,8 @@ class AppointmentAlternativeFinder
             if (!empty($slots)) {
                 $bestSlot = $this->findClosestSlot($slots, $desiredDateTime);
                 if ($bestSlot) {
-                    $slotTime = Carbon::parse($bestSlot['time']);
+                    // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                    $slotTime = Carbon::parse($bestSlot['time'])->setTimezone('Europe/Berlin');
                     $alternatives->push([
                         'datetime' => $slotTime,
                         'type' => 'next_available',
@@ -472,8 +565,9 @@ class AppointmentAlternativeFinder
         );
 
         // 🔧 FIX 2025-11-19: Reduce cache TTL from 300s to 60s
-        // Reduces race condition window from 5 minutes to 1 minute
-        return Cache::remember($cacheKey, 60, function() use ($startTime, $endTime, $eventTypeId) {
+        // 🔧 FIX 2025-11-21: Further reduced from 60s to 30s
+        // Reduces race condition window from 1 minute to 30 seconds
+        return Cache::remember($cacheKey, 30, function() use ($startTime, $endTime, $eventTypeId) {
             try {
                 $response = $this->calcomService->getAvailableSlots(
                     $eventTypeId,
@@ -493,12 +587,16 @@ class AppointmentAlternativeFinder
                             foreach ($dateSlots as $slot) {
                                 // Each slot is an object with a 'time' property
                                 $slotTime = is_array($slot) && isset($slot['time']) ? $slot['time'] : $slot;
-                                $parsedTime = Carbon::parse($slotTime);
+                                // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                                // Bug: Agent said "06:00 Uhr" when Cal.com website showed 07:00 (first slot)
+                                // Root cause: Carbon::parse(UTC) stored datetime without timezone conversion
+                                $parsedTime = Carbon::parse($slotTime)->setTimezone('Europe/Berlin');
 
                                 // Debug logging
                                 Log::debug('Checking slot', [
                                     'slot_time' => $slotTime,
-                                    'parsed' => $parsedTime->format('Y-m-d H:i:s'),
+                                    'slot_utc' => Carbon::parse($slotTime)->format('Y-m-d H:i:s'),
+                                    'slot_berlin' => $parsedTime->format('Y-m-d H:i:s'),
                                     'start' => $startTime->format('Y-m-d H:i:s'),
                                     'end' => $endTime->format('Y-m-d H:i:s'),
                                     'in_window' => ($parsedTime >= $startTime && $parsedTime <= $endTime)
@@ -852,7 +950,10 @@ class AppointmentAlternativeFinder
 
         // Check if any slot matches the target time (within 15-minute tolerance)
         foreach ($slots as $slot) {
-            $slotTime = isset($slot['datetime']) ? $slot['datetime'] : Carbon::parse($slot['time']);
+            // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+            $slotTime = isset($slot['datetime'])
+                ? $slot['datetime']
+                : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
 
             // Match if within 15 minutes
             $diffMinutes = abs($slotTime->diffInMinutes($targetTime));
@@ -905,7 +1006,10 @@ class AppointmentAlternativeFinder
             if (!empty($slots)) {
                 // Find the first slot within business hours
                 foreach ($slots as $slot) {
-                    $slotTime = isset($slot['datetime']) ? $slot['datetime'] : Carbon::parse($slot['time']);
+                    // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                    $slotTime = isset($slot['datetime'])
+                        ? $slot['datetime']
+                        : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
 
                     if ($this->isWithinBusinessHours($slotTime)) {
                         Log::info('✅ Found available slot', [
@@ -1244,5 +1348,284 @@ class AppointmentAlternativeFinder
         }
 
         return $overlapStart->diffInMinutes($overlapEnd);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 🔧 NEW 2025-12-08: TimePreference-aware Strategy Methods
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Generate intelligent follow-up message based on preference match results
+     *
+     * @param TimePreference $preference Customer's time preference
+     * @param bool $allMatch Whether all alternatives match the preference
+     * @param Collection $alternatives The found alternatives
+     * @return string|null Suggested follow-up message (German)
+     */
+    private function generatePreferenceFollowup(TimePreference $preference, bool $allMatch, Collection $alternatives): ?string
+    {
+        // No follow-up needed for ANY preference or if all alternatives match
+        if ($preference->type === TimePreference::TYPE_ANY || $allMatch) {
+            return null;
+        }
+
+        // No alternatives found at all
+        if ($alternatives->isEmpty()) {
+            return match($preference->type) {
+                TimePreference::TYPE_WINDOW => "Möchten Sie, dass ich an einem anderen Tag {$preference->label} schaue?",
+                TimePreference::TYPE_FROM => "Soll ich an einem anderen Tag {$preference->label} nachschauen?",
+                TimePreference::TYPE_RANGE => "Darf ich an einem anderen Tag in diesem Zeitraum schauen?",
+                default => null
+            };
+        }
+
+        // Alternatives found but not all match preference
+        $preferenceLabel = $preference->getGermanLabel();
+        return "Die vorgeschlagenen Zeiten liegen außerhalb von {$preferenceLabel}. Käme das auch infrage, oder soll ich an einem anderen Tag {$preferenceLabel} suchen?";
+    }
+
+    /**
+     * Get search strategies based on time preference type
+     *
+     * For TIME_EXACT: Use legacy strategies (±2h around exact time)
+     * For TIME_WINDOW/FROM/RANGE: Prioritize same window, then same window other days
+     * For TIME_ANY: Use all strategies equally
+     *
+     * @param TimePreference $preference Customer's time preference
+     * @return array Strategy constants in priority order
+     */
+    private function getStrategiesForPreference(TimePreference $preference): array
+    {
+        // For EXACT time or ANY preference, use legacy behavior
+        if ($preference->type === TimePreference::TYPE_EXACT || $preference->type === TimePreference::TYPE_ANY) {
+            return [
+                self::STRATEGY_SAME_DAY,
+                self::STRATEGY_NEXT_WORKDAY,
+                self::STRATEGY_NEXT_WEEK,
+                self::STRATEGY_NEXT_AVAILABLE
+            ];
+        }
+
+        // For time windows (WINDOW, FROM, RANGE): Prioritize window-aware strategies
+        return [
+            self::STRATEGY_SAME_DAY_IN_WINDOW,      // 1. Same day, within preferred window
+            self::STRATEGY_SAME_WINDOW_OTHER_DAYS,  // 2. Other days, same time window
+            self::STRATEGY_SAME_DAY,                // 3. Same day, outside window (fallback)
+            self::STRATEGY_NEXT_AVAILABLE           // 4. Any available slot (last resort)
+        ];
+    }
+
+    /**
+     * Execute a strategy with TimePreference awareness
+     *
+     * Routes to preference-aware methods for new strategies,
+     * falls back to legacy executeStrategy for old ones.
+     *
+     * @param string $strategy Strategy constant
+     * @param Carbon $desiredDateTime Desired date/time
+     * @param int $durationMinutes Service duration
+     * @param int $eventTypeId Cal.com event type ID
+     * @param TimePreference $timePreference Customer's time preference
+     * @return Collection Found alternatives
+     */
+    private function executeStrategyWithPreference(
+        string $strategy,
+        Carbon $desiredDateTime,
+        int $durationMinutes,
+        int $eventTypeId,
+        TimePreference $timePreference
+    ): Collection {
+        return match($strategy) {
+            // New TimePreference-aware strategies
+            self::STRATEGY_SAME_DAY_IN_WINDOW => $this->findSameDayInWindow(
+                $desiredDateTime,
+                $durationMinutes,
+                $eventTypeId,
+                $timePreference
+            ),
+            self::STRATEGY_SAME_WINDOW_OTHER_DAYS => $this->findSameWindowOtherDays(
+                $desiredDateTime,
+                $durationMinutes,
+                $eventTypeId,
+                $timePreference
+            ),
+            // Legacy strategies (delegate to original method)
+            default => $this->executeStrategy($strategy, $desiredDateTime, $durationMinutes, $eventTypeId)
+        };
+    }
+
+    /**
+     * Find alternatives on the same day within the customer's preferred time window
+     *
+     * Example: Customer wants "Vormittag" (09:00-12:00)
+     * → Only search within 09:00-12:00 on the same day
+     *
+     * @param Carbon $desiredDateTime Original desired date/time
+     * @param int $durationMinutes Service duration
+     * @param int $eventTypeId Cal.com event type ID
+     * @param TimePreference $preference Customer's time window preference
+     * @return Collection Alternatives within the time window
+     */
+    private function findSameDayInWindow(
+        Carbon $desiredDateTime,
+        int $durationMinutes,
+        int $eventTypeId,
+        TimePreference $preference
+    ): Collection {
+        $alternatives = collect();
+
+        // If no window specified, fall back to legacy same-day search
+        if (!$preference->hasWindow()) {
+            Log::debug('⏭️ No time window in preference, skipping SAME_DAY_IN_WINDOW');
+            return $alternatives;
+        }
+
+        $date = $desiredDateTime->copy()->startOfDay();
+
+        // Build time range from preference
+        $windowStart = $date->copy()->setTimeFromTimeString($preference->windowStart . ':00');
+        $windowEnd = $date->copy()->setTimeFromTimeString($preference->windowEnd . ':00');
+
+        // Clamp to business hours
+        $businessStart = $date->copy()->setTimeFromTimeString($this->config['business_hours']['start'] . ':00');
+        $businessEnd = $date->copy()->setTimeFromTimeString($this->config['business_hours']['end'] . ':00');
+
+        if ($windowStart < $businessStart) {
+            $windowStart = $businessStart;
+        }
+        if ($windowEnd > $businessEnd) {
+            $windowEnd = $businessEnd;
+        }
+
+        Log::info('🕐 Searching same day in time window', [
+            'date' => $date->format('Y-m-d'),
+            'window_start' => $windowStart->format('H:i'),
+            'window_end' => $windowEnd->format('H:i'),
+            'preference_type' => $preference->type,
+            'preference_label' => $preference->label
+        ]);
+
+        // Get available slots within the window
+        $slots = $this->getAvailableSlots($windowStart, $windowEnd, $eventTypeId);
+
+        foreach ($slots as $slot) {
+            // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+            $slotTime = isset($slot['datetime'])
+                ? $slot['datetime']
+                : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
+
+            // Double-check slot is within the preference window
+            if ($preference->containsDateTime($slotTime)) {
+                $alternatives->push([
+                    'datetime' => $slotTime,
+                    'type' => 'same_day_in_window',
+                    'description' => $this->generateDateDescription($slotTime, $desiredDateTime) . ', ' . $slotTime->format('H:i') . ' Uhr',
+                    'source' => 'calcom',
+                    'matches_preference' => true
+                ]);
+            }
+        }
+
+        Log::info('✅ Found alternatives in same day window', [
+            'count' => $alternatives->count(),
+            'slots' => $alternatives->map(fn($alt) => $alt['datetime']->format('H:i'))->toArray()
+        ]);
+
+        return $alternatives;
+    }
+
+    /**
+     * Find alternatives on other days within the same time window
+     *
+     * Example: Customer wants "Vormittag" (09:00-12:00) but today is full
+     * → Search 09:00-12:00 on subsequent workdays
+     *
+     * @param Carbon $startDate Date to start searching from
+     * @param int $durationMinutes Service duration
+     * @param int $eventTypeId Cal.com event type ID
+     * @param TimePreference $preference Customer's time window preference
+     * @param int $daysToSearch Max days to search ahead (default: 7)
+     * @return Collection Alternatives on other days within the same window
+     */
+    private function findSameWindowOtherDays(
+        Carbon $startDate,
+        int $durationMinutes,
+        int $eventTypeId,
+        TimePreference $preference,
+        int $daysToSearch = 7
+    ): Collection {
+        $alternatives = collect();
+
+        // If no window specified, skip this strategy
+        if (!$preference->hasWindow()) {
+            Log::debug('⏭️ No time window in preference, skipping SAME_WINDOW_OTHER_DAYS');
+            return $alternatives;
+        }
+
+        Log::info('🕐 Searching other days with same time window', [
+            'start_date' => $startDate->format('Y-m-d'),
+            'days_to_search' => $daysToSearch,
+            'window_start' => $preference->windowStart,
+            'window_end' => $preference->windowEnd,
+            'preference_label' => $preference->label
+        ]);
+
+        for ($i = 1; $i <= $daysToSearch; $i++) {
+            $searchDate = $startDate->copy()->addDays($i);
+
+            // Skip non-workdays
+            if (!$this->isWorkday($searchDate)) {
+                continue;
+            }
+
+            // Build time window for this day
+            $windowStart = $searchDate->copy()->setTimeFromTimeString($preference->windowStart . ':00');
+            $windowEnd = $searchDate->copy()->setTimeFromTimeString($preference->windowEnd . ':00');
+
+            // Clamp to business hours
+            $businessStart = $searchDate->copy()->setTimeFromTimeString($this->config['business_hours']['start'] . ':00');
+            $businessEnd = $searchDate->copy()->setTimeFromTimeString($this->config['business_hours']['end'] . ':00');
+
+            if ($windowStart < $businessStart) {
+                $windowStart = $businessStart;
+            }
+            if ($windowEnd > $businessEnd) {
+                $windowEnd = $businessEnd;
+            }
+
+            // Get available slots within the window
+            $slots = $this->getAvailableSlots($windowStart, $windowEnd, $eventTypeId);
+
+            foreach ($slots as $slot) {
+                // 🔧 FIX 2025-12-14: TIMEZONE BUG - Cal.com returns UTC times, must convert to Berlin
+                $slotTime = isset($slot['datetime'])
+                    ? $slot['datetime']
+                    : Carbon::parse($slot['time'])->setTimezone('Europe/Berlin');
+
+                // Double-check slot is within the preference window
+                if ($preference->containsDateTime($slotTime)) {
+                    $alternatives->push([
+                        'datetime' => $slotTime,
+                        'type' => 'same_window_other_day',
+                        'description' => $this->formatGermanWeekday($slotTime) . ', ' .
+                                       $slotTime->format('d.m.') . ' um ' . $slotTime->format('H:i') . ' Uhr',
+                        'source' => 'calcom',
+                        'matches_preference' => true
+                    ]);
+                }
+
+                // Stop if we have enough alternatives
+                if ($alternatives->count() >= $this->maxAlternatives) {
+                    break 2; // Break out of both loops
+                }
+            }
+        }
+
+        Log::info('✅ Found alternatives in same window on other days', [
+            'count' => $alternatives->count(),
+            'slots' => $alternatives->map(fn($alt) => $alt['datetime']->format('Y-m-d H:i'))->toArray()
+        ]);
+
+        return $alternatives;
     }
 }

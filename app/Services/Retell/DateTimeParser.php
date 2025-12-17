@@ -95,6 +95,33 @@ class DateTimeParser
         $time = $params['time'] ?? $params['uhrzeit'] ?? null;
         $date = $params['date'] ?? $params['datum'] ?? null;
 
+        // 🔧 FIX 2025-11-25: Convert vague German time periods to concrete times
+        // Bug: "vormittags", "nachmittags" etc. are not parseable by Carbon
+        // Solution: Map to default times for these periods
+        $vagueTimeMap = [
+            'vormittags' => '10:00',
+            'mittags' => '12:00',
+            'nachmittags' => '14:00',
+            'abends' => '18:00',
+            'morgens' => '08:00',
+            'früh' => '08:00',
+            'spät' => '17:00',
+        ];
+
+        if ($time) {
+            $normalizedTime = strtolower(trim($time));
+            if (isset($vagueTimeMap[$normalizedTime])) {
+                Log::info('🕐 Converting vague time period to concrete time', [
+                    'original' => $time,
+                    'converted' => $vagueTimeMap[$normalizedTime],
+                    'call_id' => $params['call_id'] ?? 'unknown'
+                ]);
+                $time = $vagueTimeMap[$normalizedTime];
+                $params['time'] = $time;
+                $params['uhrzeit'] = $time;
+            }
+        }
+
         // 🔧 FIX 2025-11-17: Validate vague date input without time
         // Bug: "diese Woche" without time defaulted to 10:00, causing confusion
         // Solution: Return null to signal caller to ask for time explicitly
@@ -144,7 +171,11 @@ class DateTimeParser
             // Both orders: "nächste Woche Montag" AND "Montag nächste Woche"
             $isWeekBasedDate = preg_match('/(nächste|diese|dieser|nächster|nächstes|kommende|kommender|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s+(woche|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|nächste|diese)/i', $dateValue);
 
-            if ($isGermanDate || $isWeekBasedDate) {
+            // 🔧 FIX 2025-11-19: Also check for German date format "Wochentag, den DD. Monat"
+            // Pattern: "Mittwoch, den 19. November", "Montag, den 25. Dezember"
+            $isGermanMonthDate = preg_match('/(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag),?\s+(den\s+)?\d{1,2}\.?\s+(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)/i', $dateValue);
+
+            if ($isGermanDate || $isWeekBasedDate || $isGermanMonthDate) {
                 // Parse date string first to get the actual date
                 $parsedDateString = $this->parseDateString($dateValue);
 
@@ -474,6 +505,69 @@ class DateTimeParser
                         'input' => $dateString,
                         'error' => $e->getMessage(),
                         'weekday' => $weekdayName ?? null,
+                        'day' => $day ?? null,
+                        'month' => $monthName ?? null
+                    ]);
+                }
+            }
+        }
+
+        // 🔧 FIX 2025-12-05: Handle "DD. Monat" pattern WITHOUT weekday
+        // Pattern: "7. November", "13. Dezember", "25. Januar"
+        // PROBLEM: Without weekday prefix, no existing pattern matches
+        // RCA: Call 73526 - Agent said "7. November" which fell through to Carbon::parse()
+        //      and was interpreted as 2026-11-07 instead of smart year inference
+        if (preg_match('/^(\d{1,2})\.?\s+(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/i', $normalizedDate, $matches)) {
+            $day = (int)$matches[1];
+            $monthName = strtolower($matches[2]);
+
+            $monthMap = [
+                'januar' => 1,
+                'februar' => 2,
+                'märz' => 3,
+                'april' => 4,
+                'mai' => 5,
+                'juni' => 6,
+                'juli' => 7,
+                'august' => 8,
+                'september' => 9,
+                'oktober' => 10,
+                'november' => 11,
+                'dezember' => 12,
+            ];
+
+            if (isset($monthMap[$monthName])) {
+                try {
+                    $now = Carbon::now('Europe/Berlin');
+                    $currentYear = $now->year;
+                    $month = $monthMap[$monthName];
+
+                    // Try current year first
+                    $targetDate = Carbon::createFromDate($currentYear, $month, $day, 'Europe/Berlin');
+
+                    // CRITICAL: Smart year inference
+                    // If date is in past (>2 days ago), use NEXT year occurrence
+                    // This prevents "7. November" in December from becoming past date
+                    if ($targetDate->isPast() && $targetDate->diffInDays($now, true) > 2) {
+                        $targetDate = Carbon::createFromDate($currentYear + 1, $month, $day, 'Europe/Berlin');
+                    }
+
+                    Log::info('📅 Parsed German "DD. Monat" format (without weekday)', [
+                        'input' => $dateString,
+                        'normalized' => $normalizedDate,
+                        'day' => $day,
+                        'month_name' => $monthName,
+                        'month_number' => $month,
+                        'year_used' => $targetDate->year,
+                        'result_date' => $targetDate->format('Y-m-d'),
+                        'year_logic' => $targetDate->year > $currentYear ? 'next_year' : 'current_year'
+                    ]);
+
+                    return $targetDate->format('Y-m-d');
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed to parse German "DD. Monat" format', [
+                        'input' => $dateString,
+                        'error' => $e->getMessage(),
                         'day' => $day ?? null,
                         'month' => $monthName ?? null
                     ]);

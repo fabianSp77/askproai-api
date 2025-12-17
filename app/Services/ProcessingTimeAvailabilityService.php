@@ -31,27 +31,40 @@ class ProcessingTimeAvailabilityService
      */
     public function isStaffAvailable(string $staffId, Carbon $startTime, Service $service): bool
     {
-        $endTime = $startTime->copy()->addMinutes($service->getTotalDuration());
+        // Safe method call: getTotalDuration() may not exist on all service types
+        $duration = method_exists($service, 'getTotalDuration')
+            ? $service->getTotalDuration()
+            : ($service->duration_minutes ?? 60);
+        $endTime = $startTime->copy()->addMinutes($duration);
 
-        // For regular services (no processing time), check appointment overlap directly
-        if (!$service->hasProcessingTime()) {
-            return !$this->hasOverlappingAppointments($staffId, $startTime, $endTime);
+        // 🔧 FIX 2025-11-23: ALWAYS check for overlapping appointments first
+        // BUG: Processing-time services were only checking busy phases, missing regular appointments
+        // This caused false positives when a processing-time service was requested during a regular appointment
+        // Example: Dauerwelle (processing-time) 10:45-13:00 vs Herrenhaarschnitt (regular) 10:00-12:15
+        //          The phase check would pass (no phases in regular appointments), but durations overlap!
+        if ($this->hasOverlappingAppointments($staffId, $startTime, $endTime)) {
+            return false;
         }
 
-        // For processing time services, check each phase individually
-        $proposedPhases = $service->generatePhases($startTime);
+        // For processing time services, ADDITIONALLY check phase-aware conflicts
+        // This handles interleaving: staff can serve customer B during customer A's processing phase
+        // Safe method call: hasProcessingTime() and generatePhases() may not exist on all service types
+        $hasProcessingTime = method_exists($service, 'hasProcessingTime') && $service->hasProcessingTime();
+        if ($hasProcessingTime && method_exists($service, 'generatePhases')) {
+            $proposedPhases = $service->generatePhases($startTime);
 
-        foreach ($proposedPhases as $phase) {
-            // Only check phases where staff is required (busy phases)
-            if ($phase['staff_required']) {
-                $hasConflict = $this->hasOverlappingBusyPhases(
-                    $staffId,
-                    $phase['start_time'],
-                    $phase['end_time']
-                );
+            foreach ($proposedPhases as $phase) {
+                // Only check phases where staff is required (busy phases)
+                if ($phase['staff_required']) {
+                    $hasConflict = $this->hasOverlappingBusyPhases(
+                        $staffId,
+                        $phase['start_time'],
+                        $phase['end_time']
+                    );
 
-                if ($hasConflict) {
-                    return false;
+                    if ($hasConflict) {
+                        return false;
+                    }
                 }
             }
         }
@@ -69,9 +82,28 @@ class ProcessingTimeAvailabilityService
      */
     private function hasOverlappingAppointments(string $staffId, Carbon $startTime, Carbon $endTime): bool
     {
-        // Get all appointments for this staff in this time range
+        // 🔧 FIX 2025-11-26: Get staff's company_id to check company-level appointments
+        // BUG: Appointments with staff_id=NULL (company-level) were not detected!
+        // Example: Appointment #782 had staff_id=NULL, so isStaffAvailable() returned TRUE
+        //          even though the 08:00-10:15 slot was taken!
+        $staff = \App\Models\Staff::find($staffId);
+        $companyId = $staff?->company_id;
+
+        // Get all appointments for this staff OR company-level appointments (NULL staff_id)
         $appointments = \App\Models\Appointment::query()
-            ->where('staff_id', $staffId)
+            ->where(function ($query) use ($staffId, $companyId) {
+                // Check appointments assigned to this specific staff
+                $query->where('staff_id', $staffId);
+
+                // 🔧 FIX: Also check company-level appointments (no staff assigned)
+                // These appointments block ALL staff in the company
+                if ($companyId) {
+                    $query->orWhere(function ($q) use ($companyId) {
+                        $q->whereNull('staff_id')
+                          ->where('company_id', $companyId);
+                    });
+                }
+            })
             ->whereIn('status', ['scheduled', 'confirmed'])
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime, $endTime) {
@@ -116,10 +148,24 @@ class ProcessingTimeAvailabilityService
      */
     public function hasOverlappingBusyPhases(string $staffId, Carbon $startTime, Carbon $endTime): bool
     {
+        // 🔧 FIX 2025-11-26: Get staff's company_id to check company-level appointments
+        $staff = \App\Models\Staff::find($staffId);
+        $companyId = $staff?->company_id;
+
         return AppointmentPhase::query()
-            ->whereHas('appointment', function ($query) use ($staffId) {
-                $query->where('staff_id', $staffId)
-                      ->whereIn('status', ['scheduled', 'confirmed']);
+            ->whereHas('appointment', function ($query) use ($staffId, $companyId) {
+                $query->where(function ($q) use ($staffId, $companyId) {
+                    // Check appointments assigned to this specific staff
+                    $q->where('staff_id', $staffId);
+
+                    // 🔧 FIX: Also check company-level appointments (no staff assigned)
+                    if ($companyId) {
+                        $q->orWhere(function ($q2) use ($companyId) {
+                            $q2->whereNull('staff_id')
+                               ->where('company_id', $companyId);
+                        });
+                    }
+                })->whereIn('status', ['scheduled', 'confirmed']);
             })
             ->where('staff_required', true) // Only check BUSY phases
             ->where(function ($query) use ($startTime, $endTime) {

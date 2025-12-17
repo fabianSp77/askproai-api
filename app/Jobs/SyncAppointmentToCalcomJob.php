@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Appointment;
 use App\Services\CalcomV2Client;
+use App\Support\SafeLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use GuzzleHttp\Promise\Utils as PromiseUtils;
 
 /**
  * Sync Appointment to Cal.com (Bidirectional Sync)
@@ -28,7 +30,7 @@ use Carbon\Carbon;
  */
 class SyncAppointmentToCalcomJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, SafeLogger;
 
     /**
      * Number of retry attempts before permanent failure
@@ -57,6 +59,11 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
     public string $action;
 
     /**
+     * Job ID for this sync operation (cached to avoid multiple uniqid() calls)
+     */
+    private ?string $jobId = null;
+
+    /**
      * Create a new job instance
      *
      * @param Appointment $appointment Appointment to sync
@@ -83,10 +90,10 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
         $this->appointment = Appointment::lockForUpdate()->find($this->appointment->id);
 
         if (!$this->appointment) {
-            Log::channel('calcom')->warning('⚠️ Appointment not found during sync (may have been deleted)', [
+            $this->safeWarning('⚠️ Appointment not found during sync (may have been deleted)', [
                 'appointment_id' => $this->appointment?->id ?? 'unknown',
                 'action' => $this->action,
-            ]);
+            ], 'calcom');
             return;
         }
 
@@ -96,42 +103,58 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
 
         // 🐛 FIX (2025-11-17): Set job ID here where we have the real job instance
         // This prevents UUID mismatch in shouldSkipSync() duplicate job check
-        $jobId = $this->job?->uuid() ?? uniqid('job_');
+        $jobId = $this->getJobId();
         $this->appointment->update([
             'sync_job_id' => $jobId,
             'calcom_sync_status' => 'pending',
             'last_sync_attempt_at' => now(),
         ]);
 
-        Log::channel('calcom')->info('🔄 Starting Cal.com sync', [
+        $this->safeInfo('🔄 Starting Cal.com sync', [
             'appointment_id' => $this->appointment->id,
             'action' => $this->action,
             'attempt' => $this->attempts(),
             'sync_origin' => $this->appointment->sync_origin,
             'job_id' => $jobId,
-        ]);
+        ], 'calcom');
 
         // ═══════════════════════════════════════════════════════════
         // CRITICAL: Loop Prevention Check
         // ═══════════════════════════════════════════════════════════
         if ($this->shouldSkipSync()) {
-            Log::channel('calcom')->info('⏭️ Skipping sync (loop prevention)', [
+            $this->safeInfo('⏭️ Skipping sync (loop prevention)', [
                 'appointment_id' => $this->appointment->id,
                 'sync_origin' => $this->appointment->sync_origin,
                 'reason' => 'Origin is calcom or already synced'
-            ]);
+            ], 'calcom');
             return;
         }
 
         try {
             $client = new CalcomV2Client($this->appointment->company);
 
-            $response = match($this->action) {
-                'create' => $this->syncCreate($client),
-                'cancel' => $this->syncCancel($client),
-                'reschedule' => $this->syncReschedule($client),
-                default => throw new \InvalidArgumentException("Unknown action: {$this->action}")
-            };
+            // 🔧 FIX 2025-12-02: Composite service detection for CREATE, CANCEL, and RESCHEDULE actions
+            // Previously: cancel action was missing composite routing, causing only 1/4 segments to be cancelled!
+            $isComposite = $this->appointment->is_composite ||
+                ($this->appointment->service && $this->appointment->service->isComposite());
+
+            if ($isComposite) {
+                // Composite appointments: Route to segment-aware methods
+                $response = match($this->action) {
+                    'create' => $this->syncCreateComposite($client),
+                    'cancel' => $this->syncCancelComposite($client),      // 🔧 FIX 2025-12-02: Was missing!
+                    'reschedule' => $this->syncRescheduleComposite($client),
+                    default => throw new \InvalidArgumentException("Unknown composite action: {$this->action}")
+                };
+            } else {
+                // Regular appointments: Route to standard methods
+                $response = match($this->action) {
+                    'create' => $this->syncCreate($client),
+                    'cancel' => $this->syncCancel($client),
+                    'reschedule' => $this->syncReschedule($client),
+                    default => throw new \InvalidArgumentException("Unknown action: {$this->action}")
+                };
+            }
 
             if ($response->successful()) {
                 // 🔧 FIX 2025-11-17: Cal.com V2 API wraps data in 'data' key
@@ -145,6 +168,24 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
         } catch (\Exception $e) {
             $this->handleException($e);
         }
+    }
+
+    /**
+     * Get consistent job ID for this sync operation
+     *
+     * Returns the queue job UUID if available, otherwise generates and caches a unique ID.
+     * This ensures the same ID is used throughout the job lifecycle.
+     *
+     * @return string Job ID
+     */
+    private function getJobId(): string
+    {
+        if ($this->jobId === null) {
+            // Prefer queue job UUID, fallback to cryptographically secure random ID
+            // Note: uniqid() is not collision-safe under high concurrency
+            $this->jobId = $this->job?->uuid() ?? ('sync_' . bin2hex(random_bytes(12)));
+        }
+        return $this->jobId;
     }
 
     /**
@@ -169,7 +210,7 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
         // Skip if pending with active job (avoid duplicate jobs)
         if ($this->appointment->calcom_sync_status === 'pending' &&
             $this->appointment->sync_job_id &&
-            $this->appointment->sync_job_id !== ($this->job?->uuid() ?? uniqid('job_'))) {
+            $this->appointment->sync_job_id !== $this->getJobId()) {
             return true;
         }
 
@@ -190,6 +231,35 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             throw new \RuntimeException("Service has no Cal.com event type (service_id: {$service?->id})");
         }
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🔧 FIX 2025-12-01: PRE-SYNC SLOT VALIDATION
+        // Problem: Race condition - slot available during Retell call but blocked at sync time
+        // Solution: Verify slot availability before booking, auto-reschedule if blocked
+        // ═══════════════════════════════════════════════════════════════════════
+        $validatedStart = $this->validateAndAdjustSlot($client, $service);
+        if ($validatedStart && $validatedStart->ne($this->appointment->starts_at)) {
+            $this->safeInfo('📅 PRE-SYNC: Slot adjusted due to conflict', [
+                'appointment_id' => $this->appointment->id,
+                'original_start' => $this->appointment->starts_at->toIso8601String(),
+                'adjusted_start' => $validatedStart->toIso8601String(),
+            ], 'calcom');
+
+            // Update appointment with new time
+            $this->appointment->update([
+                'starts_at' => $validatedStart,
+                'ends_at' => $validatedStart->copy()->addMinutes($service->duration ?? 55),
+            ]);
+
+            // Refresh model to get updated values for payload
+            $this->appointment->refresh();
+        } elseif ($validatedStart === null) {
+            // No slot available at all
+            throw new \RuntimeException(
+                "No available slot found for Cal.com sync. All slots for " .
+                $this->appointment->starts_at->toDateString() . " are blocked."
+            );
+        }
+
         // 🔧 FIX 2025-11-17: Build V2 API payload (correct format)
         // Cal.com V2 requires: eventTypeId (int), start (ISO8601), attendee{name, email, timeZone}
         // REQUIRED: bookingFieldsResponses.title (Cal.com form field)
@@ -201,14 +271,17 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             'name' => $this->appointment->customer->name ?? 'Customer',
             'email' => $this->appointment->customer->email ?? 'noreply@example.com',
             'metadata' => [
-                'crm_appointment_id' => $this->appointment->id,
+                'crm_appointment_id' => (string) $this->appointment->id,
+                'call_id' => $this->appointment->call_id ? (string) $this->appointment->call_id : null,
                 'sync_origin' => $this->appointment->sync_origin ?? 'system',
                 'created_via' => 'crm_sync',
                 'synced_at' => now()->toIso8601String(),
             ],
-            // 🔧 FIX 2025-11-17: Cal.com requires 'title' in bookingFieldsResponses
-            // Error: "responses - {title}error_required_field"
+            // 🔧 FIX 2025-11-17 + 2025-12-01: Cal.com requires name, email, title in bookingFieldsResponses
+            // Error: "responses - {title}error_required_field", "{name}error_required_field"
             'bookingFieldsResponses' => [
+                'name' => $this->appointment->customer->name ?? 'Customer',
+                'email' => $this->appointment->customer->email ?? 'noreply@example.com',
                 'title' => $service->name ?? 'Termin',
             ],
         ];
@@ -228,14 +301,300 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             $payload['bookingFieldsResponses']['notes'] = $this->appointment->notes;
         }
 
-        Log::channel('calcom')->debug('📤 Sending CREATE to Cal.com', [
+        // 🔧 FIX 2025-12-14: Include reservationUid if available from reserve_slot call
+        // This links the booking to the existing Cal.com reservation
+        $appointmentMetadata = $this->appointment->metadata ?? [];
+        if (isset($appointmentMetadata['reservation_uid']) && !empty($appointmentMetadata['reservation_uid'])) {
+            $payload['reservationUid'] = $appointmentMetadata['reservation_uid'];
+            $this->safeInfo('🔒 Including reservationUid in booking payload', [
+                'appointment_id' => $this->appointment->id,
+                'reservation_uid' => $appointmentMetadata['reservation_uid'],
+            ], 'calcom');
+        }
+
+        $this->safeDebug('📤 Sending CREATE to Cal.com', [
             'appointment_id' => $this->appointment->id,
             'event_type_id' => $service->calcom_event_type_id,
             'starts_at' => $payload['start'],
             'FULL_PAYLOAD' => $payload, // DEBUG: See exact payload
-        ]);
+        ], 'calcom');
 
         return $client->createBooking($payload);
+    }
+
+    /**
+     * Sync CREATE action for composite service appointments
+     *
+     * Creates separate Cal.com bookings for each active segment (staff_required=true).
+     * Gap segments (processing time) are NOT synced to Cal.com.
+     *
+     * Process:
+     * 1. Get all phases where staff_required = true
+     * 2. For each phase:
+     *    - Lookup CalcomEventMap (service_id, segment_key, staff_id)
+     *    - Create Cal.com booking with segment-specific event_type_id
+     *    - Store booking_id in AppointmentPhase
+     * 3. Handle partial failures gracefully (continue with remaining segments)
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @return \Illuminate\Http\Client\Response Last response (for compatibility)
+     * @throws \RuntimeException if no phases or all phases fail
+     */
+    protected function syncCreateComposite(CalcomV2Client $client)
+    {
+        $service = $this->appointment->service;
+
+        // Get active phases only (where staff_required = true)
+        $phases = $this->appointment->phases()
+            ->where('staff_required', true)
+            ->orderBy('sequence_order')
+            ->get();
+
+        if ($phases->isEmpty()) {
+            // 🔧 FIX 2025-11-26: Fallback to single booking when composite service has no phases
+            // This handles cases where services are marked composite: true but phases weren't created
+            // (e.g., Service 441 "Dauerwelle" - composite flag without phase configuration)
+            $this->safeInfo("⚠️ Composite service has no phases - falling back to single booking", [
+                'appointment_id' => $this->appointment->id,
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'note' => 'Service marked as composite but no phases with staff_required=true'
+            ], 'calcom');
+
+            // Delegate to standard single-booking method
+            return $this->syncCreate($client);
+        }
+
+        $this->safeInfo("🔧 Syncing composite appointment: {$phases->count()} active segments", [
+            'appointment_id' => $this->appointment->id,
+            'service_id' => $service->id,
+            'staff_id' => $this->appointment->staff_id,
+            'total_phases' => $phases->count()
+        ], 'calcom');
+
+        $bookingIds = [];
+        $errors = [];
+        $lastResponse = null;
+
+        // 🚀 PERFORMANCE: Use parallel execution if enabled (70% faster)
+        if (config('features.parallel_calcom_booking', true)) {
+            return $this->syncPhasesParallel($phases, $service, $client);
+        }
+
+        // LEGACY: Sequential execution (kept for rollback safety)
+        foreach ($phases as $phase) {
+            try {
+                // Lookup CalcomEventMap for this segment + staff
+                $mapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                    ->where('segment_key', $phase->segment_key)
+                    ->where('staff_id', $this->appointment->staff_id)
+                    ->first();
+
+                if (!$mapping) {
+                    $error = "Missing CalcomEventMap for segment '{$phase->segment_key}'";
+                    $this->safeError("❌ {$error}", [
+                        'service_id' => $service->id,
+                        'segment_key' => $phase->segment_key,
+                        'staff_id' => $this->appointment->staff_id
+                    ], 'calcom');
+
+                    $errors[] = $error;
+                    $phase->update([
+                        'calcom_sync_status' => 'failed',
+                        'sync_error_message' => $error
+                    ]);
+                    continue;
+                }
+
+                // Resolve child event type ID for MANAGED event types
+                // Cal.com creates parent MANAGED event types as templates that cannot be booked.
+                // Each staff member gets a child event type ID that must be used for bookings.
+
+                // Priority 1: Use pre-resolved child_event_type_id from mapping if available
+                if ($mapping->child_event_type_id) {
+                    $childEventTypeId = $mapping->child_event_type_id;
+
+                    $this->safeDebug("🔍 Using pre-resolved child event type ID from mapping", [
+                        'parent_id' => $mapping->event_type_id,
+                        'child_id' => $childEventTypeId,
+                        'segment_key' => $phase->segment_key,
+                        'source' => 'calcom_event_map.child_event_type_id'
+                    ], 'calcom');
+                } else {
+                    // Priority 2: Resolve dynamically using CalcomChildEventTypeResolver
+                    $resolver = new \App\Services\CalcomChildEventTypeResolver($this->appointment->company);
+
+                    try {
+                        $childEventTypeId = $resolver->resolveChildEventTypeId(
+                            $mapping->event_type_id,
+                            $this->appointment->staff_id
+                        );
+
+                        if (!$childEventTypeId) {
+                            throw new \RuntimeException(
+                                "Could not resolve child event type ID for segment '{$phase->segment_key}'"
+                            );
+                        }
+
+                        $this->safeDebug("🔍 Resolved child event type ID from API", [
+                            'parent_id' => $mapping->event_type_id,
+                            'child_id' => $childEventTypeId,
+                            'staff_id' => $this->appointment->staff_id,
+                            'segment_key' => $phase->segment_key,
+                            'source' => 'CalcomChildEventTypeResolver'
+                        ], 'calcom');
+
+                    } catch (\Exception $e) {
+                        $error = "Failed to resolve child event type: {$e->getMessage()}";
+                        $this->safeError("❌ {$error}", [
+                            'parent_id' => $mapping->event_type_id,
+                            'segment_key' => $phase->segment_key,
+                            'staff_id' => $this->appointment->staff_id,
+                            'trace' => $e->getTraceAsString()
+                        ], 'calcom');
+
+                        $errors[] = $error;
+                        $phase->update([
+                            'calcom_sync_status' => 'failed',
+                            'sync_error_message' => $error
+                        ]);
+                        continue;
+                    }
+                }
+
+                // Build payload for this segment
+                // Note: CalcomV2Client expects name/email/timeZone at top level, not nested
+                $segmentPayload = [
+                    'eventTypeId' => $childEventTypeId,
+                    'start' => $phase->start_time->toIso8601String(),
+                    'name' => $this->appointment->customer->name ?? 'Customer',
+                    'email' => $this->appointment->customer->email ?? 'noreply@example.com',
+                    'timeZone' => $this->appointment->booking_timezone ?? 'Europe/Berlin',
+                    'metadata' => [
+                        'crm_appointment_id' => (string) $this->appointment->id,
+                        'crm_phase_id' => (string) $phase->id,
+                        'segment_key' => $phase->segment_key,
+                        'segment_name' => $phase->segment_name,
+                        'sync_origin' => 'system',
+                        'created_via' => 'crm_composite_sync',
+                        'synced_at' => now()->toIso8601String(),
+                    ],
+                    // 🔧 FIX 2025-12-01: Add name, email to bookingFieldsResponses (required by Cal.com)
+                    'bookingFieldsResponses' => [
+                        'name' => $this->appointment->customer->name ?? 'Customer',
+                        'email' => $this->appointment->customer->email ?? 'noreply@example.com',
+                        'title' => "{$service->name} - {$phase->segment_name}",
+                    ],
+                ];
+
+                $this->safeDebug("📤 Creating Cal.com booking for segment '{$phase->segment_key}'", [
+                    'phase_id' => $phase->id,
+                    'parent_event_type_id' => $mapping->event_type_id,
+                    'child_event_type_id' => $childEventTypeId,
+                    'start' => $segmentPayload['start'],
+                ], 'calcom');
+
+                // Create Cal.com booking
+                $response = $client->createBooking($segmentPayload);
+                $lastResponse = $response;
+
+                if ($response->successful()) {
+                    $responseData = $response->json('data', []);
+                    $bookingId = $responseData['id'] ?? null;
+                    $bookingUid = $responseData['uid'] ?? null;
+
+                    if ($bookingId) {
+                        $bookingIds[] = $bookingId;
+
+                        // Update phase with booking info
+                        $phase->update([
+                            'calcom_booking_id' => $bookingId,
+                            'calcom_booking_uid' => $bookingUid,
+                            'calcom_sync_status' => 'synced',
+                            'sync_error_message' => null
+                        ]);
+
+                        $this->safeInfo("✅ Segment '{$phase->segment_key}' synced", [
+                            'phase_id' => $phase->id,
+                            'calcom_booking_id' => $bookingId
+                        ], 'calcom');
+                    } else {
+                        throw new \RuntimeException("Response missing booking ID");
+                    }
+                } else {
+                    // 🔍 Enhanced error logging - capture full response BEFORE throwing
+                    $errorBody = $response->body();
+                    $errorData = $response->json();
+
+                    $this->safeError("❌ Cal.com API returned error", [
+                        'segment_key' => $phase->segment_key,
+                        'http_status' => $response->status(),
+                        'response_body' => $errorBody,
+                        'parsed_error' => $errorData['error'] ?? null,
+                        'error_message' => $errorData['error']['message'] ?? 'Unknown error',
+                        'error_details' => $errorData['error']['details'] ?? null,
+                        'payload_sent' => $segmentPayload
+                    ], 'calcom');
+
+                    throw new \RuntimeException(
+                        "HTTP request returned status code " . $response->status() . ": " . $errorBody
+                    );
+                }
+
+            } catch (\Exception $e) {
+                $error = "Segment '{$phase->segment_key}' sync failed: {$e->getMessage()}";
+                $errors[] = $error;
+
+                $this->safeError("❌ {$error}", [
+                    'phase_id' => $phase->id,
+                    'error' => $e->getMessage()
+                ], 'calcom');
+
+                $phase->update([
+                    'calcom_sync_status' => 'failed',
+                    'sync_error_message' => substr($e->getMessage(), 0, 255)
+                ]);
+            }
+        }
+
+        // Update appointment with aggregated booking IDs
+        // Note: Use 'synced' even for partial success (some segments synced)
+        $appointmentUpdate = [
+            'calcom_sync_status' => empty($bookingIds) ? 'failed' : 'synced',
+            'sync_verified_at' => now(),
+            'sync_error_message' => !empty($errors) ? 'Partial sync: ' . implode(', ', array_slice($errors, 0, 2)) : null,
+        ];
+
+        // Store first booking ID in main field for backward compatibility
+        if (!empty($bookingIds)) {
+            $appointmentUpdate['calcom_v2_booking_id'] = $bookingIds[0];
+        }
+
+        $this->appointment->update($appointmentUpdate);
+
+        // Summary
+        $this->safeInfo("🎉 Composite sync complete", [
+            'appointment_id' => $this->appointment->id,
+            'total_phases' => $phases->count(),
+            'synced' => count($bookingIds),
+            'failed' => count($errors),
+            'status' => empty($errors) ? 'success' : 'partial'
+        ], 'calcom');
+
+        if (empty($bookingIds)) {
+            throw new \RuntimeException(
+                "All composite segments failed to sync: " . implode(', ', $errors)
+            );
+        }
+
+        if (!empty($errors) && count($errors) === $phases->count()) {
+            throw new \RuntimeException(
+                "Composite sync completely failed: " . implode(', ', $errors)
+            );
+        }
+
+        // Return last response for compatibility with handle() method
+        return $lastResponse;
     }
 
     /**
@@ -257,13 +616,13 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             throw new \RuntimeException("No Cal.com booking UID/ID to cancel (appointment_id: {$this->appointment->id})");
         }
 
-        Log::channel('calcom')->debug('📤 Sending CANCEL to Cal.com', [
+        $this->safeDebug('📤 Sending CANCEL to Cal.com', [
             'appointment_id' => $this->appointment->id,
             'calcom_booking_uid' => $calcomBookingUid,
             'calcom_booking_id' => $calcomBookingId,
             'using_identifier' => $identifier,
             'reason' => $this->appointment->cancellation_reason ?? 'Cancelled via CRM',
-        ]);
+        ], 'calcom');
 
         return $client->cancelBooking(
             bookingUidOrId: $identifier,
@@ -274,25 +633,76 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
     /**
      * Sync RESCHEDULE action to Cal.com
      *
+     * 🔧 FIX 2025-11-25: Use UID instead of numeric ID for PATCH endpoint
+     * Root cause: Cal.com V2 API returns 404 when using numeric ID
+     * Solution: Use calcom_v2_booking_uid (string) for reschedule
+     *
+     * 🔧 FIX 2025-11-25: Fallback to CREATE only if booking truly doesn't exist
+     *
      * @param CalcomV2Client $client Cal.com API client
      * @return \Illuminate\Http\Client\Response
      */
     protected function syncReschedule(CalcomV2Client $client)
     {
+        // 🔧 FIX 2025-11-25: Use UID (string) instead of ID (int)
+        // Cal.com V2 API requires UID for PATCH endpoint
+        $calcomBookingUid = $this->appointment->calcom_v2_booking_uid;
         $calcomBookingId = $this->appointment->calcom_v2_booking_id;
 
-        if (!$calcomBookingId) {
-            throw new \RuntimeException("No Cal.com booking ID to reschedule (appointment_id: {$this->appointment->id})");
+        // If no booking UID exists, try to find it in Cal.com
+        // DO NOT fall back to CREATE - this would send "Neuer Termin" email!
+        if (!$calcomBookingUid) {
+            $this->safeWarning('⚠️ No Cal.com booking UID for reschedule - searching Cal.com', [
+                'appointment_id' => $this->appointment->id,
+                'calcom_booking_id' => $calcomBookingId,
+            ], 'calcom');
+
+            // Try to find the booking in Cal.com
+            $foundBooking = $this->tryFindBookingInCalcom($client);
+
+            if ($foundBooking) {
+                // Found it! Update our record and use it
+                $calcomBookingUid = $foundBooking['uid'];
+                $this->appointment->update([
+                    'calcom_v2_booking_id' => $foundBooking['id'],
+                    'calcom_v2_booking_uid' => $foundBooking['uid'],
+                ]);
+                $this->safeInfo('✅ Found booking UID in Cal.com', [
+                    'appointment_id' => $this->appointment->id,
+                    'found_uid' => $calcomBookingUid,
+                ], 'calcom');
+            } else {
+                // No booking found - mark for manual review
+                $this->safeError('❌ No Cal.com booking found for reschedule', [
+                    'appointment_id' => $this->appointment->id,
+                    'action' => 'Marked for manual review',
+                ], 'calcom');
+
+                $this->appointment->update([
+                    'calcom_sync_status' => 'failed',
+                    'sync_error_message' => 'Reschedule failed: No Cal.com booking exists. Manual sync required.',
+                    'requires_manual_review' => true,
+                    'manual_review_flagged_at' => now(),
+                ]);
+
+                // Return a fake 404 response to trigger error handling
+                return new \Illuminate\Http\Client\Response(
+                    new \GuzzleHttp\Psr7\Response(404, [], json_encode([
+                        'error' => 'No Cal.com booking found for reschedule'
+                    ]))
+                );
+            }
         }
 
-        Log::channel('calcom')->debug('📤 Sending RESCHEDULE to Cal.com', [
+        $this->safeDebug('📤 Sending RESCHEDULE to Cal.com', [
             'appointment_id' => $this->appointment->id,
+            'calcom_booking_uid' => $calcomBookingUid,
             'calcom_booking_id' => $calcomBookingId,
             'new_start' => $this->appointment->starts_at->toIso8601String(),
-        ]);
+        ], 'calcom');
 
-        return $client->rescheduleBooking(
-            bookingId: (int) $calcomBookingId,
+        $response = $client->rescheduleBooking(
+            bookingUid: $calcomBookingUid,  // 🔧 FIX: Use UID, not ID
             data: [
                 'start' => $this->appointment->starts_at->toIso8601String(),
                 'end' => $this->appointment->ends_at->toIso8601String(),
@@ -300,6 +710,549 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
                 'reason' => 'Rescheduled via CRM',
             ]
         );
+
+        // 🔧 FIX 2025-11-25: Handle 404 - booking not found in Cal.com
+        //
+        // CRITICAL: Do NOT fall back to syncCreate() here!
+        // Reason: syncCreate() sends a "Neuer Termin" email from Cal.com,
+        // which confuses customers who expect a "Verschoben" email.
+        //
+        // Instead:
+        // 1. Try to find the booking in Cal.com by searching
+        // 2. If found → update our UID and retry reschedule
+        // 3. If not found → mark for manual review (do NOT create new booking)
+        if ($response->status() === 404) {
+            $this->safeWarning('⚠️ Cal.com booking not found (404) during reschedule', [
+                'appointment_id' => $this->appointment->id,
+                'old_booking_uid' => $calcomBookingUid,
+                'old_booking_id' => $calcomBookingId,
+                'new_start' => $this->appointment->starts_at->toIso8601String(),
+            ], 'calcom');
+
+            // Try to find the correct booking in Cal.com
+            $foundBooking = $this->tryFindBookingInCalcom($client);
+
+            if ($foundBooking) {
+                // Found the booking! Update our UID and retry
+                $this->safeInfo('✅ Found booking in Cal.com, retrying reschedule', [
+                    'appointment_id' => $this->appointment->id,
+                    'found_booking_id' => $foundBooking['id'],
+                    'found_booking_uid' => $foundBooking['uid'],
+                ], 'calcom');
+
+                $this->appointment->update([
+                    'calcom_v2_booking_id' => $foundBooking['id'],
+                    'calcom_v2_booking_uid' => $foundBooking['uid'],
+                ]);
+
+                // Retry reschedule with correct UID
+                return $client->rescheduleBooking(
+                    bookingUid: $foundBooking['uid'],
+                    data: [
+                        'start' => $this->appointment->starts_at->toIso8601String(),
+                        'end' => $this->appointment->ends_at->toIso8601String(),
+                        'timeZone' => $this->appointment->booking_timezone ?? 'Europe/Berlin',
+                        'reason' => 'Rescheduled via CRM',
+                    ]
+                );
+            }
+
+            // Booking truly doesn't exist - mark for manual review
+            // DO NOT create new booking (würde "Neuer Termin" Email senden!)
+            $this->safeError('❌ Cal.com booking not found and cannot be recovered', [
+                'appointment_id' => $this->appointment->id,
+                'old_booking_uid' => $calcomBookingUid,
+                'action' => 'Marked for manual review - please create booking manually in Cal.com',
+            ], 'calcom');
+
+            $this->appointment->update([
+                'calcom_sync_status' => 'failed',
+                'sync_error_message' => 'Reschedule failed: Booking not found in Cal.com (404). Manual sync required.',
+                'requires_manual_review' => true,
+                'manual_review_flagged_at' => now(),
+            ]);
+
+            // Return the original 404 response to trigger proper error handling
+            return $response;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Sync RESCHEDULE action for composite appointments
+     *
+     * 🔧 FIX 2025-12-01: Reschedule all segments in Cal.com for composite appointments
+     *
+     * Composite appointments store booking_uids in the segments JSON field.
+     * Each segment needs to be rescheduled individually via Cal.com API.
+     *
+     * Flow:
+     * 1. Extract segments with booking_uids from appointment
+     * 2. Calculate new start times for each segment based on time offset
+     * 3. Reschedule each segment via Cal.com POST /v2/bookings/{uid}/reschedule
+     * 4. Update segments JSON with new booking_uids (Cal.com may return new UIDs)
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @return \Illuminate\Http\Client\Response
+     */
+    protected function syncRescheduleComposite(CalcomV2Client $client)
+    {
+        $segments = $this->appointment->segments;
+
+        if (is_string($segments)) {
+            $segments = json_decode($segments, true);
+        }
+
+        if (!is_array($segments) || empty($segments)) {
+            $this->safeWarning('⚠️ COMPOSITE RESCHEDULE: No segments found', [
+                'appointment_id' => $this->appointment->id,
+            ], 'calcom');
+
+            // Fall back to regular reschedule if this appointment has a direct booking_uid
+            if ($this->appointment->calcom_v2_booking_uid) {
+                return $this->syncReschedule($client);
+            }
+
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(400, [], json_encode([
+                    'error' => 'Composite appointment has no segments to reschedule'
+                ]))
+            );
+        }
+
+        // Filter segments that have booking_uids
+        $segmentsWithBookings = array_filter($segments, fn($s) => !empty($s['booking_uid']));
+
+        if (empty($segmentsWithBookings)) {
+            $this->safeWarning('⚠️ COMPOSITE RESCHEDULE: No segments with booking_uids', [
+                'appointment_id' => $this->appointment->id,
+                'total_segments' => count($segments),
+            ], 'calcom');
+
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(400, [], json_encode([
+                    'error' => 'Composite appointment segments have no booking_uids'
+                ]))
+            );
+        }
+
+        // 🔧 FIX 2025-12-02: Changed from SEQUENTIAL to PARALLEL for 75% faster performance
+        $this->safeInfo("🔄 COMPOSITE RESCHEDULE: Rescheduling " . count($segmentsWithBookings) . " segments in PARALLEL", [
+            'appointment_id' => $this->appointment->id,
+            'segments' => array_map(fn($s) => [
+                'key' => $s['key'] ?? 'unknown',
+                'booking_uid' => $s['booking_uid'] ?? null,
+                'new_starts_at' => $s['starts_at'] ?? null,
+            ], $segmentsWithBookings),
+        ], 'calcom');
+
+        // PHASE 1: Prepare all reschedule payloads and create promises (PARALLEL)
+        $promises = [];
+        $segmentMap = []; // Track index → segment data with new start times
+
+        foreach ($segmentsWithBookings as $index => $segment) {
+            $bookingUid = $segment['booking_uid'];
+            $newStartTime = isset($segment['starts_at'])
+                ? \Carbon\Carbon::parse($segment['starts_at'])
+                : $this->appointment->starts_at;
+
+            $promises[$index] = $client->rescheduleBookingAsync($bookingUid, [
+                'start' => $newStartTime->toIso8601String(),
+                'reason' => 'Composite appointment rescheduled via CRM',
+            ]);
+
+            $segmentMap[$index] = [
+                'segment' => $segment,
+                'new_start' => $newStartTime->toIso8601String(),
+            ];
+        }
+
+        // PHASE 2: Execute ALL reschedule calls in PARALLEL
+        $results = PromiseUtils::settle($promises)->wait();
+
+        // PHASE 3: Process results and build updated segments array
+        $successCount = 0;
+        $failedSegments = [];
+
+        // Start with all segments (including those without booking_uids)
+        $updatedSegments = $segments;
+
+        foreach ($results as $index => $result) {
+            $segmentData = $segmentMap[$index];
+            $segment = $segmentData['segment'];
+            $segmentKey = $segment['key'] ?? "segment_{$index}";
+            $bookingUid = $segment['booking_uid'];
+
+            if ($result['state'] === 'fulfilled') {
+                $response = $result['value'];
+                if ($response->successful()) {
+                    $responseData = $response->json('data', []);
+                    $newUid = $responseData['uid'] ?? $bookingUid;
+
+                    $this->safeInfo("✅ Segment {$segmentKey} rescheduled", [
+                        'old_uid' => $bookingUid,
+                        'new_uid' => $newUid,
+                        'new_start' => $segmentData['new_start'],
+                    ], 'calcom');
+
+                    // Update segment with new UID if changed
+                    $updatedSegments[$index]['booking_uid'] = $newUid;
+                    $updatedSegments[$index]['rescheduled_at'] = now()->toIso8601String();
+                    if ($newUid !== $bookingUid) {
+                        $updatedSegments[$index]['previous_booking_uid'] = $bookingUid;
+                    }
+
+                    $successCount++;
+                } else {
+                    $this->safeError("❌ Segment {$segmentKey} reschedule failed", [
+                        'booking_uid' => $bookingUid,
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ], 'calcom');
+
+                    $failedSegments[] = [
+                        'key' => $segmentKey,
+                        'booking_uid' => $bookingUid,
+                        'error' => $response->body(),
+                    ];
+                }
+            } else {
+                // Promise rejected (exception)
+                $error = $result['reason'] instanceof \Exception
+                    ? $result['reason']->getMessage()
+                    : 'Unknown error';
+
+                $this->safeError("❌ Segment {$segmentKey} reschedule exception", [
+                    'booking_uid' => $bookingUid,
+                    'error' => $error,
+                ], 'calcom');
+
+                $failedSegments[] = [
+                    'key' => $segmentKey,
+                    'booking_uid' => $bookingUid,
+                    'error' => $error,
+                ];
+            }
+        }
+
+        // Update appointment segments with new booking_uids
+        $this->appointment->update([
+            'segments' => $updatedSegments,
+        ]);
+
+        $this->safeInfo("🔄 COMPOSITE RESCHEDULE complete (PARALLEL)", [
+            'appointment_id' => $this->appointment->id,
+            'success_count' => $successCount,
+            'failed_count' => count($failedSegments),
+            'total_segments' => count($segmentsWithBookings),
+        ], 'calcom');
+
+        // Return success if at least one segment was rescheduled
+        if ($successCount > 0) {
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(200, [], json_encode([
+                    'status' => 'success',
+                    'data' => [
+                        'composite' => true,
+                        'segments_rescheduled' => $successCount,
+                        'segments_failed' => count($failedSegments),
+                        'failed_segments' => $failedSegments,
+                    ]
+                ]))
+            );
+        }
+
+        // All segments failed
+        return new \Illuminate\Http\Client\Response(
+            new \GuzzleHttp\Psr7\Response(500, [], json_encode([
+                'error' => 'All composite segments failed to reschedule',
+                'failed_segments' => $failedSegments,
+            ]))
+        );
+    }
+
+    /**
+     * Cancel all segments of a composite appointment in PARALLEL
+     *
+     * @since 2025-12-02
+     * FIX: Previously, cancel action was missing composite routing!
+     * This caused only the primary booking_uid to be cancelled, leaving 3/4 segments
+     * still active in Cal.com (causing slot leaks).
+     *
+     * Flow:
+     * 1. Extract segments with booking_uids
+     * 2. Create parallel cancel promises using cancelBookingAsync()
+     * 3. Wait for all promises to settle
+     * 4. Update sync status based on results
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @return \Illuminate\Http\Client\Response
+     */
+    protected function syncCancelComposite(CalcomV2Client $client)
+    {
+        $segments = $this->appointment->segments;
+
+        if (is_string($segments)) {
+            $segments = json_decode($segments, true);
+        }
+
+        if (!is_array($segments) || empty($segments)) {
+            $this->safeWarning('⚠️ COMPOSITE CANCEL: No segments found', [
+                'appointment_id' => $this->appointment->id,
+            ], 'calcom');
+
+            // Fall back to regular cancel if this appointment has a direct booking_uid
+            if ($this->appointment->calcom_v2_booking_uid) {
+                return $this->syncCancel($client);
+            }
+
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(400, [], json_encode([
+                    'error' => 'Composite appointment has no segments to cancel'
+                ]))
+            );
+        }
+
+        // Filter segments that have booking_uids
+        $segmentsWithBookings = array_filter($segments, fn($s) => !empty($s['booking_uid']));
+
+        if (empty($segmentsWithBookings)) {
+            $this->safeWarning('⚠️ COMPOSITE CANCEL: No segments with booking_uids', [
+                'appointment_id' => $this->appointment->id,
+                'total_segments' => count($segments),
+            ], 'calcom');
+
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(400, [], json_encode([
+                    'error' => 'Composite appointment segments have no booking_uids'
+                ]))
+            );
+        }
+
+        $this->safeInfo("🗑️ COMPOSITE CANCEL: Cancelling " . count($segmentsWithBookings) . " segments in PARALLEL", [
+            'appointment_id' => $this->appointment->id,
+            'segments' => array_map(fn($s) => [
+                'key' => $s['key'] ?? 'unknown',
+                'booking_uid' => $s['booking_uid'] ?? null,
+            ], $segmentsWithBookings),
+        ], 'calcom');
+
+        $reason = 'Composite appointment cancelled via CRM';
+
+        // PHASE 1: Create promises for ALL segments (PARALLEL)
+        $promises = [];
+        $segmentMap = []; // Track index → segment mapping
+
+        foreach ($segmentsWithBookings as $index => $segment) {
+            $bookingUid = $segment['booking_uid'];
+            $promises[$index] = $client->cancelBookingAsync($bookingUid, $reason);
+            $segmentMap[$index] = $segment;
+        }
+
+        // PHASE 2: Execute ALL cancel calls in PARALLEL
+        $results = PromiseUtils::settle($promises)->wait();
+
+        // PHASE 3: Process results
+        $successCount = 0;
+        $failedSegments = [];
+
+        foreach ($results as $index => $result) {
+            $segment = $segmentMap[$index];
+            $segmentKey = $segment['key'] ?? "segment_{$index}";
+            $bookingUid = $segment['booking_uid'];
+
+            if ($result['state'] === 'fulfilled') {
+                $response = $result['value'];
+                if ($response->successful()) {
+                    $this->safeInfo("✅ Segment {$segmentKey} cancelled", [
+                        'booking_uid' => $bookingUid,
+                    ], 'calcom');
+                    $successCount++;
+                } else {
+                    $this->safeError("❌ Segment {$segmentKey} cancel failed", [
+                        'booking_uid' => $bookingUid,
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ], 'calcom');
+
+                    $failedSegments[] = [
+                        'key' => $segmentKey,
+                        'booking_uid' => $bookingUid,
+                        'error' => $response->body(),
+                    ];
+                }
+            } else {
+                // Promise rejected (exception)
+                $error = $result['reason'] instanceof \Exception
+                    ? $result['reason']->getMessage()
+                    : 'Unknown error';
+
+                $this->safeError("❌ Segment {$segmentKey} cancel exception", [
+                    'booking_uid' => $bookingUid,
+                    'error' => $error,
+                ], 'calcom');
+
+                $failedSegments[] = [
+                    'key' => $segmentKey,
+                    'booking_uid' => $bookingUid,
+                    'error' => $error,
+                ];
+            }
+        }
+
+        // Update sync status
+        $syncStatus = match(true) {
+            $successCount === count($segmentsWithBookings) => 'synced',
+            $successCount > 0 => 'partial',
+            default => 'failed',
+        };
+
+        $this->appointment->update([
+            'calcom_sync_status' => $syncStatus,
+        ]);
+
+        $this->safeInfo("🗑️ COMPOSITE CANCEL complete", [
+            'appointment_id' => $this->appointment->id,
+            'success_count' => $successCount,
+            'failed_count' => count($failedSegments),
+            'total_segments' => count($segmentsWithBookings),
+            'sync_status' => $syncStatus,
+        ], 'calcom');
+
+        // Return success if at least one segment was cancelled
+        if ($successCount > 0) {
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(200, [], json_encode([
+                    'status' => 'success',
+                    'data' => [
+                        'composite' => true,
+                        'segments_cancelled' => $successCount,
+                        'segments_failed' => count($failedSegments),
+                        'failed_segments' => $failedSegments,
+                    ]
+                ]))
+            );
+        }
+
+        // All segments failed
+        return new \Illuminate\Http\Client\Response(
+            new \GuzzleHttp\Psr7\Response(500, [], json_encode([
+                'error' => 'All composite segments failed to cancel',
+                'failed_segments' => $failedSegments,
+            ]))
+        );
+    }
+
+    /**
+     * Try to find the booking in Cal.com by searching
+     *
+     * When our stored booking UID is invalid/stale, we try to find the correct
+     * booking by matching customer email and approximate time.
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @return array|null Found booking data or null
+     */
+    protected function tryFindBookingInCalcom(CalcomV2Client $client): ?array
+    {
+        try {
+            $this->appointment->load('customer');
+
+            if (!$this->appointment->customer || !$this->appointment->customer->email) {
+                $this->safeWarning('⚠️ Cannot search Cal.com: No customer email', [
+                    'appointment_id' => $this->appointment->id,
+                ], 'calcom');
+                return null;
+            }
+
+            // Search for bookings around the appointment time
+            // Note: We use a wider time range because the appointment might have been
+            // rescheduled in Cal.com but our DB wasn't updated
+            $searchStart = $this->appointment->starts_at->copy()->subDays(7)->startOfDay();
+            $searchEnd = $this->appointment->starts_at->copy()->addDays(7)->endOfDay();
+
+            $response = $client->getBookings([
+                'afterStart' => $searchStart->toIso8601String(),
+                'beforeEnd' => $searchEnd->toIso8601String(),
+                'status' => 'upcoming',
+            ]);
+
+            if (!$response->successful()) {
+                $this->safeWarning('⚠️ Cal.com booking search failed', [
+                    'appointment_id' => $this->appointment->id,
+                    'status' => $response->status(),
+                ], 'calcom');
+                return null;
+            }
+
+            $bookings = $response->json('data', []);
+
+            if (empty($bookings)) {
+                $this->safeInfo('ℹ️ No bookings found in Cal.com search', [
+                    'appointment_id' => $this->appointment->id,
+                    'search_range' => "{$searchStart->toDateString()} - {$searchEnd->toDateString()}",
+                ], 'calcom');
+                return null;
+            }
+
+            // Find booking matching our customer email
+            $customerEmail = strtolower($this->appointment->customer->email);
+
+            foreach ($bookings as $booking) {
+                // Check if attendee email matches
+                $attendees = $booking['attendees'] ?? [];
+                foreach ($attendees as $attendee) {
+                    if (isset($attendee['email']) && strtolower($attendee['email']) === $customerEmail) {
+                        // Found matching booking!
+                        $this->safeInfo('🔍 Found matching booking in Cal.com', [
+                            'appointment_id' => $this->appointment->id,
+                            'found_booking_id' => $booking['id'],
+                            'found_booking_uid' => $booking['uid'],
+                            'booking_start' => $booking['start'] ?? null,
+                            'customer_email' => $customerEmail,
+                        ], 'calcom');
+
+                        return [
+                            'id' => $booking['id'],
+                            'uid' => $booking['uid'],
+                            'start' => $booking['start'] ?? null,
+                        ];
+                    }
+                }
+
+                // Also check metadata for our CRM appointment ID
+                $metadata = $booking['metadata'] ?? [];
+                if (isset($metadata['crm_appointment_id']) &&
+                    (string)$metadata['crm_appointment_id'] === (string)$this->appointment->id) {
+                    $this->safeInfo('🔍 Found booking by CRM appointment ID in metadata', [
+                        'appointment_id' => $this->appointment->id,
+                        'found_booking_id' => $booking['id'],
+                        'found_booking_uid' => $booking['uid'],
+                    ], 'calcom');
+
+                    return [
+                        'id' => $booking['id'],
+                        'uid' => $booking['uid'],
+                        'start' => $booking['start'] ?? null,
+                    ];
+                }
+            }
+
+            $this->safeInfo('ℹ️ No matching booking found for customer', [
+                'appointment_id' => $this->appointment->id,
+                'customer_email' => $customerEmail,
+                'bookings_checked' => count($bookings),
+            ], 'calcom');
+
+            return null;
+
+        } catch (\Exception $e) {
+            $this->safeError('❌ Error searching Cal.com bookings', [
+                'appointment_id' => $this->appointment->id,
+                'error' => $e->getMessage(),
+            ], 'calcom');
+            return null;
+        }
     }
 
     /**
@@ -321,13 +1274,13 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
             'calcom_v2_booking_uid' => $responseData['uid'] ?? $this->appointment->calcom_v2_booking_uid,
         ]);
 
-        Log::channel('calcom')->info('✅ Cal.com sync successful', [
+        $this->safeInfo('✅ Cal.com sync successful', [
             'appointment_id' => $this->appointment->id,
             'action' => $this->action,
             'attempt' => $this->attempts(),
             'calcom_booking_id' => $responseData['id'] ?? null,
             'calcom_booking_uid' => $responseData['uid'] ?? null,
-        ]);
+        ], 'calcom');
     }
 
     /**
@@ -342,12 +1295,12 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
         $errorMessage = "Cal.com API error: {$body}";
 
         // 🐛 DEBUG (2025-11-17): Log FULL error before truncation
-        Log::channel('calcom')->error('🔍 FULL Cal.com API Error Response', [
+        $this->safeError('🔍 FULL Cal.com API Error Response', [
             'appointment_id' => $this->appointment->id,
             'status_code' => $statusCode,
             'full_body' => $body,
             'full_error' => $errorMessage,
-        ]);
+        ], 'calcom');
 
         $this->appointment->update([
             'calcom_sync_status' => 'failed',
@@ -363,12 +1316,12 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
                 'manual_review_flagged_at' => now(),
             ]);
 
-            Log::channel('calcom')->error('🚨 Cal.com sync permanently failed - manual review required', [
+            $this->safeError('🚨 Cal.com sync permanently failed - manual review required', [
                 'appointment_id' => $this->appointment->id,
                 'action' => $this->action,
                 'status_code' => $statusCode,
                 'error' => $errorMessage,
-            ]);
+            ], 'calcom');
         }
 
         throw new \RuntimeException($errorMessage);
@@ -381,13 +1334,13 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
      */
     protected function handleException(\Exception $e): void
     {
-        Log::channel('calcom')->error('❌ Cal.com sync failed', [
+        $this->safeError('❌ Cal.com sync failed', [
             'appointment_id' => $this->appointment->id,
             'action' => $this->action,
             'attempt' => $this->attempts(),
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
-        ]);
+        ], 'calcom');
 
         $this->appointment->update([
             'calcom_sync_status' => 'failed',
@@ -398,16 +1351,38 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
 
         // Flag for manual review if all retries exhausted
         if ($this->attempts() >= $this->tries) {
+            // 🔧 FIX 2025-11-23: POST-SYNC VERIFICATION
+            // Problem: Cal.com sometimes returns HTTP 400 even when bookings are created
+            // Solution: Verify if bookings actually exist in Cal.com before marking as failed
+            $this->safeInfo('🔍 POST-SYNC VERIFICATION: Checking if bookings exist despite error...', [
+                'appointment_id' => $this->appointment->id,
+                'action' => $this->action,
+            ], 'calcom');
+
+            // Wait 2 seconds to give Cal.com time to settle
+            sleep(2);
+
+            if ($this->verifyBookingsInCalcom()) {
+                $this->safeInfo('✅ POST-SYNC VERIFICATION: Bookings found in Cal.com! Marking as synced.', [
+                    'appointment_id' => $this->appointment->id,
+                ], 'calcom');
+
+                // Bookings exist! This was a false-negative error
+                // Don't flag for manual review, don't re-throw exception
+                return;
+            }
+
+            // Bookings don't exist - it's a real failure
             $this->appointment->update([
                 'requires_manual_review' => true,
                 'manual_review_flagged_at' => now(),
             ]);
 
-            Log::channel('calcom')->critical('🚨 Cal.com sync permanently failed after max retries', [
+            $this->safeCritical('🚨 Cal.com sync permanently failed after max retries', [
                 'appointment_id' => $this->appointment->id,
                 'action' => $this->action,
                 'error' => $e->getMessage(),
-            ]);
+            ], 'calcom');
         }
 
         throw $e;  // Re-throw to trigger retry
@@ -420,12 +1395,12 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::channel('calcom')->critical('💀 Cal.com sync job permanently failed', [
+        $this->safeCritical('💀 Cal.com sync job permanently failed', [
             'appointment_id' => $this->appointment->id,
             'action' => $this->action,
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString(),
-        ]);
+        ], 'calcom');
 
         // Ensure manual review flag is set
         $this->appointment->update([
@@ -437,5 +1412,656 @@ class SyncAppointmentToCalcomJob implements ShouldQueue
 
         // TODO: Send alert to monitoring system (Slack/PagerDuty)
         // TODO: Integrate with Sentry for error tracking
+    }
+
+    /**
+     * Sync composite appointment phases to Cal.com in PARALLEL (70% faster)
+     *
+     * PERFORMANCE: Uses async HTTP/2 requests to sync all segments concurrently
+     * BENEFIT: 10s → 3s for 4 segments (Dauerwelle)
+     *
+     * @param \Illuminate\Support\Collection $phases Active phases to sync
+     * @param \App\Models\Service $service The composite service
+     * @param \App\Services\CalcomV2Client $client Cal.com API client
+     * @return \Illuminate\Http\Client\Response Last successful response
+     */
+    private function syncPhasesParallel($phases, $service, $client)
+    {
+        $startTime = microtime(true);
+
+        $this->safeInfo("🚀 PARALLEL sync started for {$phases->count()} segments", [
+            'appointment_id' => $this->appointment->id,
+            'service_id' => $service->id,
+        ], 'calcom');
+
+        // Step 1: Prepare all payloads and resolve child IDs
+        $payloads = [];
+        $phaseMap = []; // Map index → phase for result processing
+
+        foreach ($phases as $index => $phase) {
+            try {
+                // Lookup mapping
+                $mapping = \App\Models\CalcomEventMap::where('service_id', $service->id)
+                    ->where('segment_key', $phase->segment_key)
+                    ->where('staff_id', $this->appointment->staff_id)
+                    ->first();
+
+                if (!$mapping) {
+                    throw new \RuntimeException("Missing CalcomEventMap for segment '{$phase->segment_key}'");
+                }
+
+                // Resolve child event type ID
+                $childEventTypeId = $mapping->child_event_type_id;
+                if (!$childEventTypeId) {
+                    $resolver = new \App\Services\CalcomChildEventTypeResolver($this->appointment->company);
+                    $childEventTypeId = $resolver->resolveChildEventTypeId(
+                        $mapping->event_type_id,
+                        $this->appointment->staff_id
+                    );
+
+                    if (!$childEventTypeId) {
+                        throw new \RuntimeException("Could not resolve child event type ID");
+                    }
+                }
+
+                // Build payload
+                $payloads[$index] = [
+                    'eventTypeId' => $childEventTypeId,
+                    'start' => $phase->start_time->toIso8601String(),
+                    'name' => $this->appointment->customer->name ?? 'Customer',
+                    'email' => $this->appointment->customer->email ?? 'noreply@example.com',
+                    'timeZone' => $this->appointment->booking_timezone ?? 'Europe/Berlin',
+                    'metadata' => [
+                        'crm_appointment_id' => (string) $this->appointment->id,
+                        'crm_phase_id' => (string) $phase->id,
+                        'segment_key' => $phase->segment_key,
+                        'segment_name' => $phase->segment_name,
+                        'sync_origin' => 'system',
+                        'created_via' => 'crm_composite_sync_parallel',
+                        'synced_at' => now()->toIso8601String(),
+                    ],
+                    // 🔧 FIX 2025-12-01: Add name, email to bookingFieldsResponses (required by Cal.com)
+                    'bookingFieldsResponses' => [
+                        'name' => $this->appointment->customer->name ?? 'Customer',
+                        'email' => $this->appointment->customer->email ?? 'noreply@example.com',
+                        'title' => "{$service->name} - {$phase->segment_name}",
+                    ],
+                ];
+
+                $phaseMap[$index] = $phase;
+
+            } catch (\Exception $e) {
+                $this->safeError("❌ Failed to prepare segment '{$phase->segment_key}': {$e->getMessage()}", [
+                    'phase_id' => $phase->id
+                ], 'calcom');
+
+                $phase->update([
+                    'calcom_sync_status' => 'failed',
+                    'sync_error_message' => substr($e->getMessage(), 0, 255)
+                ]);
+            }
+        }
+
+        if (empty($payloads)) {
+            throw new \RuntimeException("All phases failed during preparation");
+        }
+
+        // Step 2: Execute all Cal.com bookings in PARALLEL
+        $this->safeInfo("⚡ Executing " . count($payloads) . " parallel Cal.com API requests", [
+            'segments' => array_keys($payloads)
+        ], 'calcom');
+
+        $promises = [];
+        foreach ($payloads as $index => $payload) {
+            $promises[$index] = $client->createBookingAsync($payload);
+        }
+
+        // Wait for all promises to resolve
+        $results = \GuzzleHttp\Promise\Utils::settle($promises)->wait();
+
+        // Step 3: Process results
+        $bookingIds = [];
+        $errors = [];
+        $lastResponse = null;
+
+        foreach ($results as $index => $result) {
+            $phase = $phaseMap[$index];
+
+            if ($result['state'] === 'fulfilled') {
+                $response = $result['value'];
+                $lastResponse = $response;
+
+                if ($response->successful()) {
+                    $responseData = $response->json('data', []);
+                    $bookingId = $responseData['id'] ?? null;
+                    $bookingUid = $responseData['uid'] ?? null;
+
+                    if ($bookingId) {
+                        $bookingIds[] = $bookingId;
+
+                        $phase->update([
+                            'calcom_booking_id' => $bookingId,
+                            'calcom_booking_uid' => $bookingUid,
+                            'calcom_sync_status' => 'synced',
+                            'sync_error_message' => null
+                        ]);
+
+                        $this->safeInfo("✅ Segment '{$phase->segment_key}' synced", [
+                            'phase_id' => $phase->id,
+                            'calcom_booking_id' => $bookingId
+                        ], 'calcom');
+                    } else {
+                        $error = "Response missing booking ID";
+                        $errors[] = $error;
+
+                        $this->safeError("❌ {$error}", ['phase_id' => $phase->id], 'calcom');
+
+                        $phase->update([
+                            'calcom_sync_status' => 'failed',
+                            'sync_error_message' => $error
+                        ]);
+                    }
+                } else {
+                    $error = "HTTP {$response->status()}: {$response->body()}";
+                    $errors[] = $error;
+
+                    $this->safeError("❌ Cal.com API error for segment '{$phase->segment_key}'", [
+                        'phase_id' => $phase->id,
+                        'status' => $response->status(),
+                        'body' => $response->body()
+                    ], 'calcom');
+
+                    $phase->update([
+                        'calcom_sync_status' => 'failed',
+                        'sync_error_message' => substr($error, 0, 255)
+                    ]);
+                }
+            } else {
+                // Promise rejected (exception)
+                $exception = $result['reason'];
+                $error = "Exception: {$exception->getMessage()}";
+                $errors[] = $error;
+
+                $this->safeError("❌ Segment '{$phase->segment_key}' promise rejected", [
+                    'phase_id' => $phase->id,
+                    'error' => $exception->getMessage()
+                ], 'calcom');
+
+                $phase->update([
+                    'calcom_sync_status' => 'failed',
+                    'sync_error_message' => substr($error, 0, 255)
+                ]);
+            }
+        }
+
+        // Step 4: Update appointment
+        $appointmentUpdate = [
+            'calcom_sync_status' => empty($bookingIds) ? 'failed' : 'synced',
+            'sync_verified_at' => now(),
+            'sync_error_message' => !empty($errors) ? 'Partial sync: ' . implode(', ', array_slice($errors, 0, 2)) : null,
+        ];
+
+        if (!empty($bookingIds)) {
+            $appointmentUpdate['calcom_v2_booking_id'] = $bookingIds[0];
+        }
+
+        $this->appointment->update($appointmentUpdate);
+
+        // Step 5: Performance metrics
+        $duration = round((microtime(true) - $startTime) * 1000, 2);
+
+        $this->safeInfo("🎉 PARALLEL sync complete", [
+            'appointment_id' => $this->appointment->id,
+            'total_phases' => $phases->count(),
+            'synced' => count($bookingIds),
+            'failed' => count($errors),
+            'duration_ms' => $duration,
+            'performance_gain' => 'Expected ~70% faster than sequential',
+            'status' => empty($errors) ? 'success' : 'partial'
+        ], 'calcom');
+
+        if (empty($bookingIds)) {
+            throw new \RuntimeException(
+                "All composite segments failed to sync: " . implode(', ', $errors)
+            );
+        }
+
+        return $lastResponse;
+    }
+
+    /**
+     * Verify if bookings actually exist in Cal.com (Post-Sync Verification)
+     *
+     * FIX 2025-11-23: Cal.com sometimes returns HTTP 400 even when bookings are created
+     * This method queries Cal.com to check if bookings actually exist, preventing false-negative sync status
+     *
+     * For composite services: Checks if all active phases have bookings
+     * For regular services: Checks if the appointment has a booking
+     *
+     * @return bool True if bookings exist and sync should be marked as successful
+     */
+    protected function verifyBookingsInCalcom(): bool
+    {
+        try {
+            $client = new CalcomV2Client($this->appointment->company);
+
+            // For composite services, check all active phases
+            if ($this->appointment->service->isComposite()) {
+                return $this->verifyCompositeBookings($client);
+            }
+
+            // For regular services, check single booking
+            return $this->verifyRegularBooking($client);
+
+        } catch (\Exception $e) {
+            $this->safeError('⚠️ POST-SYNC VERIFICATION failed', [
+                'appointment_id' => $this->appointment->id,
+                'error' => $e->getMessage(),
+            ], 'calcom');
+
+            return false; // Verification failed, assume bookings don't exist
+        }
+    }
+
+    /**
+     * Verify composite service bookings (checks all active phases)
+     *
+     * @param CalcomV2Client $client
+     * @return bool
+     */
+    protected function verifyCompositeBookings(CalcomV2Client $client): bool
+    {
+        $this->appointment->load('phases', 'service', 'customer');
+
+        $phases = $this->appointment->phases()
+            ->where('staff_required', true)
+            ->orderBy('sequence_order')
+            ->get();
+
+        if ($phases->isEmpty()) {
+            $this->safeWarning('⚠️ No active phases found for composite appointment', [
+                'appointment_id' => $this->appointment->id,
+            ], 'calcom');
+            return false;
+        }
+
+        // Query Cal.com for bookings on this date
+        $startDate = $this->appointment->starts_at->copy()->startOfDay();
+        $endDate = $this->appointment->starts_at->copy()->endOfDay();
+
+        $response = $client->getBookings([
+            'afterStart' => $startDate->toIso8601String(),
+            'beforeEnd' => $endDate->toIso8601String(),
+            'status' => 'upcoming'
+        ]);
+
+        if (!$response->successful()) {
+            $this->safeError('⚠️ Failed to fetch Cal.com bookings for verification', [
+                'appointment_id' => $this->appointment->id,
+                'http_status' => $response->status(),
+            ], 'calcom');
+            return false;
+        }
+
+        $calcomBookings = $response->json('data', []);
+
+        // Match Cal.com bookings to our phases by time
+        $verifiedCount = 0;
+        $bookingUpdates = [];
+
+        foreach ($phases as $phase) {
+            $phaseStartUtc = $phase->start_time->copy()->setTimezone('UTC');
+
+            // Find matching booking in Cal.com (within 5 minutes tolerance)
+            $matchedBooking = collect($calcomBookings)->first(function ($booking) use ($phaseStartUtc) {
+                $bookingStart = \Carbon\Carbon::parse($booking['start'] ?? null);
+                if (!$bookingStart) {
+                    return false;
+                }
+
+                // Match if within 5 minutes
+                return abs($bookingStart->diffInMinutes($phaseStartUtc)) <= 5;
+            });
+
+            if ($matchedBooking) {
+                $verifiedCount++;
+
+                // Store booking details for update
+                $bookingUpdates[] = [
+                    'phase' => $phase,
+                    'booking_id' => $matchedBooking['id'],
+                    'booking_uid' => $matchedBooking['uid'] ?? null,
+                ];
+
+                $this->safeDebug('✅ Verified phase booking in Cal.com', [
+                    'phase_id' => $phase->id,
+                    'segment_key' => $phase->segment_key,
+                    'calcom_booking_id' => $matchedBooking['id'],
+                ], 'calcom');
+            }
+        }
+
+        // If ALL phases have bookings, mark as synced
+        if ($verifiedCount === $phases->count()) {
+            // Update phases with booking info
+            foreach ($bookingUpdates as $update) {
+                $update['phase']->update([
+                    'calcom_booking_id' => $update['booking_id'],
+                    'calcom_booking_uid' => $update['booking_uid'],
+                    'calcom_sync_status' => 'synced',
+                    'sync_error_message' => null,
+                ]);
+            }
+
+            // Update main appointment
+            $this->appointment->update([
+                'calcom_v2_booking_id' => $bookingUpdates[0]['booking_id'], // First segment
+                'calcom_v2_booking_uid' => $bookingUpdates[0]['booking_uid'],
+                'calcom_sync_status' => 'synced',
+                'sync_verified_at' => now(),
+                'sync_error_message' => null,
+                'sync_error_code' => null,
+                'requires_manual_review' => false,
+            ]);
+
+            $this->safeInfo('✅ POST-SYNC VERIFICATION SUCCESS: All composite bookings verified', [
+                'appointment_id' => $this->appointment->id,
+                'verified_count' => $verifiedCount,
+                'total_phases' => $phases->count(),
+            ], 'calcom');
+
+            return true;
+        }
+
+        // Partial verification - some bookings found but not all
+        $this->safeWarning('⚠️ POST-SYNC VERIFICATION: Partial bookings found', [
+            'appointment_id' => $this->appointment->id,
+            'verified_count' => $verifiedCount,
+            'total_phases' => $phases->count(),
+        ], 'calcom');
+
+        return false;
+    }
+
+    /**
+     * Verify regular service booking (single booking check)
+     *
+     * @param CalcomV2Client $client
+     * @return bool
+     */
+    protected function verifyRegularBooking(CalcomV2Client $client): bool
+    {
+        // Query Cal.com for bookings on this date
+        $startDate = $this->appointment->starts_at->copy()->startOfDay();
+        $endDate = $this->appointment->starts_at->copy()->endOfDay();
+
+        $response = $client->getBookings([
+            'afterStart' => $startDate->toIso8601String(),
+            'beforeEnd' => $endDate->toIso8601String(),
+            'status' => 'upcoming'
+        ]);
+
+        if (!$response->successful()) {
+            $this->safeError('⚠️ Failed to fetch Cal.com bookings for verification', [
+                'appointment_id' => $this->appointment->id,
+                'http_status' => $response->status(),
+            ], 'calcom');
+            return false;
+        }
+
+        $calcomBookings = $response->json('data', []);
+        $appointmentStartUtc = $this->appointment->starts_at->copy()->setTimezone('UTC');
+
+        // Find matching booking (within 5 minutes tolerance)
+        $matchedBooking = collect($calcomBookings)->first(function ($booking) use ($appointmentStartUtc) {
+            $bookingStart = \Carbon\Carbon::parse($booking['start'] ?? null);
+            if (!$bookingStart) {
+                return false;
+            }
+
+            return abs($bookingStart->diffInMinutes($appointmentStartUtc)) <= 5;
+        });
+
+        if ($matchedBooking) {
+            // Update appointment with booking info
+            $this->appointment->update([
+                'calcom_v2_booking_id' => $matchedBooking['id'],
+                'calcom_v2_booking_uid' => $matchedBooking['uid'] ?? null,
+                'calcom_sync_status' => 'synced',
+                'sync_verified_at' => now(),
+                'sync_error_message' => null,
+                'sync_error_code' => null,
+                'requires_manual_review' => false,
+            ]);
+
+            $this->safeInfo('✅ POST-SYNC VERIFICATION SUCCESS: Regular booking verified', [
+                'appointment_id' => $this->appointment->id,
+                'calcom_booking_id' => $matchedBooking['id'],
+            ], 'calcom');
+
+            return true;
+        }
+
+        // No matching booking found
+        $this->safeWarning('⚠️ POST-SYNC VERIFICATION: No matching booking found', [
+            'appointment_id' => $this->appointment->id,
+            'appointment_start' => $this->appointment->starts_at,
+            'total_bookings_found' => count($calcomBookings),
+        ], 'calcom');
+
+        return false;
+    }
+
+    /**
+     * Validate slot availability and find alternative if blocked (Pre-Sync Check)
+     *
+     * 🔧 FIX 2025-12-01: Race Condition Prevention
+     *
+     * Problem: Slot may be available during Retell call but blocked when sync job runs.
+     * This happens when:
+     * - Another call books the same slot between check and sync
+     * - External calendar sync blocks the slot
+     * - Manual booking in Cal.com UI
+     *
+     * Solution:
+     * 1. Query Cal.com for available slots around the appointment time
+     * 2. If requested slot is available → return original time
+     * 3. If requested slot is blocked → find nearest available slot (within 2 hours)
+     * 4. If no slot available → return null (will fail sync with clear error)
+     *
+     * @param CalcomV2Client $client Cal.com API client
+     * @param \App\Models\Service $service The service being booked
+     * @return Carbon|null Validated start time or null if no slot available
+     */
+    protected function validateAndAdjustSlot(CalcomV2Client $client, $service): ?Carbon
+    {
+        $requestedStart = $this->appointment->starts_at->copy();
+
+        // 🔧 FIX 2025-12-14: Skip re-validation if we have a valid reservation_uid
+        // ROOT CAUSE (Call #89689): reserve_slot creates a Cal.com reservation that BLOCKS
+        // the slot. When we later query availability, our own reservation makes the slot
+        // appear "blocked", causing sync failure with "All slots blocked" error.
+        //
+        // IMPORTANT: This does NOT contradict "Cal.com is source of truth" because:
+        // 1. The reservation IS stored on Cal.com's side (they validated when we reserved)
+        // 2. We're trusting Cal.com's existing reservation, not our local data
+        // 3. The actual booking will use this reservation_uid
+        $metadata = $this->appointment->metadata ?? [];
+        if (isset($metadata['reservation_uid']) && !empty($metadata['reservation_uid'])) {
+            $reservationUntil = isset($metadata['reservation_until'])
+                ? Carbon::parse($metadata['reservation_until'])
+                : null;
+
+            // Check if reservation is still valid (not expired)
+            $isReservationValid = !$reservationUntil || $reservationUntil->isFuture();
+
+            if ($isReservationValid) {
+                $this->safeInfo('✅ PRE-SYNC: Skipping availability re-check - valid Cal.com reservation exists', [
+                    'appointment_id' => $this->appointment->id,
+                    'reservation_uid' => $metadata['reservation_uid'],
+                    'reservation_until' => $reservationUntil?->toIso8601String(),
+                    'requested_start' => $requestedStart->toIso8601String(),
+                ], 'calcom');
+
+                return $requestedStart; // Trust Cal.com's reservation
+            }
+
+            $this->safeWarning('⚠️ PRE-SYNC: Reservation expired, will re-check availability', [
+                'appointment_id' => $this->appointment->id,
+                'reservation_uid' => $metadata['reservation_uid'],
+                'reservation_until' => $reservationUntil?->toIso8601String(),
+            ], 'calcom');
+        }
+
+        // 🔧 FIX 2025-12-05: Validate date is within reasonable booking window
+        // RCA: Call 73526 - Date 2026-11-07 was >12 months in future, Cal.com returned no slots
+        // This caused silent sync failure with empty calcom_booking_uid
+        $now = Carbon::now('Europe/Berlin');
+        $maxFutureDate = $now->copy()->addMonths(12);
+        $maxPastDate = $now->copy()->subDays(1);
+
+        if ($requestedStart->isAfter($maxFutureDate)) {
+            $this->safeError('❌ PRE-SYNC: Date too far in future (>12 months)', [
+                'appointment_id' => $this->appointment->id,
+                'requested_start' => $requestedStart->toIso8601String(),
+                'max_allowed' => $maxFutureDate->toIso8601String(),
+            ], 'calcom');
+
+            $this->appointment->update([
+                'calcom_sync_status' => 'failed',
+                'requires_manual_review' => true,
+                'sync_error_message' => 'Datum liegt mehr als 12 Monate in der Zukunft. Bitte Termindatum prüfen.',
+            ]);
+
+            return null;
+        }
+
+        if ($requestedStart->isBefore($maxPastDate)) {
+            $this->safeError('❌ PRE-SYNC: Date is in the past', [
+                'appointment_id' => $this->appointment->id,
+                'requested_start' => $requestedStart->toIso8601String(),
+            ], 'calcom');
+
+            $this->appointment->update([
+                'calcom_sync_status' => 'failed',
+                'requires_manual_review' => true,
+                'sync_error_message' => 'Termindatum liegt in der Vergangenheit.',
+            ]);
+
+            return null;
+        }
+
+        $requestedStartUtc = $requestedStart->copy()->setTimezone('UTC');
+
+        // Query slots for the day of the appointment
+        $dayStart = $requestedStart->copy()->startOfDay();
+        $dayEnd = $requestedStart->copy()->endOfDay();
+
+        $this->safeDebug('🔍 PRE-SYNC: Validating slot availability', [
+            'appointment_id' => $this->appointment->id,
+            'requested_start' => $requestedStart->toIso8601String(),
+            'requested_start_utc' => $requestedStartUtc->toIso8601String(),
+            'event_type_id' => $service->calcom_event_type_id,
+        ], 'calcom');
+
+        try {
+            $response = $client->getAvailableSlots(
+                eventTypeId: $service->calcom_event_type_id,
+                start: $dayStart,
+                end: $dayEnd,
+                timezone: $this->appointment->booking_timezone ?? 'Europe/Berlin'
+            );
+
+            if (!$response->successful()) {
+                $this->safeWarning('⚠️ PRE-SYNC: Could not fetch availability, proceeding with original time', [
+                    'appointment_id' => $this->appointment->id,
+                    'status' => $response->status(),
+                ], 'calcom');
+                return $requestedStart; // Proceed with original time
+            }
+
+            $slotsData = $response->json('data.slots', []);
+
+            // Flatten slots from all dates and normalize to UTC for comparison
+            $allSlots = [];
+            foreach ($slotsData as $date => $slots) {
+                foreach ($slots as $slot) {
+                    // Cal.com returns slots in the requested timezone (Berlin)
+                    // Convert to UTC for consistent comparison
+                    $allSlots[] = Carbon::parse($slot['time'])->setTimezone('UTC');
+                }
+            }
+
+            if (empty($allSlots)) {
+                $this->safeWarning('⚠️ PRE-SYNC: No slots available for this day', [
+                    'appointment_id' => $this->appointment->id,
+                    'date' => $dayStart->toDateString(),
+                ], 'calcom');
+                return null; // No slots available
+            }
+
+            // Check if requested slot is available (exact match within 2 minute tolerance)
+            // Cal.com slots are usually 5-minute intervals, so we need tight tolerance
+            $matchingSlot = collect($allSlots)->first(function ($slot) use ($requestedStartUtc) {
+                return abs($slot->diffInMinutes($requestedStartUtc)) <= 2;
+            });
+
+            if ($matchingSlot) {
+                $this->safeDebug('✅ PRE-SYNC: Requested slot is available', [
+                    'appointment_id' => $this->appointment->id,
+                    'slot' => $matchingSlot->toIso8601String(),
+                ], 'calcom');
+                return $requestedStart; // Original slot is available
+            }
+
+            // Requested slot is NOT available - find nearest alternative
+            $this->safeWarning('⚠️ PRE-SYNC: Requested slot is blocked, searching for alternative', [
+                'appointment_id' => $this->appointment->id,
+                'requested' => $requestedStartUtc->toIso8601String(),
+                'available_slots' => collect($allSlots)->map->toIso8601String()->toArray(),
+            ], 'calcom');
+
+            // Find nearest slot within 2 hours of requested time
+            $maxDiffMinutes = 120;
+            $nearestSlot = collect($allSlots)
+                ->filter(function ($slot) use ($requestedStartUtc, $maxDiffMinutes) {
+                    return abs($slot->diffInMinutes($requestedStartUtc)) <= $maxDiffMinutes;
+                })
+                ->sortBy(function ($slot) use ($requestedStartUtc) {
+                    return abs($slot->diffInMinutes($requestedStartUtc));
+                })
+                ->first();
+
+            if ($nearestSlot) {
+                // Convert back to local timezone
+                $adjustedStart = $nearestSlot->copy()->setTimezone($this->appointment->booking_timezone ?? 'Europe/Berlin');
+
+                $this->safeInfo('📅 PRE-SYNC: Found alternative slot', [
+                    'appointment_id' => $this->appointment->id,
+                    'original' => $requestedStart->toIso8601String(),
+                    'adjusted' => $adjustedStart->toIso8601String(),
+                    'diff_minutes' => abs($requestedStart->diffInMinutes($adjustedStart)),
+                ], 'calcom');
+
+                return $adjustedStart;
+            }
+
+            // No suitable alternative found
+            $this->safeError('❌ PRE-SYNC: No available slot found within 2 hours', [
+                'appointment_id' => $this->appointment->id,
+                'requested' => $requestedStart->toIso8601String(),
+            ], 'calcom');
+
+            return null;
+
+        } catch (\Exception $e) {
+            $this->safeError('❌ PRE-SYNC: Exception during slot validation', [
+                'appointment_id' => $this->appointment->id,
+                'error' => $e->getMessage(),
+            ], 'calcom');
+
+            // On error, proceed with original time (let Cal.com reject if needed)
+            return $requestedStart;
+        }
     }
 }

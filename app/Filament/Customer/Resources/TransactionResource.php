@@ -214,6 +214,11 @@ class TransactionResource extends Resource
         ];
     }
 
+    /**
+     * SECURITY: Safe scope bypass - Transaction uses tenant_id (not company_id)
+     * Pattern: withoutGlobalScopes() + explicit tenant_id filter
+     * @see HasSecureScopeBypass::tenantFilteredQuery()
+     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()

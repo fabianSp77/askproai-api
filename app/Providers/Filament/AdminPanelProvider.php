@@ -161,7 +161,11 @@ function initTooltipPatch() {
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             // Widgets disabled until database fully migrated (some query missing tables)
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([])
+            // 🆕 PHASE 3 (2025-11-24): Register specific monitoring widgets
+            ->widgets([
+                \App\Filament\Widgets\CalcomSyncStatusWidget::class,
+                \App\Filament\Widgets\AppointmentSyncStatusWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

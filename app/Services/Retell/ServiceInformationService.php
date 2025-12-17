@@ -70,7 +70,8 @@ class ServiceInformationService
 
         // Optional filtering by service name
         if (isset($parameters['service_name']) && !empty($parameters['service_name'])) {
-            $servicesQuery->where('services.name', 'ILIKE', '%' . $parameters['service_name'] . '%');
+            // FIX 2025-11-25: Use LIKE instead of ILIKE for MySQL/MariaDB compatibility
+            $servicesQuery->where('services.name', 'LIKE', '%' . $parameters['service_name'] . '%');
         }
 
         $services = $servicesQuery->get();

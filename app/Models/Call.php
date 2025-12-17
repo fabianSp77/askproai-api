@@ -92,8 +92,6 @@ class Call extends Model
         'customer_linked_at' => 'datetime',
         'appointment_linked_at' => 'datetime',
         'customer_link_confidence' => 'decimal:2',
-        'started_at' => 'datetime',  // ✅ Added - exists in DB
-        'ended_at' => 'datetime',    // ✅ Added - exists in DB
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -560,15 +558,6 @@ class Call extends Model
     public function getCallSuccessfulAttribute(): bool
     {
         return $this->status === 'completed';
-    }
-
-    /**
-     * Accessor: appointment_made → has_appointment mapping
-     * Database has 'has_appointment', code expects 'appointment_made'
-     */
-    public function getAppointmentMadeAttribute(): bool
-    {
-        return $this->has_appointment ?? false;
     }
 
     /**

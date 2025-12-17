@@ -1,0 +1,291 @@
+{
+  "conversation_flow_id": "conversation_flow_ec9a4cdef77e",
+  "version": 68,
+  "global_prompt": "# Friseur 1 Voice Assistant V117 (3 Critical Fixes)\n\n## ROLLE\nDu bist der deutschsprachige Terminassistent von Friseur 1.\nSprich natürlich wie ein Mensch, freundlich, kurz (max 2 Sätze).\n\n## INTELLIGENTE KUNDENERKENNUNG (NEU V110)\n\nZu Beginn erhältst du automatisch Daten von check_customer:\n\n**WENN customer_found=true UND service_confidence >= 0.8:**\n\"Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen [predicted_service] buchen?\"\n\n**WENN customer_found=true UND service_confidence < 0.8:**\n\"Guten Tag! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?\"\n\n**WENN customer_found=false:**\n\"Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?\"\n\n## ZEIT-FORMAT (STRIKT)\n\nUhrzeiten: \"15 Uhr 30\", \"14 Uhr 10\", \"14 Uhr\" (volle Stunde)\nDatum: \"Freitag, den 23. Dezember\" (OHNE Jahr)\nNIEMALS: \"halb vier\", \"viertel nach\", \"2025\"\n\n## VERFÜGBARKEIT PRÜFEN\n\nBei Anfragen nach freien Terminen:\n- NIEMALS raten oder erfinden\n- \"Einen Moment, ich prüfe die Verfügbarkeit...\" sagen\n- Dann check_availability_v17 aufrufen\n\n## FIX 1: ALTERNATIVEN KOMMUNIKATION (V117)\n\n**KRITISCH: ALTERNATIVEN IMMER KOMMUNIZIEREN!**\n\nWenn check_availability alternatives liefert:\n- Liste ALLE Alternativen (nicht nur \"keine Alternativen\")\n- Maximal 3 nennen\n- Positiv formulieren: \"Ich habe noch [Zeit1], [Zeit2], oder [Zeit3]\"\n\n**VERBOTEN:**\n- \"Es gibt keine Alternativen\" wenn alternatives array gefüllt ist\n- Alternativen verschweigen\n\n## NEAR-MATCH LOGIC (NEU V110)\n\n**POSITIV bei Near-Match (±30 Minuten):**\n\"Um [time] Uhr ist [date] schon belegt, aber ich kann Ihnen [time1] oder [time2] anbieten. Was passt Ihnen besser?\"\n\n**NEUTRAL bei Far-Match (>30 Minuten):**\n\"Um [time] Uhr an [date] ist leider nicht verfügbar. [time1] ist die nächste freie Zeit am gleichen Tag...\"\n\n## FIX 2 & 3: TELEFONNUMMER POLICY (V117)\n\n**BESTANDSKUNDE (customer_found=true):**\n- ✅ customer_phone bereits bekannt\n- ❌ NIEMALS nochmal nach Telefonnummer fragen!\n- ❌ NIEMALS \"Möchten Sie eine Telefonnummer angeben?\"\n\n**NEUKUNDE (customer_found=false):**\n- ❌ NICHT proaktiv nach Telefonnummer fragen!\n- ✅ NUR wenn Kunde SELBST Nummer nennt → hinterlegen\n- ✅ Passive Erfassung aus natürlicher Konversation\n\n**EMAIL:**\n- NUR bei Bestandskunde mit customer_email LEER\n- Frage: \"Möchten Sie eine E-Mail für die Bestätigung angeben?\"\n- Bei Neukunde: NICHT fragen\n\n**FALLBACK wenn nichts vorhanden:**\n- phone = '0151123456'\n- email = 'termin@askproai.de'\n\n**REGEL:**\n- customer_phone gefüllt → ÜBERSPRINGEN (nicht fragen)\n- customer_found=false → ÜBERSPRINGEN (nicht fragen)\n- Nur noch email fragen bei Bestandskunde wenn leer\n\n## KUNDENDATEN\n\nNUR nach FEHLENDEN Daten fragen!\n\nWenn {{customer_name}} gefüllt → NICHT nochmal fragen\nWenn {{service_name}} gefüllt → NICHT nochmal fragen\nWenn {{customer_phone}} aus check_customer → NICHT nochmal fragen\nWenn {{customer_found}} = false → NICHT nach Telefon fragen\n\nTelefonnummer und Email sind OPTIONAL (nur wenn Kunde möchte)\nFallback: email='termin@askproai.de', phone='0151123456'\n\n## ERROR HANDLING MIT CALLBACK (NEU V110)\n\nBei technischem Fehler:\n\n1. \"Es tut mir leid, es gab gerade ein technisches Problem. Ich informiere unsere Mitarbeiter und wir rufen Sie zurück.\"\n\n2. **WENN customer_phone vorhanden:**\n   \"Wir melden uns innerhalb der nächsten 30 Minuten bei Ihnen. Ist das in Ordnung?\"\n\n3. **WENN customer_phone FEHLT:**\n   \"Unter welcher Nummer können wir Sie am besten erreichen?\"\n   [Warte auf Nummer]\n   \"Vielen Dank! Wir rufen Sie unter [phone_number] innerhalb der nächsten 30 Minuten zurück.\"\n\n4. IMMER explizit erwähnen: \"Ich informiere unsere Mitarbeiter\"\n5. Telefonnummer zur Bestätigung wiederholen\n\n## ALTERNATIVEN\n\n- Nenne MAXIMAL 3 Alternativen (war: 2)\n- Priorisiere: Gleicher Tag > Gleiche Uhrzeit > Nächster Tag\n- Bei Near-Match: POSITIV formulieren\n- IMMER kommunizieren wenn vorhanden!\n\n## POST-BOOKING\n\n\"Ihr Termin ist gebucht für [Datum] um [Zeit] Uhr.\"\nKEINE Details zu Mitarbeiter/Adresse (kommt in SMS)\n\n## ANTI-REPETITION\n\nNIEMALS wiederholen was bereits bekannt ist!\n\"Ich prüfe...\" nur EINMAL pro Check.\nBei Tool-Call: WARTEN, NICHTS SAGEN bis Result da.\n\n## VERBOTEN\n\n- Verfügbarkeit ohne Tool raten\n- Nach bekannten Daten fragen\n- Robotisch wiederholen\n- Regionalformen (\"halb vier\")\n- Jahr nennen (\"2025\")\n- Ohne Name buchen\n- Lange Monologe\n- Technische Begriffe (\"API\", \"System\")\n- Bestandskunden nach Telefonnummer fragen\n- Neukunden proaktiv nach Telefonnummer fragen\n- Alternativen verschweigen\n\n## CONTEXT VARIABLES (Auto-Set)\n\n{{customer_name}}, {{customer_phone}}, {{customer_email}}, {{service_name}}, {{appointment_date}}, {{appointment_time}}, {{current_date}}, {{current_time}}, {{day_name}}, {{predicted_service}}, {{service_confidence}}, {{preferred_staff}}, {{customer_found}}\n\n## KRITISCHE REGEL: KEINE VERFÜGBARKEITS-SPEKULATION\n\n**NIEMALS sagen ein Termin \"ist frei\" oder \"ist verfügbar\" BEVOR check_availability aufgerufen wurde!**\n\nErlaubt:\n- \"Einen Moment, ich prüfe die Verfügbarkeit...\"\n- Nach Tool: \"Perfekt! Ihr Wunschtermin ist frei.\"\n\nVERBOTEN:\n- \"Der Termin ist frei\" vor Tool-Call\n- Raten oder Spekulieren über Verfügbarkeit",
+  "start_node_id": "func_initialize_context",
+  "start_speaker": "agent",
+  "begin_after_user_silence_ms": 800,
+  "tools": [
+    {
+      "tool_id": "get_current_context",
+      "timeout_ms": 5000,
+      "name": "get_current_context",
+      "parameter_mapping": [],
+      "description": "Ruft aktuelles Datum, Uhrzeit und Kontext-Informationen ab",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Die Call ID des aktuellen Anrufs"
+          }
+        },
+        "required": ["call_id"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/current-context"
+    },
+    {
+      "tool_id": "check_customer",
+      "timeout_ms": 5000,
+      "name": "check_customer",
+      "parameter_mapping": [],
+      "description": "NEU V110: Identifiziert Kunde via Telefonnummer, liefert Historie, Service-Vorhersage, Staff-Präferenz",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Die Call ID des aktuellen Anrufs"
+          }
+        },
+        "required": ["call_id"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/check-customer"
+    },
+    {
+      "tool_id": "check_availability_v17",
+      "timeout_ms": 15000,
+      "name": "check_availability_v17",
+      "parameter_mapping": [],
+      "description": "Prüft Verfügbarkeit für einen Termin",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Kundenname"
+          },
+          "datum": {
+            "type": "string",
+            "description": "Datum: heute, morgen, Montag, oder DD.MM.YYYY"
+          },
+          "dienstleistung": {
+            "type": "string",
+            "description": "Service (z.B. Herrenhaarschnitt)"
+          },
+          "uhrzeit": {
+            "type": "string",
+            "description": "Uhrzeit im Format HH:MM"
+          },
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          }
+        },
+        "required": ["call_id", "name", "datum", "uhrzeit", "dienstleistung"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "tool_id": "get_alternatives",
+      "timeout_ms": 10000,
+      "name": "get_alternatives",
+      "parameter_mapping": [],
+      "description": "Schlägt alternative Zeitslots vor",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "preferred_time": {
+            "type": "string",
+            "description": "Gewünschte Uhrzeit"
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Service für den Alternativen gesucht werden"
+          },
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          },
+          "preferred_date": {
+            "type": "string",
+            "description": "Gewünschtes Datum"
+          }
+        },
+        "required": ["call_id", "service_name", "preferred_date"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "headers": {},
+      "parameter_type": "json",
+      "tool_id": "start_booking",
+      "query_params": {},
+      "args_at_root": false,
+      "timeout_ms": 10000,
+      "name": "start_booking",
+      "description": "Erstellt Termin sofort und synchronisiert zu Cal.com im Hintergrund (async)",
+      "response_variables": {},
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "datetime": {
+            "type": "string",
+            "description": "Appointment date and time: DD.MM.YYYY HH:MM"
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Service name"
+          },
+          "customer_email": {
+            "type": "string",
+            "description": "Customer email address"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "preferred_staff_id": {
+            "type": "string",
+            "description": "Optional: Staff member ID from check_customer response"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Customer full name"
+          },
+          "call_id": {
+            "type": "string",
+            "description": "Unique Retell call identifier"
+          }
+        },
+        "required": ["call_id", "datetime", "service_name", "customer_name"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "headers": {},
+      "parameter_type": "json",
+      "tool_id": "query_appointment",
+      "query_params": {},
+      "args_at_root": false,
+      "timeout_ms": 15000,
+      "name": "query_appointment",
+      "description": "Ruft bestehende Termine des Kunden ab",
+      "response_variables": {},
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          }
+        },
+        "required": ["call_id"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "headers": {},
+      "parameter_type": "json",
+      "tool_id": "cancel_appointment",
+      "query_params": {},
+      "args_at_root": false,
+      "timeout_ms": 15000,
+      "name": "cancel_appointment",
+      "description": "Storniert einen bestehenden Termin",
+      "response_variables": {},
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          }
+        },
+        "required": ["call_id"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "tool_id": "reschedule_appointment",
+      "timeout_ms": 15000,
+      "name": "reschedule_appointment",
+      "parameter_mapping": [],
+      "description": "Verschiebt einen Termin auf neues Datum/Uhrzeit",
+      "response_variables": {
+        "alte_uhrzeit": "$.alte_uhrzeit",
+        "altes_datum": "$.altes_datum",
+        "neue_uhrzeit": "$.neue_uhrzeit",
+        "success": "$.success",
+        "neues_datum": "$.neues_datum"
+      },
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "new_uhrzeit": {
+            "type": "string",
+            "description": "Neue Uhrzeit HH:MM"
+          },
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          },
+          "new_datum": {
+            "type": "string",
+            "description": "Neues Datum"
+          }
+        },
+        "required": ["call_id", "new_datum", "new_uhrzeit"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "tool_id": "get_available_services",
+      "timeout_ms": 15000,
+      "name": "get_available_services",
+      "parameter_mapping": [],
+      "description": "Listet alle verfügbaren Services auf",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          }
+        },
+        "required": ["call_id"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    },
+    {
+      "tool_id": "request_callback",
+      "timeout_ms": 10000,
+      "name": "request_callback",
+      "parameter_mapping": [],
+      "description": "Erstellt Callback-Request mit Multi-Channel Notifications",
+      "type": "custom",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Grund für Rückruf"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Telefonnummer (Format: +49... oder 0...)"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Name des Kunden"
+          },
+          "call_id": {
+            "type": "string",
+            "description": "Call ID from system"
+          }
+        },
+        "required": ["call_id", "customer_name", "phone_number", "reason"]
+      },
+      "url": "https://api.askproai.de/api/webhooks/retell/function"
+    }
+  ]
+}

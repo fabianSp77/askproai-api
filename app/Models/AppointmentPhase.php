@@ -40,11 +40,19 @@ class AppointmentPhase extends Model
     protected $fillable = [
         'appointment_id',
         'phase_type',
+        'segment_name',
+        'segment_key',
+        'sequence_order',
         'start_offset_minutes',
         'duration_minutes',
         'staff_required',
         'start_time',
         'end_time',
+        // Cal.com sync fields
+        'calcom_booking_id',
+        'calcom_booking_uid',
+        'calcom_sync_status',
+        'sync_error_message',
     ];
 
     /**

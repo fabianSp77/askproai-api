@@ -153,8 +153,11 @@ class CallTrackingService
         $session = $trace->callSession;
 
         DB::transaction(function () use ($trace, $session, $response, $status, $error) {
-            // Calculate duration
-            $durationMs = now()->diffInMilliseconds($trace->started_at);
+            // 🔧 FIX 2025-11-25 (Bug 6): Ensure duration is never negative
+            // Problem: Clock skew or timestamp ordering issues caused negative durations (-714ms, -943ms)
+            // Solution: Use max(0, ...) to guarantee non-negative values
+            // Also using absolute value to handle any timestamp ordering edge cases
+            $durationMs = max(0, (int) abs(now()->diffInMilliseconds($trace->started_at)));
 
             // Sanitize output for PII protection
             $sanitizedResponse = $this->sanitizer->sanitize($response);
@@ -297,10 +300,28 @@ class CallTrackingService
      */
     public function endCallSession(string $callId, array $data = []): RetellCallSession
     {
-        $session = $this->getSession($callId);
+        // 🔧 FIX 2025-11-25 (Bug 5): Make session retrieval resilient
+        // PROBLEM: getSession throws exception if session doesn't exist, causing status to stay "in_progress"
+        // SOLUTION: Try to find session first, create minimal one if needed
+        $session = RetellCallSession::where('call_id', $callId)->first();
+
+        if (!$session) {
+            Log::warning('⚠️ No RetellCallSession found for call_ended, creating minimal record', [
+                'call_id' => $callId,
+            ]);
+
+            // Create minimal session so we can still track the end status
+            $session = RetellCallSession::create([
+                'id' => Str::uuid(),
+                'call_id' => $callId,
+                'started_at' => now()->subMinutes(5), // Approximate start time
+                'call_status' => 'unknown_start',
+            ]);
+        }
 
         DB::transaction(function () use ($session, $data) {
-            $durationMs = now()->diffInMilliseconds($session->started_at);
+            // 🔧 FIX 2025-11-25 (Bug 6): Ensure duration is never negative
+            $durationMs = max(0, (int) abs(now()->diffInMilliseconds($session->started_at)));
 
             $session->update([
                 'ended_at' => now(),
@@ -314,7 +335,7 @@ class CallTrackingService
             $this->updateSessionMetrics($session);
 
             // Remove from cache
-            Cache::forget($this->getSessionCacheKey($callId));
+            Cache::forget($this->getSessionCacheKey($session->call_id));
 
             Log::info('🏁 Call session ended', [
                 'call_id' => $session->call_id,

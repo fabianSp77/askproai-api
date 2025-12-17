@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategische Rollensystem-Analyse - AskPro AI Gateway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --gray: #6b7280;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f8f9fa;
+        }
+
+        .hero {
+            background: var(--gradient-1);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .card-modern {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .card-modern:hover {
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            transform: translateY(-2px);
+        }
+
+        .card-gradient {
+            background: var(--gradient-2);
+            color: white;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 24px;
+            border-radius: 12px;
+            background: white;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.critical { border-left-color: var(--danger); }
+        .stat-card.warning { border-left-color: var(--warning); }
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.info { border-left-color: var(--info); }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            background: #f9fafb;
+            padding: 16px;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .comparison-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ist-cell {
+            background: #fef2f2;
+            border-left: 3px solid #ef4444;
+        }
+
+        .soll-cell {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-p1 { background: #fee2e2; color: #991b1b; }
+        .priority-p2 { background: #fef3c7; color: #92400e; }
+        .priority-p3 { background: #dbeafe; color: #1e40af; }
+
+        .decision-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--warning);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .decision-card.answered {
+            border-left-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .decision-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--warning);
+            color: white;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+
+        .decision-card.answered .decision-number {
+            background: var(--success);
+        }
+
+        .decision-options {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .decision-option {
+            display: block;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .decision-option:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .decision-option input[type="radio"] {
+            margin-right: 12px;
+        }
+
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-tracker::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .progress-step {
+            position: relative;
+            flex: 1;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .progress-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .progress-step.complete .progress-circle {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .progress-step.current .progress-circle {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+        }
+
+        .progress-step.future .progress-circle {
+            background: white;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .progress-step.complete .progress-label {
+            color: var(--success);
+        }
+
+        .progress-step.current .progress-label {
+            color: var(--warning);
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .recommendation-card.critical {
+            background: linear-gradient(135deg, #ef444415 0%, #dc262615 100%);
+            border-left-color: #ef4444;
+        }
+
+        .recommendation-card.important {
+            background: linear-gradient(135deg, #f59e0b15 0%, #d9730015 100%);
+            border-left-color: #f59e0b;
+        }
+
+        .risk-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .risk-high { background: #fee2e2; color: #991b1b; }
+        .risk-medium { background: #fef3c7; color: #92400e; }
+        .risk-low { background: #d1fae5; color: #065f46; }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 24px 0;
+        }
+
+        .feature-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .feature-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .status-complete { background: #d1fae5; color: #065f46; }
+        .status-partial { background: #fef3c7; color: #92400e; }
+        .status-missing { background: #fee2e2; color: #991b1b; }
+
+        .accordion-modern .accordion-item {
+            border: none;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .accordion-modern .accordion-button {
+            background: white;
+            border: none;
+            font-weight: 600;
+            padding: 20px 24px;
+        }
+
+        .accordion-modern .accordion-button:not(.collapsed) {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .accordion-modern .accordion-body {
+            padding: 24px;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .keyword { color: #c084fc; }
+        .string { color: #86efac; }
+        .comment { color: #9ca3af; font-style: italic; }
+        .function { color: #fbbf24; }
+
+        .nav-tabs-modern {
+            border: none;
+            gap: 8px;
+        }
+
+        .nav-tabs-modern .nav-link {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: #6b7280;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs-modern .nav-link:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .nav-tabs-modern .nav-link.active {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -35px;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--primary);
+        }
+
+        .timeline-item.complete .timeline-marker {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .timeline-item.current .timeline-marker {
+            background: var(--warning);
+            border-color: var(--warning);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        @media print {
+            .no-print { display: none; }
+            .card-modern { box-shadow: none; page-break-inside: avoid; }
+        }
+
+        .tooltip-modern {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-modern .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip-modern:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1><i class="bi bi-shield-lock-fill"></i> Strategische Rollensystem-Analyse</h1>
+                    <p class="subtitle">
+                        Umfassende Analyse, Entscheidungs-Framework und Implementierungs-Roadmap
+                        für das Customer Portal
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="bi bi-calendar3"></i> 24. November 2025
+                        </span>
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="bi bi-clock"></i> 90 Min. Analyse
+                        </span>
+                        <span class="badge bg-light text-dark">
+                            <i class="bi bi-file-code"></i> 8.000+ LOC geprüft
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="stat-number text-white">90%</div>
+                    <div class="text-white">Customer Portal bereit</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Dashboard -->
+    <div class="container mb-5">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number">37</div>
+                    <div class="stat-label">Admin Resources</div>
+                    <small class="text-muted d-block mt-2">Filament Resources</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-number">11</div>
+                    <div class="stat-label">Portal Resources</div>
+                    <small class="text-muted d-block mt-2">Customer Portal</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-number">22</div>
+                    <div class="stat-label">Policy-Klassen</div>
+                    <small class="text-muted d-block mt-2">Authorization Logic</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card critical">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">Kritische Fragen</div>
+                    <small class="text-muted d-block mt-2">Business Decisions</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Finding Alert -->
+    <div class="container mb-4">
+        <div class="alert alert-warning border-0 shadow" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Kritischer Befund</h4>
+            <p class="mb-0">
+                Das Customer Portal ist <strong>technisch zu 90% fertig</strong>, aber durch Feature Flag
+                <code>FEATURE_CUSTOMER_PORTAL=false</code> deaktiviert. Der Blocker ist <strong>NICHT technisch</strong>,
+                sondern <strong>strategisch</strong>: Welche Features, für wen, zu welchem Preis?
+            </p>
+        </div>
+    </div>
+
+    <!-- Progress Tracker -->
+    <div class="container mb-5">
+        <div class="card-modern">
+            <h3 class="mb-4">Implementierungs-Status</h3>
+            <div class="progress-tracker">
+                <div class="progress-step complete">
+                    <div class="progress-circle">✓</div>
+                    <div class="progress-label">Phase 1<br>Foundation</div>
+                </div>
+                <div class="progress-step current">
+                    <div class="progress-circle">2</div>
+                    <div class="progress-label">Phase 2<br>Decision</div>
+                </div>
+                <div class="progress-step future">
+                    <div class="progress-circle">3</div>
+                    <div class="progress-label">Phase 3<br>Launch</div>
+                </div>
+                <div class="progress-step future">
+                    <div class="progress-circle">4</div>
+                    <div class="progress-label">Phase 4<br>Enhance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="container">
+        <ul class="nav nav-tabs-modern mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-decisions">
+                    <i class="bi bi-question-circle"></i> Kritische Fragen
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comparison">
+                    <i class="bi bi-arrow-left-right"></i> IST vs. SOLL
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-features">
+                    <i class="bi bi-puzzle"></i> Feature-Status
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-roadmap">
+                    <i class="bi bi-map"></i> Roadmap
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-architecture">
+                    <i class="bi bi-diagram-3"></i> Architektur
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Tab 1: Critical Decision Questions -->
+            <div class="tab-pane fade show active" id="tab-decisions">
+                <div class="card-modern">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="bi bi-question-circle"></i></div>
+                        <h2>Kritische Entscheidungsfragen</h2>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Instruktion:</strong> Diese 10 Fragen müssen beantwortet werden, bevor die Entwicklung fortgesetzt wird.
+                        Kreuzen Sie Ihre Antworten an und exportieren Sie das Dokument als Entscheidungsgrundlage.
+                    </div>
+
+                    <!-- Immediate Decisions -->
+                    <h4 class="mt-4 mb-3"><i class="bi bi-lightning-fill text-danger"></i> Sofort-Entscheidungen (Diese Woche)</h4>
+
+                    <!-- Question 1 -->
+                    <div class="decision-card" id="decision-1">
+                        <h5>
+                            <span class="decision-number">1</span>
+                            Soll das Customer Portal aktiviert werden?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Das Portal ist technisch bereit, aber deaktiviert (<code>FEATURE_CUSTOMER_PORTAL=false</code>).
+                            Wann starten wir den Rollout?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q1" value="yes-now">
+                                <strong>JA, sofort</strong> - Aktivieren in Production diese Woche
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q1" value="yes-pilot">
+                                <strong>JA, als Pilot</strong> - Beta-Test mit 2-3 Kunden
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q1" value="no-delay">
+                                <strong>NEIN, verzögern</strong> - Weitere Features erforderlich
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q1" value="no-cancel">
+                                <strong>NEIN, abbrechen</strong> - Alternative Lösung verfolgen
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div class="decision-card" id="decision-2">
+                        <h5>
+                            <span class="decision-number">2</span>
+                            Was ist das MINIMUM viable Feature-Set?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Welche Features müssen VOR dem Launch implementiert sein?
+                        </p>
+                        <div class="decision-options">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-calls" checked disabled>
+                                <label class="form-check-label" for="feature-calls">
+                                    <strong>Call History</strong> - Retell AI Transkripte ansehen (✅ IMPLEMENTIERT)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-appointments-view" checked disabled>
+                                <label class="form-check-label" for="feature-appointments-view">
+                                    <strong>Termine ansehen</strong> - Kalender + Listen-Ansicht (✅ IMPLEMENTIERT)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-appointments-edit" name="mvp-features">
+                                <label class="form-check-label" for="feature-appointments-edit">
+                                    <strong>Termine bearbeiten</strong> - Umbuchen + Stornieren (❌ FEHLT - EMPFOHLEN)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-user-mgmt" name="mvp-features">
+                                <label class="form-check-label" for="feature-user-mgmt">
+                                    <strong>User Management</strong> - Team-Mitglieder selbst verwalten (❌ FEHLT - EMPFOHLEN)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-customer-search" name="mvp-features">
+                                <label class="form-check-label" for="feature-customer-search">
+                                    <strong>Kunden-Suche</strong> - Eigene CRM-Daten durchsuchen (❌ FEHLT)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature-customer-crud" name="mvp-features">
+                                <label class="form-check-label" for="feature-customer-crud">
+                                    <strong>Kunden-Verwaltung</strong> - CRM vollständig bearbeiten (❌ Phase 2)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger mt-3">
+                            <strong><i class="bi bi-exclamation-octagon"></i> Kritisch:</strong>
+                            Ohne "Termine bearbeiten" ist das Portal nutzlos für Self-Service.
+                            Kunden müssen weiterhin anrufen für simple Umbuchungen.
+                        </div>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <div class="decision-card" id="decision-3">
+                        <h5>
+                            <span class="decision-number">3</span>
+                            Wer bekommt Portal-Zugriff?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Ist der Portal-Zugriff kostenlos oder ein Premium-Feature?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q3" value="free-all">
+                                <strong>Kostenlos für alle</strong> - Alle Kunden bekommen Zugriff
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q3" value="premium">
+                                <strong>Premium Tier</strong> - Nur "Professional" oder "Enterprise" Pläne
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q3" value="alacarte">
+                                <strong>À la Carte</strong> - Portal gratis, aber Features einzeln bezahlen
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q3" value="optin">
+                                <strong>Opt-In</strong> - Kunden müssen es explizit anfordern
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <div class="decision-card" id="decision-4">
+                        <h5>
+                            <span class="decision-number">4</span>
+                            Wie handhaben wir Support während des Rollouts?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Customer Portal ist neu - Kunden brauchen Hilfe beim Einstieg.
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q4" value="dedicated">
+                                <strong>Dedicated Support</strong> - Eigener Support-Kanal für Portal-Fragen
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q4" value="docs">
+                                <strong>Self-Service Docs</strong> - Umfangreiche Dokumentation + FAQ
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q4" value="onboarding">
+                                <strong>Onboarding Assistance</strong> - Persönliche Einführung für jeden Kunden
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q4" value="minimal">
+                                <strong>Minimal Support</strong> - Intuitiv genug, Support nicht nötig
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Strategic Decisions -->
+                    <h4 class="mt-5 mb-3"><i class="bi bi-briefcase-fill text-warning"></i> Strategische Entscheidungen (Dieser Monat)</h4>
+
+                    <!-- Question 5 -->
+                    <div class="decision-card" id="decision-5">
+                        <h5>
+                            <span class="decision-number">5</span>
+                            Permission-Architektur: Granular oder vereinfacht?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Aktuell: 400+ Berechtigungen definiert, aber nur ~100 genutzt. Wie vorgehen?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q5" value="granular">
+                                <strong>Granular (400+ Permissions)</strong>
+                                <br><small class="text-muted">Max. Flexibilität, hohe Komplexität, 5-7 Tage Umsetzung</small>
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q5" value="simplified">
+                                <strong>Vereinfacht (~30 Permissions)</strong>
+                                <br><small class="text-muted">Ausreichende Flexibilität, geringe Komplexität, 2-3 Tage Umsetzung (✅ EMPFOHLEN)</small>
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q5" value="role-only">
+                                <strong>Nur Rollen (keine Permissions)</strong>
+                                <br><small class="text-muted">Einfachste Lösung, 1 Tag Umsetzung, begrenzte Flexibilität</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 6 -->
+                    <div class="decision-card" id="decision-6">
+                        <h5>
+                            <span class="decision-number">6</span>
+                            Rollen-Naming: Aktuell beibehalten oder standardisieren?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Aktuell: Inkonsistent (<code>company_owner</code>, <code>Admin</code>, <code>super-admin</code>).
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q6" value="keep">
+                                <strong>Aktuell beibehalten</strong> - Keine Änderungen
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q6" value="standardize">
+                                <strong>Standardisieren</strong> - Alles auf <code>lowercase-hyphen</code> (✅ EMPFOHLEN)
+                            </label>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <strong>Empfohlene Struktur:</strong>
+                            <ul class="mb-0">
+                                <li><strong>Plattform:</strong> <code>super-admin</code>, <code>platform-admin</code>, <code>reseller-admin</code></li>
+                                <li><strong>Kunden:</strong> <code>owner</code>, <code>admin</code>, <code>manager</code>, <code>staff</code></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Question 7 -->
+                    <div class="decision-card" id="decision-7">
+                        <h5>
+                            <span class="decision-number">7</span>
+                            Multi-Level Isolation: Wie streng?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Aktuell: Branch-Manager sehen NUR ihre eigene Filiale. Ist das gewünscht?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q7" value="strict">
+                                <strong>Streng</strong> - Manager nur eigene Filiale (aktuell)
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q7" value="relaxed">
+                                <strong>Gelockert</strong> - Manager sehen alle Filialen (einfacher)
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q7" value="configurable">
+                                <strong>Konfigurierbar</strong> - Pro Unternehmen einstellbar
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 8 -->
+                    <div class="decision-card" id="decision-8">
+                        <h5>
+                            <span class="decision-number">8</span>
+                            Shared Customer Access: Wie handhaben?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Problem: Kunde besucht Filiale A UND Filiale B. Wer darf den Kunden sehen?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q8" value="preferred-only">
+                                <strong>Nur preferred_staff</strong> - Aktuelles Verhalten
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q8" value="all-interacted">
+                                <strong>Alle, die interagiert haben</strong> - Bessere UX (✅ EMPFOHLEN)
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q8" value="company-wide">
+                                <strong>Unternehmensweit</strong> - Alle im Unternehmen
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Long-Term Decisions -->
+                    <h4 class="mt-5 mb-3"><i class="bi bi-stars text-info"></i> Langfristige Entscheidungen (Dieses Quartal)</h4>
+
+                    <!-- Question 9 -->
+                    <div class="decision-card" id="decision-9">
+                        <h5>
+                            <span class="decision-number">9</span>
+                            Customer Portal Pricing-Modell?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Wie monetarisieren wir das Customer Portal langfristig?
+                        </p>
+                        <div class="decision-options">
+                            <label class="decision-option">
+                                <input type="radio" name="q9" value="free-forever">
+                                <strong>Kostenlos für alle</strong> - Teil des Basis-Abos
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q9" value="premium-tier">
+                                <strong>Premium Tier</strong> - Ab "Professional" Plan
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q9" value="feature-pricing">
+                                <strong>Feature-Pricing</strong> - Portal gratis, Premium-Features kosten extra
+                            </label>
+                            <label class="decision-option">
+                                <input type="radio" name="q9" value="tbd">
+                                <strong>Noch offen</strong> - Erst Nutzung messen, dann entscheiden (✅ EMPFOHLEN)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 10 -->
+                    <div class="decision-card" id="decision-10">
+                        <h5>
+                            <span class="decision-number">10</span>
+                            Phase 2 Feature-Priorisierung?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Welche Features haben nach dem Launch die höchste Priorität?
+                        </p>
+                        <div class="decision-options">
+                            <p><strong>Bitte ordnen Sie nach Priorität (1 = höchste Priorität):</strong></p>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label>
+                                        <input type="number" min="1" max="4" class="form-control form-control-sm d-inline-block" style="width: 60px;" name="priority-crm" placeholder="1-4">
+                                        <strong>Kunden-CRM (vollständig)</strong>
+                                        <br><small class="text-muted">Kunden erstellen, bearbeiten, löschen</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>
+                                        <input type="number" min="1" max="4" class="form-control form-control-sm d-inline-block" style="width: 60px;" name="priority-services" placeholder="1-4">
+                                        <strong>Service-Management</strong>
+                                        <br><small class="text-muted">Services selbst verwalten</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>
+                                        <input type="number" min="1" max="4" class="form-control form-control-sm d-inline-block" style="width: 60px;" name="priority-staff" placeholder="1-4">
+                                        <strong>Personal-Management</strong>
+                                        <br><small class="text-muted">Arbeitszeiten, Verfügbarkeit</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>
+                                        <input type="number" min="1" max="4" class="form-control form-control-sm d-inline-block" style="width: 60px;" name="priority-analytics" placeholder="1-4">
+                                        <strong>Analytics & Reporting</strong>
+                                        <br><small class="text-muted">Umsatz, Performance, Auslastung</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-4">
+                        <h5><i class="bi bi-check-circle"></i> Nächste Schritte</h5>
+                        <ol class="mb-0">
+                            <li>Beantworten Sie alle 10 Fragen in diesem Dokument</li>
+                            <li>Exportieren Sie das Dokument als PDF (Drucken → Als PDF speichern)</li>
+                            <li>Teilen Sie die Antworten mit dem Entwicklungsteam</li>
+                            <li>Entwicklung kann innerhalb von 1 Woche starten</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: IST vs SOLL Comparison -->
+            <div class="tab-pane fade" id="tab-comparison">
+                <div class="card-modern">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="bi bi-arrow-left-right"></i></div>
+                        <h2>IST vs. SOLL Architektur</h2>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Aspekt</th>
+                                <th style="width: 35%;">IST (Aktuell)</th>
+                                <th style="width: 35%;">SOLL (Ideal)</th>
+                                <th style="width: 10%;">Priorität</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Rollen</strong></td>
+                                <td class="ist-cell">
+                                    9 Rollen (inkonsistente Benennung)
+                                    <br><code>company_owner</code>, <code>Admin</code>, <code>super-admin</code>
+                                </td>
+                                <td class="soll-cell">
+                                    7 Rollen (standardisiert)
+                                    <br><code>super-admin</code>, <code>owner</code>, <code>staff</code>
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Berechtigungen</strong></td>
+                                <td class="ist-cell">
+                                    400+ definiert, ~100 genutzt
+                                    <br>Hohe Komplexität, inkonsistent
+                                </td>
+                                <td class="soll-cell">
+                                    ~30 sinnvolle Berechtigungen
+                                    <br>Policies für CRUD, Permissions für Features
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Authorization Bypass</strong></td>
+                                <td class="ist-cell">
+                                    Doppelt (Gate + Policy)
+                                    <br>22 redundante <code>before()</code> Checks
+                                </td>
+                                <td class="soll-cell">
+                                    Single Location (nur Gate)
+                                    <br>Keine Redundanz
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Isolation Logic</strong></td>
+                                <td class="ist-cell">
+                                    Dupliziert in 22 Policies
+                                    <br>300+ Zeilen Code-Duplizierung
+                                </td>
+                                <td class="soll-cell">
+                                    Zentralisierte Basis-Klasse
+                                    <br><code>CompanyScopedPolicy</code>
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Customer Portal</strong></td>
+                                <td class="ist-cell">
+                                    90% fertig, DEAKTIVIERT
+                                    <br>Read-only, keine User Management
+                                </td>
+                                <td class="soll-cell">
+                                    Aktiviert mit MVP Features
+                                    <br>Reschedule + User Management
+                                </td>
+                                <td><span class="priority-badge priority-p1">P1</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Appointment Actions</strong></td>
+                                <td class="ist-cell">
+                                    Read-only
+                                    <br>Kunden müssen für Umbuchungen anrufen
+                                </td>
+                                <td class="soll-cell">
+                                    Reschedule + Cancel
+                                    <br>Self-Service für Kunden
+                                </td>
+                                <td><span class="priority-badge priority-p1">P1</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>User Management</strong></td>
+                                <td class="ist-cell">
+                                    Nur Admin Panel
+                                    <br>Kunden können Team nicht verwalten
+                                </td>
+                                <td class="soll-cell">
+                                    Self-Service im Portal
+                                    <br>Owner/Admin verwaltet eigenes Team
+                                </td>
+                                <td><span class="priority-badge priority-p1">P1</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>staff_id Population</strong></td>
+                                <td class="ist-cell">
+                                    NULL in den meisten Records
+                                    <br>Staff Isolation funktioniert nicht
+                                </td>
+                                <td class="soll-cell">
+                                    Automatisch befüllt
+                                    <br>RetellWebhookController fixed
+                                </td>
+                                <td><span class="priority-badge priority-p1">P1</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Navigation Badges</strong></td>
+                                <td class="ist-cell">
+                                    Deaktiviert (Memory Issues)
+                                    <br>N+1 Query Probleme
+                                </td>
+                                <td class="soll-cell">
+                                    Cached, funktioniert
+                                    <br>Redis Cache (5 min TTL)
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Permission Enforcement</strong></td>
+                                <td class="ist-cell">
+                                    Inkonsistent
+                                    <br>Manche Policies prüfen, andere nicht
+                                </td>
+                                <td class="soll-cell">
+                                    Standardisiertes Pattern
+                                    <br>Alle Policies folgen gleichem Schema
+                                </td>
+                                <td><span class="priority-badge priority-p2">P2</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="mt-4">
+                        <h5>Zusammenfassung der Verbesserungen</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value text-danger">-300</div>
+                                    <div class="metric-label">Zeilen Code reduziert</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value text-success">+90%</div>
+                                    <div class="metric-label">Klarheit & Wartbarkeit</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <div class="metric-value text-info">13 Tage</div>
+                                    <div class="metric-label">Umsetzungszeit</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simplification Opportunities -->
+                <div class="card-modern mt-4">
+                    <h3 class="mb-4"><i class="bi bi-lightbulb"></i> Vereinfachungs-Möglichkeiten</h3>
+
+                    <div class="accordion accordion-modern" id="simplificationAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#simplify1">
+                                    1. Redundante Authorization Checks eliminieren
+                                </button>
+                            </h2>
+                            <div id="simplify1" class="accordion-collapse collapse show" data-bs-parent="#simplificationAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">❌ Aktuell (Redundant)</h6>
+                                            <div class="code-block">
+<span class="comment">// AuthServiceProvider (Line 54)</span>
+<span class="keyword">Gate</span>::<span class="function">before</span>(<span class="keyword">function</span> (<span class="keyword">$user</span>) {
+    <span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'super_admin'</span>))
+        <span class="keyword">return true</span>;
+});
+
+<span class="comment">// Jede Policy (Line 16) - REDUNDANT!</span>
+<span class="keyword">public function</span> <span class="function">before</span>(<span class="keyword">User $user</span>): ?<span class="keyword">bool</span> {
+    <span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'super_admin'</span>))
+        <span class="keyword">return true</span>;
+}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">✅ Vereinfacht</h6>
+                                            <div class="code-block">
+<span class="comment">// Nur Gate::before(), Policy::before() entfernen</span>
+<span class="keyword">Gate</span>::<span class="function">before</span>(<span class="keyword">function</span> (<span class="keyword">$user</span>) {
+    <span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'super_admin'</span>))
+        <span class="keyword">return true</span>;
+});
+
+<span class="comment">// Policies: Kein before() mehr nötig</span>
+<span class="comment">// Bypass erfolgt automatisch über Gate</span>
+                                            </div>
+                                            <div class="alert alert-success mt-3">
+                                                <strong>Impact:</strong> -44 Zeilen Code, konsistenter Bypass-Mechanismus
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#simplify2">
+                                    2. Isolation Logic zentralisieren
+                                </button>
+                            </h2>
+                            <div id="simplify2" class="accordion-collapse collapse" data-bs-parent="#simplificationAccordion">
+                                <div class="accordion-body">
+                                    <h6 class="text-success">✅ Zentralisierte Basis-Klasse</h6>
+                                    <div class="code-block">
+<span class="keyword">abstract class</span> <span class="function">CompanyScopedPolicy</span> {
+    <span class="keyword">protected function</span> <span class="function">canAccess</span>(<span class="keyword">User $user</span>, <span class="keyword">Model $model</span>): <span class="keyword">bool</span> {
+        <span class="comment">// Company isolation</span>
+        <span class="keyword">if</span> (<span class="keyword">$user</span>->company_id !== <span class="keyword">$model</span>->company_id)
+            <span class="keyword">return false</span>;
+
+        <span class="comment">// Branch isolation (for managers)</span>
+        <span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'manager'</span>) && <span class="keyword">$user</span>->branch_id) {
+            <span class="keyword">if</span> (<span class="keyword">$user</span>->branch_id !== <span class="keyword">$model</span>->branch_id)
+                <span class="keyword">return false</span>;
+        }
+
+        <span class="comment">// Staff isolation</span>
+        <span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'staff'</span>) && <span class="keyword">$user</span>->staff_id) {
+            <span class="keyword">if</span> (!<span class="keyword">$this</span>-><span class="function">isAssignedTo</span>(<span class="keyword">$user</span>, <span class="keyword">$model</span>))
+                <span class="keyword">return false</span>;
+        }
+
+        <span class="keyword">return true</span>;
+    }
+}
+                                    </div>
+                                    <div class="alert alert-success mt-3">
+                                        <strong>Impact:</strong> Reduziert 300+ Zeilen duplizierte Isolation-Logic auf ~50 Zeilen
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#simplify3">
+                                    3. Navigation Groups konsolidieren
+                                </button>
+                            </h2>
+                            <div id="simplify3" class="accordion-collapse collapse" data-bs-parent="#simplificationAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">❌ Aktuell: 11 Gruppen</h6>
+                                            <ul>
+                                                <li>CRM</li>
+                                                <li>Stammdaten</li>
+                                                <li>Abrechnung</li>
+                                                <li>System</li>
+                                                <li>Retell AI</li>
+                                                <li>Benachrichtigungen</li>
+                                                <li>Termine & Richtlinien</li>
+                                                <li>Finanzen</li>
+                                                <li>Mitarbeiter-Verwaltung</li>
+                                                <li>Einstellungen</li>
+                                                <li>System Administration</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">✅ Vereinfacht: 6 Gruppen</h6>
+                                            <ul>
+                                                <li><strong>CRM</strong> - Kunden, Termine, Anrufe</li>
+                                                <li><strong>Company</strong> - Unternehmen, Filialen, Personal, Services</li>
+                                                <li><strong>Billing</strong> - Rechnungen, Transaktionen, Preise</li>
+                                                <li><strong>Communication</strong> - Benachrichtigungen, Retell AI</li>
+                                                <li><strong>System</strong> - Users, Rollen, Einstellungen</li>
+                                                <li><strong>Policies</strong> - Richtlinien, Konfigurationen</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-success mt-3">
+                                        <strong>Impact:</strong> Einfachere Navigation, weniger kognitive Belastung
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Feature Status Matrix -->
+            <div class="tab-pane fade" id="tab-features">
+                <div class="card-modern">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="bi bi-puzzle"></i></div>
+                        <h2>Customer Portal Feature-Status</h2>
+                    </div>
+
+                    <div class="feature-matrix">
+                        <!-- Phase 1: Complete -->
+                        <div class="feature-card">
+                            <span class="feature-status status-complete">✅ KOMPLETT</span>
+                            <h5>Call History</h5>
+                            <p class="text-muted">Retell AI Transkripte ansehen</p>
+                            <ul class="small">
+                                <li>Company-scoped Filterung</li>
+                                <li>Branch/Staff Isolation</li>
+                                <li>Transcript Viewer</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-light text-dark">Feature Flag: ✅</span>
+                                <span class="badge bg-light text-dark">Policies: ✅</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-complete">✅ KOMPLETT</span>
+                            <h5>Termine ansehen</h5>
+                            <p class="text-muted">Kalender + Listen-Ansicht</p>
+                            <ul class="small">
+                                <li>Multi-level Isolation</li>
+                                <li>Kalender-Widget</li>
+                                <li>Status-Badges</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-light text-dark">Feature Flag: ✅</span>
+                                <span class="badge bg-light text-dark">Policies: ✅</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-complete">✅ KOMPLETT</span>
+                            <h5>Dashboard</h5>
+                            <p class="text-muted">Statistik-Übersicht</p>
+                            <ul class="small">
+                                <li>Appointments Widget</li>
+                                <li>Calls Widget</li>
+                                <li>Quick Stats</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-light text-dark">Feature Flag: ✅</span>
+                            </div>
+                        </div>
+
+                        <!-- Phase 1.5: Partial -->
+                        <div class="feature-card">
+                            <span class="feature-status status-partial">⚠️ TEILWEISE</span>
+                            <h5>Rechnungen</h5>
+                            <p class="text-muted">Nur ansehen, nicht bearbeiten</p>
+                            <ul class="small">
+                                <li>Invoice Liste</li>
+                                <li>PDF Download</li>
+                                <li>❌ Keine Payment-Actions</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-warning">Read-Only</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-partial">⚠️ TEILWEISE</span>
+                            <h5>Transaktionen</h5>
+                            <p class="text-muted">Zahlungshistorie ansehen</p>
+                            <ul class="small">
+                                <li>Transaction Log</li>
+                                <li>❌ Keine Refunds</li>
+                                <li>❌ Keine Exports</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-warning">Read-Only</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-partial">⚠️ TEILWEISE</span>
+                            <h5>Kunden (CRM)</h5>
+                            <p class="text-muted">Nur Liste, keine Bearbeitung</p>
+                            <ul class="small">
+                                <li>Customer Liste</li>
+                                <li>❌ Kein Create</li>
+                                <li>❌ Kein Edit</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-warning">Feature Flag: ❌</span>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2: Missing -->
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>Termine bearbeiten</h5>
+                            <p class="text-muted"><strong>KRITISCH FÜR MVP</strong></p>
+                            <ul class="small">
+                                <li>❌ Reschedule Action</li>
+                                <li>❌ Cancel Action</li>
+                                <li>❌ Audit Logging</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-danger">Blocker</span>
+                                <span class="badge bg-info">2 Tage</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>User Management</h5>
+                            <p class="text-muted"><strong>KRITISCH FÜR MVP</strong></p>
+                            <ul class="small">
+                                <li>❌ Team verwalten</li>
+                                <li>❌ Rollen zuweisen</li>
+                                <li>❌ Einladungen senden</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-danger">Blocker</span>
+                                <span class="badge bg-info">2 Tage</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>Kunden-CRM (Full)</h5>
+                            <p class="text-muted">Phase 2 Feature</p>
+                            <ul class="small">
+                                <li>❌ Create Customer</li>
+                                <li>❌ Edit Customer</li>
+                                <li>❌ Delete Customer</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-secondary">Phase 2</span>
+                                <span class="badge bg-info">1 Woche</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>Service Management</h5>
+                            <p class="text-muted">Phase 2 Feature</p>
+                            <ul class="small">
+                                <li>❌ Services verwalten</li>
+                                <li>❌ Preise anpassen</li>
+                                <li>❌ Verfügbarkeit</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-secondary">Phase 2</span>
+                                <span class="badge bg-info">1 Woche</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>Personal Management</h5>
+                            <p class="text-muted">Phase 2 Feature</p>
+                            <ul class="small">
+                                <li>❌ Arbeitszeiten</li>
+                                <li>❌ Verfügbarkeit</li>
+                                <li>❌ Urlaubsplanung</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-secondary">Phase 2</span>
+                                <span class="badge bg-info">1 Woche</span>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <span class="feature-status status-missing">❌ FEHLT</span>
+                            <h5>Analytics Dashboard</h5>
+                            <p class="text-muted">Phase 3 Feature</p>
+                            <ul class="small">
+                                <li>❌ Umsatz-Reports</li>
+                                <li>❌ Performance-Metriken</li>
+                                <li>❌ Auslastung</li>
+                            </ul>
+                            <div class="mt-3">
+                                <span class="badge bg-secondary">Phase 3</span>
+                                <span class="badge bg-info">1 Woche</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger mt-4">
+                        <h5><i class="bi bi-exclamation-triangle"></i> MVP Blocker</h5>
+                        <p class="mb-0">
+                            <strong>2 kritische Features fehlen für MVP:</strong>
+                        </p>
+                        <ol class="mb-0">
+                            <li><strong>Termine bearbeiten</strong> - Ohne Self-Service Umbuchungen ist Portal nutzlos</li>
+                            <li><strong>User Management</strong> - Kunden müssen Team selbst verwalten können</li>
+                        </ol>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Geschätzte Umsetzung:</strong> 4 Entwicklungstage (2 Tage pro Feature)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Implementation Roadmap -->
+            <div class="tab-pane fade" id="tab-roadmap">
+                <div class="card-modern">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="bi bi-map"></i></div>
+                        <h2>Implementierungs-Roadmap</h2>
+                    </div>
+
+                    <div class="timeline">
+                        <!-- Phase 1 -->
+                        <div class="timeline-item complete">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5><span class="badge bg-success">✅ ABGESCHLOSSEN</span> Phase 1: Foundation</h5>
+                                <p class="text-muted">Basis-Infrastruktur für Customer Portal</p>
+                                <ul>
+                                    <li>✅ Spatie Permission Package installiert</li>
+                                    <li>✅ Basis-Rollen definiert (5 Plattform + 4 Kunden)</li>
+                                    <li>✅ Berechtigungen geseedet (9 Module)</li>
+                                    <li>✅ Policies implementiert (22 Modelle)</li>
+                                    <li>✅ Customer Portal Infrastruktur (Read-Only)</li>
+                                    <li>✅ Multi-Tenant-Isolation funktioniert</li>
+                                </ul>
+                                <div class="mt-3">
+                                    <span class="badge bg-light text-dark">Aufwand: 4 Wochen</span>
+                                    <span class="badge bg-light text-dark">Status: 100%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2 -->
+                        <div class="timeline-item current">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5><span class="badge bg-warning">🔄 AKTUELL</span> Phase 2: Quick Wins</h5>
+                                <p class="text-muted">MVP Features aktivieren - 1 Woche</p>
+                                <strong>Ziel:</strong> Customer Portal mit Minimum Viable Features starten
+                                <hr>
+                                <h6>Tasks:</h6>
+                                <ol>
+                                    <li>✅ Appointment Reschedule/Cancel Actions (2 Tage)</li>
+                                    <li>✅ staff_id Population in RetellWebhookController (1 Tag)</li>
+                                    <li>✅ User Management Resource für Portal (2 Tage)</li>
+                                    <li>✅ Pilot-Test mit 2-3 Unternehmen (1 Tag)</li>
+                                    <li>✅ Feature Flag aktivieren <code>FEATURE_CUSTOMER_PORTAL=true</code> (5 Min)</li>
+                                </ol>
+                                <div class="mt-3">
+                                    <span class="badge bg-warning">Aufwand: 6 Tage + Testing</span>
+                                    <span class="badge bg-warning">Risiko: Niedrig</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3 -->
+                        <div class="timeline-item future">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5><span class="badge bg-secondary">📅 GEPLANT</span> Phase 3: Architecture Cleanup</h5>
+                                <p class="text-muted">System vereinfachen - 2 Wochen</p>
+                                <strong>Ziel:</strong> Architektur vereinfachen und standardisieren
+                                <hr>
+                                <h6>Tasks:</h6>
+                                <ol>
+                                    <li>✅ <code>CompanyScopedPolicy</code> Basis-Klasse (3 Tage)</li>
+                                    <li>✅ 22 Policies migrieren (3 Tage)</li>
+                                    <li>✅ Redundante <code>Policy::before()</code> entfernen (1 Tag)</li>
+                                    <li>✅ Navigation Badge Caching (1 Tag)</li>
+                                    <li>✅ Permission Naming standardisieren (2 Tage)</li>
+                                    <li>✅ Ungenutzte Permissions archivieren (1 Tag)</li>
+                                    <li>✅ Dokumentation aktualisieren (2 Tage)</li>
+                                </ol>
+                                <div class="mt-3">
+                                    <span class="badge bg-secondary">Aufwand: 13 Tage</span>
+                                    <span class="badge bg-warning">Risiko: Mittel (Refactoring)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 4 -->
+                        <div class="timeline-item future">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5><span class="badge bg-secondary">📅 ZUKUNFT</span> Phase 4: Customer Portal Enhancements</h5>
+                                <p class="text-muted">Phase 2 Features - 4 Wochen</p>
+                                <strong>Ziel:</strong> Basierend auf Kunden-Feedback erweitern
+                                <hr>
+                                <h6>Tasks (Priorität nach Business Decision):</h6>
+                                <ol>
+                                    <li>⏳ Kunden-CRM (Full CRUD) - 1 Woche</li>
+                                    <li>⏳ Service Management - 1 Woche</li>
+                                    <li>⏳ Personal Management - 1 Woche</li>
+                                    <li>⏳ Analytics Dashboard - 1 Woche</li>
+                                </ol>
+                                <div class="mt-3">
+                                    <span class="badge bg-secondary">Aufwand: 20 Tage</span>
+                                    <span class="badge bg-success">Risiko: Niedrig</span>
+                                </div>
+                                <div class="alert alert-info mt-3">
+                                    <strong>Abhängigkeit:</strong> Erfordert Business Decision zu Feature-Priorisierung (Frage 10)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Assessment -->
+                    <div class="mt-5">
+                        <h4><i class="bi bi-shield-exclamation"></i> Risiko-Bewertung</h4>
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-4">
+                                <div class="card-modern">
+                                    <h6 class="risk-indicator risk-high">
+                                        <i class="bi bi-exclamation-octagon"></i> Hohes Risiko
+                                    </h6>
+                                    <ul class="small mt-3">
+                                        <li>Portal ohne User Management → Support-Burden</li>
+                                        <li>Read-only Appointments → Niedrige Adoption</li>
+                                    </ul>
+                                    <strong>Mitigation:</strong> P1 Features VOR Launch (2 Wochen)
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card-modern">
+                                    <h6 class="risk-indicator risk-medium">
+                                        <i class="bi bi-exclamation-triangle"></i> Mittleres Risiko
+                                    </h6>
+                                    <ul class="small mt-3">
+                                        <li>Refactoring bricht Authorization</li>
+                                        <li>Permission-Verwirrung bei Admins</li>
+                                    </ul>
+                                    <strong>Mitigation:</strong> Umfangreiche Tests, schrittweiser Rollout
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card-modern">
+                                    <h6 class="risk-indicator risk-low">
+                                        <i class="bi bi-info-circle"></i> Niedriges Risiko
+                                    </h6>
+                                    <ul class="small mt-3">
+                                        <li>Navigation-Änderungen verwirren Nutzer</li>
+                                        <li>Temporäre Lernkurve</li>
+                                    </ul>
+                                    <strong>Mitigation:</strong> Changelog, Tooltips, In-App Benachrichtigungen
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Architecture Deep Dive -->
+            <div class="tab-pane fade" id="tab-architecture">
+                <div class="card-modern">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="bi bi-diagram-3"></i></div>
+                        <h2>Architektur Deep Dive</h2>
+                    </div>
+
+                    <h4>5-Level Security Model</h4>
+                    <p class="text-muted">
+                        Jede Policy implementiert diese 5 Sicherheitsstufen für Multi-Tenant-Isolation
+                    </p>
+
+                    <div class="code-block">
+<span class="comment">// Level 1: Platform Admin Override</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'admin'</span>)) {
+    <span class="keyword">return true</span>; <span class="comment">// See ALL appointments (no restrictions)</span>
+}
+
+<span class="comment">// Level 2: Company Isolation (CRITICAL for Multi-Tenancy)</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>->company_id !== <span class="keyword">$appointment</span>->company_id) {
+    <span class="keyword">return false</span>; <span class="comment">// Prevent cross-company access</span>
+}
+
+<span class="comment">// Level 3: Branch Isolation</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'company_manager'</span>) && <span class="keyword">$user</span>->branch_id) {
+    <span class="keyword">return</span> <span class="keyword">$user</span>->branch_id === <span class="keyword">$appointment</span>->branch_id;
+}
+
+<span class="comment">// Level 4: Staff Isolation</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasRole</span>(<span class="string">'company_staff'</span>) && <span class="keyword">$user</span>->staff_id) {
+    <span class="keyword">return</span> <span class="keyword">$user</span>->staff_id === <span class="keyword">$appointment</span>->staff_id;
+}
+
+<span class="comment">// Level 5: Company Owners/Admins</span>
+<span class="keyword">if</span> (<span class="keyword">$user</span>-><span class="function">hasAnyRole</span>([<span class="string">'company_owner'</span>, <span class="string">'company_admin'</span>])) {
+    <span class="keyword">return true</span>; <span class="comment">// See all company data</span>
+}
+
+<span class="keyword">return false</span>; <span class="comment">// Default: no access</span>
+                    </div>
+
+                    <h4 class="mt-5">Authorization Flow</h4>
+                    <div class="chart-container">
+                        <canvas id="authFlowChart"></canvas>
+                    </div>
+
+                    <h4 class="mt-5">Komplette Navigation Inventory</h4>
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#nav-admin">
+                                Admin Panel (37 Resources)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#nav-portal">
+                                Customer Portal (11 Resources)
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="nav-admin">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Navigation Group</th>
+                                            <th>Resources</th>
+                                            <th>Anzahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>CRM</strong></td>
+                                            <td>Appointments, Calls, Customers, Customer Notes, Callback Requests</td>
+                                            <td><span class="badge bg-primary">5</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Stammdaten</strong></td>
+                                            <td>Companies, Branches, Staff, Services, Working Hours, Integrations</td>
+                                            <td><span class="badge bg-primary">6</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Abrechnung</strong></td>
+                                            <td>Invoices, Transactions, Balance Topups, Balance Bonus Tiers, Pricing Plans</td>
+                                            <td><span class="badge bg-primary">5</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>System</strong></td>
+                                            <td>Users, Roles, Permissions, System Settings, Phone Numbers, Tenants, Retell Agents, Activity Logs</td>
+                                            <td><span class="badge bg-primary">8</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Retell AI</strong></td>
+                                            <td>Retell Call Sessions, Conversation Flows</td>
+                                            <td><span class="badge bg-primary">2</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Benachrichtigungen</strong></td>
+                                            <td>Notification Configurations, Notification Templates, Notification Queue</td>
+                                            <td><span class="badge bg-primary">3</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Andere</strong></td>
+                                            <td>Termine & Richtlinien (2), Finanzen (2), Mitarbeiter-Verwaltung (2), Einstellungen (1), System Admin (1)</td>
+                                            <td><span class="badge bg-primary">8</span></td>
+                                        </tr>
+                                        <tr class="table-active">
+                                            <td colspan="2"><strong>GESAMT</strong></td>
+                                            <td><span class="badge bg-success">37 Resources</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="nav-portal">
+                            <div class="alert alert-warning">
+                                <strong>Status:</strong> Feature Flag <code>FEATURE_CUSTOMER_PORTAL=false</code> (DEAKTIVIERT)
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Resource</th>
+                                            <th>Feature Flag</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>CallHistoryResource</td>
+                                            <td><code>customer_portal_calls</code> ✅</td>
+                                            <td><span class="badge bg-success">Aktiv</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>AppointmentResource</td>
+                                            <td><code>customer_portal_appointments</code> ✅</td>
+                                            <td><span class="badge bg-success">Aktiv</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Dashboard</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-success">Aktiv</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>CustomerResource</td>
+                                            <td><code>customer_portal_crm</code> ❌</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>InvoiceResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>TransactionResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>BalanceTopupResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>BalanceBonusTierResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>CallbackRequestResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>CurrencyExchangeRateResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>PricingPlanResource</td>
+                                            <td>—</td>
+                                            <td><span class="badge bg-warning">Read-Only</span></td>
+                                        </tr>
+                                        <tr class="table-active">
+                                            <td colspan="2"><strong>GESAMT</strong></td>
+                                            <td><span class="badge bg-success">11 Resources</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer CTA -->
+    <div class="container mt-5 mb-5">
+        <div class="card-gradient card-modern">
+            <h3 class="text-white"><i class="bi bi-rocket-takeoff"></i> Nächste Schritte</h3>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <h5 class="text-white">1. Fragen beantworten</h5>
+                    <p class="text-white opacity-75">
+                        Gehen Sie zu "Kritische Fragen" und treffen Sie die 10 Entscheidungen
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="text-white">2. Dokument exportieren</h5>
+                    <p class="text-white opacity-75">
+                        Drucken → Als PDF speichern → Mit Entwicklungsteam teilen
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="text-white">3. Entwicklung starten</h5>
+                    <p class="text-white opacity-75">
+                        MVP kann in 1 Woche umgesetzt werden (Phase 2: Quick Wins)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center text-muted">
+            <p class="mb-0">
+                <strong>Strategische Analyse erstellt:</strong> 24. November 2025 |
+                <strong>Analysetiefe:</strong> Sehr umfassend (90 Minuten) |
+                <strong>Dateien analysiert:</strong> 37 Resources + 22 Policies + 11 Portal Resources
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Authorization Flow Chart
+        const ctx = document.getElementById('authFlowChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gate::before()', 'Policy::before()', 'Policy Method', 'Eloquent Scope', 'Resource Filter'],
+                    datasets: [{
+                        label: 'Aktuelle Checks',
+                        data: [1, 22, 22, 15, 11],
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Optimierte Checks',
+                        data: [1, 0, 22, 22, 11],
+                        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Anzahl Checks'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Authorization Checks: Aktuell vs. Optimiert'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Mark decision cards as answered when radio selected
+        document.querySelectorAll('.decision-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const card = this.closest('.decision-card');
+                card.classList.add('answered');
+            });
+        });
+
+        // Smooth scroll for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        console.log('Strategic Analysis loaded successfully');
+    </script>
+</body>
+</html>

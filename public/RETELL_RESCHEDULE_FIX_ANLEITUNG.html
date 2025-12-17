@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent - Reschedule Flow Fix Anleitung</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1a1a2e; border-bottom: 3px solid #e94560; padding-bottom: 10px; }
+        h2 { color: #16213e; margin-top: 30px; }
+        h3 { color: #0f3460; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        pre {
+            background: #1a1a2e;
+            color: #e8e8e8;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #16213e;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .step {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .step-number {
+            background: #0066cc;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+        }
+        .new-item {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .markdown-content {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Retell Agent - Reschedule Flow Fix</h1>
+        <p><strong>Datum:</strong> 25. November 2025</p>
+        <p><strong>Agent:</strong> Friseur 1 Agent V124</p>
+        <p><strong>Priorität:</strong> HOCH - Kritischer Bug</p>
+
+        <div class="error">
+            <strong>Problem:</strong> Wenn ein Kunde anruft um einen Termin zu verschieben, wird der Termin NICHT wirklich verschoben, obwohl der Agent sagt "Ihr Termin wurde verschoben". Das Backend erwartet eine Bestätigung (<code>bestaetigung=true</code>), die der Flow nie sendet.
+        </div>
+
+        <h2>Kontext: Warum passiert das?</h2>
+
+        <p>Das Backend verwendet einen <strong>2-Schritt-Bestätigungsprozess</strong> für Terminverschiebungen:</p>
+
+        <ol>
+            <li><strong>Schritt 1:</strong> <code>reschedule_appointment</code> wird aufgerufen → Backend findet den Termin und antwortet mit <code>status: "ready_for_confirmation"</code></li>
+            <li><strong>Schritt 2:</strong> <code>reschedule_appointment</code> muss ERNEUT aufgerufen werden mit <code>bestaetigung: "true"</code> → Dann wird der Termin tatsächlich verschoben</li>
+        </ol>
+
+        <div class="warning">
+            <strong>Der aktuelle Flow hat nur eine Edge für "Rescheduling successful".</strong><br>
+            Es fehlt eine Edge für "ready_for_confirmation" und der zweite Funktionsaufruf mit <code>bestaetigung</code>.
+        </div>
+
+        <h2>Aktueller Flow (FEHLERHAFT)</h2>
+
+        <div class="flow-diagram">
+node_collect_reschedule_info
+    │
+    │ (new_datum && new_uhrzeit vorhanden)
+    ▼
+func_reschedule_appointment  ──────► "Rescheduling successful" ──► node_reschedule_success
+    │                                                                      │
+    │                                                                      ▼
+    └──► "Rescheduling failed" ──► node_personalized_followup        "Perfekt! Verschoben..."
+
+<span class="error">⚠️ PROBLEM: Backend antwortet mit "ready_for_confirmation" aber der Flow
+   hat KEINE Edge dafür! Der Agent geht in einen undefinierten Zustand.</span>
+        </div>
+
+        <h2>Gewünschter Flow (KORRIGIERT)</h2>
+
+        <div class="flow-diagram">
+node_collect_reschedule_info
+    │
+    │ (new_datum && new_uhrzeit vorhanden)
+    ▼
+func_reschedule_appointment
+    │
+    ├──► "Rescheduling successful" ──────────────────────► node_reschedule_success
+    │                                                              │
+    ├──► <span class="new-item">"ready_for_confirmation" ──► node_reschedule_confirm (NEU)</span>
+    │                                           │
+    │                                           ▼
+    │                                    "Soll ich verschieben?"
+    │                                           │
+    │                          ┌────────────────┴────────────────┐
+    │                          │                                 │
+    │                    User: "Ja"                        User: "Nein"
+    │                          │                                 │
+    │                          ▼                                 ▼
+    │              <span class="new-item">func_reschedule_confirm (NEU)</span>      node_personalized_followup
+    │              (mit bestaetigung: "true")
+    │                          │
+    │                          ▼
+    │                  node_reschedule_success
+    │
+    └──► "Rescheduling failed" ──► node_personalized_followup
+        </div>
+
+        <hr>
+
+        <h2>Schritt-für-Schritt Anleitung</h2>
+
+        <div class="step">
+            <h3><span class="step-number">1</span> Tool Definition erweitern</h3>
+
+            <p>Gehe zu <strong>Tools</strong> und finde <code>reschedule_appointment</code>.</p>
+
+            <p><strong>Füge einen neuen Parameter hinzu:</strong></p>
+
+            <table>
+                <tr>
+                    <th>Parameter Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                </tr>
+                <tr>
+                    <td><code>bestaetigung</code></td>
+                    <td>string</td>
+                    <td>Bestätigung der Verschiebung ("true" oder leer)</td>
+                    <td>Nein (optional)</td>
+                </tr>
+            </table>
+
+            <p>Die Tool-Definition sollte so aussehen:</p>
+
+<pre><code>{
+  "tool_id": "reschedule_appointment",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "call_id": {
+        "type": "string",
+        "description": "Call ID"
+      },
+      "new_datum": {
+        "type": "string",
+        "description": "Neues Datum"
+      },
+      "new_uhrzeit": {
+        "type": "string",
+        "description": "Neue Zeit"
+      },
+      <span class="highlight">"bestaetigung": {
+        "type": "string",
+        "description": "Bestätigung der Verschiebung (true/false)"
+      }</span>
+    },
+    "required": ["call_id", "new_datum", "new_uhrzeit"]
+  }
+}</code></pre>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">2</span> Edge zu func_reschedule_appointment hinzufügen</h3>
+
+            <p>Finde den Node <code>func_reschedule_appointment</code> (ID: <code>func_reschedule_appointment</code>).</p>
+
+            <p><strong>Aktuelle Edges:</strong></p>
+            <ul>
+                <li><code>edge_reschedule_to_success</code> → "Rescheduling successful" → <code>node_reschedule_success</code></li>
+                <li><code>edge_reschedule_to_error</code> → "Rescheduling failed" → <code>node_personalized_followup</code></li>
+            </ul>
+
+            <p><strong>Neue Edge hinzufügen:</strong></p>
+
+            <table>
+                <tr>
+                    <th>Feld</th>
+                    <th>Wert</th>
+                </tr>
+                <tr>
+                    <td>Edge ID</td>
+                    <td><code>edge_reschedule_to_confirm</code></td>
+                </tr>
+                <tr>
+                    <td>Destination Node ID</td>
+                    <td><code>node_reschedule_confirm</code></td>
+                </tr>
+                <tr>
+                    <td>Transition Condition Type</td>
+                    <td>prompt</td>
+                </tr>
+                <tr>
+                    <td>Transition Condition Prompt</td>
+                    <td><code>ready_for_confirmation OR awaiting confirmation OR needs confirmation</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">3</span> Neuen Node erstellen: node_reschedule_confirm</h3>
+
+            <p><strong>Typ:</strong> conversation</p>
+
+            <table>
+                <tr>
+                    <th>Feld</th>
+                    <th>Wert</th>
+                </tr>
+                <tr>
+                    <td>ID</td>
+                    <td><code>node_reschedule_confirm</code></td>
+                </tr>
+                <tr>
+                    <td>Name</td>
+                    <td>Umbuchung bestätigen</td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td>conversation</td>
+                </tr>
+                <tr>
+                    <td>Instruction Type</td>
+                    <td>static_text</td>
+                </tr>
+                <tr>
+                    <td>Instruction Text</td>
+                    <td><code>Ich habe Ihren Termin gefunden. Soll ich ihn auf {{new_datum}} um {{new_uhrzeit}} Uhr verschieben?</code></td>
+                </tr>
+                <tr>
+                    <td>Display Position</td>
+                    <td>x: 1750, y: 1450</td>
+                </tr>
+            </table>
+
+            <p><strong>Edges für diesen Node:</strong></p>
+
+            <table>
+                <tr>
+                    <th>Edge ID</th>
+                    <th>Destination</th>
+                    <th>Condition</th>
+                </tr>
+                <tr>
+                    <td><code>edge_confirm_to_func</code></td>
+                    <td><code>func_reschedule_confirm</code></td>
+                    <td>User confirms with yes, ja, okay, klar, gerne, machen Sie</td>
+                </tr>
+                <tr>
+                    <td><code>edge_confirm_cancel</code></td>
+                    <td><code>node_personalized_followup</code></td>
+                    <td>User declines or cancels the reschedule</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="step">
+            <h3><span class="step-number">4</span> Neuen Function Node erstellen: func_reschedule_confirm</h3>
+
+            <p><strong>Typ:</strong> function</p>
+
+            <table>
+                <tr>
+                    <th>Feld</th>
+                    <th>Wert</th>
+                </tr>
+                <tr>
+                    <td>ID</td>
+                    <td><code>func_reschedule_confirm</code></td>
+                </tr>
+                <tr>
+                    <td>Name</td>
+                    <td>Umbuchung durchführen</td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td>function</td>
+                </tr>
+                <tr>
+                    <td>Tool ID</td>
+                    <td><code>reschedule_appointment</code></td>
+                </tr>
+                <tr>
+                    <td>Tool Type</td>
+                    <td>local</td>
+                </tr>
+                <tr>
+                    <td>Wait for Result</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td>Speak During Execution</td>
+                    <td>false</td>
+                </tr>
+                <tr>
+                    <td>Instruction Type</td>
+                    <td>static_text</td>
+                </tr>
+                <tr>
+                    <td>Instruction Text</td>
+                    <td><code>Einen Moment, ich verschiebe Ihren Termin...</code></td>
+                </tr>
+                <tr>
+                    <td>Display Position</td>
+                    <td>x: 1900, y: 1450</td>
+                </tr>
+            </table>
+
+            <p><strong>Parameter Mapping (WICHTIG!):</strong></p>
+
+<pre><code>{
+  "call_id": "{{call_id}}",
+  "new_datum": "{{new_datum}}",
+  "new_uhrzeit": "{{new_uhrzeit}}",
+  <span class="highlight">"bestaetigung": "true"</span>
+}</code></pre>
+
+            <div class="warning">
+                <strong>KRITISCH:</strong> Der Parameter <code>"bestaetigung": "true"</code> muss als String "true" gesendet werden, NICHT als Boolean!
+            </div>
+
+            <p><strong>Edges für diesen Node:</strong></p>
+
+            <table>
+                <tr>
+                    <th>Edge ID</th>
+                    <th>Destination</th>
+                    <th>Condition</th>
+                </tr>
+                <tr>
+                    <td><code>edge_confirm_to_success</code></td>
+                    <td><code>node_reschedule_success</code></td>
+                    <td>Rescheduling successful</td>
+                </tr>
+                <tr>
+                    <td><code>edge_confirm_to_error</code></td>
+                    <td><code>node_personalized_followup</code></td>
+                    <td>Rescheduling failed or error</td>
+                </tr>
+            </table>
+        </div>
+
+        <hr>
+
+        <h2>Zusammenfassung der Änderungen</h2>
+
+        <table>
+            <tr>
+                <th>Was</th>
+                <th>Aktion</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Tool: reschedule_appointment</td>
+                <td class="new-item">Parameter hinzufügen</td>
+                <td><code>bestaetigung</code> (string, optional)</td>
+            </tr>
+            <tr>
+                <td>Node: func_reschedule_appointment</td>
+                <td class="new-item">Edge hinzufügen</td>
+                <td>→ node_reschedule_confirm bei "ready_for_confirmation"</td>
+            </tr>
+            <tr>
+                <td>Node: node_reschedule_confirm</td>
+                <td class="new-item">NEU erstellen</td>
+                <td>Conversation Node für User-Bestätigung</td>
+            </tr>
+            <tr>
+                <td>Node: func_reschedule_confirm</td>
+                <td class="new-item">NEU erstellen</td>
+                <td>Function Node mit bestaetigung: "true"</td>
+            </tr>
+        </table>
+
+        <hr>
+
+        <h2>Testen nach der Implementierung</h2>
+
+        <div class="info">
+            <strong>Testfall:</strong>
+            <ol>
+                <li>Rufe an und sage: "Ich möchte meinen Termin verschieben"</li>
+                <li>Wenn gefragt wird wann: "Auf morgen um 14 Uhr"</li>
+                <li>Der Agent sollte fragen: "Ich habe Ihren Termin gefunden. Soll ich ihn auf morgen um 14 Uhr verschieben?"</li>
+                <li>Sage: "Ja"</li>
+                <li>Der Agent sollte bestätigen: "Perfekt! Ihr Termin wurde erfolgreich verschoben."</li>
+                <li><strong>Verifiziere:</strong> Im Admin-Panel/Datenbank prüfen ob der Termin WIRKLICH verschoben wurde!</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>JSON zum Kopieren (falls nötig)</h2>
+
+        <h3>Neuer Node: node_reschedule_confirm</h3>
+<pre><code>{
+  "name": "Umbuchung bestätigen",
+  "edges": [
+    {
+      "destination_node_id": "func_reschedule_confirm",
+      "id": "edge_confirm_to_func",
+      "transition_condition": {
+        "type": "prompt",
+        "prompt": "User confirms with yes, ja, okay, klar, gerne, machen Sie"
+      }
+    },
+    {
+      "destination_node_id": "node_personalized_followup",
+      "id": "edge_confirm_cancel",
+      "transition_condition": {
+        "type": "prompt",
+        "prompt": "User declines or cancels the reschedule"
+      }
+    }
+  ],
+  "id": "node_reschedule_confirm",
+  "type": "conversation",
+  "display_position": {
+    "x": 1750,
+    "y": 1450
+  },
+  "instruction": {
+    "type": "static_text",
+    "text": "Ich habe Ihren Termin gefunden. Soll ich ihn auf {{new_datum}} um {{new_uhrzeit}} Uhr verschieben?"
+  }
+}</code></pre>
+
+        <h3>Neuer Node: func_reschedule_confirm</h3>
+<pre><code>{
+  "tool_id": "reschedule_appointment",
+  "instruction": {
+    "type": "static_text",
+    "text": "Einen Moment, ich verschiebe Ihren Termin..."
+  },
+  "name": "Umbuchung durchführen",
+  "edges": [
+    {
+      "destination_node_id": "node_reschedule_success",
+      "id": "edge_confirm_to_success",
+      "transition_condition": {
+        "type": "prompt",
+        "prompt": "Rescheduling successful"
+      }
+    },
+    {
+      "destination_node_id": "node_personalized_followup",
+      "id": "edge_confirm_to_error",
+      "transition_condition": {
+        "type": "prompt",
+        "prompt": "Rescheduling failed or error"
+      }
+    }
+  ],
+  "parameter_mapping": {
+    "call_id": "{{call_id}}",
+    "new_datum": "{{new_datum}}",
+    "new_uhrzeit": "{{new_uhrzeit}}",
+    "bestaetigung": "true"
+  },
+  "id": "func_reschedule_confirm",
+  "type": "function",
+  "tool_type": "local",
+  "speak_during_execution": false,
+  "display_position": {
+    "x": 1900,
+    "y": 1450
+  },
+  "wait_for_result": true
+}</code></pre>
+
+        <h3>Neue Edge für func_reschedule_appointment</h3>
+<pre><code>{
+  "destination_node_id": "node_reschedule_confirm",
+  "id": "edge_reschedule_to_confirm",
+  "transition_condition": {
+    "type": "prompt",
+    "prompt": "ready_for_confirmation OR awaiting confirmation OR needs confirmation"
+  }
+}</code></pre>
+
+        <hr>
+
+        <div class="success">
+            <strong>Nach erfolgreicher Implementierung:</strong><br>
+            Der Reschedule-Flow funktioniert mit 2-Schritt-Bestätigung und Termine werden tatsächlich verschoben!
+        </div>
+
+        <p><em>Erstellt am 25.11.2025 - AskPro AI Team</em></p>
+    </div>
+</body>
+</html>

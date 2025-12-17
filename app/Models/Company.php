@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Traits\HasConfigurationInheritance;
@@ -65,6 +66,7 @@ class Company extends Model
         'is_white_label' => 'boolean',
         'can_make_outbound_calls' => 'boolean',
         'is_active' => 'boolean',
+        'is_system' => 'boolean',
         'active' => 'boolean',
         'alerts_enabled' => 'boolean',
         'send_call_summaries' => 'boolean',
@@ -84,6 +86,7 @@ class Company extends Model
         'call_notification_settings' => 'json',
         'retell_default_settings' => 'json',
         'settings' => 'json',
+        'v128_config' => 'json',  // V128 Retell AI conversation flow settings
         'metadata' => 'json',
         'alert_preferences' => 'json',
         'supported_languages' => 'json',
@@ -94,6 +97,9 @@ class Company extends Model
         'credit_balance' => 'decimal:2',
         'low_credit_threshold' => 'decimal:2',
         'commission_rate' => 'decimal:2',
+        // Customer Portal: Pilot program mechanism
+        'is_pilot' => 'boolean',
+        'pilot_enabled_at' => 'datetime',
     ];
 
     public function users(): HasMany
@@ -256,6 +262,70 @@ class Company extends Model
     }
 
     /**
+     * Customer Portal: Pilot Program
+     */
+
+    /**
+     * User who enabled pilot program for this company
+     */
+    public function pilotEnabledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pilot_enabled_by');
+    }
+
+    /**
+     * Query scope to filter only pilot companies
+     */
+    public function scopePilot($query)
+    {
+        return $query->where('is_pilot', true);
+    }
+
+    /**
+     * Check if company is in pilot program
+     */
+    public function isPilotCompany(): bool
+    {
+        return $this->is_pilot === true;
+    }
+
+    /**
+     * Enable pilot program for this company
+     */
+    public function enablePilot(User $user, ?string $notes = null): void
+    {
+        $this->update([
+            'is_pilot' => true,
+            'pilot_enabled_at' => now(),
+            'pilot_enabled_by' => $user->id,
+            'pilot_notes' => $notes,
+        ]);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties(['notes' => $notes])
+            ->log('pilot_enabled');
+    }
+
+    /**
+     * Disable pilot program for this company
+     */
+    public function disablePilot(User $user, ?string $reason = null): void
+    {
+        $this->update([
+            'is_pilot' => false,
+            'pilot_notes' => $reason ? "Disabled: {$reason}" : $this->pilot_notes,
+        ]);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties(['reason' => $reason])
+            ->log('pilot_disabled');
+    }
+
+    /**
      * Encrypt/Decrypt API Keys
      */
     public function setCalcomApiKeyAttribute($value)
@@ -323,5 +393,34 @@ class Company extends Model
             'pending' => 'Pending',
             default => 'Unknown'
         };
+    }
+
+    /**
+     * Get V128 config with defaults
+     *
+     * Returns merged config with sensible defaults for Retell AI conversation flow.
+     */
+    public function getV128ConfigWithDefaults(): array
+    {
+        $defaults = [
+            'time_shift_enabled' => true,
+            'time_shift_message' => '{label} ist leider schon ausgebucht. Soll ich am nächsten Tag {label} schauen, oder würde heute Abend auch passen? Heute hätte ich noch {alternatives} frei.',
+            'name_skip_enabled' => true,
+            'full_confirmation_enabled' => true,
+            'silence_handling_enabled' => true,
+            'silence_timeout_seconds' => 20,
+            'max_silence_repeats' => 2,
+        ];
+
+        return array_merge($defaults, $this->v128_config ?? []);
+    }
+
+    /**
+     * Get a specific V128 config value with default fallback
+     */
+    public function getV128Config(string $key, mixed $default = null): mixed
+    {
+        $config = $this->getV128ConfigWithDefaults();
+        return $config[$key] ?? $default;
     }
 }

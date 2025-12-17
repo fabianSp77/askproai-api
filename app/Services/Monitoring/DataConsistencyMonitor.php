@@ -310,20 +310,29 @@ class DataConsistencyMonitor
     /**
      * Rule 5: Detect recent creation failures
      *
+     * Note: booking_failed data is stored in retell_error_log table,
+     * not in calls table.
+     *
      * @return array
      */
     private function detectRecentFailures(): array
     {
-        $failures = DB::table('calls')
-            ->select('id', 'retell_call_id', 'booking_failed', 'booking_failure_reason', 'created_at')
-            ->where('booking_failed', true)
-            ->where('created_at', '>=', now()->subHours(self::RECENT_HOURS))
+        $failures = DB::table('retell_error_log')
+            ->select([
+                'retell_error_log.id',
+                'retell_call_sessions.call_id as retell_call_id',
+                'retell_error_log.error_message as booking_failure_reason',
+                'retell_error_log.occurred_at as created_at'
+            ])
+            ->join('retell_call_sessions', 'retell_error_log.call_session_id', '=', 'retell_call_sessions.id')
+            ->where('retell_error_log.booking_failed', true)
+            ->where('retell_error_log.occurred_at', '>=', now()->subHours(self::RECENT_HOURS))
             ->get();
 
         $recentFailures = [];
         foreach ($failures as $failure) {
             $recentFailures[] = [
-                'call_id' => $failure->id,
+                'error_log_id' => $failure->id,
                 'retell_call_id' => $failure->retell_call_id,
                 'reason' => $failure->booking_failure_reason,
                 'created_at' => $failure->created_at,

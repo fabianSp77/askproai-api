@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester V4 - Complete Function Suite</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .pulse-success { animation: pulse-green 2s infinite; }
+        .pulse-error { animation: pulse-red 2s infinite; }
+        @keyframes pulse-green { 0%, 100% { background-color: #D1FAE5; } 50% { background-color: #6EE7B7; } }
+        @keyframes pulse-red { 0%, 100% { background-color: #FEE2E2; } 50% { background-color: #FCA5A5; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="apiTesterV4()" x-cloak>
+
+    <!-- Top Navigation -->
+    <nav class="bg-gradient-to-r from-purple-600 to-purple-700 border-b border-purple-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">🧪 Backend API Tester V4</h1>
+                    <span class="ml-3 px-3 py-1 text-xs font-medium bg-white text-purple-600 rounded-full">Complete Function Suite</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Export Dropdown -->
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                class="px-4 py-2 text-sm font-semibold bg-white text-purple-600 rounded-lg hover:bg-purple-50 transition-all flex items-center space-x-2">
+                            <span>📥</span>
+                            <span>Export</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false"
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <button @click="exportAsJSON(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3 border-b">
+                                <span class="text-xl">📄</span>
+                                <div>
+                                    <div class="font-semibold text-sm text-gray-900">Als JSON</div>
+                                    <div class="text-xs text-gray-500">Strukturierte Daten</div>
+                                </div>
+                            </button>
+                            <button @click="exportAsMarkdown(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3 border-b">
+                                <span class="text-xl">📝</span>
+                                <div>
+                                    <div class="font-semibold text-sm text-gray-900">Als Markdown</div>
+                                    <div class="text-xs text-gray-500">Dokumentation</div>
+                                </div>
+                            </button>
+                            <button @click="copyToClipboard(); open = false"
+                                    class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3">
+                                <span class="text-xl">📋</span>
+                                <div>
+                                    <div class="font-semibold text-sm text-gray-900">In Zwischenablage</div>
+                                    <div class="text-xs text-gray-500">Schnell kopieren</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-sm text-purple-100">Alle 10 Retell-Funktionen</span>
+                    <span class="px-2 py-1 text-xs font-mono bg-purple-800 text-purple-100 rounded">v4.1.0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Test Selector Tabs -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+            <div class="flex space-x-2 overflow-x-auto pb-2">
+                <button @click="activeTab = 'individual'"
+                        :class="activeTab === 'individual' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap">
+                    Einzelne Funktionen
+                </button>
+                <button @click="activeTab = 'reschedule'"
+                        :class="activeTab === 'reschedule' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap">
+                    🔄 Reschedule E2E Test
+                </button>
+                <button @click="activeTab = 'booking'"
+                        :class="activeTab === 'booking' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap">
+                    📅 Booking E2E Test
+                </button>
+                <button @click="activeTab = 'cancel'"
+                        :class="activeTab === 'cancel' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap">
+                    ❌ Cancel E2E Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Individual Functions Tab -->
+        <div x-show="activeTab === 'individual'" class="space-y-6">
+
+            <!-- Function Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- 1. check_customer -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">1️⃣ check_customer</h3>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.check_customer.phone"
+                               placeholder="Telefonnummer"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testCheckCustomer()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50">
+                            Kunde prüfen
+                        </button>
+                        <div x-show="functions.check_customer.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.check_customer.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. check_availability_v17 -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-green-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">2️⃣ check_availability</h3>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.check_availability.service"
+                               placeholder="Service (z.B. Herrenhaarschnitt)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.check_availability.date"
+                               placeholder="Datum (morgen, Freitag)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.check_availability.time"
+                               placeholder="Uhrzeit (10:00)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testCheckAvailability()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50">
+                            Verfügbarkeit prüfen
+                        </button>
+                        <div x-show="functions.check_availability.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.check_availability.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. start_booking -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-purple-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">3️⃣ start_booking</h3>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.start_booking.name"
+                               placeholder="Kundenname"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.start_booking.service"
+                               placeholder="Service"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.start_booking.datetime"
+                               placeholder="Datum/Zeit (2025-11-19 10:00)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.start_booking.phone"
+                               placeholder="Telefon (optional)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testStartBooking()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50">
+                            Termin buchen
+                        </button>
+                        <div x-show="functions.start_booking.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.start_booking.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. get_customer_appointments -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-orange-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">4️⃣ get_appointments</h3>
+                    <div class="space-y-3">
+                        <button @click="testGetAppointments()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50">
+                            Termine abrufen
+                        </button>
+                        <div x-show="functions.get_appointments.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.get_appointments.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. reschedule_appointment (CRITICAL!) -->
+                <div class="bg-white rounded-lg shadow-lg border-4 border-red-400 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-900">5️⃣ reschedule_appointment</h3>
+                        <span class="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded">CRITICAL FIX</span>
+                    </div>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.reschedule.new_date"
+                               placeholder="Neues Datum (morgen)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.reschedule.new_time"
+                               placeholder="Neue Uhrzeit (14:00)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testReschedule()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50">
+                            Termin verschieben
+                        </button>
+                        <div x-show="functions.reschedule.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.reschedule.result)"></div>
+
+                            <!-- Variable Validation -->
+                            <div x-show="functions.reschedule.result" class="mt-3 p-3 rounded border"
+                                 :class="validateRescheduleVariables() ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
+                                <h4 class="text-sm font-bold mb-2" :class="validateRescheduleVariables() ? 'text-green-800' : 'text-red-800'">
+                                    <span x-show="validateRescheduleVariables()">✅ Variable Validation: PASS</span>
+                                    <span x-show="!validateRescheduleVariables()">❌ Variable Validation: FAIL</span>
+                                </h4>
+                                <div class="text-xs space-y-1">
+                                    <div :class="checkVariable('neues_datum') ? 'text-green-700' : 'text-red-700'">
+                                        <span x-show="checkVariable('neues_datum')">✓</span>
+                                        <span x-show="!checkVariable('neues_datum')">✗</span>
+                                        neues_datum: <code x-text="functions.reschedule.result?.data?.neues_datum || 'MISSING'"></code>
+                                    </div>
+                                    <div :class="checkVariable('neue_uhrzeit') ? 'text-green-700' : 'text-red-700'">
+                                        <span x-show="checkVariable('neue_uhrzeit')">✓</span>
+                                        <span x-show="!checkVariable('neue_uhrzeit')">✗</span>
+                                        neue_uhrzeit: <code x-text="functions.reschedule.result?.data?.neue_uhrzeit || 'MISSING'"></code>
+                                    </div>
+                                    <div :class="checkVariable('altes_datum') ? 'text-green-700' : 'text-red-700'">
+                                        <span x-show="checkVariable('altes_datum')">✓</span>
+                                        <span x-show="!checkVariable('altes_datum')">✗</span>
+                                        altes_datum: <code x-text="functions.reschedule.result?.data?.altes_datum || 'MISSING'"></code>
+                                    </div>
+                                    <div :class="checkVariable('alte_uhrzeit') ? 'text-green-700' : 'text-red-700'">
+                                        <span x-show="checkVariable('alte_uhrzeit')">✓</span>
+                                        <span x-show="!checkVariable('alte_uhrzeit')">✗</span>
+                                        alte_uhrzeit: <code x-text="functions.reschedule.result?.data?.alte_uhrzeit || 'MISSING'"></code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. cancel_appointment -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">6️⃣ cancel_appointment</h3>
+                    <div class="space-y-3">
+                        <button @click="testCancelAppointment()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 disabled:opacity-50">
+                            Termin stornieren
+                        </button>
+                        <div x-show="functions.cancel.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.cancel.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. get_available_services -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-indigo-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">7️⃣ get_services</h3>
+                    <div class="space-y-3">
+                        <button @click="testGetServices()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50">
+                            Services abrufen
+                        </button>
+                        <div x-show="functions.get_services.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.get_services.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. request_callback -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-pink-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">8️⃣ request_callback</h3>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.callback.name"
+                               placeholder="Kundenname"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.callback.phone"
+                               placeholder="Telefonnummer"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.callback.reason"
+                               placeholder="Grund (z.B. Termin buchen)"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testRequestCallback()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 disabled:opacity-50">
+                            Callback anfordern
+                        </button>
+                        <div x-show="functions.callback.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.callback.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. get_current_context -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-teal-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">9️⃣ get_current_context</h3>
+                    <div class="space-y-3">
+                        <button @click="testGetContext()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 disabled:opacity-50">
+                            Context abrufen
+                        </button>
+                        <div x-show="functions.context.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.context.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10. get_alternatives -->
+                <div class="bg-white rounded-lg shadow-lg border-2 border-yellow-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">🔟 get_alternatives</h3>
+                    <div class="space-y-3">
+                        <input type="text" x-model="functions.alternatives.service"
+                               placeholder="Service"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.alternatives.date"
+                               placeholder="Datum"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="text" x-model="functions.alternatives.time"
+                               placeholder="Uhrzeit"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <button @click="testGetAlternatives()"
+                                :disabled="loading"
+                                class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 disabled:opacity-50">
+                            Alternativen abrufen
+                        </button>
+                        <div x-show="functions.alternatives.result" class="mt-3">
+                            <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-40"
+                                 x-html="formatJSON(functions.alternatives.result)"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Reschedule E2E Test Tab -->
+        <div x-show="activeTab === 'reschedule'" class="space-y-6">
+            <div class="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg p-6">
+                <h2 class="text-xl font-bold text-red-900 mb-4">🔄 Reschedule E2E Flow Test</h2>
+                <p class="text-sm text-red-800 mb-6">
+                    Testet den kompletten Reschedule-Flow inkl. Variable Validation (neues_datum, neue_uhrzeit)
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Input -->
+                    <div class="bg-white rounded-lg p-4 space-y-3">
+                        <h3 class="font-bold text-gray-900">Testdaten</h3>
+                        <input type="text" x-model="e2e.reschedule.phone" placeholder="Telefonnummer" class="w-full px-3 py-2 border rounded">
+                        <input type="text" x-model="e2e.reschedule.new_date" placeholder="Neues Datum" class="w-full px-3 py-2 border rounded">
+                        <input type="text" x-model="e2e.reschedule.new_time" placeholder="Neue Uhrzeit" class="w-full px-3 py-2 border rounded">
+                        <button @click="runRescheduleE2E()" :disabled="loading"
+                                class="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">
+                            🚀 Reschedule E2E starten
+                        </button>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="bg-white rounded-lg p-4">
+                        <h3 class="font-bold text-gray-900 mb-3">Fortschritt</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center space-x-2" :class="e2e.reschedule.steps.check_customer ? 'text-green-600' : 'text-gray-400'">
+                                <span x-show="e2e.reschedule.steps.check_customer">✅</span>
+                                <span x-show="!e2e.reschedule.steps.check_customer">⏳</span>
+                                <span>1. Kunde identifiziert</span>
+                            </div>
+                            <div class="flex items-center space-x-2" :class="e2e.reschedule.steps.get_appointments ? 'text-green-600' : 'text-gray-400'">
+                                <span x-show="e2e.reschedule.steps.get_appointments">✅</span>
+                                <span x-show="!e2e.reschedule.steps.get_appointments">⏳</span>
+                                <span>2. Termine abgerufen</span>
+                            </div>
+                            <div class="flex items-center space-x-2" :class="e2e.reschedule.steps.reschedule ? 'text-green-600' : 'text-gray-400'">
+                                <span x-show="e2e.reschedule.steps.reschedule">✅</span>
+                                <span x-show="!e2e.reschedule.steps.reschedule">⏳</span>
+                                <span>3. Termin verschoben</span>
+                            </div>
+                            <div class="flex items-center space-x-2" :class="e2e.reschedule.steps.validate ? 'text-green-600' : 'text-red-600'">
+                                <span x-show="e2e.reschedule.steps.validate === true">✅</span>
+                                <span x-show="e2e.reschedule.steps.validate === false">❌</span>
+                                <span x-show="e2e.reschedule.steps.validate === null">⏳</span>
+                                <span>4. Variablen validiert</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div x-show="e2e.reschedule.result" class="mt-6 bg-white rounded-lg p-4">
+                    <h3 class="font-bold text-gray-900 mb-3">Ergebnis</h3>
+                    <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-60"
+                         x-html="formatJSON(e2e.reschedule.result)"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking E2E Test Tab -->
+        <div x-show="activeTab === 'booking'" class="space-y-6">
+            <div class="bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-300 rounded-lg p-6">
+                <h2 class="text-xl font-bold text-purple-900 mb-4">📅 Booking E2E Flow Test</h2>
+                <button @click="runBookingE2E()" :disabled="loading"
+                        class="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50">
+                    🚀 Booking E2E starten
+                </button>
+                <div x-show="e2e.booking.result" class="mt-6 bg-white rounded-lg p-4">
+                    <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-60"
+                         x-html="formatJSON(e2e.booking.result)"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel E2E Test Tab -->
+        <div x-show="activeTab === 'cancel'" class="space-y-6">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-300 rounded-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">❌ Cancel E2E Flow Test</h2>
+                <button @click="runCancelE2E()" :disabled="loading"
+                        class="px-6 py-3 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700 disabled:opacity-50">
+                    🚀 Cancel E2E starten
+                </button>
+                <div x-show="e2e.cancel.result" class="mt-6 bg-white rounded-lg p-4">
+                    <div class="text-xs font-mono bg-gray-50 p-3 rounded border overflow-auto max-h-60"
+                         x-html="formatJSON(e2e.cancel.result)"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function apiTesterV4() {
+            return {
+                activeTab: 'individual',
+                loading: false,
+                callId: `test_${Date.now()}`,
+
+                functions: {
+                    check_customer: { phone: '+4916043662218', result: null },
+                    check_availability: { service: 'Herrenhaarschnitt', date: 'morgen', time: '10:00', result: null },
+                    start_booking: { name: 'Hans Schuster', service: 'Herrenhaarschnitt', datetime: '', phone: '+4916043662218', result: null },
+                    get_appointments: { result: null },
+                    reschedule: { new_date: 'morgen', new_time: '14:00', result: null },
+                    cancel: { result: null },
+                    get_services: { result: null },
+                    callback: { name: 'Max Mustermann', phone: '+491519999999', reason: 'Termin buchen', result: null },
+                    context: { result: null },
+                    alternatives: { service: 'Herrenhaarschnitt', date: 'morgen', time: '10:00', result: null }
+                },
+
+                e2e: {
+                    reschedule: {
+                        phone: '+4916043662218',
+                        new_date: 'morgen',
+                        new_time: '14:00',
+                        result: null,
+                        steps: { check_customer: false, get_appointments: false, reschedule: false, validate: null }
+                    },
+                    booking: { result: null },
+                    cancel: { result: null }
+                },
+
+                async callAPI(functionName, params) {
+                    try {
+                        const response = await fetch('/api/webhooks/retell/function', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                call_id: this.callId,
+                                function_name: functionName,
+                                ...params
+                            })
+                        });
+                        return await response.json();
+                    } catch (error) {
+                        return { error: error.message };
+                    }
+                },
+
+                async testCheckCustomer() {
+                    this.loading = true;
+                    this.functions.check_customer.result = await this.callAPI('check_customer', {});
+                    this.loading = false;
+                },
+
+                async testCheckAvailability() {
+                    this.loading = true;
+                    this.functions.check_availability.result = await this.callAPI('check_availability_v17', {
+                        dienstleistung: this.functions.check_availability.service,
+                        datum: this.functions.check_availability.date,
+                        uhrzeit: this.functions.check_availability.time,
+                        name: 'Test'
+                    });
+                    this.loading = false;
+                },
+
+                async testStartBooking() {
+                    this.loading = true;
+                    this.functions.start_booking.result = await this.callAPI('start_booking', {
+                        customer_name: this.functions.start_booking.name,
+                        service_name: this.functions.start_booking.service,
+                        datetime: this.functions.start_booking.datetime,
+                        customer_phone: this.functions.start_booking.phone
+                    });
+                    this.loading = false;
+                },
+
+                async testGetAppointments() {
+                    this.loading = true;
+                    this.functions.get_appointments.result = await this.callAPI('get_customer_appointments', {});
+                    this.loading = false;
+                },
+
+                async testReschedule() {
+                    this.loading = true;
+                    this.functions.reschedule.result = await this.callAPI('reschedule_appointment', {
+                        new_datum: this.functions.reschedule.new_date,
+                        new_uhrzeit: this.functions.reschedule.new_time
+                    });
+                    this.loading = false;
+                },
+
+                async testCancelAppointment() {
+                    this.loading = true;
+                    this.functions.cancel.result = await this.callAPI('cancel_appointment', {});
+                    this.loading = false;
+                },
+
+                async testGetServices() {
+                    this.loading = true;
+                    this.functions.get_services.result = await this.callAPI('get_available_services', {});
+                    this.loading = false;
+                },
+
+                async testRequestCallback() {
+                    this.loading = true;
+                    this.functions.callback.result = await this.callAPI('request_callback', {
+                        customer_name: this.functions.callback.name,
+                        phone_number: this.functions.callback.phone,
+                        reason: this.functions.callback.reason
+                    });
+                    this.loading = false;
+                },
+
+                async testGetContext() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/webhooks/retell/current-context', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ call_id: this.callId })
+                        });
+                        this.functions.context.result = await response.json();
+                    } catch (error) {
+                        this.functions.context.result = { error: error.message };
+                    }
+                    this.loading = false;
+                },
+
+                async testGetAlternatives() {
+                    this.loading = true;
+                    this.functions.alternatives.result = await this.callAPI('get_alternatives', {
+                        service_name: this.functions.alternatives.service,
+                        preferred_date: this.functions.alternatives.date,
+                        preferred_time: this.functions.alternatives.time
+                    });
+                    this.loading = false;
+                },
+
+                async runRescheduleE2E() {
+                    this.loading = true;
+                    this.e2e.reschedule.steps = { check_customer: false, get_appointments: false, reschedule: false, validate: null };
+
+                    const results = { steps: [] };
+
+                    // Step 1: Check customer
+                    const customerResult = await this.callAPI('check_customer', {});
+                    this.e2e.reschedule.steps.check_customer = true;
+                    results.steps.push({ step: 'check_customer', result: customerResult });
+
+                    // Step 2: Get appointments
+                    const appointmentsResult = await this.callAPI('get_customer_appointments', {});
+                    this.e2e.reschedule.steps.get_appointments = true;
+                    results.steps.push({ step: 'get_appointments', result: appointmentsResult });
+
+                    // Step 3: Reschedule
+                    const rescheduleResult = await this.callAPI('reschedule_appointment', {
+                        new_datum: this.e2e.reschedule.new_date,
+                        new_uhrzeit: this.e2e.reschedule.new_time
+                    });
+                    this.e2e.reschedule.steps.reschedule = true;
+                    results.steps.push({ step: 'reschedule', result: rescheduleResult });
+
+                    // Step 4: Validate variables
+                    const hasNeusDatum = rescheduleResult?.data?.neues_datum;
+                    const hasNeueUhrzeit = rescheduleResult?.data?.neue_uhrzeit;
+                    const hasAltesDatum = rescheduleResult?.data?.altes_datum;
+                    const hasAlteUhrzeit = rescheduleResult?.data?.alte_uhrzeit;
+
+                    this.e2e.reschedule.steps.validate = hasNeusDatum && hasNeueUhrzeit && hasAltesDatum && hasAlteUhrzeit;
+
+                    results.validation = {
+                        passed: this.e2e.reschedule.steps.validate,
+                        variables: {
+                            neues_datum: hasNeusDatum ? '✅' : '❌',
+                            neue_uhrzeit: hasNeueUhrzeit ? '✅' : '❌',
+                            altes_datum: hasAltesDatum ? '✅' : '❌',
+                            alte_uhrzeit: hasAlteUhrzeit ? '✅' : '❌'
+                        }
+                    };
+
+                    this.e2e.reschedule.result = results;
+                    this.loading = false;
+                },
+
+                async runBookingE2E() {
+                    this.loading = true;
+                    const results = { steps: [] };
+
+                    results.steps.push({ step: 'context', result: await this.callAPI('get_current_context', {}) });
+                    results.steps.push({ step: 'check_customer', result: await this.callAPI('check_customer', {}) });
+                    results.steps.push({ step: 'check_availability', result: await this.callAPI('check_availability_v17', {
+                        dienstleistung: 'Herrenhaarschnitt',
+                        datum: 'morgen',
+                        uhrzeit: '10:00',
+                        name: 'Test'
+                    }) });
+                    results.steps.push({ step: 'start_booking', result: await this.callAPI('start_booking', {
+                        customer_name: 'Test',
+                        service_name: 'Herrenhaarschnitt',
+                        datetime: 'morgen 10:00'
+                    }) });
+
+                    this.e2e.booking.result = results;
+                    this.loading = false;
+                },
+
+                async runCancelE2E() {
+                    this.loading = true;
+                    const results = { steps: [] };
+
+                    results.steps.push({ step: 'get_appointments', result: await this.callAPI('get_customer_appointments', {}) });
+                    results.steps.push({ step: 'cancel', result: await this.callAPI('cancel_appointment', {}) });
+
+                    this.e2e.cancel.result = results;
+                    this.loading = false;
+                },
+
+                checkVariable(varName) {
+                    return this.functions.reschedule.result?.data?.[varName] ? true : false;
+                },
+
+                validateRescheduleVariables() {
+                    const data = this.functions.reschedule.result?.data;
+                    if (!data) return false;
+                    return data.neues_datum && data.neue_uhrzeit && data.altes_datum && data.alte_uhrzeit;
+                },
+
+                formatJSON(data) {
+                    if (!data) return '';
+                    return `<pre class="language-json"><code class="language-json">${JSON.stringify(data, null, 2)}</code></pre>`;
+                },
+
+                // Export Functions
+                getAllResults() {
+                    return {
+                        timestamp: new Date().toISOString(),
+                        call_id: this.callId,
+                        individual_tests: {
+                            check_customer: this.functions.check_customer.result,
+                            check_availability: this.functions.check_availability.result,
+                            start_booking: this.functions.start_booking.result,
+                            get_appointments: this.functions.get_appointments.result,
+                            reschedule_appointment: {
+                                result: this.functions.reschedule.result,
+                                validation: this.validateRescheduleVariables() ? 'PASS' : 'FAIL',
+                                variables_present: {
+                                    neues_datum: this.checkVariable('neues_datum'),
+                                    neue_uhrzeit: this.checkVariable('neue_uhrzeit'),
+                                    altes_datum: this.checkVariable('altes_datum'),
+                                    alte_uhrzeit: this.checkVariable('alte_uhrzeit')
+                                }
+                            },
+                            cancel_appointment: this.functions.cancel.result,
+                            get_services: this.functions.get_services.result,
+                            request_callback: this.functions.callback.result,
+                            get_current_context: this.functions.context.result,
+                            get_alternatives: this.functions.alternatives.result
+                        },
+                        e2e_tests: {
+                            reschedule: this.e2e.reschedule.result,
+                            booking: this.e2e.booking.result,
+                            cancel: this.e2e.cancel.result
+                        }
+                    };
+                },
+
+                exportAsJSON() {
+                    const data = this.getAllResults();
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `retell-test-results-${Date.now()}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('✅ JSON Export erfolgreich!');
+                },
+
+                exportAsMarkdown() {
+                    const data = this.getAllResults();
+                    let md = `# Retell API Test Results\n\n`;
+                    md += `**Timestamp**: ${data.timestamp}\n`;
+                    md += `**Call ID**: ${data.call_id}\n\n`;
+                    md += `---\n\n`;
+
+                    // Individual Tests
+                    md += `## Individual Function Tests\n\n`;
+
+                    // Reschedule Test (Critical)
+                    if (data.individual_tests.reschedule_appointment.result) {
+                        md += `### 🔄 reschedule_appointment (CRITICAL)\n\n`;
+                        md += `**Validation**: ${data.individual_tests.reschedule_appointment.validation === 'PASS' ? '✅ PASS' : '❌ FAIL'}\n\n`;
+                        md += `**Variables Present**:\n`;
+                        md += `- neues_datum: ${data.individual_tests.reschedule_appointment.variables_present.neues_datum ? '✅' : '❌'}\n`;
+                        md += `- neue_uhrzeit: ${data.individual_tests.reschedule_appointment.variables_present.neue_uhrzeit ? '✅' : '❌'}\n`;
+                        md += `- altes_datum: ${data.individual_tests.reschedule_appointment.variables_present.altes_datum ? '✅' : '❌'}\n`;
+                        md += `- alte_uhrzeit: ${data.individual_tests.reschedule_appointment.variables_present.alte_uhrzeit ? '✅' : '❌'}\n\n`;
+                        md += `**Result**:\n\`\`\`json\n${JSON.stringify(data.individual_tests.reschedule_appointment.result, null, 2)}\n\`\`\`\n\n`;
+                    }
+
+                    // Other Tests
+                    Object.entries(data.individual_tests).forEach(([name, result]) => {
+                        if (name !== 'reschedule_appointment' && result) {
+                            md += `### ${name}\n\n`;
+                            md += `\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\n`;
+                        }
+                    });
+
+                    // E2E Tests
+                    md += `## E2E Tests\n\n`;
+                    Object.entries(data.e2e_tests).forEach(([name, result]) => {
+                        if (result) {
+                            md += `### ${name} E2E Flow\n\n`;
+                            md += `\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\n`;
+                        }
+                    });
+
+                    const blob = new Blob([md], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `retell-test-results-${Date.now()}.md`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('✅ Markdown Export erfolgreich!');
+                },
+
+                async copyToClipboard() {
+                    const data = this.getAllResults();
+                    const text = JSON.stringify(data, null, 2);
+
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        alert('✅ Ergebnisse in Zwischenablage kopiert!');
+                    } catch (err) {
+                        // Fallback for older browsers
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        alert('✅ Ergebnisse in Zwischenablage kopiert!');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskPro AI - Booking Middleware Dokumentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-tertiary {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-tertiary:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
+        }
+
+        .section h4 {
+            color: #48bb78;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .code-block .comment {
+            color: #6a9955;
+        }
+
+        .code-block .keyword {
+            color: #569cd6;
+        }
+
+        .code-block .string {
+            color: #ce9178;
+        }
+
+        .code-block .function {
+            color: #dcdcaa;
+        }
+
+        .info-box {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff7e6;
+            border-left: 4px solid #faad14;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #f6ffed;
+            border-left: 4px solid #52c41a;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .flow-diagram {
+            background: #f9fafb;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .toc {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0 0.25rem;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        #copyNotification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 AskPro AI Booking Middleware</h1>
+        <p>Comprehensive Technical Documentation für Cem</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Version 1.0 | Stand: 2025-11-19</p>
+    </div>
+
+    <div class="container">
+        <!-- Export Buttons -->
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportAsMarkdown()">📝 Als Markdown kopieren</button>
+            <button class="btn btn-secondary" onclick="exportAsJSON()">📋 Als JSON kopieren</button>
+            <button class="btn btn-tertiary" onclick="exportAsPlainText()">📄 Als Plain Text kopieren</button>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>📚 Inhaltsverzeichnis</h3>
+            <ul>
+                <li><a href="#overview">1. System-Übersicht</a></li>
+                <li><a href="#architecture">2. Architektur</a></li>
+                <li><a href="#datetime">3. DateTime-Parsing System</a></li>
+                <li><a href="#functions">4. Alle Middleware-Funktionen</a></li>
+                <li><a href="#service-listing">5. Intelligentes Service-Listing</a></li>
+                <li><a href="#flows">6. Prozess-Flows</a></li>
+                <li><a href="#examples">7. Praxis-Beispiele</a></li>
+                <li><a href="#troubleshooting">8. Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <!-- Section 1: Overview -->
+        <div class="section" id="overview">
+            <h2>1. System-Übersicht</h2>
+
+            <p>Die AskPro AI Booking Middleware ist eine intelligente Vermittlungsschicht zwischen:</p>
+
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li><strong>Retell.ai Voice Agent</strong> (KI-Telefon-Assistent)</li>
+                <li><strong>Laravel Backend</strong> (Unsere Geschäftslogik)</li>
+                <li><strong>Cal.com API</strong> (Externes Kalendersystem)</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>🎯 Hauptaufgabe:</strong> Die Middleware übersetzt natürlichsprachliche Anfragen ("Ich möchte morgen um 17 Uhr einen Termin") in strukturierte Daten, prüft Verfügbarkeiten, erstellt Buchungen und synchronisiert alles mit Cal.com.
+            </div>
+
+            <h3>Kernfunktionalitäten</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Funktion</th>
+                        <th>Beschreibung</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>DateTime-Parsing</strong></td>
+                        <td>Wandelt "morgen 17 Uhr" → "2025-11-20 17:00"</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kundenerkennung</strong></td>
+                        <td>Identifiziert Kunden via Telefonnummer</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Verfügbarkeitsprüfung</strong></td>
+                        <td>Prüft freie Termine via Cal.com</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Terminbuchung</strong></td>
+                        <td>Erstellt Termin + Cal.com Sync</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Verschiebung</strong></td>
+                        <td>Umbuchung mit Policy-Check</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stornierung</strong></td>
+                        <td>Absage mit Policy-Check</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Service-Listing</strong></td>
+                        <td>Intelligente Dienstleistungsliste</td>
+                        <td><span class="badge badge-success">✅ Aktiv</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Architecture -->
+        <div class="section" id="architecture">
+            <h2>2. Architektur</h2>
+
+            <div class="flow-diagram">
+                <pre class="mermaid">
+graph TB
+    A[Retell Voice Agent] -->|Function Call| B[RetellFunctionCallHandler.php]
+    B -->|Parse DateTime| C[DateTimeParser.php]
+    B -->|Query Database| D[(PostgreSQL)]
+    B -->|Check Availability| E[Cal.com API]
+    B -->|Create Booking| F[AppointmentCreationService.php]
+    F -->|Sync| E
+    F -->|Store| D
+    B -->|Response| A
+
+    style A fill:#667eea,color:#fff
+    style B fill:#764ba2,color:#fff
+    style C fill:#48bb78,color:#fff
+    style D fill:#ed8936,color:#fff
+    style E fill:#f56565,color:#fff
+    style F fill:#4299e1,color:#fff
+                </pre>
+            </div>
+
+            <h3>Komponenten-Übersicht</h3>
+
+            <h4>1. RetellFunctionCallHandler.php</h4>
+            <div class="code-block">
+<span class="comment">// Hauptklasse für alle Function Calls vom Retell Agent</span>
+<span class="keyword">Location:</span> app/Http/Controllers/RetellFunctionCallHandler.php
+
+<span class="comment">// Wichtigste Methoden:</span>
+- <span class="function">handleFunctionCall</span>($functionName, $params, $callId)
+- <span class="function">checkCustomer</span>($params, $callId)
+- <span class="function">checkAvailabilityV17</span>($params, $callId)
+- <span class="function">bookAppointment</span>($params, $callId)
+- <span class="function">rescheduleAppointment</span>($params, $callId)
+- <span class="function">cancelAppointment</span>($params, $callId)
+            </div>
+
+            <h4>2. DateTimeParser.php</h4>
+            <div class="code-block">
+<span class="comment">// Intelligente Datums-/Zeitverarbeitung</span>
+<span class="keyword">Location:</span> app/Services/Retell/DateTimeParser.php
+
+<span class="comment">// Unterstützte Formate:</span>
+✅ <span class="string">"morgen"</span>, <span class="string">"heute"</span>, <span class="string">"übermorgen"</span>
+✅ <span class="string">"Montag"</span>, <span class="string">"nächsten Freitag"</span>
+✅ <span class="string">"Mittwoch, den 19. November"</span>
+✅ <span class="string">"19.11.2025"</span>, <span class="string">"2025-11-19"</span>
+✅ <span class="string">"17 Uhr"</span>, <span class="string">"14:30"</span>, <span class="string">"halb drei"</span>
+            </div>
+
+            <h4>3. AppointmentCreationService.php</h4>
+            <div class="code-block">
+<span class="comment">// Sichere Terminbuchung mit Multi-Tenant-Isolation</span>
+<span class="keyword">Location:</span> app/Services/Retell/AppointmentCreationService.php
+
+<span class="comment">// Features:</span>
+✅ Pre-Sync Validation (verhindert Race Conditions)
+✅ Pessimistic Locking
+✅ Multi-Tenant Isolation (CRIT-002, CRIT-003)
+✅ Async Cal.com Sync via Queue Jobs
+            </div>
+
+            <div class="success-box">
+                <strong>🔒 Security Features:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 2rem;">
+                    <li>CRIT-002: Tenant Context Validation (verhindert Cache Poisoning)</li>
+                    <li>CRIT-003: Multi-Tenant Filtering (company_id + branch_id)</li>
+                    <li>Pre-Sync Validation (verhindert Double Bookings um 71%)</li>
+                    <li>Pessimistic Locking (lockForUpdate())</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 3: DateTime Parsing -->
+        <div class="section" id="datetime">
+            <h2>3. DateTime-Parsing System</h2>
+
+            <p>Das Herzstück der Middleware ist das intelligente DateTime-Parsing. Es löst das fundamentale Problem: <strong>LLMs sind schlecht im Kalender-Rechnen!</strong></p>
+
+            <div class="warning-box">
+                <strong>⚠️ Warum nicht ISO-Format vom LLM?</strong><br>
+                Wenn heute der 19. November ist und der User sagt "nächsten Freitag", berechnet das LLM oft das falsche Datum. Deshalb übergeben wir den Roh-Text ("nächsten Freitag 14 Uhr") an unsere Middleware, die viel präziser rechnet.
+            </div>
+
+            <h3>Unterstützte Formate</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kategorie</th>
+                        <th>Beispiel-Input</th>
+                        <th>Parsed Output</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Relative Datums</strong></td>
+                        <td>"morgen", "heute", "übermorgen"</td>
+                        <td>"2025-11-20", "2025-11-19", "2025-11-21"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Wochentage</strong></td>
+                        <td>"Montag", "nächsten Freitag"</td>
+                        <td>"2025-11-24", "2025-11-28"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deutsches Format</strong></td>
+                        <td>"Mittwoch, den 19. November"</td>
+                        <td>"2025-11-19"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Numerisch</strong></td>
+                        <td>"19.11.2025", "2025-11-19"</td>
+                        <td>"2025-11-19"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uhrzeiten</strong></td>
+                        <td>"17 Uhr", "14:30", "halb drei"</td>
+                        <td>"17:00", "14:30", "14:30"</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Code-Beispiel</h3>
+
+            <div class="code-block">
+<span class="comment">// Input vom Retell Agent:</span>
+{
+  <span class="string">"datetime"</span>: <span class="string">"morgen 17 Uhr"</span>,
+  <span class="string">"service_name"</span>: <span class="string">"Herrenhaarschnitt"</span>
+}
+
+<span class="comment">// DateTimeParser.php verarbeitet:</span>
+<span class="keyword">$parser</span> = <span class="keyword">new</span> <span class="function">DateTimeParser</span>();
+<span class="keyword">$result</span> = <span class="keyword">$parser</span>-><span class="function">parseDateTime</span>($params);
+
+<span class="comment">// Output:</span>
+<span class="keyword">$result</span> = [
+  <span class="string">'date'</span> => <span class="string">'2025-11-20'</span>,
+  <span class="string">'time'</span> => <span class="string">'17:00'</span>,
+  <span class="string">'datetime'</span> => <span class="keyword">Carbon</span>::<span class="function">parse</span>(<span class="string">'2025-11-20 17:00'</span>)
+];
+            </div>
+
+            <h3>FIX 6 + FIX 8 (Deployed 2025-11-19)</h3>
+
+            <div class="success-box">
+                <strong>✅ FIX 6:</strong> Implementierung der parseDateString() Methode für deutsches Datumsformat<br>
+                <strong>📍 Location:</strong> DateTimeParser.php Lines 397-482<br><br>
+
+                <strong>✅ FIX 8:</strong> Regex-Erweiterung zur Erkennung von Monatsformaten<br>
+                <strong>📍 Location:</strong> DateTimeParser.php Lines 147-151<br><br>
+
+                <strong>🎯 Result:</strong> "Mittwoch, den 19. November" wird jetzt korrekt zu "2025-11-19" geparst
+            </div>
+        </div>
+
+        <!-- Section 4: Functions -->
+        <div class="section" id="functions">
+            <h2>4. Alle Middleware-Funktionen</h2>
+
+            <h3>4.1 check_customer</h3>
+            <div class="info-box">
+                <strong>📞 Zweck:</strong> Identifiziert Kunden anhand der Telefonnummer und liefert Buchungshistorie
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc123..."</span>
+}
+            </div>
+
+            <h4>Response (Bestandskunde)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"status"</span>: <span class="string">"existing_customer"</span>,
+  <span class="string">"customer"</span>: {
+    <span class="string">"id"</span>: <span class="string">"uuid-123"</span>,
+    <span class="string">"name"</span>: <span class="string">"Hans Schuster"</span>,
+    <span class="string">"phone"</span>: <span class="string">"+49151..."</span>,
+    <span class="string">"predicted_service"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+    <span class="string">"service_confidence"</span>: <span class="keyword">0.85</span>,
+    <span class="string">"preferred_staff"</span>: <span class="string">"Fabian Spitzer"</span>,
+    <span class="string">"preferred_staff_id"</span>: <span class="string">"uuid-456"</span>
+  }
+}
+            </div>
+
+            <h4>Response (Neukunde)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"status"</span>: <span class="string">"new_customer"</span>,
+  <span class="string">"message"</span>: <span class="string">"Dies ist ein neuer Kunde. Bitte fragen Sie nach dem Namen."</span>
+}
+            </div>
+
+            <h3>4.2 check_availability_v17</h3>
+            <div class="info-box">
+                <strong>🔍 Zweck:</strong> Prüft Verfügbarkeit für einen Termin und schlägt Alternativen vor
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>,
+  <span class="string">"name"</span>: <span class="string">"Hans Schuster"</span>,
+  <span class="string">"datum"</span>: <span class="string">"Mittwoch, den 19. November"</span>,  <span class="comment">// ← Natürlichsprachlich!</span>
+  <span class="string">"uhrzeit"</span>: <span class="string">"17:00"</span>,
+  <span class="string">"dienstleistung"</span>: <span class="string">"Herrenhaarschnitt"</span>
+}
+            </div>
+
+            <h4>Response (Verfügbar)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"available"</span>: <span class="keyword">true</span>,
+  <span class="string">"service"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+  <span class="string">"staff"</span>: <span class="string">"Fabian Spitzer"</span>,
+  <span class="string">"requested_time"</span>: <span class="string">"2025-11-19 17:00"</span>,
+  <span class="string">"message"</span>: <span class="string">"Ja, Herrenhaarschnitt ist verfügbar am Mittwoch, den 19. November um 17:00 Uhr."</span>
+}
+            </div>
+
+            <h4>Response (Nicht verfügbar, mit Alternativen)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"available"</span>: <span class="keyword">false</span>,
+  <span class="string">"same_day_available"</span>: <span class="keyword">true</span>,
+  <span class="string">"requested_time"</span>: <span class="string">"2025-11-19 17:00"</span>,
+  <span class="string">"alternatives"</span>: [
+    {
+      <span class="string">"time"</span>: <span class="string">"2025-11-19 16:45"</span>,
+      <span class="string">"spoken"</span>: <span class="string">"heute um 16 Uhr 45"</span>,
+      <span class="string">"available"</span>: <span class="keyword">true</span>,
+      <span class="string">"type"</span>: <span class="string">"same_day_earlier"</span>
+    },
+    {
+      <span class="string">"time"</span>: <span class="string">"2025-11-19 18:00"</span>,
+      <span class="string">"spoken"</span>: <span class="string">"heute um 18 Uhr"</span>,
+      <span class="string">"available"</span>: <span class="keyword">true</span>,
+      <span class="string">"type"</span>: <span class="string">"same_day_later"</span>
+    }
+  ],
+  <span class="string">"message"</span>: <span class="string">"Zur gewünschten Zeit nicht frei, aber am gleichen Tag habe ich noch: heute um 16 Uhr 45 oder heute um 18 Uhr."</span>
+}
+            </div>
+
+            <h3>4.3 start_booking</h3>
+            <div class="info-box">
+                <strong>📅 Zweck:</strong> Erstellt einen Termin in der Datenbank und synchronisiert mit Cal.com
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>,
+  <span class="string">"datetime"</span>: <span class="string">"morgen 17:00"</span>,  <span class="comment">// ← Wird von DateTimeParser verarbeitet</span>
+  <span class="string">"service_name"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+  <span class="string">"customer_name"</span>: <span class="string">"Hans Schuster"</span>,
+  <span class="string">"customer_phone"</span>: <span class="string">"+49151..."</span>,  <span class="comment">// Optional (Dummy: "0151123456")</span>
+  <span class="string">"customer_email"</span>: <span class="string">"hans@example.com"</span>,  <span class="comment">// Optional (Dummy: "termin@askproai.de")</span>
+  <span class="string">"preferred_staff_id"</span>: <span class="string">"uuid-456"</span>  <span class="comment">// Optional</span>
+}
+            </div>
+
+            <h4>Response (Erfolg)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"booked"</span>: <span class="keyword">true</span>,
+  <span class="string">"appointment_id"</span>: <span class="keyword">706</span>,
+  <span class="string">"appointment_time"</span>: <span class="string">"2025-11-20 17:00"</span>,
+  <span class="string">"message"</span>: <span class="string">"Perfekt! Ihr Termin am 20.11. um 17:00 Uhr ist gebucht."</span>,
+  <span class="string">"sync_mode"</span>: <span class="string">"async"</span>  <span class="comment">// Cal.com Sync läuft im Hintergrund</span>
+}
+            </div>
+
+            <div class="success-box">
+                <strong>🔒 Security Features aktiv:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 2rem;">
+                    <li>✅ Tenant Context Validation (company_id + branch_id)</li>
+                    <li>✅ Pre-Sync Conflict Check (verhindert Double Bookings)</li>
+                    <li>✅ Pessimistic Locking (lockForUpdate())</li>
+                    <li>✅ Dummy-Daten für anonyme Anrufer</li>
+                </ul>
+            </div>
+
+            <h3>4.4 reschedule_appointment</h3>
+            <div class="info-box">
+                <strong>🔄 Zweck:</strong> Verschiebt einen bestehenden Termin auf ein neues Datum/Zeit
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>,
+  <span class="string">"new_datum"</span>: <span class="string">"Freitag, den 21. November"</span>,
+  <span class="string">"new_uhrzeit"</span>: <span class="string">"14:00"</span>
+}
+            </div>
+
+            <h4>Response (Erfolg)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"altes_datum"</span>: <span class="string">"2025-11-19"</span>,
+  <span class="string">"alte_uhrzeit"</span>: <span class="string">"17:00"</span>,
+  <span class="string">"neues_datum"</span>: <span class="string">"2025-11-21"</span>,
+  <span class="string">"neue_uhrzeit"</span>: <span class="string">"14:00"</span>,
+  <span class="string">"message"</span>: <span class="string">"Termin erfolgreich verschoben."</span>
+}
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Policy Check:</strong> Die Verschiebung prüft automatisch die 24-Stunden-Policy. Wenn der Termin in weniger als 24 Stunden ist, wird die Verschiebung abgelehnt (konfigurierbar pro Filiale).
+            </div>
+
+            <h3>4.5 cancel_appointment</h3>
+            <div class="info-box">
+                <strong>❌ Zweck:</strong> Storniert einen bestehenden Termin
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>
+}
+            </div>
+
+            <h4>Response (Erfolg)</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"cancelled_appointment"</span>: {
+    <span class="string">"date"</span>: <span class="string">"2025-11-19"</span>,
+    <span class="string">"time"</span>: <span class="string">"17:00"</span>,
+    <span class="string">"service"</span>: <span class="string">"Herrenhaarschnitt"</span>
+  },
+  <span class="string">"message"</span>: <span class="string">"Ihr Termin wurde storniert."</span>
+}
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Policy Check:</strong> Die Stornierung prüft automatisch die 24-Stunden-Policy. Kurzfristige Stornierungen können je nach Konfiguration abgelehnt werden.
+            </div>
+
+            <h3>4.6 get_available_services</h3>
+            <div class="info-box">
+                <strong>📋 Zweck:</strong> Listet verfügbare Dienstleistungen auf (siehe nächste Sektion für intelligentes Listing)
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>
+}
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"services"</span>: [
+    {
+      <span class="string">"id"</span>: <span class="keyword">438</span>,
+      <span class="string">"name"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+      <span class="string">"duration"</span>: <span class="keyword">30</span>,
+      <span class="string">"price"</span>: <span class="string">"25.00"</span>,
+      <span class="string">"category"</span>: <span class="string">"Herrenschnitt"</span>
+    },
+    {
+      <span class="string">"id"</span>: <span class="keyword">439</span>,
+      <span class="string">"name"</span>: <span class="string">"Dauerwelle"</span>,
+      <span class="string">"duration"</span>: <span class="keyword">90</span>,
+      <span class="string">"price"</span>: <span class="string">"75.00"</span>,
+      <span class="string">"category"</span>: <span class="string">"Styling"</span>
+    }
+  ],
+  <span class="string">"categories"</span>: [<span class="string">"Herrenschnitt"</span>, <span class="string">"Damenschnitt"</span>, <span class="string">"Styling"</span>]
+}
+            </div>
+
+            <h3>4.7 get_alternatives</h3>
+            <div class="info-box">
+                <strong>🔄 Zweck:</strong> Schlägt alternative Zeitslots vor, wenn Wunschtermin belegt
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>,
+  <span class="string">"service_name"</span>: <span class="string">"Herrenhaarschnitt"</span>,
+  <span class="string">"preferred_date"</span>: <span class="string">"morgen"</span>,
+  <span class="string">"preferred_time"</span>: <span class="string">"17:00"</span>
+}
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"alternatives"</span>: [
+    {
+      <span class="string">"date"</span>: <span class="string">"2025-11-20"</span>,
+      <span class="string">"time"</span>: <span class="string">"16:30"</span>,
+      <span class="string">"spoken"</span>: <span class="string">"morgen um 16 Uhr 30"</span>
+    },
+    {
+      <span class="string">"date"</span>: <span class="string">"2025-11-20"</span>,
+      <span class="string">"time"</span>: <span class="string">"18:00"</span>,
+      <span class="string">"spoken"</span>: <span class="string">"morgen um 18 Uhr"</span>
+    }
+  ]
+}
+            </div>
+
+            <h3>4.8 request_callback</h3>
+            <div class="info-box">
+                <strong>📞 Zweck:</strong> Erstellt eine Rückruf-Anfrage bei technischen Problemen oder wenn kein Termin frei ist
+            </div>
+
+            <h4>Request</h4>
+            <div class="code-block">
+{
+  <span class="string">"call_id"</span>: <span class="string">"call_abc..."</span>,
+  <span class="string">"customer_name"</span>: <span class="string">"Hans Schuster"</span>,
+  <span class="string">"phone_number"</span>: <span class="string">"+49151..."</span>,
+  <span class="string">"reason"</span>: <span class="string">"Termin buchen"</span>
+}
+            </div>
+
+            <h4>Response</h4>
+            <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"callback_id"</span>: <span class="keyword">123</span>,
+  <span class="string">"message"</span>: <span class="string">"Rückruf-Anfrage erstellt. Sie werden in Kürze kontaktiert."</span>
+}
+            </div>
+        </div>
+
+        <!-- Section 5: Service Listing Intelligence -->
+        <div class="section" id="service-listing">
+            <h2>5. Intelligentes Service-Listing</h2>
+
+            <div class="info-box">
+                <strong>🎯 Problem:</strong> Bei 50+ Dienstleistungen kann der Agent nicht alle aufzählen. Die Antwort wäre zu lang und der User verliert den Überblick.
+            </div>
+
+            <h3>Lösung: Progressive Disclosure</h3>
+
+            <p>Der Agent präsentiert Services in drei Stufen:</p>
+
+            <h4>Stufe 1: Top 3-5 Services (Initial)</h4>
+            <div class="code-block">
+<span class="comment">// User fragt: "Welche Dienstleistungen bieten Sie an?"</span>
+
+<span class="comment">// Agent antwortet mit TOP-Services nach Kategorie:</span>
+<span class="string">"Wir bieten folgende Dienstleistungen an:
+
+<strong>Herrenschnitt:</strong>
+- Herrenhaarschnitt (25€, 30 Min)
+- Bart trimmen (15€, 15 Min)
+
+<strong>Damenschnitt:</strong>
+- Damenhaarschnitt (35€, 45 Min)
+- Föhnen und Styling (20€, 30 Min)
+
+Möchten Sie mehr über eine bestimmte Kategorie erfahren?"</span>
+            </div>
+
+            <h4>Stufe 2: Kategorie-Details (Auf Nachfrage)</h4>
+            <div class="code-block">
+<span class="comment">// User fragt: "Was haben Sie noch im Bereich Styling?"</span>
+
+<span class="comment">// Agent listet Kategorie-spezifisch:</span>
+<span class="string">"Im Bereich Styling haben wir:
+- Dauerwelle (75€, 90 Min)
+- Strähnen (ab 45€, 60 Min)
+- Balayage (ab 80€, 120 Min)
+- Hochsteckfrisur (50€, 60 Min)
+
+Möchten Sie einen dieser Services buchen?"</span>
+            </div>
+
+            <h4>Stufe 3: Vollständige Liste (Bei Bedarf)</h4>
+            <div class="code-block">
+<span class="comment">// User fragt: "Zeigen Sie mir alle Services"</span>
+
+<span class="comment">// Agent listet ALLE (max 10 pro Message):</span>
+<span class="string">"Hier ist unsere komplette Service-Liste:
+
+[Erste 10 Services]
+
+Es gibt noch weitere Services. Soll ich fortfahren?"</span>
+            </div>
+
+            <h3>Implementation im Retell Flow</h3>
+
+            <div class="code-block">
+<span class="comment">// Node: "Services anzeigen"</span>
+<span class="keyword">instruction</span>: {
+  <span class="string">"SERVICES PRÄSENTIEREN:
+
+  WENN erster Aufruf:
+    Zeige TOP 3-5 Services pro Hauptkategorie
+    'Wir bieten [Liste]. Möchten Sie mehr erfahren?'
+
+  WENN Kategorie genannt:
+    Zeige alle Services dieser Kategorie
+    Max 5 Services auf einmal
+
+  WENN 'alle' oder 'komplett':
+    Zeige max 10 Services
+    'Es gibt noch weitere. Soll ich fortfahren?'
+
+  REGEL: Maximal 5 Services pro Antwort nennen
+  REGEL: Immer mit Frage enden ('Möchten Sie...')"</span>
+}
+            </div>
+
+            <h3>Service-Kategorisierung</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kategorie</th>
+                        <th>Beispiel-Services</th>
+                        <th>Häufigkeit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Herrenschnitt</strong></td>
+                        <td>Herrenhaarschnitt, Bart trimmen</td>
+                        <td><span class="badge badge-success">Hoch</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Damenschnitt</strong></td>
+                        <td>Damenhaarschnitt, Föhnen</td>
+                        <td><span class="badge badge-success">Hoch</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Styling</strong></td>
+                        <td>Dauerwelle, Strähnen, Balayage</td>
+                        <td><span class="badge badge-warning">Mittel</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Spezial</strong></td>
+                        <td>Hochzeit-Styling, Events</td>
+                        <td><span class="badge badge-info">Niedrig</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>✅ Best Practice:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 2rem;">
+                    <li>Start mit 3-5 Top-Services (häufigste Buchungen)</li>
+                    <li>Gruppierung nach Kategorien für Übersichtlichkeit</li>
+                    <li>Progressive Disclosure: Erst Überblick, dann Details</li>
+                    <li>Immer mit Rückfrage enden ("Möchten Sie...")</li>
+                    <li>Max 5 Services pro Antwort (sonst zu lang)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 6: Compound-Termine & Service-Synchronisierung -->
+        <div class="section" id="compound-appointments">
+            <h2>6. Compound-Termine & Service-Synchronisierung</h2>
+
+            <p>Das System unterstützt zwei Arten von Compound-Terminen (zusammengesetzte Termine) für Services, die aus mehreren Phasen bestehen.</p>
+
+            <h3>6.1 Processing Time (Split Appointments)</h3>
+
+            <div class="info-box">
+                <strong>Konzept:</strong> EIN Cal.com Booking, aber intern in mehrere Phasen aufgeteilt. Der Mitarbeiter ist während der Processing-Phase verfügbar für andere Kunden.
+            </div>
+
+            <h4>Beispiel: Dauerwelle</h4>
+            <div class="code-block">
+<span class="comment">// Service-Konfiguration in der Datenbank</span>
+{
+  <span class="string">"name"</span>: <span class="string">"Dauerwelle"</span>,
+  <span class="string">"duration_minutes"</span>: 65,
+  <span class="string">"has_processing_time"</span>: <span class="keyword">true</span>,
+
+  <span class="comment">// Phase 1: Initial (Staff BUSY)</span>
+  <span class="string">"initial_duration"</span>: 15,     <span class="comment">// Waschen, Wickeln</span>
+
+  <span class="comment">// Phase 2: Processing (Staff AVAILABLE)</span>
+  <span class="string">"processing_duration"</span>: 30,  <span class="comment">// Einwirkzeit - Stylist kann andere Kunden bedienen</span>
+
+  <span class="comment">// Phase 3: Final (Staff BUSY)</span>
+  <span class="string">"final_duration"</span>: 20        <span class="comment">// Ausspülen, Föhnen, Styling</span>
+}
+            </div>
+
+            <h4>Phasen-Struktur</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Phase</th>
+                        <th>Dauer</th>
+                        <th>Staff Status</th>
+                        <th>Beschreibung</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Initial</strong></td>
+                        <td>15 min</td>
+                        <td>🔴 BUSY</td>
+                        <td>Waschen, Lockenwickler setzen, Dauerwellen-Lösung auftragen</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Processing</strong></td>
+                        <td>30 min</td>
+                        <td>✅ AVAILABLE</td>
+                        <td>Einwirkzeit - Stylist kann in dieser Zeit andere Kunden bedienen</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Final</strong></td>
+                        <td>20 min</td>
+                        <td>🔴 BUSY</td>
+                        <td>Ausspülen, Föhnen, Styling, Finish</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Cal.com Synchronisierung</h4>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+sequenceDiagram
+    participant CRM as CRM System
+    participant DB as PostgreSQL
+    participant Calcom as Cal.com API
+
+    Note over CRM,Calcom: Buchung: Dauerwelle (65 min)
+
+    CRM->>DB: CREATE Appointment<br/>(starts_at: 10:00, duration: 65min)
+    CRM->>DB: CREATE AppointmentPhase 1<br/>(initial, 10:00-10:15, staff_required=true)
+    CRM->>DB: CREATE AppointmentPhase 2<br/>(processing, 10:15-10:45, staff_required=false)
+    CRM->>DB: CREATE AppointmentPhase 3<br/>(final, 10:45-11:05, staff_required=true)
+
+    CRM->>Calcom: POST /bookings<br/>{eventTypeId, start: 10:00, duration: 65min}
+    Calcom-->>CRM: ✅ Booking created<br/>(booking_id: 12345678)
+
+    CRM->>DB: UPDATE appointment<br/>(calcom_booking_id: 12345678, sync_origin: 'calcom')
+
+    Note over DB: Availability Check berücksichtigt<br/>nur Phasen mit staff_required=true
+                </pre>
+            </div>
+
+            <div class="success-box">
+                <strong>Vorteil:</strong> Staff Utilization wird maximiert. Während der 30-minütigen Einwirkzeit kann der Stylist:
+                <ul>
+                    <li>Einen Haarschnitt machen (25 min)</li>
+                    <li>Eine Beratung durchführen (15 min)</li>
+                    <li>Einen anderen Kunden färben/wickeln</li>
+                </ul>
+            </div>
+
+            <h4>Availability Checking mit Processing Time</h4>
+            <div class="code-block">
+<span class="comment">// Verfügbarkeitscheck berücksichtigt NUR Phasen mit staff_required=true</span>
+
+<span class="comment">// Beispiel: Stylist hat Dauerwelle 10:00-11:05</span>
+<span class="comment">// Phase 1: 10:00-10:15 (BUSY)</span>
+<span class="comment">// Phase 2: 10:15-10:45 (AVAILABLE)</span>
+<span class="comment">// Phase 3: 10:45-11:05 (BUSY)</span>
+
+<span class="comment">// Verfügbar für Haarschnitt (25 min)?</span>
+<span class="function">check_availability</span>(<span class="string">"Haarschnitt"</span>, <span class="string">"10:20"</span>)
+<span class="comment">// ✅ JA - 10:20-10:45 ist AVAILABLE (25 min)</span>
+
+<span class="function">check_availability</span>(<span class="string">"Haarschnitt"</span>, <span class="string">"10:00"</span>)
+<span class="comment">// ❌ NEIN - 10:00-10:15 ist BUSY (Initial-Phase)</span>
+
+<span class="function">check_availability</span>(<span class="string">"Haarschnitt"</span>, <span class="string">"10:50"</span>)
+<span class="comment">// ❌ NEIN - 10:45-11:05 ist BUSY (Final-Phase)</span>
+            </div>
+
+            <h3>6.2 Composite Bookings (Segment-basiert)</h3>
+
+            <div class="info-box">
+                <strong>Konzept:</strong> MEHRERE Cal.com Bookings für verschiedene Segmente. Jedes Segment kann von unterschiedlichen Mitarbeitern durchgeführt werden.
+            </div>
+
+            <h4>Beispiel: Komplexe Farbbehandlung</h4>
+            <div class="code-block">
+<span class="comment">// Service-Konfiguration</span>
+{
+  <span class="string">"name"</span>: <span class="string">"Balayage Premium"</span>,
+  <span class="string">"composite"</span>: <span class="keyword">true</span>,
+  <span class="string">"segments"</span>: [
+    {
+      <span class="string">"key"</span>: <span class="string">"color_application"</span>,
+      <span class="string">"name"</span>: <span class="string">"Farbauftrag"</span>,
+      <span class="string">"durationMin"</span>: 45,
+      <span class="string">"gapAfterMin"</span>: 20,          <span class="comment">// Mindestens 20min Pause</span>
+      <span class="string">"gapAfterMax"</span>: 40,          <span class="comment">// Maximal 40min Pause</span>
+      <span class="string">"preferSameStaff"</span>: <span class="keyword">false</span>  <span class="comment">// Verschiedene Stylisten OK</span>
+    },
+    {
+      <span class="string">"key"</span>: <span class="string">"wash_and_style"</span>,
+      <span class="string">"name"</span>: <span class="string">"Waschen & Stylen"</span>,
+      <span class="string">"durationMin"</span>: 30
+    }
+  ]
+}
+            </div>
+
+            <h4>Booking-Ablauf</h4>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+sequenceDiagram
+    participant CRM as CompositeBookingService
+    participant Lock as BookingLockService
+    participant Calcom as Cal.com API
+    participant DB as PostgreSQL
+
+    Note over CRM,DB: Booking Request: Balayage Premium
+
+    CRM->>Lock: acquireMultipleLocks([Segment A, Segment B])
+    Lock-->>CRM: ✅ Locks acquired
+
+    Note over CRM: Reverse Order Booking (B → A) for safer rollback
+
+    CRM->>Calcom: POST /bookings (Segment B: Waschen)<br/>{start: 11:00, duration: 30min, staff: Marie}
+    Calcom-->>CRM: ✅ booking_id: 999002
+
+    CRM->>Calcom: POST /bookings (Segment A: Farbauftrag)<br/>{start: 10:00, duration: 45min, staff: Anna}
+    Calcom-->>CRM: ✅ booking_id: 999001
+
+    CRM->>DB: CREATE Appointment<br/>(composite=true, composite_group_uid: xyz-123)
+    CRM->>DB: segments: [{index:0, booking_id:999001}, {index:1, booking_id:999002}]
+
+    CRM->>Lock: releaseMultipleLocks()
+
+    Note over CRM,DB: ✅ Composite Booking Complete
+                </pre>
+            </div>
+
+            <h4>Saga Pattern (Compensation bei Fehler)</h4>
+            <div class="warning-box">
+                <strong>Problem:</strong> Segment A erfolgreich gebucht, aber Segment B schlägt fehl.<br>
+                <strong>Lösung:</strong> Automatische Kompensation - bereits gebuchte Segmente werden storniert.
+            </div>
+
+            <div class="code-block">
+<span class="comment">// Beispiel: Segment A gebucht, Segment B fehlgeschlagen</span>
+
+1. Segment B buchen → ✅ <span class="keyword">SUCCESS</span> (booking_id: 999002)
+2. Segment A buchen → ❌ <span class="keyword">FAILED</span> (Stylist nicht verfügbar)
+
+<span class="comment">// Compensation Saga startet automatisch:</span>
+3. Storniere Segment B (booking_id: 999002)
+4. Release Locks
+5. Return Error → <span class="string">"Leider ist dieser Termin nicht mehr verfügbar"</span>
+            </div>
+
+            <h3>6.3 Service-Synchronisierung (Cal.com ↔ CRM)</h3>
+
+            <div class="info-box">
+                <strong>Multi-Tenant-Sicherheit:</strong> Jedes Cal.com Event Type kann nur EINER Company gehören. Die Zuordnung wird in <code>calcom_event_mappings</code> gespeichert.
+            </div>
+
+            <h4>Architektur</h4>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+graph TB
+    subgraph "Cal.com (SaaS)"
+        Team[Team: Friseur Meier<br/>team_id: 34209]
+        ET1[Event Type: Herrenhaarschnitt<br/>id: 3757770]
+        ET2[Event Type: Dauerwelle<br/>id: 3757758]
+        ET3[Event Type: Färben<br/>id: 3757801]
+        Team --> ET1
+        Team --> ET2
+        Team --> ET3
+    end
+
+    subgraph "CRM System"
+        Company[Company: Friseur Meier<br/>company_id: 1]
+        Branch[Branch: Hauptfiliale<br/>branch_id: 1]
+        S1[Service: Herrenhaarschnitt<br/>calcom_event_type_id: 3757770]
+        S2[Service: Dauerwelle<br/>calcom_event_type_id: 3757758]
+        S3[Service: Färben<br/>calcom_event_type_id: 3757801]
+
+        Company --> Branch
+        Branch --> S1
+        Branch --> S2
+        Branch --> S3
+    end
+
+    subgraph "Mapping Table"
+        Map1[calcom_event_type_id: 3757770<br/>company_id: 1<br/>calcom_team_id: 34209]
+        Map2[calcom_event_type_id: 3757758<br/>company_id: 1<br/>calcom_team_id: 34209]
+        Map3[calcom_event_type_id: 3757801<br/>company_id: 1<br/>calcom_team_id: 34209]
+    end
+
+    ET1 -.->|ownership| Map1
+    ET2 -.->|ownership| Map2
+    ET3 -.->|ownership| Map3
+
+    Map1 -.->|validates| S1
+    Map2 -.->|validates| S2
+    Map3 -.->|validates| S3
+
+    style Team fill:#e1f5ff
+    style Company fill:#ffe1f5
+    style Map1 fill:#fff4e1
+    style Map2 fill:#fff4e1
+    style Map3 fill:#fff4e1
+                </pre>
+            </div>
+
+            <h4>Synchronisierungs-Prozess</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Schritt</th>
+                        <th>Trigger</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Fetch Event Types</strong></td>
+                        <td>Cron (täglich 2:00 Uhr)<br/>Manuell: <code>php artisan calcom:sync-services</code></td>
+                        <td>Holt alle Event Types vom Cal.com Team</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Create Mapping</strong></td>
+                        <td>Neues Event Type gefunden</td>
+                        <td>Erstellt Eintrag in <code>calcom_event_mappings</code><br/>Verknüpft Event Type mit Company</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Create/Update Service</strong></td>
+                        <td>Mapping existiert</td>
+                        <td>Erstellt/Aktualisiert Service in CRM<br/>Setzt <code>calcom_event_type_id</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Validate Ownership</strong></td>
+                        <td>Service wird gespeichert</td>
+                        <td>Prüft via Mapping, ob Event Type zur Company gehört<br/>Verhindert Cross-Tenant-Zugriff</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Deactivate Orphans</strong></td>
+                        <td>Event Type in CRM, aber nicht in Cal.com</td>
+                        <td>Setzt Service auf <code>is_active = false</code><br/>Sync-Status: 'error'</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Ownership Validation (Multi-Tenant Security)</h4>
+            <div class="code-block">
+<span class="comment">// Service.php - boot() Methode</span>
+
+<span class="keyword">static</span>::<span class="function">saving</span>(<span class="keyword">function</span> ($service) {
+    <span class="comment">// Validate Cal.com event type ownership (Multi-Tenant Security)</span>
+    <span class="keyword">if</span> ($service-><span class="function">isDirty</span>(<span class="string">'calcom_event_type_id'</span>) && $service->calcom_event_type_id) {
+        $isValid = DB::<span class="function">table</span>(<span class="string">'calcom_event_mappings'</span>)
+            -><span class="function">where</span>(<span class="string">'calcom_event_type_id'</span>, $service->calcom_event_type_id)
+            -><span class="function">where</span>(<span class="string">'company_id'</span>, $service->company_id)
+            -><span class="function">exists</span>();
+
+        <span class="keyword">if</span> (!$isValid) {
+            <span class="keyword">throw new</span> Exception(
+                <span class="string">"Security violation: Event Type does not belong to company's Cal.com team"</span>
+            );
+        }
+    }
+});
+
+<span class="comment">// ✅ Verhindert: Company A verwendet Event Type von Company B</span>
+<span class="comment">// ✅ Garantiert: Event Type kann nur in eigener Company genutzt werden</span>
+            </div>
+
+            <h4>Synchronisierungs-Befehle</h4>
+            <div class="code-block">
+<span class="comment"># Alle Services mit Cal.com synchronisieren</span>
+php artisan calcom:sync-services
+
+<span class="comment"># Nur Unterschiede prüfen (kein Sync)</span>
+php artisan calcom:sync-services --check-only
+
+<span class="comment"># Force Sync (auch bei kürzlichem Sync)</span>
+php artisan calcom:sync-services --force
+
+<span class="comment"># Team Event Types importieren</span>
+php artisan calcom:import-team-events
+
+<span class="comment"># Cal.com Verfügbarkeit testen</span>
+php artisan calcom:check-availability
+            </div>
+
+            <h4>Webhook-basierte Sync (Real-time)</h4>
+            <div class="success-box">
+                <strong>Best Practice:</strong> Cron-Jobs sind Backup. Haupt-Synchronisierung erfolgt via Cal.com Webhooks in Echtzeit.
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Cal.com Webhook</th>
+                        <th>CRM Aktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>BOOKING_CREATED</strong></td>
+                        <td>POST /api/webhooks/calcom</td>
+                        <td>Prüft ob bereits in CRM → Falls nicht: Import Appointment<br/>sync_origin = 'calcom'</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BOOKING_RESCHEDULED</strong></td>
+                        <td>POST /api/webhooks/calcom</td>
+                        <td>Update Appointment (starts_at, ends_at)<br/>Invalidate Cache</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BOOKING_CANCELLED</strong></td>
+                        <td>POST /api/webhooks/calcom</td>
+                        <td>Update status = 'cancelled'<br/>Invalidate Cache</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EVENT_TYPE_CREATED</strong></td>
+                        <td>POST /api/webhooks/calcom</td>
+                        <td>Create calcom_event_mapping<br/>Create Service (is_active=false)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EVENT_TYPE_UPDATED</strong></td>
+                        <td>POST /api/webhooks/calcom</td>
+                        <td>Update Service (duration, name, etc.)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="warning-box">
+                <strong>Wichtig für Retell Agent:</strong>
+                <ul>
+                    <li><strong>Processing Time Services:</strong> Agent nennt die Gesamtdauer (z.B. "Dauerwelle dauert 65 Minuten"). Die Phasen-Aufteilung ist intern und wird dem Kunden nicht erklärt.</li>
+                    <li><strong>Composite Services:</strong> Agent kann optional die Segmente erwähnen (z.B. "Balayage besteht aus Farbauftrag und anschließendem Styling mit kurzer Einwirkzeit dazwischen").</li>
+                    <li><strong>Verfügbarkeit:</strong> System prüft automatisch Processing-Phasen und Composite-Segmente. Agent muss nur <code>check_availability_v17</code> aufrufen.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 7: Process Flows -->
+        <div class="section" id="flows">
+            <h2>7. Prozess-Flows</h2>
+
+            <h3>7.1 Booking Flow (Komplett)</h3>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+graph TD
+    A[User ruft an] -->|Retell Agent| B[get_current_context]
+    B --> C[check_customer]
+    C -->|Bestandskunde| D[Personalisierte Begrüßung]
+    C -->|Neukunde| E[Standardbegrüßung]
+    D --> F[User nennt Wunsch]
+    E --> F
+    F -->|'Termin buchen'| G[extract_booking_variables]
+    G --> H[check_availability_v17]
+    H -->|Verfügbar| I[start_booking]
+    H -->|Nicht verfügbar| J[get_alternatives]
+    J --> K[User wählt Alternative]
+    K --> I
+    I -->|Erfolg| L[Bestätigung an User]
+    I -->|Fehler| M[request_callback]
+    L --> N[Cal.com Sync async]
+    M --> O[Callback-Team benachrichtigt]
+
+    style A fill:#667eea,color:#fff
+    style I fill:#48bb78,color:#fff
+    style L fill:#48bb78,color:#fff
+    style M fill:#f56565,color:#fff
+                </pre>
+            </div>
+
+            <h3>7.2 Reschedule Flow</h3>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+graph TD
+    A[User: 'Termin verschieben'] --> B[query_appointment]
+    B --> C[Zeige aktuellen Termin]
+    C --> D[Frage nach neuem Datum/Zeit]
+    D --> E[check_availability_v17]
+    E -->|Verfügbar| F[Policy Check 24h]
+    E -->|Nicht verfügbar| G[get_alternatives]
+    F -->|OK| H[reschedule_appointment]
+    F -->|Abgelehnt| I[Fehler: Zu kurzfristig]
+    G --> D
+    H --> J[Bestätigung + Cal.com Sync]
+
+    style A fill:#667eea,color:#fff
+    style H fill:#48bb78,color:#fff
+    style I fill:#f56565,color:#fff
+                </pre>
+            </div>
+
+            <h3>7.3 Cancel Flow</h3>
+            <div class="flow-diagram">
+                <pre class="mermaid">
+graph TD
+    A[User: 'Stornieren'] --> B[query_appointment]
+    B --> C[Zeige Termin-Details]
+    C --> D[Bestätigung einholen]
+    D -->|'Ja'| E[Policy Check 24h]
+    D -->|'Nein'| F[Abbruch]
+    E -->|OK| G[cancel_appointment]
+    E -->|Abgelehnt| H[Fehler: Zu kurzfristig]
+    G --> I[Bestätigung + Cal.com Sync]
+
+    style A fill:#667eea,color:#fff
+    style G fill:#48bb78,color:#fff
+    style H fill:#f56565,color:#fff
+                </pre>
+            </div>
+        </div>
+
+        <!-- Section 8: Praxis-Beispiele -->
+        <div class="section" id="examples">
+            <h2>8. Praxis-Beispiele</h2>
+
+            <h3>Beispiel 1: Erfolgreiche Buchung mit deutschem Datum</h3>
+
+            <h4>Gesprächsverlauf</h4>
+            <div class="code-block">
+<span class="comment">// User:</span>
+<span class="string">"Ich hätte gern eine Dauerwelle heute um 17 Uhr"</span>
+
+<span class="comment">// Agent ruft auf:</span>
+<span class="function">check_availability_v17</span>({
+  <span class="string">"datum"</span>: <span class="string">"heute"</span>,
+  <span class="string">"uhrzeit"</span>: <span class="string">"17:00"</span>,
+  <span class="string">"dienstleistung"</span>: <span class="string">"Dauerwelle"</span>
+})
+
+<span class="comment">// DateTimeParser wandelt um:</span>
+<span class="string">"heute"</span> → <span class="string">"2025-11-19"</span>
+
+<span class="comment">// Response:</span>
+{
+  <span class="string">"available"</span>: <span class="keyword">true</span>,
+  <span class="string">"message"</span>: <span class="string">"Ja, Dauerwelle ist verfügbar am Mittwoch, den 19. November um 17:00 Uhr."</span>
+}
+
+<span class="comment">// Agent:</span>
+<span class="string">"Perfekt! Ihr Wunschtermin heute um 17 Uhr ist frei. Auf welchen Namen darf ich buchen?"</span>
+
+<span class="comment">// User:</span>
+<span class="string">"Hans Schuster"</span>
+
+<span class="comment">// Agent ruft auf:</span>
+<span class="function">start_booking</span>({
+  <span class="string">"datetime"</span>: <span class="string">"heute 17:00"</span>,
+  <span class="string">"customer_name"</span>: <span class="string">"Hans Schuster"</span>,
+  <span class="string">"customer_phone"</span>: <span class="string">"0151123456"</span>,  <span class="comment">// Dummy (anonym)</span>
+  <span class="string">"customer_email"</span>: <span class="string">"termin@askproai.de"</span>  <span class="comment">// Dummy</span>
+})
+
+<span class="comment">// Response:</span>
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"appointment_id"</span>: <span class="keyword">706</span>,
+  <span class="string">"message"</span>: <span class="string">"Perfekt! Ihr Termin am 19.11. um 17:00 Uhr ist gebucht."</span>
+}
+
+<span class="comment">// Agent:</span>
+<span class="string">"Ihr Termin ist gebucht für heute um 17 Uhr. Kann ich Ihnen sonst noch helfen?"</span>
+            </div>
+
+            <h3>Beispiel 2: Alternative auswählen</h3>
+
+            <h4>Gesprächsverlauf</h4>
+            <div class="code-block">
+<span class="comment">// User:</span>
+<span class="string">"Ich möchte morgen um 10 Uhr einen Herrenhaarschnitt"</span>
+
+<span class="comment">// check_availability_v17 Response:</span>
+{
+  <span class="string">"available"</span>: <span class="keyword">false</span>,
+  <span class="string">"alternatives"</span>: [
+    { <span class="string">"time"</span>: <span class="string">"2025-11-20 09:45"</span>, <span class="string">"spoken"</span>: <span class="string">"morgen um 9 Uhr 45"</span> },
+    { <span class="string">"time"</span>: <span class="string">"2025-11-20 10:30"</span>, <span class="string">"spoken"</span>: <span class="string">"morgen um 10 Uhr 30"</span> }
+  ]
+}
+
+<span class="comment">// Agent:</span>
+<span class="string">"Um 10 Uhr ist morgen schon belegt, aber ich habe noch morgen um 9 Uhr 45 oder morgen um 10 Uhr 30. Was passt Ihnen besser?"</span>
+
+<span class="comment">// User:</span>
+<span class="string">"Dann nehme ich um 10 Uhr 30"</span>
+
+<span class="comment">// Flow aktualisiert appointment_time auf "10:30"</span>
+
+<span class="comment">// start_booking wird aufgerufen mit neuer Zeit</span>
+<span class="function">start_booking</span>({ <span class="string">"datetime"</span>: <span class="string">"morgen 10:30"</span>, ... })
+
+<span class="comment">// Agent:</span>
+<span class="string">"Perfekt! Ihr Termin ist gebucht für morgen um 10 Uhr 30."</span>
+            </div>
+
+            <h3>Beispiel 3: Service-Liste abfragen</h3>
+
+            <h4>Gesprächsverlauf</h4>
+            <div class="code-block">
+<span class="comment">// User:</span>
+<span class="string">"Welche Dienstleistungen bieten Sie an?"</span>
+
+<span class="comment">// Agent ruft auf:</span>
+<span class="function">get_available_services</span>()
+
+<span class="comment">// Agent (Progressive Disclosure - Stufe 1):</span>
+<span class="string">"Wir bieten folgende Dienstleistungen an:
+
+Herrenschnitt:
+- Herrenhaarschnitt (25€, 30 Min)
+- Bart trimmen (15€, 15 Min)
+
+Damenschnitt:
+- Damenhaarschnitt (35€, 45 Min)
+
+Möchten Sie mehr über eine bestimmte Kategorie erfahren?"</span>
+
+<span class="comment">// User:</span>
+<span class="string">"Was haben Sie noch im Bereich Styling?"</span>
+
+<span class="comment">// Agent (Stufe 2 - Kategorie-Details):</span>
+<span class="string">"Im Bereich Styling haben wir:
+- Dauerwelle (75€, 90 Min)
+- Strähnen (ab 45€, 60 Min)
+- Balayage (ab 80€, 120 Min)
+
+Möchten Sie einen dieser Services buchen?"</span>
+            </div>
+        </div>
+
+        <!-- Section 9: Troubleshooting -->
+        <div class="section" id="troubleshooting">
+            <h2>9. Troubleshooting</h2>
+
+            <h3>Häufige Probleme und Lösungen</h3>
+
+            <h4>Problem 1: "Fehler beim Parsen des Datums"</h4>
+            <div class="warning-box">
+                <strong>Symptom:</strong> Agent sagt "Es gab ein technisches Problem" bei Verfügbarkeitsprüfung
+            </div>
+
+            <div class="code-block">
+<span class="comment">// Ursache:</span>
+DateTime-Parser erkennt Format nicht
+
+<span class="comment">// Lösung:</span>
+1. Check: Welches Format wurde gesendet?
+   → Logs: <span class="string">"datum"</span> Parameter prüfen
+
+2. Ist Format in DateTimeParser unterstützt?
+   → Siehe Section 3 für unterstützte Formate
+
+3. Falls neues Format: DateTimeParser erweitern
+   → <span class="keyword">Location:</span> app/Services/Retell/DateTimeParser.php
+            </div>
+
+            <h4>Problem 2: start_booking wird nicht aufgerufen</h4>
+            <div class="warning-box">
+                <strong>Symptom:</strong> Agent sagt "gebucht" aber kein Termin in Datenbank
+            </div>
+
+            <div class="code-block">
+<span class="comment">// Ursache:</span>
+Retell Flow überspringt start_booking Node
+
+<span class="comment">// Lösung:</span>
+1. Check Flow Transitions:
+   → node_collect_final_booking_data → func_start_booking
+   → Condition: <span class="string">"customer_name exists"</span>
+
+2. Verify wait_for_result: <span class="keyword">true</span>
+   → start_booking muss warten auf Response
+
+3. Check Logs:
+   → Grep nach <span class="string">"start_booking"</span> in laravel.log
+            </div>
+
+            <h4>Problem 3: Double Bookings trotz Pre-Sync Validation</h4>
+            <div class="warning-box">
+                <strong>Symptom:</strong> Zwei Termine zur gleichen Zeit gebucht
+            </div>
+
+            <div class="code-block">
+<span class="comment">// Ursache:</span>
+Race Condition oder Pre-Sync Check nicht aktiv
+
+<span class="comment">// Lösung:</span>
+1. Verify Pre-Sync Validation aktiv:
+   → RetellFunctionCallHandler.php Lines 1908-1938 (ASYNC)
+   → Lines 2009-2039 (SYNC)
+
+2. Check Logs für:
+   → <span class="string">"✅ PRE-SYNC VALIDATION passed"</span>
+   → <span class="string">"🚨 PRE-SYNC CONFLICT"</span>
+
+3. Falls nicht vorhanden: FIX 3 nicht deployed
+            </div>
+
+            <h4>Problem 4: Service-Liste zu lang</h4>
+            <div class="warning-box">
+                <strong>Symptom:</strong> Agent listet 50+ Services auf, User überfordert
+            </div>
+
+            <div class="code-block">
+<span class="comment">// Ursache:</span>
+Flow-Instruction zeigt alle Services
+
+<span class="comment">// Lösung:</span>
+Progressive Disclosure implementieren (siehe Section 5):
+
+1. <span class="keyword">node_show_services</span> Instruction ändern:
+   → <span class="string">"Zeige max 5 Services pro Kategorie"</span>
+   → <span class="string">"Frage: 'Möchten Sie mehr erfahren?'"</span>
+
+2. Edge hinzufügen:
+   → <span class="string">"User wants more"</span> → func_get_services (mit Filter)
+            </div>
+
+            <h3>Debug-Checklist</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Schritt</th>
+                        <th>Kommando/Location</th>
+                        <th>Was prüfen?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Logs prüfen</td>
+                        <td><code>tail -f storage/logs/laravel.log</code></td>
+                        <td>Exception Messages, Stack Traces</td>
+                    </tr>
+                    <tr>
+                        <td>2. Call ID finden</td>
+                        <td><code>grep "call_abc..." laravel.log</code></td>
+                        <td>Alle Events für diesen Call</td>
+                    </tr>
+                    <tr>
+                        <td>3. Function Calls</td>
+                        <td><code>grep "check_availability" laravel.log</code></td>
+                        <td>Request + Response prüfen</td>
+                    </tr>
+                    <tr>
+                        <td>4. DB Check</td>
+                        <td><code>php artisan tinker</code></td>
+                        <td>Appointment::latest()->first()</td>
+                    </tr>
+                    <tr>
+                        <td>5. Cal.com Sync</td>
+                        <td><code>grep "Cal.com sync" laravel.log</code></td>
+                        <td>Success/Fail + API Response</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box">
+                <strong>💡 Pro-Tip:</strong> Für umfassende Analysen nutze:<br>
+                <code>grep "call_abc..." laravel.log | grep -E "(check_availability|start_booking|ERROR)"</code><br>
+                Das zeigt alle relevanten Events für einen Call.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>📚 AskPro AI Booking Middleware Documentation v1.0</p>
+            <p>Erstellt: 2025-11-19 | Für: Cem | Von: Claude Code</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                Alle Fixes deployed und aktiv: FIX 1-8 | Status: ✅ Production Ready
+            </p>
+        </div>
+    </div>
+
+    <!-- Copy Notification -->
+    <div id="copyNotification">✅ Erfolgreich kopiert!</div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+
+        // Export as Markdown
+        function exportAsMarkdown() {
+            const sections = document.querySelectorAll('.section');
+            let markdown = '# AskPro AI Booking Middleware Documentation\n\n';
+            markdown += '*Version 1.0 | Stand: 2025-11-19*\n\n';
+            markdown += '---\n\n';
+
+            sections.forEach(section => {
+                // Section Title
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    markdown += `## ${h2.textContent}\n\n`;
+                }
+
+                // Paragraphs
+                section.querySelectorAll('p').forEach(p => {
+                    markdown += `${p.textContent}\n\n`;
+                });
+
+                // Lists
+                section.querySelectorAll('ul').forEach(ul => {
+                    ul.querySelectorAll('li').forEach(li => {
+                        markdown += `- ${li.textContent}\n`;
+                    });
+                    markdown += '\n';
+                });
+
+                // Tables
+                section.querySelectorAll('table').forEach(table => {
+                    const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
+                    markdown += `| ${headers.join(' | ')} |\n`;
+                    markdown += `|${headers.map(() => '---').join('|')}|\n`;
+
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                        const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+                        markdown += `| ${cells.join(' | ')} |\n`;
+                    });
+                    markdown += '\n';
+                });
+
+                // Code Blocks
+                section.querySelectorAll('.code-block').forEach(code => {
+                    markdown += '```\n';
+                    markdown += code.textContent.trim() + '\n';
+                    markdown += '```\n\n';
+                });
+
+                markdown += '---\n\n';
+            });
+
+            copyToClipboard(markdown);
+        }
+
+        // Export as JSON
+        function exportAsJSON() {
+            const data = {
+                title: 'AskPro AI Booking Middleware Documentation',
+                version: '1.0',
+                date: '2025-11-19',
+                sections: []
+            };
+
+            document.querySelectorAll('.section').forEach(section => {
+                const sectionData = {
+                    title: section.querySelector('h2')?.textContent || '',
+                    content: [],
+                    code_examples: [],
+                    tables: []
+                };
+
+                // Content
+                section.querySelectorAll('p').forEach(p => {
+                    sectionData.content.push(p.textContent);
+                });
+
+                // Code Examples
+                section.querySelectorAll('.code-block').forEach(code => {
+                    sectionData.code_examples.push(code.textContent.trim());
+                });
+
+                // Tables
+                section.querySelectorAll('table').forEach(table => {
+                    const tableData = {
+                        headers: Array.from(table.querySelectorAll('th')).map(th => th.textContent),
+                        rows: []
+                    };
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                        tableData.rows.push(
+                            Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
+                        );
+                    });
+                    sectionData.tables.push(tableData);
+                });
+
+                data.sections.push(sectionData);
+            });
+
+            copyToClipboard(JSON.stringify(data, null, 2));
+        }
+
+        // Export as Plain Text
+        function exportAsPlainText() {
+            let text = 'ASKPRO AI BOOKING MIDDLEWARE DOCUMENTATION\n';
+            text += '=' .repeat(80) + '\n\n';
+            text += 'Version 1.0 | Stand: 2025-11-19\n\n';
+
+            document.querySelectorAll('.section').forEach(section => {
+                const title = section.querySelector('h2')?.textContent || '';
+                text += '\n' + title + '\n';
+                text += '-'.repeat(title.length) + '\n\n';
+
+                section.querySelectorAll('p, li, th, td').forEach(el => {
+                    text += el.textContent.trim() + '\n';
+                });
+
+                section.querySelectorAll('.code-block').forEach(code => {
+                    text += '\n--- CODE ---\n';
+                    text += code.textContent.trim() + '\n';
+                    text += '--- END CODE ---\n\n';
+                });
+            });
+
+            copyToClipboard(text);
+        }
+
+        // Copy to Clipboard Helper
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification();
+            });
+        }
+
+        // Show Notification
+        function showNotification() {
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

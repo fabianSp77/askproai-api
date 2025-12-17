@@ -272,6 +272,41 @@ class BranchResource extends Resource
                                                 return implode("\n", $info);
                                             }),
 
+                                        // Cal.com Integration Override
+                                        Section::make('Cal.com Überschreibungen')
+                                            ->description('Optional: Überschreiben Sie die Unternehmenseinstellungen für diese Filiale')
+                                            ->collapsed()
+                                            ->schema([
+                                                Grid::make(2)->schema([
+                                                    Forms\Components\TextInput::make('calcom_team_id')
+                                                        ->label('Cal.com Team ID (Override)')
+                                                        ->numeric()
+                                                        ->helperText('Leer lassen = von Unternehmen übernehmen'),
+
+                                                    Forms\Components\TextInput::make('calcom_api_key')
+                                                        ->label('Cal.com API Key (Override)')
+                                                        ->password()
+                                                        ->helperText('Leer lassen = von Unternehmen übernehmen'),
+                                                ]),
+                                            ]),
+
+                                        // Retell Integration Override
+                                        Section::make('Retell Überschreibungen')
+                                            ->description('Optional: Überschreiben Sie die Unternehmenseinstellungen für diese Filiale')
+                                            ->collapsed()
+                                            ->schema([
+                                                Grid::make(2)->schema([
+                                                    Forms\Components\TextInput::make('retell_agent_id')
+                                                        ->label('Retell Agent ID')
+                                                        ->helperText('Agent ID für diese Filiale (z.B. agent_xxx)'),
+
+                                                    Forms\Components\TextInput::make('retell_conversation_flow_id')
+                                                        ->label('Conversation Flow ID')
+                                                        ->maxLength(100)
+                                                        ->helperText('Retell Conversation Flow (z.B. conversation_flow_xxx)'),
+                                                ]),
+                                            ]),
+
                                         Grid::make(2)->schema([
                                             Forms\Components\Toggle::make('include_transcript_in_summary')
                                                 ->label('Transkript in Summary')

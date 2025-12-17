@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use App\Filament\Resources\CallResource;
 
 class CallsRelationManager extends RelationManager
 {
@@ -18,11 +19,11 @@ class CallsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('call_id')
+                Forms\Components\TextInput::make('retell_call_id')
                     ->label('Call ID')
                     ->disabled(),
-                Forms\Components\DateTimePicker::make('started_at')
-                    ->label('Started At')
+                Forms\Components\DateTimePicker::make('created_at')
+                    ->label('Created At')
                     ->disabled(),
                 Forms\Components\TextInput::make('duration')
                     ->label('Duration (seconds)')
@@ -33,8 +34,16 @@ class CallsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                // 🔧 FIX 2025-11-24: Use string matching on to_number instead of FK phone_number_id
+                // Reason: phone_number_id is not consistently set, but to_number always contains the phone number
+                // This allows showing ALL calls for this phone number, not just those with FK set
+                $phoneNumber = $this->getOwnerRecord()->number;
+                return $query->where('to_number', $phoneNumber)
+                    ->with(['appointments.service', 'customer']);
+            })
             ->columns([
-                Tables\Columns\TextColumn::make('call_id')
+                Tables\Columns\TextColumn::make('retell_call_id')
                     ->label('Call ID')
                     ->searchable()
                     ->sortable()
@@ -61,12 +70,50 @@ class CallsRelationManager extends RelationManager
                     })
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('started_at')
-                    ->label('Started')
-                    ->dateTime('d.m.Y H:i:s')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('ended_at')
-                    ->label('Ended')
+                Tables\Columns\TextColumn::make('service_type')
+                    ->label('Service / Terminwunsch')
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        try {
+                            $appointments = $record->appointments()->with('service')->get();
+
+                            if ($appointments->isEmpty()) {
+                                return '<span class="text-gray-400 text-xs">Kein Termin</span>';
+                            }
+
+                            $lines = [];
+                            $seen = [];
+
+                            foreach ($appointments as $appt) {
+                                if (!$appt || !$appt->service) continue;
+
+                                $serviceId = $appt->service->id;
+                                if (in_array($serviceId, $seen)) continue;
+                                $seen[] = $serviceId;
+
+                                $name = ($appt->service->display_name && trim($appt->service->display_name) !== '')
+                                    ? $appt->service->display_name
+                                    : $appt->service->name;
+                                $price = $appt->service->price;
+
+                                $isCancelled = $appt->status === 'cancelled';
+
+                                if ($isCancelled) {
+                                    $lines[] = '<span class="text-xs text-orange-600 line-through">🚫 ' . $name . '</span>';
+                                } else {
+                                    $priceText = $price ? ' • ' . number_format($price, 2) . '€' : '';
+                                    $lines[] = '<span class="text-xs text-gray-700">✓ ' . $name . $priceText . '</span>';
+                                }
+                            }
+
+                            return implode('<br>', $lines) ?: '<span class="text-gray-400 text-xs">-</span>';
+                        } catch (\Exception $e) {
+                            return '<span class="text-gray-400 text-xs">-</span>';
+                        }
+                    })
+                    ->wrap(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
                     ->dateTime('d.m.Y H:i:s')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('duration')
@@ -94,7 +141,7 @@ class CallsRelationManager extends RelationManager
                         'success' => 'outbound',
                     ]),
             ])
-            ->defaultSort('started_at', 'desc')
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
@@ -109,17 +156,21 @@ class CallsRelationManager extends RelationManager
                         'outbound' => 'Outbound',
                     ]),
                 Tables\Filters\Filter::make('today')
-                    ->query(fn ($query) => $query->whereDate('started_at', today()))
+                    ->query(fn ($query) => $query->whereDate('created_at', today()))
                     ->label('Today'),
                 Tables\Filters\Filter::make('this_week')
-                    ->query(fn ($query) => $query->whereBetween('started_at', [now()->startOfWeek(), now()->endOfWeek()]))
+                    ->query(fn ($query) => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]))
                     ->label('This Week'),
             ])
             ->headerActions([
                 // No create action for calls - they're created by the system
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('view')
+                    ->label('Ansehen')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn ($record) => CallResource::getUrl('view', ['record' => $record]))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 // No bulk actions for call history

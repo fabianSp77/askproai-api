@@ -9,9 +9,12 @@ use App\Jobs\SoftDeleteServiceJob;
 use App\Models\Service;
 use App\Models\Customer;
 use App\Models\Appointment;
+use App\Models\Staff;
 use App\Services\PhoneNumberNormalizer;
 use App\Services\StaffAssignmentService;
+use App\Services\CalcomHostMappingService;
 use App\Services\Strategies\AssignmentContext;
+use App\Services\Strategies\HostMatchContext;
 use App\Traits\LogsWebhookEvents;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -229,6 +232,7 @@ class CalcomWebhookController extends Controller
             // PHASE 2: Staff Assignment Integration
             // Attempt to assign staff using multi-model assignment system
             $staffId = null;
+            $branchId = null;  // Initialize early - will be set later based on service/staff
             $assignmentMetadata = [];
 
             if ($service) {
@@ -267,6 +271,56 @@ class CalcomWebhookController extends Controller
                 }
             }
 
+            // FALLBACK: Cal.com Host Mapping
+            // If StaffAssignmentService didn't assign, try Cal.com host mapping
+            $calcomHostId = null;
+
+            if (!$staffId) {
+                try {
+                    $hostMappingService = app(CalcomHostMappingService::class);
+
+                    // Extract host from Cal.com webhook payload
+                    $hostData = $hostMappingService->extractHostFromBooking($payload);
+
+                    if ($hostData) {
+                        $hostContext = new HostMatchContext(
+                            companyId: $expectedCompanyId,
+                            branchId: $branchId ?? null,
+                            serviceId: $service->id,
+                            calcomBooking: $payload
+                        );
+
+                        $staffId = $hostMappingService->resolveStaffForHost($hostData, $hostContext);
+                        $calcomHostId = $hostData['id'] ?? null;
+
+                        if ($staffId) {
+                            Log::channel('calcom')->info('[Cal.com] Staff assigned via host mapping', [
+                                'staff_id' => $staffId,
+                                'calcom_host_id' => $calcomHostId,
+                                'host_email' => $hostData['email'] ?? null,
+                                'matching_strategy' => 'calcom_host_mapping'
+                            ]);
+
+                            // Add to assignment metadata
+                            $assignmentMetadata['assignment_model_used'] = 'calcom_host_mapping';
+                            $assignmentMetadata['calcom_host_id'] = $calcomHostId;
+                            $assignmentMetadata['calcom_host_email'] = $hostData['email'] ?? null;
+                        } else {
+                            Log::channel('calcom')->warning('[Cal.com] No staff match for host', [
+                                'calcom_host_id' => $calcomHostId,
+                                'host_email' => $hostData['email'] ?? null,
+                                'host_name' => $hostData['name'] ?? null
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::channel('calcom')->error('[Cal.com] Host mapping error', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
+            }
+
             // 🏢 MULTI-BRANCH SUPPORT: Determine branch for appointment
             // Priority: 1) Service.branch_id (filialspezifischer Service)
             //          2) Staff.branch_id (Home-Filiale des Mitarbeiters)
@@ -284,14 +338,15 @@ class CalcomWebhookController extends Controller
                     'customer_id' => $customer->id,
                     'company_id' => $expectedCompanyId,  // ← Use verified company ID
                     'service_id' => $service?->id,
-                    'staff_id' => $staffId, // From multi-model assignment
+                    'staff_id' => $staffId, // From multi-model assignment or Cal.com host mapping
+                    'calcom_host_id' => $calcomHostId, // Cal.com host ID for audit trail
                     'branch_id' => $branchId, // 🏢 NEW: Multi-branch support via Service or Staff
                     'starts_at' => $startTime,
                     'ends_at' => $endTime,
                     'status' => 'confirmed',
                     'source' => 'cal.com',
                     'notes' => $payload['description'] ?? $payload['additionalNotes'] ?? null,
-                    'metadata' => json_encode([
+                    'metadata' => $this->safeJsonEncode([
                         'cal_com_data' => $payload,
                         'booking_uid' => $payload['uid'] ?? null,
                         'event_type' => $payload['eventType'] ?? null,
@@ -638,5 +693,56 @@ class CalcomWebhookController extends Controller
         }
 
         return $phone;
+    }
+
+    /**
+     * Safely encode data to JSON with error handling
+     *
+     * Prevents corrupt metadata from crashing appointment creation
+     *
+     * @param array $data Data to encode
+     * @return string|null JSON string or null on failure
+     */
+    private function safeJsonEncode(array $data): ?string
+    {
+        try {
+            $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            if ($json === false) {
+                Log::warning('[Cal.com] JSON encode failed', [
+                    'error' => json_last_error_msg(),
+                    'data_keys' => array_keys($data),
+                ]);
+                // Fallback: encode without problematic payload data
+                return json_encode([
+                    'booking_uid' => $data['booking_uid'] ?? null,
+                    'event_type' => $data['event_type'] ?? null,
+                    'encode_error' => json_last_error_msg(),
+                ]);
+            }
+
+            // Safety limit: 64KB max for metadata
+            if (strlen($json) > 65536) {
+                Log::warning('[Cal.com] Metadata too large, truncating cal_com_data', [
+                    'original_size' => strlen($json),
+                ]);
+                // Store only essential fields
+                return json_encode([
+                    'booking_uid' => $data['booking_uid'] ?? null,
+                    'event_type' => $data['event_type'] ?? null,
+                    'location' => $data['location'] ?? null,
+                    'meeting_url' => $data['meeting_url'] ?? null,
+                    'truncated' => true,
+                    'original_size' => strlen($json),
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            return $json;
+        } catch (\Exception $e) {
+            Log::error('[Cal.com] JSON encode exception', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }

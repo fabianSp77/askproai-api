@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Agent V67 → V68 - Komplette Fix-Anleitung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .version {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #856404;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .dashboard-link {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .dashboard-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+        }
+
+        .dashboard-link a:hover {
+            text-decoration: underline;
+        }
+
+        .fix-section {
+            margin: 40px 0;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .fix-header {
+            padding: 20px;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .fix-header input[type="checkbox"] {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .fix1 .fix-header { background: #e74c3c; }
+        .fix2 .fix-header { background: #c0392b; }
+        .fix3 .fix-header { background: #e67e22; }
+        .fix4 .fix-header { background: #f39c12; }
+
+        .fix-body {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-description {
+            margin: 15px 0;
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        .copyable {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .copyable pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: #27ae60;
+        }
+
+        .tool-mapping {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .tool-mapping table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tool-mapping th {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tool-mapping td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tool-mapping tr:hover {
+            background: #f8f9fa;
+        }
+
+        .old-value {
+            color: #e74c3c;
+            text-decoration: line-through;
+            font-family: monospace;
+        }
+
+        .new-value {
+            color: #27ae60;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .alert-critical {
+            background: #fee;
+            border: 3px solid #c0392b;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .alert-critical strong {
+            color: #c0392b;
+            font-size: 1.2em;
+        }
+
+        .testing-section {
+            background: #d4edda;
+            border: 3px solid #28a745;
+            padding: 30px;
+            margin: 40px 0;
+            border-radius: 15px;
+        }
+
+        .testing-section h2 {
+            color: #155724;
+            margin-bottom: 20px;
+        }
+
+        .test-step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+
+        .publish-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .publish-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .publish-step {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .screenshot-hint {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .screenshot-hint::before {
+            content: "💡 ";
+            font-size: 1.2em;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .copy-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Retell Agent Fix-Anleitung</h1>
+            <div class="version">Agent V67 → V68 (4 Kritische Fixes)</div>
+        </div>
+
+        <div class="content">
+            <div class="warning">
+                <strong>⚠️ WICHTIG:</strong> Diese Anleitung behebt 4 kritische Probleme:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Doppelte Begrüßung</strong> - Agent begrüßt mehrmals</li>
+                    <li><strong>Alle Tool-Calls schlagen fehl</strong> - BLOCKING! Keine Buchungen möglich!</li>
+                    <li><strong>Falsche Begrüßung</strong> - Neue Kunden werden als bekannte Kunden behandelt</li>
+                    <li><strong>Reschedule-Variablen</strong> - Agent spricht Template-Code statt echtem Datum</li>
+                </ul>
+            </div>
+
+            <div class="dashboard-link">
+                <strong>🔗 Dashboard URL (in neuem Tab öffnen):</strong><br>
+                <a href="https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f" target="_blank">
+                    https://dashboard.retellai.com/agents/agent_7a24afda65b04d1cd79fa11e8f
+                </a>
+            </div>
+
+            <!-- FIX 1: Doppelte Begrüßung -->
+            <div class="fix-section fix1">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix1-done">
+                    <span>FIX 1: Doppelte Begrüßung entfernen</span>
+                </div>
+                <div class="fix-body">
+                    <div class="alert-critical">
+                        <strong>🚨 Problem:</strong> Agent begrüßt bei jedem Anruf 2x ("Willkommen bei" + "Guten Tag, ...")
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Öffne den Conversation Flow Editor</span>
+                        </div>
+                        <div class="step-description">
+                            Im Dashboard → Klicke auf den Tab <strong>"Conversation Flow"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Du siehst jetzt eine visuelle Flow-Darstellung mit vielen bunten Boxen (Nodes)
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Finde die "Start Node" Einstellung</span>
+                        </div>
+                        <div class="step-description">
+                            Oben links oder rechts im Editor gibt es eine Einstellung <strong>"Start Node"</strong> oder <strong>"Starting Node"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Aktueller Wert: <span class="old-value">node_greeting</span>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">3</span>
+                            <span>Ändere Start Node</span>
+                        </div>
+                        <div class="step-description">
+                            Klicke auf das Dropdown und wähle:
+                        </div>
+                        <div class="copyable">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'func_initialize_context')">Kopieren</button>
+                            <pre>func_initialize_context</pre>
+                        </div>
+                        <div class="screenshot-hint">
+                            <strong>Vorher:</strong> node_greeting<br>
+                            <strong>Nachher:</strong> func_initialize_context
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">4</span>
+                            <span>Lösche die Node "node_greeting"</span>
+                        </div>
+                        <div class="step-description">
+                            Suche im Flow-Editor nach der Box mit dem Namen <strong>"node_greeting"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Rechtsklick auf die Node → "Delete" oder "Remove"<br>
+                            Oder: Node auswählen und Entf-Taste drücken
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIX 2: Tool-Namen korrigieren -->
+            <div class="fix-section fix2">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix2-done">
+                    <span>FIX 2: Tool-Namen korrigieren (KRITISCH - BLOCKING!)</span>
+                </div>
+                <div class="fix-body">
+                    <div class="alert-critical">
+                        <strong>🚨 BLOCKING BUG:</strong> ALLE Tool-Calls schlagen derzeit fehl!<br>
+                        Error: "Function 'tool-check-availability' is not supported"<br>
+                        <strong>Ohne diesen Fix kann der Agent KEINE Termine buchen, abfragen oder umbuchen!</strong>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Gehe zum Tools-Bereich</span>
+                        </div>
+                        <div class="step-description">
+                            Im Dashboard → Tab <strong>"Tools"</strong> oder <strong>"Functions"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Du siehst eine Liste von 10 Tools/Functions
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Für JEDES der 10 Tools: Ändere das Feld "Tool ID" oder "Function Name"</span>
+                        </div>
+                        <div class="step-description">
+                            <strong>WICHTIG:</strong> Nicht die Description ändern, nur die Tool ID!<br>
+                            Du musst das "tool-" Prefix entfernen und bei check-availability zu v17 wechseln.
+                        </div>
+
+                        <div class="tool-mapping">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>ALT (falsch ❌)</th>
+                                        <th>NEU (korrekt ✅)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td><span class="old-value">tool-get-current-context</span></td>
+                                        <td>
+                                            <span class="new-value">get_current_context</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_current_context')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td><span class="old-value">tool-check-customer</span></td>
+                                        <td>
+                                            <span class="new-value">check_customer</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'check_customer')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td><span class="old-value">tool-check-availability</span></td>
+                                        <td>
+                                            <span class="new-value">check_availability_v17</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'check_availability_v17')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td><span class="old-value">tool-start-booking</span></td>
+                                        <td>
+                                            <span class="new-value">start_booking</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'start_booking')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td><span class="old-value">tool-get-appointments</span></td>
+                                        <td>
+                                            <span class="new-value">query_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'query_appointment')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td><span class="old-value">tool-cancel-appointment</span></td>
+                                        <td>
+                                            <span class="new-value">cancel_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'cancel_appointment')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td><span class="old-value">tool-reschedule-appointment</span></td>
+                                        <td>
+                                            <span class="new-value">reschedule_appointment</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'reschedule_appointment')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td><span class="old-value">tool-get-alternatives</span></td>
+                                        <td>
+                                            <span class="new-value">get_alternatives</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_alternatives')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td><span class="old-value">tool-get-services</span></td>
+                                        <td>
+                                            <span class="new-value">get_available_services</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'get_available_services')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>10</td>
+                                        <td><span class="old-value">tool-request-callback</span></td>
+                                        <td>
+                                            <span class="new-value">request_callback</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(this, 'request_callback')" style="position: relative; float: right; top: -5px;">Kopieren</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="screenshot-hint">
+                            <strong>Wie:</strong> Klicke jedes Tool an → Ändere "Tool ID" oder "Function Name" Feld → Speichern
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIX 3: customer_found Logic -->
+            <div class="fix-section fix3">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix3-done">
+                    <span>FIX 3: customer_found Logic verschärfen</span>
+                </div>
+                <div class="fix-body">
+                    <div class="alert-critical">
+                        <strong>🚨 Problem:</strong> Neue Kunden werden fälschlicherweise als wiederkehrende Kunden begrüßt<br>
+                        ("Schön dass Sie wieder anrufen" obwohl customer_found=false)
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Finde die Node "node_personalized_greeting"</span>
+                        </div>
+                        <div class="step-description">
+                            Im Conversation Flow Editor → Suche nach der Node namens <strong>"node_personalized_greeting"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Klicke die Node an, um sie zu editieren
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Ersetze die komplette "Instruction"</span>
+                        </div>
+                        <div class="step-description">
+                            In der Node gibt es ein Textfeld <strong>"Instruction"</strong> oder <strong>"Prompt"</strong><br>
+                            <strong>Lösche den kompletten alten Text</strong> und ersetze ihn mit:
+                        </div>
+                        <div class="copyable" style="margin-top: 20px;">
+                            <button class="copy-btn" onclick="copyToClipboard(this, `STRIKT PRÜFEN - Boolean UND String Varianten:
+
+IF {{customer_found}} === \"false\" OR {{customer_found}} === false OR NOT {{customer_found}}:
+  Sage: \"Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?\"
+
+ELSE IF {{customer_found}} === \"true\" OR {{customer_found}} === true:
+  IF {{service_confidence}} >= 0.8:
+    Sage: \"Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen {{predicted_service}} buchen?\"
+  ELSE:
+    Sage: \"Guten Tag, {{customer_name}}! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?\"
+
+WICHTIG: Dies ist die EINZIGE personalisierte Begrüßung. Danach SOFORT zur Intent-Erkennung (NICHT noch einmal begrüßen!).`)">Kopieren</button>
+                            <pre>STRIKT PRÜFEN - Boolean UND String Varianten:
+
+IF {{customer_found}} === "false" OR {{customer_found}} === false OR NOT {{customer_found}}:
+  Sage: "Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?"
+
+ELSE IF {{customer_found}} === "true" OR {{customer_found}} === true:
+  IF {{service_confidence}} >= 0.8:
+    Sage: "Guten Tag! Ich sehe Sie waren bereits bei uns. Möchten Sie wieder einen {{predicted_service}} buchen?"
+  ELSE:
+    Sage: "Guten Tag, {{customer_name}}! Schön dass Sie wieder anrufen. Wie kann ich Ihnen heute helfen?"
+
+WICHTIG: Dies ist die EINZIGE personalisierte Begrüßung. Danach SOFORT zur Intent-Erkennung (NICHT noch einmal begrüßen!).</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIX 4: Reschedule-Variablen -->
+            <div class="fix-section fix4">
+                <div class="fix-header">
+                    <input type="checkbox" id="fix4-done">
+                    <span>FIX 4: Reschedule-Variablen aktualisieren</span>
+                </div>
+                <div class="fix-body">
+                    <div class="alert-critical">
+                        <strong>🚨 Problem:</strong> Bei Umbuchen spricht der Agent den Template-Code statt des echten Datums<br>
+                        (Sagt: "{{new_datum}} um {{new_uhrzeit}} Uhr" statt "15. November um 10 Uhr")
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">1</span>
+                            <span>Finde die Node "node_reschedule_success"</span>
+                        </div>
+                        <div class="step-description">
+                            Im Conversation Flow Editor → Suche nach der Node namens <strong>"node_reschedule_success"</strong>
+                        </div>
+                        <div class="screenshot-hint">
+                            Klicke die Node an, um sie zu editieren
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">
+                            <span class="step-number">2</span>
+                            <span>Ändere die Variablennamen in der Instruction</span>
+                        </div>
+                        <div class="step-description">
+                            Suche im Instruction-Text nach:
+                        </div>
+                        <div class="copyable">
+                            <pre style="color: #e74c3c;">❌ ALT (falsch):
+{{new_datum}} um {{new_uhrzeit}} Uhr</pre>
+                        </div>
+                        <div class="step-description">
+                            Ersetze es mit:
+                        </div>
+                        <div class="copyable">
+                            <button class="copy-btn" onclick="copyToClipboard(this, '{{neues_datum}} um {{neue_uhrzeit}} Uhr')">Kopieren</button>
+                            <pre style="color: #2ecc71;">✅ NEU (korrekt):
+{{neues_datum}} um {{neue_uhrzeit}} Uhr</pre>
+                        </div>
+                        <div class="screenshot-hint">
+                            <strong>Tipp:</strong> Nutze Strg+F (oder Cmd+F) im Textfeld, um "new_datum" zu finden und zu ersetzen
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publish Section -->
+            <div class="publish-section">
+                <h2>🚀 JETZT PUBLISHEN!</h2>
+                <div class="publish-step">
+                    <strong>Schritt 1:</strong> Klicke oben rechts auf den Button <strong>"Publish"</strong> oder <strong>"Save & Publish"</strong>
+                </div>
+                <div class="publish-step">
+                    <strong>Schritt 2:</strong> Bestätige die Publish-Aktion
+                </div>
+                <div class="publish-step">
+                    <strong>Was passiert:</strong><br>
+                    ✅ Version V68 wird published (live)<br>
+                    ✅ Version V69 wird automatisch als neuer Draft erstellt<br>
+                    ✅ Die Telefonnummer +493033081738 nutzt "auto-latest" → V68 geht SOFORT live!
+                </div>
+            </div>
+
+            <!-- Testing Section -->
+            <div class="testing-section">
+                <h2>✅ NACH DEM PUBLISH: LIVE-TEST DURCHFÜHREN</h2>
+
+                <div class="test-step">
+                    <strong>Test 1: Einzelne Begrüßung</strong><br>
+                    📞 Testanruf mit anonymer/unterdrückter Nummer<br>
+                    ✅ Erwarte: NUR EINE Begrüßung ("Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?")<br>
+                    ❌ Fehler wenn: Doppelte Begrüßung kommt
+                </div>
+
+                <div class="test-step">
+                    <strong>Test 2: Tool-Calls funktionieren</strong><br>
+                    💬 Sage: "Herrenhaarschnitt morgen um 10 Uhr"<br>
+                    ✅ Erwarte: Agent prüft Verfügbarkeit und antwortet mit Alternativen<br>
+                    ❌ Fehler wenn: "Function not supported" Error
+                </div>
+
+                <div class="test-step">
+                    <strong>Test 3: Korrekte Begrüßung für neue Kunden</strong><br>
+                    📞 Testanruf mit neuer/unbekannter Nummer<br>
+                    ✅ Erwarte: "Willkommen bei Friseur 1! Wie kann ich Ihnen helfen?"<br>
+                    ❌ Fehler wenn: "Schön dass Sie wieder anrufen"
+                </div>
+
+                <div class="test-step">
+                    <strong>Test 4: Reschedule mit echten Werten</strong><br>
+                    💬 Buche Termin, dann sage: "Ich möchte umbuchen auf nächsten Dienstag 14 Uhr"<br>
+                    ✅ Erwarte: "Ihr Termin wurde verschoben auf 19. November um 14 Uhr"<br>
+                    ❌ Fehler wenn: Agent sagt Template-Code wie "{{neues_datum}}"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Kopieren fehlgeschlagen. Bitte manuell kopieren.');
+                console.error('Copy failed:', err);
+            });
+        }
+
+        // Save checkbox states to localStorage
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            const savedState = localStorage.getItem(checkbox.id);
+            if (savedState === 'true') {
+                checkbox.checked = true;
+            }
+
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem(checkbox.id, checkbox.checked);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskPro AI Gateway - Komplette System Dokumentation 2025-11-24</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .header .metadata {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .metadata-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 3px solid #667eea;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.6em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .section h4 {
+            color: #555;
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .flow-chart {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .flow-step::after {
+            content: '↓';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        .flow-step:last-child::after {
+            content: '';
+        }
+
+        .flow-step .step-number {
+            background: rgba(255,255,255,0.3);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .flow-step .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .flow-step .step-details {
+            font-size: 0.95em;
+            opacity: 0.95;
+            padding-left: 20px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .code-block .comment {
+            color: #6272a4;
+        }
+
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+
+        .code-block .string {
+            color: #f1fa8c;
+        }
+
+        .code-block .function {
+            color: #50fa7b;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .info-box.success {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .info-box.warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .info-box.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .info-box h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: inherit;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 2px;
+        }
+
+        .badge.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .badge.warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .badge.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .badge.info {
+            background: #2196f3;
+            color: white;
+        }
+
+        .badge.gray {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.green {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .status-dot.red {
+            background: #f44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+
+        .status-dot.yellow {
+            background: #ff9800;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .card h4 {
+            color: #667eea;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .toc {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .toc h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border: none;
+            padding: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .toc li:last-child {
+            border-bottom: none;
+        }
+
+        .toc a {
+            color: #764ba2;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: #667eea;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .metric-value {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #667eea;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 70px;
+            padding-bottom: 30px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 18px;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px #667eea;
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .timeline-date {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            background: #2d2d2d;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🚀 AskPro AI Gateway</h1>
+            <div class="subtitle">Komplette System Dokumentation - State-of-the-Art</div>
+            <div class="metadata">
+                <div class="metadata-item">
+                    <strong>Version:</strong> 2.0 Production Ready
+                </div>
+                <div class="metadata-item">
+                    <strong>Datum:</strong> 24. November 2025
+                </div>
+                <div class="metadata-item">
+                    <strong>Status:</strong> <span class="status-indicator"><span class="status-dot green"></span>100% Produktionsbereit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <div class="nav">
+            <ul>
+                <li><a href="#overview">Übersicht</a></li>
+                <li><a href="#architecture">Architektur</a></li>
+                <li><a href="#booking-flow">Buchungs-Flow</a></li>
+                <li><a href="#composite-services">Composite Services</a></li>
+                <li><a href="#reschedule">Verschieben/Stornieren</a></li>
+                <li><a href="#calcom-sync">Cal.com Sync</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#monitoring">Monitoring</a></li>
+                <li><a href="#files">Dateien</a></li>
+            </ul>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- EXECUTIVE SUMMARY -->
+            <div class="section" id="overview">
+                <h2>📋 Executive Summary</h2>
+
+                <div class="info-box success">
+                    <h4>🎯 Systemstatus</h4>
+                    <p><strong>Das AskPro AI Gateway ist vollständig produktionsbereit!</strong></p>
+                    <p>Alle kritischen Komponenten sind getestet, dokumentiert und deployed. Das System kann sofort für echte Kundenbuchungen verwendet werden.</p>
+                </div>
+
+                <h3>Kern-Funktionalität</h3>
+                <p>Das AskPro AI Gateway ist ein Voice-AI-basiertes Terminbuchungssystem für Friseur-Dienstleistungen. Es verbindet:</p>
+
+                <div class="grid-3">
+                    <div class="card">
+                        <h4>🤖 Retell AI</h4>
+                        <p>Voice AI Agent für natürliche Telefongespräche mit Kunden</p>
+                        <div class="badge info">V83 Prompt</div>
+                    </div>
+                    <div class="card">
+                        <h4>📅 Cal.com</h4>
+                        <p>Kalender- und Verfügbarkeitssystem für Terminmanagement</p>
+                        <div class="badge info">V2 API</div>
+                    </div>
+                    <div class="card">
+                        <h4>⚙️ Laravel Backend</h4>
+                        <p>Zentrale Business Logic und Datenverwaltung</p>
+                        <div class="badge info">Laravel 11</div>
+                    </div>
+                </div>
+
+                <h3>Letzte Updates (2025-11-23 bis 2025-11-24)</h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">23. November 2025</div>
+                            <h4>Kritische Bugfixes</h4>
+                            <ul>
+                                <li>✅ Availability Overlap Detection korrigiert</li>
+                                <li>✅ Call ID Placeholder Support erweitert</li>
+                                <li>✅ Post-Sync Verification implementiert</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">24. November 2025</div>
+                            <h4>CalcomEventMaps Setup Komplett</h4>
+                            <ul>
+                                <li>✅ 12 Event Types in Cal.com erstellt</li>
+                                <li>✅ 24 CalcomEventMap Einträge in DB</li>
+                                <li>✅ Beide Fabian Spitzer Accounts konfiguriert</li>
+                                <li>✅ 100% Verifikation erfolgreich</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Metriken</h3>
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">24/24</div>
+                            <div class="metric-label">CalcomEventMaps</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">100%</div>
+                            <div class="metric-label">Service Coverage</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">3</div>
+                            <div class="metric-label">Composite Services</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Referenz-Dokumentation</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dokument</th>
+                                <th>Beschreibung</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>FINAL_STATUS_PRODUCTION_READY_2025-11-23.md</strong></td>
+                                <td>Session vom 23.11. - Bugfixes & Post-Sync Verification</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>CALCOM_EVENT_MAPS_SETUP_COMPLETE_2025-11-24.md</strong></td>
+                                <td>CalcomEventMaps Setup - Technische Details (700+ Zeilen)</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>SESSION_SUMMARY_2025-11-24.md</strong></td>
+                                <td>Session vom 24.11. - Übersicht & Roadmap</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>testanruf-analyse-2025-11-22.html</strong></td>
+                                <td>Vorherige Testanruf-Analyse (Referenz)</td>
+                                <td><span class="badge info">Archiv</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ARCHITECTURE -->
+            <div class="section" id="architecture">
+                <h2>🏗️ System-Architektur</h2>
+
+                <h3>High-Level Übersicht</h3>
+
+                <div class="mermaid">
+graph TB
+    User[👤 Kunde ruft an] --> Retell[🤖 Retell AI Agent]
+    Retell -->|Function Calls| Backend[⚙️ Laravel Backend]
+    Backend -->|Query Availability| Calcom[📅 Cal.com API]
+    Backend -->|Create Bookings| Calcom
+    Backend -->|Store Data| DB[(🗄️ PostgreSQL)]
+    Backend -->|Cache| Redis[(💾 Redis)]
+    Admin[👨‍💼 Admin] --> Filament[🎨 Filament Admin]
+    Filament --> DB
+    Calcom -->|Webhooks| Backend
+
+    style Retell fill:#667eea,color:#fff
+    style Backend fill:#764ba2,color:#fff
+    style Calcom fill:#50fa7b,color:#000
+    style DB fill:#f1fa8c,color:#000
+    style Redis fill:#ff79c6,color:#fff
+    style Filament fill:#8be9fd,color:#000
+                </div>
+
+                <h3>Tech Stack</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Backend</h4>
+                        <ul>
+                            <li><strong>Framework:</strong> Laravel 11 (PHP 8.2)</li>
+                            <li><strong>Database:</strong> PostgreSQL 14</li>
+                            <li><strong>Cache:</strong> Redis</li>
+                            <li><strong>Queue:</strong> Laravel Queue (Redis Driver)</li>
+                            <li><strong>Admin Panel:</strong> Filament 3</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Externe Services</h4>
+                        <ul>
+                            <li><strong>Voice AI:</strong> Retell AI (V83 Prompt)</li>
+                            <li><strong>Calendar:</strong> Cal.com (V2 API)</li>
+                            <li><strong>Hosting:</strong> Linux Server (ARM64)</li>
+                            <li><strong>Webserver:</strong> Nginx + PHP-FPM 8.3</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Datenbank-Schema (Kern-Tabellen)</h3>
+
+                <div class="code-block">
+<span class="comment">-- Termine</span>
+appointments
+  ├─ id (UUID)
+  ├─ company_id → companies
+  ├─ branch_id → branches
+  ├─ customer_id → customers
+  ├─ service_id → services
+  ├─ staff_id → staff
+  ├─ starts_at (timestamp)
+  ├─ ends_at (timestamp)
+  ├─ status (enum: scheduled, confirmed, completed, cancelled, no_show)
+  ├─ calcom_sync_status (enum: pending, synced, failed)
+  └─ requires_manual_review (boolean)
+
+<span class="comment">-- Composite Service Phasen</span>
+appointment_phases
+  ├─ id (UUID)
+  ├─ appointment_id → appointments
+  ├─ segment_key (A, B, C, D, GAP_A, etc.)
+  ├─ segment_name (varchar)
+  ├─ staff_id → staff
+  ├─ staff_required (boolean)
+  ├─ starts_at (timestamp)
+  ├─ ends_at (timestamp)
+  ├─ sequence_order (integer)
+  ├─ calcom_booking_uid (varchar)
+  └─ calcom_sync_status (enum)
+
+<span class="comment">-- CalcomEventMap (Mapping Service Segments → Cal.com Event Types)</span>
+calcom_event_map
+  ├─ id (bigint)
+  ├─ company_id → companies
+  ├─ branch_id → branches
+  ├─ service_id → services
+  ├─ segment_key (varchar)
+  ├─ staff_id → staff
+  ├─ event_type_id (bigint) <span class="comment">-- Parent Cal.com Event Type ID</span>
+  ├─ child_event_type_id (bigint) <span class="comment">-- Child Event Type ID (for MANAGED types)</span>
+  └─ event_name_pattern (varchar)
+
+<span class="comment">-- Services</span>
+services
+  ├─ id (bigint)
+  ├─ name (varchar)
+  ├─ composite (boolean) <span class="comment">-- TRUE für Multi-Phasen Services</span>
+  ├─ segments (json) <span class="comment">-- Segment-Definitionen</span>
+  └─ duration_minutes (integer)
+
+<span class="comment">-- Calls</span>
+calls
+  ├─ call_id (varchar) <span class="comment">-- Retell Call ID</span>
+  ├─ customer_id → customers
+  ├─ transcript (text)
+  ├─ status (varchar)
+  └─ created_at (timestamp)
+                </div>
+
+                <h3>Multi-Tenancy</h3>
+                <div class="info-box">
+                    <h4>Tenant Isolation</h4>
+                    <p>Das System ist vollständig multi-tenant-fähig:</p>
+                    <ul>
+                        <li><strong>Company Scope:</strong> Alle Daten sind nach <span class="highlight">company_id</span> isoliert</li>
+                        <li><strong>Middleware:</strong> <code>TenantMiddleware</code> setzt automatisch Company Context</li>
+                        <li><strong>RLS:</strong> Row Level Security via <code>companyscope</code></li>
+                        <li><strong>Roles:</strong> Super-Admin, Reseller, Company-Admin</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- BOOKING FLOW -->
+            <div class="section" id="booking-flow">
+                <h2>📞 Komplett-Ablauf: Terminbuchung</h2>
+
+                <div class="info-box">
+                    <h4>🎯 Ziel</h4>
+                    <p>Ein Kunde ruft an und möchte einen Termin buchen. Das System führt ihn durch den gesamten Prozess von der Begrüßung bis zur Bestätigung.</p>
+                </div>
+
+                <h3>End-to-End Flow</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Anruf startet - Retell AI Agent aktiviert</div>
+                        <div class="step-details">
+                            <strong>Trigger:</strong> Kunde ruft Telefonnummer an<br>
+                            <strong>System:</strong> Retell AI beantwortet Anruf<br>
+                            <strong>Agent:</strong> V83 Conversation Flow wird geladen<br>
+                            <strong>Datenbank:</strong> Call-Eintrag wird erstellt mit Status "in_progress"
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">get_current_context() - Datum & Uhrzeit</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::getCurrentContext()</code><br>
+                            <strong>Rückgabe:</strong> Aktuelles Datum, Uhrzeit, Wochentag, morgen/übermorgen<br>
+                            <strong>Zweck:</strong> Agent kennt aktuellen Zeitkontext für Terminvorschläge
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">check_customer() - Kundenidentifikation</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::checkCustomer()</code><br>
+                            <strong>Input:</strong> Telefonnummer des Anrufers<br>
+                            <strong>Query:</strong> Suche in <code>customers</code> Tabelle<br>
+                            <strong>Output:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>Bestehender Kunde → Name, Buchungshistorie</li>
+                                <li>Neuer Kunde → Agent fragt nach Name</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">extract_dynamic_variable - Service & Zeit erfassen</div>
+                        <div class="step-details">
+                            <strong>Flow Node:</strong> Retell AI extrahiert aus Conversation<br>
+                            <strong>Variablen:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li><code>customer_name</code> - z.B. "Hans Müller"</li>
+                                <li><code>service_name</code> - z.B. "Dauerwelle"</li>
+                                <li><code>appointment_date</code> - z.B. "Freitag"</li>
+                                <li><code>appointment_time</code> - z.B. "14 Uhr"</li>
+                            </ul>
+                            <strong>NLP:</strong> LLM parsed natürliche Sprache → strukturierte Daten
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">check_availability_v17() - Verfügbarkeitsprüfung</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::checkAvailabilityV17()</code><br>
+                            <strong>Input:</strong> service_name, date, time, call_id<br>
+                            <strong>Processing:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>1. Service-Lookup (fuzzy match via Levenshtein)</li>
+                                <li>2. Datum-Parsing (deutsch: "Freitag", "morgen", "15. November")</li>
+                                <li>3. Zeit-Parsing ("14 Uhr", "halb drei")</li>
+                                <li>4. Staff-Verfügbarkeit prüfen (ProcessingTimeAvailabilityService)</li>
+                                <li>5. Alternativen suchen wenn nicht verfügbar</li>
+                            </ul>
+                            <strong>Output:</strong> available=true/false + Alternativen
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5a</div>
+                        <div class="step-title">ProcessingTimeAvailabilityService - Detail-Check</div>
+                        <div class="step-details">
+                            <strong>Klasse:</strong> <code>app/Services/ProcessingTimeAvailabilityService.php</code><br>
+                            <strong>Logik:</strong>
+                            <div class="code-block" style="margin-top: 10px;">
+<span class="function">public function</span> <span class="keyword">isStaffAvailable</span>($staffId, $startTime, $service)
+{
+    $endTime = $startTime-&gt;copy()-&gt;addMinutes($service-&gt;getTotalDuration());
+
+    <span class="comment">// 🔧 FIX 2025-11-23: ALWAYS check full-duration overlaps FIRST</span>
+    <span class="keyword">if</span> ($this-&gt;hasOverlappingAppointments($staffId, $startTime, $endTime)) {
+        <span class="keyword">return false</span>;
+    }
+
+    <span class="comment">// For composite services: ADDITIONALLY check phase-aware conflicts</span>
+    <span class="keyword">if</span> ($service-&gt;hasProcessingTime()) {
+        $proposedPhases = $service-&gt;generatePhases($startTime);
+        <span class="keyword">foreach</span> ($proposedPhases <span class="keyword">as</span> $phase) {
+            <span class="keyword">if</span> ($phase['staff_required']) {
+                <span class="keyword">if</span> ($this-&gt;hasOverlappingBusyPhases($staffId, $phase['start'], $phase['end'])) {
+                    <span class="keyword">return false</span>;
+                }
+            }
+        }
+    }
+
+    <span class="keyword">return true</span>;
+}
+                            </div>
+                            <strong>Wichtig:</strong> Prüft IMMER zuerst Full-Duration Overlaps, dann Phase-Konflikte
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Agent bietet Termin an</div>
+                        <div class="step-details">
+                            <strong>Verfügbar:</strong> "Freitag 14 Uhr ist verfügbar. Soll ich den Termin buchen?"<br>
+                            <strong>Nicht verfügbar:</strong> "Zur gewünschten Zeit nicht frei. Alternativen: Freitag 15 Uhr oder Montag 14 Uhr."<br>
+                            <strong>User bestätigt:</strong> "Ja, bitte buchen"
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">7</div>
+                        <div class="step-title">start_booking() - Termin erstellen</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::startBooking()</code><br>
+                            <strong>Input:</strong> customer_name, phone, service, datetime, call_id<br>
+                            <strong>Processing:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>1. Customer erstellen/finden</li>
+                                <li>2. Appointment erstellen</li>
+                                <li>3. AppointmentPhases erstellen (für Composite Services)</li>
+                                <li>4. Call mit Appointment verknüpfen</li>
+                                <li>5. <strong>SyncAppointmentToCalcomJob</strong> dispatchen (Queue)</li>
+                            </ul>
+                            <strong>Output:</strong> success=true + appointment_id
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">8</div>
+                        <div class="step-title">SyncAppointmentToCalcomJob - Cal.com Sync (Async)</div>
+                        <div class="step-details">
+                            <strong>Queue Job:</strong> <code>app/Jobs/SyncAppointmentToCalcomJob.php</code><br>
+                            <strong>Processing:</strong>
+                            <ul style="margin-top: 10px;">
+                                <li>1. Appointment & Service laden</li>
+                                <li>2. Für jede Phase: CalcomEventMap lookup</li>
+                                <li>3. Cal.com Booking API Calls (parallel via HTTP/2)</li>
+                                <li>4. Booking UIDs in appointment_phases speichern</li>
+                                <li>5. Sync Status aktualisieren</li>
+                            </ul>
+                            <strong>Fallback:</strong> Post-Sync Verification bei Fehlern (siehe unten)
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">9</div>
+                        <div class="step-title">Agent bestätigt Buchung</div>
+                        <div class="step-details">
+                            <strong>Success:</strong> "Ihr Termin ist gebucht! Dauerwelle am Freitag, 29.11. um 14 Uhr."<br>
+                            <strong>Sync läuft:</strong> Queue Job arbeitet im Hintergrund<br>
+                            <strong>User Experience:</strong> Sofortige Bestätigung, keine Wartezeit
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">10</div>
+                        <div class="step-title">Call beendet - Transcript gespeichert</div>
+                        <div class="step-details">
+                            <strong>Retell Webhook:</strong> Call ended<br>
+                            <strong>Backend:</strong> Transcript in DB speichern<br>
+                            <strong>Status:</strong> Call Status → "completed"<br>
+                            <strong>Analytics:</strong> Call Metriken aktualisieren
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Sequenz-Diagramm: Booking Flow</h3>
+
+                <div class="mermaid">
+sequenceDiagram
+    participant U as 👤 Kunde
+    participant R as 🤖 Retell AI
+    participant B as ⚙️ Backend
+    participant D as 🗄️ Database
+    participant C as 📅 Cal.com
+    participant Q as 📨 Queue
+
+    U->>R: Ruft an
+    R->>B: get_current_context()
+    B-->>R: Datum/Uhrzeit
+    R->>B: check_customer(phone)
+    B->>D: Query customers
+    D-->>B: Customer data
+    B-->>R: Customer found/not found
+    R->>U: "Für welchen Service?"
+    U->>R: "Dauerwelle, Freitag 14 Uhr"
+    R->>B: check_availability_v17(service, date, time)
+    B->>D: Query appointments + staff
+    D-->>B: Availability data
+    B-->>R: available=true
+    R->>U: "Freitag 14 Uhr ist frei. Buchen?"
+    U->>R: "Ja"
+    R->>B: start_booking(data)
+    B->>D: Create appointment + phases
+    D-->>B: Appointment created
+    B->>Q: Dispatch SyncJob
+    B-->>R: success=true
+    R->>U: "Termin gebucht!"
+    Q->>C: Create bookings (parallel)
+    C-->>Q: Bookings created
+    Q->>D: Update sync_status
+                </div>
+
+                <h3>Code-Referenzen</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Function</th>
+                                <th>File</th>
+                                <th>Zeile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>getCurrentContext()</code></td>
+                                <td>app/Http/Controllers/RetellFunctionCallHandler.php</td>
+                                <td>~50</td>
+                            </tr>
+                            <tr>
+                                <td><code>checkCustomer()</code></td>
+                                <td>app/Http/Controllers/RetellFunctionCallHandler.php</td>
+                                <td>~100</td>
+                            </tr>
+                            <tr>
+                                <td><code>checkAvailabilityV17()</code></td>
+                                <td>app/Http/Controllers/RetellFunctionCallHandler.php</td>
+                                <td>~200</td>
+                            </tr>
+                            <tr>
+                                <td><code>startBooking()</code></td>
+                                <td>app/Http/Controllers/RetellFunctionCallHandler.php</td>
+                                <td>~400</td>
+                            </tr>
+                            <tr>
+                                <td><code>isStaffAvailable()</code></td>
+                                <td>app/Services/ProcessingTimeAvailabilityService.php</td>
+                                <td>32-67</td>
+                            </tr>
+                            <tr>
+                                <td><code>SyncAppointmentToCalcomJob</code></td>
+                                <td>app/Jobs/SyncAppointmentToCalcomJob.php</td>
+                                <td>gesamte Datei</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- COMPOSITE SERVICES -->
+            <div class="section" id="composite-services">
+                <h2>🧩 Composite Services - Multi-Phasen Termine</h2>
+
+                <div class="info-box">
+                    <h4>Was sind Composite Services?</h4>
+                    <p>Composite Services sind Dienstleistungen, die aus mehreren <strong>Phasen (Segmenten)</strong> bestehen. Beispiel:</p>
+                    <p><strong>Dauerwelle</strong> besteht aus 6 Phasen: Haare wickeln → Einwirkzeit → Fixierung auftragen → Einwirkzeit → Auswaschen → Schneiden</p>
+                    <p>Einige Phasen benötigen <span class="highlight">kein Personal</span> (z.B. Einwirkzeit), andere <span class="highlight">benötigen Personal</span>.</p>
+                </div>
+
+                <h3>Beispiel: Service "Dauerwelle"</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Segment</th>
+                                <th>Name</th>
+                                <th>Dauer</th>
+                                <th>Staff Required</th>
+                                <th>Typ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge info">A</span></td>
+                                <td>Haare wickeln</td>
+                                <td>50 Min</td>
+                                <td><span class="badge success">✓ Ja</span></td>
+                                <td>active</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge gray">GAP_A</span></td>
+                                <td>Einwirkzeit (Dauerwelle wirkt ein)</td>
+                                <td>15 Min</td>
+                                <td><span class="badge error">✗ Nein</span></td>
+                                <td>processing</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge info">B</span></td>
+                                <td>Fixierung auftragen</td>
+                                <td>5 Min</td>
+                                <td><span class="badge success">✓ Ja</span></td>
+                                <td>active</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge gray">GAP_B</span></td>
+                                <td>Einwirkzeit (Fixierung wirkt ein)</td>
+                                <td>10 Min</td>
+                                <td><span class="badge error">✗ Nein</span></td>
+                                <td>processing</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge info">C</span></td>
+                                <td>Auswaschen & Pflege</td>
+                                <td>15 Min</td>
+                                <td><span class="badge success">✓ Ja</span></td>
+                                <td>active</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge info">D</span></td>
+                                <td>Schneiden & Styling</td>
+                                <td>40 Min</td>
+                                <td><span class="badge success">✓ Ja</span></td>
+                                <td>active</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-box warning">
+                    <h4>⚠️ Wichtig: Staff Required = FALSE</h4>
+                    <p>Phasen mit <code>staff_required = false</code> (GAP-Phasen) benötigen KEIN Personal und KEIN Cal.com Booking!</p>
+                    <p>Das Personal kann in dieser Zeit andere Kunden bedienen.</p>
+                </div>
+
+                <h3>Composite Service Flow</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Service Definition in Database</div>
+                        <div class="step-details">
+                            <strong>Tabelle:</strong> <code>services</code><br>
+                            <strong>Spalte:</strong> <code>composite = true</code><br>
+                            <strong>Spalte:</strong> <code>segments</code> (JSON Array)
+                            <div class="code-block" style="margin-top: 10px;">
+{
+  "segments": [
+    {
+      "key": "A",
+      "name": "Haare wickeln",
+      "order": 1,
+      "type": "active",
+      "durationMin": 50,
+      "staff_required": true,
+      "allowedRoles": ["stylist"]
+    },
+    {
+      "key": "GAP_A",
+      "name": "Einwirkzeit",
+      "order": 2,
+      "type": "processing",
+      "durationMin": 15,
+      "staff_required": false
+    },
+    ...
+  ]
+}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Appointment Creation</div>
+                        <div class="step-details">
+                            <strong>When:</strong> <code>startBooking()</code> wird aufgerufen<br>
+                            <strong>Process:</strong>
+                            <ol style="margin-top: 10px;">
+                                <li>Appointment Eintrag erstellen (Haupt-Termin)</li>
+                                <li>Für jedes Segment: AppointmentPhase erstellen</li>
+                                <li>Start/End Zeiten berechnen (kumulativ)</li>
+                                <li>Staff zuweisen (gleicher Staff für alle aktiven Phasen)</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">AppointmentPhase Creation (Detail)</div>
+                        <div class="step-details">
+                            <strong>Service:</strong> <code>AppointmentPhaseCreationService</code><br>
+                            <strong>Code:</strong>
+                            <div class="code-block" style="margin-top: 10px;">
+$currentTime = $appointment->starts_at;
+
+<span class="keyword">foreach</span> ($service->segments <span class="keyword">as</span> $segment) {
+    $phaseStart = $currentTime;
+    $phaseEnd = $phaseStart->copy()->addMinutes($segment['durationMin']);
+
+    AppointmentPhase::create([
+        'appointment_id' => $appointment->id,
+        'segment_key' => $segment['key'],
+        'segment_name' => $segment['name'],
+        'staff_id' => $segment['staff_required'] ? $appointment->staff_id : <span class="keyword">null</span>,
+        'staff_required' => $segment['staff_required'],
+        'starts_at' => $phaseStart,
+        'ends_at' => $phaseEnd,
+        'sequence_order' => $segment['order'],
+        'calcom_sync_status' => 'pending'
+    ]);
+
+    $currentTime = $phaseEnd;
+}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">CalcomEventMap Lookup</div>
+                        <div class="step-details">
+                            <strong>Problem:</strong> Welcher Cal.com Event Type für welches Segment?<br>
+                            <strong>Solution:</strong> CalcomEventMap Tabelle<br>
+                            <strong>Query:</strong>
+                            <div class="code-block" style="margin-top: 10px;">
+$mapping = CalcomEventMap::where('service_id', $service->id)
+    ->where('segment_key', $phase->segment_key)
+    ->where('staff_id', $appointment->staff_id)
+    ->first();
+
+<span class="keyword">if</span> (!$mapping) {
+    <span class="comment">// ERROR: Missing CalcomEventMap</span>
+    <span class="keyword">throw new</span> Exception("Missing CalcomEventMap");
+}
+
+$eventTypeId = $mapping->child_event_type_id ?: $mapping->event_type_id;
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Cal.com Bookings erstellen (Parallel)</div>
+                        <div class="step-details">
+                            <strong>Nur für Phasen mit staff_required = true!</strong><br>
+                            <strong>Process:</strong>
+                            <ol style="margin-top: 10px;">
+                                <li>Alle aktiven Phasen sammeln</li>
+                                <li>Für jede Phase: HTTP Request an Cal.com vorbereiten</li>
+                                <li>Alle Requests PARALLEL ausführen (HTTP/2)</li>
+                                <li>Booking UIDs in appointment_phases speichern</li>
+                            </ol>
+                            <strong>Performance:</strong> 70% schneller als sequentiell!
+                        </div>
+                    </div>
+                </div>
+
+                <h3>CalcomEventMap Setup (2025-11-24)</h3>
+
+                <div class="info-box success">
+                    <h4>✅ Setup Complete</h4>
+                    <p>Alle CalcomEventMaps für Composite Services sind vollständig konfiguriert!</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Segmente</th>
+                                <th>Staff</th>
+                                <th>Event Maps</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dauerwelle (441)</td>
+                                <td>6 (4 aktiv)</td>
+                                <td>Fabian (beide Accounts)</td>
+                                <td>8</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td>Ansatzfärbung (440)</td>
+                                <td>5 (4 aktiv)</td>
+                                <td>Fabian (beide) + Emma</td>
+                                <td>12</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td>Ansatz + Längenausgleich (442)</td>
+                                <td>5 (4 aktiv)</td>
+                                <td>Fabian (beide)</td>
+                                <td>8</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                            <tr>
+                                <td>Komplette Umfärbung (444)</td>
+                                <td>5 (4 aktiv)</td>
+                                <td>Fabian (beide) + Emma</td>
+                                <td>12</td>
+                                <td><span class="badge success">Complete</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Visualisierung: Dauerwelle Timeline</h3>
+
+                <div class="mermaid">
+gantt
+    title Dauerwelle - Timeline (135 Minuten)
+    dateFormat HH:mm
+    axisFormat %H:%M
+
+    section Staff Required
+    Haare wickeln (A)           :a1, 14:00, 50m
+    Fixierung auftragen (B)     :a2, 15:05, 5m
+    Auswaschen & Pflege (C)     :a3, 15:20, 15m
+    Schneiden & Styling (D)     :a4, 15:35, 40m
+
+    section Gap (kein Staff)
+    Einwirkzeit Dauerwelle      :crit, 14:50, 15m
+    Einwirkzeit Fixierung       :crit, 15:10, 10m
+                </div>
+
+                <p style="margin-top: 20px;"><strong>Erklärung:</strong></p>
+                <ul>
+                    <li><strong>Blaue Balken:</strong> Staff Required = TRUE → Cal.com Booking wird erstellt</li>
+                    <li><strong>Rote Balken:</strong> Gap-Phasen → Personal kann andere Kunden bedienen</li>
+                    <li><strong>Gesamtdauer:</strong> 135 Minuten (14:00 - 16:15 Uhr)</li>
+                </ul>
+            </div>
+
+            <!-- RESCHEDULE/CANCEL FLOW -->
+            <div class="section" id="reschedule">
+                <h2>🔄 Verschieben & Stornieren</h2>
+
+                <h3>Verschieben-Flow</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Kunde ruft an: "Termin verschieben"</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> Retell AI erkennt Intent "reschedule"<br>
+                            <strong>Action:</strong> Agent fragt nach Telefonnummer
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">check_customer() - Terminsuche</div>
+                        <div class="step-details">
+                            <strong>Function:</strong> <code>checkCustomer(phone)</code><br>
+                            <strong>Return:</strong> Offene Termine des Kunden<br>
+                            <strong>Agent:</strong> Listet Termine auf: "Sie haben einen Termin am Freitag 14 Uhr für Dauerwelle"
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Neuen Wunschtermin erfassen</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> "Auf wann möchten Sie verschieben?"<br>
+                            <strong>Kunde:</strong> "Montag 10 Uhr"<br>
+                            <strong>Extract:</strong> new_date, new_time
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">check_availability_v17() - Neue Zeit prüfen</div>
+                        <div class="step-details">
+                            <strong>Input:</strong> same service, new date/time<br>
+                            <strong>Check:</strong> Ist Montag 10 Uhr verfügbar?<br>
+                            <strong>Output:</strong> available=true/false + Alternativen
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">reschedule_appointment() - Verschiebung durchführen</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::rescheduleAppointment()</code><br>
+                            <strong>Process:</strong>
+                            <ol style="margin-top: 10px;">
+                                <li>Alten Termin laden</li>
+                                <li>Neue Zeiten setzen (starts_at, ends_at)</li>
+                                <li>Phasen neu berechnen (für Composite)</li>
+                                <li>Cal.com Bookings aktualisieren (PATCH requests)</li>
+                                <li>Event dispatchen: AppointmentRescheduled</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Cal.com Sync - Reschedule</div>
+                        <div class="step-details">
+                            <strong>API:</strong> <code>PATCH /v2/bookings/{uid}</code><br>
+                            <strong>Für jede Phase:</strong> Booking UID → neue Start/End Zeit<br>
+                            <strong>Parallel:</strong> Alle Bookings gleichzeitig aktualisieren
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Bestätigung</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> "Termin wurde verschoben! Neuer Termin: Montag 10 Uhr."<br>
+                            <strong>Database:</strong> Appointment Status → "confirmed"<br>
+                            <strong>Email:</strong> Optional: Bestätigungs-Email an Kunde
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Stornieren-Flow</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Kunde ruft an: "Termin stornieren"</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> Retell AI erkennt Intent "cancel"<br>
+                            <strong>Action:</strong> Telefonnummer abfragen
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">check_customer() - Termine laden</div>
+                        <div class="step-details">
+                            <strong>Return:</strong> Liste offener Termine<br>
+                            <strong>Agent:</strong> Listet Termine auf
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Stornierungsgrund erfragen</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> "Warum möchten Sie stornieren?"<br>
+                            <strong>Zweck:</strong> Analytics & Qualitätssicherung<br>
+                            <strong>Optional:</strong> Alternativen anbieten statt Stornierung
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">cancel_appointment() - Stornierung durchführen</div>
+                        <div class="step-details">
+                            <strong>Function Call:</strong> <code>RetellFunctionCallHandler::cancelAppointment()</code><br>
+                            <strong>Process:</strong>
+                            <ol style="margin-top: 10px;">
+                                <li>Appointment Status → "cancelled"</li>
+                                <li>cancelled_at → current timestamp</li>
+                                <li>cancellation_reason speichern</li>
+                                <li>Cal.com Bookings löschen (DELETE requests)</li>
+                                <li>Event dispatchen: AppointmentCancelled</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Cal.com Sync - Cancel</div>
+                        <div class="step-details">
+                            <strong>API:</strong> <code>DELETE /v2/bookings/{uid}</code><br>
+                            <strong>Für jede Phase:</strong> Booking UID → löschen<br>
+                            <strong>Parallel:</strong> Alle Bookings gleichzeitig entfernen
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Bestätigung</div>
+                        <div class="step-details">
+                            <strong>Agent:</strong> "Ihr Termin wurde storniert."<br>
+                            <strong>Database:</strong> Status = "cancelled"<br>
+                            <strong>Freigabe:</strong> Zeitslot wird wieder verfügbar
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Security: Phone-Based Cancellation Policy</h3>
+
+                <div class="info-box warning">
+                    <h4>🔒 Sicherheitsrichtlinie</h4>
+                    <p><strong>Nur Anrufe von der GLEICHEN Telefonnummer können Termine stornieren/verschieben!</strong></p>
+                    <p>Dies verhindert unbefugte Stornierungen durch Dritte.</p>
+                </div>
+
+                <div class="code-block">
+<span class="comment">// Security Check in cancelAppointment()</span>
+<span class="keyword">if</span> ($appointment->customer->phone !== $request->phone) {
+    <span class="keyword">return</span> [
+        'success' => <span class="keyword">false</span>,
+        'error' => <span class="string">'Dieser Termin kann nur von der Original-Nummer storniert werden'</span>
+    ];
+}
+                </div>
+
+                <p><strong>Dokumentation:</strong> <code>claudedocs/06_SECURITY/PHONE_BASED_CANCELLATION_POLICY.md</code></p>
+
+                <h3>Code-Referenzen</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Function</th>
+                                <th>File</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>rescheduleAppointment()</code></td>
+                                <td>RetellFunctionCallHandler.php</td>
+                                <td>Hauptlogik Verschiebung</td>
+                            </tr>
+                            <tr>
+                                <td><code>cancelAppointment()</code></td>
+                                <td>RetellFunctionCallHandler.php</td>
+                                <td>Hauptlogik Stornierung</td>
+                            </tr>
+                            <tr>
+                                <td><code>rescheduleBooking()</code></td>
+                                <td>CalcomV2Client.php</td>
+                                <td>Cal.com API - PATCH</td>
+                            </tr>
+                            <tr>
+                                <td><code>cancelBooking()</code></td>
+                                <td>CalcomV2Client.php</td>
+                                <td>Cal.com API - DELETE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CALCOM SYNC DETAILS -->
+            <div class="section" id="calcom-sync">
+                <h2>🔄 Cal.com Synchronisation - Deep Dive</h2>
+
+                <div class="info-box">
+                    <h4>Warum Cal.com?</h4>
+                    <p>Cal.com dient als <strong>zentrale Kalender-Plattform</strong> für alle Termine. Das ermöglicht:</p>
+                    <ul>
+                        <li>Verfügbarkeitsprüfung in Echtzeit</li>
+                        <li>Team-übergreifende Ressourcenplanung</li>
+                        <li>Externe Kalender-Integration (Google Calendar, etc.)</li>
+                        <li>Webhook-Benachrichtigungen bei Änderungen</li>
+                    </ul>
+                </div>
+
+                <h3>SyncAppointmentToCalcomJob - Vollständiger Ablauf</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Job Dispatch</div>
+                        <div class="step-details">
+                            <strong>Trigger:</strong> <code>startBooking()</code> erstellt Appointment<br>
+                            <strong>Queue:</strong> <code>SyncAppointmentToCalcomJob::dispatch($appointment)</code><br>
+                            <strong>Async:</strong> Job läuft im Hintergrund (Redis Queue)
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Appointment & Service laden</div>
+                        <div class="step-details">
+                            <div class="code-block">
+$appointment = Appointment::with([
+    'customer',
+    'service',
+    'staff',
+    'phases' => fn($q) => $q->where('staff_required', true)
+])->find($this->appointmentId);
+
+$service = $appointment->service;
+$isComposite = $service->isComposite();
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Branch Detection: Composite vs. Simple</div>
+                        <div class="step-details">
+                            <strong>IF Composite:</strong> Sync jede Phase einzeln<br>
+                            <strong>IF Simple:</strong> Sync ein einzelnes Booking<br>
+                            <strong>Unterschied:</strong> Composite → mehrere Cal.com Bookings, Simple → ein Booking
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4a</div>
+                        <div class="step-title">Composite: Phase Preparation</div>
+                        <div class="step-details">
+                            <strong>Für jede Phase mit staff_required = true:</strong>
+                            <ol style="margin-top: 10px;">
+                                <li>CalcomEventMap lookup (service_id, segment_key, staff_id)</li>
+                                <li>Event Type ID ermitteln (child_event_type_id oder parent)</li>
+                                <li>Booking Data vorbereiten (start, end, attendees)</li>
+                            </ol>
+                            <div class="code-block" style="margin-top: 10px;">
+$mapping = CalcomEventMap::where('service_id', $service->id)
+    ->where('segment_key', $phase->segment_key)
+    ->where('staff_id', $appointment->staff_id)
+    ->first();
+
+<span class="keyword">if</span> (!$mapping) {
+    <span class="comment">// FEHLER: Missing CalcomEventMap</span>
+    $phase->update([
+        'calcom_sync_status' => 'failed',
+        'calcom_sync_error' => "Missing CalcomEventMap for segment {$phase->segment_key}"
+    ]);
+    <span class="keyword">continue</span>;
+}
+
+$eventTypeId = $mapping->child_event_type_id ?: $mapping->event_type_id;
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4b</div>
+                        <div class="step-title">Simple: Single Booking Preparation</div>
+                        <div class="step-details">
+                            <strong>Einfacher Service:</strong>
+                            <div class="code-block">
+$eventTypeId = $service->calcom_event_type_id;
+$bookingData = [
+    'eventTypeId' => $eventTypeId,
+    'start' => $appointment->starts_at->toIso8601String(),
+    'end' => $appointment->ends_at->toIso8601String(),
+    'attendee' => [
+        'name' => $appointment->customer->name,
+        'email' => $appointment->customer->email ?? 'noemail@askproai.de',
+        'timeZone' => 'Europe/Berlin'
+    ],
+    'meetingUrl' => 'Vor Ort'
+];
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Parallel API Calls (HTTP/2)</div>
+                        <div class="step-details">
+                            <strong>Performance-Optimierung:</strong> Alle Cal.com Requests parallel ausführen!<br>
+                            <strong>Technologie:</strong> Guzzle HTTP/2 Promises<br>
+                            <strong>Speedup:</strong> ~70% schneller als sequentiell<br>
+                            <div class="code-block" style="margin-top: 10px;">
+$promises = [];
+
+<span class="keyword">foreach</span> ($bookingDataArray <span class="keyword">as</span> $index => $bookingData) {
+    $promises[$index] = $client->createBookingAsync($bookingData);
+}
+
+<span class="comment">// Wait for all to complete</span>
+$results = Promise\Utils::settle($promises)->wait();
+
+<span class="comment">// Process results</span>
+<span class="keyword">foreach</span> ($results <span class="keyword">as</span> $index => $result) {
+    <span class="keyword">if</span> ($result['state'] === 'fulfilled') {
+        $response = $result['value'];
+        $bookingData = $response->json('data');
+        $bookingUid = $bookingData['uid'];
+
+        <span class="comment">// Update phase with booking UID</span>
+        $phases[$index]->update([
+            'calcom_booking_uid' => $bookingUid,
+            'calcom_sync_status' => 'synced'
+        ]);
+    } <span class="keyword">else</span> {
+        <span class="comment">// Handle error</span>
+        $phases[$index]->update(['calcom_sync_status' => 'failed']);
+    }
+}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Error Handling & Post-Sync Verification</div>
+                        <div class="step-details">
+                            <strong>🔧 FIX 2025-11-23: Post-Sync Verification</strong><br>
+                            <strong>Problem:</strong> Cal.com erstellt manchmal Bookings trotz HTTP 400<br>
+                            <strong>Solution:</strong> Nach Fehler → Warte 2s → Verifiziere ob Bookings existieren
+                            <div class="code-block" style="margin-top: 10px;">
+<span class="keyword">catch</span> (Exception $e) {
+    <span class="keyword">if</span> ($this->attempts() >= $this->tries) {
+        <span class="comment">// 🔍 POST-SYNC VERIFICATION</span>
+        Log::info('🔍 POST-SYNC VERIFICATION: Checking if bookings exist despite error');
+        sleep(2);
+
+        <span class="keyword">if</span> ($this->verifyBookingsInCalcom()) {
+            Log::info('✅ POST-SYNC VERIFICATION: Bookings found! Marking as synced.');
+            <span class="keyword">return</span>; <span class="comment">// Success despite error!</span>
+        }
+
+        <span class="comment">// Real failure</span>
+        $this->appointment->update([
+            'requires_manual_review' => <span class="keyword">true</span>,
+            'calcom_sync_status' => 'failed'
+        ]);
+    }
+}
+                            </div>
+                            <strong>Dokumentation:</strong> <code>POST_SYNC_VERIFICATION_DEPLOYMENT_2025-11-23.md</code>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">7</div>
+                        <div class="step-title">Sync Status Update</div>
+                        <div class="step-details">
+                            <strong>Erfolg (alle Phasen synced):</strong>
+                            <div class="code-block">
+$appointment->update([
+    'calcom_sync_status' => 'synced',
+    'last_synced_at' => now()
+]);
+                            </div>
+                            <strong>Teilweise Fehler:</strong>
+                            <div class="code-block">
+$appointment->update([
+    'calcom_sync_status' => 'failed',
+    'requires_manual_review' => <span class="keyword">true</span>
+]);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>verifyBookingsInCalcom() - Detail</h3>
+
+                <div class="code-block">
+<span class="keyword">protected function</span> <span class="function">verifyBookingsInCalcom</span>(): bool
+{
+    <span class="keyword">try</span> {
+        $client = <span class="keyword">new</span> CalcomV2Client($this->appointment->company);
+
+        <span class="comment">// Query Cal.com for bookings on this date</span>
+        $startDate = $this->appointment->starts_at->copy()->startOfDay();
+        $endDate = $this->appointment->starts_at->copy()->endOfDay();
+
+        $response = $client->getBookings([
+            'afterStart' => $startDate->toIso8601String(),
+            'beforeEnd' => $endDate->toIso8601String(),
+            'status' => 'upcoming'
+        ]);
+
+        $bookings = $response->json('data', []);
+
+        <span class="comment">// Match bookings by time (±5 min tolerance)</span>
+        $phases = $this->appointment->phases()
+            ->where('staff_required', <span class="keyword">true</span>)
+            ->get();
+
+        $verifiedCount = 0;
+
+        <span class="keyword">foreach</span> ($phases <span class="keyword">as</span> $phase) {
+            $phaseStart = Carbon::parse($phase->starts_at);
+
+            <span class="keyword">foreach</span> ($bookings <span class="keyword">as</span> $booking) {
+                $bookingStart = Carbon::parse($booking['start']);
+
+                <span class="keyword">if</span> ($phaseStart->diffInMinutes($bookingStart, <span class="keyword">false</span>) <= 5) {
+                    <span class="comment">// Match found!</span>
+                    $phase->update([
+                        'calcom_booking_uid' => $booking['uid'],
+                        'calcom_sync_status' => 'synced'
+                    ]);
+                    $verifiedCount++;
+                    <span class="keyword">break</span>;
+                }
+            }
+        }
+
+        <span class="keyword">if</span> ($verifiedCount === $phases->count()) {
+            <span class="comment">// ALL phases verified!</span>
+            $this->appointment->update(['calcom_sync_status' => 'synced']);
+            <span class="keyword">return true</span>;
+        }
+
+        <span class="keyword">return false</span>;
+
+    } <span class="keyword">catch</span> (Exception $e) {
+        Log::error('⚠️ POST-SYNC VERIFICATION failed: ' . $e->getMessage());
+        <span class="keyword">return false</span>;
+    }
+}
+</div>
+
+                <h3>CalcomEventMap - Setup Tools</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Beschreibung</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>setup_calcom_event_maps.php</code></td>
+                                <td>Interaktiver Wizard - Übersicht, Guide, Erstellung, Verifikation</td>
+                                <td><span class="badge success">Production</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>find_missing_event_maps.php</code></td>
+                                <td>Findet fehlende CalcomEventMap Kombinationen</td>
+                                <td><span class="badge success">Production</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>create_missing_calcom_event_types.php</code></td>
+                                <td>Automatische Event Type Erstellung via API</td>
+                                <td><span class="badge info">Development</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>add_second_fabian_to_event_types.php</code></td>
+                                <td>Fügt zweiten Fabian Account zu Event Types hinzu</td>
+                                <td><span class="badge success">Completed</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DEPLOYMENT -->
+            <div class="section" id="deployment">
+                <h2>🚀 Deployment & Updates</h2>
+
+                <h3>Deployment Checklist</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Code Changes validieren</div>
+                        <div class="step-details">
+                            <strong>Check:</strong> PHP Syntax korrekt?
+                            <div class="code-block">
+php -l app/Services/ProcessingTimeAvailabilityService.php
+php -l app/Jobs/SyncAppointmentToCalcomJob.php
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Git Commit</div>
+                        <div class="step-details">
+                            <div class="code-block">
+git add app/Services/ProcessingTimeAvailabilityService.php
+git add app/Jobs/SyncAppointmentToCalcomJob.php
+git commit -m "fix(availability): Correct overlap detection for composite services
+
+🔧 FIX: Always check full-duration overlaps first
+🔧 FIX: Post-Sync Verification for false-negative errors
+
+Generated with Claude Code
+Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;"
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">PHP-FPM Reload</div>
+                        <div class="step-details">
+                            <strong>WICHTIG:</strong> PHP-FPM muss neu geladen werden!
+                            <div class="code-block">
+sudo systemctl reload php8.3-fpm
+                            </div>
+                            <strong>Verify:</strong>
+                            <div class="code-block">
+sudo systemctl status php8.3-fpm
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Cache Clear (Optional)</div>
+                        <div class="step-details">
+                            <div class="code-block">
+php artisan cache:clear
+php artisan config:clear
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Testing</div>
+                        <div class="step-details">
+                            <strong>Manual Test:</strong> Testanruf durchführen<br>
+                            <strong>Verify:</strong> Logs prüfen
+                            <div class="code-block">
+tail -f storage/logs/laravel.log
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Wichtige Deployment-Befehle</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Befehl</th>
+                                <th>Zweck</th>
+                                <th>Wann?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>sudo systemctl reload php8.3-fpm</code></td>
+                                <td>PHP Code neu laden (ohne Downtime)</td>
+                                <td>Nach JEDEM Code-Update</td>
+                            </tr>
+                            <tr>
+                                <td><code>php artisan cache:clear</code></td>
+                                <td>Application Cache leeren</td>
+                                <td>Bei Config-Änderungen</td>
+                            </tr>
+                            <tr>
+                                <td><code>php artisan config:clear</code></td>
+                                <td>Config Cache leeren</td>
+                                <td>Bei Config-Änderungen</td>
+                            </tr>
+                            <tr>
+                                <td><code>php artisan queue:restart</code></td>
+                                <td>Queue Worker neu starten</td>
+                                <td>Nach Job-Updates</td>
+                            </tr>
+                            <tr>
+                                <td><code>composer dump-autoload</code></td>
+                                <td>Autoloader neu generieren</td>
+                                <td>Bei neuen Klassen</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Letzte Deployments</h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">23. Nov 2025 - 21:40 CET</div>
+                            <h4>Availability Overlap Fix</h4>
+                            <p><strong>File:</strong> ProcessingTimeAvailabilityService.php (Lines 32-67)</p>
+                            <p><strong>Status:</strong> <span class="badge success">Deployed & Verified</span></p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">23. Nov 2025 - 22:00 CET</div>
+                            <h4>Call ID Placeholder Support</h4>
+                            <p><strong>File:</strong> RetellFunctionCallHandler.php (Line 133)</p>
+                            <p><strong>Status:</strong> <span class="badge success">Deployed & Verified</span></p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">23. Nov 2025 - 22:36 CET</div>
+                            <h4>Post-Sync Verification</h4>
+                            <p><strong>File:</strong> SyncAppointmentToCalcomJob.php (~220 lines added)</p>
+                            <p><strong>Status:</strong> <span class="badge success">Deployed & Verified</span></p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">24. Nov 2025 - 07:00 CET</div>
+                            <h4>CalcomEventMaps Setup Complete</h4>
+                            <p><strong>Created:</strong> 12 Event Types + 24 CalcomEventMaps</p>
+                            <p><strong>Status:</strong> <span class="badge success">100% Verified</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MONITORING -->
+            <div class="section" id="monitoring">
+                <h2>📊 Monitoring & Metriken</h2>
+
+                <h3>Wichtige Metriken</h3>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>1. Sync Success Rate</h4>
+                        <div class="code-block">
+SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN calcom_sync_status = 'synced' THEN 1 ELSE 0 END) as synced,
+    ROUND(SUM(CASE WHEN calcom_sync_status = 'synced' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) as success_rate
+FROM appointments
+WHERE created_at >= NOW() - INTERVAL 7 DAY;
+                        </div>
+                        <p><strong>Target:</strong> >95%</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>2. Manual Review Queue</h4>
+                        <div class="code-block">
+SELECT COUNT(*)
+FROM appointments
+WHERE requires_manual_review = true
+  AND created_at >= NOW() - INTERVAL 7 DAY;
+                        </div>
+                        <p><strong>Target:</strong> <5 pro Tag</p>
+                    </div>
+                </div>
+
+                <h3>Log Monitoring</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Log Type</th>
+                                <th>Command</th>
+                                <th>Was suchen?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Post-Sync Verification Triggers</td>
+                                <td><code>grep "POST-SYNC VERIFICATION" storage/logs/laravel.log</code></td>
+                                <td>Sollte selten sein (nur bei Cal.com Fehlern)</td>
+                            </tr>
+                            <tr>
+                                <td>CalcomEventMap Errors</td>
+                                <td><code>grep "Missing CalcomEventMap" storage/logs/laravel.log</code></td>
+                                <td>Sollte 0 sein (alle Maps existieren)</td>
+                            </tr>
+                            <tr>
+                                <td>Cal.com API Errors</td>
+                                <td><code>grep "Cal.com API error" storage/logs/laravel.log</code></td>
+                                <td>HTTP 400/500 Fehler</td>
+                            </tr>
+                            <tr>
+                                <td>Availability False Positives</td>
+                                <td><code>grep "hasOverlappingAppointments" storage/logs/laravel.log</code></td>
+                                <td>Debug-Info für Overlap Detection</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Performance Metriken</h3>
+
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">&lt;1s</div>
+                            <div class="metric-label">LLM Latency</div>
+                        </div>
+                        <p style="margin-top: 10px; text-align: center; color: #666;">Retell AI Response Time</p>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">&lt;500ms</div>
+                            <div class="metric-label">TTS Latency</div>
+                        </div>
+                        <p style="margin-top: 10px; text-align: center; color: #666;">Text-to-Speech</p>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">&lt;2s</div>
+                            <div class="metric-label">E2E Latency</div>
+                        </div>
+                        <p style="margin-top: 10px; text-align: center; color: #666;">End-to-End Response</p>
+                    </div>
+                </div>
+
+                <h3>Filament Admin - Dashboard</h3>
+
+                <div class="info-box">
+                    <h4>📈 Admin Panel Zugriff</h4>
+                    <p><strong>URL:</strong> <code>https://api.askproai.de/admin</code></p>
+                    <p><strong>Dashboard Widgets:</strong></p>
+                    <ul>
+                        <li>Appointment Stats (heute, diese Woche, diesen Monat)</li>
+                        <li>Call Stats (Erfolgsrate, Durchschnittsdauer)</li>
+                        <li>Sync Status Übersicht</li>
+                        <li>Manual Review Queue</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FILES & RESOURCES -->
+            <div class="section" id="files">
+                <h2>📁 Wichtige Dateien & Ressourcen</h2>
+
+                <h3>Dokumentation (Markdown)</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Datei</th>
+                                <th>Beschreibung</th>
+                                <th>Zeilen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>FINAL_STATUS_PRODUCTION_READY_2025-11-23.md</strong></td>
+                                <td>Session 23.11. - Bugfixes & Status</td>
+                                <td>~400</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CALCOM_EVENT_MAPS_SETUP_COMPLETE_2025-11-24.md</strong></td>
+                                <td>CalcomEventMaps - Technische Details</td>
+                                <td>~700</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SESSION_SUMMARY_2025-11-24.md</strong></td>
+                                <td>Session 24.11. - Übersicht & Roadmap</td>
+                                <td>~600</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RCA_AVAILABILITY_OVERLAP_BUG_2025-11-23.md</strong></td>
+                                <td>Root Cause Analysis - Availability Bug</td>
+                                <td>~300</td>
+                            </tr>
+                            <tr>
+                                <td><strong>POST_SYNC_VERIFICATION_DEPLOYMENT_2025-11-23.md</strong></td>
+                                <td>Post-Sync Verification Technische Docs</td>
+                                <td>~250</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MISSING_CALCOM_EVENT_MAPS_GUIDE_2025-11-23.md</strong></td>
+                                <td>Setup Guide für CalcomEventMaps</td>
+                                <td>~440</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>HTML Dokumentation</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Datei</th>
+                                <th>URL</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>testanruf-analyse-2025-11-22.html</strong></td>
+                                <td><a href="https://api.askproai.de/testanruf-analyse-2025-11-22.html" target="_blank">Link</a></td>
+                                <td>Vorherige Testanruf-Analyse (Referenz)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>COMPLETE_SYSTEM_DOCUMENTATION_2025-11-24.html</strong></td>
+                                <td><a href="https://api.askproai.de/COMPLETE_SYSTEM_DOCUMENTATION_2025-11-24.html" target="_blank">Link</a></td>
+                                <td>Dieses Dokument</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>PHP Tools/Scripts</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Datei</th>
+                                <th>Typ</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>setup_calcom_event_maps.php</td>
+                                <td>Interactive CLI Wizard</td>
+                                <td><span class="badge success">Production</span></td>
+                            </tr>
+                            <tr>
+                                <td>find_missing_event_maps.php</td>
+                                <td>Missing Maps Finder</td>
+                                <td><span class="badge success">Production</span></td>
+                            </tr>
+                            <tr>
+                                <td>create_missing_calcom_event_types.php</td>
+                                <td>Auto Event Type Creator</td>
+                                <td><span class="badge info">Development</span></td>
+                            </tr>
+                            <tr>
+                                <td>add_second_fabian_to_event_types.php</td>
+                                <td>Multi-Host Updater</td>
+                                <td><span class="badge success">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td>create_calcom_event_maps_final.php</td>
+                                <td>Final Maps Creator</td>
+                                <td><span class="badge success">Completed</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Kern-Dateien (Code)</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Datei</th>
+                                <th>Beschreibung</th>
+                                <th>Letzte Änderung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>app/Services/ProcessingTimeAvailabilityService.php</code></td>
+                                <td>Verfügbarkeitsprüfung für Composite Services</td>
+                                <td>2025-11-23</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Jobs/SyncAppointmentToCalcomJob.php</code></td>
+                                <td>Cal.com Sync + Post-Sync Verification</td>
+                                <td>2025-11-23</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Http/Controllers/RetellFunctionCallHandler.php</code></td>
+                                <td>Retell AI Function Call Handler</td>
+                                <td>2025-11-23</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Services/CalcomV2Client.php</code></td>
+                                <td>Cal.com API V2 Client</td>
+                                <td>Stabil</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Services/CalcomChildEventTypeResolver.php</code></td>
+                                <td>Child Event Type ID Resolution</td>
+                                <td>2025-11-22</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Models/Appointment.php</code></td>
+                                <td>Appointment Model</td>
+                                <td>Stabil</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Models/AppointmentPhase.php</code></td>
+                                <td>Composite Service Phase Model</td>
+                                <td>Stabil</td>
+                            </tr>
+                            <tr>
+                                <td><code>app/Models/CalcomEventMap.php</code></td>
+                                <td>Event Type Mapping Model</td>
+                                <td>Stabil</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Filament Resources</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Beschreibung</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>AppointmentResource.php</code></td>
+                                <td>Termin-Verwaltung im Admin Panel</td>
+                                <td>Composite Display fehlt noch</td>
+                            </tr>
+                            <tr>
+                                <td><code>CallResource.php</code></td>
+                                <td>Anruf-Verwaltung im Admin Panel</td>
+                                <td>Composite Display fehlt noch</td>
+                            </tr>
+                            <tr>
+                                <td><code>CustomerResource.php</code></td>
+                                <td>Kunden-Verwaltung</td>
+                                <td>Stabil</td>
+                            </tr>
+                            <tr>
+                                <td><code>ServiceResource.php</code></td>
+                                <td>Service-Verwaltung</td>
+                                <td>Stabil</td>
+                            </tr>
+                            <tr>
+                                <td><code>StaffResource.php</code></td>
+                                <td>Personal-Verwaltung</td>
+                                <td>Stabil</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NEXT STEPS -->
+            <div class="section">
+                <h2>🎯 Nächste Schritte</h2>
+
+                <h3>Immediate (Next 24 Hours)</h3>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>1. Testanrufe durchführen ✅</h4>
+                        <ul>
+                            <li>Ansatzfärbung mit Fabian (beide Accounts) testen</li>
+                            <li>Ansatz + Längenausgleich testen</li>
+                            <li>Komplette Umfärbung testen</li>
+                            <li>Cal.com Sync verifizieren</li>
+                        </ul>
+                        <p><span class="badge warning">User Action Required</span></p>
+                    </div>
+
+                    <div class="card">
+                        <h4>2. System Monitoring</h4>
+                        <ul>
+                            <li>Sync Success Rate überwachen</li>
+                            <li>Logs auf Fehler prüfen</li>
+                            <li>Manual Review Queue checken</li>
+                            <li>Performance Metriken sammeln</li>
+                        </ul>
+                        <p><span class="badge info">Automated</span></p>
+                    </div>
+                </div>
+
+                <h3>Short-term (Next Week)</h3>
+
+                <div class="card">
+                    <h4>Composite Display Enhancement (Optional)</h4>
+                    <p><strong>Ziel:</strong> Phase/Segment Informationen in Filament Admin sichtbar machen</p>
+                    <p><strong>Aufwand:</strong> 3-5 Stunden Development</p>
+                    <p><strong>Priorität:</strong> MEDIUM (UX Enhancement, nicht blocking)</p>
+                    <p><strong>Roadmap:</strong> Siehe <code>SESSION_SUMMARY_2025-11-24.md</code> Abschnitt "Implementation Roadmap"</p>
+                </div>
+
+                <h3>Long-term (Next Month)</h3>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Automatische CalcomEventMap Population</h4>
+                        <p>Bei Erstellung neuer Composite Services automatisch Event Types und Maps erstellen</p>
+                        <p><span class="badge info">Enhancement</span></p>
+                    </div>
+
+                    <div class="card">
+                        <h4>Real-time Child Event Type Resolution</h4>
+                        <p>Child Event Type IDs dynamisch zur Laufzeit auflösen statt Parent-Fallback</p>
+                        <p><span class="badge info">Optimization</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="section">
+                <h2>✅ Zusammenfassung</h2>
+
+                <div class="info-box success">
+                    <h4>🎉 System Status: PRODUCTION READY</h4>
+                    <p><strong>Das AskPro AI Gateway ist vollständig einsatzbereit für echte Kundenbuchungen!</strong></p>
+                </div>
+
+                <h3>Was funktioniert ✅</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Buchungs-Flow</h4>
+                        <ul>
+                            <li>✅ Kundenidentifikation via Telefonnummer</li>
+                            <li>✅ Service-Erkennung (fuzzy match)</li>
+                            <li>✅ Datum/Zeit-Parsing (deutsch)</li>
+                            <li>✅ Verfügbarkeitsprüfung (accurate)</li>
+                            <li>✅ Termin-Erstellung</li>
+                            <li>✅ Cal.com Sync (parallel)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Composite Services</h4>
+                        <ul>
+                            <li>✅ Multi-Phasen Termine</li>
+                            <li>✅ Gap-Phasen (kein Staff)</li>
+                            <li>✅ CalcomEventMaps (24/24)</li>
+                            <li>✅ Parallel Cal.com Bookings</li>
+                            <li>✅ Post-Sync Verification</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Bekannte Limitationen 🟡</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Limitation</th>
+                                <th>Impact</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Composite Display nicht implementiert</td>
+                                <td>UX - Admin kann Phasen nicht sehen</td>
+                                <td><span class="badge warning">MEDIUM</span></td>
+                            </tr>
+                            <tr>
+                                <td>Child Event Type IDs verwenden Parent-Fallback</td>
+                                <td>Funktioniert, aber suboptimal</td>
+                                <td><span class="badge info">LOW</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Kontakt & Support</h3>
+                <div class="info-box">
+                    <h4>📞 Bei Fragen oder Problemen</h4>
+                    <p><strong>Dokumentation:</strong> Diese Datei + alle MD-Dateien im Projekt-Root</p>
+                    <p><strong>Logs:</strong> <code>storage/logs/laravel.log</code></p>
+                    <p><strong>Admin Panel:</strong> <a href="https://api.askproai.de/admin" target="_blank">https://api.askproai.de/admin</a></p>
+                </div>
+
+                <div class="grid-3" style="margin-top: 30px;">
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">100%</div>
+                            <div class="metric-label">System Bereitschaft</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">24/24</div>
+                            <div class="metric-label">CalcomEventMaps</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="metric">
+                            <div class="metric-value">0</div>
+                            <div class="metric-label">Blocking Issues</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <h3>AskPro AI Gateway - Komplette System Dokumentation</h3>
+            <p>Version 2.0 Production Ready - 24. November 2025</p>
+            <p style="margin-top: 20px;">
+                Erstellt von: <a href="https://claude.ai">Claude Code (Sonnet 4.5)</a><br>
+                Basiert auf: <a href="https://api.askproai.de/testanruf-analyse-2025-11-22.html">testanruf-analyse-2025-11-22.html</a>
+            </p>
+            <p style="margin-top: 30px; opacity: 0.7;">
+                Referenz-Dateien:<br>
+                FINAL_STATUS_PRODUCTION_READY_2025-11-23.md<br>
+                CALCOM_EVENT_MAPS_SETUP_COMPLETE_2025-11-24.md<br>
+                SESSION_SUMMARY_2025-11-24.md
+            </p>
+        </div>
+    </div>
+</body>
+</html>

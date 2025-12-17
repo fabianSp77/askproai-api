@@ -425,7 +425,7 @@ class CalcomService
                     $resp = Http::withHeaders([
                         'Authorization' => 'Bearer ' . $this->apiKey,
                         'cal-api-version' => config('services.calcom.api_version', '2024-08-13')
-                    ])->acceptJson()->timeout(3)->get($fullUrl);
+                    ])->acceptJson()->connectTimeout(1)->timeout(2)->get($fullUrl);  // 🔧 OPTIMIZED 2025-12-13: connectTimeout(1) + timeout(2) for faster failure on connection issues
 
                     // 🔧 FIX 2025-11-11: Handle 429 Rate Limit responses
                     if ($resp->status() === 429) {
@@ -501,15 +501,17 @@ class CalcomService
                     'lock_key' => $lockKey
                 ]);
 
-                // Block up to 5 seconds waiting for the winner to populate cache
-                if ($lock->block(5)) {
+                // 🔧 OPTIMIZED 2025-12-13: Reduced from 5s to 3s (conservative middle ground)
+                // Block up to 3 seconds waiting for the winner to populate cache
+                // Rationale: 3s ≈ P95 Cal.com availability + buffer, prevents thundering herd
+                if ($lock->block(3)) {
                     // Lock acquired after waiting - check cache again
                     $cachedResponse = Cache::get($cacheKey);
 
                     if ($cachedResponse) {
                         Log::info('Request coalescing: Cache populated by winner', [
                             'cache_key' => $cacheKey,
-                            'waited_ms' => '< 5000'
+                            'waited_ms' => '< 3000'
                         ]);
 
                         return new Response(
@@ -538,11 +540,31 @@ class CalcomService
             }
         }
 
+        // 🔧 OPTIMIZED 2025-12-13: Jitter + final cache check to prevent thundering herd
+        // Before making our own call, wait 20-80ms and check cache one more time
+        // This spreads out "losers" and catches late cache population by winner
+        try {
+            usleep(random_int(20_000, 80_000));
+        } catch (\Exception $e) {
+            // Fallback to fixed 50ms if random_int fails (very rare, but possible)
+            usleep(50_000);
+        }
+
+        $finalCacheCheck = Cache::get($cacheKey);
+        if ($finalCacheCheck) {
+            Log::info('Request coalescing: Cache hit after jitter (thundering herd prevented)', [
+                'cache_key' => $cacheKey
+            ]);
+            return new Response(
+                new \GuzzleHttp\Psr7\Response(200, [], json_encode($finalCacheCheck))
+            );
+        }
+
         // Fallback: If coalescing failed, proceed with normal cache-miss flow
         // This is a safety net that should rarely execute
         Log::warning('Request coalescing fallback triggered', [
             'cache_key' => $cacheKey,
-            'reason' => 'lock_timeout_or_cache_miss_after_wait'
+            'reason' => 'lock_timeout_and_cache_miss_after_jitter'
         ]);
 
         // Prepare query parameters for fallback
@@ -576,7 +598,7 @@ class CalcomService
                 $resp = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'cal-api-version' => config('services.calcom.api_version', '2024-08-13')
-                ])->acceptJson()->timeout(3)->get($fullUrl);
+                ])->acceptJson()->connectTimeout(1)->timeout(2)->get($fullUrl);  // 🔧 OPTIMIZED 2025-12-13: connectTimeout(1) + timeout(2) for faster failure
 
                 // 🔧 FIX 2025-11-12: Handle 429 Rate Limit responses (fallback path)
                 if ($resp->status() === 429) {
@@ -1661,6 +1683,204 @@ class CalcomService
                 'Cal.com API circuit breaker is open. Service appears to be down.',
                 null, "/bookings/{$bookingId}/cancel", $payload, 503
             );
+        }
+    }
+
+    /**
+     * Reserve a slot in Cal.com (prevents race conditions)
+     *
+     * Cal.com API v2: POST /v2/slots/reservations
+     * Default reservation duration: 5 minutes
+     *
+     * @param int $eventTypeId Cal.com event type ID
+     * @param string $slotStart Slot start time (will be converted to UTC ISO-8601)
+     * @param int|null $reservationDuration Duration in minutes (default: 5)
+     * @return array{success: bool, reservationUid: ?string, reservationUntil: ?string, error: ?string}
+     */
+    public function reserveSlot(int $eventTypeId, string $slotStart, ?int $reservationDuration = 5): array
+    {
+        // Convert to UTC ISO-8601 for Cal.com API
+        $slotStartUtc = \Carbon\Carbon::parse($slotStart)->utc()->toIso8601String();
+
+        $payload = [
+            'eventTypeId' => $eventTypeId,
+            'slotStart' => $slotStartUtc,
+        ];
+
+        // Only add reservationDuration if different from default
+        if ($reservationDuration && $reservationDuration !== 5) {
+            $payload['reservationDuration'] = $reservationDuration;
+        }
+
+        Log::channel('calcom')->info('[Cal.com V2] Reserve Slot Request:', [
+            'event_type_id' => $eventTypeId,
+            'slot_start' => $slotStart,
+            'slot_start_utc' => $slotStartUtc,
+            'reservation_duration' => $reservationDuration,
+        ]);
+
+        // Check rate limit
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached for reserveSlot, waiting');
+            $this->rateLimiter->waitForAvailability();
+        }
+
+        try {
+            $resp = $this->circuitBreaker->call(function() use ($payload) {
+                $fullUrl = $this->baseUrl . '/slots/reservations';
+                return Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'cal-api-version' => '2024-09-04', // Slots API requires this version
+                    'Content-Type' => 'application/json'
+                ])->connectTimeout(1)->timeout(3)->acceptJson()->post($fullUrl, $payload);
+            });
+
+            Log::channel('calcom')->debug('[Cal.com V2] Reserve Slot Response:', [
+                'status' => $resp->status(),
+                'body' => $resp->json() ?? $resp->body(),
+            ]);
+
+            if ($resp->status() === 429) {
+                Log::error('[Cal.com] Rate limit exceeded (429) for reserveSlot');
+                return [
+                    'success' => false,
+                    'reservationUid' => null,
+                    'reservationUntil' => null,
+                    'error' => 'rate_limit_exceeded',
+                ];
+            }
+
+            if (!$resp->successful()) {
+                $errorBody = $resp->json();
+                Log::error('[Cal.com] Reserve slot failed', [
+                    'status' => $resp->status(),
+                    'error' => $errorBody,
+                ]);
+                return [
+                    'success' => false,
+                    'reservationUid' => null,
+                    'reservationUntil' => null,
+                    'error' => $errorBody['error'] ?? 'reservation_failed',
+                ];
+            }
+
+            $data = $resp->json();
+
+            // Cal.com V2 returns: { "status": "success", "data": { "reservationUid": "...", "reservationUntil": "..." } }
+            // 🔧 FIX 2025-12-14: Cal.com uses "reservationUid" (camelCase), NOT "uid"
+            // Bug found: We looked for 'uid' but Cal.com returns 'reservationUid'
+            $reservationData = $data['data'] ?? $data;
+
+            $reservationUid = $reservationData['reservationUid'] ?? $reservationData['uid'] ?? null;
+            $reservationUntil = $reservationData['reservationUntil'] ?? null;
+
+            // 🔧 FIX 2025-12-14: Validate reservation UID exists
+            // ROOT CAUSE (Call #89576): Cal.com returned reservationUntil but NO uid
+            // This caused start_booking to fail with "wurde gerade vergeben" because
+            // the Layer 1 re-check didn't know a reservation existed.
+            // Now we properly detect this anomaly and still return success if we have reservationUntil.
+            if (!$reservationUid && $reservationUntil) {
+                Log::channel('calcom')->warning('[Cal.com V2] ⚠️ Reservation created WITHOUT uid - anomaly detected', [
+                    'reservation_uid' => null,
+                    'reservation_until' => $reservationUntil,
+                    'raw_response' => $data,
+                    'note' => 'Cal.com returned reservationUntil but no uid - treating as valid reservation',
+                ]);
+            } else {
+                Log::channel('calcom')->info('[Cal.com V2] ✅ Slot reserved successfully', [
+                    'reservation_uid' => $reservationUid,
+                    'reservation_until' => $reservationUntil,
+                ]);
+            }
+
+            // Return success if we have EITHER uid OR reservationUntil
+            // The reservation is valid as long as Cal.com gave us an expiry time
+            return [
+                'success' => ($reservationUid !== null || $reservationUntil !== null),
+                'reservationUid' => $reservationUid,
+                'reservationUntil' => $reservationUntil,
+                'error' => (!$reservationUid && !$reservationUntil) ? 'no_reservation_data' : null,
+            ];
+
+        } catch (CircuitBreakerOpenException $e) {
+            Log::error('[Cal.com] Circuit breaker OPEN for reserveSlot');
+            return [
+                'success' => false,
+                'reservationUid' => null,
+                'reservationUntil' => null,
+                'error' => 'circuit_breaker_open',
+            ];
+        } catch (\Exception $e) {
+            Log::error('[Cal.com] reserveSlot exception', ['error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'reservationUid' => null,
+                'reservationUntil' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Release a reserved slot in Cal.com
+     *
+     * Cal.com API v2: DELETE /v2/slots/reservations/{uid}
+     *
+     * @param string $reservationUid The reservation UID to release
+     * @return array{success: bool, error: ?string}
+     */
+    public function releaseSlotReservation(string $reservationUid): array
+    {
+        Log::channel('calcom')->info('[Cal.com V2] Release Slot Reservation Request:', [
+            'reservation_uid' => $reservationUid,
+        ]);
+
+        // Check rate limit
+        if (!$this->rateLimiter->canMakeRequest()) {
+            Log::channel('calcom')->warning('[Cal.com] Rate limit reached for releaseSlotReservation, waiting');
+            $this->rateLimiter->waitForAvailability();
+        }
+
+        try {
+            $resp = $this->circuitBreaker->call(function() use ($reservationUid) {
+                $fullUrl = $this->baseUrl . '/slots/reservations/' . $reservationUid;
+                return Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'cal-api-version' => '2024-09-04', // Slots API requires this version
+                ])->connectTimeout(1)->timeout(3)->acceptJson()->delete($fullUrl);
+            });
+
+            Log::channel('calcom')->debug('[Cal.com V2] Release Slot Response:', [
+                'status' => $resp->status(),
+                'body' => $resp->json() ?? $resp->body(),
+            ]);
+
+            if ($resp->status() === 429) {
+                Log::error('[Cal.com] Rate limit exceeded (429) for releaseSlotReservation');
+                return ['success' => false, 'error' => 'rate_limit_exceeded'];
+            }
+
+            // 200 or 204 = success
+            if ($resp->successful()) {
+                Log::channel('calcom')->info('[Cal.com V2] ✅ Slot reservation released', [
+                    'reservation_uid' => $reservationUid,
+                ]);
+                return ['success' => true, 'error' => null];
+            }
+
+            $errorBody = $resp->json();
+            Log::error('[Cal.com] Release slot reservation failed', [
+                'status' => $resp->status(),
+                'error' => $errorBody,
+            ]);
+            return ['success' => false, 'error' => $errorBody['error'] ?? 'release_failed'];
+
+        } catch (CircuitBreakerOpenException $e) {
+            Log::error('[Cal.com] Circuit breaker OPEN for releaseSlotReservation');
+            return ['success' => false, 'error' => 'circuit_breaker_open'];
+        } catch (\Exception $e) {
+            Log::error('[Cal.com] releaseSlotReservation exception', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
