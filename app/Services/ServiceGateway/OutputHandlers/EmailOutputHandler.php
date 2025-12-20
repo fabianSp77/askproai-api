@@ -3,7 +3,9 @@
 namespace App\Services\ServiceGateway\OutputHandlers;
 
 use App\Mail\ServiceCaseNotification;
+use App\Mail\VisionaryDataBackupMail;
 use App\Models\ServiceCase;
+use App\Models\ServiceOutputConfiguration;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -86,12 +88,18 @@ class EmailOutputHandler implements OutputHandlerInterface
                     continue;
                 }
 
-                Mail::to($email)->queue(new ServiceCaseNotification($case, 'internal'));
+                // Use VisionaryDataBackupMail for Visionary Data configs
+                $mailable = $this->isVisionaryDataConfig($config)
+                    ? new VisionaryDataBackupMail($case)
+                    : new ServiceCaseNotification($case, 'internal');
+
+                Mail::to($email)->queue($mailable);
                 $queued++;
 
                 Log::debug('[EmailOutputHandler] Email queued', [
                     'case_id' => $case->id,
                     'recipient' => $email,
+                    'mailable' => get_class($mailable),
                 ]);
             }
 
@@ -276,5 +284,28 @@ class EmailOutputHandler implements OutputHandlerInterface
     private function isValidEmail(string $email): bool
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    /**
+     * Check if configuration is for Visionary Data backup emails.
+     *
+     * Visionary Data configurations require the full backup email
+     * with transcript and JSON data block instead of the standard
+     * internal notification.
+     *
+     * Detection: Configuration name contains "visionary" (case-insensitive)
+     *
+     * @param ServiceOutputConfiguration|null $config Output configuration
+     * @return bool True if this is a Visionary Data config
+     */
+    private function isVisionaryDataConfig($config): bool
+    {
+        if (!$config instanceof ServiceOutputConfiguration) {
+            return false;
+        }
+
+        $name = strtolower($config->name ?? '');
+
+        return str_contains($name, 'visionary');
     }
 }
