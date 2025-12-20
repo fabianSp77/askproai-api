@@ -92,7 +92,7 @@ class ServiceCaseNotification extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.service-cases.notification',
+            view: 'emails.service-cases.notification-html',
             with: [
                 'case' => $this->case,
                 'recipientType' => $this->recipientType,

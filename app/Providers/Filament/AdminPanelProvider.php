@@ -165,6 +165,7 @@ function initTooltipPatch() {
             ->widgets([
                 \App\Filament\Widgets\CalcomSyncStatusWidget::class,
                 \App\Filament\Widgets\AppointmentSyncStatusWidget::class,
+                \App\Filament\Widgets\ServiceDeskStatsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

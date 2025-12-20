@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Gateway - Projektstatus</title>
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --bg-dark: #1f2937;
+            --bg-card: #374151;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #4b5563;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #000;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover { transform: translateY(-4px); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: var(--text);
+            margin: 1.5rem 0 1rem;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            gap: 0.3rem;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+
+        .checklist { list-style: none; }
+
+        .checklist li {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .checklist .done { border-left: 4px solid var(--success); }
+        .checklist .pending { border-left: 4px solid var(--warning); }
+        .checklist .missing { border-left: 4px solid var(--danger); }
+
+        .icon { font-size: 1.2rem; flex-shrink: 0; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        .file-tree {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        .file-tree .folder { color: var(--info); }
+        .file-tree .file { color: var(--text-muted); }
+        .file-tree .new { color: var(--success); }
+
+        .progress-bar {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: 24px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #000;
+            transition: width 0.5s;
+        }
+
+        .architecture-diagram {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .flow-step {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            margin: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .flow-step:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .flow-arrow {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin: 0 0.5rem;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .api-endpoint {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+        }
+
+        .method-post { background: var(--success); color: #000; }
+        .method-get { background: var(--info); color: #fff; }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.8rem; }
+            .two-col { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Service Gateway</h1>
+            <p class="subtitle">IT-Systemhaus Ticket Support Agent - Projektstatus</p>
+            <span class="date-badge">Stand: 20. Dezember 2025</span>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">85%</div>
+                <div class="stat-label">Gesamtfortschritt</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Service Cases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1</div>
+                <div class="stat-label">Kategorien</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Output Configs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Policies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4</div>
+                <div class="stat-label">Tests</div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="section">
+            <h2>Projektfortschritt</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 85%;">85% abgeschlossen</div>
+            </div>
+            <div class="two-col" style="margin-top: 1.5rem;">
+                <div>
+                    <h3>Erledigte Module</h3>
+                    <ul class="checklist">
+                        <li class="done"><span class="icon">&#10003;</span> Core Models (ServiceCase, Category, OutputConfig)</li>
+                        <li class="done"><span class="icon">&#10003;</span> Database Migrations</li>
+                        <li class="done"><span class="icon">&#10003;</span> Filament Admin Resources (3x)</li>
+                        <li class="done"><span class="icon">&#10003;</span> Authorization Policies (3x)</li>
+                        <li class="done"><span class="icon">&#10003;</span> ServiceDeskHandler Controller</li>
+                        <li class="done"><span class="icon">&#10003;</span> ServiceDeskLockService (Idempotency)</li>
+                        <li class="done"><span class="icon">&#10003;</span> Output Handlers (Email, Webhook, Hybrid)</li>
+                        <li class="done"><span class="icon">&#10003;</span> Gateway Configuration</li>
+                        <li class="done"><span class="icon">&#10003;</span> Retell Integration (finalize_ticket)</li>
+                        <li class="done"><span class="icon">&#10003;</span> Dashboard Widget</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Offene Aufgaben</h3>
+                    <ul class="checklist">
+                        <li class="pending"><span class="icon">&#9888;</span> Output Configuration erstellen (Admin UI)</li>
+                        <li class="pending"><span class="icon">&#9888;</span> E-Mail Templates konfigurieren</li>
+                        <li class="pending"><span class="icon">&#9888;</span> Webhook Integration testen</li>
+                        <li class="missing"><span class="icon">&#10007;</span> ServiceCase Events (Created, Updated)</li>
+                        <li class="missing"><span class="icon">&#10007;</span> ServiceCase Observer</li>
+                        <li class="missing"><span class="icon">&#10007;</span> Delivery Queue UI</li>
+                        <li class="missing"><span class="icon">&#10007;</span> SLA Monitoring Widget</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Section -->
+        <div class="section">
+            <h2>Architektur</h2>
+
+            <h3>Call Flow</h3>
+            <div class="architecture-diagram">
+                <div class="flow-step">Retell AI Anruf</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step">GatewayModeResolver</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step">ServiceDeskHandler</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step">finalize_ticket()</div>
+                <br><br>
+                <div class="flow-step">ServiceCase erstellt</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step">DeliverCaseOutputJob</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step">Email/Webhook</div>
+            </div>
+
+            <h3>Gateway Modes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Modus</th>
+                        <th>Beschreibung</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>appointment</code></td>
+                        <td>Standard Terminbuchung</td>
+                        <td>Arztpraxen, Friseure, Dienstleister</td>
+                    </tr>
+                    <tr>
+                        <td><code>service_desk</code></td>
+                        <td>IT-Ticket Support</td>
+                        <td>IT-Systemhäuser, Helpdesks</td>
+                    </tr>
+                    <tr>
+                        <td><code>hybrid</code></td>
+                        <td>Intent-basierte Weiterleitung</td>
+                        <td>Gemischte Anfragen</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- File Structure Section -->
+        <div class="section">
+            <h2>Dateistruktur</h2>
+
+            <div class="two-col">
+                <div>
+                    <h3>Models</h3>
+                    <div class="file-tree">
+<span class="folder">app/Models/</span>
+├── <span class="file">ServiceCase.php</span>
+├── <span class="file">ServiceCaseCategory.php</span>
+└── <span class="new">ServiceOutputConfiguration.php</span> <span class="badge badge-success">NEU</span>
+                    </div>
+
+                    <h3>Policies</h3>
+                    <div class="file-tree">
+<span class="folder">app/Policies/</span>
+├── <span class="new">ServiceCasePolicy.php</span> <span class="badge badge-success">NEU</span>
+├── <span class="new">ServiceCaseCategoryPolicy.php</span> <span class="badge badge-success">NEU</span>
+└── <span class="new">ServiceOutputConfigurationPolicy.php</span> <span class="badge badge-success">NEU</span>
+                    </div>
+
+                    <h3>Filament Resources</h3>
+                    <div class="file-tree">
+<span class="folder">app/Filament/Resources/</span>
+├── <span class="file">ServiceCaseResource.php</span>
+├── <span class="file">ServiceCaseCategoryResource.php</span>
+└── <span class="new">ServiceOutputConfigurationResource.php</span> <span class="badge badge-success">NEU</span>
+    └── <span class="folder">Pages/</span>
+        ├── ListServiceOutputConfigurations.php
+        ├── CreateServiceOutputConfiguration.php
+        └── EditServiceOutputConfiguration.php
+                    </div>
+                </div>
+                <div>
+                    <h3>Services</h3>
+                    <div class="file-tree">
+<span class="folder">app/Services/</span>
+├── <span class="folder">ServiceDesk/</span>
+│   └── <span class="file">ServiceDeskLockService.php</span>
+└── <span class="folder">ServiceGateway/</span>
+    ├── <span class="file">OutputHandlerFactory.php</span>
+    └── <span class="folder">OutputHandlers/</span>
+        ├── <span class="file">OutputHandlerInterface.php</span>
+        ├── <span class="file">EmailOutputHandler.php</span>
+        ├── <span class="file">WebhookOutputHandler.php</span>
+        └── <span class="file">HybridOutputHandler.php</span>
+                    </div>
+
+                    <h3>Controllers & Jobs</h3>
+                    <div class="file-tree">
+<span class="folder">app/Http/Controllers/</span>
+└── <span class="file">ServiceDeskHandler.php</span>
+
+<span class="folder">app/Jobs/ServiceGateway/</span>
+└── <span class="file">DeliverCaseOutputJob.php</span>
+                    </div>
+
+                    <h3>Tests</h3>
+                    <div class="file-tree">
+<span class="folder">tests/</span>
+├── <span class="folder">Unit/ServiceDesk/</span>
+│   └── <span class="file">ServiceDeskLockServiceTest.php</span>
+├── <span class="folder">Unit/ServiceGateway/</span>
+│   ├── <span class="file">HybridOutputHandlerTest.php</span>
+│   └── <span class="file">WebhookOutputHandlerTest.php</span>
+└── <span class="folder">Feature/ServiceGateway/</span>
+    ├── <span class="file">FinalizeTicketTest.php</span>
+    └── <span class="file">SmartOfficeFlowTest.php</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints Section -->
+        <div class="section">
+            <h2>API Endpoints</h2>
+
+            <div class="api-endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/retell/function-call</code>
+                <p style="margin-top: 0.5rem; color: var(--text-muted);">
+                    Retell Function Call Handler - routet zu ServiceDeskHandler wenn gateway_mode = 'service_desk'
+                </p>
+            </div>
+
+            <h3>ServiceDeskHandler Functions</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function Name</th>
+                        <th>Beschreibung</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>collect_issue_details</code></td>
+                        <td>Sammelt Problembeschreibung vom Anrufer</td>
+                        <td><span class="badge badge-success">&#10003; Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>categorize_request</code></td>
+                        <td>Kategorisiert das Anliegen</td>
+                        <td><span class="badge badge-success">&#10003; Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>route_ticket</code></td>
+                        <td>Routing-Entscheidung</td>
+                        <td><span class="badge badge-success">&#10003; Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>finalize_ticket</code></td>
+                        <td>Erstellt ServiceCase + triggert Output</td>
+                        <td><span class="badge badge-success">&#10003; Aktiv</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>detect_intent</code></td>
+                        <td>Intent-Erkennung (Hybrid Mode)</td>
+                        <td><span class="badge badge-success">&#10003; Aktiv</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Database Section -->
+        <div class="section">
+            <h2>Datenbank</h2>
+
+            <h3>Service Gateway Tabellen</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tabelle</th>
+                        <th>Beschreibung</th>
+                        <th>Records</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>service_cases</code></td>
+                        <td>Haupttabelle für Support-Tickets</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td><code>service_case_categories</code></td>
+                        <td>Ticket-Kategorien pro Company</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td><code>service_output_configurations</code></td>
+                        <td>Email/Webhook Konfigurationen</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>ServiceCase Status Flow</h3>
+            <div class="architecture-diagram">
+                <div class="flow-step" style="border-color: var(--info);">new</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step" style="border-color: var(--warning);">open</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step" style="border-color: var(--warning);">pending</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step" style="border-color: var(--success);">resolved</div>
+                <span class="flow-arrow">&#8594;</span>
+                <div class="flow-step" style="border-color: var(--text-muted);">closed</div>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="section">
+            <h2>Konfiguration</h2>
+
+            <h3>config/gateway.php</h3>
+            <div class="file-tree">
+return [
+    'mode_enabled' => env('GATEWAY_MODE_ENABLED', false),
+    'default_mode' => env('GATEWAY_DEFAULT_MODE', 'appointment'),
+    'modes' => ['appointment', 'service_desk', 'hybrid'],
+    'hybrid' => [
+        'fallback_mode' => env('GATEWAY_HYBRID_FALLBACK', 'appointment'),
+    ],
+];
+            </div>
+
+            <h3>Aktivierung</h3>
+            <div class="api-endpoint">
+                <p><strong>Schritt 1:</strong> In <code>.env</code> setzen:</p>
+                <code style="display: block; margin: 0.5rem 0;">GATEWAY_MODE_ENABLED=true</code>
+                <p style="margin-top: 1rem;"><strong>Schritt 2:</strong> Company Policy konfigurieren:</p>
+                <code style="display: block; margin: 0.5rem 0;">gateway_mode: 'service_desk'</code>
+            </div>
+        </div>
+
+        <!-- Policies Section -->
+        <div class="section">
+            <h2>Authorization Policies</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Policy</th>
+                        <th>Model</th>
+                        <th>Spezielle Methoden</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ServiceCasePolicy</code></td>
+                        <td>ServiceCase</td>
+                        <td>assign, resolve, close, reopen, escalate, retryOutput</td>
+                    </tr>
+                    <tr>
+                        <td><code>ServiceCaseCategoryPolicy</code></td>
+                        <td>ServiceCaseCategory</td>
+                        <td>Standard CRUD + Cases-Check vor Delete</td>
+                    </tr>
+                    <tr>
+                        <td><code>ServiceOutputConfigurationPolicy</code></td>
+                        <td>ServiceOutputConfiguration</td>
+                        <td>test() + Categories-Check vor Delete</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Rollen-Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rolle</th>
+                        <th>viewAny</th>
+                        <th>view</th>
+                        <th>create</th>
+                        <th>update</th>
+                        <th>delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>super_admin</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                    </tr>
+                    <tr>
+                        <td>admin</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                        <td>&#10003;</td>
+                    </tr>
+                    <tr>
+                        <td>manager</td>
+                        <td>&#10003;</td>
+                        <td>Company</td>
+                        <td>&#10003;</td>
+                        <td>Company</td>
+                        <td>Company</td>
+                    </tr>
+                    <tr>
+                        <td>staff</td>
+                        <td>&#10003;</td>
+                        <td>Assigned</td>
+                        <td>-</td>
+                        <td>Assigned</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>company_owner</td>
+                        <td>&#10003;</td>
+                        <td>Company</td>
+                        <td>&#10003;</td>
+                        <td>Company</td>
+                        <td>Company</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Next Steps Section -->
+        <div class="section">
+            <h2>Nächste Schritte</h2>
+
+            <div class="two-col">
+                <div>
+                    <h3 style="color: var(--warning);">Prio 1: Konfiguration</h3>
+                    <ul class="checklist">
+                        <li class="pending"><span class="icon">1</span> Output Konfiguration im Admin erstellen</li>
+                        <li class="pending"><span class="icon">2</span> E-Mail-Empfänger für Tickets festlegen</li>
+                        <li class="pending"><span class="icon">3</span> E-Mail-Template anpassen</li>
+                        <li class="pending"><span class="icon">4</span> Test-Ticket per API senden</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: var(--info);">Prio 2: Erweiterungen</h3>
+                    <ul class="checklist">
+                        <li class="missing"><span class="icon">1</span> ServiceCaseCreated Event</li>
+                        <li class="missing"><span class="icon">2</span> ServiceCaseObserver</li>
+                        <li class="missing"><span class="icon">3</span> SLA Monitoring Dashboard</li>
+                        <li class="missing"><span class="icon">4</span> Eskalations-Workflow</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section -->
+        <div class="section">
+            <h2>Testing</h2>
+
+            <h3>Vorhandene Tests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Typ</th>
+                        <th>Prüft</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ServiceDeskLockServiceTest</td>
+                        <td>Unit</td>
+                        <td>Idempotency, Lock-Mechanismus</td>
+                    </tr>
+                    <tr>
+                        <td>HybridOutputHandlerTest</td>
+                        <td>Unit</td>
+                        <td>Email + Webhook Delivery</td>
+                    </tr>
+                    <tr>
+                        <td>WebhookOutputHandlerTest</td>
+                        <td>Unit</td>
+                        <td>Webhook Payload, Headers</td>
+                    </tr>
+                    <tr>
+                        <td>FinalizeTicketTest</td>
+                        <td>Feature</td>
+                        <td>End-to-End Ticket-Erstellung</td>
+                    </tr>
+                    <tr>
+                        <td>SmartOfficeFlowTest</td>
+                        <td>Feature</td>
+                        <td>Kompletter IT-Systemhaus Flow</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Test ausführen</h3>
+            <div class="file-tree">
+# Alle Service Gateway Tests
+php artisan test --filter=ServiceGateway
+
+# Einzelner Test
+php artisan test tests/Feature/ServiceGateway/FinalizeTicketTest.php
+            </div>
+        </div>
+
+        <footer>
+            <p>Service Gateway Dokumentation | AskPro AI Gateway</p>
+            <p>Generiert am 20. Dezember 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

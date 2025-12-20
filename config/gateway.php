@@ -22,4 +22,26 @@ return [
     |
     */
     'default_mode' => env('GATEWAY_DEFAULT_MODE', 'appointment'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Gateway Modes
+    |--------------------------------------------------------------------------
+    |
+    | List of valid gateway modes for validation.
+    |
+    */
+    'modes' => ['appointment', 'service_desk', 'hybrid'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hybrid Mode Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for hybrid mode intent detection.
+    |
+    */
+    'hybrid' => [
+        'fallback_mode' => env('GATEWAY_HYBRID_FALLBACK', 'appointment'),
+    ],
 ];

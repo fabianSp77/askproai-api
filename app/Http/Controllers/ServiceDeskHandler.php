@@ -591,9 +591,28 @@ class ServiceDeskHandler extends Controller
                 'category_name' => $bestMatch->name,
                 'score' => $bestScore,
             ]);
+            return $bestMatch->id;
         }
 
-        return $bestMatch?->id;
+        // Fallback to default category
+        $defaultCategory = \App\Models\ServiceCaseCategory::where('company_id', $companyId)
+            ->where('is_default', true)
+            ->where('is_active', true)
+            ->first();
+
+        if ($defaultCategory) {
+            Log::debug('[ServiceDeskHandler] Using default category', [
+                'category_id' => $defaultCategory->id,
+                'category_name' => $defaultCategory->name,
+            ]);
+            return $defaultCategory->id;
+        }
+
+        Log::warning('[ServiceDeskHandler] No category found for company', [
+            'company_id' => $companyId,
+        ]);
+
+        return null;
     }
 
     /**

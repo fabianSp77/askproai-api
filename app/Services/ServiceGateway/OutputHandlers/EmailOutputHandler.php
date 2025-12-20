@@ -226,7 +226,7 @@ class EmailOutputHandler implements OutputHandlerInterface
             return false;
         }
 
-        return method_exists($config, 'usesEmail') && $config->usesEmail();
+        return method_exists($config, 'sendsEmail') && $config->sendsEmail();
     }
 
     /**

@@ -227,8 +227,8 @@ class WebhookOutputHandler implements OutputHandlerInterface
             return false;
         }
 
-        return method_exists($config, 'usesWebhook')
-            && $config->usesWebhook()
+        return method_exists($config, 'sendsWebhook')
+            && $config->sendsWebhook()
             && !empty($config->webhook_url);
     }
 
