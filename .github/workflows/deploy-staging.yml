@@ -2,7 +2,7 @@
 # Deploy to Staging Workflow
 # ==============================================================================
 # Purpose: Automatic deployment to staging.askproai.de
-# Trigger: Push to develop branch (after build-artifacts passes)
+# Trigger: Push to main branch (staging mirrors production)
 # Server: staging.askproai.de
 # ==============================================================================
 
@@ -10,7 +10,7 @@ name: Deploy to Staging
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:  # Manual trigger
 
 env:

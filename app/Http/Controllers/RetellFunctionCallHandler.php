@@ -800,7 +800,25 @@ class RetellFunctionCallHandler extends Controller
         // @see docs/SERVICE_GATEWAY_IMPLEMENTATION_PLAN.md
         // ========================================================================
         if (config('gateway.mode_enabled') && $callId) {
-            $gatewayMode = app(\App\Services\Gateway\GatewayModeResolver::class)->resolve($callId);
+            try {
+                $gatewayMode = app(\App\Services\Gateway\GatewayModeResolver::class)->resolve($callId);
+            } catch (\RuntimeException $e) {
+                // CRIT-002: Tenant context required (e.g., company soft-deleted)
+                if (str_contains($e->getMessage(), 'CRIT-002')) {
+                    Log::error('[Gateway] CRIT-002: Tenant context failure', [
+                        'call_id' => $callId,
+                        'function' => $baseFunctionName,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'CRIT-002: Tenant context required',
+                        'message' => 'Es gab ein Problem bei der Zuordnung Ihres Anrufs.',
+                    ], 400);
+                }
+                throw $e; // Re-throw non-CRIT-002 exceptions
+            }
 
             if ($gatewayMode === 'service_desk') {
                 Log::info('[Gateway] Routing to ServiceDeskHandler', [
