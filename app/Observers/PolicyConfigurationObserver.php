@@ -255,6 +255,12 @@ class PolicyConfigurationObserver
                     'min_appointments_to_keep' => 'integer',
                 ],
             ],
+            'gateway_mode' => [
+                'required' => ['mode'],
+                'fields' => [
+                    'mode' => 'string', // appointment, service_desk, hybrid
+                ],
+            ],
             default => throw ValidationException::withMessages([
                 'policy_type' => "Invalid policy type: {$policyType}",
             ]),

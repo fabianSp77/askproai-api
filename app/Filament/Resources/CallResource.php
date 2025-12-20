@@ -506,7 +506,7 @@ class CallResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\AppointmentsRelationManager::class,
+            // RelationManagers\AppointmentsRelationManager::class, // Temporarily disabled - file missing
         ];
     }
 

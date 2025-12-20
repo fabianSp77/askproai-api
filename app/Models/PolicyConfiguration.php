@@ -69,6 +69,9 @@ class PolicyConfiguration extends Model
     public const POLICY_TYPE_ANONYMOUS_RESTRICTIONS = 'anonymous_caller_restrictions';
     public const POLICY_TYPE_INFO_DISCLOSURE = 'appointment_info_disclosure';
 
+    // ✅ Phase 3: Service Gateway routing
+    public const POLICY_TYPE_GATEWAY_MODE = 'gateway_mode';
+
     public const POLICY_TYPES = [
         // Legacy
         self::POLICY_TYPE_CANCELLATION,
@@ -84,6 +87,8 @@ class PolicyConfiguration extends Model
         // Access Control
         self::POLICY_TYPE_ANONYMOUS_RESTRICTIONS,
         self::POLICY_TYPE_INFO_DISCLOSURE,
+        // Service Gateway
+        self::POLICY_TYPE_GATEWAY_MODE,
     ];
 
     /**
