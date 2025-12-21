@@ -49,8 +49,13 @@ class PhoneNumberResolutionService implements PhoneNumberResolutionInterface
             return null;
         }
 
-        // Lookup in database
+        // Lookup in database - try with and without '+' prefix for compatibility
+        // DB may store '493041735870' while normalizer returns '+493041735870'
+        $normalizedWithoutPlus = ltrim($normalized, '+');
+
         $phoneRecord = PhoneNumber::where('number_normalized', $normalized)
+            ->orWhere('number_normalized', $normalizedWithoutPlus)
+            ->orWhere('number', $normalized)
             ->with(['company', 'branch'])
             ->first();
 

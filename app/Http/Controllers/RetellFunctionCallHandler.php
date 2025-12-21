@@ -559,11 +559,11 @@ class RetellFunctionCallHandler extends Controller
             }
         }
 
-        // 🔥 FIX 2025-11-19: DEFAULT BRANCH FALLBACK
+        // 🔥 FIX 2025-12-21: PHONE NUMBER FALLBACK
         // If company_id/branch_id still NULL after all resolution attempts,
-        // use default branch to prevent "Call context not available" errors
+        // try direct phone lookup to get company context
         if (!$companyId || !$branchId) {
-            Log::error('❌ getCallContext: company/branch resolution failed - trying DEFAULT BRANCH fallback', [
+            Log::warning('⚠️ getCallContext: company/branch resolution failed - trying direct phone lookup', [
                 'call_id' => $call->id,
                 'company_id' => $companyId,
                 'branch_id' => $branchId,
@@ -571,27 +571,29 @@ class RetellFunctionCallHandler extends Controller
                 'to_number' => $call->to_number
             ]);
 
-            // Try to get default branch for company_id 1 (fallback)
-            $defaultBranch = \App\Models\Branch::where('company_id', 1)
-                ->where('is_default', true)
+            // Try direct phone number lookup
+            $toPhoneRecord = \App\Models\PhoneNumber::where('number', $call->to_number)
+                ->orWhere('phone_number', $call->to_number)
+                ->with(['company', 'branch'])
                 ->first();
 
-            if ($defaultBranch) {
-                $companyId = $defaultBranch->company_id;
-                $branchId = $defaultBranch->id;
+            if ($toPhoneRecord) {
+                $companyId = $toPhoneRecord->company_id;
+                $branchId = $toPhoneRecord->branch_id;
+                $phoneNumberId = $toPhoneRecord->id;
 
-                Log::info('✅ DEFAULT BRANCH FALLBACK successful', [
+                Log::info('✅ Direct phone lookup fallback successful', [
                     'call_id' => $call->id,
                     'fallback_company_id' => $companyId,
                     'fallback_branch_id' => $branchId,
-                    'fallback_branch_name' => $defaultBranch->name,
-                    'source' => 'default_branch_fallback'
+                    'phone_number_id' => $phoneNumberId,
+                    'source' => 'direct_phone_lookup_fallback'
                 ]);
             } else {
-                Log::critical('🚨 NO DEFAULT BRANCH FOUND - functions will fail!', [
+                Log::critical('🚨 PHONE NUMBER NOT FOUND - call has no company context!', [
                     'call_id' => $call->id,
-                    'company_id' => 1,
-                    'suggestion' => 'Ensure default branch exists in database with is_default=true'
+                    'to_number' => $call->to_number,
+                    'hint' => 'Ensure phone number is registered in database'
                 ]);
                 return null;
             }
