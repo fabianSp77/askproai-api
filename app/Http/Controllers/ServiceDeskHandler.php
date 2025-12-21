@@ -505,8 +505,10 @@ class ServiceDeskHandler extends Controller
                             'retell_call_id' => $callId,  // EXTERNAL Retell ID for audit
                             'customer_name' => $params['customer_name'] ?? null,
                             'customer_phone' => $params['customer_phone'] ?? null,
+                            'customer_email' => $params['customer_email'] ?? null,
                             'customer_location' => $params['customer_location'] ?? null,
                             'others_affected' => $params['others_affected'] ?? false,
+                            'problem_since' => $params['problem_since'] ?? null,
                             'finalized_at' => now()->toIso8601String(),
                         ],
                         'status' => ServiceCase::STATUS_NEW,
