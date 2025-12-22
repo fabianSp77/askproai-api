@@ -128,6 +128,8 @@ class ServiceCase extends Model
         'output_status',
         'output_sent_at',
         'output_error',
+        'audio_object_key',
+        'audio_expires_at',
     ];
 
     /**
@@ -141,6 +143,7 @@ class ServiceCase extends Model
         'sla_response_due_at' => 'datetime',
         'sla_resolution_due_at' => 'datetime',
         'output_sent_at' => 'datetime',
+        'audio_expires_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

@@ -337,4 +337,16 @@ class ServiceCasePolicy
 
         return false;
     }
+
+    /**
+     * Determine whether the user can view/download the call recording.
+     *
+     * Same access control as view() - if you can see the case, you can hear it.
+     * Additional audit logging happens in AudioController.
+     */
+    public function viewRecording(User $user, ServiceCase $serviceCase): bool
+    {
+        // Delegate to view() - same access control applies
+        return $this->view($user, $serviceCase);
+    }
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V2\CommunicationController;
 use App\Http\Controllers\Api\CompositeBookingExampleController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\TestChecklistController;
+use App\Http\Controllers\Api\AudioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -421,6 +422,54 @@ Route::prefix('customer-portal')->group(function () {
             ->middleware('throttle:10,1');
     });
 });
+
+// ---- Audio Routes (Secure Download) -------------------------------------------
+// Protected audio streaming with multi-layer security:
+// 1. signed - URL must have valid signature (24h from email)
+// 2. throttle - Rate limiting (10 requests per minute)
+// Note: No auth required - signed URL from email is sufficient
+// Note: Path uses /stream due to server-side blocking of /download
+Route::middleware(['signed', 'throttle:10,1'])
+    ->get('/audio/{serviceCase}/stream', function (\Illuminate\Http\Request $request, \App\Models\ServiceCase $serviceCase) {
+        $audioService = app(\App\Services\Audio\AudioStorageService::class);
+
+        // Check audio key exists
+        if (!$serviceCase->audio_object_key) {
+            \Illuminate\Support\Facades\Log::warning('[Audio] No audio key', ['case_id' => $serviceCase->id]);
+            abort(404, 'Recording not available');
+        }
+
+        // Check file exists
+        if (!$audioService->exists($serviceCase->audio_object_key)) {
+            \Illuminate\Support\Facades\Log::error('[Audio] File not found', [
+                'case_id' => $serviceCase->id,
+                'key' => $serviceCase->audio_object_key,
+            ]);
+            abort(404, 'Recording file not found');
+        }
+
+        // Audit log
+        \App\Models\ServiceGatewayExchangeLog::create([
+            'company_id' => $serviceCase->company_id,
+            'service_case_id' => $serviceCase->id,
+            'direction' => 'outbound',
+            'endpoint' => 'audio-stream',
+            'http_method' => 'GET',
+            'status_code' => 200,
+            'request_body_redacted' => ['case_id' => $serviceCase->id],
+            'response_body_redacted' => ['action' => 'stream', 'ip' => $request->ip()],
+            'duration_ms' => 0,
+        ]);
+
+        \Illuminate\Support\Facades\Log::info('[Audio] Streaming download', [
+            'case_id' => $serviceCase->id,
+            'key' => $serviceCase->audio_object_key,
+        ]);
+
+        // Stream the file
+        return $audioService->streamDownload($serviceCase->audio_object_key, $serviceCase->formatted_id);
+    })
+    ->name('api.audio.stream');
 
 // ---- Test Routes (Local/Testing Environment Only) -------------------------------------------
 // IMPORTANT: Only available in local/testing environments (see controller)

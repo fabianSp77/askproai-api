@@ -193,6 +193,17 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/reservation-cleanup.log'));
 
+        // 🔊 AUDIO STORAGE CLEANUP (2025-12-22) - SERVICE GATEWAY
+        //
+        // Delete expired audio recordings from S3/MinIO.
+        // Retention: 60 days from upload
+        // Fallback: S3 lifecycle rules (if configured)
+        $schedule->command('audio:cleanup')
+            ->dailyAt('04:30')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/audio-cleanup.log'));
+
         // 🔄 APPOINTMENT SYNC MONITORING (2025-11-24) - PHASE 3
 
         // Alert on appointment sync failures - runs every 15 minutes
