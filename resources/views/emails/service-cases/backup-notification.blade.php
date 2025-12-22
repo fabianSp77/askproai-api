@@ -159,15 +159,17 @@
                                             Problembeschreibung
                                         </div>
 
-                                        <!-- Subject -->
+                                        <!-- Subject as Title -->
                                         <div style="color:#111827; font-size:16px; font-weight:600; margin-bottom:12px;">
                                             {{ $case->subject }}
                                         </div>
 
-                                        <!-- Description -->
+                                        <!-- Description (only if different from subject) -->
+                                        @if($case->description && trim($case->description) !== trim($case->subject))
                                         <div style="background-color:#ffffff; border-radius:6px; padding:12px; color:#374151; font-size:13px; line-height:1.6;">
                                             {{ $case->description }}
                                         </div>
+                                        @endif
 
                                         <!-- Additional Info -->
                                         @if(!empty($meta['problem_since']) || (!empty($meta['others_affected']) && $meta['others_affected'] !== 'nein' && $meta['others_affected'] !== false))
