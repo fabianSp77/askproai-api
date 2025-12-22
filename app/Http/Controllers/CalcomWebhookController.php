@@ -605,8 +605,11 @@ class CalcomWebhookController extends Controller
     private function findOrCreateCustomer(string $name, ?string $email, ?string $phone, int $companyId): Customer
     {
         // Try to find by email first
+        // Multi-Tenancy Fix: Filter by company_id to prevent cross-tenant matching
         if ($email) {
-            $customer = Customer::where('email', $email)->first();
+            $customer = Customer::where('company_id', $companyId)
+                ->where('email', $email)
+                ->first();
             if ($customer) {
                 // Update phone if we have a new one
                 if ($phone && !$customer->phone) {
@@ -617,15 +620,17 @@ class CalcomWebhookController extends Controller
         }
 
         // Try to find by phone
+        // Multi-Tenancy Fix: Filter by company_id to prevent cross-tenant matching
         if ($phone) {
             $normalizedPhone = PhoneNumberNormalizer::normalize($phone);
             $phoneVariants = PhoneNumberNormalizer::generateVariants($normalizedPhone ?? $phone);
 
-            $customer = Customer::where(function ($query) use ($phoneVariants) {
-                foreach ($phoneVariants as $variant) {
-                    $query->orWhere('phone', $variant);
-                }
-            })->first();
+            $customer = Customer::where('company_id', $companyId)
+                ->where(function ($query) use ($phoneVariants) {
+                    foreach ($phoneVariants as $variant) {
+                        $query->orWhere('phone', $variant);
+                    }
+                })->first();
 
             if ($customer) {
                 // Update email if we have a new one

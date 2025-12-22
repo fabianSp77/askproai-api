@@ -239,7 +239,8 @@ class BookingService
     {
         try {
             // Find or create customer
-            $customer = $this->findOrCreateCustomer($bookingDetails);
+            // Multi-Tenancy Fix: Pass company_id from call to ensure proper tenant isolation
+            $customer = $this->findOrCreateCustomer($bookingDetails, $call->company_id);
 
             // Create appointment
             $appointment = Appointment::create([
@@ -283,18 +284,25 @@ class BookingService
 
     /**
      * Find or create customer from booking details
+     * Multi-Tenancy Fix: Now requires companyId to prevent cross-tenant matching
      */
-    private function findOrCreateCustomer(array $bookingDetails): Customer
+    private function findOrCreateCustomer(array $bookingDetails, ?int $companyId = null): Customer
     {
         // Try to find existing customer by phone or email
+        // Multi-Tenancy Fix: Filter by company_id
         $customer = null;
+        $companyId = $companyId ?? ($bookingDetails['company_id'] ?? 1);
 
         if (!empty($bookingDetails['customer_phone'])) {
-            $customer = Customer::where('phone', $bookingDetails['customer_phone'])->first();
+            $customer = Customer::where('company_id', $companyId)
+                ->where('phone', $bookingDetails['customer_phone'])
+                ->first();
         }
 
         if (!$customer && !empty($bookingDetails['customer_email'])) {
-            $customer = Customer::where('email', $bookingDetails['customer_email'])->first();
+            $customer = Customer::where('company_id', $companyId)
+                ->where('email', $bookingDetails['customer_email'])
+                ->first();
         }
 
         // Create new customer if not found
@@ -308,7 +316,7 @@ class BookingService
             ]);
 
             // Then set guarded fields directly (bypass mass assignment protection)
-            $customer->company_id = 1; // Default company
+            $customer->company_id = $companyId;
             $customer->save();
 
             Log::info('Created new customer from booking', [

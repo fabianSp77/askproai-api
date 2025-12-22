@@ -190,23 +190,26 @@ class ViewCustomer extends ViewRecord
 
     /**
      * Find duplicate customers by phone or email
+     * Multi-Tenancy Fix: Only show duplicates within the same company
      */
     protected function findDuplicates()
     {
         $duplicates = collect();
 
-        // Find by phone
+        // Find by phone - Multi-Tenancy Fix: Filter by company_id
         if ($this->record->phone) {
             $phoneDuplicates = Customer::where('phone', $this->record->phone)
                 ->where('id', '!=', $this->record->id)
+                ->where('company_id', $this->record->company_id)
                 ->get();
             $duplicates = $duplicates->merge($phoneDuplicates);
         }
 
-        // Find by email
+        // Find by email - Multi-Tenancy Fix: Filter by company_id
         if ($this->record->email) {
             $emailDuplicates = Customer::where('email', $this->record->email)
                 ->where('id', '!=', $this->record->id)
+                ->where('company_id', $this->record->company_id)
                 ->get();
             $duplicates = $duplicates->merge($emailDuplicates);
         }

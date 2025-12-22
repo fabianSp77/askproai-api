@@ -419,12 +419,12 @@ class RetellWebhookController extends Controller
             case 'booking_cancel':
             case 'cancel':
             case 'appointment_cancel':
-                return $this->handleBookingCancel($slotsData);
+                return $this->handleBookingCancel($slotsData, $incomingNumber);
 
             case 'booking_query':
             case 'query':
             case 'appointment_query':
-                return $this->handleBookingQuery($slotsData);
+                return $this->handleBookingQuery($slotsData, $incomingNumber);
 
             default:
                 // Log unknown intents for debugging
@@ -1001,13 +1001,13 @@ class RetellWebhookController extends Controller
         $staff = $staff ?: $branch->staffs->first();
 
         // 6. Customer anlegen oder finden
+        // Multi-Tenancy Fix: Must include company_id in unique key to prevent cross-tenant matching
         $customer = null;
         if ($customerPhone) {
             $customer = Customer::firstOrCreate(
-                ['phone' => $customerPhone],
+                ['phone' => $customerPhone, 'company_id' => $tenant->id],
                 [
                     'name' => $customerName,
-                    'tenant_id' => $tenant->id,
                     'branch_id' => $branch->id,
                 ]
             );
@@ -1047,7 +1047,7 @@ class RetellWebhookController extends Controller
         ]);
     }
 
-    private function handleBookingCancel($slotsData): Response
+    private function handleBookingCancel($slotsData, ?string $incomingNumber = null): Response
     {
         Log::info('Handling booking cancel intent', ['slots' => $slotsData]);
 
@@ -1058,12 +1058,24 @@ class RetellWebhookController extends Controller
             return $this->responseFormatter->error('Need appointment ID or customer phone to cancel');
         }
 
+        // Multi-Tenancy Fix: Resolve company from incoming phone number
+        $companyId = null;
+        if ($incomingNumber) {
+            $phoneContext = $this->phoneResolver->resolve($incomingNumber);
+            $companyId = $phoneContext['company_id'] ?? null;
+        }
+
         // Find appointment
         $query = Appointment::query();
         if ($appointmentId) {
             $query->where('id', $appointmentId);
         } elseif ($customerPhone) {
-            $customer = Customer::where('phone', $customerPhone)->first();
+            // Multi-Tenancy Fix: Filter customer lookup by company_id
+            $customerQuery = Customer::where('phone', $customerPhone);
+            if ($companyId) {
+                $customerQuery->where('company_id', $companyId);
+            }
+            $customer = $customerQuery->first();
             if ($customer) {
                 $query->where('customer_id', $customer->id)
                       ->where('status', 'scheduled')
@@ -1086,7 +1098,7 @@ class RetellWebhookController extends Controller
         );
     }
 
-    private function handleBookingQuery($slotsData): Response
+    private function handleBookingQuery($slotsData, ?string $incomingNumber = null): Response
     {
         Log::info('Handling booking query intent', ['slots' => $slotsData]);
 
@@ -1097,8 +1109,20 @@ class RetellWebhookController extends Controller
             return $this->responseFormatter->error('Need customer phone to query appointments');
         }
 
-        // Find customer
-        $customer = Customer::where('phone', $customerPhone)->first();
+        // Multi-Tenancy Fix: Resolve company from incoming phone number
+        $companyId = null;
+        if ($incomingNumber) {
+            $phoneContext = $this->phoneResolver->resolve($incomingNumber);
+            $companyId = $phoneContext['company_id'] ?? null;
+        }
+
+        // Find customer - Multi-Tenancy Fix: Filter by company_id
+        $customerQuery = Customer::where('phone', $customerPhone);
+        if ($companyId) {
+            $customerQuery->where('company_id', $companyId);
+        }
+        $customer = $customerQuery->first();
+
         if (!$customer) {
             return $this->responseFormatter->success(
                 ['appointments' => []],

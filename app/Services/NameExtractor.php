@@ -228,7 +228,9 @@ class NameExtractor
         }
 
         // Only link if we have a real phone number match
+        // Multi-Tenancy Fix: Filter by company_id to prevent cross-tenant matching
         $customer = \App\Models\Customer::where('phone', $call->from_number)
+            ->where('company_id', $call->company_id)
             ->first();
 
         if ($customer) {

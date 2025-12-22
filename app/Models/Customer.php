@@ -245,6 +245,86 @@ class Customer extends Model
         return $query->with(['company', 'preferredBranch', 'preferredStaff']);
     }
 
+    // ===================================================================
+    // Multi-Tenancy Safe Lookup Methods
+    // ===================================================================
+    // These methods MUST be used for customer lookups to prevent data leakage
+    // between tenants. They enforce company_id filtering at the query level.
+
+    /**
+     * Find a customer by phone number within a specific company
+     * Multi-Tenancy Safe: Always filters by company_id
+     *
+     * @param string $phone The phone number to search for
+     * @param int $companyId The company to search within
+     * @return static|null
+     */
+    public static function findByPhoneInCompany(string $phone, int $companyId): ?self
+    {
+        return static::where('phone', $phone)
+            ->where('company_id', $companyId)
+            ->first();
+    }
+
+    /**
+     * Find or create a customer by phone within a specific company
+     * Multi-Tenancy Safe: Ensures uniqueness is per-company, not global
+     *
+     * Note: Uses direct attribute setting because company_id is guarded
+     *
+     * @param string $phone The phone number
+     * @param int $companyId The company ID
+     * @param array $attributes Additional attributes for creation
+     * @return static
+     */
+    public static function firstOrCreateInCompany(string $phone, int $companyId, array $attributes = []): self
+    {
+        // Try to find existing customer
+        $existing = static::where('phone', $phone)
+            ->where('company_id', $companyId)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        // Create new customer - company_id is guarded so we set it directly
+        $customer = new static($attributes);
+        $customer->phone = $phone;
+        $customer->company_id = $companyId;
+        $customer->save();
+
+        return $customer;
+    }
+
+    /**
+     * Find a customer by email within a specific company
+     * Multi-Tenancy Safe: Always filters by company_id
+     *
+     * @param string $email The email to search for
+     * @param int $companyId The company to search within
+     * @return static|null
+     */
+    public static function findByEmailInCompany(string $email, int $companyId): ?self
+    {
+        return static::where('email', $email)
+            ->where('company_id', $companyId)
+            ->first();
+    }
+
+    /**
+     * Scope to filter by company - use for explicit tenant filtering
+     * Useful when CompanyScope global scope is bypassed
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $companyId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeInCompany($query, int $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
     // Helper methods
     public function updateJourneyStatus($newStatus, $reason = null)
     {

@@ -96,17 +96,20 @@ class DeterministicCustomerMatcher
             }
         }
 
-        // Step 6: Cross-company search (lower confidence)
-        $customer = Customer::where('phone', $normalizedFrom)->first();
-        if ($customer) {
-            $result['customer'] = $customer;
-            $result['confidence'] = 70; // Medium confidence - wrong company context
-            $result['match_method'] = 'exact_phone_cross_company';
-            Log::warning('Customer found but in different company', [
-                'customer_company' => $customer->company_id,
-                'call_company' => $targetCompany
+        // Step 6: REMOVED - No cross-company matching allowed (Multi-Tenancy Fix)
+        // Previously this searched ALL companies for a matching phone number,
+        // which caused customer data leakage between tenants.
+        // Now: If no customer found in targetCompany, they are unknown.
+
+        // Log if customer exists in different company (for debugging, but don't return them)
+        $crossCompanyCustomer = Customer::where('phone', $normalizedFrom)->first();
+        if ($crossCompanyCustomer && $crossCompanyCustomer->company_id !== $targetCompany) {
+            Log::info('Customer exists in different company - not returning due to tenant isolation', [
+                'customer_company' => $crossCompanyCustomer->company_id,
+                'target_company' => $targetCompany,
+                'phone' => $normalizedFrom
             ]);
-            return $result;
+            // DO NOT return - proceed to mark as unknown
         }
 
         // Step 7: Mark as unknown - legitimate unknown customer
@@ -139,9 +142,11 @@ class DeterministicCustomerMatcher
             return null;
         }
 
-        // Check if we already have an unknown customer placeholder for this number
+        // Check if we already have an unknown customer placeholder for this number IN THIS COMPANY
+        // Multi-Tenancy Fix: Must filter by company_id to prevent cross-tenant data leakage
         $unknownCustomer = Customer::where('phone', $normalizedPhone)
             ->where('customer_type', 'unknown')
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->first();
 
         if ($unknownCustomer) {

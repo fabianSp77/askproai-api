@@ -2125,9 +2125,12 @@ class RetellApiController extends Controller
         }
 
         // Try to find existing customer by phone first
+        // Multi-Tenancy Fix: Filter by company_id to prevent cross-tenant matching
         if ($phone) {
             $normalizedPhone = preg_replace('/[^0-9+]/', '', $phone);
-            $customer = Customer::where('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%')->first();
+            $customer = Customer::where('company_id', $companyId)
+                ->where('phone', 'LIKE', '%' . substr($normalizedPhone, -8) . '%')
+                ->first();
             if ($customer) {
                 return $customer;
             }
