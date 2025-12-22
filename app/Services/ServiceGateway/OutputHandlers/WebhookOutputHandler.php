@@ -4,6 +4,7 @@ namespace App\Services\ServiceGateway\OutputHandlers;
 
 use App\Models\ServiceCase;
 use App\Models\ServiceOutputConfiguration;
+use App\Services\Audio\AudioStorageService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -249,6 +250,10 @@ class WebhookOutputHandler implements OutputHandlerInterface
             return $this->renderTemplate($case, $config->webhook_template);
         }
 
+        // Generate audio URL if feature enabled and audio available
+        $audioUrl = $this->generateAudioUrl($case, $config);
+        $audioTtl = $config->audio_url_ttl_minutes ?? config('gateway.delivery.audio_url_ttl_minutes', 60);
+
         // Generate default Jira-compatible payload
         return [
             'fields' => [
@@ -261,7 +266,7 @@ class WebhookOutputHandler implements OutputHandlerInterface
             ],
             'meta' => [
                 'source' => 'askpro_service_gateway',
-                'version' => '1.0',
+                'version' => '1.1',
                 'case_id' => $case->id,
                 'company_id' => $case->company_id,
                 'call_id' => $case->call_id,
@@ -269,6 +274,16 @@ class WebhookOutputHandler implements OutputHandlerInterface
                 'created_at' => $case->created_at->toIso8601String(),
                 'urgency' => $case->urgency,
                 'impact' => $case->impact,
+            ],
+            'enrichment' => [
+                'status' => $case->enrichment_status ?? 'pending',
+                'enriched_at' => $case->enriched_at?->toIso8601String(),
+                'transcript_available' => ($case->transcript_segment_count ?? 0) > 0,
+                'transcript_segment_count' => $case->transcript_segment_count,
+                'transcript_char_count' => $case->transcript_char_count,
+                'audio_available' => !empty($case->audio_object_key),
+                'audio_url' => $audioUrl,
+                'audio_url_expires_at' => $audioUrl ? now()->addMinutes($audioTtl)->toIso8601String() : null,
             ],
         ];
     }
@@ -333,8 +348,14 @@ class WebhookOutputHandler implements OutputHandlerInterface
         // Convert template to JSON string for replacement
         $json = is_array($template) ? json_encode($template) : $template;
 
+        // Get audio URL for template (if enabled)
+        $config = $case->category?->outputConfiguration;
+        $audioUrl = $config ? $this->generateAudioUrl($case, $config) : null;
+        $audioTtl = $config?->audio_url_ttl_minutes ?? config('gateway.delivery.audio_url_ttl_minutes', 60);
+
         // Build replacement map
         $replacements = [
+            // Case fields
             '{{case.id}}' => (string) $case->id,
             '{{case.subject}}' => $case->subject,
             '{{case.description}}' => $case->description,
@@ -350,6 +371,18 @@ class WebhookOutputHandler implements OutputHandlerInterface
             '{{case.external_reference}}' => $case->external_reference ?? '',
             '{{case.created_at}}' => $case->created_at->toIso8601String(),
             '{{case.updated_at}}' => $case->updated_at->toIso8601String(),
+
+            // Enrichment fields
+            '{{enrichment.status}}' => $case->enrichment_status ?? 'pending',
+            '{{enrichment.enriched_at}}' => $case->enriched_at?->toIso8601String() ?? '',
+            '{{enrichment.transcript_available}}' => ($case->transcript_segment_count ?? 0) > 0 ? 'true' : 'false',
+            '{{enrichment.transcript_segment_count}}' => (string) ($case->transcript_segment_count ?? 0),
+            '{{enrichment.transcript_char_count}}' => (string) ($case->transcript_char_count ?? 0),
+            '{{enrichment.audio_available}}' => !empty($case->audio_object_key) ? 'true' : 'false',
+            '{{enrichment.audio_url}}' => $audioUrl ?? '',
+            '{{enrichment.audio_url_expires_at}}' => $audioUrl ? now()->addMinutes($audioTtl)->toIso8601String() : '',
+
+            // Meta fields
             '{{timestamp}}' => now()->toIso8601String(),
             '{{source}}' => 'askpro_service_gateway',
         ];
@@ -442,5 +475,68 @@ class WebhookOutputHandler implements OutputHandlerInterface
         }
 
         return null;
+    }
+
+    /**
+     * Generate presigned audio URL for webhook payload.
+     *
+     * Respects the GATEWAY_AUDIO_IN_WEBHOOK feature flag and generates
+     * a time-limited presigned URL for secure audio access.
+     *
+     * @param ServiceCase $case Service case with audio_object_key
+     * @param ServiceOutputConfiguration $config Output configuration with TTL settings
+     * @return string|null Presigned URL or null if not available/disabled
+     */
+    private function generateAudioUrl(ServiceCase $case, ServiceOutputConfiguration $config): ?string
+    {
+        // Check if audio in webhook is enabled (feature flag)
+        if (!config('gateway.features.audio_in_webhook', false)) {
+            Log::debug('[WebhookOutputHandler] Audio in webhook disabled by feature flag', [
+                'case_id' => $case->id,
+            ]);
+            return null;
+        }
+
+        // Check if audio exists
+        if (empty($case->audio_object_key)) {
+            Log::debug('[WebhookOutputHandler] No audio available for case', [
+                'case_id' => $case->id,
+            ]);
+            return null;
+        }
+
+        // Check if audio is expired
+        if ($case->audio_expires_at && $case->audio_expires_at->isPast()) {
+            Log::debug('[WebhookOutputHandler] Audio expired for case', [
+                'case_id' => $case->id,
+                'expired_at' => $case->audio_expires_at->toIso8601String(),
+            ]);
+            return null;
+        }
+
+        try {
+            // Get TTL from config (default 60 minutes)
+            $ttlMinutes = $config->audio_url_ttl_minutes ?? config('gateway.delivery.audio_url_ttl_minutes', 60);
+
+            // Generate presigned URL via AudioStorageService
+            $audioService = app(AudioStorageService::class);
+            $url = $audioService->getPresignedUrl($case->audio_object_key, $ttlMinutes);
+
+            if ($url) {
+                Log::debug('[WebhookOutputHandler] Audio URL generated', [
+                    'case_id' => $case->id,
+                    'ttl_minutes' => $ttlMinutes,
+                ]);
+            }
+
+            return $url;
+
+        } catch (\Exception $e) {
+            Log::warning('[WebhookOutputHandler] Failed to generate audio URL', [
+                'case_id' => $case->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }

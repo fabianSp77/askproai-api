@@ -103,6 +103,27 @@ class ServiceCase extends Model
     ];
 
     /**
+     * Enrichment status enumeration
+     *
+     * Part of 2-Phase Delivery-Gate Pattern:
+     * - pending: Case created during call, awaiting enrichment
+     * - enriched: Case enriched with transcript/audio after call ended
+     * - timeout: Enrichment didn't complete within timeout, delivered with partial data
+     * - skipped: Case doesn't require enrichment (e.g., non-voice source)
+     */
+    public const ENRICHMENT_PENDING = 'pending';
+    public const ENRICHMENT_ENRICHED = 'enriched';
+    public const ENRICHMENT_TIMEOUT = 'timeout';
+    public const ENRICHMENT_SKIPPED = 'skipped';
+
+    public const ENRICHMENT_STATUSES = [
+        self::ENRICHMENT_PENDING,
+        self::ENRICHMENT_ENRICHED,
+        self::ENRICHMENT_TIMEOUT,
+        self::ENRICHMENT_SKIPPED,
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<string>
@@ -130,6 +151,12 @@ class ServiceCase extends Model
         'output_error',
         'audio_object_key',
         'audio_expires_at',
+        // Enrichment fields (2-Phase Delivery-Gate)
+        'enrichment_status',
+        'enriched_at',
+        'retell_call_session_id',
+        'transcript_segment_count',
+        'transcript_char_count',
     ];
 
     /**
@@ -144,6 +171,9 @@ class ServiceCase extends Model
         'sla_resolution_due_at' => 'datetime',
         'output_sent_at' => 'datetime',
         'audio_expires_at' => 'datetime',
+        'enriched_at' => 'datetime',
+        'transcript_segment_count' => 'integer',
+        'transcript_char_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -167,6 +197,19 @@ class ServiceCase extends Model
     public function call(): BelongsTo
     {
         return $this->belongsTo(Call::class);
+    }
+
+    /**
+     * Get the Retell call session for enrichment data.
+     *
+     * Links to RetellCallSession for transcript stats, function call counts,
+     * and other call analytics. Populated during enrichment phase.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function callSession(): BelongsTo
+    {
+        return $this->belongsTo(RetellCallSession::class, 'retell_call_session_id');
     }
 
     /**
@@ -287,6 +330,28 @@ class ServiceCase extends Model
     }
 
     /**
+     * Scope a query to only include cases pending enrichment.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePendingEnrichment($query)
+    {
+        return $query->where('enrichment_status', self::ENRICHMENT_PENDING);
+    }
+
+    /**
+     * Scope a query to only include enriched cases.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeEnriched($query)
+    {
+        return $query->where('enrichment_status', self::ENRICHMENT_ENRICHED);
+    }
+
+    /**
      * Check if the case is overdue for SLA response.
      *
      * @return bool
@@ -358,6 +423,62 @@ class ServiceCase extends Model
         $this->update([
             'output_status' => self::OUTPUT_FAILED,
             'output_error' => $error,
+        ]);
+    }
+
+    /**
+     * Check if the case is pending enrichment.
+     *
+     * @return bool
+     */
+    public function isPendingEnrichment(): bool
+    {
+        return $this->enrichment_status === self::ENRICHMENT_PENDING;
+    }
+
+    /**
+     * Check if the case has been enriched.
+     *
+     * @return bool
+     */
+    public function isEnriched(): bool
+    {
+        return $this->enrichment_status === self::ENRICHMENT_ENRICHED;
+    }
+
+    /**
+     * Mark the case as enriched with transcript/audio data.
+     *
+     * @param RetellCallSession|null $session Optional session to link
+     * @return void
+     */
+    public function markAsEnriched(?RetellCallSession $session = null): void
+    {
+        $updateData = [
+            'enrichment_status' => self::ENRICHMENT_ENRICHED,
+            'enriched_at' => now(),
+        ];
+
+        if ($session) {
+            $updateData['retell_call_session_id'] = $session->id;
+            $updateData['transcript_segment_count'] = $session->transcript_segment_count;
+            // Calculate char count from transcript segments if available
+            $updateData['transcript_char_count'] = $session->transcriptSegments()
+                ->sum(\Illuminate\Support\Facades\DB::raw('LENGTH(text)'));
+        }
+
+        $this->update($updateData);
+    }
+
+    /**
+     * Mark the case enrichment as timed out.
+     *
+     * @return void
+     */
+    public function markEnrichmentTimeout(): void
+    {
+        $this->update([
+            'enrichment_status' => self::ENRICHMENT_TIMEOUT,
         ]);
     }
 

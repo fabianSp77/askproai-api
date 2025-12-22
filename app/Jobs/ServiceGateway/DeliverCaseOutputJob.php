@@ -59,6 +59,40 @@ class DeliverCaseOutputJob implements ShouldQueue
             return;
         }
 
+        // Delivery-Gate: Wait for enrichment if configured
+        // Part of 2-Phase Delivery-Gate Pattern
+        $config = $this->case->category?->outputConfiguration;
+        $waitForEnrichment = $config?->wait_for_enrichment ?? false;
+
+        if ($waitForEnrichment && $this->case->enrichment_status === ServiceCase::ENRICHMENT_PENDING) {
+            $timeoutSeconds = $config?->enrichment_timeout_seconds ?? 180;
+            $caseAge = now()->diffInSeconds($this->case->created_at);
+
+            Log::info('[DeliverCaseOutputJob] Checking enrichment gate', [
+                'case_id' => $this->case->id,
+                'enrichment_status' => $this->case->enrichment_status,
+                'case_age_seconds' => $caseAge,
+                'timeout_seconds' => $timeoutSeconds,
+                'attempt' => $this->attempts(),
+            ]);
+
+            if ($caseAge < $timeoutSeconds && $this->attempts() < $this->tries) {
+                Log::info('[DeliverCaseOutputJob] Waiting for enrichment, releasing', [
+                    'case_id' => $this->case->id,
+                    'release_seconds' => 30,
+                ]);
+                $this->release(30); // Retry in 30s
+                return;
+            }
+
+            // Timeout reached - proceed with partial data
+            Log::warning('[DeliverCaseOutputJob] Enrichment timeout, proceeding with partial data', [
+                'case_id' => $this->case->id,
+                'case_age_seconds' => $caseAge,
+            ]);
+            $this->case->update(['enrichment_status' => ServiceCase::ENRICHMENT_TIMEOUT]);
+        }
+
         try {
             // Get appropriate handler for this case
             $handler = $factory->makeForCase($this->case);

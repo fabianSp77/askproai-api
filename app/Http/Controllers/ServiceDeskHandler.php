@@ -7,6 +7,7 @@ use App\Services\ServiceDesk\ServiceDeskLockService;
 use App\Services\Retell\CallLifecycleService;
 use App\Services\Gateway\IntentDetectionService;
 use App\Jobs\ServiceGateway\DeliverCaseOutputJob;
+use App\Jobs\ServiceGateway\ProcessCallRecordingJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -363,7 +364,13 @@ class ServiceDeskHandler extends Controller
                 $this->lockService->markCaseCreated($callId, $case->id);
 
                 // Dispatch output delivery job (async)
-                DeliverCaseOutputJob::dispatch($case);
+                // 2-Phase Delivery-Gate: Delay dispatch if wait_for_enrichment is enabled
+                $delaySeconds = $case->category?->outputConfiguration?->wait_for_enrichment ? 90 : 0;
+                DeliverCaseOutputJob::dispatch($case)->delay(now()->addSeconds($delaySeconds));
+
+                // Dispatch audio processing job (async, downloads recording to S3)
+                // Delay 30s to ensure recording is available from Retell
+                ProcessCallRecordingJob::dispatch($case)->delay(now()->addSeconds(30));
 
                 // Clean up cached data
                 cache()->forget("service_desk:issue:{$callId}");
@@ -520,7 +527,13 @@ class ServiceDeskHandler extends Controller
                 $this->lockService->markCaseCreated($callId, $case->id);
 
                 // Dispatch output delivery job (async)
-                DeliverCaseOutputJob::dispatch($case);
+                // 2-Phase Delivery-Gate: Delay dispatch if wait_for_enrichment is enabled
+                $delaySeconds = $case->category?->outputConfiguration?->wait_for_enrichment ? 90 : 0;
+                DeliverCaseOutputJob::dispatch($case)->delay(now()->addSeconds($delaySeconds));
+
+                // Dispatch audio processing job (async, downloads recording to S3)
+                // Delay 30s to ensure recording is available from Retell
+                ProcessCallRecordingJob::dispatch($case)->delay(now()->addSeconds(30));
 
                 Log::info('[ServiceDeskHandler] Ticket finalized successfully', [
                     'call_id' => $callId,
@@ -553,10 +566,13 @@ class ServiceDeskHandler extends Controller
     }
 
     /**
-     * Auto-classify category from problem description using keyword matching.
+     * Auto-classify category from problem description using improved keyword matching.
      *
-     * Searches ServiceCaseCategory models for the company and scores
-     * based on keyword matches in the description.
+     * Algorithm:
+     * 1. Normalize text (lowercase, German umlaut handling)
+     * 2. Word boundary matching (primary, higher weight)
+     * 3. Compound word matching (secondary, lower weight)
+     * 4. Support for weighted keywords (keyword:weight format)
      *
      * @param string $description Problem description from caller
      * @param int $companyId Company ID for category lookup
@@ -564,7 +580,7 @@ class ServiceDeskHandler extends Controller
      */
     private function classifyCategory(string $description, int $companyId): ?int
     {
-        $description = mb_strtolower($description);
+        $normalizedDescription = $this->normalizeGermanText($description);
 
         $categories = \App\Models\ServiceCaseCategory::where('company_id', $companyId)
             ->where('is_active', true)
@@ -573,17 +589,36 @@ class ServiceDeskHandler extends Controller
 
         $bestMatch = null;
         $bestScore = 0;
+        $matchedKeywords = [];
 
         foreach ($categories as $category) {
             $score = 0;
-            foreach ($category->intent_keywords as $keyword) {
-                if (str_contains($description, mb_strtolower($keyword))) {
-                    $score += mb_strlen($keyword); // Longer keywords = higher score
+            $categoryMatches = [];
+
+            foreach ($category->intent_keywords as $keywordEntry) {
+                // Parse keyword and optional weight
+                $parsed = $this->parseKeywordWeight($keywordEntry);
+                $keyword = $parsed['keyword'];
+                $weight = $parsed['weight'];
+
+                $normalizedKeyword = $this->normalizeGermanText($keyword);
+                $matchResult = $this->matchKeyword($normalizedDescription, $normalizedKeyword);
+
+                if ($matchResult['matched']) {
+                    $keywordScore = $weight * $matchResult['multiplier'];
+                    $score += $keywordScore;
+                    $categoryMatches[] = [
+                        'keyword' => $keyword,
+                        'type' => $matchResult['type'],
+                        'score' => $keywordScore,
+                    ];
                 }
             }
+
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $bestMatch = $category;
+                $matchedKeywords = $categoryMatches;
             }
         }
 
@@ -591,7 +626,8 @@ class ServiceDeskHandler extends Controller
             Log::debug('[ServiceDeskHandler] Category auto-classified', [
                 'category_id' => $bestMatch->id,
                 'category_name' => $bestMatch->name,
-                'score' => $bestScore,
+                'score' => round($bestScore, 2),
+                'matched_keywords' => $matchedKeywords,
             ]);
             return $bestMatch->id;
         }
@@ -615,6 +651,133 @@ class ServiceDeskHandler extends Controller
         ]);
 
         return null;
+    }
+
+    /**
+     * Normalize German text for keyword matching.
+     *
+     * Handles:
+     * - Lowercase conversion
+     * - German umlaut normalization (ä->ae, ö->oe, ü->ue)
+     * - Eszett normalization (ß->ss)
+     * - Punctuation removal while preserving word boundaries
+     *
+     * Note: Only actual umlauts are expanded, not regular a/o/u letters.
+     * The matching algorithm handles both forms (drucker matches Drucker AND Drücker).
+     *
+     * @param string $text Input text
+     * @return string Normalized text
+     */
+    private function normalizeGermanText(string $text): string
+    {
+        $text = mb_strtolower($text);
+
+        // Convert German special characters to ASCII equivalents
+        $replacements = [
+            'ä' => 'ae',
+            'ö' => 'oe',
+            'ü' => 'ue',
+            'ß' => 'ss',
+        ];
+
+        $text = str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $text
+        );
+
+        // Remove punctuation but preserve word boundaries (replace with space)
+        $text = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text);
+
+        // Normalize whitespace
+        $text = preg_replace('/\s+/', ' ', $text);
+
+        return trim($text);
+    }
+
+    /**
+     * Parse keyword entry for optional weight.
+     *
+     * Supports formats:
+     * - "drucker" -> keyword: "drucker", weight: 0.7 (length/10)
+     * - "drucker:1.5" -> keyword: "drucker", weight: 1.5
+     * - {"keyword": "drucker", "weight": 1.5} -> direct object
+     *
+     * @param mixed $keywordEntry Keyword string or object
+     * @return array{keyword: string, weight: float}
+     */
+    private function parseKeywordWeight(mixed $keywordEntry): array
+    {
+        // Handle object/array format
+        if (is_array($keywordEntry)) {
+            return [
+                'keyword' => $keywordEntry['keyword'] ?? '',
+                'weight' => (float) ($keywordEntry['weight'] ?? 1.0),
+            ];
+        }
+
+        // Handle string:weight format
+        if (is_string($keywordEntry) && str_contains($keywordEntry, ':')) {
+            $parts = explode(':', $keywordEntry, 2);
+            $keyword = trim($parts[0]);
+            $weight = is_numeric($parts[1]) ? (float) $parts[1] : 1.0;
+            return ['keyword' => $keyword, 'weight' => $weight];
+        }
+
+        // Default: weight based on length (longer = more specific)
+        $keyword = (string) $keywordEntry;
+        $weight = max(0.3, mb_strlen($keyword) / 10);
+
+        return ['keyword' => $keyword, 'weight' => $weight];
+    }
+
+    /**
+     * Match keyword against text with word boundary awareness.
+     *
+     * Matching types (in order of precedence):
+     * 1. Exact word match (word boundaries) - multiplier: 1.0
+     * 2. Word start match (compound words) - multiplier: 0.7
+     * 3. Word end match (compound words) - multiplier: 0.7
+     * 4. Substring match (legacy fallback) - multiplier: 0.3
+     *
+     * @param string $text Normalized text
+     * @param string $keyword Normalized keyword
+     * @return array{matched: bool, type: string, multiplier: float}
+     */
+    private function matchKeyword(string $text, string $keyword): array
+    {
+        if (empty($keyword)) {
+            return ['matched' => false, 'type' => 'none', 'multiplier' => 0];
+        }
+
+        // Escape regex special characters in keyword
+        $escapedKeyword = preg_quote($keyword, '/');
+
+        // 1. Exact word boundary match (highest priority)
+        // Uses \b for word boundaries, works with German characters
+        if (preg_match('/(?:^|\s)' . $escapedKeyword . '(?:\s|$)/u', ' ' . $text . ' ')) {
+            return ['matched' => true, 'type' => 'exact', 'multiplier' => 1.0];
+        }
+
+        // 2. Word start match (German compound words like "Netzwerkdrucker")
+        // Keyword appears at start of a word
+        if (preg_match('/(?:^|\s)' . $escapedKeyword . '/u', ' ' . $text . ' ')) {
+            return ['matched' => true, 'type' => 'word_start', 'multiplier' => 0.7];
+        }
+
+        // 3. Word end match (German compound words like "Arbeitsplatz-PC")
+        // Keyword appears at end of a word
+        if (preg_match('/' . $escapedKeyword . '(?:\s|$)/u', ' ' . $text . ' ')) {
+            return ['matched' => true, 'type' => 'word_end', 'multiplier' => 0.7];
+        }
+
+        // 4. Substring match (legacy fallback, low weight)
+        // Only for keywords longer than 3 characters to avoid false positives
+        if (mb_strlen($keyword) > 3 && str_contains($text, $keyword)) {
+            return ['matched' => true, 'type' => 'substring', 'multiplier' => 0.3];
+        }
+
+        return ['matched' => false, 'type' => 'none', 'multiplier' => 0];
     }
 
     /**

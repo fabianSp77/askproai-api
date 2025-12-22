@@ -44,4 +44,54 @@ return [
     'hybrid' => [
         'fallback_mode' => env('GATEWAY_HYBRID_FALLBACK', 'appointment'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Feature Flags (2-Phase Delivery-Gate Pattern)
+    |--------------------------------------------------------------------------
+    |
+    | Control flags for progressive rollout of enrichment features.
+    |
+    */
+    'features' => [
+        // Enable 2-phase delivery flow (wait for enrichment)
+        'enrichment_enabled' => env('GATEWAY_ENRICHMENT_ENABLED', false),
+
+        // Include presigned audio URL in webhook payloads
+        'audio_in_webhook' => env('GATEWAY_AUDIO_IN_WEBHOOK', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Delivery Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Default settings for case output delivery and enrichment.
+    |
+    */
+    'delivery' => [
+        // Initial delay before first delivery attempt (when wait_for_enrichment=true)
+        'initial_delay_seconds' => env('GATEWAY_DELIVERY_INITIAL_DELAY', 90),
+
+        // Maximum time to wait for enrichment before delivering with partial data
+        'enrichment_timeout_seconds' => env('GATEWAY_ENRICHMENT_TIMEOUT', 180),
+
+        // TTL for presigned audio URLs in webhook payload (minutes)
+        'audio_url_ttl_minutes' => env('GATEWAY_AUDIO_URL_TTL', 60),
+
+        // Queue name for delivery jobs
+        'queue' => env('GATEWAY_DELIVERY_QUEUE', 'default'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Output Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for case output handlers.
+    |
+    */
+    'output' => [
+        'queue' => env('GATEWAY_OUTPUT_QUEUE', 'default'),
+    ],
 ];

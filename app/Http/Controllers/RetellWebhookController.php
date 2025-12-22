@@ -898,6 +898,30 @@ class RetellWebhookController extends Controller
                 ]);
             }
 
+            // 🔧 2-Phase Delivery-Gate: Dispatch EnrichServiceCaseJob for ServiceCase enrichment
+            // This job links transcript/audio data to the ServiceCase created during the call
+            if ($call && \App\Models\ServiceCase::where('call_id', $call->id)->exists()) {
+                try {
+                    $retellCallId = $callData['call_id'] ?? null;
+                    if ($retellCallId) {
+                        \App\Jobs\ServiceGateway\EnrichServiceCaseJob::dispatch($call->id, $retellCallId)
+                            ->delay(now()->addSeconds(10)); // Wait 10s for transcript to be fully stored
+
+                        Log::info('✅ EnrichServiceCaseJob dispatched for 2-phase delivery', [
+                            'call_id' => $call->id,
+                            'retell_call_id' => $retellCallId,
+                            'delay_seconds' => 10,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    // Non-critical - enrichment failure shouldn't block call_ended
+                    Log::warning('⚠️ Failed to dispatch EnrichServiceCaseJob', [
+                        'call_id' => $call->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // If we STILL don't have a call after all attempts, log warning
             if (!$call) {
                 Log::warning('⚠️ No call record found or created for call_ended event', [
