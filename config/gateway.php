@@ -94,4 +94,45 @@ return [
     'output' => [
         'queue' => env('GATEWAY_OUTPUT_QUEUE', 'default'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Alerts Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for administrative notifications on critical failures.
+    | When delivery permanently fails, admins are notified via these channels.
+    |
+    */
+    'alerts' => [
+        // Email address(es) for delivery failure notifications
+        // Can be comma-separated for multiple recipients
+        'admin_email' => env('GATEWAY_ADMIN_EMAIL'),
+
+        // Enable/disable admin alerts
+        'enabled' => env('GATEWAY_ALERTS_ENABLED', true),
+
+        // Optional Slack webhook for critical alerts
+        'slack_webhook' => env('GATEWAY_SLACK_WEBHOOK'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache TTL Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Cache time-to-live settings for dashboard widgets.
+    | Centralizes all widget cache durations for easy tuning.
+    |
+    */
+    'cache' => [
+        // Widget statistics (real-time feel)
+        'widget_stats_seconds' => env('GATEWAY_CACHE_WIDGET_STATS', 55),
+
+        // Widget trend data (longer retention)
+        'widget_trends_seconds' => env('GATEWAY_CACHE_WIDGET_TRENDS', 300),
+
+        // Recent activity (very fresh)
+        'recent_activity_seconds' => env('GATEWAY_CACHE_RECENT_ACTIVITY', 30),
+    ],
 ];

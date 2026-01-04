@@ -48,8 +48,11 @@ class ServiceCaseCategory extends Model
         'confidence_threshold',
         'default_case_type',
         'default_priority',
+        'sla_response_hours',
+        'sla_resolution_hours',
         'output_configuration_id',
         'is_active',
+        'is_default',
         'sort_order',
     ];
 
@@ -61,7 +64,10 @@ class ServiceCaseCategory extends Model
     protected $casts = [
         'intent_keywords' => 'array',
         'confidence_threshold' => 'decimal:2',
+        'sla_response_hours' => 'integer',
+        'sla_resolution_hours' => 'integer',
         'is_active' => 'boolean',
+        'is_default' => 'boolean',
         'sort_order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -178,59 +184,6 @@ class ServiceCaseCategory extends Model
     public function isRoot(): bool
     {
         return $this->parent_id === null;
-    }
-
-    /**
-     * Get the full category path (parent > child > ...).
-     *
-     * @return string
-     */
-    public function getFullPath(): string
-    {
-        $path = [$this->name];
-        $parent = $this->parent;
-
-        while ($parent) {
-            array_unshift($path, $parent->name);
-            $parent = $parent->parent;
-        }
-
-        return implode(' > ', $path);
-    }
-
-    /**
-     * Get all ancestor categories.
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    public function getAncestors()
-    {
-        $ancestors = collect();
-        $parent = $this->parent;
-
-        while ($parent) {
-            $ancestors->push($parent);
-            $parent = $parent->parent;
-        }
-
-        return $ancestors;
-    }
-
-    /**
-     * Get all descendant categories (recursive).
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    public function getDescendants()
-    {
-        $descendants = collect();
-
-        foreach ($this->children as $child) {
-            $descendants->push($child);
-            $descendants = $descendants->merge($child->getDescendants());
-        }
-
-        return $descendants;
     }
 
     /**

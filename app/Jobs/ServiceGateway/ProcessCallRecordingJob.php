@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\ServiceGateway;
 
+use App\Constants\ServiceGatewayConstants;
 use App\Models\ServiceGatewayExchangeLog;
 use App\Models\ServiceCase;
 use App\Services\Audio\AudioStorageService;
@@ -12,7 +13,6 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -31,38 +31,47 @@ use Illuminate\Support\Facades\Log;
  * - Bounded retries: Max 3 attempts with 60s backoff
  * - ExchangeLog: Records success/failure for debugging
  *
+ * NOTE: Intentionally does NOT use SerializesModels trait to avoid
+ * closure serialization issues with ServiceCase model relationships.
+ * Instead, we serialize only the case_id and load fresh in handle().
+ *
  * @package App\Jobs\ServiceGateway
  */
 class ProcessCallRecordingJob implements ShouldQueue, ShouldBeUnique
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable;
 
     /**
      * Maximum number of retry attempts.
      */
-    public int $tries = 3;
+    public int $tries = ServiceGatewayConstants::AUDIO_MAX_ATTEMPTS;
 
     /**
      * Backoff between retries in seconds.
      */
-    public int $backoff = 60;
+    public int $backoff = ServiceGatewayConstants::AUDIO_BACKOFF_SECONDS;
 
     /**
      * Time in seconds this job is unique for.
      */
-    public int $uniqueFor = 3600;
+    public int $uniqueFor = ServiceGatewayConstants::AUDIO_UNIQUE_FOR_SECONDS;
 
     /**
-     * The service case to process.
+     * The service case ID - loaded fresh in handle() to avoid serialization issues.
      */
-    public ServiceCase $case;
+    public int $caseId;
+
+    /**
+     * The service case instance - loaded in handle().
+     */
+    protected ?ServiceCase $case = null;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(ServiceCase $case)
+    public function __construct(ServiceCase|int $case)
     {
-        $this->case = $case;
+        $this->caseId = $case instanceof ServiceCase ? $case->id : $case;
         $this->onQueue('audio-processing');
     }
 
@@ -71,7 +80,7 @@ class ProcessCallRecordingJob implements ShouldQueue, ShouldBeUnique
      */
     public function uniqueId(): string
     {
-        return 'audio-processing-' . $this->case->id;
+        return 'audio-processing-' . $this->caseId;
     }
 
     /**
@@ -79,8 +88,15 @@ class ProcessCallRecordingJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(AudioStorageService $audioService): void
     {
-        // Refresh case to get latest state
-        $this->case->refresh();
+        // Load case fresh to avoid serialization issues
+        $this->case = ServiceCase::find($this->caseId);
+
+        if (!$this->case) {
+            Log::error('[ProcessCallRecording] Case not found', [
+                'case_id' => $this->caseId,
+            ]);
+            return;
+        }
 
         // Idempotency check: Skip if already processed
         if ($this->case->audio_object_key) {
@@ -141,31 +157,36 @@ class ProcessCallRecordingJob implements ShouldQueue, ShouldBeUnique
      */
     public function failed(\Throwable $exception): void
     {
+        // Load case if not already loaded
+        $case = $this->case ?? ServiceCase::find($this->caseId);
+
         Log::error('[ProcessCallRecording] Job failed permanently', [
-            'case_id' => $this->case->id,
+            'case_id' => $this->caseId,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts(),
         ]);
 
-        ServiceGatewayExchangeLog::create([
-            'company_id' => $this->case->company_id,
-            'service_case_id' => $this->case->id,
-            'direction' => 'internal',
-            'endpoint' => 'audio-storage',
-            'http_method' => 'PUT',
-            'status_code' => 500,
-            'request_body_redacted' => [
-                'case_id' => $this->case->id,
-                'call_id' => $this->case->call_id,
-            ],
-            'response_body_redacted' => [
-                'status' => 'failed_permanently',
-                'error' => $exception->getMessage(),
-                'attempts' => $this->attempts(),
-            ],
-            'duration_ms' => 0,
-            'error_message' => $exception->getMessage(),
-        ]);
+        if ($case) {
+            ServiceGatewayExchangeLog::create([
+                'company_id' => $case->company_id,
+                'service_case_id' => $case->id,
+                'direction' => 'internal',
+                'endpoint' => 'audio-storage',
+                'http_method' => 'PUT',
+                'status_code' => 500,
+                'request_body_redacted' => [
+                    'case_id' => $case->id,
+                    'call_id' => $case->call_id,
+                ],
+                'response_body_redacted' => [
+                    'status' => 'failed_permanently',
+                    'error' => $exception->getMessage(),
+                    'attempts' => $this->attempts(),
+                ],
+                'duration_ms' => 0,
+                'error_message' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**

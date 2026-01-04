@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  *
  * @property int $id
  * @property string $event_id UUID for external correlation
- * @property string $direction 'outbound' or 'inbound'
+ * @property string $direction 'outbound', 'inbound', or 'internal'
  * @property int|null $call_id
  * @property int|null $service_case_id
  * @property int|null $company_id
@@ -37,6 +37,8 @@ use Illuminate\Support\Str;
  * @property string|null $error_message
  * @property string|null $correlation_id
  * @property string|null $parent_event_id
+ * @property bool $is_test
+ * @property int|null $output_configuration_id
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon|null $completed_at
  */
@@ -81,6 +83,8 @@ class ServiceGatewayExchangeLog extends Model
         'error_message',
         'correlation_id',
         'parent_event_id',
+        'is_test',
+        'output_configuration_id',
         'created_at',
         'completed_at',
     ];
@@ -98,6 +102,8 @@ class ServiceGatewayExchangeLog extends Model
         'duration_ms' => 'integer',
         'attempt_no' => 'integer',
         'max_attempts' => 'integer',
+        'is_test' => 'boolean',
+        'output_configuration_id' => 'integer',
         'created_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
@@ -148,6 +154,14 @@ class ServiceGatewayExchangeLog extends Model
         return $this->belongsTo(Company::class);
     }
 
+    /**
+     * Get the output configuration this exchange belongs to.
+     */
+    public function outputConfiguration(): BelongsTo
+    {
+        return $this->belongsTo(ServiceOutputConfiguration::class);
+    }
+
     // =========================================================================
     // Query Scopes
     // =========================================================================
@@ -193,6 +207,14 @@ class ServiceGatewayExchangeLog extends Model
     }
 
     /**
+     * Scope to filter by internal direction (enrichment, audio processing).
+     */
+    public function scopeInternal($query)
+    {
+        return $query->where('direction', 'internal');
+    }
+
+    /**
      * Scope to filter failed exchanges.
      */
     public function scopeFailed($query)
@@ -224,6 +246,30 @@ class ServiceGatewayExchangeLog extends Model
             $q->where('event_id', $parentEventId)
               ->orWhere('parent_event_id', $parentEventId);
         })->orderBy('attempt_no');
+    }
+
+    /**
+     * Scope to filter test webhook deliveries.
+     */
+    public function scopeTest($query)
+    {
+        return $query->where('is_test', true);
+    }
+
+    /**
+     * Scope to filter real (non-test) webhook deliveries.
+     */
+    public function scopeReal($query)
+    {
+        return $query->where('is_test', false);
+    }
+
+    /**
+     * Scope to filter by output configuration.
+     */
+    public function scopeForConfiguration($query, int $configurationId)
+    {
+        return $query->where('output_configuration_id', $configurationId);
     }
 
     // =========================================================================
@@ -293,5 +339,87 @@ class ServiceGatewayExchangeLog extends Model
         }
 
         return 'success';
+    }
+
+    // =========================================================================
+    // Export Methods (Partner Communication)
+    // =========================================================================
+
+    /**
+     * Generate cURL command for this exchange log.
+     * Allows partners to reproduce the exact webhook call.
+     *
+     * Note: Redacted headers (containing ***REDACTED***) are excluded.
+     */
+    public function toCurlCommand(): string
+    {
+        $headers = $this->headers_redacted ?? [];
+        $body = $this->request_body_redacted;
+
+        $curl = "curl -X {$this->http_method} '{$this->endpoint}'";
+
+        foreach ($headers as $key => $value) {
+            // Skip sensitive headers that are redacted
+            if (is_string($value) && str_contains($value, '***REDACTED***')) {
+                continue;
+            }
+            // Handle array values (shouldn't happen, but safety first)
+            if (is_array($value)) {
+                $value = json_encode($value);
+            }
+            $curl .= " \\\n  -H '{$key}: {$value}'";
+        }
+
+        if ($body && $this->http_method !== 'GET') {
+            $jsonBody = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            // Escape single quotes in JSON for shell safety
+            $jsonBody = str_replace("'", "'\\''", $jsonBody);
+            $curl .= " \\\n  -d '{$jsonBody}'";
+        }
+
+        return $curl;
+    }
+
+    /**
+     * Export as structured JSON for partner communication.
+     * Includes all relevant data with metadata for audit trail.
+     */
+    public function toExportJson(): array
+    {
+        return [
+            'id' => $this->event_id,
+            'timestamp' => $this->created_at?->toIso8601String(),
+            'direction' => $this->direction,
+            'request' => [
+                'method' => $this->http_method,
+                'url' => $this->endpoint,
+                'headers' => $this->headers_redacted,
+                'body' => $this->request_body_redacted,
+            ],
+            'response' => [
+                'status_code' => $this->status_code,
+                'body' => $this->response_body_redacted,
+                'latency_ms' => $this->duration_ms,
+            ],
+            'metadata' => [
+                'attempt' => $this->attempt_no,
+                'max_attempts' => $this->max_attempts,
+                'is_test' => $this->is_test,
+                'is_successful' => $this->isSuccessful(),
+                'error_class' => $this->error_class,
+                'error_message' => $this->error_message,
+                'correlation_id' => $this->correlation_id,
+                'exported_at' => now()->toIso8601String(),
+                'exported_by' => 'AskProAI Gateway',
+            ],
+        ];
+    }
+
+    /**
+     * Get a shortened event ID for display/filenames.
+     */
+    public function getShortEventIdAttribute(): string
+    {
+        return substr($this->event_id, 0, 8);
     }
 }
