@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "dedoc/scramble": "^0.13.10",
         "filament/filament": "^3.3",
         "giggsey/libphonenumber-for-php": "^9.0",
         "laravel-notification-channels/telegram": "^6.0",
@@ -15,6 +16,7 @@
         "laravel/framework": "^11.31",
         "laravel/telescope": "^5.11",
         "laravel/tinker": "^2.9",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
         "pusher/pusher-php-server": "^7.2",
         "spatie/icalendar-generator": "^3.0",
