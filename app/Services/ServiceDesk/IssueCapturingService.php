@@ -2,6 +2,7 @@
 
 namespace App\Services\ServiceDesk;
 
+use App\Services\Retell\CallLifecycleService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -13,11 +14,15 @@ use Illuminate\Support\Facades\Log;
  * Validates issue data, structures it for case creation, and temporarily
  * caches it for retrieval during case routing.
  *
+ * Security: H-001 Cache Isolation
+ * - All cache keys include company_id for multi-tenant isolation
+ * - Cache TTL reduced to 5 minutes (was 30 minutes)
+ *
  * Flow:
  * 1. Capture raw issue data from Retell AI
  * 2. Validate required fields
  * 3. Structure data for ServiceCase creation
- * 4. Cache for retrieval (30min TTL)
+ * 4. Cache for retrieval (5min TTL)
  *
  * @package App\Services\ServiceDesk
  */
@@ -29,9 +34,9 @@ class IssueCapturingService
     private const CACHE_PREFIX = 'issue_data';
 
     /**
-     * Cache TTL in seconds (30 minutes)
+     * Cache TTL in seconds (5 minutes - H-001 security)
      */
-    private const CACHE_TTL = 1800;
+    private const CACHE_TTL = 300;
 
     /**
      * Required fields for issue capture
@@ -40,6 +45,21 @@ class IssueCapturingService
         'customer_name',
         'issue_description',
     ];
+
+    /**
+     * CallLifecycleService for resolving company_id from call context
+     */
+    private CallLifecycleService $callLifecycle;
+
+    /**
+     * Constructor with dependency injection.
+     *
+     * @param CallLifecycleService $callLifecycle Service for call context resolution
+     */
+    public function __construct(CallLifecycleService $callLifecycle)
+    {
+        $this->callLifecycle = $callLifecycle;
+    }
 
     /**
      * Capture and structure issue data from voice call.
@@ -213,13 +233,31 @@ class IssueCapturingService
     }
 
     /**
-     * Get cache key for call ID.
+     * Get cache key for call ID with tenant isolation.
+     *
+     * H-001 Security: Cache keys MUST include company_id to prevent
+     * cross-tenant data leakage. If company_id cannot be resolved,
+     * a warning is logged and a fallback key without company_id is used.
      *
      * @param string $callId Call ID
-     * @return string Cache key
+     * @return string Cache key with format: issue_data:{company_id}:{call_id}
      */
     private function getCacheKey(string $callId): string
     {
+        // H-001: Resolve company_id from call context
+        $callContext = $this->callLifecycle->getCallContext($callId);
+        $companyId = $callContext?->company_id;
+
+        if ($companyId) {
+            return sprintf('%s:%d:%s', self::CACHE_PREFIX, $companyId, $callId);
+        }
+
+        // Fallback without company_id (logged for monitoring)
+        Log::warning('[IssueCapturingService] H-001: Cache key without company_id', [
+            'call_id' => $callId,
+            'context_found' => $callContext !== null,
+        ]);
+
         return sprintf('%s:%s', self::CACHE_PREFIX, $callId);
     }
 

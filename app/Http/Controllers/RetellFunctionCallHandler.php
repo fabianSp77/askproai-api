@@ -79,6 +79,39 @@ class RetellFunctionCallHandler extends Controller
     }
 
     /**
+     * Build a tenant-isolated cache key for call-specific data.
+     *
+     * H-001 Security: All cache keys MUST include company_id to prevent
+     * cross-tenant data leakage. This is defense-in-depth since Retell
+     * call IDs are unique UUIDs, but we add company_id for consistency
+     * with the rest of the codebase.
+     *
+     * @param string $callId The Retell call ID
+     * @param string $suffix The cache key suffix (e.g., 'validated_alternatives')
+     * @param int|null $companyId Optional explicit company ID (resolved from call context if null)
+     * @return string Cache key with format: call:{company_id}:{call_id}:{suffix}
+     */
+    private function buildCacheKey(string $callId, string $suffix, ?int $companyId = null): string
+    {
+        if ($companyId === null) {
+            $callContext = $this->callLifecycle->getCallContext($callId);
+            $companyId = $callContext?->company_id;
+        }
+
+        if ($companyId) {
+            return "call:{$companyId}:{$callId}:{$suffix}";
+        }
+
+        // Fallback without company_id (logged for monitoring)
+        Log::debug('[RetellFunctionCallHandler] H-001: Cache key without company_id', [
+            'call_id' => $callId,
+            'suffix' => $suffix,
+        ]);
+
+        return "call:{$callId}:{$suffix}";
+    }
+
+    /**
      * 🔧 FIX 2025-11-18: 4-Layer Call ID Extraction (Layered Defense Architecture)
      *
      * Root Cause: Flow V76 truncates call_id from 32 → 27 chars (missing last 5 chars)
@@ -1377,8 +1410,8 @@ class RetellFunctionCallHandler extends Controller
                         return $alt['date'] . ' ' . $alt['time'];
                     }, $alternatives);
 
-                    Cache::put("call:{$callId}:validated_alternatives", $validatedSlots, now()->addMinutes(5));
-                    Cache::put("call:{$callId}:alternatives_validated_at", now(), now()->addMinutes(5));
+                    Cache::put($this->buildCacheKey($callId, 'validated_alternatives'), $validatedSlots, now()->addMinutes(5));
+                    Cache::put($this->buildCacheKey($callId, 'alternatives_validated_at'), now(), now()->addMinutes(5));
 
                     Log::info('📋 Cached validated alternatives for re-check skip', [
                         'call_id' => $callId,
@@ -1431,15 +1464,15 @@ class RetellFunctionCallHandler extends Controller
             // PROBLEM: collectAppointment was using different service, causing Event Type mismatch
             // SOLUTION: Cache service_id for entire call session (30 min TTL)
             if ($callId) {
-                Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
-                Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
-                Cache::put("call:{$callId}:event_type_id", $eventTypeId, now()->addMinutes(30));
+                Cache::put($this->buildCacheKey($callId, 'service_id'), $service->id, now()->addMinutes(30));
+                Cache::put($this->buildCacheKey($callId, 'service_name'), $service->name, now()->addMinutes(30));
+                Cache::put($this->buildCacheKey($callId, 'event_type_id'), $eventTypeId, now()->addMinutes(30));
 
                 Log::info('📌 Service pinned to call session', [
                     'call_id' => $callId,
                     'service_id' => $service->id,
                     'service_name' => $service->name,
-                    'cache_key' => "call:{$callId}:service_id",
+                    'cache_key' => $this->buildCacheKey($callId, 'service_id'),
                     'ttl_minutes' => 30
                 ]);
             }
@@ -1559,7 +1592,7 @@ class RetellFunctionCallHandler extends Controller
     
                         // Pin the staff ID for subsequent booking
                         if ($staffId && $callId) {
-                            Cache::put("call:{$callId}:pinned_staff_id", $staffId, now()->addMinutes(30));
+                            Cache::put($this->buildCacheKey($callId, 'pinned_staff_id'), $staffId, now()->addMinutes(30));
                              Log::info('📌 Pinned staff ID for composite booking', [
                                 'call_id' => $callId,
                                 'staff_id' => $staffId
@@ -1666,7 +1699,7 @@ class RetellFunctionCallHandler extends Controller
                         $validatedSlots = array_map(function($slot) use ($requestedDate) {
                             return $requestedDate->format('Y-m-d') . ' ' . $slot['time_display'];
                         }, $periodSlots);
-                        Cache::put("call:{$callId}:validated_alternatives", $validatedSlots, now()->addMinutes(5));
+                        Cache::put($this->buildCacheKey($callId, 'validated_alternatives'), $validatedSlots, now()->addMinutes(5));
                     }
 
                     return $this->responseFormatter->success([
@@ -1808,7 +1841,7 @@ class RetellFunctionCallHandler extends Controller
                 ]);
 
                 // 🔧 FIX 2025-11-14: Cache availability check timestamp for race condition prevention
-                Cache::put("call:{$callId}:last_availability_check", now(), now()->addMinutes(10));
+                Cache::put($this->buildCacheKey($callId, 'last_availability_check'), now(), now()->addMinutes(10));
 
                 // 🚀 PHASE 1 OPTIMIZATION (2025-11-17): Cache validated slot for fast booking
                 // Eliminates redundant availability re-check in bookAppointment() (saves 300-800ms)
@@ -2202,7 +2235,7 @@ class RetellFunctionCallHandler extends Controller
                             $validatedSlots = array_map(function($alt) use ($requestedDate) {
                                 return $requestedDate->format('Y-m-d') . ' ' . $alt['time'];
                             }, $intelligentAlternatives);
-                            Cache::put("call:{$callId}:validated_alternatives", $validatedSlots, now()->addMinutes(5));
+                            Cache::put($this->buildCacheKey($callId, 'validated_alternatives'), $validatedSlots, now()->addMinutes(5));
 
                             // 🔒 FIX 2025-11-26: Lock alternatives to prevent race conditions
                             $lockAlternatives = array_map(function($alt) use ($requestedDate) {
@@ -2265,7 +2298,7 @@ class RetellFunctionCallHandler extends Controller
                         $altTime = $alt['datetime']->format('H:i');
                         $altDate = $alt['datetime']->format('Y-m-d');
 
-                        $cacheKey = "call:{$callId}:alternative_date:{$altTime}";
+                        $cacheKey = $this->buildCacheKey($callId, "alternative_date:{$altTime}");
                         Cache::put($cacheKey, $altDate, now()->addMinutes(30));
 
                         Log::info('📅 Alternative date cached for future booking', [
@@ -2498,14 +2531,14 @@ class RetellFunctionCallHandler extends Controller
 
             // 🔧 FIX 2025-12-07: Use cached event_type_id if available (preserves staff selection)
             // This ensures consistency with check_availability which pins the specific event type
-            $eventTypeId = \Illuminate\Support\Facades\Cache::get("call:{$callId}:event_type_id") ?? $service->calcom_event_type_id;
+            $eventTypeId = \Illuminate\Support\Facades\Cache::get($this->buildCacheKey($callId, 'event_type_id')) ?? $service->calcom_event_type_id;
 
             Log::info('Using service for alternatives', [
                 'service_id' => $service->id,
                 'service_name' => $service->name,
                 'default_event_type_id' => $service->calcom_event_type_id,
                 'used_event_type_id' => $eventTypeId,
-                'from_cache' => \Illuminate\Support\Facades\Cache::has("call:{$callId}:event_type_id"),
+                'from_cache' => \Illuminate\Support\Facades\Cache::has($this->buildCacheKey($callId, 'event_type_id')),
                 'call_id' => $callId
             ]);
 
@@ -2790,7 +2823,7 @@ class RetellFunctionCallHandler extends Controller
 
             // 🔧 FIX 2025-12-13: Check for existing slot reservation
             // If reserve_slot was called earlier, the slot is already held in Cal.com
-            $reservationKey = "call:{$callId}:reservation";
+            $reservationKey = $this->buildCacheKey($callId, 'reservation');
             $existingReservation = Cache::get($reservationKey);
             $hasActiveReservation = false;
 
@@ -3045,7 +3078,7 @@ class RetellFunctionCallHandler extends Controller
 
             // 🔧 FIX 2025-12-07: Use pinned staff from availability check (Highest Priority)
             // Ensures that the exact staff member found during checkAvailability is used for booking
-            $pinnedStaffId = $callId ? Cache::get("call:{$callId}:pinned_staff_id") : null;
+            $pinnedStaffId = $callId ? Cache::get($this->buildCacheKey($callId, 'pinned_staff_id')) : null;
             if ($pinnedStaffId) {
                 $preferredStaffId = $pinnedStaffId;
                 Log::info('📌 Using pinned staff ID for booking (from cache)', [
@@ -3091,7 +3124,7 @@ class RetellFunctionCallHandler extends Controller
             // SOLUTION: Check cache first for pinned service_id, guarantees consistency
             // This ensures check_availability and book_appointment use the SAME service/event_type
             $service = null;
-            $pinnedServiceId = $callId ? Cache::get("call:{$callId}:service_id") : null;
+            $pinnedServiceId = $callId ? Cache::get($this->buildCacheKey($callId, 'service_id')) : null;
 
             if ($pinnedServiceId) {
                 // Use pinned service from check_availability
@@ -3118,15 +3151,15 @@ class RetellFunctionCallHandler extends Controller
 
                 // Pin this service for subsequent calls in this session
                 if ($service && $callId) {
-                    Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
-                    Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
-                    Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'service_id'), $service->id, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'service_name'), $service->name, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'event_type_id'), $service->calcom_event_type_id, now()->addMinutes(30));
 
                     Log::info('📌 Service pinned to call session from bookAppointment', [
                         'call_id' => $callId,
                         'service_id' => $service->id,
                         'service_name' => $service->name,
-                        'cache_key' => "call:{$callId}:service_id"
+                        'cache_key' => $this->buildCacheKey($callId, 'service_id')
                     ]);
                 }
             }
@@ -3287,14 +3320,14 @@ class RetellFunctionCallHandler extends Controller
                 $timeSinceCheck = 0; // Cache hit = instant (no time since last check)
             } else {
                 // LAYER 1: Check time since last availability check
-                $lastCheckTime = Cache::get("call:{$callId}:last_availability_check");
+                $lastCheckTime = Cache::get($this->buildCacheKey($callId, 'last_availability_check'));
                 $timeSinceCheck = $lastCheckTime ? now()->diffInSeconds($lastCheckTime) : 999;
 
                 // 🔧 FIX 2025-11-25: Check if slot is a pre-validated alternative
                 // PROBLEM: Customer selects alternative from check_availability, but re-check fails
                 // SOLUTION: Trust alternatives that were validated within last 5 minutes
-                $validatedAlternatives = Cache::get("call:{$callId}:validated_alternatives", []);
-                $alternativesValidatedAt = Cache::get("call:{$callId}:alternatives_validated_at");
+                $validatedAlternatives = Cache::get($this->buildCacheKey($callId, 'validated_alternatives'), []);
+                $alternativesValidatedAt = Cache::get($this->buildCacheKey($callId, 'alternatives_validated_at'));
                 $requestedSlotKey = $appointmentTime->format('Y-m-d H:i');
 
                 if (!empty($validatedAlternatives) && $alternativesValidatedAt) {
@@ -3514,7 +3547,7 @@ class RetellFunctionCallHandler extends Controller
                 ]);
             } else {
                 // No lock exists - check cached validated alternatives as fallback
-                $validatedAlternatives = Cache::get("call:{$callId}:validated_alternatives", []);
+                $validatedAlternatives = Cache::get($this->buildCacheKey($callId, 'validated_alternatives'), []);
                 $requestedSlotKey = $appointmentTime->format('Y-m-d H:i');
 
                 if (in_array($requestedSlotKey, $validatedAlternatives)) {
@@ -5041,7 +5074,7 @@ class RetellFunctionCallHandler extends Controller
 
         if (!$serviceId && !$serviceName) {
             // Try to get from session
-            $sessionService = Cache::get("call:{$callId}:service");
+            $sessionService = Cache::get($this->buildCacheKey($callId, 'service'));
             if ($sessionService) {
                 $serviceId = $sessionService['id'] ?? null;
             }
@@ -5092,7 +5125,7 @@ class RetellFunctionCallHandler extends Controller
         }
 
         // Store reservation in session for later use in start_booking
-        $reservationKey = "call:{$callId}:reservation";
+        $reservationKey = $this->buildCacheKey($callId, 'reservation');
         Cache::put($reservationKey, [
             'uid' => $result['reservationUid'],
             'until' => $result['reservationUntil'],
@@ -5139,7 +5172,7 @@ class RetellFunctionCallHandler extends Controller
 
         if (!$reservationUid && $callId) {
             // Try to get from session
-            $reservationKey = "call:{$callId}:reservation";
+            $reservationKey = $this->buildCacheKey($callId, 'reservation');
             $sessionReservation = Cache::get($reservationKey);
             if ($sessionReservation) {
                 $reservationUid = $sessionReservation['uid'] ?? null;
@@ -5159,7 +5192,7 @@ class RetellFunctionCallHandler extends Controller
 
         // Clear session reservation
         if ($callId) {
-            Cache::forget("call:{$callId}:reservation");
+            Cache::forget($this->buildCacheKey($callId, 'reservation'));
         }
 
         if (!$result['success']) {
@@ -5551,7 +5584,7 @@ class RetellFunctionCallHandler extends Controller
                 if ($callId) {
                     // Extract just the time (HH:MM format)
                     $timeOnly = strpos($uhrzeit, ':') !== false ? $uhrzeit : sprintf('%02d:00', intval($uhrzeit));
-                    $cacheKey = "call:{$callId}:alternative_date:{$timeOnly}";
+                    $cacheKey = $this->buildCacheKey($callId, "alternative_date:{$timeOnly}");
                     $cachedAlternativeDate = Cache::get($cacheKey);
 
                     if ($cachedAlternativeDate) {
@@ -5594,7 +5627,7 @@ class RetellFunctionCallHandler extends Controller
                     // SOLUTION: Compare with cached checked_availability and use it if mismatch detected
                     // This prevents booking wrong dates when AI misinterprets date between function calls
                     if ($callId && $confirmBooking === true) {
-                        $checkedAvailabilityCacheKey = "call:{$callId}:checked_availability";
+                        $checkedAvailabilityCacheKey = $this->buildCacheKey($callId, 'checked_availability');
                         $checkedData = Cache::get($checkedAvailabilityCacheKey);
 
                         if ($checkedData) {
@@ -5731,7 +5764,7 @@ class RetellFunctionCallHandler extends Controller
             // STRATEGY: Check cache first, then fall back to default selection
             // This guarantees consistency: check_availability → collectAppointment use SAME service
             $service = null;
-            $pinnedServiceId = $callId ? Cache::get("call:{$callId}:service_id") : null;
+            $pinnedServiceId = $callId ? Cache::get($this->buildCacheKey($callId, 'service_id')) : null;
 
             if ($pinnedServiceId) {
                 // Use pinned service from check_availability
@@ -5794,9 +5827,9 @@ class RetellFunctionCallHandler extends Controller
 
                 // Pin this service for subsequent calls in this session
                 if ($service && $callId) {
-                    Cache::put("call:{$callId}:service_id", $service->id, now()->addMinutes(30));
-                    Cache::put("call:{$callId}:service_name", $service->name, now()->addMinutes(30));
-                    Cache::put("call:{$callId}:event_type_id", $service->calcom_event_type_id, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'service_id'), $service->id, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'service_name'), $service->name, now()->addMinutes(30));
+                    Cache::put($this->buildCacheKey($callId, 'event_type_id'), $service->calcom_event_type_id, now()->addMinutes(30));
 
                     Log::info('📌 Service pinned for future calls in session', [
                         'call_id' => $callId,
@@ -6671,7 +6704,7 @@ class RetellFunctionCallHandler extends Controller
                     // SOLUTION: Cache the checked datetime with call_id binding for validation in booking phase
                     // TTL: 10 minutes (reasonable time for user to confirm)
                     if ($callId) {
-                        $checkedAvailabilityCacheKey = "call:{$callId}:checked_availability";
+                        $checkedAvailabilityCacheKey = $this->buildCacheKey($callId, 'checked_availability');
                         $checkedData = [
                             'datum' => $datum,                                   // Original input ("Samstag", "2025-12-13", etc.)
                             'datum_parsed' => $appointmentDate->format('Y-m-d'), // Normalized date (2025-12-13)
@@ -8056,7 +8089,7 @@ class RetellFunctionCallHandler extends Controller
             // PROBLEM: Conversation flow calls reschedule_appointment without bestaetigung parameter
             // SOLUTION: Cache the pending reschedule request, auto-confirm on second identical call
             $confirmReschedule = $params['bestaetigung'] ?? $params['confirm_reschedule'] ?? null;
-            $rescheduleRequestKey = "call:{$callId}:reschedule_pending";
+            $rescheduleRequestKey = $this->buildCacheKey($callId, 'reschedule_pending');
             $pendingReschedule = Cache::get($rescheduleRequestKey);
 
             // Auto-confirm if this is a second call with same parameters (user confirmed via conversation)
@@ -10390,8 +10423,8 @@ class RetellFunctionCallHandler extends Controller
         }
 
         if (!empty($validatedSlots)) {
-            Cache::put("call:{$callId}:validated_alternatives", $validatedSlots, now()->addMinutes(5));
-            Cache::put("call:{$callId}:alternatives_validated_at", now(), now()->addMinutes(5));
+            Cache::put($this->buildCacheKey($callId, 'validated_alternatives'), $validatedSlots, now()->addMinutes(5));
+            Cache::put($this->buildCacheKey($callId, 'alternatives_validated_at'), now(), now()->addMinutes(5));
 
             Log::info('📋 Cached validated alternatives for re-check skip', [
                 'call_id' => $callId,
@@ -10456,7 +10489,7 @@ class RetellFunctionCallHandler extends Controller
 
                 if (!empty($lockedSlots)) {
                     // Store lock keys for cleanup later
-                    Cache::put("call:{$callId}:slot_locks", $lockedSlots, now()->addMinutes(5));
+                    Cache::put($this->buildCacheKey($callId, 'slot_locks'), $lockedSlots, now()->addMinutes(5));
 
                     Log::info('🔒 Acquired slot locks for alternatives', [
                         'call_id' => $callId,
@@ -11252,7 +11285,7 @@ class RetellFunctionCallHandler extends Controller
 
         if (!empty($lockedKeys)) {
             // Cache the locked keys for this call for later release
-            Cache::put("call:{$callId}:alternative_locks", $lockedKeys, $lockTtl + 60);
+            Cache::put($this->buildCacheKey($callId, 'alternative_locks'), $lockedKeys, $lockTtl + 60);
 
             Log::info('🔒 Alternatives soft-locked for call', [
                 'call_id' => $callId,
