@@ -129,10 +129,12 @@ class WebhookOutputHandler implements OutputHandlerInterface
         ]);
 
         // Send webhook request
+        // SSRF-001: withoutRedirecting() prevents redirect-based SSRF attacks
         $startTime = microtime(true);
 
         try {
             $response = Http::timeout($this->timeout)
+                ->withoutRedirecting()
                 ->withHeaders($headers)
                 ->post($config->webhook_url, $payload);
 
@@ -388,53 +390,254 @@ class WebhookOutputHandler implements OutputHandlerInterface
     }
 
     /**
-     * SSRF-001: Check if URL points to external (non-private) network.
+     * SSRF-001: Hardened external URL validation.
      *
-     * Prevents Server-Side Request Forgery by blocking:
-     * - Localhost (127.0.0.1, ::1, localhost)
-     * - Private networks (10.x, 172.16-31.x, 192.168.x)
-     * - Link-local (169.254.x.x - includes AWS metadata)
-     * - Reserved ranges
+     * Defense-in-depth approach addressing:
+     * - Protocol whitelist (https only in production)
+     * - Port whitelist (80, 443)
+     * - Hostname blocklist with canonicalization
+     * - IPv6 awareness (including IPv4-mapped addresses)
+     * - Alternative IP notation (decimal, octal, hex)
+     * - DNS resolution with ALL record validation
      *
      * @param string $url URL to validate
      * @return bool True if URL is safe (external), false if internal/private
      */
     private function isExternalUrl(string $url): bool
     {
-        $host = parse_url($url, PHP_URL_HOST);
-
-        if (empty($host)) {
+        // 1. Parse URL and validate structure
+        $parsed = parse_url($url);
+        if (!$parsed || empty($parsed['host'])) {
+            Log::debug('[SSRF] Invalid URL structure', ['url' => $this->maskUrl($url)]);
             return false;
         }
 
-        // Block obvious localhost variations
-        $blockedHosts = ['localhost', '127.0.0.1', '::1', '0.0.0.0'];
-        if (in_array(strtolower($host), $blockedHosts, true)) {
-            Log::debug('[WebhookOutputHandler] SSRF: Blocked localhost', ['host' => $host]);
+        $scheme = strtolower($parsed['scheme'] ?? '');
+        $host = strtolower($parsed['host']);
+        $port = $parsed['port'] ?? null;
+
+        // 2. Protocol whitelist - HTTPS only in production
+        $allowedSchemes = app()->isProduction() ? ['https'] : ['http', 'https'];
+        if (!in_array($scheme, $allowedSchemes, true)) {
+            Log::debug('[SSRF] Blocked scheme', ['scheme' => $scheme, 'url' => $this->maskUrl($url)]);
             return false;
         }
 
-        // Resolve hostname to IP (handles DNS rebinding attempts)
-        $ip = gethostbyname($host);
-
-        // If resolution failed (returns original hostname), block it
-        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-            Log::debug('[WebhookOutputHandler] SSRF: DNS resolution failed', ['host' => $host]);
+        // 3. Port whitelist (null = default port)
+        $allowedPorts = [null, 80, 443];
+        if (!in_array($port, $allowedPorts, true)) {
+            Log::debug('[SSRF] Blocked port', ['port' => $port, 'url' => $this->maskUrl($url)]);
             return false;
         }
 
-        // Validate against private/reserved IP ranges
-        // FILTER_FLAG_NO_PRIV_RANGE blocks: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-        // FILTER_FLAG_NO_RES_RANGE blocks: 0.0.0.0/8, 169.254.0.0/16, 127.0.0.0/8, 224.0.0.0/4, 240.0.0.0/4
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-            Log::debug('[WebhookOutputHandler] SSRF: Blocked private/reserved IP', [
-                'host' => $host,
-                'resolved_ip' => $ip,
-            ]);
+        // 4. Detect URL encoding tricks and suspicious patterns
+        if (preg_match('/%[0-9a-f]{2}|\\\\|@.*@|\x00/i', $url)) {
+            Log::debug('[SSRF] Blocked suspicious URL encoding', ['url' => $this->maskUrl($url)]);
             return false;
+        }
+
+        // 5. Strip IPv6 brackets and interface identifier for validation
+        $hostToCheck = $host;
+        if (preg_match('/^\[(.+)\]$/', $host, $matches)) {
+            $hostToCheck = $matches[1];
+            $hostToCheck = preg_replace('/%.*$/', '', $hostToCheck); // Strip %eth0 etc.
+        }
+
+        // 6. Block known dangerous hostnames
+        $blockedHostnames = [
+            'localhost', 'localhost.localdomain', 'ip6-localhost', 'ip6-loopback',
+            'kubernetes.default', 'kubernetes.default.svc',
+            'metadata.google.internal', 'instance-data', // Cloud metadata
+        ];
+        if (in_array($hostToCheck, $blockedHostnames, true)) {
+            Log::debug('[SSRF] Blocked hostname', ['host' => $host]);
+            return false;
+        }
+
+        // 7. Check if host looks like an IP address (starts with digit, 0x, or is IPv6)
+        //    Only call isBlockedIp() for IP-like hosts, NOT for hostnames
+        $looksLikeIp = preg_match('/^[\d\[]|^0x/i', $hostToCheck);
+        if ($looksLikeIp) {
+            $normalizedIp = $this->normalizeIpAddress($hostToCheck);
+            if ($normalizedIp !== false && $this->isBlockedIp($normalizedIp)) {
+                Log::debug('[SSRF] Blocked IP address', ['ip' => $hostToCheck, 'normalized' => $normalizedIp]);
+                return false;
+            }
+            // If normalizedIp is false but it looks like an IP, it's likely an obfuscation attempt
+            if ($normalizedIp === false) {
+                Log::debug('[SSRF] Invalid IP notation blocked', ['ip' => $hostToCheck]);
+                return false;
+            }
+            // If it's a valid public IP, allow it (no need for DNS resolution)
+            return true;
+        }
+
+        // 8. Resolve ALL DNS records (A and AAAA) for hostnames
+        $resolvedIps = $this->resolveAllIps($hostToCheck);
+        if (empty($resolvedIps)) {
+            Log::debug('[SSRF] DNS resolution failed', ['host' => $host]);
+            return false;
+        }
+
+        // 9. Validate ALL resolved IPs are external
+        foreach ($resolvedIps as $ip) {
+            if ($this->isBlockedIp($ip)) {
+                Log::debug('[SSRF] Resolved to blocked IP', [
+                    'host' => $host,
+                    'resolved_ip' => $ip,
+                ]);
+                return false;
+            }
         }
 
         return true;
+    }
+
+    /**
+     * Check if IP address is in a blocked range.
+     *
+     * Handles IPv4, IPv6, IPv4-mapped IPv6, and alternative notations.
+     */
+    private function isBlockedIp(string $ip): bool
+    {
+        // Normalize IP to detect obfuscation (decimal, octal, hex)
+        $normalizedIp = $this->normalizeIpAddress($ip);
+        if ($normalizedIp === false) {
+            return true; // Invalid = blocked
+        }
+
+        // Check IPv4
+        if (filter_var($normalizedIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return filter_var(
+                $normalizedIp,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            ) === false;
+        }
+
+        // Check IPv6
+        if (filter_var($normalizedIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            // IPv4-mapped IPv6 (::ffff:x.x.x.x)
+            if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i', $normalizedIp, $matches)) {
+                return $this->isBlockedIp($matches[1]);
+            }
+            // Loopback (::1)
+            if (in_array($normalizedIp, ['::1', '0:0:0:0:0:0:0:1'], true)) {
+                return true;
+            }
+            // Link-local (fe80::/10)
+            if (preg_match('/^fe[89ab][0-9a-f]:/i', $normalizedIp)) {
+                return true;
+            }
+            // Unique local (fc00::/7)
+            if (preg_match('/^f[cd][0-9a-f]{2}:/i', $normalizedIp)) {
+                return true;
+            }
+            return false;
+        }
+
+        return true; // Unknown format = blocked
+    }
+
+    /**
+     * Normalize IP address to standard format.
+     *
+     * Converts decimal (2130706433), octal (0177.0.0.1), hex (0x7f.0.0.1) to dotted decimal.
+     */
+    private function normalizeIpAddress(string $ip): string|false
+    {
+        // Standard validation first
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+
+        // Decimal notation (e.g., 2130706433 = 127.0.0.1)
+        if (preg_match('/^\d{8,10}$/', $ip)) {
+            $long = (int) $ip;
+            if ($long >= 0 && $long <= 4294967295) {
+                return long2ip($long);
+            }
+        }
+
+        // Octal/hex notation (e.g., 0177.0.0.1, 0x7f.0.0.1)
+        if (preg_match('/^([0-9a-fx]+)\.([0-9a-fx]+)\.([0-9a-fx]+)\.([0-9a-fx]+)$/i', $ip, $parts)) {
+            $octets = [];
+            for ($i = 1; $i <= 4; $i++) {
+                $octet = $this->parseOctet($parts[$i]);
+                if ($octet === false || $octet < 0 || $octet > 255) {
+                    return false;
+                }
+                $octets[] = $octet;
+            }
+            return implode('.', $octets);
+        }
+
+        // Shortened notation (e.g., 127.1 = 127.0.0.1)
+        if (preg_match('/^(\d+)\.(\d+)$/', $ip, $parts)) {
+            $first = (int) $parts[1];
+            $last = (int) $parts[2];
+            if ($first <= 255 && $last <= 16777215) {
+                return long2ip(($first << 24) | $last);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Parse an octet in decimal, octal, or hex format.
+     */
+    private function parseOctet(string $value): int|false
+    {
+        $value = strtolower($value);
+        if (str_starts_with($value, '0x')) {
+            return hexdec($value);
+        }
+        if (str_starts_with($value, '0') && strlen($value) > 1 && ctype_digit($value)) {
+            return octdec($value);
+        }
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+        return false;
+    }
+
+    /**
+     * Resolve all IP addresses for a hostname (A and AAAA records).
+     */
+    private function resolveAllIps(string $host): array
+    {
+        $ips = [];
+
+        // Get IPv4 addresses
+        $dns4 = @dns_get_record($host, DNS_A);
+        if ($dns4) {
+            foreach ($dns4 as $record) {
+                if (isset($record['ip'])) {
+                    $ips[] = $record['ip'];
+                }
+            }
+        }
+
+        // Get IPv6 addresses
+        $dns6 = @dns_get_record($host, DNS_AAAA);
+        if ($dns6) {
+            foreach ($dns6 as $record) {
+                if (isset($record['ipv6'])) {
+                    $ips[] = $record['ipv6'];
+                }
+            }
+        }
+
+        // Fallback to gethostbyname if dns_get_record fails
+        if (empty($ips)) {
+            $ip = gethostbyname($host);
+            if ($ip !== $host) {
+                $ips[] = $ip;
+            }
+        }
+
+        return array_unique($ips);
     }
 
     /**
