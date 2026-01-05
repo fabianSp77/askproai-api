@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Call;
 use App\Models\ServiceCase;
+use App\Models\ServiceCaseCategory;
 use App\Services\ServiceDesk\ServiceDeskLockService;
 use App\Services\Retell\CallLifecycleService;
 use App\Services\Gateway\IntentDetectionService;
+use App\Services\RelativeTimeParser;
 use App\Jobs\ServiceGateway\DeliverCaseOutputJob;
 use App\Jobs\ServiceGateway\ProcessCallRecordingJob;
 use Illuminate\Http\JsonResponse;
@@ -320,6 +323,38 @@ class ServiceDeskHandler extends Controller
                     ], 400);
                 }
 
+                // CRIT-003: Validate category belongs to same company (Multi-Tenancy Guard)
+                $category = ServiceCaseCategory::find($categoryId);
+                if (!$category || $category->company_id !== $callContext->company_id) {
+                    Log::critical('[ServiceDeskHandler] CRIT-003: Category-Company mismatch detected', [
+                        'call_id' => $callId,
+                        'requested_category_id' => $categoryId,
+                        'case_company_id' => $callContext->company_id,
+                        'category_company_id' => $category?->company_id,
+                        'category_name' => $category?->name,
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'CRIT-003: Invalid category for this company',
+                        'message' => 'Die angegebene Kategorie gehört nicht zu diesem Unternehmen.',
+                    ], 403);
+                }
+
+                // Persist gateway_mode to Call record (2025-12-22)
+                // This call is definitively service_desk since it's using route_ticket
+                try {
+                    $callContext->update([
+                        'gateway_mode' => 'service_desk',
+                        'detected_intent' => 'service_desk',
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('[ServiceDeskHandler] Failed to persist gateway_mode', [
+                        'call_id' => $callId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 // Create case in transaction
                 $case = DB::transaction(function() use (
                     $callContext,
@@ -347,14 +382,11 @@ class ServiceDeskHandler extends Controller
                             $issueData['additional_info'] ?? [],
                             $params['structured_data'] ?? []
                         ),
-                        'ai_metadata' => [
-                            'source' => 'voice',
-                            'call_id' => $callId,
-                            'retell_call_id' => $callContext->retell_call_id,
-                            'customer_name' => $issueData['customer_name'] ?? null,
-                            'customer_email' => $issueData['customer_email'] ?? null,
-                            'customer_phone' => $issueData['customer_phone'] ?? null,
-                        ],
+                        'ai_metadata' => $this->buildRouteTicketAiMetadata(
+                            $callId,
+                            $callContext,
+                            $issueData
+                        ),
                         'status' => ServiceCase::STATUS_NEW,
                         'output_status' => ServiceCase::OUTPUT_PENDING,
                     ]);
@@ -366,7 +398,7 @@ class ServiceDeskHandler extends Controller
                 // Dispatch output delivery job (async)
                 // 2-Phase Delivery-Gate: Delay dispatch if wait_for_enrichment is enabled
                 $delaySeconds = $case->category?->outputConfiguration?->wait_for_enrichment ? 90 : 0;
-                DeliverCaseOutputJob::dispatch($case)->delay(now()->addSeconds($delaySeconds));
+                DeliverCaseOutputJob::dispatch($case->id)->delay(now()->addSeconds($delaySeconds));
 
                 // Dispatch audio processing job (async, downloads recording to S3)
                 // Delay 30s to ensure recording is available from Retell
@@ -490,9 +522,25 @@ class ServiceDeskHandler extends Controller
                 $categoryId = $this->classifyCategory($problemDescription, $callContext->company_id);
 
                 // Determine priority (high if others affected)
-                $priority = ($params['others_affected'] ?? false)
+                // Parse German "ja"/"nein" strings to boolean
+                $othersAffectedForPriority = $this->parseGermanBoolean($params['others_affected'] ?? false);
+                $priority = $othersAffectedForPriority
                     ? ServiceCase::PRIORITY_HIGH
                     : ServiceCase::PRIORITY_NORMAL;
+
+                // Persist gateway_mode to Call record (2025-12-22)
+                // This call is definitively service_desk since it's using finalize_ticket
+                try {
+                    $callContext->update([
+                        'gateway_mode' => 'service_desk',
+                        'detected_intent' => 'service_desk',
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('[ServiceDeskHandler] Failed to persist gateway_mode', [
+                        'call_id' => $callId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
 
                 // Create case in transaction
                 $case = DB::transaction(function() use ($callContext, $callId, $params, $problemDescription, $categoryId, $priority) {
@@ -507,17 +555,7 @@ class ServiceDeskHandler extends Controller
                         'impact' => $priority,
                         'subject' => mb_substr($problemDescription, 0, 80),
                         'description' => $problemDescription,
-                        'ai_metadata' => [
-                            'source' => 'voice_finalize_ticket',
-                            'retell_call_id' => $callId,  // EXTERNAL Retell ID for audit
-                            'customer_name' => $params['customer_name'] ?? null,
-                            'customer_phone' => $params['customer_phone'] ?? null,
-                            'customer_email' => $params['customer_email'] ?? null,
-                            'customer_location' => $params['customer_location'] ?? null,
-                            'others_affected' => $params['others_affected'] ?? false,
-                            'problem_since' => $params['problem_since'] ?? null,
-                            'finalized_at' => now()->toIso8601String(),
-                        ],
+                        'ai_metadata' => $this->buildAiMetadata($callId, $params, $callContext),
                         'status' => ServiceCase::STATUS_NEW,
                         'output_status' => ServiceCase::OUTPUT_PENDING,
                     ]);
@@ -529,11 +567,37 @@ class ServiceDeskHandler extends Controller
                 // Dispatch output delivery job (async)
                 // 2-Phase Delivery-Gate: Delay dispatch if wait_for_enrichment is enabled
                 $delaySeconds = $case->category?->outputConfiguration?->wait_for_enrichment ? 90 : 0;
-                DeliverCaseOutputJob::dispatch($case)->delay(now()->addSeconds($delaySeconds));
+                DeliverCaseOutputJob::dispatch($case->id)->delay(now()->addSeconds($delaySeconds));
 
                 // Dispatch audio processing job (async, downloads recording to S3)
                 // Delay 30s to ensure recording is available from Retell
                 ProcessCallRecordingJob::dispatch($case)->delay(now()->addSeconds(30));
+
+                // Update Call with customer_name from function call params
+                // This ensures the name appears on the Call overview page in Filament
+                if (!empty($params['customer_name']) && $callContext) {
+                    $existingName = $callContext->customer_name;
+                    $isPlaceholder = $existingName && (
+                        str_starts_with($existingName, 'Unbekannt #') ||
+                        str_starts_with($existingName, 'Unknown #')
+                    );
+
+                    // Only update if no name set or it's a placeholder
+                    if (empty($existingName) || $isPlaceholder) {
+                        $callContext->update([
+                            'customer_name' => $params['customer_name'],
+                            'customer_name_verified' => false,
+                            'verification_confidence' => 50,
+                            'verification_method' => 'phone_match', // ENUM: phone_match, anonymous_name, manual, unknown
+                        ]);
+
+                        Log::info('[ServiceDeskHandler] Updated Call with customer_name from finalize_ticket', [
+                            'call_id' => $callContext->id,
+                            'customer_name' => $params['customer_name'],
+                            'previous_name' => $existingName,
+                        ]);
+                    }
+                }
 
                 Log::info('[ServiceDeskHandler] Ticket finalized successfully', [
                     'call_id' => $callId,
@@ -829,6 +893,28 @@ class ServiceDeskHandler extends Controller
             $threshold = config('gateway.hybrid.intent_confidence_threshold', 0.75);
             $recommendedMode = $result['confidence'] >= $threshold ? $result['intent'] : 'clarify';
 
+            // Persist intent data to Call record (2025-12-22)
+            if ($callContext) {
+                try {
+                    $callContext->update([
+                        'detected_intent' => $result['intent'],
+                        'intent_confidence' => $result['confidence'],
+                        'intent_keywords' => $result['detected_keywords'],
+                    ]);
+
+                    Log::debug('[ServiceDeskHandler] Intent persisted to call', [
+                        'call_id' => $callId,
+                        'intent' => $result['intent'],
+                    ]);
+                } catch (\Exception $persistError) {
+                    // Don't fail the request if persistence fails
+                    Log::warning('[ServiceDeskHandler] Failed to persist intent', [
+                        'call_id' => $callId,
+                        'error' => $persistError->getMessage(),
+                    ]);
+                }
+            }
+
             Log::info('[ServiceDeskHandler] Intent detected', [
                 'call_id' => $callId,
                 'intent' => $result['intent'],
@@ -904,5 +990,143 @@ class ServiceDeskHandler extends Controller
             'function' => $functionName,
             'message' => 'Diese Funktion ist nicht verfügbar.',
         ], 400);
+    }
+
+    /**
+     * Build AI metadata with enriched timestamps.
+     *
+     * Converts relative time expressions like "seit fünfzehn Minuten"
+     * to include absolute timestamps in German format.
+     *
+     * Phone number fallback chain (2025-12-30):
+     * 1. Agent-provided customer_phone (highest priority - caller explicitly stated)
+     * 2. Call's from_number (fallback - Caller ID from phone system)
+     *
+     * @param string $callId Retell call ID
+     * @param array $params Function parameters
+     * @param Call|null $callContext Optional Call context for phone fallback
+     * @return array AI metadata
+     */
+    private function buildAiMetadata(string $callId, array $params, ?Call $callContext = null): array
+    {
+        $now = now();
+        $problemSince = $params['problem_since'] ?? null;
+        $problemSinceFormatted = $problemSince;
+        $problemSinceAbsolute = null;
+
+        // Enrich relative time with absolute timestamp
+        if ($problemSince) {
+            $parser = new RelativeTimeParser();
+            $parsed = $parser->parse($problemSince, $now);
+
+            $problemSinceFormatted = $parsed['formatted'];
+            $problemSinceAbsolute = $parsed['absolute'];
+        }
+
+        // Phone number fallback: Agent-provided > Call.from_number
+        $agentProvidedPhone = $params['customer_phone'] ?? null;
+        $callFromNumber = $callContext?->from_number;
+
+        // Don't use anonymous caller IDs as fallback
+        if ($callFromNumber && in_array(strtolower($callFromNumber), ['anonymous', 'unknown', 'private', 'withheld'])) {
+            $callFromNumber = null;
+        }
+
+        // Determine effective phone and source for audit trail
+        $effectivePhone = $agentProvidedPhone ?: $callFromNumber;
+        $phoneSource = $agentProvidedPhone ? 'agent' : ($callFromNumber ? 'call_record' : null);
+
+        // Convert German "ja"/"nein" strings to boolean for others_affected
+        $othersAffected = $this->parseGermanBoolean($params['others_affected'] ?? false);
+
+        return [
+            'source' => 'voice_finalize_ticket',
+            'retell_call_id' => $callId,  // EXTERNAL Retell ID for audit
+            'customer_name' => $params['customer_name'] ?? null,
+            'customer_phone' => $effectivePhone,
+            'customer_phone_source' => $phoneSource,  // Audit: 'agent' or 'call_record'
+            'call_from_number' => $callFromNumber,    // Original Caller ID for audit
+            'customer_email' => $params['customer_email'] ?? null,
+            'customer_location' => $params['customer_location'] ?? null,
+            'others_affected' => $othersAffected,
+            'problem_since' => $problemSinceFormatted,
+            'problem_since_original' => $problemSince,
+            'problem_since_absolute' => $problemSinceAbsolute,
+            'finalized_at' => $now->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Build AI metadata for routeTicket with phone fallback.
+     *
+     * Phone number fallback chain (2025-12-30):
+     * 1. Agent-provided customer_phone from issueData (highest priority)
+     * 2. Call's from_number (fallback - Caller ID from phone system)
+     *
+     * @param string $callId Retell call ID
+     * @param Call $callContext Call context with from_number
+     * @param array $issueData Cached issue data from collect_issue_details
+     * @return array AI metadata
+     */
+    private function buildRouteTicketAiMetadata(string $callId, Call $callContext, array $issueData): array
+    {
+        // Phone number fallback: Agent-provided > Call.from_number
+        $agentProvidedPhone = $issueData['customer_phone'] ?? null;
+        $callFromNumber = $callContext->from_number;
+
+        // Don't use anonymous caller IDs as fallback
+        if ($callFromNumber && in_array(strtolower($callFromNumber), ['anonymous', 'unknown', 'private', 'withheld'])) {
+            $callFromNumber = null;
+        }
+
+        // Determine effective phone and source for audit trail
+        $effectivePhone = $agentProvidedPhone ?: $callFromNumber;
+        $phoneSource = $agentProvidedPhone ? 'agent' : ($callFromNumber ? 'call_record' : null);
+
+        return [
+            'source' => 'voice',
+            'call_id' => $callId,
+            'retell_call_id' => $callContext->retell_call_id,
+            'customer_name' => $issueData['customer_name'] ?? null,
+            'customer_email' => $issueData['customer_email'] ?? null,
+            'customer_phone' => $effectivePhone,
+            'customer_phone_source' => $phoneSource,  // Audit: 'agent' or 'call_record'
+            'call_from_number' => $callFromNumber,    // Original Caller ID for audit
+        ];
+    }
+
+    /**
+     * Parse German boolean strings ("ja"/"nein") to actual boolean values.
+     *
+     * Retell agents may return German strings instead of boolean values.
+     * This method normalizes various representations to a boolean.
+     *
+     * @param mixed $value The value to parse
+     * @return bool The boolean result
+     */
+    private function parseGermanBoolean(mixed $value): bool
+    {
+        // Already boolean
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        // Handle string values
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+
+            // German "yes" variants
+            if (in_array($normalized, ['ja', 'yes', 'true', '1', 'wahr'])) {
+                return true;
+            }
+
+            // German "no" variants (and empty string)
+            if (in_array($normalized, ['nein', 'no', 'false', '0', 'falsch', ''])) {
+                return false;
+            }
+        }
+
+        // Fallback: PHP's default boolean cast
+        return (bool) $value;
     }
 }

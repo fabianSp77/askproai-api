@@ -95,6 +95,16 @@ class WebhookOutputHandler implements OutputHandlerInterface
             return false;
         }
 
+        // SSRF-001: Runtime check - block internal/private URLs
+        if (!$this->isExternalUrl($config->webhook_url)) {
+            Log::critical('[WebhookOutputHandler] SSRF-001: Blocked internal URL at runtime', [
+                'case_id' => $case->id,
+                'config_id' => $config->id,
+                'url' => $this->maskUrl($config->webhook_url),
+            ]);
+            return false;
+        }
+
         // Build payload and headers
         $payload = $this->buildPayload($case, $config);
         $headers = $this->buildHeaders($case, $config, $payload);
@@ -358,11 +368,70 @@ class WebhookOutputHandler implements OutputHandlerInterface
             return false;
         }
 
+        // SSRF-001: Block internal/private network access
+        if (!$this->isExternalUrl($config->webhook_url)) {
+            Log::warning('[WebhookOutputHandler] SSRF-001: Blocked internal URL', [
+                'config_id' => $config->id,
+                'url' => $this->maskUrl($config->webhook_url),
+            ]);
+            return false;
+        }
+
         // Warn but don't fail for non-HTTPS (might be internal)
         if (!str_starts_with($config->webhook_url, 'https://')) {
             Log::warning('[WebhookOutputHandler] Non-HTTPS webhook URL', [
                 'config_id' => $config->id,
             ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * SSRF-001: Check if URL points to external (non-private) network.
+     *
+     * Prevents Server-Side Request Forgery by blocking:
+     * - Localhost (127.0.0.1, ::1, localhost)
+     * - Private networks (10.x, 172.16-31.x, 192.168.x)
+     * - Link-local (169.254.x.x - includes AWS metadata)
+     * - Reserved ranges
+     *
+     * @param string $url URL to validate
+     * @return bool True if URL is safe (external), false if internal/private
+     */
+    private function isExternalUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if (empty($host)) {
+            return false;
+        }
+
+        // Block obvious localhost variations
+        $blockedHosts = ['localhost', '127.0.0.1', '::1', '0.0.0.0'];
+        if (in_array(strtolower($host), $blockedHosts, true)) {
+            Log::debug('[WebhookOutputHandler] SSRF: Blocked localhost', ['host' => $host]);
+            return false;
+        }
+
+        // Resolve hostname to IP (handles DNS rebinding attempts)
+        $ip = gethostbyname($host);
+
+        // If resolution failed (returns original hostname), block it
+        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
+            Log::debug('[WebhookOutputHandler] SSRF: DNS resolution failed', ['host' => $host]);
+            return false;
+        }
+
+        // Validate against private/reserved IP ranges
+        // FILTER_FLAG_NO_PRIV_RANGE blocks: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+        // FILTER_FLAG_NO_RES_RANGE blocks: 0.0.0.0/8, 169.254.0.0/16, 127.0.0.0/8, 224.0.0.0/4, 240.0.0.0/4
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            Log::debug('[WebhookOutputHandler] SSRF: Blocked private/reserved IP', [
+                'host' => $host,
+                'resolved_ip' => $ip,
+            ]);
+            return false;
         }
 
         return true;
