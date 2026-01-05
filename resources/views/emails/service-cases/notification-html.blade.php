@@ -202,6 +202,90 @@
                     </tr>
                     @endif
 
+                    {{-- Voice Call Data Card (Orange) - from ai_metadata --}}
+                    @php
+                        $aiMeta = $case->ai_metadata ?? [];
+                        $callerNumber = $aiMeta['call_from_number'] ?? ($case->call->from_number ?? null);
+                        $hasVoiceData = !empty($aiMeta['customer_name']) || !empty($aiMeta['customer_phone']) || !empty($aiMeta['customer_email']) || !empty($aiMeta['customer_location']) || !empty($aiMeta['problem_since']) || $callerNumber !== null;
+                    @endphp
+                    @if($hasVoiceData)
+                    <tr>
+                        <td style="padding: 0 24px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FFF7ED; border: 1px solid #FDBA74; border-radius: 8px;">
+                                <tr>
+                                    <td style="padding: 16px;">
+                                        <div style="color: #EA580C; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                                            🎙️ Anrufer-Informationen
+                                        </div>
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            @if(!empty($aiMeta['customer_name']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Name</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">{{ $aiMeta['customer_name'] }}</td>
+                                            </tr>
+                                            @endif
+                                            {{-- Rückrufnummer (vom Kunden genannt) --}}
+                                            @if(!empty($aiMeta['customer_phone']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Tel. für Rückruf</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">
+                                                    <a href="tel:{{ $aiMeta['customer_phone'] }}" style="color: #2563EB; text-decoration: none;">{{ $aiMeta['customer_phone'] }}</a>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            {{-- Anrufernummer (Caller-ID / von welcher Nummer angerufen wurde) --}}
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Anruf von</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">
+                                                    @if(!empty($callerNumber))
+                                                        <a href="tel:{{ $callerNumber }}" style="color: #2563EB; text-decoration: none;">{{ $callerNumber }}</a>
+                                                    @else
+                                                        <span style="color: #9CA3AF; font-style: italic;">Anonym (keine Rufnummer übertragen)</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @if(!empty($aiMeta['customer_email']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">E-Mail</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">
+                                                    <a href="mailto:{{ $aiMeta['customer_email'] }}" style="color: #2563EB; text-decoration: none;">{{ $aiMeta['customer_email'] }}</a>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if(!empty($aiMeta['customer_location']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Standort</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">{{ $aiMeta['customer_location'] }}</td>
+                                            </tr>
+                                            @endif
+                                            @if(!empty($aiMeta['problem_since']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Problem seit</td>
+                                                <td style="color: #1F2937; font-size: 13px; font-weight: 500; padding-bottom: 8px;">{{ $aiMeta['problem_since'] }}</td>
+                                            </tr>
+                                            @endif
+                                            @if(!empty($aiMeta['others_affected']) && $aiMeta['others_affected'] === true)
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; padding-bottom: 8px; width: 140px;">Mehrere betroffen</td>
+                                                <td style="padding-bottom: 8px;">
+                                                    <span style="display: inline-block; background-color: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;">Ja - Mehrere Mitarbeiter</span>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if(!empty($aiMeta['retell_call_id']))
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 12px; width: 140px;">Retell Call-ID</td>
+                                                <td style="color: #9CA3AF; font-size: 11px; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">{{ $aiMeta['retell_call_id'] }}</td>
+                                            </tr>
+                                            @endif
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
+
                     {{-- AI Summary Card (Green) --}}
                     @if($case->ai_summary)
                     <tr>

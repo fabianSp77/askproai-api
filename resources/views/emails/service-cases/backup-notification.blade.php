@@ -97,16 +97,17 @@
                     {{-- ═══════════════════════════════════════════════════════════════ --}}
 
                     @php
-                        $hasContact = !empty($meta['customer_name']) || !empty($meta['customer_phone']) || !empty($meta['customer_email']) || !empty($meta['customer_location']);
+                        $callerNumber = $meta['call_from_number'] ?? ($case->call->from_number ?? null);
+                        $hasContact = !empty($meta['customer_name']) || !empty($meta['customer_phone']) || !empty($meta['customer_email']) || !empty($meta['customer_location']) || $callerNumber !== null;
                     @endphp
 
                     @if($hasContact)
                     <tr>
                         <td style="padding:20px 24px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #3b82f6; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                                 <tr>
-                                    <td style="padding:16px;">
-                                        <div style="color:#1d4ed8; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                    <td style="padding:16px 20px;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
                                             Kontaktdaten
                                         </div>
                                         <table width="100%" cellspacing="0" cellpadding="0">
@@ -116,14 +117,26 @@
                                                 <td style="color:#111827; font-size:13px; font-weight:500; padding-bottom:8px;">{{ $meta['customer_name'] }}</td>
                                             </tr>
                                             @endif
+                                            {{-- Rückrufnummer (vom Kunden genannt) --}}
                                             @if(!empty($meta['customer_phone']))
                                             <tr>
-                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:100px;">Telefon</td>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:120px;">Tel. für Rückruf</td>
                                                 <td style="padding-bottom:8px;">
                                                     <a href="tel:{{ $meta['customer_phone'] }}" style="color:#2563eb; font-size:13px; font-weight:500; text-decoration:none;">{{ $meta['customer_phone'] }}</a>
                                                 </td>
                                             </tr>
                                             @endif
+                                            {{-- Anrufernummer (Caller-ID) --}}
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:120px;">Anruf von</td>
+                                                <td style="padding-bottom:8px;">
+                                                    @if(!empty($callerNumber))
+                                                        <a href="tel:{{ $callerNumber }}" style="color:#2563eb; font-size:13px; font-weight:500; text-decoration:none;">{{ $callerNumber }}</a>
+                                                    @else
+                                                        <span style="color:#9ca3af; font-style:italic; font-size:13px;">Anonym (keine Rufnummer übertragen)</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
                                             @if(!empty($meta['customer_email']))
                                             <tr>
                                                 <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:100px;">E-Mail</td>
@@ -152,10 +165,10 @@
 
                     <tr>
                         <td style="padding:0 24px 20px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#fff7ed; border:1px solid #fed7aa; border-radius:8px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #f59e0b; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                                 <tr>
-                                    <td style="padding:16px;">
-                                        <div style="color:#c2410c; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                    <td style="padding:16px 20px;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
                                             Problembeschreibung
                                         </div>
 
@@ -202,17 +215,21 @@
                     {{-- SECTION 4: AI SUMMARY (if enabled) --}}
                     {{-- ═══════════════════════════════════════════════════════════════ --}}
 
-                    @if(($includeSummary ?? false) && !empty($jsonData['zusammenfassung'] ?? null))
+                    @php
+                        $summary = $meta['summary'] ?? $case->call?->summary ?? null;
+                    @endphp
+
+                    @if(($includeSummary ?? false) && !empty($summary))
                     <tr>
                         <td style="padding:0 24px 20px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#f0fdf4; border:1px solid #86efac; border-radius:8px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #10b981; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                                 <tr>
-                                    <td style="padding:16px;">
-                                        <div style="color:#166534; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                    <td style="padding:16px 20px;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
                                             KI-Zusammenfassung
                                         </div>
                                         <div style="color:#374151; font-size:13px; line-height:1.6;">
-                                            {{ $jsonData['zusammenfassung'] }}
+                                            {{ $summary }}
                                         </div>
                                     </td>
                                 </tr>
@@ -228,10 +245,10 @@
                     @if(($includeTranscript ?? false) && !empty($chatTranscript ?? []))
                     <tr>
                         <td style="padding:0 24px 20px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#faf5ff; border:1px solid #d8b4fe; border-radius:8px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #8b5cf6; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                                 <tr>
-                                    <td style="padding:16px;">
-                                        <div style="color:#7c3aed; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                    <td style="padding:16px 20px;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
                                             Gesprächsverlauf
                                             @if($transcriptTruncated ?? false)
                                             <span style="font-weight:400; font-size:10px; color:#9ca3af;">(gekürzt)</span>
@@ -279,13 +296,13 @@
                     @if(($audioOption ?? 'none') === 'link' && !empty($audioUrl ?? null))
                     <tr>
                         <td style="padding:0 24px 20px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#fef2f2; border:1px solid #fecaca; border-radius:8px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #ef4444; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                                 <tr>
-                                    <td style="padding:16px; text-align:center;">
-                                        <div style="color:#b91c1c; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                    <td style="padding:16px 20px; text-align:center;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
                                             Aufnahme
                                         </div>
-                                        <a href="{{ $audioUrl }}" style="display:inline-block; background-color:#b91c1c; color:#ffffff; padding:12px 24px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">
+                                        <a href="{{ $audioUrl }}" style="display:inline-block; background-color:#ef4444; color:#ffffff; padding:12px 24px; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">
                                             Aufnahme anhören
                                         </a>
                                         <div style="color:#9ca3af; font-size:10px; margin-top:8px;">
@@ -302,9 +319,10 @@
                     @endif
 
                     {{-- ═══════════════════════════════════════════════════════════════ --}}
-                    {{-- SECTION 7: ACTION BUTTON --}}
+                    {{-- SECTION 7: ACTION BUTTON (conditional) --}}
                     {{-- ═══════════════════════════════════════════════════════════════ --}}
 
+                    @if($showAdminLink ?? false)
                     <tr>
                         <td align="center" style="padding:0 24px 24px;">
                             <a href="{{ config('app.url') }}/admin/service-cases/{{ $case->id }}" style="display:inline-block; background-color:#2563eb; color:#ffffff; padding:14px 32px; border-radius:8px; font-size:14px; font-weight:600; text-decoration:none;">
@@ -312,58 +330,7 @@
                             </a>
                         </td>
                     </tr>
-
-                    <!-- Divider -->
-                    <tr>
-                        <td style="padding:0 24px;">
-                            <div style="border-top:1px solid #e5e7eb;"></div>
-                        </td>
-                    </tr>
-
-                    {{-- ═══════════════════════════════════════════════════════════════ --}}
-                    {{-- SECTION 5: TECHNICAL DATA (JSON) --}}
-                    {{-- ═══════════════════════════════════════════════════════════════ --}}
-
-                    <tr>
-                        <td style="padding:20px 24px;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
-                                <tr>
-                                    <td style="padding:16px;">
-                                        <div style="color:#6b7280; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
-                                            Technische Daten (Backup)
-                                        </div>
-
-                                        <!-- Reference IDs -->
-                                        <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:12px;">
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:11px; padding-bottom:4px; width:120px;">Interne ID</td>
-                                                <td style="color:#374151; font-size:11px; font-family:'SF Mono', Monaco, monospace; padding-bottom:4px;">{{ $case->id }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:11px; padding-bottom:4px; width:120px;">Kategorie-ID</td>
-                                                <td style="color:#374151; font-size:11px; font-family:'SF Mono', Monaco, monospace; padding-bottom:4px;">{{ $case->category_id }}</td>
-                                            </tr>
-                                            @if(!empty($meta['retell_call_id']) || $case->call)
-                                            <tr>
-                                                <td style="color:#6b7280; font-size:11px; width:120px;">Anruf-Referenz</td>
-                                                <td style="color:#374151; font-size:11px; font-family:'SF Mono', Monaco, monospace;">{{ Str::limit($meta['retell_call_id'] ?? $case->call?->retell_call_id ?? '-', 20) }}</td>
-                                            </tr>
-                                            @endif
-                                        </table>
-
-                                        <!-- JSON Data Block -->
-                                        <div style="background-color:#1f2937; border-radius:6px; padding:12px; overflow-x:auto;">
-                                            <pre style="margin:0; color:#e5e7eb; font-size:10px; font-family:'SF Mono', Monaco, 'Courier New', monospace; white-space:pre-wrap; word-wrap:break-word;">{{ json_encode($jsonData ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
-                                        </div>
-
-                                        <div style="color:#9ca3af; font-size:10px; margin-top:8px; text-align:center;">
-                                            Vollständige Daten sind als JSON-Datei angehängt
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                    @endif
 
                     {{-- ═══════════════════════════════════════════════════════════════ --}}
                     {{-- FOOTER --}}
