@@ -19,6 +19,7 @@ class WebhookOutputHandlerTest extends TestCase
     private Company $company;
     private ServiceOutputConfiguration $config;
     private ServiceCaseCategory $category;
+    private ServiceCase $case;
 
     protected function setUp(): void
     {
@@ -44,6 +45,15 @@ class WebhookOutputHandlerTest extends TestCase
             'slug' => 'it-support',
             'output_configuration_id' => $this->config->id,
             'is_active' => true,
+        ]);
+
+        $this->case = ServiceCase::create([
+            'company_id' => $this->company->id,
+            'category_id' => $this->category->id,
+            'subject' => 'Test Case for Webhook',
+            'description' => 'Testing webhook delivery',
+            'case_type' => 'incident',
+            'priority' => 'normal',
         ]);
     }
 
@@ -461,26 +471,40 @@ class WebhookOutputHandlerTest extends TestCase
             'jira.example.com/*' => Http::response(['success' => true], 200),
         ]);
 
-        $result = $this->handler->test($this->config);
+        $result = $this->handler->test($this->case);
 
-        $this->assertTrue($result);
-
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'jira.example.com') &&
-                   $request->method() === 'POST';
-        });
+        $this->assertIsArray($result);
+        $this->assertTrue($result['can_deliver'] ?? false);
+        $this->assertEquals('ready', $result['status'] ?? '');
     }
 
     /** @test */
-    public function test_webhook_test_connection_failure(): void
+    public function test_webhook_test_without_config(): void
     {
-        Http::fake([
-            'jira.example.com/*' => Http::response(['error' => 'Unauthorized'], 401),
+        // Create category without output config
+        $categoryWithoutConfig = ServiceCaseCategory::create([
+            'company_id' => $this->company->id,
+            'name' => 'No Output Config',
+            'slug' => 'no-output-config',
+            'output_configuration_id' => null,
+            'is_active' => true,
         ]);
 
-        $result = $this->handler->test($this->config);
+        // Create case with category but no output config
+        $case = ServiceCase::create([
+            'company_id' => $this->company->id,
+            'category_id' => $categoryWithoutConfig->id,
+            'subject' => 'No Config Case',
+            'description' => 'Testing without configuration',
+            'case_type' => 'incident',
+            'priority' => 'normal',
+        ]);
 
-        $this->assertFalse($result);
+        $result = $this->handler->test($case);
+
+        $this->assertIsArray($result);
+        $this->assertFalse($result['can_deliver'] ?? true);
+        $this->assertNotEmpty($result['issues']);
     }
 
     /** @test */

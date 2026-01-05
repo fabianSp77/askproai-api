@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ServiceCaseResource extends Resource
 {
@@ -136,10 +137,17 @@ class ServiceCaseResource extends Resource
                             ->required()
                             ->default(ServiceCase::STATUS_NEW),
                         Forms\Components\Select::make('assigned_to')
-                            ->label('Zugewiesen an')
+                            ->label('Zugewiesen an (Person)')
                             ->relationship('assignedTo', 'name')
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->helperText('Individuelle Zuweisung'),
+                        Forms\Components\Select::make('assigned_group_id')
+                            ->label('Zugewiesen an (Gruppe)')
+                            ->relationship('assignedGroup', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Team-basierte Zuweisung'),
                         Forms\Components\TextInput::make('external_reference')
                             ->label('Externe Referenz')
                             ->maxLength(255),
@@ -171,7 +179,8 @@ class ServiceCaseResource extends Resource
                             ->columnSpanFull(),
                     ])->columns(2)
                     ->collapsible()
-                    ->collapsed(),
+                    ->collapsed()
+                    ->visibleOn('view'),  // Hide in Edit/Create - SLA info already in ViewServiceCase sidebar
 
                 Forms\Components\Section::make('AI Metadata')
                     ->schema([
@@ -192,6 +201,20 @@ class ServiceCaseResource extends Resource
     {
         return $table
             ->columns([
+                // 🎫 Phase 2: ServiceNow-Style 3-Zeilen Summary (Primäransicht)
+                Tables\Columns\ViewColumn::make('summary')
+                    ->label('Ticket')
+                    ->view('filament.columns.service-case-list-row')
+                    ->searchable(query: function ($query, $search) {
+                        return $query->where(function ($q) use ($search) {
+                            $q->where('id', 'like', "%{$search}%")
+                              ->orWhere('subject', 'like', "%{$search}%")
+                              ->orWhere('ai_metadata->customer_name', 'like', "%{$search}%")
+                              ->orWhere('ai_metadata->customer_phone', 'like', "%{$search}%");
+                        });
+                    }),
+
+                // === Detail-Spalten (standardmäßig ausgeblendet, für erweiterte Ansicht) ===
                 Tables\Columns\TextColumn::make('formatted_id')
                     ->label('Ticket-ID')
                     ->sortable(query: fn ($query, $direction) => $query->orderBy('id', $direction))
@@ -199,12 +222,14 @@ class ServiceCaseResource extends Resource
                     ->copyable()
                     ->copyMessage('Ticket-ID kopiert')
                     ->weight('bold')
-                    ->color('primary'),
+                    ->color('primary')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('subject')
                     ->label('Betreff')
                     ->searchable()
                     ->limit(40)
-                    ->tooltip(fn ($record) => $record->subject),
+                    ->tooltip(fn ($record) => $record->subject)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\BadgeColumn::make('case_type')
                     ->label('Typ')
                     ->colors([
@@ -217,7 +242,8 @@ class ServiceCaseResource extends Resource
                         ServiceCase::TYPE_REQUEST => 'Anfrage',
                         ServiceCase::TYPE_INQUIRY => 'Anliegen',
                         default => $state,
-                    }),
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\BadgeColumn::make('priority')
                     ->label('Priorität')
                     ->colors([
@@ -226,13 +252,20 @@ class ServiceCaseResource extends Resource
                         'warning' => ServiceCase::PRIORITY_HIGH,
                         'danger' => ServiceCase::PRIORITY_CRITICAL,
                     ])
+                    ->icons([
+                        'heroicon-o-arrow-down' => ServiceCase::PRIORITY_LOW,
+                        'heroicon-o-minus' => ServiceCase::PRIORITY_NORMAL,
+                        'heroicon-o-arrow-up' => ServiceCase::PRIORITY_HIGH,
+                        'heroicon-o-fire' => ServiceCase::PRIORITY_CRITICAL,
+                    ])
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         ServiceCase::PRIORITY_LOW => 'Niedrig',
                         ServiceCase::PRIORITY_NORMAL => 'Normal',
                         ServiceCase::PRIORITY_HIGH => 'Hoch',
                         ServiceCase::PRIORITY_CRITICAL => 'Kritisch',
                         default => $state,
-                    }),
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
@@ -249,11 +282,13 @@ class ServiceCaseResource extends Resource
                         ServiceCase::STATUS_RESOLVED => 'Gelöst',
                         ServiceCase::STATUS_CLOSED => 'Geschlossen',
                         default => $state,
-                    }),
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Kategorie')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 // Caller from ai_metadata (Voice AI captured data)
                 Tables\Columns\TextColumn::make('ai_metadata.customer_name')
                     ->label('Anrufer')
@@ -267,6 +302,9 @@ class ServiceCaseResource extends Resource
                     ->placeholder('—')
                     ->copyable()
                     ->copyMessage('Telefonnummer kopiert')
+                    ->searchable(query: function ($query, $search) {
+                        return $query->where('ai_metadata->customer_phone', 'like', "%{$search}%");
+                    })
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('ai_metadata.others_affected')
                     ->label('Mehrere betroffen')
@@ -282,7 +320,12 @@ class ServiceCaseResource extends Resource
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('assignedTo.name')
-                    ->label('Zugewiesen')
+                    ->label('Zugewiesen (Person)')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('assignedGroup.name')
+                    ->label('Zugewiesen (Gruppe)')
+                    ->icon('heroicon-o-user-group')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('sla_status')
@@ -329,6 +372,22 @@ class ServiceCaseResource extends Resource
                     ->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
+            // ServiceNow-Style Row Highlighting für visuelle Hierarchie
+            ->recordClasses(function (ServiceCase $record): ?string {
+                // SLA überfällig = höchste Priorität (rot)
+                if ($record->isResolutionOverdue() || $record->isResponseOverdue()) {
+                    return 'bg-red-50 dark:bg-red-950/20 border-l-4 border-l-red-500';
+                }
+                // Kritisch/Hoch + Offen = Aufmerksamkeit erforderlich (amber)
+                if (in_array($record->priority, [ServiceCase::PRIORITY_CRITICAL, ServiceCase::PRIORITY_HIGH]) && $record->isOpen()) {
+                    return 'bg-amber-50 dark:bg-amber-950/20 border-l-4 border-l-amber-500';
+                }
+                // Output fehlgeschlagen = Problem (rose)
+                if ($record->output_status === ServiceCase::OUTPUT_FAILED) {
+                    return 'bg-rose-50 dark:bg-rose-950/20 border-l-4 border-l-rose-500';
+                }
+                return null;
+            })
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
@@ -362,23 +421,185 @@ class ServiceCaseResource extends Resource
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
+                Tables\Filters\SelectFilter::make('assigned_group_id')
+                    ->label('Zuweisungsgruppe')
+                    ->relationship('assignedGroup', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('assigned_to')
+                    ->label('Zugewiesen an (Person)')
+                    ->relationship('assignedTo', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\Filter::make('open')
                     ->label('Nur offene Cases')
                     ->query(fn (Builder $query): Builder => $query->open())
                     ->toggle(),
+                // FIX: Only filter cases that have SLA dates set (exclude pass-through companies with NULL SLA)
                 Tables\Filters\Filter::make('overdue')
                     ->label('SLA überschritten')
                     ->query(fn (Builder $query): Builder => $query->where(function ($q) {
-                        $q->where('sla_resolution_due_at', '<', now())
-                          ->orWhere('sla_response_due_at', '<', now());
+                        $q->where(function ($q2) {
+                            $q2->whereNotNull('sla_resolution_due_at')
+                               ->where('sla_resolution_due_at', '<', now());
+                        })->orWhere(function ($q2) {
+                            $q2->whereNotNull('sla_response_due_at')
+                               ->where('sla_response_due_at', '<', now());
+                        });
                     }))
                     ->toggle(),
                 Tables\Filters\Filter::make('output_failed')
                     ->label('Output fehlgeschlagen')
                     ->query(fn (Builder $query): Builder => $query->where('output_status', ServiceCase::OUTPUT_FAILED))
                     ->toggle(),
+
+                // 📅 Phase 4: Zeitraum-Filter (ServiceNow-Style)
+                Tables\Filters\Filter::make('created_at')
+                    ->label('Erstellungszeitraum')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Von')
+                            ->native(false)
+                            ->displayFormat('d.m.Y')
+                            ->placeholder('TT.MM.JJJJ'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Bis')
+                            ->native(false)
+                            ->displayFormat('d.m.Y')
+                            ->placeholder('TT.MM.JJJJ'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['created_from'] ?? null) {
+                            $indicators['created_from'] = 'Ab: ' . \Carbon\Carbon::parse($data['created_from'])->format('d.m.Y');
+                        }
+                        if ($data['created_until'] ?? null) {
+                            $indicators['created_until'] = 'Bis: ' . \Carbon\Carbon::parse($data['created_until'])->format('d.m.Y');
+                        }
+                        return $indicators;
+                    }),
+
+                // 🔄 Phase 4: Enrichment-Status Filter (für Troubleshooting)
+                Tables\Filters\SelectFilter::make('enrichment_status')
+                    ->label('Enrichment-Status')
+                    ->options([
+                        'pending' => '⏳ Ausstehend',
+                        'enriched' => '✅ Angereichert',
+                        'failed' => '❌ Fehlgeschlagen',
+                        'skipped' => '⏭️ Übersprungen',
+                    ])
+                    ->placeholder('Alle'),
+
+                // 📤 Phase 4: Output-Status Filter (erweitert)
+                Tables\Filters\SelectFilter::make('output_status')
+                    ->label('Output-Status')
+                    ->options([
+                        ServiceCase::OUTPUT_PENDING => '⏳ Ausstehend',
+                        ServiceCase::OUTPUT_SENT => '✅ Gesendet',
+                        ServiceCase::OUTPUT_FAILED => '❌ Fehlgeschlagen',
+                    ])
+                    ->placeholder('Alle'),
             ])
             ->actions([
+                // 🎯 Phase 3: Quick Action - Mir zuweisen (ServiceNow-Style)
+                Tables\Actions\Action::make('assign_to_me')
+                    ->icon('heroicon-o-user-plus')
+                    ->iconButton()
+                    ->tooltip('Mir zuweisen')
+                    ->color('primary')
+                    ->visible(fn (ServiceCase $record): bool =>
+                        $record->assigned_to !== \Illuminate\Support\Facades\Auth::user()?->staff?->id
+                        && \Illuminate\Support\Facades\Auth::user()?->staff !== null
+                        && $record->isOpen()
+                    )
+                    ->action(function (ServiceCase $record) {
+                        $staffId = \Illuminate\Support\Facades\Auth::user()->staff->id;
+                        $record->update(['assigned_to' => $staffId]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Ticket zugewiesen')
+                            ->body('Das Ticket wurde Ihnen zugewiesen.')
+                            ->success()
+                            ->send();
+                    }),
+
+                // 🚨 Phase 3: Quick Action - Priorität ändern
+                Tables\Actions\Action::make('change_priority')
+                    ->icon('heroicon-o-arrow-trending-up')
+                    ->iconButton()
+                    ->tooltip('Priorität ändern')
+                    ->color('warning')
+                    ->visible(fn (ServiceCase $record): bool => $record->isOpen())
+                    ->form([
+                        Forms\Components\Select::make('priority')
+                            ->label('Neue Priorität')
+                            ->options([
+                                ServiceCase::PRIORITY_LOW => '↓ Niedrig',
+                                ServiceCase::PRIORITY_NORMAL => '– Normal',
+                                ServiceCase::PRIORITY_HIGH => '↑ Hoch',
+                                ServiceCase::PRIORITY_CRITICAL => '🔥 Kritisch',
+                            ])
+                            ->default(fn (ServiceCase $record) => $record->priority)
+                            ->required(),
+                    ])
+                    ->action(function (ServiceCase $record, array $data) {
+                        $oldPriority = $record->priority;
+                        $record->update(['priority' => $data['priority']]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Priorität geändert')
+                            ->body("Von {$oldPriority} auf {$data['priority']}")
+                            ->success()
+                            ->send();
+                    }),
+
+                // ✅ Phase 3: Quick Action - Status ändern
+                Tables\Actions\Action::make('change_status')
+                    ->icon('heroicon-o-arrow-path')
+                    ->iconButton()
+                    ->tooltip('Status ändern')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->label('Neuer Status')
+                            ->options([
+                                ServiceCase::STATUS_NEW => 'Neu',
+                                ServiceCase::STATUS_OPEN => 'Offen',
+                                ServiceCase::STATUS_PENDING => 'Wartend',
+                                ServiceCase::STATUS_RESOLVED => 'Gelöst',
+                                ServiceCase::STATUS_CLOSED => 'Geschlossen',
+                            ])
+                            ->default(fn (ServiceCase $record) => $record->status)
+                            ->required(),
+                        Forms\Components\Textarea::make('resolution_notes')
+                            ->label('Lösungsnotiz')
+                            ->placeholder('Optional: Beschreiben Sie die Lösung...')
+                            ->visible(fn (callable $get) => in_array($get('status'), [ServiceCase::STATUS_RESOLVED, ServiceCase::STATUS_CLOSED]))
+                            ->maxLength(1000),
+                    ])
+                    ->action(function (ServiceCase $record, array $data) {
+                        $updateData = ['status' => $data['status']];
+                        if (!empty($data['resolution_notes'])) {
+                            $updateData['resolution_notes'] = $data['resolution_notes'];
+                            $updateData['resolved_at'] = now();
+                        }
+                        $record->update($updateData);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Status geändert')
+                            ->body("Status auf '{$data['status']}' gesetzt.")
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('resend_output')
@@ -419,6 +640,44 @@ class ServiceCaseResource extends Resource
                         ->action(function ($records, array $data) {
                             $records->each->update(['assigned_to' => $data['assigned_to']]);
                         }),
+                    Tables\Actions\BulkAction::make('export_csv')
+                        ->label('Als CSV exportieren')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('gray')
+                        ->action(function (Collection $records) {
+                            // CSV Header
+                            $csv = "Ticket-ID,Betreff,Typ,Status,Priorität,Kategorie,Anrufer,Telefon,Zugewiesen an,Gruppe,Erstellt,SLA Response,SLA Resolution\n";
+
+                            foreach ($records as $record) {
+                                // Safe field extraction with fallbacks
+                                $callerName = $record->ai_metadata['customer_name'] ?? '';
+                                $callerPhone = $record->ai_metadata['customer_phone'] ?? '';
+
+                                $csv .= sprintf(
+                                    "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                                    $record->formatted_id,
+                                    '"' . str_replace('"', '""', $record->subject ?? '') . '"',
+                                    $record->case_type ?? '',
+                                    $record->status ?? '',
+                                    $record->priority ?? '',
+                                    '"' . str_replace('"', '""', $record->category?->name ?? '') . '"',
+                                    '"' . str_replace('"', '""', $callerName) . '"',
+                                    $callerPhone,
+                                    '"' . str_replace('"', '""', $record->assignedTo?->name ?? '') . '"',
+                                    '"' . str_replace('"', '""', $record->assignedGroup?->name ?? '') . '"',
+                                    $record->created_at?->format('Y-m-d H:i') ?? '',
+                                    $record->sla_response_due_at?->format('Y-m-d H:i') ?? '',
+                                    $record->sla_resolution_due_at?->format('Y-m-d H:i') ?? ''
+                                );
+                            }
+
+                            return response()->streamDownload(function () use ($csv) {
+                                echo $csv;
+                            }, 'service-cases-' . now()->format('Y-m-d-His') . '.csv', [
+                                'Content-Type' => 'text/csv; charset=utf-8',
+                            ]);
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
@@ -534,40 +793,9 @@ class ServiceCaseResource extends Resource
                         Infolists\Components\TextEntry::make('external_reference')
                             ->label('Externe Referenz'),
                     ])->columns(2),
-                Infolists\Components\Section::make('SLA')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('sla_response_due_at')
-                            ->label('Response Deadline')
-                            ->dateTime('d.m.Y H:i')
-                            ->color(fn ($record) => $record->isResponseOverdue() ? 'danger' : 'success'),
-                        Infolists\Components\TextEntry::make('sla_resolution_due_at')
-                            ->label('Resolution Deadline')
-                            ->dateTime('d.m.Y H:i')
-                            ->color(fn ($record) => $record->isResolutionOverdue() ? 'danger' : 'success'),
-                    ])->columns(2),
-                Infolists\Components\Section::make('Output Status')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('output_status')
-                            ->label('Status')
-                            ->badge(),
-                        Infolists\Components\TextEntry::make('output_sent_at')
-                            ->label('Gesendet am')
-                            ->dateTime('d.m.Y H:i'),
-                        Infolists\Components\TextEntry::make('output_error')
-                            ->label('Fehler')
-                            ->color('danger')
-                            ->columnSpanFull(),
-                    ])->columns(2),
-                Infolists\Components\Section::make('Timestamps')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('created_at')
-                            ->label('Erstellt')
-                            ->dateTime('d.m.Y H:i'),
-                        Infolists\Components\TextEntry::make('updated_at')
-                            ->label('Aktualisiert')
-                            ->dateTime('d.m.Y H:i'),
-                    ])->columns(2)
-                    ->collapsible(),
+                // NOTE: SLA, Output Status, and Timestamps sections are now rendered
+                // in the custom ServiceNow-style ViewServiceCase page with enhanced UI.
+                // See: app/Filament/Resources/ServiceCaseResource/Pages/ViewServiceCase.php
             ]);
     }
 

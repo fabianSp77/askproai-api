@@ -11,7 +11,7 @@ use App\Models\Company;
 use App\Models\PhoneNumber;
 use App\Jobs\ServiceGateway\DeliverCaseOutputJob;
 use App\Services\ServiceDesk\ServiceDeskLockService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Queue;
  */
 class FinalizeTicketTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected Company $company;
     protected PhoneNumber $phoneNumber;
@@ -107,6 +107,20 @@ class FinalizeTicketTest extends TestCase
             'default_priority' => 'low',
             'is_active' => true,
             'sort_order' => 2,
+        ]);
+
+        // Create fallback category for cases that don't match any keyword
+        ServiceCaseCategory::create([
+            'company_id' => $this->company->id,
+            'name' => 'Allgemein',
+            'slug' => 'allgemein',
+            'intent_keywords' => [],
+            'confidence_threshold' => 0.50,
+            'default_case_type' => 'incident',
+            'default_priority' => 'normal',
+            'is_active' => true,
+            'is_default' => true,  // This makes it the fallback
+            'sort_order' => 99,
         ]);
     }
 
@@ -265,7 +279,9 @@ class FinalizeTicketTest extends TestCase
 
         $this->assertNotNull($case);
         $this->assertNull($case->ai_metadata['customer_name']);
-        $this->assertNull($case->ai_metadata['customer_phone']);
+        // customer_phone falls back to call's from_number when not explicitly provided
+        $this->assertEquals($this->call->from_number, $case->ai_metadata['customer_phone']);
+        $this->assertEquals('call_record', $case->ai_metadata['customer_phone_source'] ?? null);
         $this->assertEquals(ServiceCase::PRIORITY_NORMAL, $case->priority);
     }
 

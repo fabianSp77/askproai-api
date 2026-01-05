@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ServiceCase Model
@@ -43,6 +44,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ServiceCase extends Model
 {
     use HasFactory, SoftDeletes, BelongsToCompany;
+
+    /**
+     * Default attribute values.
+     *
+     * These mirror the database defaults and are applied BEFORE
+     * the saving event validation runs.
+     */
+    protected $attributes = [
+        'priority' => 'normal',
+        'urgency' => 'normal',
+        'impact' => 'normal',
+        'status' => 'new',
+        'output_status' => 'pending',
+    ];
 
     /**
      * Case type enumeration
@@ -124,6 +139,47 @@ class ServiceCase extends Model
     ];
 
     /**
+     * German labels for status values
+     * Single source of truth for all widgets and UI components
+     */
+    public const STATUS_LABELS = [
+        self::STATUS_NEW => 'Neu',
+        self::STATUS_OPEN => 'Offen',
+        self::STATUS_PENDING => 'Wartend',
+        self::STATUS_RESOLVED => 'Gelöst',
+        self::STATUS_CLOSED => 'Geschlossen',
+    ];
+
+    /**
+     * German labels for priority values
+     * Single source of truth for all widgets and UI components
+     */
+    public const PRIORITY_LABELS = [
+        self::PRIORITY_CRITICAL => 'Kritisch',
+        self::PRIORITY_HIGH => 'Hoch',
+        self::PRIORITY_NORMAL => 'Normal',
+        self::PRIORITY_LOW => 'Niedrig',
+    ];
+
+    /**
+     * German labels for case type values
+     */
+    public const TYPE_LABELS = [
+        self::TYPE_INCIDENT => 'Incident',
+        self::TYPE_REQUEST => 'Anfrage',
+        self::TYPE_INQUIRY => 'Anfrage (allgemein)',
+    ];
+
+    /**
+     * German labels for output status values
+     */
+    public const OUTPUT_STATUS_LABELS = [
+        self::OUTPUT_PENDING => 'Ausstehend',
+        self::OUTPUT_SENT => 'Gesendet',
+        self::OUTPUT_FAILED => 'Fehlgeschlagen',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<string>
@@ -144,13 +200,18 @@ class ServiceCase extends Model
         'status',
         'external_reference',
         'assigned_to',
+        'assigned_group_id',
         'sla_response_due_at',
         'sla_resolution_due_at',
+        'sla_response_met_at',
         'output_status',
         'output_sent_at',
         'output_error',
         'audio_object_key',
         'audio_expires_at',
+        // Lifecycle timestamps
+        'resolved_at',
+        'closed_at',
         // Enrichment fields (2-Phase Delivery-Gate)
         'enrichment_status',
         'enriched_at',
@@ -169,8 +230,11 @@ class ServiceCase extends Model
         'ai_metadata' => 'array',
         'sla_response_due_at' => 'datetime',
         'sla_resolution_due_at' => 'datetime',
+        'sla_response_met_at' => 'datetime',
         'output_sent_at' => 'datetime',
         'audio_expires_at' => 'datetime',
+        'resolved_at' => 'datetime',
+        'closed_at' => 'datetime',
         'enriched_at' => 'datetime',
         'transcript_segment_count' => 'integer',
         'transcript_char_count' => 'integer',
@@ -233,6 +297,29 @@ class ServiceCase extends Model
     }
 
     /**
+     * Get all notes for this service case (newest first)
+     *
+     * @return HasMany<ServiceCaseNote>
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ServiceCaseNote::class)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get top-level notes only (no replies, newest first)
+     *
+     * @return HasMany<ServiceCaseNote>
+     */
+    public function topLevelNotes(): HasMany
+    {
+        return $this->hasMany(ServiceCaseNote::class)
+            ->whereNull('parent_id')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get the staff member assigned to this service case.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -240,6 +327,17 @@ class ServiceCase extends Model
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'assigned_to');
+    }
+
+    /**
+     * Get the assignment group for this service case.
+     * ServiceNow-style team-based ticket assignment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function assignedGroup(): BelongsTo
+    {
+        return $this->belongsTo(AssignmentGroup::class, 'assigned_group_id');
     }
 
     /**
@@ -362,6 +460,38 @@ class ServiceCase extends Model
     }
 
     /**
+     * Check if first response SLA was met.
+     *
+     * @return bool|null True if met, false if breached, null if not yet responded
+     */
+    public function isResponseSlaMet(): ?bool
+    {
+        if (!$this->sla_response_met_at) {
+            return null; // Not yet responded
+        }
+
+        if (!$this->sla_response_due_at) {
+            return true; // No SLA defined, consider as met
+        }
+
+        return $this->sla_response_met_at->lte($this->sla_response_due_at);
+    }
+
+    /**
+     * Mark the first response as made (for SLA tracking).
+     *
+     * @return void
+     */
+    public function markFirstResponse(): void
+    {
+        if (!$this->sla_response_met_at) {
+            $this->update([
+                'sla_response_met_at' => now(),
+            ]);
+        }
+    }
+
+    /**
      * Check if the case is overdue for SLA resolution.
      *
      * @return bool
@@ -369,6 +499,71 @@ class ServiceCase extends Model
     public function isResolutionOverdue(): bool
     {
         return $this->sla_resolution_due_at && now()->isAfter($this->sla_resolution_due_at);
+    }
+
+    /**
+     * Calculate and set SLA due dates based on category configuration.
+     *
+     * This method is called by the ServiceCaseObserver during case creation
+     * and category changes. It MUST be wrapped in try-catch in the Observer
+     * to ensure SLA failures never block case operations.
+     *
+     * BEHAVIOR:
+     * - Skips calculation if company has sla_tracking_enabled = false
+     * - Skips if category has no SLA configuration
+     * - Sets sla_response_due_at and sla_resolution_due_at based on category hours
+     *
+     * @return void
+     */
+    public function calculateSlaDueDates(): void
+    {
+        try {
+            // Guard: Skip if company has SLA tracking disabled (pass-through mode)
+            if (!$this->company?->sla_tracking_enabled) {
+                \Log::debug('[ServiceCase] SLA calculation skipped: Company has SLA tracking disabled', [
+                    'company_id' => $this->company_id,
+                ]);
+                return;
+            }
+
+            // Guard: Skip if no category assigned
+            if (!$this->category) {
+                \Log::debug('[ServiceCase] SLA calculation skipped: No category assigned', [
+                    'case_id' => $this->id,
+                ]);
+                return;
+            }
+
+            // Use created_at as base time, fall back to now() for new cases
+            $baseTime = $this->created_at ?? now();
+
+            // Calculate response SLA
+            if ($this->category->sla_response_hours) {
+                $this->sla_response_due_at = $baseTime->copy()->addHours($this->category->sla_response_hours);
+            }
+
+            // Calculate resolution SLA
+            if ($this->category->sla_resolution_hours) {
+                $this->sla_resolution_due_at = $baseTime->copy()->addHours($this->category->sla_resolution_hours);
+            }
+
+            \Log::debug('[ServiceCase] SLA due dates calculated', [
+                'company_id' => $this->company_id,
+                'category_id' => $this->category_id,
+                'response_hours' => $this->category->sla_response_hours,
+                'resolution_hours' => $this->category->sla_resolution_hours,
+                'sla_response_due_at' => $this->sla_response_due_at,
+                'sla_resolution_due_at' => $this->sla_resolution_due_at,
+            ]);
+        } catch (\Exception $e) {
+            // CRITICAL: SLA errors must NEVER block case creation!
+            // Log the error but allow the case to be created without SLA dates
+            \Log::error('[ServiceCase] SLA calculation failed - case creation continues', [
+                'company_id' => $this->company_id,
+                'category_id' => $this->category_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

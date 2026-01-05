@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\ServiceCase;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Number;
 
@@ -17,9 +18,10 @@ class ServiceDeskStatsWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         try {
-            // Cache for 5 minutes
+            // Cache for 5 minutes - MUST include company_id for multi-tenancy isolation
+            $companyId = Auth::user()?->company_id;
             $cacheMinute = floor(now()->minute / 5) * 5;
-            $cacheKey = 'service-desk-stats-' . now()->format('Y-m-d-H') . '-' . str_pad($cacheMinute, 2, '0', STR_PAD_LEFT);
+            $cacheKey = "service_desk_stats_{$companyId}_" . now()->format('Y-m-d-H') . '-' . str_pad($cacheMinute, 2, '0', STR_PAD_LEFT);
 
             return Cache::remember($cacheKey, 300, function () {
                 // Open Cases (new, open, pending)

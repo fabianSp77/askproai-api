@@ -34,7 +34,7 @@ class ServiceGatewayExchangeLogResource extends Resource
     protected static ?string $navigationLabel = 'Exchange Logs';
     protected static ?string $modelLabel = 'Exchange Log';
     protected static ?string $pluralModelLabel = 'Exchange Logs';
-    protected static ?int $navigationSort = 13;
+    protected static ?int $navigationSort = 15;
 
     /**
      * Only show in navigation when Service Gateway is enabled.
@@ -340,18 +340,34 @@ class ServiceGatewayExchangeLogResource extends Resource
 
                 Infolists\Components\Section::make('Request (Redacted)')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('request_body_redacted')
+                        Infolists\Components\TextEntry::make('request_json')
                             ->label('')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                $data = $record->request_body_redacted;
+                                if (!$data) return '-';
+                                return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            })
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->extraAttributes(['class' => 'whitespace-pre-wrap text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto']),
                     ])
                     ->collapsible()
                     ->collapsed(false),
 
                 Infolists\Components\Section::make('Response (Redacted)')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('response_body_redacted')
+                        Infolists\Components\TextEntry::make('response_json')
                             ->label('')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                $data = $record->response_body_redacted;
+                                if (!$data) return '-';
+                                return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            })
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->extraAttributes(['class' => 'whitespace-pre-wrap text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto']),
                     ])
                     ->collapsible()
                     ->collapsed(false)
@@ -359,9 +375,17 @@ class ServiceGatewayExchangeLogResource extends Resource
 
                 Infolists\Components\Section::make('Headers (Redacted)')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('headers_redacted')
+                        Infolists\Components\TextEntry::make('headers_json')
                             ->label('')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                $data = $record->headers_redacted;
+                                if (!$data) return '-';
+                                return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                            })
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->extraAttributes(['class' => 'whitespace-pre-wrap text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto']),
                     ])
                     ->collapsible()
                     ->collapsed()
