@@ -42,6 +42,7 @@ class ExchangeLogService
         'api_key',
         'apikey',
         'api-key',
+        'api_secret',
         'secret',
         'password',
         'token',
@@ -49,8 +50,15 @@ class ExchangeLogService
         'refresh_token',
         'bearer',
         'authorization',
+        'authorization_bearer',
         'auth',
         'credentials',
+        'private_key',
+        'client_secret',
+        'webhook_secret',
+        'signing_secret',
+        'jwt_secret',
+        'hmac_secret',
 
         // Retell-specific
         'retell_api_key',
@@ -82,8 +90,14 @@ class ExchangeLogService
         'calcom_api_key',
         'stripe_secret',
         'stripe_key',
+        'stripe_webhook_secret',
         'openai_key',
+        'openai_api_key',
         'anthropic_key',
+        'anthropic_api_key',
+        'azure_key',
+        'aws_secret_key',
+        'aws_access_key',
 
         // Internal identifiers (should not leak)
         'internal_id',
@@ -119,15 +133,24 @@ class ExchangeLogService
         'authorization',
         'x-api-key',
         'x-auth-token',
+        'x-signature',
+        'x-webhook-secret',
+        'x-hub-signature',
+        'x-hub-signature-256',
         'cookie',
         'set-cookie',
         'x-csrf-token',
         'x-xsrf-token',
         'x-askpro-signature', // Our own signature - don't leak
+        'x-retell-signature',
+        'x-stripe-signature',
     ];
 
     /**
      * Log an outbound exchange (we send to external system).
+     *
+     * @param bool $isTest Whether this is a test webhook (not a real delivery)
+     * @param int|null $outputConfigurationId The ServiceOutputConfiguration ID for filtering
      */
     public function logOutbound(
         string $endpoint,
@@ -145,7 +168,9 @@ class ExchangeLogService
         ?string $errorClass = null,
         ?string $errorMessage = null,
         ?string $parentEventId = null,
-        ?array $headers = null
+        ?array $headers = null,
+        bool $isTest = false,
+        ?int $outputConfigurationId = null
     ): ServiceGatewayExchangeLog {
         return $this->log(
             direction: 'outbound',
@@ -164,7 +189,9 @@ class ExchangeLogService
             errorClass: $errorClass,
             errorMessage: $errorMessage,
             parentEventId: $parentEventId,
-            headers: $headers
+            headers: $headers,
+            isTest: $isTest,
+            outputConfigurationId: $outputConfigurationId
         );
     }
 
@@ -225,7 +252,9 @@ class ExchangeLogService
         ?string $errorClass,
         ?string $errorMessage,
         ?string $parentEventId,
-        ?array $headers
+        ?array $headers,
+        bool $isTest = false,
+        ?int $outputConfigurationId = null
     ): ServiceGatewayExchangeLog {
         try {
             $log = ServiceGatewayExchangeLog::create([
@@ -241,12 +270,14 @@ class ExchangeLogService
                 'call_id' => $callId,
                 'service_case_id' => $serviceCaseId,
                 'company_id' => $companyId,
+                'output_configuration_id' => $outputConfigurationId,
                 'correlation_id' => $correlationId,
                 'attempt_no' => $attemptNo,
                 'max_attempts' => $maxAttempts,
                 'error_class' => $errorClass,
                 'error_message' => $this->sanitizeErrorMessage($errorMessage),
                 'parent_event_id' => $parentEventId,
+                'is_test' => $isTest,
                 'completed_at' => ($statusCode !== null || $errorClass !== null) ? now() : null,
             ]);
 
