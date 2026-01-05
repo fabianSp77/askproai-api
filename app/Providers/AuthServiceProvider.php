@@ -42,6 +42,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\ServiceCase::class => \App\Policies\ServiceCasePolicy::class,
         \App\Models\ServiceCaseCategory::class => \App\Policies\ServiceCaseCategoryPolicy::class,
         \App\Models\ServiceOutputConfiguration::class => \App\Policies\ServiceOutputConfigurationPolicy::class,
+        \App\Models\ServiceCaseNote::class => \App\Policies\ServiceCaseNotePolicy::class,
     ];
 
     /**
@@ -60,6 +61,17 @@ class AuthServiceProvider extends ServiceProvider
                 return true;
             }
             return null; // Let policies handle authorization
+        });
+
+        /**
+         * Gate for API Documentation access (Scramble RestrictedDocsAccess).
+         * Only super_admin can view API docs (handled by Gate::before above).
+         * All other users are denied.
+         */
+        Gate::define('viewApiDocs', function ($user) {
+            // Super admins are already handled by Gate::before
+            // For all other users, deny access to API documentation
+            return $user->hasRole('super_admin');
         });
 
         /*

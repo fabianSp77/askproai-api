@@ -118,8 +118,8 @@ MD,
 
     'middleware' => [
         'web',
-        // Remove RestrictedDocsAccess for public API docs
-        // RestrictedDocsAccess::class,
+        // Security: Require authentication to view API documentation
+        RestrictedDocsAccess::class,
     ],
 
     'extensions' => [],

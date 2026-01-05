@@ -8,49 +8,15 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
-// Debug route to check current user and permissions
-Route::get('/debug-user', function () {
-    if (!auth()->check()) {
-        return response()->json([
-            'authenticated' => false,
-            'message' => 'Not logged in. Please login at /admin/login first'
-        ]);
-    }
-
-    $user = auth()->user();
-    $roles = $user->roles->pluck('name')->toArray();
-
-    return response()->json([
-        'authenticated' => true,
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'company_id' => $user->company_id,
-        ],
-        'roles' => $roles,
-        'permissions' => [
-            'can_view_services' => $user->can('viewAny', \App\Models\Service::class),
-            'can_create_services' => $user->can('create', \App\Models\Service::class),
-        ],
-        'policy_checks' => [
-            'hasAnyRole_admin' => $user->hasAnyRole(['admin', 'Admin']),
-            'hasAnyRole_manager' => $user->hasAnyRole(['manager']),
-            'hasAnyRole_company_owner' => $user->hasAnyRole(['company_owner']),
-            'hasAnyRole_reseller_owner' => $user->hasAnyRole(['reseller_owner']),
-            'hasRole_super_admin' => $user->hasRole('super_admin'),
-            'hasRole_Super_Admin' => $user->hasRole('Super Admin'),
-        ]
-    ], 200, [], JSON_PRETTY_PRINT);
-})->middleware('web');
+// Debug route REMOVED for security (was exposing user details and permissions)
 
 // Redirect old business routes to admin
 Route::redirect('/business', '/admin', 301);
 Route::redirect('/business/login', '/admin/login', 301);
 Route::redirect('/business/{any}', '/admin/{any}', 301)->where('any', '.*');
 
-// Test Checklist Routes (Public Access)
-Route::prefix('test-checklist')->group(function () {
+// Test Checklist Routes (Protected - requires authentication)
+Route::middleware(['auth'])->prefix('test-checklist')->group(function () {
     Route::get('/', [TestChecklistController::class, 'index'])->name('test-checklist.index');
     Route::get('/status', [TestChecklistController::class, 'status'])->name('test-checklist.status');
     Route::post('/test-webhook', [TestChecklistController::class, 'testWebhook'])->name('test-checklist.test-webhook');
@@ -59,8 +25,11 @@ Route::prefix('test-checklist')->group(function () {
 });
 
 // Monitoring Routes
-Route::prefix('monitor')->group(function () {
-    Route::get('/health', [MonitoringController::class, 'health'])->name('monitor.health');
+// Health endpoint stays public for load balancer health checks
+Route::get('/monitor/health', [MonitoringController::class, 'health'])->name('monitor.health');
+
+// Dashboard requires authentication
+Route::middleware(['auth'])->prefix('monitor')->group(function () {
     Route::get('/dashboard', [MonitoringController::class, 'dashboard'])->name('monitor.dashboard');
 });
 
@@ -134,5 +103,17 @@ Route::middleware(['web'])->group(function () {
 });
 
 
+// ============================================================================
+// Session Management Routes (Session-Timeout-Warning-System)
+// ============================================================================
+Route::middleware(['web', 'auth'])->prefix('api/session')->name('session.')->group(function () {
+    Route::post('/ping', [\App\Http\Controllers\SessionController::class, 'ping'])
+        ->name('ping');
+    Route::get('/status', [\App\Http\Controllers\SessionController::class, 'status'])
+        ->name('status');
+});
+
 require __DIR__.'/auth.php';
 require __DIR__.'/web-test.php';
+
+
