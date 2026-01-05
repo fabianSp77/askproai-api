@@ -233,6 +233,65 @@ class ExchangeLogService
     }
 
     /**
+     * Log an internal exchange (job processing, async operations).
+     *
+     * DRY-001: Centralized method for job exchange logging.
+     * Use this instead of direct ServiceGatewayExchangeLog::create() in jobs.
+     *
+     * @param string $operation Operation name (e.g., 'audio-storage', 'enrichment', 'delivery')
+     * @param string $status Status code: 'success', 'failed', 'skipped', 'timeout'
+     * @param ServiceCase|null $case The service case (if available)
+     * @param array $context Additional context data to log
+     * @param string|null $error Error message if failed
+     * @param int $attemptNo Current attempt number
+     * @param int $maxAttempts Maximum attempts
+     */
+    public function logInternal(
+        string $operation,
+        string $status,
+        ?\App\Models\ServiceCase $case = null,
+        array $context = [],
+        ?string $error = null,
+        int $attemptNo = 1,
+        int $maxAttempts = 1
+    ): ?ServiceGatewayExchangeLog {
+        // Map status to HTTP status code for consistency
+        $statusCode = match ($status) {
+            'success' => 200,
+            'skipped' => 204,
+            'timeout' => 408,
+            'pending' => 202,
+            default => 500,
+        };
+
+        return $this->log(
+            direction: 'internal',
+            endpoint: $operation,
+            method: 'PROCESS',
+            requestBody: array_merge(
+                $case ? ['case_id' => $case->id, 'call_id' => $case->call_id] : [],
+                $context
+            ),
+            responseBody: array_merge(
+                ['status' => $status],
+                $error ? ['error' => $error] : []
+            ),
+            statusCode: $statusCode,
+            durationMs: 0,
+            callId: $case?->call_id,
+            serviceCaseId: $case?->id,
+            companyId: $case?->company_id,
+            correlationId: $case ? $case->id . '-' . $operation . '-' . now()->format('His') : null,
+            attemptNo: $attemptNo,
+            maxAttempts: $maxAttempts,
+            errorClass: $error ? 'JobError' : null,
+            errorMessage: $error,
+            parentEventId: null,
+            headers: null
+        );
+    }
+
+    /**
      * Create exchange log with full redaction.
      */
     private function log(
