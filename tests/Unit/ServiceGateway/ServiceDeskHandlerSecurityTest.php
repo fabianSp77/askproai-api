@@ -392,4 +392,75 @@ class ServiceDeskHandlerSecurityTest extends TestCase
             $this->assertStringNotContainsString('H-002', $responseData['error'] ?? '');
         }
     }
+
+    // =========================================================================
+    // Rate Limiting Tests
+    // =========================================================================
+
+    /**
+     * @test
+     * @group security
+     * @group rate-limiting
+     */
+    public function rate_limit_constants_are_defined(): void
+    {
+        $reflection = new ReflectionClass(ServiceDeskHandler::class);
+
+        $rateLimitPerCall = $reflection->getConstant('RATE_LIMIT_PER_CALL');
+        $rateLimitDecay = $reflection->getConstant('RATE_LIMIT_DECAY_SECONDS');
+
+        $this->assertEquals(20, $rateLimitPerCall, 'Rate limit should be 20 ops per call');
+        $this->assertEquals(60, $rateLimitDecay, 'Decay should be 60 seconds');
+    }
+
+    /**
+     * @test
+     * @group security
+     * @group rate-limiting
+     */
+    public function handle_returns_429_when_rate_limited(): void
+    {
+        // Flush rate limiter to start fresh
+        \Illuminate\Support\Facades\RateLimiter::clear("service_desk:call_rate_test:ops");
+
+        // Mock call context for non-critical operation
+        $this->mockCallLifecycle
+            ->shouldReceive('getCallContext')
+            ->andReturn(null);
+
+        // Hit the rate limit (20 times)
+        for ($i = 0; $i < 20; $i++) {
+            \Illuminate\Support\Facades\RateLimiter::hit("service_desk:call_rate_test:ops", 60);
+        }
+
+        // Now the next request should be rate limited
+        $response = $this->handler->handle('detect_intent', [], 'call_rate_test');
+
+        $this->assertEquals(429, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertFalse($responseData['success']);
+        $this->assertStringContainsString('Rate limit', $responseData['error']);
+        $this->assertArrayHasKey('retry_after', $responseData);
+    }
+
+    /**
+     * @test
+     * @group security
+     * @group rate-limiting
+     */
+    public function handle_allows_requests_within_rate_limit(): void
+    {
+        // Fresh rate limiter state
+        \Illuminate\Support\Facades\RateLimiter::clear("service_desk:call_within_limit:ops");
+
+        // Mock for non-critical operation
+        $this->mockCallLifecycle
+            ->shouldReceive('getCallContext')
+            ->andReturn(null);
+
+        // First request should not be rate limited (returns error for other reasons, not 429)
+        $response = $this->handler->handle('detect_intent', [], 'call_within_limit');
+
+        $this->assertNotEquals(429, $response->getStatusCode(), 'First request should not be rate limited');
+    }
 }

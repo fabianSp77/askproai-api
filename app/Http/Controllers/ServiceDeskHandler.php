@@ -14,6 +14,7 @@ use App\Jobs\ServiceGateway\ProcessCallRecordingJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Exception;
 
 /**
@@ -42,6 +43,22 @@ use Exception;
 class ServiceDeskHandler extends Controller
 {
     /**
+     * Cache TTL for issue/category data (H-001 fix: reduced from 3600s)
+     */
+    private const CACHE_TTL_SECONDS = 300;
+
+    /**
+     * Rate limiting: Max operations per call per minute
+     * Prevents DoS and abuse of service desk functions
+     */
+    private const RATE_LIMIT_PER_CALL = 20;
+
+    /**
+     * Rate limiting: Decay time in seconds (1 minute)
+     */
+    private const RATE_LIMIT_DECAY_SECONDS = 60;
+
+    /**
      * @param ServiceDeskLockService $lockService Lock and idempotency service
      * @param CallLifecycleService $callLifecycle Call context resolution
      */
@@ -49,6 +66,91 @@ class ServiceDeskHandler extends Controller
         private ServiceDeskLockService $lockService,
         private CallLifecycleService $callLifecycle
     ) {}
+
+    /**
+     * H-002: API Authorization Guard
+     *
+     * IMPORTANT: ServiceDeskHandler uses API-based authorization, NOT Laravel Gate.
+     * Traditional Laravel authorization requires an authenticated User model.
+     * For Retell webhooks, the "actor" is the Retell system, authenticated via:
+     *
+     * 1. VerifyRetellWebhookSignature middleware (validates signature)
+     * 2. Call context lookup (validates call exists in our system)
+     * 3. Company-scoped operations (validates tenant isolation)
+     * 4. CRIT-003 category validation (validates category belongs to company)
+     *
+     * This method provides explicit validation for defense-in-depth.
+     *
+     * @param string $callId The Retell call ID
+     * @param string $operation The operation being performed
+     * @return object|null The validated call context, or null if unauthorized
+     */
+    private function validateApiContext(string $callId, string $operation): ?object
+    {
+        // Get call context - this is our "authentication"
+        $callContext = $this->callLifecycle->getCallContext($callId);
+
+        if (!$callContext) {
+            Log::warning('[ServiceDeskHandler] H-002: Unauthorized - no call context', [
+                'call_id' => $callId,
+                'operation' => $operation,
+            ]);
+            return null;
+        }
+
+        if (!$callContext->company_id) {
+            Log::warning('[ServiceDeskHandler] H-002: Unauthorized - no company_id', [
+                'call_id' => $callId,
+                'operation' => $operation,
+            ]);
+            return null;
+        }
+
+        // Additional validation: Ensure the call is in a valid state
+        if (isset($callContext->status) && in_array($callContext->status, ['cancelled', 'rejected'])) {
+            Log::warning('[ServiceDeskHandler] H-002: Unauthorized - call in invalid state', [
+                'call_id' => $callId,
+                'operation' => $operation,
+                'status' => $callContext->status,
+            ]);
+            return null;
+        }
+
+        return $callContext;
+    }
+
+    /**
+     * Build tenant-isolated cache key (H-001: Multi-Tenancy Guard)
+     *
+     * CRITICAL: Cache keys MUST include company_id to prevent cross-tenant data leakage.
+     * If company_id cannot be determined, falls back to call_id only but logs a warning.
+     *
+     * @param string $type Cache key type (issue, category)
+     * @param string $callId Retell call ID
+     * @param int|null $companyId Optional company ID (will be looked up if not provided)
+     * @return string Tenant-isolated cache key
+     */
+    private function buildCacheKey(string $type, string $callId, ?int $companyId = null): string
+    {
+        // If company_id not provided, try to resolve it from call context
+        if ($companyId === null) {
+            $callContext = $this->callLifecycle->getCallContext($callId);
+            $companyId = $callContext?->company_id;
+        }
+
+        // H-001: Include company_id in cache key for tenant isolation
+        if ($companyId) {
+            return "service_desk:{$companyId}:{$type}:{$callId}";
+        }
+
+        // Fallback: Use call_id only (but log warning - should not happen in production)
+        Log::warning('[ServiceDeskHandler] H-001: Cache key without company_id', [
+            'call_id' => $callId,
+            'type' => $type,
+        ]);
+
+        return "service_desk:{$type}:{$callId}";
+    }
 
     /**
      * Main entry point from RetellFunctionCallHandler
@@ -67,6 +169,38 @@ class ServiceDeskHandler extends Controller
             'call_id' => $callId,
             'parameters' => $parameters,
         ]);
+
+        // H-002: Authorization Guard - validate API context before processing
+        // Skip for non-critical operations (detect_intent is exploratory)
+        $criticalOperations = ['route_ticket', 'finalize_ticket'];
+        if (in_array($functionName, $criticalOperations)) {
+            $callContext = $this->validateApiContext($callId, $functionName);
+            if (!$callContext) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'H-002: Unauthorized - invalid call context',
+                    'message' => 'Der Anrufkontext konnte nicht validiert werden.',
+                ], 403);
+            }
+        }
+
+        // Rate Limiting: Prevent DoS and abuse
+        $rateLimitKey = "service_desk:{$callId}:ops";
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::RATE_LIMIT_PER_CALL)) {
+            $availableIn = RateLimiter::availableIn($rateLimitKey);
+            Log::warning('[ServiceDeskHandler] Rate limit exceeded', [
+                'call_id' => $callId,
+                'function' => $functionName,
+                'available_in_seconds' => $availableIn,
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Rate limit exceeded',
+                'message' => 'Zu viele Anfragen. Bitte warten Sie einen Moment.',
+                'retry_after' => $availableIn,
+            ], 429);
+        }
+        RateLimiter::hit($rateLimitKey, self::RATE_LIMIT_DECAY_SECONDS);
 
         return match($functionName) {
             'collect_issue_details' => $this->collectIssueDetails($parameters, $callId),
@@ -110,7 +244,8 @@ class ServiceDeskHandler extends Controller
             }
 
             // Store in cache for this call session
-            $cacheKey = "service_desk:issue:{$callId}";
+            // H-001: Use tenant-isolated cache key with company_id
+            $cacheKey = $this->buildCacheKey('issue', $callId);
             $issueData = [
                 'subject' => $params['subject'],
                 'description' => $params['description'],
@@ -121,7 +256,7 @@ class ServiceDeskHandler extends Controller
                 'collected_at' => now()->toIso8601String(),
             ];
 
-            cache()->put($cacheKey, $issueData, 3600); // 1 hour
+            cache()->put($cacheKey, $issueData, self::CACHE_TTL_SECONDS);
 
             Log::info('[ServiceDeskHandler] Issue details collected', [
                 'call_id' => $callId,
@@ -179,7 +314,8 @@ class ServiceDeskHandler extends Controller
             $categoryId = $params['category_id'] ?? null;
 
             // Store categorization in cache
-            $cacheKey = "service_desk:category:{$callId}";
+            // H-001: Use tenant-isolated cache key with company_id
+            $cacheKey = $this->buildCacheKey('category', $callId);
             $categoryData = [
                 'case_type' => $caseType,
                 'priority' => $priority,
@@ -189,7 +325,7 @@ class ServiceDeskHandler extends Controller
                 'categorized_at' => now()->toIso8601String(),
             ];
 
-            cache()->put($cacheKey, $categoryData, 3600); // 1 hour
+            cache()->put($cacheKey, $categoryData, self::CACHE_TTL_SECONDS);
 
             Log::info('[ServiceDeskHandler] Request categorized', [
                 'call_id' => $callId,
@@ -299,8 +435,9 @@ class ServiceDeskHandler extends Controller
                 }
 
                 // Retrieve cached issue and category data
-                $issueData = cache()->get("service_desk:issue:{$callId}", []);
-                $categoryData = cache()->get("service_desk:category:{$callId}", []);
+                // H-001: Use tenant-isolated cache keys with company_id
+                $issueData = cache()->get($this->buildCacheKey('issue', $callId, $callContext->company_id), []);
+                $categoryData = cache()->get($this->buildCacheKey('category', $callId, $callContext->company_id), []);
 
                 // Merge with params (params take precedence)
                 $subject = $params['subject'] ?? $issueData['subject'] ?? 'Neues Anliegen';
@@ -405,8 +542,9 @@ class ServiceDeskHandler extends Controller
                 ProcessCallRecordingJob::dispatch($case)->delay(now()->addSeconds(30));
 
                 // Clean up cached data
-                cache()->forget("service_desk:issue:{$callId}");
-                cache()->forget("service_desk:category:{$callId}");
+                // H-001: Use tenant-isolated cache keys with company_id
+                cache()->forget($this->buildCacheKey('issue', $callId, $callContext->company_id));
+                cache()->forget($this->buildCacheKey('category', $callId, $callContext->company_id));
 
                 Log::info('[ServiceDeskHandler] Case created successfully', [
                     'call_id' => $callId,
