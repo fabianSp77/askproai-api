@@ -8,6 +8,7 @@ use App\Models\RetellCallSession;
 use App\Models\ServiceCase;
 use App\Models\ServiceOutputConfiguration;
 use App\Services\Audio\AudioStorageService;
+use App\Services\RelativeTimeParser;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -25,19 +26,16 @@ use Illuminate\Support\Facades\URL;
  *
  * Unified backup email with configurable features for different use cases.
  *
- * Modes:
- * - MODE_TECHNICAL: Full technical details with transcript (for partners like Visionary Data)
- * - MODE_ADMINISTRATIVE: Clean, sanitized format with JSON attachment (for IT-Systemhaus)
- *
  * Features (configurable per ServiceOutputConfiguration):
- * - Transcript: Chat format in HTML, plain text in JSON
+ * - Transcript: Chat format in HTML
  * - Summary: AI-generated call summary
  * - Audio: none | link (signed URL) | attachment (if <10MB)
- * - JSON attachment: Full ticket data as file
+ * - JSON attachment: Single case JSON (identical to webhook payload)
  *
  * Security:
- * - NO external provider URLs (Retell recording_url) in output
- * - Provider names sanitized (retell_call_id → anruf_referenz)
+ * - NO internal IDs exposed (case_id, company_id, customer_id, etc.)
+ * - NO external provider references (Retell URLs/IDs)
+ * - Uses opaque ticket reference (TKT-YYYY-XXXXX) instead
  * - Audio via signed internal URLs only
  *
  * @package App\Mail
@@ -80,19 +78,19 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     private bool $includeSummary = true;
 
     /**
-     * Whether to sanitize provider references.
+     * Whether to attach case JSON file (webhook-compatible format).
      */
-    private bool $sanitizeProviderRefs = true;
-
-    /**
-     * Whether to attach JSON file.
-     */
-    private bool $attachJson = true;
+    private bool $attachCaseJson = true;
 
     /**
      * Audio option: none, link, attachment.
      */
     private string $audioOption = 'none';
+
+    /**
+     * Whether to show admin link in email.
+     */
+    private bool $showAdminLink = false;
 
     /**
      * Loaded transcript segments.
@@ -110,9 +108,9 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     private string $plainTranscript = '';
 
     /**
-     * Sanitized JSON data for display and attachment.
+     * Case JSON payload (webhook-compatible format for attachment).
      */
-    private array $sanitizedData = [];
+    private array $casePayload = [];
 
     /**
      * Whether transcript was truncated.
@@ -153,8 +151,10 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
             $this->loadTranscriptData();
         }
 
-        // Build sanitized data
-        $this->sanitizedData = $this->buildSanitizedData();
+        // Build case payload (webhook-compatible format for attachment)
+        if ($this->attachCaseJson) {
+            $this->casePayload = $this->buildWebhookPayload();
+        }
 
         // Generate audio URL if needed
         if ($this->audioOption !== 'none' && $this->case->audio_object_key) {
@@ -163,57 +163,62 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Configure features based on config and mode detection.
+     * Configure features based on config settings.
      */
     private function configureFromSettings(?ServiceOutputConfiguration $config): void
     {
-        // Auto-detect mode from config name
-        if ($this->isVisionaryConfig($config)) {
-            $this->mode = self::MODE_TECHNICAL;
+        if (!$config) {
+            return;
+        }
+
+        // Set mode from explicit email_template_type
+        $templateType = $config->email_template_type ?? 'admin';
+        $this->mode = match ($templateType) {
+            'technical' => self::MODE_TECHNICAL,
+            'admin' => self::MODE_ADMINISTRATIVE,
+            default => self::MODE_ADMINISTRATIVE,
+        };
+
+        // Enable transcript for technical mode by default
+        if ($this->mode === self::MODE_TECHNICAL) {
             $this->includeTranscript = true;
-            $this->sanitizeProviderRefs = false;
-            $this->attachJson = false; // Visionary gets inline JSON only
         }
 
-        // Override from config settings if available
-        if ($config) {
-            $this->includeTranscript = $config->include_transcript ?? $this->includeTranscript;
-            $this->includeSummary = $config->include_summary ?? $this->includeSummary;
-            $this->audioOption = $config->email_audio_option ?? 'none';
-        }
+        // Override from config settings
+        $this->includeTranscript = $config->include_transcript ?? $this->includeTranscript;
+        $this->includeSummary = $config->include_summary ?? $this->includeSummary;
+        $this->audioOption = $config->email_audio_option ?? 'none';
+        $this->showAdminLink = $config->email_show_admin_link ?? true;
 
-        Log::debug('[BackupNotificationMail] Configured', [
+        Log::debug('[BackupNotificationMail] Configured from settings', [
             'case_id' => $this->case->id,
+            'email_template_type' => $templateType,
             'mode' => $this->mode,
             'include_transcript' => $this->includeTranscript,
             'include_summary' => $this->includeSummary,
             'audio_option' => $this->audioOption,
-            'sanitize_providers' => $this->sanitizeProviderRefs,
+            'show_admin_link' => $this->showAdminLink,
         ]);
     }
 
-    /**
-     * Check if config is for Visionary Data (technical mode).
-     */
-    private function isVisionaryConfig(?ServiceOutputConfiguration $config): bool
-    {
-        if (!$config) {
-            return false;
-        }
-
-        $name = strtolower($config->name ?? '');
-        return str_contains($name, 'visionary');
-    }
-
+    
     /**
      * Load all required relationships.
+     * Includes nested phoneNumber for Servicenummer and Zugehöriges Unternehmen display.
      */
     private function loadRelationships(): void
     {
-        $relations = ['category', 'customer', 'company', 'call'];
+        $relations = [
+            'category',
+            'customer',
+            'company',
+            'call.phoneNumber.company',
+            'call.phoneNumber.branch',
+        ];
 
         foreach ($relations as $relation) {
-            if (!$this->case->relationLoaded($relation)) {
+            $topLevel = \Illuminate\Support\Str::before($relation, '.');
+            if (!$this->case->relationLoaded($topLevel)) {
                 $this->case->load($relation);
             }
         }
@@ -241,24 +246,84 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Load transcript segments from RetellCallSession.
+     * Load transcript segments from RetellCallSession or fallback to Call.transcript.
      */
     private function loadTranscriptSegments(): Collection
     {
-        if (!$this->case->call || !$this->case->call->retell_call_id) {
+        if (!$this->case->call) {
             return collect();
         }
 
-        $retellCallId = $this->case->call->retell_call_id;
-        $session = RetellCallSession::where('call_id', $retellCallId)->first();
+        // Try RetellTranscriptSegment first (detailed segments with timing)
+        if ($this->case->call->retell_call_id) {
+            $retellCallId = $this->case->call->retell_call_id;
+            $session = RetellCallSession::where('call_id', $retellCallId)->first();
 
-        if (!$session) {
+            if ($session && $session->transcriptSegments()->exists()) {
+                return $session->transcriptSegments()
+                    ->orderBy('segment_sequence')
+                    ->get();
+            }
+        }
+
+        // Fallback: Parse Call.transcript field
+        return $this->parseCallTranscript();
+    }
+
+    /**
+     * Parse Call.transcript plain text into segment-like objects.
+     *
+     * Format expected: "Agent: Text here...\nUser: Text here...\n"
+     *
+     * @return Collection
+     */
+    private function parseCallTranscript(): Collection
+    {
+        $transcript = $this->case->call?->transcript;
+
+        if (empty($transcript)) {
+            Log::debug('[BackupNotificationMail] No transcript in Call model', [
+                'case_id' => $this->case->id,
+                'call_id' => $this->case->call?->id,
+            ]);
             return collect();
         }
 
-        return $session->transcriptSegments()
-            ->orderBy('segment_sequence')
-            ->get();
+        Log::info('[BackupNotificationMail] Using Call.transcript fallback', [
+            'case_id' => $this->case->id,
+            'transcript_length' => strlen($transcript),
+        ]);
+
+        $segments = [];
+        $sequence = 0;
+
+        // Split by newlines and parse "Role: Text" format
+        $lines = preg_split('/\r?\n/', $transcript);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            // Match "Agent: " or "User: " prefix
+            if (preg_match('/^(Agent|User):\s*(.+)$/i', $line, $matches)) {
+                $role = strtolower($matches[1]) === 'agent' ? 'agent' : 'user';
+                $text = trim($matches[2]);
+
+                if (!empty($text)) {
+                    $segments[] = (object) [
+                        'role' => $role,
+                        'text' => $text,
+                        'call_offset_ms' => null,
+                        'sentiment' => null,
+                        'segment_sequence' => $sequence++,
+                    ];
+                }
+            }
+        }
+
+        return collect($segments);
     }
 
     /**
@@ -397,11 +462,14 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        // Extract metadata for view (avoiding internal IDs)
+        $meta = $this->case->ai_metadata ?? [];
+
         return new Content(
             view: 'emails.service-cases.backup-notification',
             with: [
                 'case' => $this->case,
-                'jsonData' => $this->sanitizedData,
+                'meta' => $meta,
                 'mode' => $this->mode,
                 'includeTranscript' => $this->includeTranscript,
                 'includeSummary' => $this->includeSummary,
@@ -411,6 +479,7 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
                 'audioOption' => $this->audioOption,
                 'audioUrl' => $this->audioUrl,
                 'audioSizeExceeded' => $this->audioSizeExceeded,
+                'showAdminLink' => $this->showAdminLink,
             ]
         );
     }
@@ -424,21 +493,28 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     {
         $attachments = [];
 
-        // JSON attachment
-        if ($this->attachJson) {
+        // Case JSON attachment (webhook-compatible format)
+        // Single attachment identical to what's sent via webhook
+        if ($this->attachCaseJson && !empty($this->casePayload)) {
             $filename = sprintf(
-                'ticket_%s_%s.json',
+                'case_%s_%s.json',
                 $this->case->formatted_id,
                 $this->case->created_at->format('Y-m-d_His')
             );
 
             $jsonContent = json_encode(
-                $this->sanitizedData,
+                $this->casePayload,
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
             );
 
             $attachments[] = Attachment::fromData(fn () => $jsonContent, $filename)
                 ->withMime('application/json');
+
+            Log::debug('[BackupNotificationMail] Case JSON attached', [
+                'case_id' => $this->case->id,
+                'filename' => $filename,
+                'size_bytes' => strlen($jsonContent),
+            ]);
         }
 
         // Audio attachment (only if configured and within size limit)
@@ -469,141 +545,170 @@ class BackupNotificationMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Build sanitized data array.
+     * Enrich problem_since with absolute timestamp if not already enriched.
+     *
+     * Backwards compatible: enriches old cases that only have relative time.
+     * New cases already have enriched format from ServiceDeskHandler.
+     *
+     * @param string|null $value The problem_since value
+     * @return string|null Enriched value with absolute timestamp
      */
-    private function buildSanitizedData(): array
-    {
-        $meta = $this->case->ai_metadata ?? [];
-
-        // Build sanitized metadata
-        $sanitizedMeta = $this->sanitizeProviderRefs
-            ? $this->sanitizeMetadata($meta)
-            : $meta;
-
-        $data = [
-            // Ticket identification
-            'ticket' => [
-                'id' => $this->case->formatted_id,
-                'interne_id' => $this->case->id,
-                'erstellt_am' => $this->case->created_at?->timezone('Europe/Berlin')->format('d.m.Y H:i:s'),
-                'aktualisiert_am' => $this->case->updated_at?->timezone('Europe/Berlin')->format('d.m.Y H:i:s'),
-            ],
-
-            // Classification
-            'klassifizierung' => [
-                'kategorie' => $this->case->category?->name ?? 'Allgemein',
-                'kategorie_id' => $this->case->category_id,
-                'typ' => $this->getTypeLabel($this->case->case_type),
-                'prioritaet' => $this->getPriorityLabel($this->case->priority),
-                'status' => $this->getStatusLabel($this->case->status),
-            ],
-
-            // Issue content
-            'anfrage' => [
-                'betreff' => $this->case->subject,
-                'beschreibung' => $this->case->description,
-            ],
-
-            // Contact information
-            'kontakt' => [
-                'name' => $sanitizedMeta['kunde_name'] ?? $meta['customer_name'] ?? null,
-                'telefon' => $sanitizedMeta['kunde_telefon'] ?? $meta['customer_phone'] ?? null,
-                'email' => $sanitizedMeta['kunde_email'] ?? $meta['customer_email'] ?? null,
-                'standort' => $sanitizedMeta['kunde_standort'] ?? $meta['customer_location'] ?? null,
-            ],
-
-            // Additional context
-            'kontext' => [
-                'problem_seit' => $sanitizedMeta['problem_seit'] ?? $meta['problem_since'] ?? null,
-                'weitere_betroffen' => $this->formatOthersAffected($meta['others_affected'] ?? null),
-                'anruf_referenz' => $this->sanitizeProviderRefs
-                    ? ($sanitizedMeta['anruf_referenz'] ?? null)
-                    : ($meta['retell_call_id'] ?? $this->case->call?->retell_call_id ?? null),
-            ],
-
-            // Company info
-            'unternehmen' => [
-                'name' => $this->case->company?->name ?? config('app.name'),
-                'id' => $this->case->company_id,
-            ],
-
-            // Metadata
-            'meta' => [
-                'quelle' => 'voice_intake',
-                'version' => '2.0',
-                'generiert_am' => now()->timezone('Europe/Berlin')->format('d.m.Y H:i:s'),
-            ],
-        ];
-
-        // Add summary if enabled
-        if ($this->includeSummary) {
-            $data['zusammenfassung'] = $meta['summary'] ?? $this->case->call?->summary ?? null;
-        }
-
-        // Add transcript if enabled
-        if ($this->includeTranscript && !empty($this->plainTranscript)) {
-            $data['transkript'] = [
-                'text' => $this->plainTranscript,
-                'gekuerzt' => $this->transcriptTruncated,
-                'gesamtzeichen' => $this->originalTranscriptLength,
-            ];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Sanitize metadata to remove external provider references.
-     */
-    private function sanitizeMetadata(array $meta): array
-    {
-        $sanitized = [];
-
-        // Map fields with German names
-        $fieldMapping = [
-            'customer_name' => 'kunde_name',
-            'customer_phone' => 'kunde_telefon',
-            'customer_email' => 'kunde_email',
-            'customer_location' => 'kunde_standort',
-            'problem_since' => 'problem_seit',
-            'others_affected' => 'weitere_betroffen',
-            'retell_call_id' => 'anruf_referenz',
-        ];
-
-        foreach ($fieldMapping as $original => $sanitizedKey) {
-            if (isset($meta[$original]) && !empty($meta[$original])) {
-                $sanitized[$sanitizedKey] = $meta[$original];
-            }
-        }
-
-        return $sanitized;
-    }
-
-    /**
-     * Format others_affected value.
-     */
-    private function formatOthersAffected(mixed $value): ?string
+    private function enrichProblemSince(?string $value): ?string
     {
         if (empty($value)) {
             return null;
         }
 
-        if (is_bool($value)) {
-            return $value ? 'Ja' : 'Nein';
+        // Check if already enriched - detect various enrichment patterns:
+        // Pattern 1: "(17:31 Uhr, Di. 23. Dez.)" - parentheses format
+        // Pattern 2: "Mi. 24. Dez. 09:00 –" - new format with weekday, date, time
+        // Pattern 3: Contains "–" (em-dash) typically added during enrichment
+        $alreadyEnrichedPatterns = [
+            '/\(\d{1,2}:\d{2}\s*Uhr/',                           // (17:31 Uhr...
+            '/[A-Z][a-z]\.\s+\d{1,2}\.\s+[A-Z][a-z]{2}\.\s+\d{1,2}:\d{2}/', // Mi. 24. Dez. 09:00
+            '/\d{1,2}:\d{2}\s+Uhr,\s+[A-Z][a-z]\./',            // 09:00 Uhr, Mi.
+        ];
+
+        foreach ($alreadyEnrichedPatterns as $pattern) {
+            if (preg_match($pattern, $value)) {
+                return $value;
+            }
         }
 
-        if (is_string($value)) {
-            $lower = strtolower(trim($value));
-            if (in_array($lower, ['ja', 'yes', 'true', '1'])) {
-                return 'Ja';
+        // Parse and enrich using RelativeTimeParser
+        $parser = new RelativeTimeParser();
+        $referenceTime = $this->case->created_at ?? now();
+
+        return $parser->format($value, $referenceTime);
+    }
+
+    /**
+     * Build webhook-style payload for technical integration.
+     *
+     * This mirrors WebhookOutputHandler::buildPayload() format to provide
+     * the same data structure that external systems receive via webhook.
+     *
+     * @return array Webhook-compatible payload
+     */
+    private function buildWebhookPayload(): array
+    {
+        $aiMeta = $this->case->ai_metadata ?? [];
+
+        // Generate audio URL if feature enabled and audio available
+        $audioUrl = null;
+        $audioTtl = $this->config?->audio_url_ttl_minutes ?? config('gateway.delivery.audio_url_ttl_minutes', 60);
+
+        if (config('gateway.features.audio_in_webhook', false) && $this->case->audio_object_key) {
+            try {
+                $audioService = app(AudioStorageService::class);
+                $audioUrl = $audioService->getPresignedUrl($this->case->audio_object_key, $audioTtl);
+            } catch (\Exception $e) {
+                Log::debug('[BackupNotificationMail] Could not generate audio URL', [
+                    'case_id' => $this->case->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
-            if (in_array($lower, ['nein', 'no', 'false', '0'])) {
-                return 'Nein';
-            }
-            return $value;
         }
 
-        return (string) $value;
+        // Clean payload - no internal IDs, no architecture hints
+        // Matches WebhookOutputHandler format
+        $ticketReference = sprintf('TKT-%s-%05d', $this->case->created_at->format('Y'), $this->case->id);
+
+        $payload = [
+            'ticket' => [
+                'reference' => $ticketReference,
+                'summary' => $this->case->subject,
+                'description' => $this->case->description,
+                'type' => $this->case->case_type,
+                'priority' => $this->case->priority,
+                'category' => $this->case->category?->name ?? 'Allgemein',
+                'created_at' => $this->case->created_at?->toIso8601String(),
+            ],
+            'context' => [
+                'urgency' => $this->case->urgency ?? 'normal',
+                'impact' => $this->case->impact ?? 'normal',
+                'problem_since' => $this->enrichProblemSince($aiMeta['problem_since'] ?? null),
+                'others_affected' => $aiMeta['others_affected'] ?? null,
+            ],
+            'customer' => [
+                'name' => $aiMeta['customer_name'] ?? $this->case->customer?->name ?? null,
+                'phone' => $aiMeta['customer_phone'] ?? $this->case->customer?->phone ?? null,
+                'email' => $aiMeta['customer_email'] ?? $this->case->customer?->email ?? null,
+                'location' => $aiMeta['customer_location'] ?? null,
+            ],
+        ];
+
+        // Add audio URL only if available (no redundant boolean flags)
+        if ($audioUrl) {
+            $payload['audio'] = [
+                'url' => $audioUrl,
+                'expires_at' => now()->addMinutes($audioTtl)->toIso8601String(),
+            ];
+        }
+
+        // Add transcript if available
+        if (!empty($this->plainTranscript)) {
+            $payload['transcript'] = $this->buildTranscriptPayload();
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Build transcript payload for webhook format.
+     */
+    private function buildTranscriptPayload(): array
+    {
+        if ($this->transcriptSegments->isEmpty()) {
+            return [
+                'format' => 'text',
+                'content' => $this->plainTranscript,
+                'segment_count' => 1,
+            ];
+        }
+
+        $segments = [];
+        foreach ($this->transcriptSegments as $segment) {
+            $segments[] = [
+                'role' => $segment->role ?? 'unknown',
+                'content' => $segment->text ?? '',
+                'timestamp' => $this->formatOffsetAsTime($segment->call_offset_ms),
+            ];
+        }
+
+        return [
+            'format' => 'segments',
+            'segments' => $segments,
+            'segment_count' => count($segments),
+            'total_chars' => $this->originalTranscriptLength,
+        ];
+    }
+
+    /**
+     * Map case type to Jira-compatible type.
+     */
+    private function mapCaseType(string $type): string
+    {
+        return match($type) {
+            'incident' => 'Bug',
+            'request' => 'Task',
+            'inquiry' => 'Story',
+            default => 'Task',
+        };
+    }
+
+    /**
+     * Map priority to Jira-compatible priority.
+     */
+    private function mapPriority(string $priority): string
+    {
+        return match($priority) {
+            'critical' => 'Highest',
+            'high' => 'High',
+            'normal' => 'Medium',
+            'low' => 'Low',
+            default => 'Medium',
+        };
     }
 
     /**

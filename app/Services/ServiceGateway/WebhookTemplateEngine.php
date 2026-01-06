@@ -223,7 +223,8 @@ class WebhookTemplateEngine
             $case->load('category.outputConfiguration');
         }
         if (!$case->relationLoaded('call')) {
-            $case->load('call');
+            // Include nested phoneNumber for service number and receiver display
+            $case->load('call.phoneNumber.company', 'call.phoneNumber.branch');
         }
         if (!$case->relationLoaded('customer')) {
             $case->load('customer');
@@ -269,13 +270,16 @@ class WebhookTemplateEngine
                 'location' => $aiMeta['customer_location'] ?? '',
             ],
 
+            // Call details (Servicenummer, Zugehöriges Unternehmen, Gesprächsdauer)
+            'call' => $this->buildCallContext($case),
+
             // Context/problem details
             'context' => [
                 'problem_since' => $this->enrichProblemSince(
                     $aiMeta['problem_since'] ?? null,
                     $case->created_at
                 ),
-                'others_affected' => $aiMeta['others_affected'] ?? false,
+                'others_affected' => $aiMeta['others_affected'] ?? null,
             ],
 
             // Enrichment data
@@ -496,6 +500,62 @@ class WebhookTemplateEngine
         }
 
         return null;
+    }
+
+    /**
+     * Build call context for webhook templates.
+     *
+     * Provides access to:
+     * - called_phone: The phone number that was called (Servicenummer)
+     * - called_company: The company owning the phone number
+     * - called_branch: The branch owning the phone number
+     * - receiver: Combined display format "Branch (Company)" or "Branch (+49...)"
+     * - duration: Human-readable duration (e.g., "4m 23s")
+     * - duration_seconds: Duration in seconds for calculations
+     * - created_at: Call timestamp in ISO8601 format
+     */
+    private function buildCallContext(ServiceCase $case): array
+    {
+        $call = $case->call;
+        if (!$call) {
+            return [
+                'called_phone' => '',
+                'called_company' => '',
+                'called_branch' => '',
+                'receiver' => '',
+                'duration' => '',
+                'duration_seconds' => 0,
+                'created_at' => '',
+            ];
+        }
+
+        $phoneNumber = $call->phoneNumber;
+        $calledPhone = $phoneNumber?->formatted_number ?? $call->to_number ?? '';
+        $calledCompany = $phoneNumber?->company?->name ?? '';
+        $calledBranch = $phoneNumber?->branch?->name ?? '';
+        $branchPhone = $phoneNumber?->branch?->phone_number ?? '';
+
+        // Build receiver display format
+        $receiver = '';
+        if ($calledBranch && $branchPhone) {
+            $receiver = "{$calledBranch} ({$branchPhone})";
+        } elseif ($calledBranch && $calledCompany) {
+            $receiver = "{$calledBranch} ({$calledCompany})";
+        } elseif ($calledBranch) {
+            $receiver = $calledBranch;
+        } elseif ($calledCompany) {
+            $receiver = $calledCompany;
+        }
+
+        return [
+            'called_phone' => $calledPhone,
+            'called_company' => $calledCompany,
+            'called_branch' => $calledBranch,
+            'receiver' => $receiver,
+            'duration' => $call->duration_formatted ?? '',
+            'duration_seconds' => $call->duration ?? 0,
+            'created_at' => $call->created_at?->toIso8601String() ?? '',
+        ];
     }
 
     /**

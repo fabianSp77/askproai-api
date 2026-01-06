@@ -52,17 +52,20 @@ class ServiceCaseNotification extends Mailable implements ShouldQueue
         $this->recipientType = $recipientType;
 
         // Load relationships if not already loaded
-        if (!$case->relationLoaded('category')) {
-            $case->load('category');
-        }
-        if (!$case->relationLoaded('customer')) {
-            $case->load('customer');
-        }
-        if (!$case->relationLoaded('company')) {
-            $case->load('company');
-        }
-        if (!$case->relationLoaded('call')) {
-            $case->load('call');
+        // Includes nested phoneNumber for Servicenummer and Zugehöriges Unternehmen display
+        $relationships = [
+            'category',
+            'customer',
+            'company',
+            'call.phoneNumber.company',
+            'call.phoneNumber.branch',
+        ];
+
+        foreach ($relationships as $relation) {
+            $topLevel = \Illuminate\Support\Str::before($relation, '.');
+            if (!$case->relationLoaded($topLevel)) {
+                $case->load($relation);
+            }
         }
     }
 

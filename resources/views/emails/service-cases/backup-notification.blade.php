@@ -40,6 +40,26 @@
                         ];
 
                         $meta = $case->ai_metadata ?? [];
+
+                        // Servicenummer / Angerufene Nummer Details
+                        $calledPhone = $case->call?->phoneNumber;
+                        $serviceNumber = $calledPhone?->formatted_number ?? $case->call?->to_number ?? null;
+                        $calledCompanyName = $calledPhone?->company?->name ?? null;
+                        $calledBranchName = $calledPhone?->branch?->name ?? null;
+                        $calledBranchPhone = $calledPhone?->branch?->phone_number ?? null;
+                        $callDuration = $case->call?->duration_formatted;
+
+                        // Format: "Berlin (+49 30 123456)" oder nur "AskPro GmbH"
+                        $receiverDisplay = null;
+                        if ($calledBranchName && $calledBranchPhone) {
+                            $receiverDisplay = $calledBranchName . ' (' . $calledBranchPhone . ')';
+                        } elseif ($calledBranchName && $calledCompanyName) {
+                            $receiverDisplay = $calledBranchName . ' (' . $calledCompanyName . ')';
+                        } elseif ($calledBranchName) {
+                            $receiverDisplay = $calledBranchName;
+                        } elseif ($calledCompanyName) {
+                            $receiverDisplay = $calledCompanyName;
+                        }
                     @endphp
 
                     <!-- Priority Header Bar -->
@@ -151,6 +171,62 @@
                                                 <td style="color:#111827; font-size:13px; font-weight:500;">{{ $meta['customer_location'] }}</td>
                                             </tr>
                                             @endif
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
+
+                    {{-- ═══════════════════════════════════════════════════════════════ --}}
+                    {{-- SECTION 2.5: ANRUF-DETAILS (Servicenummer, Zugehöriges Unternehmen, Gesprächsdauer) --}}
+                    {{-- ═══════════════════════════════════════════════════════════════ --}}
+
+                    @if($serviceNumber || $receiverDisplay || $callDuration || $case->call)
+                    <tr>
+                        <td style="padding:0 24px 20px;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-left:3px solid #8b5cf6; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                                <tr>
+                                    <td style="padding:16px 20px;">
+                                        <div style="color:#1f2937; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                            Anruf-Details
+                                        </div>
+                                        <table width="100%" cellspacing="0" cellpadding="0">
+                                            @if($serviceNumber)
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:140px;">Servicenummer</td>
+                                                <td style="padding-bottom:8px;">
+                                                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $serviceNumber) }}" style="color:#2563eb; font-size:13px; font-weight:500; text-decoration:none;">{{ $serviceNumber }}</a>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($receiverDisplay)
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:140px;">Zugehöriges Unternehmen</td>
+                                                <td style="color:#111827; font-size:13px; font-weight:500; padding-bottom:8px;">{{ $receiverDisplay }}</td>
+                                            </tr>
+                                            @endif
+                                            @if($callDuration)
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:140px;">Gesprächsdauer</td>
+                                                <td style="color:#111827; font-size:13px; font-weight:500; padding-bottom:8px;">{{ $callDuration }}</td>
+                                            </tr>
+                                            @endif
+                                            @if($case->call?->retell_call_id)
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; padding-bottom:8px; width:140px;">Anruf-ID</td>
+                                                <td style="color:#6b7280; font-size:11px; font-family:'SF Mono', Monaco, monospace; padding-bottom:8px;">{{ Str::limit($case->call->retell_call_id, 20) }}</td>
+                                            </tr>
+                                            @endif
+                                            <tr>
+                                                <td style="color:#6b7280; font-size:12px; width:140px;">Datum / Uhrzeit</td>
+                                                <td style="color:#111827; font-size:13px; font-weight:500;">
+                                                    {{ ($case->call?->created_at ?? $case->created_at)->timezone('Europe/Berlin')->format('d.m.Y') }}
+                                                    <span style="color:#6b7280; font-weight:400;">um</span>
+                                                    {{ ($case->call?->created_at ?? $case->created_at)->timezone('Europe/Berlin')->format('H:i') }} Uhr
+                                                </td>
+                                            </tr>
                                         </table>
                                     </td>
                                 </tr>
