@@ -405,6 +405,30 @@ class ServiceOutputConfigurationResource extends Resource
                                                 default => '',
                                             }))
                                             ->visible(fn (Forms\Get $get) => in_array($get('email_template_type'), ['technical', 'admin', 'custom'])),
+
+                                        // Preview Button - opens modal with rendered email
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('preview_email_template')
+                                                ->label('Vorschau anzeigen')
+                                                ->icon('heroicon-o-eye')
+                                                ->color('info')
+                                                ->size('sm')
+                                                ->modalHeading('E-Mail Vorschau')
+                                                ->modalDescription('So sieht die E-Mail mit den aktuellen Einstellungen aus.')
+                                                ->modalWidth('6xl')
+                                                ->modalContent(fn (Forms\Get $get) => view('filament.forms.components.email-preview-modal', [
+                                                    'templateType' => $get('email_template_type') ?? 'standard',
+                                                    'includeTranscript' => (bool) $get('include_transcript'),
+                                                    'includeSummary' => (bool) $get('include_summary'),
+                                                    'audioOption' => $get('email_audio_option') ?? 'none',
+                                                    'showAdminLink' => (bool) $get('email_show_admin_link'),
+                                                    'customSubject' => $get('email_subject_template') ?? '',
+                                                    'customBody' => $get('email_body_template') ?? '',
+                                                ]))
+                                                ->modalSubmitAction(false)
+                                                ->modalCancelActionLabel('Schließen'),
+                                        ])
+                                        ->columnSpanFull(),
                                     ])
                                     ->collapsible()
                                     ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [

@@ -24,6 +24,12 @@ Route::middleware(['auth'])->prefix('test-checklist')->group(function () {
     Route::post('/clear-cache', [TestChecklistController::class, 'clearCache'])->name('test-checklist.clear-cache');
 });
 
+// Admin API Routes (Internal use only)
+Route::middleware(['auth'])->prefix('admin/api')->name('admin.api.')->group(function () {
+    Route::get('output-config/preview', [\App\Http\Controllers\Admin\EmailPreviewController::class, 'preview'])
+        ->name('output-config.preview');
+});
+
 // Monitoring Routes
 // Health endpoint stays public for load balancer health checks
 Route::get('/monitor/health', [MonitoringController::class, 'health'])->name('monitor.health');
