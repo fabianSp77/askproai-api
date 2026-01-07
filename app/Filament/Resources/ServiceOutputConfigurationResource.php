@@ -315,6 +315,41 @@ class ServiceOutputConfigurationResource extends Resource
                                         ServiceOutputConfiguration::TYPE_HYBRID,
                                     ])),
 
+                                // ═══════════════════════════════════════════════════════════════
+                                // INFO-BANNER: E-Mail = Interne Teams (nicht Kunden!)
+                                // ═══════════════════════════════════════════════════════════════
+                                Forms\Components\Placeholder::make('email_purpose_info')
+                                    ->content(new HtmlString('
+                                        <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+                                            <div class="flex items-start gap-3">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-1">📧 E-Mail = Interne Teams</h4>
+                                                    <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                                                        E-Mails werden an <strong>IHRE eigenen Mitarbeiter</strong> gesendet (nicht an Kunden!):
+                                                    </p>
+                                                    <ul class="text-sm text-blue-700 dark:text-blue-300 list-disc list-inside space-y-1">
+                                                        <li>IT-Support Team (z.B. support@firma.de)</li>
+                                                        <li>Helpdesk Mitarbeiter</li>
+                                                        <li>Admins & Techniker</li>
+                                                    </ul>
+                                                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                                        💡 <strong>Tipp:</strong> Für externe Systeme (Jira, ServiceNow, Zendesk) nutzen Sie den <strong>Webhook-Tab</strong>.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    '))
+                                    ->columnSpanFull()
+                                    ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
+                                        ServiceOutputConfiguration::TYPE_EMAIL,
+                                        ServiceOutputConfiguration::TYPE_HYBRID,
+                                    ])),
+
                                 // Email Template Type Selection (replaces magic string detection)
                                 Forms\Components\Section::make('E-Mail Template')
                                     ->description('Art und Format der E-Mail-Benachrichtigung')
@@ -323,20 +358,20 @@ class ServiceOutputConfigurationResource extends Resource
                                         Forms\Components\Select::make('email_template_type')
                                             ->label('Template Typ')
                                             ->options([
-                                                'standard' => 'Standard (interne Benachrichtigung)',
-                                                'technical' => 'Technisch (Backup mit Transkript & JSON)',
-                                                'admin' => 'Admin (IT-Support mit JSON-Anhang)',
-                                                'custom' => 'Custom (eigenes Template)',
+                                                'standard' => '📋 Standard - Für Team-Benachrichtigungen',
+                                                'technical' => '🔬 Technisch - Für Archivierung & Monitoring',
+                                                'admin' => '🛠️ IT-Support - Für Helpdesk-Teams',
+                                                'custom' => '⚙️ Custom - Eigenes Template',
                                             ])
                                             ->default('standard')
                                             ->required()
                                             ->live()
                                             ->helperText(fn (Forms\Get $get) => match ($get('email_template_type')) {
-                                                'standard' => 'Einfache Benachrichtigung für interne Teams',
-                                                'technical' => 'Technisches Format mit Transkript, JSON-Anhang - ideal für Backup/Monitoring',
-                                                'admin' => 'IT-Support Format mit JSON-Anhang und strukturierten Daten',
-                                                'custom' => 'Eigenes Template über das Feld unten definieren',
-                                                default => 'Wähle ein Template-Format',
+                                                'standard' => '✅ Einfache, lesbare Benachrichtigung. Ideal für: Helpdesk, Support-Team, Admins',
+                                                'technical' => '📦 Vollständiges Transkript + JSON-Anhang. Ideal für: Automatische Archivierung, Daten-Backup',
+                                                'admin' => '🔧 Strukturierte Ticket-Info + JSON + Admin-Link. Ideal für: IT-Systemhaus, technisches Support-Team',
+                                                'custom' => '✏️ Definiere dein eigenes Template-Format im Abschnitt unten',
+                                                default => 'Wähle ein Template-Format für deine Benachrichtigungen',
                                             }),
 
                                         Forms\Components\Placeholder::make('template_preview')
@@ -379,9 +414,26 @@ class ServiceOutputConfigurationResource extends Resource
 
                                 // Email Configuration Section
                                 Forms\Components\Section::make('Empfänger')
-                                    ->description('Wer soll benachrichtigt werden? Toggle = Aktiv/Pausiert')
+                                    ->description('Wer soll benachrichtigt werden?')
                                     ->icon('heroicon-o-users')
                                     ->schema([
+                                        // Hilfe-Text für Empfänger-Verwaltung
+                                        Forms\Components\Placeholder::make('recipient_help')
+                                            ->content(new HtmlString('
+                                                <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 mb-2">
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                                        <strong>💡 So funktionierts:</strong>
+                                                    </p>
+                                                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+                                                        <li><strong>Mehrere Empfänger:</strong> Alle aktiven E-Mails erhalten die Benachrichtigung gleichzeitig</li>
+                                                        <li><strong>Pausieren (Aktiv-Toggle aus):</strong> Temporär deaktivieren ohne zu löschen - <em>ideal für Tests!</em></li>
+                                                        <li><strong>Test-Tipp:</strong> Pausiere alle außer einer Test-E-Mail, um nur dort zu empfangen</li>
+                                                    </ul>
+                                                </div>
+                                            '))
+                                            ->hiddenLabel()
+                                            ->columnSpanFull(),
+
                                         // Repeater: Each email with active/paused toggle
                                         Forms\Components\Repeater::make('recipient_entries')
                                             ->label('E-Mail Empfänger')
@@ -398,6 +450,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                     ->inline(false)
                                                     ->onColor('success')
                                                     ->offColor('warning')
+                                                    ->helperText('Aus = Pausiert')
                                                     ->columnSpan(1),
                                             ])
                                             ->columns(3)
@@ -506,13 +559,17 @@ class ServiceOutputConfigurationResource extends Resource
                                         Forms\Components\Select::make('email_audio_option')
                                             ->label('Audio-Aufnahme')
                                             ->options([
-                                                'none' => 'Nicht einbinden',
-                                                'link' => 'Als Download-Link (empfohlen)',
-                                                'attachment' => 'Als Anhang (max. 10 MB)',
+                                                'none' => '🚫 Nicht einbinden',
+                                                'link' => '🔗 Als Download-Link (empfohlen)',
+                                                'attachment' => '📎 Als Anhang (max. 10 MB)',
                                             ])
                                             ->default('none')
                                             ->live()
-                                            ->helperText('Link = Download-Button in der E-Mail (24h gultig). Anhang = MP3-Datei direkt angehängt.')
+                                            ->helperText(fn (Forms\Get $get) => match ($get('email_audio_option')) {
+                                                'link' => '✅ Download-Button in der E-Mail. Link ist 24 Stunden gültig. Sicher & platzsparend!',
+                                                'attachment' => '⚠️ MP3 direkt angehängt. Bei Aufnahmen >10 MB wird automatisch auf Link umgestellt.',
+                                                default => 'Audio wird nicht in der E-Mail eingebunden. Aktiviere "Auf Enrichment warten" im Erweitert-Tab für Audio-Daten.',
+                                            })
                                             ->columnSpan(2),
                                     ])
                                     ->columns(2)
@@ -569,6 +626,44 @@ class ServiceOutputConfigurationResource extends Resource
                                         </div>
                                     '))
                                     ->visible(fn (Forms\Get $get): bool => !in_array($get('output_type'), [
+                                        ServiceOutputConfiguration::TYPE_WEBHOOK,
+                                        ServiceOutputConfiguration::TYPE_HYBRID,
+                                    ])),
+
+                                // Webhook Purpose Info Banner
+                                Forms\Components\Placeholder::make('webhook_purpose_info')
+                                    ->content(new HtmlString('
+                                        <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
+                                            <div class="flex items-start gap-3">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                                    </svg>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">🔗 Webhook = Externe Systeme</h4>
+                                                    <p class="text-sm text-amber-700 dark:text-amber-300 mb-2">
+                                                        Webhooks senden Ticket-Daten automatisch an <strong>externe Tools & Ticketsysteme</strong>:
+                                                    </p>
+                                                    <div class="flex flex-wrap gap-2 mt-2">
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">Jira</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">ServiceNow</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">OTRS</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">Zendesk</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">Slack</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">MS Teams</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">n8n</span>
+                                                        <span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">Zapier</span>
+                                                    </div>
+                                                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                                                        💡 <strong>Tipp:</strong> Nutze ein <strong>Preset</strong> für schnelle Einrichtung oder konfiguriere manuell.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    '))
+                                    ->columnSpanFull()
+                                    ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
                                         ServiceOutputConfiguration::TYPE_WEBHOOK,
                                         ServiceOutputConfiguration::TYPE_HYBRID,
                                     ])),
@@ -817,6 +912,43 @@ class ServiceOutputConfigurationResource extends Resource
                                     ->description('Steuerung der 2-Phase Delivery: Warten auf Enrichment (Transkript, Audio) vor Zustellung')
                                     ->icon('heroicon-o-clock')
                                     ->schema([
+                                        // Decision Helper - IMMER sichtbar
+                                        Forms\Components\Placeholder::make('delivery_gate_decision')
+                                            ->content(new HtmlString('
+                                                <div class="grid md:grid-cols-2 gap-3 mb-2">
+                                                    <div class="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3">
+                                                        <div class="font-medium text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                            Sofortige Zustellung
+                                                        </div>
+                                                        <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                                            <li>✅ Schnell: 5-10 Sekunden</li>
+                                                            <li>✅ Einfach & zuverlässig</li>
+                                                            <li>⚠️ Ohne Transkript & Audio</li>
+                                                        </ul>
+                                                        <p class="text-xs text-green-600 dark:text-green-400 mt-2">
+                                                            <strong>Ideal für:</strong> Schnelle Alerts, Echtzeit-Benachrichtigungen
+                                                        </p>
+                                                    </div>
+                                                    <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3">
+                                                        <div class="font-medium text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            Mit Enrichment-Warten
+                                                        </div>
+                                                        <ul class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                                                            <li>✅ Vollständig: Mit Transkript</li>
+                                                            <li>✅ Mit Audio-Aufnahme</li>
+                                                            <li>⚠️ Langsamer: 30-90 Sekunden</li>
+                                                        </ul>
+                                                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                                            <strong>Ideal für:</strong> Dokumentation, Archivierung, Qualitätssicherung
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            '))
+                                            ->hiddenLabel()
+                                            ->columnSpanFull(),
+
                                         Forms\Components\Toggle::make('wait_for_enrichment')
                                             ->label('Auf Transkript & Audio warten')
                                             ->default(false)
