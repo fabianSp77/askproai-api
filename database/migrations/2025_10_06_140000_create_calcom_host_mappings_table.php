@@ -18,7 +18,7 @@ return new class extends Migration
             $table->id();
 
             // Staff relationship (UUID foreign key)
-            $table->char('staff_id', 36);
+            $table->char('staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
             $table->foreign('staff_id')
                 ->references('id')
                 ->on('staff')

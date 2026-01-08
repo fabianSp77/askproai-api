@@ -23,7 +23,7 @@ return new class extends Migration
             $table->integer('max_retry_attempts')->default(3);
             $table->json('headers')->nullable(); // Custom headers to send
             $table->text('description')->nullable();
-            $table->char('created_by', 36)->nullable(); // Staff ID (UUID) who created it
+            $table->char('created_by', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // Staff ID (UUID) who created it
             $table->timestamp('last_triggered_at')->nullable();
             $table->integer('total_deliveries')->default(0);
             $table->integer('successful_deliveries')->default(0);

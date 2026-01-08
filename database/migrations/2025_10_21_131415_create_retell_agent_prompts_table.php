@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('retell_agent_prompts', function (Blueprint $table) {
             $table->id();
-            $table->char('branch_id', 36);
+            $table->char('branch_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
             $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
             $table->unsignedInteger('version')->default(1);
             $table->longText('prompt_content');

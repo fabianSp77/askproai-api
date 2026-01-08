@@ -23,7 +23,7 @@ return new class extends Migration
 
             // Booking details
             $table->unsignedBigInteger('service_id');
-            $table->char('staff_id', 36)->nullable(); // UUID reference to staff table
+            $table->char('staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID reference to staff table
             $table->timestamp('start_time');
             $table->timestamp('end_time');
 

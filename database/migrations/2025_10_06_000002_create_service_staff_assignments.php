@@ -11,11 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('service_staff_assignments')) {
+            return;
+        }
+
         Schema::create('service_staff_assignments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('service_id');
-            $table->char('staff_id', 36);  // UUID format to match staff table
+            $table->char('staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');  // UUID format to match staff table
 
             // Priority for assignment (lower = higher priority)
             $table->integer('priority_order')->default(0)

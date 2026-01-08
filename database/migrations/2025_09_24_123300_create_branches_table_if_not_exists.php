@@ -13,7 +13,7 @@ return new class extends Migration
     {
         if (!Schema::hasTable('branches')) {
             Schema::create('branches', function (Blueprint $table) {
-                $table->char('id', 36)->primary(); // UUID as primary key
+                $table->char('id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->primary(); // UUID as primary key
                 $table->unsignedBigInteger('company_id');
                 $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
                 $table->string('name');
