@@ -11,7 +11,7 @@ on:
 
 env:
   PHP_VERSION: '8.4'
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   # =========================================
@@ -64,7 +64,10 @@ jobs:
           cache: 'npm'
 
       - name: Install npm dependencies and build
-        run: npm install && npm run build
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+          npm run build
 
       - name: Cache Composer dependencies
         uses: actions/cache@v3
@@ -141,7 +144,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend assets
-        run: npm install && npm run build
+        run: rm -rf node_modules && npm install && npm run build
 
       - name: Install dependencies
         run: composer install --no-interaction
@@ -198,7 +201,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend assets
-        run: npm install && npm run build
+        run: rm -rf node_modules && npm install && npm run build
 
       - name: Install dependencies
         run: composer install --no-interaction
@@ -246,7 +249,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend assets
-        run: npm install && npm run build
+        run: rm -rf node_modules && npm install && npm run build
 
       - name: Install dependencies
         run: composer install --no-interaction
@@ -300,7 +303,7 @@ jobs:
           cache: 'npm'
 
       - name: Install npm dependencies and build assets
-        run: npm install && npm run build
+        run: rm -rf node_modules && npm install && npm run build
 
       - name: Install Playwright
         run: |
@@ -357,7 +360,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend assets
-        run: npm install && npm run build
+        run: rm -rf node_modules && npm install && npm run build
 
       - name: Install dependencies
         run: composer install --no-interaction
