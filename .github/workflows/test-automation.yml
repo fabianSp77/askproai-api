@@ -82,6 +82,12 @@ jobs:
       - name: Copy environment file
         run: cp .env.testing .env
 
+      - name: Setup Laravel storage directories
+        run: |
+          mkdir -p storage/framework/{cache,sessions,views}
+          mkdir -p storage/logs
+          chmod -R 775 storage bootstrap/cache
+
       - name: Generate application key
         run: php artisan key:generate
 
