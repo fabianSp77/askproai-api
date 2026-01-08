@@ -12,8 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Skip in testing environment (SQLite doesn't support FULLTEXT indexes and CREATE VIEW)
-        if (app()->environment('testing')) {
+        // Skip only for SQLite (doesn't support FULLTEXT indexes and CREATE VIEW)
+        // MySQL in CI testing environment should still create these tables
+        if (config('database.default') === 'sqlite') {
             return;
         }
 
