@@ -55,7 +55,7 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, pdo, pdo_mysql, redis, gd
           coverage: xdebug
-          ini-values: memory_limit=512M
+          ini-values: memory_limit=2048M
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
