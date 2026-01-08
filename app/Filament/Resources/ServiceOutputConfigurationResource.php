@@ -20,7 +20,7 @@ class ServiceOutputConfigurationResource extends Resource
     protected static ?string $navigationLabel = 'Output Konfigurationen';
     protected static ?string $modelLabel = 'Output Konfiguration';
     protected static ?string $pluralModelLabel = 'Output Konfigurationen';
-    protected static ?int $navigationSort = 13;
+    protected static ?int $navigationSort = 14;
 
     /**
      * Only show in navigation when Service Gateway is enabled.
@@ -840,6 +840,13 @@ class ServiceOutputConfigurationResource extends Resource
                                             ->default(false)
                                             ->live()
                                             ->helperText('Das vollstandige Gesprachsprotokoll wird im JSON-Payload mitgesendet'),
+
+                                        Forms\Components\TextInput::make('contact_type_override')
+                                            ->label('ServiceNow contact_type Override')
+                                            ->maxLength(50)
+                                            ->placeholder('z.B. phone, email, self-service')
+                                            ->helperText('Überschreibt den auto-gemappten contact_type (leer = automatisch aus Quelle)')
+                                            ->prefixIcon('heroicon-o-identification'),
                                     ])
                                     ->columns(2)
                                     ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
@@ -1219,6 +1226,38 @@ class ServiceOutputConfigurationResource extends Resource
                         ServiceOutputConfiguration::TYPE_HYBRID => 'Hybrid',
                         default => $state,
                     }),
+                Tables\Columns\BadgeColumn::make('email_template_type')
+                    ->label('Template')
+                    ->colors([
+                        'primary' => 'standard',
+                        'info' => 'technical',
+                        'warning' => 'admin',
+                        'gray' => 'custom',
+                    ])
+                    ->icons([
+                        'heroicon-o-document-text' => 'standard',
+                        'heroicon-o-beaker' => 'technical',
+                        'heroicon-o-wrench-screwdriver' => 'admin',
+                        'heroicon-o-code-bracket' => 'custom',
+                    ])
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'standard' => 'Standard',
+                        'technical' => 'Technisch',
+                        'admin' => 'IT-Support',
+                        'custom' => 'Custom',
+                        default => $state ?? 'Standard',
+                    })
+                    ->tooltip(fn (?string $state): string => match ($state) {
+                        'standard' => 'Einfache, lesbare Benachrichtigung für Teams',
+                        'technical' => 'Vollständiges Transkript + JSON für Archivierung',
+                        'admin' => 'Strukturierte Ticket-Info für IT-Helpdesk',
+                        'custom' => 'Benutzerdefiniertes Template',
+                        default => 'Standard-Template',
+                    })
+                    ->visible(fn ($record) => in_array($record?->output_type, [
+                        ServiceOutputConfiguration::TYPE_EMAIL,
+                        ServiceOutputConfiguration::TYPE_HYBRID,
+                    ])),
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Aktiv')
                     ->sortable(),
@@ -1281,27 +1320,92 @@ class ServiceOutputConfigurationResource extends Resource
                     ->falseLabel('Sofortige Zustellung'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation()
-                    ->before(function (Tables\Actions\DeleteAction $action, ServiceOutputConfiguration $record) {
-                        if ($record->categories()->exists()) {
-                            $count = $record->categories()->count();
-                            \Filament\Notifications\Notification::make()
-                                ->title('Löschen nicht möglich')
-                                ->body("Diese Konfiguration wird von {$count} Kategorie(n) verwendet. Entferne zuerst die Zuordnungen.")
-                                ->danger()
-                                ->persistent()
-                                ->send();
-                            $action->cancel();
-                        }
-                    }),
-                Tables\Actions\Action::make('toggle_active')
-                    ->label(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'Deaktivieren' : 'Aktivieren')
-                    ->icon(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'heroicon-o-pause' : 'heroicon-o-play')
-                    ->color(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'warning' : 'success')
-                    ->requiresConfirmation()
-                    ->action(fn (ServiceOutputConfiguration $record) => $record->update(['is_active' => !$record->is_active])),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('preview_template')
+                        ->label('Vorschau')
+                        ->icon('heroicon-o-eye')
+                        ->color('info')
+                        ->modalHeading(fn (ServiceOutputConfiguration $record) => 'E-Mail Vorschau: ' . $record->name)
+                        ->modalDescription('So sieht die E-Mail mit den aktuellen Einstellungen aus.')
+                        ->modalWidth('6xl')
+                        ->modalContent(fn (ServiceOutputConfiguration $record) => view('filament.forms.components.email-preview-modal', [
+                            'templateType' => $record->email_template_type ?? 'standard',
+                            'includeTranscript' => (bool) $record->include_transcript,
+                            'includeSummary' => (bool) $record->include_summary,
+                            'audioOption' => $record->email_audio_option ?? 'none',
+                            'showAdminLink' => (bool) $record->email_show_admin_link,
+                            'customSubject' => $record->email_subject_template ?? '',
+                            'customBody' => $record->email_body_template ?? '',
+                        ]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Schließen')
+                        ->visible(fn (ServiceOutputConfiguration $record) => in_array($record->output_type, [
+                            ServiceOutputConfiguration::TYPE_EMAIL,
+                            ServiceOutputConfiguration::TYPE_HYBRID,
+                        ])),
+                    Tables\Actions\Action::make('send_test_email')
+                        ->label('Test-E-Mail')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Test-E-Mail senden')
+                        ->modalDescription(fn (ServiceOutputConfiguration $record) =>
+                            'Sende eine Test-E-Mail mit dem Template "' . ($record->email_template_type ?? 'standard') . '" an:')
+                        ->form([
+                            \Filament\Forms\Components\TextInput::make('test_email')
+                                ->label('E-Mail-Adresse')
+                                ->email()
+                                ->required()
+                                ->default('fabian@askproai.de')
+                                ->placeholder('test@example.de'),
+                        ])
+                        ->action(function (ServiceOutputConfiguration $record, array $data) {
+                            try {
+                                $factory = new \App\Services\ServiceGateway\SampleServiceCaseFactory();
+                                $sampleCase = $factory->create($record);
+
+                                $handler = new \App\Services\ServiceGateway\OutputHandlers\EmailOutputHandler();
+                                $handler->sendTestEmail($sampleCase, $data['test_email'], $record);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Test-E-Mail gesendet!')
+                                    ->body('E-Mail wurde an ' . $data['test_email'] . ' gesendet.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Fehler beim Senden')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn (ServiceOutputConfiguration $record) => in_array($record->output_type, [
+                            ServiceOutputConfiguration::TYPE_EMAIL,
+                            ServiceOutputConfiguration::TYPE_HYBRID,
+                        ])),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\Action::make('toggle_active')
+                        ->label(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'Deaktivieren' : 'Aktivieren')
+                        ->icon(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'heroicon-o-pause' : 'heroicon-o-play')
+                        ->color(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'warning' : 'success')
+                        ->requiresConfirmation()
+                        ->action(fn (ServiceOutputConfiguration $record) => $record->update(['is_active' => !$record->is_active])),
+                    Tables\Actions\DeleteAction::make()
+                        ->requiresConfirmation()
+                        ->before(function (Tables\Actions\DeleteAction $action, ServiceOutputConfiguration $record) {
+                            if ($record->categories()->exists()) {
+                                $count = $record->categories()->count();
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Löschen nicht möglich')
+                                    ->body("Diese Konfiguration wird von {$count} Kategorie(n) verwendet. Entferne zuerst die Zuordnungen.")
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                                $action->cancel();
+                            }
+                        }),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

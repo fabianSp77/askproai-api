@@ -34,7 +34,7 @@ class ServiceGatewayExchangeLogResource extends Resource
     protected static ?string $navigationLabel = 'Exchange Logs';
     protected static ?string $modelLabel = 'Exchange Log';
     protected static ?string $pluralModelLabel = 'Exchange Logs';
-    protected static ?int $navigationSort = 15;
+    protected static ?int $navigationSort = 16;
 
     /**
      * Only show in navigation when Service Gateway is enabled.
