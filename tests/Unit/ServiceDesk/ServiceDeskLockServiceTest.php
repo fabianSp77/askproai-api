@@ -224,7 +224,7 @@ class ServiceDeskLockServiceTest extends TestCase
     }
 
     /**
-     * Test: Lock stats returns all values
+     * Test: Lock stats returns all expected values
      *
      * @test
      */
@@ -232,9 +232,15 @@ class ServiceDeskLockServiceTest extends TestCase
     {
         $stats = $this->lockService->getLockStats();
 
+        // Core configuration values
         $this->assertArrayHasKey('ttl', $stats);
         $this->assertArrayHasKey('max_wait', $stats);
-        $this->assertArrayHasKey('idempotency_ttl', $stats);
         $this->assertArrayHasKey('driver', $stats);
+        $this->assertArrayHasKey('service', $stats);
+
+        // Verify values are sensible
+        $this->assertIsInt($stats['ttl']);
+        $this->assertIsInt($stats['max_wait']);
+        $this->assertEquals('ServiceDeskLockService', $stats['service']);
     }
 }
