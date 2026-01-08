@@ -18,8 +18,13 @@ return new class extends Migration
     public function up(): void
     {
         // Add the normalized column
-        
+
         if (!Schema::hasTable('phone_numbers')) {
+            return;
+        }
+
+        // Only add column if it doesn't exist (idempotent migration)
+        if (Schema::hasColumn('phone_numbers', 'number_normalized')) {
             return;
         }
 
