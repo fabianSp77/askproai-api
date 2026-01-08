@@ -37,8 +37,9 @@ jobs:
 
       - name: Install Frontend Dependencies
         run: |
-          echo "📦 Installing npm dependencies (deterministic)..."
-          npm ci --prefer-offline
+          echo "📦 Installing npm dependencies (cross-platform)..."
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Build Frontend Assets
         run: |
@@ -71,6 +72,7 @@ jobs:
   build-backend:
     name: Build Backend Dependencies
     runs-on: ubuntu-latest
+    needs: build-frontend  # Backend requires Vite manifest for artisan package:discover
     timeout-minutes: 15
 
     steps:
@@ -83,6 +85,12 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
           coverage: none
+
+      - name: Download Frontend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: public/build/
 
       - name: Validate composer.json and composer.lock
         run: composer validate --strict
