@@ -12,15 +12,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        
+        // Skip in testing environment (SQLite doesn't have INFORMATION_SCHEMA)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         if (!Schema::hasTable('calls')) {
             return;
         }
 
         Schema::table('calls', function (Blueprint $table) {
-            // Verify foreign key doesn't already exist before adding
-            // Change column type to match phone_numbers.id (bigint unsigned)
-            $table->unsignedBigInteger('phone_number_id')->nullable()->change();
+            // Note: phone_numbers.id is char(36) UUID, not bigint
+            // This migration now skips the column change since create_calls_table
+            // already defines it correctly as char(36)
+            // $table->char('phone_number_id', 36)->nullable()->change();
 
             // Check if foreign key already exists before adding
             $foreignKeys = collect(DB::select("
