@@ -74,8 +74,8 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->integer('max_alternatives')->default(2);
             $table->integer('time_window_hours')->default(2);
-            $table->json('search_strategies')->default('["same_day_different_time","next_workday_same_time","next_week_same_day","next_available_workday"]');
-            $table->json('workdays')->default('["monday","tuesday","wednesday","thursday","friday"]');
+            $table->json('search_strategies')->nullable(); // Default set in model
+            $table->json('workdays')->nullable(); // Default set in model
             $table->time('business_hours_start')->default('09:00');
             $table->time('business_hours_end')->default('18:00');
             $table->boolean('enable_nested_bookings')->default(false);
