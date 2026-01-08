@@ -12,6 +12,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Disable FK checks to allow tables to be created in any order
+        // This prevents "Foreign key constraint is incorrectly formed" errors
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            $this->createTables();
+        } finally {
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
+
+    private function createTables(): void
+    {
         // Create core tables for testing environment
 
         // Users table (required for authentication)
@@ -20,6 +33,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('name');
                 $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable(); // Required by Laravel default User model
                 $table->string('password');
                 $table->unsignedBigInteger('company_id')->nullable();
                 $table->unsignedBigInteger('branch_id')->nullable();
@@ -29,56 +43,9 @@ return new class extends Migration
             });
         }
 
-        // Roles & Permissions tables (Spatie)
-        if (!Schema::hasTable('roles')) {
-            Schema::create('roles', function ($table) {
-                $table->id();
-                $table->string('name');
-                $table->string('guard_name');
-                $table->timestamps();
-                $table->unique(['name', 'guard_name']);
-            });
-        }
-
-        if (!Schema::hasTable('permissions')) {
-            Schema::create('permissions', function ($table) {
-                $table->id();
-                $table->string('name');
-                $table->string('guard_name');
-                $table->timestamps();
-                $table->unique(['name', 'guard_name']);
-            });
-        }
-
-        if (!Schema::hasTable('model_has_roles')) {
-            Schema::create('model_has_roles', function ($table) {
-                $table->unsignedBigInteger('role_id');
-                $table->string('model_type');
-                $table->unsignedBigInteger('model_id');
-                $table->primary(['role_id', 'model_id', 'model_type']);
-                $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
-            });
-        }
-
-        if (!Schema::hasTable('model_has_permissions')) {
-            Schema::create('model_has_permissions', function ($table) {
-                $table->unsignedBigInteger('permission_id');
-                $table->string('model_type');
-                $table->unsignedBigInteger('model_id');
-                $table->primary(['permission_id', 'model_id', 'model_type'], 'model_has_permissions_permission_model_type_primary');
-                $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
-            });
-        }
-
-        if (!Schema::hasTable('role_has_permissions')) {
-            Schema::create('role_has_permissions', function ($table) {
-                $table->unsignedBigInteger('permission_id');
-                $table->unsignedBigInteger('role_id');
-                $table->primary(['permission_id', 'role_id']);
-                $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
-                $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
-            });
-        }
+        // Spatie Roles & Permissions tables are created by the official
+        // migration 2025_10_17_205256_create_permission_tables.php
+        // Do NOT create them here to avoid FK conflicts during RefreshDatabase
 
         if (!Schema::hasTable('companies')) {
             Schema::create('companies', function ($table) {
@@ -94,7 +61,7 @@ return new class extends Migration
 
         if (!Schema::hasTable('branches')) {
             Schema::create('branches', function ($table) {
-                $table->char('id', 36)->primary(); // UUID as primary key
+                $table->char('id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->primary(); // UUID as primary key
                 $table->unsignedBigInteger('company_id');
                 $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
                 $table->string('name');
@@ -120,10 +87,10 @@ return new class extends Migration
 
         if (!Schema::hasTable('staff')) {
             Schema::create('staff', function ($table) {
-                $table->char('id', 36)->primary(); // UUID as primary key
+                $table->char('id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->primary(); // UUID as primary key
                 $table->unsignedBigInteger('company_id');
                 $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
-                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->char('branch_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->string('name');
                 $table->string('email')->nullable();
@@ -147,11 +114,12 @@ return new class extends Migration
             Schema::create('phone_numbers', function ($table) {
                 $table->uuid('id')->primary();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-                $table->char('branch_id', 36)->nullable();
+                $table->char('branch_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable();
                 $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
 
+                $table->string('number', 20)->nullable(); // Used by factories
                 $table->string('phone_number', 20);
-                $table->string('number_normalized', 20)->unique();
+                $table->string('number_normalized', 20)->nullable()->unique();
 
                 $table->string('retell_agent_id')->nullable();
                 $table->string('agent_id')->nullable();
@@ -163,7 +131,13 @@ return new class extends Migration
                 $table->string('friendly_name')->nullable();
                 $table->text('description')->nullable();
                 $table->string('provider')->nullable();
+                $table->string('provider_id')->nullable(); // For factory
                 $table->string('country_code', 10)->default('+49');
+                $table->decimal('monthly_cost', 8, 2)->nullable(); // For factory
+                $table->integer('usage_minutes')->nullable(); // For factory
+                $table->timestamp('last_used_at')->nullable(); // For factory
+                $table->string('label')->nullable(); // For factory
+                $table->text('notes')->nullable(); // For factory
 
                 $table->timestamps();
 
@@ -176,11 +150,11 @@ return new class extends Migration
             Schema::create('appointments', function ($table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->char('branch_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->foreignId('service_id')->constrained()->cascadeOnDelete();
                 $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-                $table->char('staff_id', 36)->nullable(); // UUID foreign key
+                $table->char('staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('staff_id')->references('id')->on('staff')->nullOnDelete();
                 $table->timestamp('start_time');
                 $table->timestamp('end_time');
@@ -198,6 +172,38 @@ return new class extends Migration
                 $table->string('external_calendar_source')->nullable();
                 $table->string('external_calendar_id')->nullable();
                 $table->timestamps();
+            });
+        }
+
+        // Service Gateway tables
+        if (!Schema::hasTable('service_output_configurations')) {
+            Schema::create('service_output_configurations', function ($table) {
+                $table->id();
+                $table->unsignedBigInteger('company_id');
+                $table->string('name');
+                $table->enum('output_type', ['email', 'webhook', 'hybrid'])->default('email');
+                $table->json('email_recipients')->nullable();
+                $table->string('email_subject_template')->nullable();
+                $table->text('email_body_template')->nullable();
+                $table->unsignedBigInteger('webhook_configuration_id')->nullable();
+                $table->string('webhook_url')->nullable();
+                $table->json('webhook_headers')->nullable();
+                $table->text('webhook_payload_template')->nullable();
+                $table->text('webhook_secret')->nullable();
+                $table->boolean('webhook_enabled')->default(true);
+                $table->boolean('webhook_include_transcript')->default(false);
+                $table->json('fallback_emails')->nullable();
+                $table->boolean('retry_on_failure')->default(true);
+                $table->boolean('is_active')->default(true);
+                $table->string('email_audio_option', 20)->default('none');
+                $table->boolean('include_transcript')->default(true);
+                $table->boolean('include_summary')->default(true);
+                $table->boolean('email_show_admin_link')->default(false);
+                $table->boolean('wait_for_enrichment')->default(false);
+                $table->unsignedInteger('enrichment_timeout_seconds')->default(180);
+                $table->unsignedSmallInteger('audio_url_ttl_minutes')->default(60);
+                $table->timestamps();
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             });
         }
 
@@ -236,11 +242,11 @@ return new class extends Migration
             Schema::create('callback_requests', function ($table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-                $table->char('branch_id', 36)->nullable(); // UUID foreign key
+                $table->char('branch_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
                 $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
                 $table->foreignId('service_id')->nullable()->constrained()->nullOnDelete();
-                $table->char('assigned_staff_id', 36)->nullable(); // UUID foreign key
+                $table->char('assigned_staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('assigned_staff_id')->references('id')->on('staff')->nullOnDelete();
                 $table->string('customer_name');
                 $table->string('customer_phone', 20);
@@ -263,9 +269,9 @@ return new class extends Migration
             Schema::create('callback_escalations', function ($table) {
                 $table->id();
                 $table->foreignId('callback_request_id')->constrained()->cascadeOnDelete();
-                $table->char('escalated_by_id', 36)->nullable(); // UUID foreign key
+                $table->char('escalated_by_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('escalated_by_id')->references('id')->on('staff')->nullOnDelete();
-                $table->char('escalated_to_id', 36)->nullable(); // UUID foreign key
+                $table->char('escalated_to_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci')->nullable(); // UUID foreign key
                 $table->foreign('escalated_to_id')->references('id')->on('staff')->nullOnDelete();
                 $table->text('reason')->nullable();
                 $table->timestamp('escalated_at');
@@ -356,17 +362,9 @@ return new class extends Migration
             }
         }
 
-        // Seed essential roles for testing
-        \DB::table('roles')->insertOrIgnore([
-            ['name' => 'super_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'manager', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'staff', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'company_owner', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'company_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'company_manager', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'company_staff', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // Note: Essential roles for testing are seeded by Spatie migration
+        // or by the AdminUserSeeder - do not seed here as roles table
+        // is created by 2025_10_17_205256_create_permission_tables.php
     }
 
     public function down(): void

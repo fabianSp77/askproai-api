@@ -19,7 +19,8 @@ return new class extends Migration
             // Primary keys
             $table->id();
             $table->unsignedBigInteger('service_id');
-            $table->unsignedBigInteger('staff_id');
+            // UUID column with explicit charset/collation to match staff.id
+            $table->char('staff_id', 36)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
 
             // Pivot data
             $table->boolean('is_primary')->default(false)->comment('Primary staff member for this service');
