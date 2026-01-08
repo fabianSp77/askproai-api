@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (depends on retell_call_sessions table skipped in testing)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Check if columns already exist and add them if they don't
         if (!Schema::hasColumn('retell_call_sessions', 'branch_id')) {
             Schema::table('retell_call_sessions', function (Blueprint $table) {

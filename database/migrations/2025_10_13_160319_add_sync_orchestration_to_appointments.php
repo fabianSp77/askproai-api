@@ -14,6 +14,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('appointments')) {
+            return;
+        }
+
         Schema::table('appointments', function (Blueprint $table) {
             // ═══════════════════════════════════════════════════════════
             // SYNC ORIGIN TRACKING (Loop Prevention)
@@ -55,49 +60,69 @@ return new class extends Migration
             // ═══════════════════════════════════════════════════════════
 
             // Laravel job ID for tracking sync job status
-            $table->string('sync_job_id', 100)
-                  ->nullable()
-                  ->after('sync_initiated_by_user_id')
-                  ->comment('Laravel job ID for tracking sync progress');
+            if (!Schema::hasColumn('appointments', 'sync_job_id')) {
+                $table->string('sync_job_id', 100)
+                      ->nullable()
+                      ->after('sync_initiated_by_user_id')
+                      ->comment('Laravel job ID for tracking sync progress');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // SYNC RETRY TRACKING
             // ═══════════════════════════════════════════════════════════
 
             // Number of sync attempts (for exponential backoff)
-            $table->unsignedTinyInteger('sync_attempt_count')
-                  ->default(0)
-                  ->after('sync_job_id')
-                  ->comment('Number of sync attempts (for retry logic)');
+            if (!Schema::hasColumn('appointments', 'sync_attempt_count')) {
+                $table->unsignedTinyInteger('sync_attempt_count')
+                      ->default(0)
+                      ->after('sync_job_id')
+                      ->comment('Number of sync attempts (for retry logic)');
+            }
 
             // ═══════════════════════════════════════════════════════════
             // MANUAL REVIEW FLAGS
             // ═══════════════════════════════════════════════════════════
 
             // Flag for appointments requiring manual review (after max retries)
-            $table->boolean('requires_manual_review')
-                  ->default(false)
-                  ->after('sync_attempt_count')
-                  ->comment('True if sync failed after max retries');
+            if (!Schema::hasColumn('appointments', 'requires_manual_review')) {
+                $table->boolean('requires_manual_review')
+                      ->default(false)
+                      ->after('sync_attempt_count')
+                      ->comment('True if sync failed after max retries');
+            }
 
             // When the appointment was flagged for manual review
-            $table->timestamp('manual_review_flagged_at')
-                  ->nullable()
-                  ->after('requires_manual_review')
-                  ->comment('When appointment was flagged for manual review');
+            if (!Schema::hasColumn('appointments', 'manual_review_flagged_at')) {
+                $table->timestamp('manual_review_flagged_at')
+                      ->nullable()
+                      ->after('requires_manual_review')
+                      ->comment('When appointment was flagged for manual review');
+            }
 
-            // ═══════════════════════════════════════════════════════════
-            // INDEXES (Performance Optimization)
-            // ═══════════════════════════════════════════════════════════
+        });
 
+        // ═══════════════════════════════════════════════════════════
+        // INDEXES (Performance Optimization)
+        // ═══════════════════════════════════════════════════════════
+
+        // Check existing indexes to avoid duplicates
+        $existingIndexes = collect(Schema::getIndexes('appointments'))->pluck('name')->toArray();
+
+        Schema::table('appointments', function (Blueprint $table) use ($existingIndexes) {
             // Index for sync origin queries (e.g., "find all retell appointments to sync")
-            $table->index(['sync_origin', 'company_id'], 'idx_sync_origin_company');
+            if (!in_array('idx_sync_origin_company', $existingIndexes)) {
+                $table->index(['sync_origin', 'company_id'], 'idx_sync_origin_company');
+            }
 
             // Index for manual review dashboard queries
-            $table->index(['requires_manual_review', 'manual_review_flagged_at'], 'idx_manual_review');
+            if (!in_array('idx_manual_review', $existingIndexes)) {
+                $table->index(['requires_manual_review', 'manual_review_flagged_at'], 'idx_manual_review');
+            }
 
             // Index for pending sync jobs
-            $table->index(['calcom_sync_status', 'sync_job_id'], 'idx_sync_status_job');
+            if (!in_array('idx_sync_status_job', $existingIndexes)) {
+                $table->index(['calcom_sync_status', 'sync_job_id'], 'idx_sync_status_job');
+            }
         });
     }
 

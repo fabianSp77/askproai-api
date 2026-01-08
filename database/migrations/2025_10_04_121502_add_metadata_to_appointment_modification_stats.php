@@ -16,9 +16,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('appointment_modification_stats', function (Blueprint $table) {
-            $table->json('metadata')->nullable()->after('count');
-        });
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('appointment_modification_stats')) {
+            return;
+        }
+
+        // Skip if column already exists
+        if (Schema::hasColumn('appointment_modification_stats', 'metadata')) {
+            return;
+        }
+
+        // Check if 'count' column exists for proper positioning
+        if (Schema::hasColumn('appointment_modification_stats', 'count')) {
+            Schema::table('appointment_modification_stats', function (Blueprint $table) {
+                $table->json('metadata')->nullable()->after('count');
+            });
+        } else {
+            Schema::table('appointment_modification_stats', function (Blueprint $table) {
+                $table->json('metadata')->nullable();
+            });
+        }
     }
 
     /**

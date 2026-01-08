@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -12,6 +13,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if required tables don't exist (idempotent migration)
+        if (!Schema::hasTable('calls') || !Schema::hasTable('appointments')) {
+            return;
+        }
+
+        // Skip if required columns don't exist
+        if (!Schema::hasColumn('calls', 'appointment_link_status') ||
+            !Schema::hasColumn('calls', 'customer_link_status') ||
+            !Schema::hasColumn('appointments', 'call_id')) {
+            return;
+        }
+
+        // Skip if data_consistency_alerts table doesn't exist
+        if (!Schema::hasTable('data_consistency_alerts')) {
+            return;
+        }
+
+        // Drop existing triggers to avoid errors
+        DB::unprepared("DROP TRIGGER IF EXISTS before_insert_call_set_direction");
+        DB::unprepared("DROP TRIGGER IF EXISTS before_update_call_sync_customer_link");
+        DB::unprepared("DROP TRIGGER IF EXISTS after_insert_appointment_link_call");
+        DB::unprepared("DROP TRIGGER IF EXISTS after_update_appointment_link_call");
+
         // Trigger 1: Auto-set direction to 'inbound' if NULL on INSERT
         DB::unprepared("
             CREATE TRIGGER before_insert_call_set_direction

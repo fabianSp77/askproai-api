@@ -16,15 +16,35 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Skip if table doesn't exist
+        if (!Schema::hasTable('service_output_configurations')) {
+            return;
+        }
+
         Schema::table('service_output_configurations', function (Blueprint $table) {
+            // Determine placement column (fallback if email_subject_template doesn't exist)
+            $afterColumn = Schema::hasColumn('service_output_configurations', 'email_subject_template')
+                ? 'email_subject_template'
+                : 'id';
+
             // Audio option in emails: 'none', 'link' (signed URL), 'attachment' (if <10MB)
-            $table->string('email_audio_option', 20)->default('none')->after('email_subject_template');
+            if (!Schema::hasColumn('service_output_configurations', 'email_audio_option')) {
+                $table->string('email_audio_option', 20)->default('none')->after($afterColumn);
+            }
 
             // Include transcript in backup emails
-            $table->boolean('include_transcript')->default(true)->after('email_audio_option');
+            if (!Schema::hasColumn('service_output_configurations', 'include_transcript')) {
+                $afterCol = Schema::hasColumn('service_output_configurations', 'email_audio_option')
+                    ? 'email_audio_option' : $afterColumn;
+                $table->boolean('include_transcript')->default(true)->after($afterCol);
+            }
 
             // Include AI summary in backup emails
-            $table->boolean('include_summary')->default(true)->after('include_transcript');
+            if (!Schema::hasColumn('service_output_configurations', 'include_summary')) {
+                $afterCol = Schema::hasColumn('service_output_configurations', 'include_transcript')
+                    ? 'include_transcript' : $afterColumn;
+                $table->boolean('include_summary')->default(true)->after($afterCol);
+            }
         });
     }
 

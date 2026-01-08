@@ -45,12 +45,16 @@ return new class extends Migration
             $table->enum('status', ['new', 'open', 'pending', 'resolved', 'closed'])->default('new');
             $table->string('external_reference', 100)->nullable();
 
-            // Assignment
-            $table->unsignedBigInteger('assigned_to')->nullable();
+            // Assignment (UUID to match staff.id type)
+            $table->uuid('assigned_to')->nullable();
 
             // SLA tracking
             $table->timestamp('sla_response_due_at')->nullable();
             $table->timestamp('sla_resolution_due_at')->nullable();
+
+            // Lifecycle timestamps
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
 
             // Output delivery status
             $table->enum('output_status', ['pending', 'sent', 'failed'])->default('pending');

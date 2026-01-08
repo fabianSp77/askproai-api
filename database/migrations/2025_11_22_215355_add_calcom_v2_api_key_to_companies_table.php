@@ -14,8 +14,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist
+        if (!Schema::hasTable('companies')) {
+            return;
+        }
+
+        // Skip if column already exists
+        if (Schema::hasColumn('companies', 'calcom_v2_api_key')) {
+            return;
+        }
+
         Schema::table('companies', function (Blueprint $table) {
-            $table->string('calcom_v2_api_key', 255)->nullable()->after('calcom_api_key')
+            // Determine where to place the column (fallback if calcom_api_key doesn't exist)
+            $afterColumn = Schema::hasColumn('companies', 'calcom_api_key') ? 'calcom_api_key' : 'id';
+            $table->string('calcom_v2_api_key', 255)->nullable()->after($afterColumn)
                 ->comment('Cal.com V2 API key for this company (overrides ENV config)');
         });
     }
@@ -25,6 +37,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('companies')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('companies', 'calcom_v2_api_key')) {
+            return;
+        }
+
         Schema::table('companies', function (Blueprint $table) {
             $table->dropColumn('calcom_v2_api_key');
         });

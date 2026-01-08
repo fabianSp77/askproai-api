@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support REGEXP)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Check if the calcom_event_type_id column exists before trying to clean it
         if (!Schema::hasColumn('services', 'calcom_event_type_id')) {
             \Log::info('[Cal.com Cleanup] Skipping - calcom_event_type_id column does not exist');

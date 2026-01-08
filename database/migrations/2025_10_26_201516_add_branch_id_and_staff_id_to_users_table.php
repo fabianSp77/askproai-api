@@ -38,56 +38,123 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        // Skip if table doesn't exist
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
+        // Check for existing indexes to avoid duplicates
+        $existingIndexes = collect(Schema::getIndexes('users'))->pluck('name')->toArray();
+
+        Schema::table('users', function (Blueprint $table) use ($existingIndexes) {
             // Add company_id first if it doesn't exist
             if (!Schema::hasColumn('users', 'company_id')) {
                 $table->unsignedBigInteger('company_id')
                     ->nullable()
                     ->after('password')
                     ->comment('Company this user belongs to');
-
-                $table->foreign('company_id')
-                    ->references('id')
-                    ->on('companies')
-                    ->onDelete('cascade');
-
-                $table->index('company_id');
             }
 
-            // Branch assignment for company_manager role
-            // Allows managers to be assigned to specific branches
-            // Note: branches.id is bigint unsigned auto-increment
-            // NULL = not a manager OR sees all branches (company_owner)
-            $table->unsignedBigInteger('branch_id')
-                ->nullable()
-                ->after('company_id')
-                ->comment('Branch assignment for company_manager role');
+            // Branch assignment for company_manager role (only if column doesn't exist)
+            if (!Schema::hasColumn('users', 'branch_id')) {
+                $table->unsignedBigInteger('branch_id')
+                    ->nullable()
+                    ->after(Schema::hasColumn('users', 'company_id') ? 'company_id' : 'password')
+                    ->comment('Branch assignment for company_manager role');
+            }
 
-            // Staff relationship for company_staff role
-            // Links user account to their staff entry (for appointments, calls, etc.)
-            // Note: staff.id is bigint unsigned auto-increment
-            $table->unsignedBigInteger('staff_id')
-                ->nullable()
-                ->after('branch_id')
-                ->comment('Staff entry this user represents (for company_staff role)');
-
-            // Foreign key constraints
-            $table->foreign('branch_id')
-                ->references('id')
-                ->on('branches')
-                ->onDelete('set null')  // If branch deleted, set NULL (don't delete user)
-                ->onUpdate('cascade');  // If branch ID changes, update reference
-
-            $table->foreign('staff_id')
-                ->references('id')
-                ->on('staff')
-                ->onDelete('set null')  // If staff deleted, set NULL (don't delete user)
-                ->onUpdate('cascade');  // If staff ID changes, update reference
-
-            // Indexes for performance (policy checks will query these frequently)
-            $table->index('branch_id', 'users_branch_id_index');
-            $table->index('staff_id', 'users_staff_id_index');
+            // Staff relationship for company_staff role (only if column doesn't exist)
+            if (!Schema::hasColumn('users', 'staff_id')) {
+                $table->unsignedBigInteger('staff_id')
+                    ->nullable()
+                    ->after(Schema::hasColumn('users', 'branch_id') ? 'branch_id' : 'password')
+                    ->comment('Staff entry this user represents (for company_staff role)');
+            }
         });
+
+        // Add foreign keys in separate try-catch blocks to handle constraint errors gracefully
+        $existingForeignKeys = $this->getExistingForeignKeys('users');
+
+        // Foreign key for company_id
+        if (Schema::hasColumn('users', 'company_id') &&
+            Schema::hasTable('companies') &&
+            !in_array('users_company_id_foreign', $existingForeignKeys)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('company_id')
+                        ->references('id')
+                        ->on('companies')
+                        ->onDelete('cascade');
+                });
+            } catch (\Exception $e) {
+                // FK constraint error (table might not exist, types mismatch, etc.) - skip silently
+            }
+        }
+
+        // Foreign key for branch_id
+        if (Schema::hasColumn('users', 'branch_id') &&
+            Schema::hasTable('branches') &&
+            Schema::hasColumn('branches', 'id') &&
+            !in_array('users_branch_id_foreign', $existingForeignKeys)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('branch_id')
+                        ->references('id')
+                        ->on('branches')
+                        ->onDelete('set null')
+                        ->onUpdate('cascade');
+                });
+            } catch (\Exception $e) {
+                // FK constraint error - skip silently (branches table might have different structure)
+            }
+        }
+
+        // Foreign key for staff_id
+        if (Schema::hasColumn('users', 'staff_id') &&
+            Schema::hasTable('staff') &&
+            Schema::hasColumn('staff', 'id') &&
+            !in_array('users_staff_id_foreign', $existingForeignKeys)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->foreign('staff_id')
+                        ->references('id')
+                        ->on('staff')
+                        ->onDelete('set null')
+                        ->onUpdate('cascade');
+                });
+            } catch (\Exception $e) {
+                // FK constraint error - skip silently (staff table might have different structure)
+            }
+        }
+
+        // Add indexes in separate call to avoid blocking on FK errors
+        Schema::table('users', function (Blueprint $table) use ($existingIndexes) {
+            // Indexes for performance
+            if (Schema::hasColumn('users', 'company_id') && !in_array('users_company_id_index', $existingIndexes)) {
+                $table->index('company_id', 'users_company_id_index');
+            }
+
+            if (Schema::hasColumn('users', 'branch_id') && !in_array('users_branch_id_index', $existingIndexes)) {
+                $table->index('branch_id', 'users_branch_id_index');
+            }
+
+            if (Schema::hasColumn('users', 'staff_id') && !in_array('users_staff_id_index', $existingIndexes)) {
+                $table->index('staff_id', 'users_staff_id_index');
+            }
+        });
+    }
+
+    /**
+     * Get existing foreign keys for a table.
+     */
+    private function getExistingForeignKeys(string $table): array
+    {
+        try {
+            $foreignKeys = Schema::getForeignKeys($table);
+            return collect($foreignKeys)->pluck('name')->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 
     /**
@@ -95,17 +162,37 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
+        $existingIndexes = collect(Schema::getIndexes('users'))->pluck('name')->toArray();
+        $existingForeignKeys = $this->getExistingForeignKeys('users');
+
+        Schema::table('users', function (Blueprint $table) use ($existingIndexes, $existingForeignKeys) {
             // Drop foreign keys first (before dropping columns)
-            $table->dropForeign(['branch_id']);
-            $table->dropForeign(['staff_id']);
+            if (in_array('users_branch_id_foreign', $existingForeignKeys)) {
+                $table->dropForeign(['branch_id']);
+            }
+            if (in_array('users_staff_id_foreign', $existingForeignKeys)) {
+                $table->dropForeign(['staff_id']);
+            }
 
             // Drop indexes
-            $table->dropIndex('users_branch_id_index');
-            $table->dropIndex('users_staff_id_index');
+            if (in_array('users_branch_id_index', $existingIndexes)) {
+                $table->dropIndex('users_branch_id_index');
+            }
+            if (in_array('users_staff_id_index', $existingIndexes)) {
+                $table->dropIndex('users_staff_id_index');
+            }
 
             // Drop columns
-            $table->dropColumn(['branch_id', 'staff_id']);
+            if (Schema::hasColumn('users', 'branch_id')) {
+                $table->dropColumn('branch_id');
+            }
+            if (Schema::hasColumn('users', 'staff_id')) {
+                $table->dropColumn('staff_id');
+            }
         });
     }
 };

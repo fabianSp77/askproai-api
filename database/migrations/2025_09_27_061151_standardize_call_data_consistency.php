@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support SHOW INDEX)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Check if calls table exists first
         if (!Schema::hasTable('calls')) {
             return;

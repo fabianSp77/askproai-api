@@ -14,6 +14,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if notification_queue doesn't exist (FK dependency)
+        if (!Schema::hasTable('notification_queue')) {
+            return;
+        }
+
         if (!Schema::hasTable('notification_deliveries')) {
             Schema::create('notification_deliveries', function (Blueprint $table) {
             $table->id();

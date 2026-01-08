@@ -18,10 +18,14 @@ return new class extends Migration
         }
 
         Schema::table('services', function (Blueprint $table) {
-            $table->boolean('is_default')->default(false)
-                ->comment('Default service for this company to use for phone calls');
-            $table->integer('priority')->default(50)
-                ->comment('Service priority for selection (lower number = higher priority)');
+            if (!Schema::hasColumn('services', 'is_default')) {
+                $table->boolean('is_default')->default(false)
+                    ->comment('Default service for this company to use for phone calls');
+            }
+            if (!Schema::hasColumn('services', 'priority')) {
+                $table->integer('priority')->default(50)
+                    ->comment('Service priority for selection (lower number = higher priority)');
+            }
         });
 
         // Set default services for each company

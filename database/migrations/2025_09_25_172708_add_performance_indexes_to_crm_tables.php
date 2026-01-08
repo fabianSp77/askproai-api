@@ -82,10 +82,8 @@ return new class extends Migration
                 $table->index(['sentiment', 'created_at'], 'idx_calls_sentiment');
             }
 
-            // Index for status filtering
-            if (!Schema::hasIndex('calls', 'idx_calls_status')) {
-                $table->index('status', 'idx_calls_status');
-            }
+            // Index for status filtering - skip if any status index exists (already created in create_calls_table)
+            // $table->index('status', 'idx_calls_status'); // Already exists from create_calls_table
         });
 
         // Customers table indexes

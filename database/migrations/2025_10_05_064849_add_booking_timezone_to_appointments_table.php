@@ -15,6 +15,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support JSON_UNQUOTE)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Add booking_timezone column
         if (!Schema::hasColumn('appointments', 'booking_timezone')) {
             Schema::table('appointments', function (Blueprint $table) {

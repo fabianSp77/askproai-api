@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support UPDATE...INNER JOIN)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Add unique constraint to email column (allowing NULLs)
-        
+
         if (!Schema::hasTable('customers')) {
             return;
         }

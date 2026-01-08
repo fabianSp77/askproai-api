@@ -25,6 +25,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support SHOW INDEXES)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Check current index count (MySQL limit is 128)
         $currentIndexes = DB::select("SHOW INDEXES FROM appointments");
         $indexCount = count(array_unique(array_column($currentIndexes, 'Key_name')));

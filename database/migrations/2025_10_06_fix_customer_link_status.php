@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * 🔧 EMERGENCY FIX #4: Correct misclassified customer_link_status
@@ -20,6 +21,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('calls')) {
+            return;
+        }
+
+        // Skip if required columns don't exist
+        if (!Schema::hasColumn('calls', 'customer_link_status') ||
+            !Schema::hasColumn('calls', 'extracted_name')) {
+            return;
+        }
+
         Log::info('🔧 Migration: Starting customer_link_status correction');
 
         // Get counts before changes for logging

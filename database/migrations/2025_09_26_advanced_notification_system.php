@@ -42,11 +42,8 @@ return new class extends Migration
         });
 
         // Customer notification preferences
-        if (Schema::hasTable('notification_preferences')) {
-            return;
-        }
-
-        Schema::create('notification_preferences', function (Blueprint $table) {
+        if (!Schema::hasTable('notification_preferences')) {
+            Schema::create('notification_preferences', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('customer_id')->constrained()->onDelete('cascade');
                 $table->string('channel');
@@ -64,13 +61,11 @@ return new class extends Migration
                 $table->unique(['customer_id', 'channel']);
                 $table->index('unsubscribe_token');
             });
-
-        // Enhanced notification queue
-        if (Schema::hasTable('notification_queue')) {
-            return;
         }
 
-        Schema::create('notification_queue', function (Blueprint $table) {
+        // Enhanced notification queue
+        if (!Schema::hasTable('notification_queue')) {
+            Schema::create('notification_queue', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid')->unique();
                 $table->morphs('notifiable');
@@ -100,13 +95,11 @@ return new class extends Migration
                 $table->index('notifiable_id');
                 $table->index('sent_at');
             });
-
-        // Notification delivery logs (detailed tracking)
-        if (Schema::hasTable('notification_deliveries')) {
-            return;
         }
 
-        Schema::create('notification_deliveries', function (Blueprint $table) {
+        // Notification delivery logs (detailed tracking)
+        if (!Schema::hasTable('notification_deliveries')) {
+            Schema::create('notification_deliveries', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('notification_queue_id')->constrained('notification_queue');
                 $table->string('event');
@@ -122,13 +115,11 @@ return new class extends Migration
                 $table->index(['notification_queue_id', 'event']);
                 $table->index('occurred_at');
             });
-
-        // SMS/WhatsApp provider configurations
-        if (Schema::hasTable('notification_providers')) {
-            return;
         }
 
-        Schema::create('notification_providers', function (Blueprint $table) {
+        // SMS/WhatsApp provider configurations
+        if (!Schema::hasTable('notification_providers')) {
+            Schema::create('notification_providers', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->nullable()->constrained();
                 $table->string('name');
@@ -147,13 +138,11 @@ return new class extends Migration
 
                 $table->index(['company_id', 'channel', 'is_active']);
             });
-
-        // Notification analytics
-        if (Schema::hasTable('notification_analytics')) {
-            return;
         }
 
-        Schema::create('notification_analytics', function (Blueprint $table) {
+        // Notification analytics
+        if (!Schema::hasTable('notification_analytics')) {
+            Schema::create('notification_analytics', function (Blueprint $table) {
                 $table->id();
                 $table->date('date');
                 $table->foreignId('company_id')->nullable()->constrained();
@@ -176,13 +165,11 @@ return new class extends Migration
                 $table->unique(['date', 'company_id', 'channel', 'type']);
                 $table->index(['company_id', 'date']);
             });
-
-        // Unsubscribe list
-        if (Schema::hasTable('notification_unsubscribes')) {
-            return;
         }
 
-        Schema::create('notification_unsubscribes', function (Blueprint $table) {
+        // Unsubscribe list
+        if (!Schema::hasTable('notification_unsubscribes')) {
+            Schema::create('notification_unsubscribes', function (Blueprint $table) {
                 $table->id();
                 $table->string('email')->nullable();
                 $table->string('phone')->nullable();
@@ -199,6 +186,7 @@ return new class extends Migration
                 $table->index(['phone', 'channel']);
                 $table->index('customer_id');
             });
+        }
 
         // Add notification fields to customers table
         

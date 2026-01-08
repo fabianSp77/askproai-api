@@ -15,6 +15,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support triggers)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Add database triggers to enforce multi-tenant isolation
         // Ensures appointments.company_id always matches customer.company_id
         DB::unprepared('

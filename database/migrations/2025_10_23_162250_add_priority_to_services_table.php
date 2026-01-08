@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::table('services', function (Blueprint $table) {
             // Add priority column (lower number = higher priority)
             // Default 999 = lowest priority
-            $table->integer('priority')->default(999)->after('is_default');
-            $table->index('priority'); // Index for ORDER BY queries
+            if (!Schema::hasColumn('services', 'priority')) {
+                $table->integer('priority')->default(999)->after('is_default');
+                $table->index('priority'); // Index for ORDER BY queries
+            }
         });
 
         // Set priority for existing services

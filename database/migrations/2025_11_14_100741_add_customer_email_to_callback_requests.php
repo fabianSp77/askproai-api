@@ -20,15 +20,31 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist
+        if (!Schema::hasTable('callback_requests')) {
+            return;
+        }
+
+        // Skip if column already exists
+        if (Schema::hasColumn('callback_requests', 'customer_email')) {
+            return;
+        }
+
         Schema::table('callback_requests', function (Blueprint $table) {
+            $afterColumn = Schema::hasColumn('callback_requests', 'customer_name') ? 'customer_name' : 'id';
             $table->string('customer_email', 255)
                   ->nullable()
-                  ->after('customer_name')
+                  ->after($afterColumn)
                   ->comment('Customer email for callback confirmation');
-
-            // Add index for email lookups
-            $table->index('customer_email', 'idx_callback_email');
         });
+
+        // Add index for email lookups (check if doesn't exist)
+        $existingIndexes = collect(Schema::getIndexes('callback_requests'))->pluck('name')->toArray();
+        if (!in_array('idx_callback_email', $existingIndexes)) {
+            Schema::table('callback_requests', function (Blueprint $table) {
+                $table->index('customer_email', 'idx_callback_email');
+            });
+        }
     }
 
     /**
@@ -36,8 +52,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('callback_requests', function (Blueprint $table) {
-            $table->dropIndex('idx_callback_email');
+        if (!Schema::hasTable('callback_requests')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('callback_requests', 'customer_email')) {
+            return;
+        }
+
+        $existingIndexes = collect(Schema::getIndexes('callback_requests'))->pluck('name')->toArray();
+
+        Schema::table('callback_requests', function (Blueprint $table) use ($existingIndexes) {
+            if (in_array('idx_callback_email', $existingIndexes)) {
+                $table->dropIndex('idx_callback_email');
+            }
             $table->dropColumn('customer_email');
         });
     }

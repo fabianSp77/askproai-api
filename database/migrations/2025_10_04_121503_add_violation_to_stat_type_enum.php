@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,6 +16,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('appointment_modification_stats')) {
+            return;
+        }
+
+        // Skip if column doesn't exist
+        if (!Schema::hasColumn('appointment_modification_stats', 'stat_type')) {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE appointment_modification_stats
             MODIFY COLUMN stat_type ENUM(

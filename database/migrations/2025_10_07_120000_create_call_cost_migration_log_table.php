@@ -14,7 +14,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::createIfNotExists('call_cost_migration_log', function (Blueprint $table) {
+        if (Schema::hasTable('call_cost_migration_log')) {
+            return;
+        }
+
+        Schema::create('call_cost_migration_log', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('call_id');
             $table->string('migration_batch', 50);

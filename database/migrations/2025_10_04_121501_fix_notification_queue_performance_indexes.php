@@ -17,6 +17,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('notification_queue')) {
+            return;
+        }
+
+        // Check if indexes already exist
+        $existingIndexes = collect(Schema::getIndexes('notification_queue'))->pluck('name')->toArray();
+        if (in_array('idx_nq_status_created', $existingIndexes)) {
+            return; // Already migrated
+        }
+
         Schema::table('notification_queue', function (Blueprint $table) {
             // Create indexes that were supposed to be created by 2025_10_04_110927
             $table->index(['status', 'created_at'], 'idx_nq_status_created');

@@ -15,6 +15,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support JSON functions)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // Count records that will be updated
         $countToUpdate = DB::table('appointments')
             ->whereNull('calcom_booking_id')

@@ -16,6 +16,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support index checks)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         Schema::table('calls', function (Blueprint $table) {
             // Composite index for OngoingCallsWidget query optimization
             // Query: WHERE status IN (...) AND call_status IN (...) AND created_at >= ...

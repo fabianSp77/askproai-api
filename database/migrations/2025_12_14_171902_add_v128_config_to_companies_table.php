@@ -18,8 +18,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist
+        if (!Schema::hasTable('companies')) {
+            return;
+        }
+
+        // Skip if column already exists
+        if (Schema::hasColumn('companies', 'v128_config')) {
+            return;
+        }
+
         Schema::table('companies', function (Blueprint $table) {
-            $table->json('v128_config')->nullable()->after('settings');
+            // Use fallback column if 'settings' doesn't exist
+            $afterColumn = Schema::hasColumn('companies', 'settings') ? 'settings' : 'id';
+            $table->json('v128_config')->nullable()->after($afterColumn);
         });
     }
 

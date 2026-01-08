@@ -29,6 +29,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (uses MySQL-specific features)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // ═══════════════════════════════════════════════════════════
         // STEP 1: Verify no orphaned records exist
         // ═══════════════════════════════════════════════════════════
@@ -105,49 +110,65 @@ return new class extends Migration
      */
     protected function backfillCompanyIds(): void
     {
-        // Backfill services.company_id from branches
-        $servicesUpdated = DB::table('services')
-            ->whereNull('company_id')
-            ->whereNotNull('branch_id')
-            ->update([
-                'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = services.branch_id)')
-            ]);
+        $servicesUpdated = 0;
+        $servicesDefaulted = 0;
+        $staffUpdated = 0;
+        $staffDefaulted = 0;
+        $callsUpdated = 0;
+        $callsDefaulted = 0;
+        $branchesDefaulted = 0;
 
-        // Backfill remaining services.company_id with default company (ID=1)
-        $servicesDefaulted = DB::table('services')
-            ->whereNull('company_id')
-            ->update(['company_id' => 1]);
+        // Backfill services.company_id from branches (only if columns exist)
+        if (Schema::hasTable('services') && Schema::hasColumn('services', 'branch_id') && Schema::hasColumn('services', 'company_id')) {
+            $servicesUpdated = DB::table('services')
+                ->whereNull('company_id')
+                ->whereNotNull('branch_id')
+                ->update([
+                    'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = services.branch_id)')
+                ]);
 
-        // Backfill staff.company_id from branches
-        $staffUpdated = DB::table('staff')
-            ->whereNull('company_id')
-            ->whereNotNull('branch_id')
-            ->update([
-                'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = staff.branch_id)')
-            ]);
+            // Backfill remaining services.company_id with default company (ID=1)
+            $servicesDefaulted = DB::table('services')
+                ->whereNull('company_id')
+                ->update(['company_id' => 1]);
+        }
 
-        // Backfill remaining staff.company_id with default company (ID=1)
-        $staffDefaulted = DB::table('staff')
-            ->whereNull('company_id')
-            ->update(['company_id' => 1]);
+        // Backfill staff.company_id from branches (only if columns exist)
+        if (Schema::hasTable('staff') && Schema::hasColumn('staff', 'branch_id') && Schema::hasColumn('staff', 'company_id')) {
+            $staffUpdated = DB::table('staff')
+                ->whereNull('company_id')
+                ->whereNotNull('branch_id')
+                ->update([
+                    'company_id' => DB::raw('(SELECT company_id FROM branches WHERE branches.id = staff.branch_id)')
+                ]);
 
-        // Backfill calls.company_id from customers
-        $callsUpdated = DB::table('calls')
-            ->whereNull('company_id')
-            ->whereNotNull('customer_id')
-            ->update([
-                'company_id' => DB::raw('(SELECT company_id FROM customers WHERE customers.id = calls.customer_id)')
-            ]);
+            // Backfill remaining staff.company_id with default company (ID=1)
+            $staffDefaulted = DB::table('staff')
+                ->whereNull('company_id')
+                ->update(['company_id' => 1]);
+        }
 
-        // Backfill remaining calls.company_id with default company (ID=1)
-        $callsDefaulted = DB::table('calls')
-            ->whereNull('company_id')
-            ->update(['company_id' => 1]);
+        // Backfill calls.company_id from customers (only if columns exist)
+        if (Schema::hasTable('calls') && Schema::hasColumn('calls', 'customer_id') && Schema::hasColumn('calls', 'company_id')) {
+            $callsUpdated = DB::table('calls')
+                ->whereNull('company_id')
+                ->whereNotNull('customer_id')
+                ->update([
+                    'company_id' => DB::raw('(SELECT company_id FROM customers WHERE customers.id = calls.customer_id)')
+                ]);
+
+            // Backfill remaining calls.company_id with default company (ID=1)
+            $callsDefaulted = DB::table('calls')
+                ->whereNull('company_id')
+                ->update(['company_id' => 1]);
+        }
 
         // Backfill branches.company_id (should not be NULL, but safety check)
-        $branchesDefaulted = DB::table('branches')
-            ->whereNull('company_id')
-            ->update(['company_id' => 1]);
+        if (Schema::hasTable('branches') && Schema::hasColumn('branches', 'company_id')) {
+            $branchesDefaulted = DB::table('branches')
+                ->whereNull('company_id')
+                ->update(['company_id' => 1]);
+        }
 
         \Log::info('company_id backfill completed', [
             'services_from_branch' => $servicesUpdated,
@@ -242,53 +263,69 @@ return new class extends Migration
     protected function addPerformanceIndexes(): void
     {
         // 1. staff.calcom_user_id (Cal.com sync performance)
-        Schema::table('staff', function (Blueprint $table) {
-            // Check if index already exists
-            $indexes = DB::select("
-                SHOW INDEX FROM staff WHERE Key_name = 'idx_staff_calcom_user'
-            ");
+        if (Schema::hasTable('staff') && Schema::hasColumn('staff', 'calcom_user_id')) {
+            Schema::table('staff', function (Blueprint $table) {
+                // Check if index already exists
+                $indexes = DB::select("
+                    SHOW INDEX FROM staff WHERE Key_name = 'idx_staff_calcom_user'
+                ");
 
-            if (empty($indexes)) {
-                $table->index('calcom_user_id', 'idx_staff_calcom_user');
-                \Log::info('Added index: staff.calcom_user_id');
-            }
-        });
+                if (empty($indexes)) {
+                    $table->index('calcom_user_id', 'idx_staff_calcom_user');
+                    \Log::info('Added index: staff.calcom_user_id');
+                }
+            });
+        }
 
         // 2. service_staff reverse lookup (staff_id, can_book, is_active)
-        Schema::table('service_staff', function (Blueprint $table) {
-            $indexes = DB::select("
-                SHOW INDEX FROM service_staff WHERE Key_name = 'idx_service_staff_reverse'
-            ");
+        if (Schema::hasTable('service_staff') &&
+            Schema::hasColumn('service_staff', 'staff_id') &&
+            Schema::hasColumn('service_staff', 'can_book') &&
+            Schema::hasColumn('service_staff', 'is_active')) {
+            Schema::table('service_staff', function (Blueprint $table) {
+                $indexes = DB::select("
+                    SHOW INDEX FROM service_staff WHERE Key_name = 'idx_service_staff_reverse'
+                ");
 
-            if (empty($indexes)) {
-                $table->index(['staff_id', 'can_book', 'is_active'], 'idx_service_staff_reverse');
-                \Log::info('Added index: service_staff(staff_id, can_book, is_active)');
-            }
-        });
+                if (empty($indexes)) {
+                    $table->index(['staff_id', 'can_book', 'is_active'], 'idx_service_staff_reverse');
+                    \Log::info('Added index: service_staff(staff_id, can_book, is_active)');
+                }
+            });
+        }
 
         // 3. services branch filtering (company_id, branch_id, is_active)
-        Schema::table('services', function (Blueprint $table) {
-            $indexes = DB::select("
-                SHOW INDEX FROM services WHERE Key_name = 'idx_services_branch_active'
-            ");
+        if (Schema::hasTable('services') &&
+            Schema::hasColumn('services', 'company_id') &&
+            Schema::hasColumn('services', 'branch_id') &&
+            Schema::hasColumn('services', 'is_active')) {
+            Schema::table('services', function (Blueprint $table) {
+                $indexes = DB::select("
+                    SHOW INDEX FROM services WHERE Key_name = 'idx_services_branch_active'
+                ");
 
-            if (empty($indexes)) {
-                $table->index(['company_id', 'branch_id', 'is_active'], 'idx_services_branch_active');
-                \Log::info('Added index: services(company_id, branch_id, is_active)');
-            }
-        });
+                if (empty($indexes)) {
+                    $table->index(['company_id', 'branch_id', 'is_active'], 'idx_services_branch_active');
+                    \Log::info('Added index: services(company_id, branch_id, is_active)');
+                }
+            });
+        }
 
         // 4. calls customer-company lookup (company_id, customer_id, created_at)
-        Schema::table('calls', function (Blueprint $table) {
-            $indexes = DB::select("
-                SHOW INDEX FROM calls WHERE Key_name = 'idx_calls_customer_company'
-            ");
+        if (Schema::hasTable('calls') &&
+            Schema::hasColumn('calls', 'company_id') &&
+            Schema::hasColumn('calls', 'customer_id')) {
+            Schema::table('calls', function (Blueprint $table) {
+                $indexes = DB::select("
+                    SHOW INDEX FROM calls WHERE Key_name = 'idx_calls_customer_company'
+                ");
 
-            if (empty($indexes)) {
-                $table->index(['company_id', 'customer_id', 'created_at'], 'idx_calls_customer_company');
-                \Log::info('Added index: calls(company_id, customer_id, created_at)');
-            }
-        });
+                if (empty($indexes)) {
+                    $table->index(['company_id', 'customer_id', 'created_at'], 'idx_calls_customer_company');
+                    \Log::info('Added index: calls(company_id, customer_id, created_at)');
+                }
+            });
+        }
     }
 
     /**

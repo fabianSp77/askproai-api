@@ -24,6 +24,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support REGEXP)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         try {
             // Step 1: Add temporary backup column for rollback capability
             if (!Schema::hasColumn('appointments', '_migration_backup_v2_id')) {

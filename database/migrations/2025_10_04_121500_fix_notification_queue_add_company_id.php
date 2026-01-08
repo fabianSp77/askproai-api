@@ -20,6 +20,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('notification_queue')) {
+            return;
+        }
+
+        // Skip if column already exists
+        if (Schema::hasColumn('notification_queue', 'company_id')) {
+            return;
+        }
+
         // Add company_id column to notification_queue
         Schema::table('notification_queue', function (Blueprint $table) {
             $table->unsignedBigInteger('company_id')->nullable()->after('notifiable_id');

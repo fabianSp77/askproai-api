@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support FULLTEXT indexes and CREATE VIEW)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         // 1. RETELL_CALL_SESSIONS - Aggregate root for each call
         Schema::create('retell_call_sessions', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -225,9 +230,9 @@ return new class extends Migration
             $table->index(['severity', 'occurred_at'], 'idx_errors_critical');
         });
 
-        // Create view for quick call debugging (MySQL-compatible)
+        // Create view for quick call debugging (MySQL-compatible, idempotent)
         DB::statement("
-            CREATE VIEW retell_call_debug_view AS
+            CREATE OR REPLACE VIEW retell_call_debug_view AS
             SELECT
                 cs.id as session_id,
                 cs.call_id,

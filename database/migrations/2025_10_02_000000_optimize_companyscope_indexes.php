@@ -35,6 +35,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support SHOW INDEX)
+        if (app()->environment('testing')) {
+            return;
+        }
+
         $this->optimizeAppointmentsIndexes();
         $this->optimizeCustomersIndexes();
         $this->optimizeCallsIndexes();

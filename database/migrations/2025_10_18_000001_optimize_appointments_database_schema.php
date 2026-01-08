@@ -28,6 +28,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table doesn't exist (idempotent migration)
+        if (!Schema::hasTable('appointments')) {
+            return;
+        }
+
         // Drop phantom columns if they were somehow created in the schema
         Schema::table('appointments', function (Blueprint $table) {
             if (Schema::hasColumn('appointments', 'created_by')) {
@@ -46,8 +51,9 @@ return new class extends Migration
             }
         });
 
-        // Verify critical indexes exist
-        if (!$this->indexExists('appointments', 'idx_appointments_call_lookup')) {
+        // Verify critical indexes exist (only if column exists)
+        if (Schema::hasColumn('appointments', 'call_id') &&
+            !$this->indexExists('appointments', 'idx_appointments_call_lookup')) {
             Schema::table('appointments', function (Blueprint $table) {
                 $table->index(['call_id'], 'idx_appointments_call_lookup');
             });
