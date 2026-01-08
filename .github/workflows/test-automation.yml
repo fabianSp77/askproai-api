@@ -18,7 +18,7 @@ jobs:
   # Unit Tests
   # =========================================
   unit-tests:
-    name: Unit Tests (PHPUnit)
+    name: Unit Tests (Pest)
     runs-on: ubuntu-latest
 
     services:
@@ -96,7 +96,7 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run Unit Tests with Coverage
-        run: vendor/bin/phpunit --testsuite=Unit --coverage-clover=coverage.xml --coverage-html=coverage-report
+        run: vendor/bin/pest tests/Unit --coverage-clover=coverage.xml --coverage-html=coverage-report
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -177,7 +177,7 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run RCA Prevention Tests
-        run: vendor/bin/phpunit tests/Unit/Services/RcaPreventionTest.php --verbose
+        run: vendor/bin/pest tests/Unit/Services/RcaPreventionTest.php --verbose
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -258,7 +258,7 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run Integration Tests
-        run: vendor/bin/phpunit --testsuite=Feature --filter=Integration
+        run: vendor/bin/pest tests/Feature --filter=Integration
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -445,7 +445,7 @@ jobs:
         run: cp .env.testing .env
 
       - name: Run Security Tests
-        run: vendor/bin/phpunit --testsuite=Feature --filter=Security
+        run: vendor/bin/pest tests/Feature --filter=Security
 
       - name: Run PHPStan Static Analysis
         run: vendor/bin/phpstan analyse --level=8 app/ --error-format=github
