@@ -2,11 +2,11 @@
 
 namespace App\Filament\Widgets\ServiceGateway;
 
+use App\Filament\Widgets\ServiceGateway\Concerns\HasDashboardFilters;
 use App\Models\AssignmentGroup;
 use App\Models\ServiceCase;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,40 +17,33 @@ use Illuminate\Support\Facades\Log;
  * Bar chart showing case distribution across assignment groups.
  * SECURITY: All queries explicitly filtered by company_id for multi-tenancy isolation.
  * PERFORMANCE: Uses GROUP BY query instead of N+1 queries per group.
- * FEATURE: Supports company filter from dashboard for super-admins.
+ * FEATURE: Supports company and time_range filters from dashboard.
  */
 class WorkloadByGroupChart extends ChartWidget
 {
     use InteractsWithPageFilters;
+    use HasDashboardFilters;
 
     protected static ?string $heading = 'Workload nach Team';
-    protected static ?string $pollingInterval = '60s';
+    // Polling removed - Reactive via InteractsWithPageFilters handles filter updates
 
     protected static bool $isLazy = true;
-    protected static ?string $maxHeight = '300px';
+    protected static ?string $maxHeight = '350px';
 
-    protected function getEffectiveCompanyId(): ?int
-    {
-        $filteredCompanyId = $this->filters['company_id'] ?? null;
-        if ($filteredCompanyId) {
-            return (int) $filteredCompanyId;
-        }
-
-        $user = Auth::user();
-        if ($user && $user->hasAnyRole(['super_admin', 'super-admin', 'Admin', 'reseller_admin'])) {
-            return null;
-        }
-
-        return $user?->company_id;
-    }
+    protected int|string|array $columnSpan = [
+        'default' => 1,
+        'md' => 1,
+        'xl' => 1,
+    ];
 
     protected function getData(): array
     {
         try {
             $companyId = $this->getEffectiveCompanyId();
-            $cacheKey = $companyId ? "service_gateway_workload_chart_{$companyId}" : 'service_gateway_workload_chart_all';
+            $timeRangeStart = $this->getTimeRangeStart();
+            $cacheKey = "service_gateway_workload_chart_{$this->getFilterCacheKey()}";
 
-            $data = Cache::remember($cacheKey, config('gateway.cache.widget_stats_seconds'), function () use ($companyId) {
+            $data = Cache::remember($cacheKey, config('gateway.cache.widget_stats_seconds'), function () use ($companyId, $timeRangeStart) {
             // Get assignment groups
             $groupsQuery = AssignmentGroup::query()->where('is_active', true)->ordered();
             if ($companyId) {
@@ -66,6 +59,9 @@ class WorkloadByGroupChart extends ChartWidget
 
             if ($companyId) {
                 $caseQuery->where('company_id', $companyId);
+            }
+            if ($timeRangeStart) {
+                $caseQuery->where('created_at', '>=', $timeRangeStart);
             }
 
             $caseCounts = $caseQuery->get()->groupBy('assigned_group_id');
@@ -158,7 +154,7 @@ class WorkloadByGroupChart extends ChartWidget
                     'stacked' => true,
                     'beginAtZero' => true,
                     'grid' => [
-                        'color' => 'rgba(0, 0, 0, 0.05)',
+                        'color' => 'rgba(128, 128, 128, 0.1)', // Dark mode adaptive
                     ],
                 ],
             ],

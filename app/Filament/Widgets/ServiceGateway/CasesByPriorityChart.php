@@ -2,10 +2,10 @@
 
 namespace App\Filament\Widgets\ServiceGateway;
 
+use App\Filament\Widgets\ServiceGateway\Concerns\HasDashboardFilters;
 use App\Models\ServiceCase;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -14,43 +14,33 @@ use Illuminate\Support\Facades\Log;
  *
  * Horizontal bar chart showing open cases by priority.
  * SECURITY: All queries explicitly filtered by company_id for multi-tenancy isolation.
- * FEATURE: Supports company filter from dashboard for super-admins.
+ * FEATURE: Supports company and time_range filters from dashboard.
  */
 class CasesByPriorityChart extends ChartWidget
 {
     use InteractsWithPageFilters;
+    use HasDashboardFilters;
 
     protected static ?string $heading = 'Offene Cases nach Priorität';
-    protected static ?string $pollingInterval = '60s';
+    // Polling removed - Reactive via InteractsWithPageFilters handles filter updates
 
     protected static bool $isLazy = true;
-    protected static ?string $maxHeight = '300px';
-
-    protected function getEffectiveCompanyId(): ?int
-    {
-        $filteredCompanyId = $this->filters['company_id'] ?? null;
-        if ($filteredCompanyId) {
-            return (int) $filteredCompanyId;
-        }
-
-        $user = Auth::user();
-        if ($user && $user->hasAnyRole(['super_admin', 'super-admin', 'Admin', 'reseller_admin'])) {
-            return null;
-        }
-
-        return $user?->company_id;
-    }
+    protected static ?string $maxHeight = '350px';
 
     protected function getData(): array
     {
         try {
             $companyId = $this->getEffectiveCompanyId();
-            $cacheKey = $companyId ? "service_gateway_priority_chart_{$companyId}" : 'service_gateway_priority_chart_all';
+            $timeRangeStart = $this->getTimeRangeStart();
+            $cacheKey = "service_gateway_priority_chart_{$this->getFilterCacheKey()}";
 
-            $data = Cache::remember($cacheKey, config('gateway.cache.widget_stats_seconds'), function () use ($companyId) {
+            $data = Cache::remember($cacheKey, config('gateway.cache.widget_stats_seconds'), function () use ($companyId, $timeRangeStart) {
             $baseQuery = ServiceCase::query()->open();
             if ($companyId) {
                 $baseQuery->where('company_id', $companyId);
+            }
+            if ($timeRangeStart) {
+                $baseQuery->where('created_at', '>=', $timeRangeStart);
             }
 
             return [
@@ -109,7 +99,7 @@ class CasesByPriorityChart extends ChartWidget
                     'beginAtZero' => true,
                     'grid' => [
                         'display' => true,
-                        'color' => 'rgba(0, 0, 0, 0.05)',
+                        'color' => 'rgba(128, 128, 128, 0.1)', // Dark mode adaptive
                     ],
                 ],
                 'y' => [

@@ -12,9 +12,11 @@ use App\Filament\Widgets\ServiceGateway\WorkloadByGroupChart;
 use App\Filament\Widgets\ServiceGateway\RecentCasesWidget;
 use App\Filament\Widgets\ServiceGateway\OutputDeliveryStats;
 use App\Models\Company;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Pages\Dashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Illuminate\Support\Facades\Auth;
@@ -61,11 +63,12 @@ class ServiceGatewayDashboard extends Dashboard
     }
 
     /**
-     * Dashboard filter form - Company selector for admins.
+     * Dashboard filter form - Company selector and time range for admins.
      *
      * Super-admins/Admins can:
      * - Select "Alle Unternehmen" to see aggregated data
      * - Select specific company to filter
+     * - Choose preset time ranges or custom date range
      *
      * Regular users don't see the filter (uses their company automatically).
      */
@@ -91,6 +94,8 @@ class ServiceGatewayDashboard extends Dashboard
                             ->searchable()
                             ->preload()
                             ->native(false)
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->dispatch('filtersUpdated', filters: $this->filters))
                             ->columnSpan(1),
                         Select::make('time_range')
                             ->label('Zeitraum')
@@ -100,12 +105,42 @@ class ServiceGatewayDashboard extends Dashboard
                                 'month' => 'Dieser Monat',
                                 'quarter' => 'Dieses Quartal',
                                 'all' => 'Gesamt',
+                                'custom' => 'Benutzerdefiniert...',
                             ])
                             ->default('month')
                             ->native(false)
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->dispatch('filtersUpdated', filters: $this->filters))
+                            ->columnSpan(1),
+                        // Custom date range pickers (visible only when 'custom' is selected)
+                        DatePicker::make('date_from')
+                            ->label('Von')
+                            ->native(false)
+                            ->displayFormat('d.m.Y')
+                            ->placeholder('TT.MM.JJJJ')
+                            ->maxDate(now())
+                            ->visible(fn (Get $get) => $get('time_range') === 'custom')
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->dispatch('filtersUpdated', filters: $this->filters))
+                            ->columnSpan(1),
+                        DatePicker::make('date_to')
+                            ->label('Bis')
+                            ->native(false)
+                            ->displayFormat('d.m.Y')
+                            ->placeholder('TT.MM.JJJJ')
+                            ->default(now())
+                            ->maxDate(now())
+                            ->visible(fn (Get $get) => $get('time_range') === 'custom')
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->dispatch('filtersUpdated', filters: $this->filters))
                             ->columnSpan(1),
                     ])
-                    ->columns(4)
+                    ->columns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'md' => 4,
+                        'xl' => 6, // Extra space for date pickers
+                    ])
                     ->compact(),
             ]);
     }
@@ -120,6 +155,22 @@ class ServiceGatewayDashboard extends Dashboard
     public function getWidgets(): array
     {
         return [];
+    }
+
+    /**
+     * Pass filters to header/footer widgets.
+     *
+     * CRITICAL: Without this override, header/footer widgets receive empty data
+     * and don't get the filter values. The Filament Dashboard base class only
+     * passes filters to main widgets (getWidgets), not header/footer widgets.
+     *
+     * @see vendor/filament/filament/resources/views/components/page/index.blade.php
+     */
+    public function getWidgetData(): array
+    {
+        return [
+            'filters' => $this->filters,
+        ];
     }
 
     /**
