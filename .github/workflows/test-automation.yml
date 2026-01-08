@@ -10,7 +10,7 @@ on:
     - cron: '0 2 * * *'
 
 env:
-  PHP_VERSION: '8.2'
+  PHP_VERSION: '8.4'
   NODE_VERSION: '18'
 
 jobs:
