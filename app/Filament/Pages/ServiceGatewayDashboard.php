@@ -111,6 +111,18 @@ class ServiceGatewayDashboard extends Dashboard
     }
 
     /**
+     * Override parent getWidgets() to prevent Cal.com widgets from appearing.
+     *
+     * The parent Dashboard class includes Cal.com widgets in getWidgets().
+     * We explicitly return an empty array to ensure only Service Gateway
+     * widgets (defined in getHeaderWidgets/getFooterWidgets) are shown.
+     */
+    public function getWidgets(): array
+    {
+        return [];
+    }
+
+    /**
      * Header widgets - Stats overview (3 columns)
      *
      * Row 1: SLA Compliance + Output Delivery + First Response Time
