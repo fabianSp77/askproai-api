@@ -87,9 +87,23 @@ jobs:
 
       - name: Run database migrations
         run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run Unit Tests with Coverage
         run: vendor/bin/phpunit --testsuite=Unit --coverage-clover=coverage.xml --coverage-html=coverage-report
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -154,9 +168,23 @@ jobs:
 
       - name: Run migrations
         run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run RCA Prevention Tests
         run: vendor/bin/phpunit tests/Unit/Services/RcaPreventionTest.php --verbose
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Report RCA Test Results
         if: always()
@@ -211,12 +239,33 @@ jobs:
 
       - name: Run migrations
         run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Seed test data
         run: php artisan db:seed --class=TestDataSeeder
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run Integration Tests
         run: vendor/bin/phpunit --testsuite=Feature --filter=Integration
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
   # =========================================
   # Performance Tests (K6)
@@ -260,10 +309,23 @@ jobs:
           php artisan migrate --force
           php artisan serve &
           sleep 10
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run Baseline Performance Test
         env:
           API_URL: http://localhost:8000
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
         run: k6 run tests/Performance/k6/baseline-booking-flow.js --out json=baseline-results.json
 
       - name: Check Performance Thresholds
@@ -325,9 +387,23 @@ jobs:
           php artisan db:seed --class=TestDataSeeder
           php artisan serve &
           sleep 10
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run Playwright E2E Tests
         run: npx playwright test tests/E2E/playwright/
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: askproai_testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
