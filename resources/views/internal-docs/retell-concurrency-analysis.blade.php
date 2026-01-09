@@ -1578,8 +1578,8 @@ we believe in the Retell platform and want to make this partnership work.</pre>
 
         // Szenario-Tabelle mit automatischer Paketzuweisung
         function updateScenarioTable(callsPerDay, duration) {
-            // Zeige die Paketgrenzen: 19 (S max), 39 (M max), 40+ (L)
-            const scenarios = [19, 39, 50];
+            // Zeige praktische Beispiele: 10 (S), 20 (M Start), 40 (L Start)
+            const scenarios = [10, 20, 40];
             const tbody = document.getElementById('scenario-table');
             const currentCompanies = parseInt(document.getElementById('calc-companies').value);
 
@@ -1675,9 +1675,9 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             updateQuoteTemplate(companies, callsPerDay, duration, result);
         }
 
-        // Szenario-Vergleichskarten (1, 19, 20, 40 Unternehmen - zeigt Übergänge)
+        // Szenario-Vergleichskarten (1, 10, 20, 40 Unternehmen)
         function updateInvoiceScenarios(callsPerDay, duration) {
-            const scenarios = [1, 19, 20, 40];
+            const scenarios = [1, 10, 20, 40];
             const container = document.getElementById('invoice-scenarios');
             const anrufeProMonat = callsPerDay * CONFIG.tage_pro_monat;
             const minutenProKunde = anrufeProMonat * duration;
