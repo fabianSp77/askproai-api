@@ -1013,7 +1013,27 @@
                                 <th class="px-3 py-2 text-center font-semibold text-indigo-800">Unternehmen</th>
                                 <th class="px-3 py-2 text-right font-semibold text-indigo-800">€/min</th>
                                 <th class="px-3 py-2 text-right font-semibold text-indigo-800">Rabatt</th>
-                                <th class="px-3 py-2 text-right font-semibold text-indigo-800">Deine Marge</th>
+                                <th class="px-3 py-2 text-right font-semibold text-indigo-800 group relative cursor-help">
+                                    <span class="flex items-center justify-end gap-1">
+                                        Deine Marge
+                                        <svg class="w-4 h-4 text-indigo-400 opacity-60 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                                    </span>
+                                    <!-- Tooltip -->
+                                    <div class="absolute z-30 right-0 top-full mt-1 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                        <div class="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-2xl border border-indigo-400">
+                                            <div class="absolute -top-2 right-4 w-3 h-3 bg-gray-900 rotate-45 border-l border-t border-indigo-400"></div>
+                                            <p class="font-bold text-indigo-300 mb-2">📊 Marge-Berechnung</p>
+                                            <div class="space-y-1 text-[11px]">
+                                                <p class="text-gray-300">Die Marge zeigt, wie viel Prozent des Verkaufspreises dein Gewinn ist.</p>
+                                                <div class="bg-gray-800 rounded p-2 mt-2 font-mono">
+                                                    <p class="text-gray-400">Formel:</p>
+                                                    <p class="text-indigo-300">(Preis − Selbstkosten) ÷ Preis × 100</p>
+                                                </div>
+                                                <p class="text-gray-400 mt-2">Selbstkosten: <span class="text-white" id="tooltip-selbstkosten-header">€0.113</span>/min</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1027,7 +1047,23 @@
                                 <td class="px-3 py-3 text-center font-medium" id="pkg-range-S">1–19</td>
                                 <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-S">€0.29</td>
                                 <td class="px-3 py-3 text-right text-gray-400">—</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-S">61%</span></td>
+                                <td class="px-3 py-3 text-right">
+                                    <div class="group/margin relative inline-block cursor-help">
+                                        <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-S">61%</span>
+                                        <div class="absolute z-30 right-0 bottom-full mb-2 w-56 opacity-0 invisible group-hover/margin:opacity-100 group-hover/margin:visible transition-all duration-200">
+                                            <div class="bg-gray-900 text-white text-[11px] rounded-lg p-3 shadow-2xl border border-green-400">
+                                                <div class="absolute -bottom-2 right-4 w-3 h-3 bg-gray-900 rotate-45 border-r border-b border-green-400"></div>
+                                                <p class="font-bold text-green-300 mb-2">📊 Paket S Marge</p>
+                                                <div class="space-y-1 font-mono">
+                                                    <div class="flex justify-between"><span class="text-gray-400">Verkaufspreis:</span><span id="tooltip-pkg-s-price" class="text-white">€0.29</span></div>
+                                                    <div class="flex justify-between"><span class="text-gray-400">− Selbstkosten:</span><span id="tooltip-pkg-s-cost" class="text-red-300">€0.113</span></div>
+                                                    <div class="flex justify-between border-t border-gray-700 pt-1"><span class="text-gray-400">= Gewinn/min:</span><span id="tooltip-pkg-s-profit" class="text-green-300">€0.177</span></div>
+                                                    <div class="flex justify-between font-bold mt-1 pt-1 border-t border-gray-700"><span class="text-white">Marge:</span><span id="tooltip-pkg-s-margin" class="text-green-400">61%</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                             <tr class="border-b border-indigo-100 hover:bg-indigo-50" id="package-row-M">
                                 <td class="px-3 py-3">
@@ -1039,7 +1075,23 @@
                                 <td class="px-3 py-3 text-center font-medium" id="pkg-range-M">20–39</td>
                                 <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-M">€0.27</td>
                                 <td class="px-3 py-3 text-right text-green-600 font-medium" id="pkg-diff-M">-€0.02</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-M">58%</span></td>
+                                <td class="px-3 py-3 text-right">
+                                    <div class="group/margin relative inline-block cursor-help">
+                                        <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-M">58%</span>
+                                        <div class="absolute z-30 right-0 bottom-full mb-2 w-56 opacity-0 invisible group-hover/margin:opacity-100 group-hover/margin:visible transition-all duration-200">
+                                            <div class="bg-gray-900 text-white text-[11px] rounded-lg p-3 shadow-2xl border border-blue-400">
+                                                <div class="absolute -bottom-2 right-4 w-3 h-3 bg-gray-900 rotate-45 border-r border-b border-blue-400"></div>
+                                                <p class="font-bold text-blue-300 mb-2">📊 Paket M Marge</p>
+                                                <div class="space-y-1 font-mono">
+                                                    <div class="flex justify-between"><span class="text-gray-400">Verkaufspreis:</span><span id="tooltip-pkg-m-price" class="text-white">€0.27</span></div>
+                                                    <div class="flex justify-between"><span class="text-gray-400">− Selbstkosten:</span><span id="tooltip-pkg-m-cost" class="text-red-300">€0.113</span></div>
+                                                    <div class="flex justify-between border-t border-gray-700 pt-1"><span class="text-gray-400">= Gewinn/min:</span><span id="tooltip-pkg-m-profit" class="text-green-300">€0.157</span></div>
+                                                    <div class="flex justify-between font-bold mt-1 pt-1 border-t border-gray-700"><span class="text-white">Marge:</span><span id="tooltip-pkg-m-margin" class="text-blue-400">58%</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                             <tr class="hover:bg-indigo-50" id="package-row-L">
                                 <td class="px-3 py-3">
@@ -1051,7 +1103,23 @@
                                 <td class="px-3 py-3 text-center font-medium" id="pkg-range-L">40+</td>
                                 <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-L">€0.24</td>
                                 <td class="px-3 py-3 text-right text-green-600 font-medium" id="pkg-diff-L">-€0.05</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-L">53%</span></td>
+                                <td class="px-3 py-3 text-right">
+                                    <div class="group/margin relative inline-block cursor-help">
+                                        <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-L">53%</span>
+                                        <div class="absolute z-30 right-0 bottom-full mb-2 w-56 opacity-0 invisible group-hover/margin:opacity-100 group-hover/margin:visible transition-all duration-200">
+                                            <div class="bg-gray-900 text-white text-[11px] rounded-lg p-3 shadow-2xl border border-purple-400">
+                                                <div class="absolute -bottom-2 right-4 w-3 h-3 bg-gray-900 rotate-45 border-r border-b border-purple-400"></div>
+                                                <p class="font-bold text-purple-300 mb-2">📊 Paket L Marge</p>
+                                                <div class="space-y-1 font-mono">
+                                                    <div class="flex justify-between"><span class="text-gray-400">Verkaufspreis:</span><span id="tooltip-pkg-l-price" class="text-white">€0.24</span></div>
+                                                    <div class="flex justify-between"><span class="text-gray-400">− Selbstkosten:</span><span id="tooltip-pkg-l-cost" class="text-red-300">€0.113</span></div>
+                                                    <div class="flex justify-between border-t border-gray-700 pt-1"><span class="text-gray-400">= Gewinn/min:</span><span id="tooltip-pkg-l-profit" class="text-green-300">€0.127</span></div>
+                                                    <div class="flex justify-between font-bold mt-1 pt-1 border-t border-gray-700"><span class="text-white">Marge:</span><span id="tooltip-pkg-l-margin" class="text-purple-400">53%</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -2094,6 +2162,32 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             if (incentiveEl) {
                 incentiveEl.innerHTML = `💡 <strong>Incentive:</strong> Ein Partner mit ${CONFIG.pakete.S.maxCompanies + 1} Unternehmen zahlt für <em>alle ${CONFIG.pakete.S.maxCompanies + 1}</em> nur €${priceM.toFixed(2)}/min statt €${priceS.toFixed(2)}/min!`;
             }
+
+            // Update margin tooltips with detailed calculations
+            const updatePackageTooltip = (pkg, price) => {
+                const profit = price - costs;
+                const margin = (profit / price) * 100;
+                const pkgLower = pkg.toLowerCase();
+
+                // Update tooltip values
+                const priceEl = document.getElementById(`tooltip-pkg-${pkgLower}-price`);
+                const costEl = document.getElementById(`tooltip-pkg-${pkgLower}-cost`);
+                const profitEl = document.getElementById(`tooltip-pkg-${pkgLower}-profit`);
+                const marginEl = document.getElementById(`tooltip-pkg-${pkgLower}-margin`);
+
+                if (priceEl) priceEl.textContent = `€${price.toFixed(2)}`;
+                if (costEl) costEl.textContent = `€${costs.toFixed(3)}`;
+                if (profitEl) profitEl.textContent = `€${profit.toFixed(3)}`;
+                if (marginEl) marginEl.textContent = `${margin.toFixed(0)}%`;
+            };
+
+            updatePackageTooltip('S', priceS);
+            updatePackageTooltip('M', priceM);
+            updatePackageTooltip('L', priceL);
+
+            // Update header tooltip with current Selbstkosten
+            const headerCostEl = document.getElementById('tooltip-selbstkosten-header');
+            if (headerCostEl) headerCostEl.textContent = `€${costs.toFixed(3)}`;
         }
 
         // Update dirty state indicator
