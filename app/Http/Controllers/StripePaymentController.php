@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BalanceTopup;
 use App\Models\Tenant;
 use App\Services\BalanceService;
+use App\Services\Billing\StripeInvoicingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
@@ -14,10 +15,14 @@ use Exception;
 class StripePaymentController extends Controller
 {
     protected $balanceService;
+    protected $stripeInvoicingService;
 
-    public function __construct(BalanceService $balanceService)
-    {
+    public function __construct(
+        BalanceService $balanceService,
+        StripeInvoicingService $stripeInvoicingService
+    ) {
         $this->balanceService = $balanceService;
+        $this->stripeInvoicingService = $stripeInvoicingService;
         Stripe::setApiKey(config('services.stripe.secret'));
     }
 
@@ -96,6 +101,23 @@ class StripePaymentController extends Controller
 
                 case 'charge.refunded':
                     $this->handleRefund($event['data']['object']);
+                    break;
+
+                // Invoice events for Partner Billing
+                case 'invoice.paid':
+                    $this->stripeInvoicingService->handleInvoicePaid($event);
+                    break;
+
+                case 'invoice.payment_failed':
+                    $this->stripeInvoicingService->handleInvoicePaymentFailed($event);
+                    break;
+
+                case 'invoice.finalized':
+                    $this->stripeInvoicingService->handleInvoiceFinalized($event);
+                    break;
+
+                case 'invoice.voided':
+                    $this->stripeInvoicingService->handleInvoiceVoided($event);
                     break;
 
                 default:

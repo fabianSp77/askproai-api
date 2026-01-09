@@ -17,6 +17,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\MonitorProcessingTimeHealth::class,
         \App\Console\Commands\AlertAppointmentSyncFailures::class, // 🆕 PHASE 3 (2025-11-24)
         \App\Console\Commands\ReconcileCallSuccess::class, // 🆕 2025-11-27: Fix false negatives
+        \App\Console\Commands\QueueHealthCheckCommand::class, // 🆕 2025-12-31: Stale worker detection
+        \App\Console\Commands\GenerateMonthlyInvoicesCommand::class, // 🆕 2026-01-09: Partner monthly billing
     ];
 
     public function schedule(Schedule $schedule): void
@@ -204,6 +206,30 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/audio-cleanup.log'));
 
+        // ⚡ ESCALATION RULES PROCESSING (2025-12-28) - SERVICE GATEWAY
+        //
+        // Process automated escalation rules for ServiceNow-style SLA monitoring.
+        // Opt-in per company (escalation_rules_enabled = true).
+        // Actions: Email notification, Group reassignment, Priority escalation, Webhook
+        $schedule->job(new \App\Jobs\ServiceGateway\ProcessEscalationRulesJob())
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/escalation-rules.log'))
+            ->onOneServer();
+
+        // 🔄 QUEUE HEALTH MONITORING (2025-12-31)
+        //
+        // Detects "stale workers" - processes that are running but not processing jobs.
+        // Common causes: memory leaks, deadlocks, PHP process hangs.
+        // Triggers graceful queue:restart if >10 jobs are stale (>5 min old).
+        // This prevents data loss (webhooks not sent, emails not delivered).
+        $schedule->command('queue:health-check')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/queue-health.log'))
+            ->onOneServer();
+
         // 🔄 APPOINTMENT SYNC MONITORING (2025-11-24) - PHASE 3
 
         // Alert on appointment sync failures - runs every 15 minutes
@@ -230,6 +256,22 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/call-reconciliation.log'));
+
+        // 💰 PARTNER MONTHLY BILLING (2026-01-09)
+        //
+        // Generate and send monthly invoices to partners on the 1st of each month.
+        // Each partner receives ONE aggregated invoice covering all their managed companies.
+        // Charges include: Call minutes, monthly service fees, service changes, setup fees.
+        // --send flag automatically finalizes and emails invoices via Stripe.
+        $schedule->command('billing:generate-monthly-invoices --send')
+            ->monthlyOn(1, '09:00')
+            ->timezone('Europe/Berlin')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/partner-billing.log'))
+            ->emailOutputOnFailure(config('mail.admin_email', 'admin@askpro.ai'))
+            ->onOneServer()
+            ->environments(['production']);
 
         // Collect appointment sync metrics - runs every 5 minutes
         // Caches metrics for dashboard widget (5-minute TTL)
