@@ -31,6 +31,55 @@
 
     <main class="max-w-5xl mx-auto px-6 py-10">
 
+        <!-- ================================================================== -->
+        <!-- OPEN REQUEST TRACKER - Retell Support                              -->
+        <!-- ================================================================== -->
+        <section id="support-tracker" class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-lg border-2 border-amber-300 p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h2 class="text-xl font-bold text-amber-900">Offene Anfrage: Retell Support</h2>
+                        <span class="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full animate-pulse">
+                            ⏳ Warte auf Antwort
+                        </span>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-white/60 rounded-lg p-3 border border-amber-200">
+                            <p class="text-xs text-amber-700 font-medium mb-1">Gesendet an</p>
+                            <p class="font-semibold text-amber-900">Rita (Retell.ai Support)</p>
+                        </div>
+                        <div class="bg-white/60 rounded-lg p-3 border border-amber-200">
+                            <p class="text-xs text-amber-700 font-medium mb-1">Datum</p>
+                            <p class="font-semibold text-amber-900">09. Januar 2026</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 rounded-lg p-4 border border-amber-200 mb-4">
+                        <p class="text-sm font-semibold text-amber-800 mb-2">📋 Offene Fragen:</p>
+                        <ol class="text-sm text-amber-900 space-y-2 list-decimal list-inside">
+                            <li><strong>Account vs. Per-Number Concurrency</strong> – Gibt es zwei getrennte Limits?</li>
+                            <li><strong>Peak Handling</strong> – Kosten für 10 parallele Anrufe pro Nummer?</li>
+                            <li><strong>Hunting Groups</strong> – Können wir Per-Number-Limits umgehen?</li>
+                            <li><strong>Enterprise Pricing</strong> – Volumenrabatte bei ~20 Kunden?</li>
+                        </ol>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="text-amber-700">Nach Antwort:</span>
+                        <a href="#next-steps" class="text-amber-800 hover:text-amber-900 underline font-medium">→ Nächste Schritte</a>
+                        <span class="text-amber-400">|</span>
+                        <a href="#implementation-phases" class="text-amber-800 hover:text-amber-900 underline font-medium">→ Implementierungsplan</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Quick Summary -->
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -1698,6 +1747,110 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                     </div>
                 </li>
             </ol>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- NEXT STEPS & IMPLEMENTATION PLAN                                    -->
+        <!-- ================================================================== -->
+        <section id="next-steps" class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-lg border-2 border-emerald-200 p-6 mb-8">
+            <h2 class="text-xl font-bold text-emerald-900 mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </span>
+                Nächste Schritte (nach Retell-Antwort)
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-white/70 rounded-lg p-4 border border-emerald-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                        <h3 class="font-semibold text-emerald-800">Architektur-Entscheidung</h3>
+                    </div>
+                    <ul class="text-sm text-emerald-700 space-y-1 ml-8">
+                        <li>• Multi-Number vs. Per-Number?</li>
+                        <li>• Hunting Groups sinnvoll?</li>
+                        <li>• Enterprise-Deal möglich?</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white/70 rounded-lg p-4 border border-emerald-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                        <h3 class="font-semibold text-emerald-800">Kosten-Kalkulation</h3>
+                    </div>
+                    <ul class="text-sm text-emerald-700 space-y-1 ml-8">
+                        <li>• Calculator oben anpassen</li>
+                        <li>• Echte CPS-Kosten eintragen</li>
+                        <li>• Break-Even berechnen</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white/70 rounded-lg p-4 border border-emerald-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                        <h3 class="font-semibold text-emerald-800">Implementierung</h3>
+                    </div>
+                    <ul class="text-sm text-emerald-700 space-y-1 ml-8">
+                        <li>• Monitoring einbauen</li>
+                        <li>• Alerting konfigurieren</li>
+                        <li>• Dashboard-Widget</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="implementation-phases" class="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl shadow-lg border border-gray-300 p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 bg-gray-700 text-white rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                </span>
+                Implementierungsplan
+            </h2>
+
+            <div class="space-y-4">
+                <div class="flex gap-4 items-start">
+                    <div class="flex-shrink-0 w-24 text-right">
+                        <span class="text-xs text-gray-500">Phase 1</span>
+                        <p class="font-semibold text-gray-700">2-3h</p>
+                    </div>
+                    <div class="flex-1 bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 mb-1">Basis-Monitoring</h3>
+                        <p class="text-sm text-gray-600">Retell GET /get-concurrency API integrieren, Redis-basiertes Tracking, Filament Dashboard-Widget</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 items-start">
+                    <div class="flex-shrink-0 w-24 text-right">
+                        <span class="text-xs text-gray-500">Phase 2</span>
+                        <p class="font-semibold text-gray-700">1-2h</p>
+                    </div>
+                    <div class="flex-1 bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 mb-1">Alerting</h3>
+                        <p class="text-sm text-gray-600">80% Auslastungs-Warning, Slack/Email Benachrichtigung, Log-Aggregation</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 items-start">
+                    <div class="flex-shrink-0 w-24 text-right">
+                        <span class="text-xs text-gray-500">Phase 3</span>
+                        <p class="font-semibold text-gray-700">2-3h</p>
+                    </div>
+                    <div class="flex-1 bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 mb-1">Graceful Handling</h3>
+                        <p class="text-sm text-gray-600">429-Error-Handler, Queue für wartende Anrufe (optional), Fallback-Strategie</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <p class="text-sm text-amber-800">
+                    <strong>⚠️ Hinweis:</strong> Implementierung erst nach Klärung der Concurrency-Architektur mit Retell starten.
+                </p>
+            </div>
         </section>
 
     </main>
