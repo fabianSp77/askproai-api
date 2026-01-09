@@ -691,6 +691,202 @@
             </div>
         </section>
 
+        <!-- ================================================================== -->
+        <!-- PRICING CONFIGURATION PANEL                                         -->
+        <!-- ================================================================== -->
+        <section id="config-panel" class="bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl shadow-xl border border-gray-200 mb-8 overflow-hidden">
+            <!-- Panel Header -->
+            <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-700 text-white cursor-pointer" onclick="toggleConfigPanel()">
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="text-lg font-bold">Preiskonfiguration</h2>
+                        <p class="text-sm text-slate-300">Minutenpreise und Fixkosten flexibel anpassen</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="config-status" class="hidden px-3 py-1 rounded-full text-xs font-medium bg-amber-500 text-white animate-pulse">
+                        Ungespeichert
+                    </span>
+                    <button id="toggle-config-btn" class="p-2 hover:bg-white/10 rounded-lg transition-colors" aria-expanded="false" aria-controls="config-content">
+                        <svg class="w-5 h-5 transition-transform duration-300" id="toggle-config-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Content (Collapsible) -->
+            <div id="config-content" class="hidden">
+                <div class="p-6">
+                    <!-- Package Prices Grid -->
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <!-- Package S -->
+                        <div class="package-config-card bg-white rounded-xl p-5 border-2 border-gray-200 transition-all duration-300 hover:border-gray-400 hover:shadow-lg" data-package="S">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">S</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Standard</p>
+                                        <p class="text-xs text-gray-500">1–19 Firmen</p>
+                                    </div>
+                                </div>
+                                <span class="config-modified-dot hidden w-3 h-3 bg-amber-500 rounded-full animate-pulse" title="Geändert"></span>
+                            </div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-gray-500 font-medium">EUR</span>
+                                <input type="number" id="config-preis-s" step="0.01" min="0.15" max="1.00" value="0.29" data-default="0.29"
+                                       class="flex-1 text-center text-xl font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                                       oninput="handleConfigChange(this)">
+                                <span class="text-gray-500">/min</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">Marge:</span>
+                                <span id="config-margin-s" class="font-semibold text-green-600">61%</span>
+                            </div>
+                        </div>
+
+                        <!-- Package M -->
+                        <div class="package-config-card bg-white rounded-xl p-5 border-2 border-gray-200 transition-all duration-300 hover:border-blue-400 hover:shadow-lg" data-package="M">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">M</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Partner</p>
+                                        <p class="text-xs text-gray-500">20–39 Firmen</p>
+                                    </div>
+                                </div>
+                                <span class="config-modified-dot hidden w-3 h-3 bg-amber-500 rounded-full animate-pulse" title="Geändert"></span>
+                            </div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-gray-500 font-medium">EUR</span>
+                                <input type="number" id="config-preis-m" step="0.01" min="0.15" max="1.00" value="0.27" data-default="0.27"
+                                       class="flex-1 text-center text-xl font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                                       oninput="handleConfigChange(this)">
+                                <span class="text-gray-500">/min</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">Marge:</span>
+                                <span id="config-margin-m" class="font-semibold text-green-600">58%</span>
+                            </div>
+                        </div>
+
+                        <!-- Package L -->
+                        <div class="package-config-card bg-white rounded-xl p-5 border-2 border-gray-200 transition-all duration-300 hover:border-purple-400 hover:shadow-lg" data-package="L">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">L</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Enterprise</p>
+                                        <p class="text-xs text-gray-500">40+ Firmen</p>
+                                    </div>
+                                </div>
+                                <span class="config-modified-dot hidden w-3 h-3 bg-amber-500 rounded-full animate-pulse" title="Geändert"></span>
+                            </div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-gray-500 font-medium">EUR</span>
+                                <input type="number" id="config-preis-l" step="0.01" min="0.15" max="1.00" value="0.24" data-default="0.24"
+                                       class="flex-1 text-center text-xl font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                                       oninput="handleConfigChange(this)">
+                                <span class="text-gray-500">/min</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">Marge:</span>
+                                <span id="config-margin-l" class="font-semibold text-green-600">53%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <details class="group mb-6">
+                        <summary class="flex items-center gap-2 cursor-pointer py-3 px-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors list-none">
+                            <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            <span class="font-medium text-gray-700">Erweiterte Einstellungen</span>
+                            <span class="text-xs text-gray-500">(Fixkosten, Selbstkosten, Tage/Monat)</span>
+                        </summary>
+                        <div class="grid md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-200">
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="config-fixgebuehr">Fixgebühr/Unternehmen</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-500">EUR</span>
+                                    <input type="number" id="config-fixgebuehr" step="10" min="50" max="500" value="200" data-default="200"
+                                           class="flex-1 text-center font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                           oninput="handleConfigChange(this)">
+                                    <span class="text-gray-500">/Mo</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="config-selbstkosten">Selbstkosten/Minute</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-500">EUR</span>
+                                    <input type="number" id="config-selbstkosten" step="0.001" min="0.05" max="0.25" value="0.113" data-default="0.113"
+                                           class="flex-1 text-center font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                           oninput="handleConfigChange(this)">
+                                    <span class="text-gray-500">/min</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="config-nummernkosten">Kosten/Telefonnummer</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-500">EUR</span>
+                                    <input type="number" id="config-nummernkosten" step="0.05" min="0.50" max="5.00" value="1.15" data-default="1.15"
+                                           class="flex-1 text-center font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                           oninput="handleConfigChange(this)">
+                                    <span class="text-gray-500">/Mo</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="config-tage">Tage pro Monat</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="config-tage" step="1" min="28" max="31" value="30" data-default="30"
+                                           class="flex-1 text-center font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                           oninput="handleConfigChange(this)">
+                                    <span class="text-gray-500">Tage</span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Änderungen werden <strong>live</strong> im Rechner angezeigt</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="resetConfig()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2 min-h-[44px]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Zurücksetzen
+                            </button>
+                            <button onclick="shareConfig()" class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors duration-200 flex items-center gap-2 min-h-[44px]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                </svg>
+                                Link teilen
+                            </button>
+                            <button onclick="saveConfig()" id="save-config-btn" class="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 min-h-[44px]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Interactive Revenue Calculator -->
         <section class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl shadow-lg border-2 border-indigo-200 p-6 mb-8" id="calculator-section">
             <h2 class="text-2xl font-bold text-indigo-900 mb-2 flex items-center gap-3">
@@ -1565,11 +1761,237 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             }
         };
 
-        // Ermittle das Paket basierend auf der Unternehmensanzahl
+        // Deep clone für Reset-Funktion
+        const DEFAULT_CONFIG = JSON.parse(JSON.stringify(CONFIG));
+
+        // =====================================================
+        // CONFIG MANAGEMENT SYSTEM
+        // =====================================================
+        let configIsDirty = false;
+
+        // Toggle config panel
+        function toggleConfigPanel() {
+            const content = document.getElementById('config-content');
+            const icon = document.getElementById('toggle-config-icon');
+            const btn = document.getElementById('toggle-config-btn');
+            const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+            content.classList.toggle('hidden', isExpanded);
+            icon.classList.toggle('rotate-180', !isExpanded);
+            btn.setAttribute('aria-expanded', !isExpanded);
+        }
+
+        // Handle any config input change
+        function handleConfigChange(input) {
+            const value = parseFloat(input.value);
+            if (isNaN(value)) return;
+
+            // Update CONFIG based on input ID
+            const id = input.id;
+            if (id === 'config-preis-s') CONFIG.pakete.S.preis = value;
+            else if (id === 'config-preis-m') CONFIG.pakete.M.preis = value;
+            else if (id === 'config-preis-l') CONFIG.pakete.L.preis = value;
+            else if (id === 'config-fixgebuehr') CONFIG.fixgebuehr = value;
+            else if (id === 'config-selbstkosten') CONFIG.selbstkosten = value;
+            else if (id === 'config-nummernkosten') CONFIG.nummernkosten = value;
+            else if (id === 'config-tage') CONFIG.tage_pro_monat = value;
+
+            // Mark as modified
+            markInputModified(input);
+            updateConfigMargins();
+            updateDirtyState();
+
+            // Live update calculator
+            updateCalculator();
+        }
+
+        // Mark individual input as modified
+        function markInputModified(input) {
+            const defaultValue = parseFloat(input.dataset.default);
+            const currentValue = parseFloat(input.value);
+            const isModified = Math.abs(defaultValue - currentValue) > 0.001;
+
+            input.classList.toggle('border-amber-500', isModified);
+            input.classList.toggle('bg-amber-50', isModified);
+
+            // Update card's modified dot
+            const card = input.closest('.package-config-card');
+            if (card) {
+                const dot = card.querySelector('.config-modified-dot');
+                if (dot) dot.classList.toggle('hidden', !isModified);
+                card.classList.toggle('border-amber-400', isModified);
+            }
+        }
+
+        // Update margin displays for each package
+        function updateConfigMargins() {
+            const costs = CONFIG.selbstkosten;
+            ['S', 'M', 'L'].forEach(pkg => {
+                const price = CONFIG.pakete[pkg].preis;
+                const margin = ((price - costs) / price) * 100;
+                const el = document.getElementById(`config-margin-${pkg.toLowerCase()}`);
+                if (el) {
+                    el.textContent = `${margin.toFixed(0)}%`;
+                    el.className = margin < 30 ? 'font-semibold text-red-600'
+                                 : margin < 50 ? 'font-semibold text-amber-600'
+                                 : 'font-semibold text-green-600';
+                }
+            });
+        }
+
+        // Update dirty state indicator
+        function updateDirtyState() {
+            const isDirty = JSON.stringify(CONFIG) !== JSON.stringify(DEFAULT_CONFIG);
+            configIsDirty = isDirty;
+            const statusEl = document.getElementById('config-status');
+            if (statusEl) statusEl.classList.toggle('hidden', !isDirty);
+        }
+
+        // Reset config to defaults
+        function resetConfig() {
+            if (!confirm('Alle Preise auf Standard zurücksetzen?')) return;
+
+            // Reset CONFIG
+            Object.assign(CONFIG, JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+
+            // Update form inputs
+            applyConfigToForm();
+            updateConfigMargins();
+            updateDirtyState();
+            updateCalculator();
+
+            // Clear localStorage
+            localStorage.removeItem('retell_pricing_config');
+            showToast('Auf Standardwerte zurückgesetzt', 'success');
+        }
+
+        // Save config to localStorage
+        function saveConfig() {
+            localStorage.setItem('retell_pricing_config', JSON.stringify({
+                pakete: {
+                    S: { preis: CONFIG.pakete.S.preis },
+                    M: { preis: CONFIG.pakete.M.preis },
+                    L: { preis: CONFIG.pakete.L.preis }
+                },
+                fixgebuehr: CONFIG.fixgebuehr,
+                selbstkosten: CONFIG.selbstkosten,
+                nummernkosten: CONFIG.nummernkosten,
+                tage_pro_monat: CONFIG.tage_pro_monat
+            }));
+            localStorage.setItem('retell_pricing_saved_at', new Date().toISOString());
+
+            // Update default to current (so dirty state clears)
+            Object.assign(DEFAULT_CONFIG, JSON.parse(JSON.stringify(CONFIG)));
+            updateDirtyState();
+
+            // Re-mark all inputs (clears modified state)
+            document.querySelectorAll('[id^="config-"]').forEach(input => {
+                if (input.type === 'number') {
+                    input.dataset.default = input.value;
+                    markInputModified(input);
+                }
+            });
+
+            showToast('Einstellungen gespeichert', 'success');
+        }
+
+        // Share config via URL
+        function shareConfig() {
+            const configStr = btoa(JSON.stringify({
+                s: CONFIG.pakete.S.preis,
+                m: CONFIG.pakete.M.preis,
+                l: CONFIG.pakete.L.preis,
+                fix: CONFIG.fixgebuehr,
+                sk: CONFIG.selbstkosten
+            }));
+            const url = new URL(window.location);
+            url.searchParams.set('pricing', configStr);
+
+            navigator.clipboard.writeText(url.toString())
+                .then(() => showToast('Link in Zwischenablage kopiert!', 'success'))
+                .catch(() => showToast('Fehler beim Kopieren', 'error'));
+        }
+
+        // Load config from localStorage or URL
+        function loadConfig() {
+            // 1. Check URL params first
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('pricing')) {
+                try {
+                    const data = JSON.parse(atob(params.get('pricing')));
+                    if (data.s) CONFIG.pakete.S.preis = data.s;
+                    if (data.m) CONFIG.pakete.M.preis = data.m;
+                    if (data.l) CONFIG.pakete.L.preis = data.l;
+                    if (data.fix) CONFIG.fixgebuehr = data.fix;
+                    if (data.sk) CONFIG.selbstkosten = data.sk;
+                    console.log('Config loaded from URL');
+                    return true;
+                } catch (e) {
+                    console.warn('Invalid URL config');
+                }
+            }
+
+            // 2. Check localStorage
+            const saved = localStorage.getItem('retell_pricing_config');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.pakete?.S?.preis) CONFIG.pakete.S.preis = data.pakete.S.preis;
+                    if (data.pakete?.M?.preis) CONFIG.pakete.M.preis = data.pakete.M.preis;
+                    if (data.pakete?.L?.preis) CONFIG.pakete.L.preis = data.pakete.L.preis;
+                    if (data.fixgebuehr) CONFIG.fixgebuehr = data.fixgebuehr;
+                    if (data.selbstkosten) CONFIG.selbstkosten = data.selbstkosten;
+                    if (data.nummernkosten) CONFIG.nummernkosten = data.nummernkosten;
+                    if (data.tage_pro_monat) CONFIG.tage_pro_monat = data.tage_pro_monat;
+                    console.log('Config loaded from localStorage');
+                    return true;
+                } catch (e) {
+                    console.warn('Invalid localStorage config');
+                }
+            }
+            return false;
+        }
+
+        // Apply CONFIG values to form inputs
+        function applyConfigToForm() {
+            const setValue = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            };
+
+            setValue('config-preis-s', CONFIG.pakete.S.preis);
+            setValue('config-preis-m', CONFIG.pakete.M.preis);
+            setValue('config-preis-l', CONFIG.pakete.L.preis);
+            setValue('config-fixgebuehr', CONFIG.fixgebuehr);
+            setValue('config-selbstkosten', CONFIG.selbstkosten);
+            setValue('config-nummernkosten', CONFIG.nummernkosten);
+            setValue('config-tage', CONFIG.tage_pro_monat);
+
+            // Update modified indicators
+            document.querySelectorAll('[id^="config-"]').forEach(input => {
+                if (input.type === 'number') markInputModified(input);
+            });
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white font-medium z-50 transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-gray-800'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Ermittle das Paket basierend auf der Unternehmensanzahl (DYNAMIC - uses CONFIG)
         function getPackageForCompanyCount(companies) {
-            if (companies < 20) return 'S';   // 1-19 Unternehmen
-            if (companies < 40) return 'M';   // 20-39 Unternehmen
-            return 'L';                       // 40+ Unternehmen
+            if (companies <= CONFIG.pakete.S.maxCompanies) return 'S';
+            if (companies <= CONFIG.pakete.M.maxCompanies) return 'M';
+            return 'L';
         }
 
         // =====================================================
@@ -2120,6 +2542,20 @@ Komplexe Änderung (mehrere Bereiche):        nach Absprache
                 year: 'numeric'
             });
             document.getElementById('invoice-date').textContent = dateStr;
+
+            // Load saved configuration (URL params or localStorage)
+            const configLoaded = loadConfig();
+
+            // Apply config values to form inputs
+            applyConfigToForm();
+
+            // Update margin displays
+            updateConfigMargins();
+
+            // Show notification if config was loaded
+            if (configLoaded) {
+                showToast('Gespeicherte Einstellungen geladen', 'info');
+            }
 
             // Initialize calculator (will also update invoice)
             updateCalculator();
