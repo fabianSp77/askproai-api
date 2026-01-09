@@ -855,29 +855,158 @@
 
             <!-- Results -->
             <div class="bg-white rounded-xl p-6 border-2 border-indigo-300 shadow-lg">
-                <h3 class="font-bold text-indigo-900 mb-4 text-lg">Ergebnis: Monatliche Kalkulation</h3>
+                <h3 class="font-bold text-indigo-900 mb-4 text-lg flex items-center gap-2">
+                    Ergebnis: Monatliche Kalkulation
+                    <span class="text-xs font-normal text-indigo-500 bg-indigo-100 px-2 py-1 rounded-full">
+                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                        Hover für Details
+                    </span>
+                </h3>
 
-                <!-- Summary Cards -->
+                <!-- Summary Cards with Tooltips -->
                 <div class="grid md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-                        <p class="text-blue-100 text-xs font-medium uppercase">Gesamtumsatz</p>
-                        <p id="result-revenue" class="text-3xl font-bold">€0</p>
-                        <p class="text-blue-200 text-xs mt-1">Fix + Minuten</p>
+                    <!-- Gesamtumsatz Card -->
+                    <div class="group relative">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg cursor-help transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-blue-600 hover:to-blue-700">
+                            <div class="flex items-center justify-between">
+                                <p class="text-blue-100 text-xs font-medium uppercase">Gesamtumsatz</p>
+                                <svg class="w-4 h-4 text-blue-200 opacity-60 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <p id="result-revenue" class="text-3xl font-bold">€0</p>
+                            <p class="text-blue-200 text-xs mt-1">Fix + Minuten</p>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute z-20 left-0 right-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                            <div class="bg-gray-900 text-white text-xs rounded-lg p-4 shadow-2xl border border-blue-400">
+                                <div class="absolute -top-2 left-6 w-4 h-4 bg-gray-900 rotate-45 border-l border-t border-blue-400"></div>
+                                <p class="font-bold text-blue-300 mb-2 text-sm">📊 Umsatz-Berechnung</p>
+                                <div class="space-y-2 font-mono text-[11px]">
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Fixgebühren:</span>
+                                        <span id="tooltip-fix-calc" class="text-blue-300">0 Firmen × €200</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Minutenumsatz:</span>
+                                        <span id="tooltip-minute-calc" class="text-blue-300">0 min × €0.29</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1 font-bold">
+                                        <span class="text-white">= Gesamt:</span>
+                                        <span id="tooltip-revenue-total" class="text-green-400">€0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-4 text-white shadow-lg">
-                        <p class="text-red-100 text-xs font-medium uppercase">Deine Kosten</p>
-                        <p id="result-costs" class="text-3xl font-bold">€0</p>
-                        <p class="text-red-200 text-xs mt-1">Retell + Twilio</p>
+
+                    <!-- Deine Kosten Card -->
+                    <div class="group relative">
+                        <div class="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-4 text-white shadow-lg cursor-help transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-red-500 hover:to-red-600">
+                            <div class="flex items-center justify-between">
+                                <p class="text-red-100 text-xs font-medium uppercase">Deine Kosten</p>
+                                <svg class="w-4 h-4 text-red-200 opacity-60 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <p id="result-costs" class="text-3xl font-bold">€0</p>
+                            <p class="text-red-200 text-xs mt-1">Retell + Twilio</p>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute z-20 left-0 right-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                            <div class="bg-gray-900 text-white text-xs rounded-lg p-4 shadow-2xl border border-red-400">
+                                <div class="absolute -top-2 left-6 w-4 h-4 bg-gray-900 rotate-45 border-l border-t border-red-400"></div>
+                                <p class="font-bold text-red-300 mb-2 text-sm">💰 Kosten-Berechnung</p>
+                                <div class="space-y-2 font-mono text-[11px]">
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Telefonnummern:</span>
+                                        <span id="tooltip-number-calc" class="text-red-300">0 × €1.15/Mo</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Minutenkosten:</span>
+                                        <span id="tooltip-mincost-calc" class="text-red-300">0 min × €0.113</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1 font-bold">
+                                        <span class="text-white">= Gesamt:</span>
+                                        <span id="tooltip-costs-total" class="text-yellow-400">€0</span>
+                                    </div>
+                                </div>
+                                <p class="text-gray-400 text-[10px] mt-2 italic">Retell €0.07 + Twilio €0.043 = €0.113/min</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg">
-                        <p class="text-green-100 text-xs font-medium uppercase">Dein Gewinn</p>
-                        <p id="result-profit" class="text-3xl font-bold">€0</p>
-                        <p id="result-margin" class="text-green-200 text-xs mt-1">0% Marge</p>
+
+                    <!-- Dein Gewinn Card -->
+                    <div class="group relative">
+                        <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg cursor-help transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-green-600 hover:to-emerald-700">
+                            <div class="flex items-center justify-between">
+                                <p class="text-green-100 text-xs font-medium uppercase">Dein Gewinn</p>
+                                <svg class="w-4 h-4 text-green-200 opacity-60 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <p id="result-profit" class="text-3xl font-bold">€0</p>
+                            <p id="result-margin" class="text-green-200 text-xs mt-1">0% Marge</p>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute z-20 left-0 right-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                            <div class="bg-gray-900 text-white text-xs rounded-lg p-4 shadow-2xl border border-green-400">
+                                <div class="absolute -top-2 left-6 w-4 h-4 bg-gray-900 rotate-45 border-l border-t border-green-400"></div>
+                                <p class="font-bold text-green-300 mb-2 text-sm">🎯 Gewinn-Berechnung</p>
+                                <div class="space-y-2 font-mono text-[11px]">
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Umsatz:</span>
+                                        <span id="tooltip-profit-revenue" class="text-blue-300">€0</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">− Kosten:</span>
+                                        <span id="tooltip-profit-costs" class="text-red-300">€0</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1 font-bold">
+                                        <span class="text-white">= Gewinn:</span>
+                                        <span id="tooltip-profit-total" class="text-green-400">€0</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-gray-700">
+                                    <div class="flex justify-between text-[10px]">
+                                        <span class="text-gray-400">Marge-Formel:</span>
+                                        <span class="text-gray-300">(Gewinn ÷ Umsatz) × 100</span>
+                                    </div>
+                                    <div class="flex justify-between text-[11px] font-bold mt-1">
+                                        <span class="text-green-400">= Marge:</span>
+                                        <span id="tooltip-margin-value" class="text-green-300">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
-                        <p class="text-purple-100 text-xs font-medium uppercase">Gewinn/Kunde</p>
-                        <p id="result-profit-per-customer" class="text-3xl font-bold">€0</p>
-                        <p class="text-purple-200 text-xs mt-1">pro Monat</p>
+
+                    <!-- Gewinn/Kunde Card -->
+                    <div class="group relative">
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg cursor-help transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-purple-600 hover:to-purple-700">
+                            <div class="flex items-center justify-between">
+                                <p class="text-purple-100 text-xs font-medium uppercase">Gewinn/Kunde</p>
+                                <svg class="w-4 h-4 text-purple-200 opacity-60 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <p id="result-profit-per-customer" class="text-3xl font-bold">€0</p>
+                            <p class="text-purple-200 text-xs mt-1">pro Monat</p>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute z-20 left-0 right-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                            <div class="bg-gray-900 text-white text-xs rounded-lg p-4 shadow-2xl border border-purple-400">
+                                <div class="absolute -top-2 left-6 w-4 h-4 bg-gray-900 rotate-45 border-l border-t border-purple-400"></div>
+                                <p class="font-bold text-purple-300 mb-2 text-sm">👤 Gewinn pro Kunde</p>
+                                <div class="space-y-2 font-mono text-[11px]">
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">Gesamtgewinn:</span>
+                                        <span id="tooltip-percust-profit" class="text-green-300">€0</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                                        <span class="text-gray-400">÷ Anzahl Kunden:</span>
+                                        <span id="tooltip-percust-count" class="text-purple-300">0</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1 font-bold">
+                                        <span class="text-white">= Pro Kunde:</span>
+                                        <span id="tooltip-percust-result" class="text-purple-400">€0</span>
+                                    </div>
+                                </div>
+                                <p class="text-gray-400 text-[10px] mt-2 italic">Monatlicher Gewinn je Endkunde</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1459,6 +1588,36 @@ we believe in the Retell platform and want to make this partnership work.</pre>
         }
 
         // =====================================================
+        // TOOLTIP UPDATES
+        // =====================================================
+        function updateTooltips(companies, result) {
+            // Umsatz-Tooltip
+            document.getElementById('tooltip-fix-calc').textContent =
+                `${companies} Firmen × €200 = ${formatEuro(result.fixRevenue)}`;
+            document.getElementById('tooltip-minute-calc').textContent =
+                `${result.totalMinuten.toLocaleString('de-DE')} min × €${result.preis.toFixed(2)}`;
+            document.getElementById('tooltip-revenue-total').textContent = formatEuro(result.totalRevenue);
+
+            // Kosten-Tooltip
+            document.getElementById('tooltip-number-calc').textContent =
+                `${companies} × €1.15/Mo = ${formatEuroDecimal(result.numberCosts)}`;
+            document.getElementById('tooltip-mincost-calc').textContent =
+                `${result.totalMinuten.toLocaleString('de-DE')} min × €0.113`;
+            document.getElementById('tooltip-costs-total').textContent = formatEuro(result.totalCosts);
+
+            // Gewinn-Tooltip
+            document.getElementById('tooltip-profit-revenue').textContent = formatEuro(result.totalRevenue);
+            document.getElementById('tooltip-profit-costs').textContent = `−${formatEuro(result.totalCosts)}`;
+            document.getElementById('tooltip-profit-total').textContent = formatEuro(result.profit);
+            document.getElementById('tooltip-margin-value').textContent = formatPercent(result.margin);
+
+            // Gewinn/Kunde-Tooltip
+            document.getElementById('tooltip-percust-profit').textContent = formatEuro(result.profit);
+            document.getElementById('tooltip-percust-count').textContent = `${companies} Kunden`;
+            document.getElementById('tooltip-percust-result').textContent = formatEuro(result.profitPerCustomer);
+        }
+
+        // =====================================================
         // CALCULATOR LOGIC
         // =====================================================
         function calculateScenario(companies, callsPerDay, duration, packageKey = null) {
@@ -1556,6 +1715,9 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             document.getElementById('detail-minutes2').textContent = result.totalMinuten.toLocaleString('de-DE');
             document.getElementById('detail-minute-costs').textContent = formatEuro(result.minuteCosts);
             document.getElementById('detail-total-costs').textContent = formatEuro(result.totalCosts);
+
+            // Update tooltips with detailed calculations
+            updateTooltips(companies, result);
 
             // Update scenario comparison table
             updateScenarioTable(callsPerDay, duration);
