@@ -1000,10 +1000,10 @@
                                         Standard
                                     </span>
                                 </td>
-                                <td class="px-3 py-3 text-center font-medium">1–19</td>
-                                <td class="px-3 py-3 text-right font-bold text-indigo-600">€0.29</td>
+                                <td class="px-3 py-3 text-center font-medium" id="pkg-range-S">1–19</td>
+                                <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-S">€0.29</td>
                                 <td class="px-3 py-3 text-right text-gray-400">—</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">61%</span></td>
+                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-S">61%</span></td>
                             </tr>
                             <tr class="border-b border-indigo-100 hover:bg-indigo-50" id="package-row-M">
                                 <td class="px-3 py-3">
@@ -1012,10 +1012,10 @@
                                         Partner
                                     </span>
                                 </td>
-                                <td class="px-3 py-3 text-center font-medium">20–39</td>
-                                <td class="px-3 py-3 text-right font-bold text-indigo-600">€0.27</td>
-                                <td class="px-3 py-3 text-right text-green-600 font-medium">-€0.02</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">58%</span></td>
+                                <td class="px-3 py-3 text-center font-medium" id="pkg-range-M">20–39</td>
+                                <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-M">€0.27</td>
+                                <td class="px-3 py-3 text-right text-green-600 font-medium" id="pkg-diff-M">-€0.02</td>
+                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-M">58%</span></td>
                             </tr>
                             <tr class="hover:bg-indigo-50" id="package-row-L">
                                 <td class="px-3 py-3">
@@ -1024,15 +1024,15 @@
                                         Enterprise
                                     </span>
                                 </td>
-                                <td class="px-3 py-3 text-center font-medium">40+</td>
-                                <td class="px-3 py-3 text-right font-bold text-indigo-600">€0.24</td>
-                                <td class="px-3 py-3 text-right text-green-600 font-medium">-€0.05</td>
-                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">53%</span></td>
+                                <td class="px-3 py-3 text-center font-medium" id="pkg-range-L">40+</td>
+                                <td class="px-3 py-3 text-right font-bold text-indigo-600" id="pkg-price-L">€0.24</td>
+                                <td class="px-3 py-3 text-right text-green-600 font-medium" id="pkg-diff-L">-€0.05</td>
+                                <td class="px-3 py-3 text-right"><span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700" id="pkg-margin-L">53%</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="text-xs text-indigo-600 mt-3">💡 <strong>Incentive:</strong> Ein Partner mit 20 Unternehmen zahlt für <em>alle 20</em> nur €0.27/min statt €0.29/min!</p>
+                <p class="text-xs text-indigo-600 mt-3" id="pkg-incentive-text">💡 <strong>Incentive:</strong> Ein Partner mit 20 Unternehmen zahlt für <em>alle 20</em> nur €0.27/min statt €0.29/min!</p>
             </div>
 
             <!-- Calculator Inputs -->
@@ -1954,7 +1954,8 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             updateConfigMargins();
             updateDirtyState();
 
-            // Live update calculator
+            // Live update all displays
+            updatePackagePriceTable();
             updateCalculator();
         }
 
@@ -1976,7 +1977,7 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             }
         }
 
-        // Update margin displays for each package
+        // Update margin displays for each package (in config panel)
         function updateConfigMargins() {
             const costs = CONFIG.selbstkosten;
             ['S', 'M', 'L'].forEach(pkg => {
@@ -1990,6 +1991,63 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                                  : 'font-semibold text-green-600';
                 }
             });
+        }
+
+        // Update the static package price table with dynamic values
+        function updatePackagePriceTable() {
+            const costs = CONFIG.selbstkosten;
+            const priceS = CONFIG.pakete.S.preis;
+            const priceM = CONFIG.pakete.M.preis;
+            const priceL = CONFIG.pakete.L.preis;
+
+            // Update prices
+            const setPriceCell = (id, price) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = `€${price.toFixed(2)}`;
+            };
+            setPriceCell('pkg-price-S', priceS);
+            setPriceCell('pkg-price-M', priceM);
+            setPriceCell('pkg-price-L', priceL);
+
+            // Update price differences (relative to S)
+            const setDiffCell = (id, diff) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = diff < 0 ? `-€${Math.abs(diff).toFixed(2)}` : `+€${diff.toFixed(2)}`;
+            };
+            setDiffCell('pkg-diff-M', priceM - priceS);
+            setDiffCell('pkg-diff-L', priceL - priceS);
+
+            // Update margins
+            const setMarginCell = (id, price) => {
+                const margin = ((price - costs) / price) * 100;
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = `${margin.toFixed(0)}%`;
+                    // Update color class
+                    el.className = `px-2 py-1 rounded text-xs font-medium ${
+                        margin >= 50 ? 'bg-green-100 text-green-700' :
+                        margin >= 30 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                    }`;
+                }
+            };
+            setMarginCell('pkg-margin-S', priceS);
+            setMarginCell('pkg-margin-M', priceM);
+            setMarginCell('pkg-margin-L', priceL);
+
+            // Update ranges based on CONFIG thresholds
+            const rangeS = document.getElementById('pkg-range-S');
+            const rangeM = document.getElementById('pkg-range-M');
+            const rangeL = document.getElementById('pkg-range-L');
+            if (rangeS) rangeS.textContent = `1–${CONFIG.pakete.S.maxCompanies}`;
+            if (rangeM) rangeM.textContent = `${CONFIG.pakete.S.maxCompanies + 1}–${CONFIG.pakete.M.maxCompanies}`;
+            if (rangeL) rangeL.textContent = `${CONFIG.pakete.M.maxCompanies + 1}+`;
+
+            // Update incentive text
+            const incentiveEl = document.getElementById('pkg-incentive-text');
+            if (incentiveEl) {
+                incentiveEl.innerHTML = `💡 <strong>Incentive:</strong> Ein Partner mit ${CONFIG.pakete.S.maxCompanies + 1} Unternehmen zahlt für <em>alle ${CONFIG.pakete.S.maxCompanies + 1}</em> nur €${priceM.toFixed(2)}/min statt €${priceS.toFixed(2)}/min!`;
+            }
         }
 
         // Update dirty state indicator
@@ -2702,8 +2760,9 @@ Komplexe Änderung (mehrere Bereiche):        nach Absprache
             // Apply config values to form inputs
             applyConfigToForm();
 
-            // Update margin displays
+            // Update all displays with CONFIG values
             updateConfigMargins();
+            updatePackagePriceTable();
 
             // Show notification if config was loaded
             if (configLoaded) {
