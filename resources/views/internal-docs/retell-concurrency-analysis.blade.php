@@ -861,15 +861,39 @@
                             <span class="text-xs text-gray-500">(Fixkosten, Selbstkosten, Tage/Monat)</span>
                         </summary>
                         <div class="grid md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-200">
-                            <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                <label class="block text-sm font-medium text-gray-700 mb-2" for="config-fixgebuehr">Fixgebühr/Unternehmen</label>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-gray-500">EUR</span>
-                                    <input type="number" id="config-fixgebuehr" step="10" min="50" max="500" value="200" data-default="200"
-                                           class="flex-1 text-center font-mono font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                           oninput="handleConfigChange(this)">
-                                    <span class="text-gray-500">/Mo</span>
+                            <div class="bg-white rounded-lg p-4 border border-gray-200 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">CPS-Modell (Fixgebühr/Unternehmen)</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="cps-option relative cursor-pointer">
+                                        <input type="radio" name="cps-model" value="1" data-fixgebuehr="50"
+                                               class="sr-only peer" onchange="handleCpsChange(this)">
+                                        <div class="border-2 border-gray-300 rounded-lg p-3 text-center transition-all
+                                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50
+                                                    hover:border-gray-400 hover:bg-gray-50">
+                                            <div class="flex items-center justify-center gap-2 mb-1">
+                                                <span class="w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                                                <span class="font-bold text-gray-800">1 CPS</span>
+                                            </div>
+                                            <p class="text-lg font-bold text-indigo-600">€50<span class="text-xs font-normal text-gray-500">/Mo</span></p>
+                                            <p class="text-xs text-gray-500">1 Anruf gleichzeitig</p>
+                                        </div>
+                                    </label>
+                                    <label class="cps-option relative cursor-pointer">
+                                        <input type="radio" name="cps-model" value="5" data-fixgebuehr="200"
+                                               class="sr-only peer" checked onchange="handleCpsChange(this)">
+                                        <div class="border-2 border-gray-300 rounded-lg p-3 text-center transition-all
+                                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50
+                                                    hover:border-gray-400 hover:bg-gray-50">
+                                            <div class="flex items-center justify-center gap-2 mb-1">
+                                                <span class="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold">5</span>
+                                                <span class="font-bold text-gray-800">5 CPS</span>
+                                            </div>
+                                            <p class="text-lg font-bold text-indigo-600">€200<span class="text-xs font-normal text-gray-500">/Mo</span></p>
+                                            <p class="text-xs text-gray-500">5 Anrufe gleichzeitig</p>
+                                        </div>
+                                    </label>
                                 </div>
+                                <input type="hidden" id="config-fixgebuehr" value="200" data-default="200">
                             </div>
                             <div class="bg-white rounded-lg p-4 border border-gray-200">
                                 <label class="block text-sm font-medium text-gray-700 mb-2" for="config-selbstkosten">Selbstkosten/Minute</label>
@@ -1869,7 +1893,8 @@ we believe in the Retell platform and want to make this partnership work.</pre>
         // =====================================================
         const CONFIG = {
             // Partner-Perspektive (Selbstkosten)
-            fixgebuehr: 200,           // € pro Unternehmen/Monat (Bereitstellung)
+            cps: 5,                    // Calls Per Second Modell (1 oder 5)
+            fixgebuehr: 200,           // € pro Unternehmen/Monat (1 CPS=50€, 5 CPS=200€)
             selbstkosten: 0.113,       // € pro Minute (Retell + Twilio SIP)
             nummernkosten: 1.15,       // € pro Telefonnummer/Monat (Twilio)
             tage_pro_monat: 30,
@@ -1932,6 +1957,27 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             content.classList.toggle('hidden', isExpanded);
             icon.classList.toggle('rotate-180', !isExpanded);
             btn.setAttribute('aria-expanded', !isExpanded);
+        }
+
+        // Handle CPS model change (radio buttons)
+        function handleCpsChange(radio) {
+            const fixgebuehr = parseFloat(radio.dataset.fixgebuehr);
+            const cps = parseInt(radio.value);
+
+            // Update CONFIG
+            CONFIG.fixgebuehr = fixgebuehr;
+            CONFIG.cps = cps;
+
+            // Update hidden input for compatibility
+            const hiddenInput = document.getElementById('config-fixgebuehr');
+            if (hiddenInput) {
+                hiddenInput.value = fixgebuehr;
+            }
+
+            // Trigger full update
+            updateDirtyState();
+            updatePackagePriceTable();
+            updateCalculator();
         }
 
         // Handle any config input change
@@ -2084,6 +2130,7 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                     M: { preis: CONFIG.pakete.M.preis },
                     L: { preis: CONFIG.pakete.L.preis }
                 },
+                cps: CONFIG.cps,
                 fixgebuehr: CONFIG.fixgebuehr,
                 selbstkosten: CONFIG.selbstkosten,
                 nummernkosten: CONFIG.nummernkosten,
@@ -2112,6 +2159,7 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                 s: CONFIG.pakete.S.preis,
                 m: CONFIG.pakete.M.preis,
                 l: CONFIG.pakete.L.preis,
+                cps: CONFIG.cps,
                 fix: CONFIG.fixgebuehr,
                 sk: CONFIG.selbstkosten
             }));
@@ -2133,6 +2181,10 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                     if (data.s) CONFIG.pakete.S.preis = data.s;
                     if (data.m) CONFIG.pakete.M.preis = data.m;
                     if (data.l) CONFIG.pakete.L.preis = data.l;
+                    if (data.cps) {
+                        CONFIG.cps = data.cps;
+                        CONFIG.fixgebuehr = data.cps === 1 ? 50 : 200;
+                    }
                     if (data.fix) CONFIG.fixgebuehr = data.fix;
                     if (data.sk) CONFIG.selbstkosten = data.sk;
                     console.log('Config loaded from URL');
@@ -2150,6 +2202,10 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                     if (data.pakete?.S?.preis) CONFIG.pakete.S.preis = data.pakete.S.preis;
                     if (data.pakete?.M?.preis) CONFIG.pakete.M.preis = data.pakete.M.preis;
                     if (data.pakete?.L?.preis) CONFIG.pakete.L.preis = data.pakete.L.preis;
+                    if (data.cps) {
+                        CONFIG.cps = data.cps;
+                        CONFIG.fixgebuehr = data.cps === 1 ? 50 : 200;
+                    }
                     if (data.fixgebuehr) CONFIG.fixgebuehr = data.fixgebuehr;
                     if (data.selbstkosten) CONFIG.selbstkosten = data.selbstkosten;
                     if (data.nummernkosten) CONFIG.nummernkosten = data.nummernkosten;
@@ -2177,6 +2233,10 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             setValue('config-selbstkosten', CONFIG.selbstkosten);
             setValue('config-nummernkosten', CONFIG.nummernkosten);
             setValue('config-tage', CONFIG.tage_pro_monat);
+
+            // Set CPS radio button based on CONFIG.cps
+            const cpsRadio = document.querySelector(`input[name="cps-model"][value="${CONFIG.cps}"]`);
+            if (cpsRadio) cpsRadio.checked = true;
 
             // Update modified indicators
             document.querySelectorAll('[id^="config-"]').forEach(input => {
