@@ -1040,13 +1040,19 @@
 
                 <!-- Scenario Comparison Cards -->
                 <div class="mt-6">
-                    <h4 class="font-semibold text-gray-800 mb-4">Kundenrechnung pro Monat nach Partner-Größe</h4>
-                    <div class="grid md:grid-cols-4 gap-4" id="invoice-scenarios">
+                    <h4 class="font-semibold text-gray-800 mb-2">Kundenrechnung pro Monat nach Partnergröße</h4>
+                    <p class="text-sm text-gray-600 mb-4">
+                        <strong>Staffelpreise:</strong>
+                        <span class="inline-flex items-center gap-1 ml-2"><span class="w-5 h-5 bg-gray-400 text-white rounded text-xs flex items-center justify-center font-bold">S</span> 1–19 Unternehmen = €0,29/min</span>
+                        <span class="inline-flex items-center gap-1 ml-3"><span class="w-5 h-5 bg-blue-500 text-white rounded text-xs flex items-center justify-center font-bold">M</span> ab 20 = €0,27/min</span>
+                        <span class="inline-flex items-center gap-1 ml-3"><span class="w-5 h-5 bg-purple-500 text-white rounded text-xs flex items-center justify-center font-bold">L</span> ab 40 = €0,24/min</span>
+                    </p>
+                    <div class="grid md:grid-cols-3 gap-4" id="invoice-scenarios">
                         <!-- Will be filled by JavaScript -->
                     </div>
                     <p class="text-xs text-gray-500 mt-3">
                         * Basierend auf <span id="invoice-calls-info">20 Anrufe/Tag × 3 Min</span>.
-                        Der Minutenpreis sinkt mit steigender Partnergröße – der Vorteil wird an Kunden weitergegeben.
+                        Der günstigere Minutenpreis gilt für <strong>alle</strong> Unternehmen des Partners.
                     </p>
                 </div>
 
@@ -1675,9 +1681,9 @@ we believe in the Retell platform and want to make this partnership work.</pre>
             updateQuoteTemplate(companies, callsPerDay, duration, result);
         }
 
-        // Szenario-Vergleichskarten (1, 10, 20, 40 Unternehmen)
+        // Szenario-Vergleichskarten (1, 20, 40 Unternehmen - je eine pro Preisstufe)
         function updateInvoiceScenarios(callsPerDay, duration) {
-            const scenarios = [1, 10, 20, 40];
+            const scenarios = [1, 20, 40];
             const container = document.getElementById('invoice-scenarios');
             const anrufeProMonat = callsPerDay * CONFIG.tage_pro_monat;
             const minutenProKunde = anrufeProMonat * duration;
@@ -1698,25 +1704,29 @@ we believe in the Retell platform and want to make this partnership work.</pre>
                 const gesamtNetto = nettoProKunde * numCompanies;
                 const einrichtungGesamt = CONFIG.kunde.setup.professional * numCompanies;
 
+                // Bereichsanzeige für Preisstufe
+                const tierRange = packageKey === 'S' ? '1–19 Unternehmen' : packageKey === 'M' ? 'ab 20 Unternehmen' : 'ab 40 Unternehmen';
+
                 html += `
-                    <div class="bg-white rounded-lg border-2 ${numCompanies === 1 ? 'border-gray-200' : 'border-' + (packageKey === 'S' ? 'gray' : packageKey === 'M' ? 'blue' : packageKey === 'L' ? 'purple' : 'amber') + '-300'} p-4 text-center">
-                        <div class="flex items-center justify-center gap-2 mb-2">
-                            <span class="w-8 h-8 bg-gradient-to-br ${pkg.gradient} text-white rounded-lg flex items-center justify-center font-bold text-sm">${packageKey}</span>
-                            <span class="font-semibold text-gray-800">${numCompanies} Unternehmen</span>
+                    <div class="bg-white rounded-lg border-2 border-${packageKey === 'S' ? 'gray' : packageKey === 'M' ? 'blue' : 'purple'}-300 p-4 text-center">
+                        <div class="flex flex-col items-center mb-3">
+                            <span class="w-10 h-10 bg-gradient-to-br ${pkg.gradient} text-white rounded-lg flex items-center justify-center font-bold text-lg mb-1">${packageKey}</span>
+                            <span class="font-bold text-gray-800">${pkg.label}</span>
+                            <span class="text-xs text-gray-500">${tierRange}</span>
+                        </div>
+                        <div class="bg-${packageKey === 'S' ? 'gray' : packageKey === 'M' ? 'blue' : 'purple'}-50 rounded-lg p-2 mb-3">
+                            <p class="text-2xl font-bold text-${packageKey === 'S' ? 'gray-700' : packageKey === 'M' ? 'blue-700' : 'purple-700'}">€${preis.toFixed(2)}<span class="text-sm font-normal">/min</span></p>
                         </div>
                         <div class="space-y-1 text-sm">
-                            <p class="text-gray-500">Minutenpreis: <strong class="text-gray-800">€${preis.toFixed(2)}</strong></p>
-                            <p class="text-gray-400 text-xs">${anrufeProMonat.toLocaleString('de-DE')} Anrufe × ${minutenProKunde.toLocaleString('de-DE')} Min/Mo</p>
+                            <p class="text-gray-400 text-xs">${anrufeProMonat.toLocaleString('de-DE')} Anrufe × ${duration} Min</p>
                             <div class="border-t pt-2 mt-2">
-                                <p class="text-xs text-gray-400 uppercase tracking-wide">Pro Kunde/Monat</p>
-                                <p class="text-xl font-bold text-amber-700">€${formatNumber(nettoProKunde)}</p>
+                                <p class="text-xs text-gray-400 uppercase tracking-wide">Beispiel: ${numCompanies} ${numCompanies === 1 ? 'Kunde' : 'Kunden'}</p>
+                                <p class="text-xl font-bold text-amber-700">€${formatNumber(nettoProKunde)}<span class="text-sm font-normal text-gray-500">/Kunde</span></p>
                                 <p class="text-xs text-gray-500">(€${formatNumber(bruttoProKunde)} brutto)</p>
                             </div>
-                            <div class="border-t pt-2 mt-2 bg-gray-50 -mx-4 px-4 py-2">
-                                <p class="text-xs text-gray-400">Einmalige Einrichtung gesamt:</p>
-                                <p class="font-semibold text-green-700">€${formatNumber(einrichtungGesamt)}</p>
-                                <p class="text-xs text-gray-400 mt-1">Monatl. Volumen gesamt:</p>
-                                <p class="font-semibold text-blue-700">€${formatNumber(gesamtNetto)}</p>
+                            <div class="border-t pt-2 mt-2 bg-gray-50 -mx-4 px-4 py-2 rounded-b-lg">
+                                <p class="text-xs text-gray-400">Bei ${numCompanies} Kunden:</p>
+                                <p class="font-semibold text-blue-700">€${formatNumber(gesamtNetto)}/Monat</p>
                             </div>
                         </div>
                     </div>
