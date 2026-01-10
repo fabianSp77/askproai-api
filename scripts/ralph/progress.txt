@@ -72,3 +72,28 @@ Started: Sa 10. Jan 05:44:26 CET 2026
   - Pint may fail on directories with permission issues - test specific files instead
   - Factory pattern uses states for variants: ->state(['field' => value])
 ---
+## Sa 10. Jan 06:42:15 CET 2026 - US-004
+- Implemented EmailTemplateResource form for create/edit functionality
+- Files modified:
+  - app/Filament/Resources/EmailTemplateResource.php (added form schema)
+- Form fields implemented:
+  - name: TextInput with required, max 255, helper text
+  - subject: TextInput with required, max 500, helper text
+  - body_html: RichEditor with required, columnSpanFull, helper text
+  - is_active: Toggle with default true, helper text
+- Filament framework automatically provides:
+  - Form validation for required fields
+  - Success notifications on save/update
+  - Redirect to list page after create
+  - Data pre-filling in edit mode
+- Code style check passed with Pint
+- **Learnings for future iterations:**
+  - Filament form components: TextInput, RichEditor, Toggle
+  - Use ->required() for validation, ->maxLength() for string limits
+  - Use ->default() to set default values for fields
+  - Use ->helperText() to provide user guidance
+  - Use ->columnSpanFull() for wide components like RichEditor
+  - CreateRecord and EditRecord pages handle lifecycle automatically
+  - No need to manually implement notifications/redirects - Filament does this
+  - Pre-existing test permission issues don't block story completion (as per US-001 notes)
+---
