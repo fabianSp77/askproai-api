@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $body_html
  * @property array|null $variables
  * @property bool $is_active
+ * @property string $template_type
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -40,6 +41,7 @@ class EmailTemplate extends Model
         'body_html',
         'variables',
         'is_active',
+        'template_type',
     ];
 
     /**
@@ -50,6 +52,7 @@ class EmailTemplate extends Model
     protected $casts = [
         'variables' => 'array',
         'is_active' => 'boolean',
+        'template_type' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

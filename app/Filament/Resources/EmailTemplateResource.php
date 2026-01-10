@@ -20,6 +20,11 @@ class EmailTemplateResource extends Resource
 
     protected static ?string $navigationLabel = 'Email Templates';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole(['admin', 'super_admin']) ?? false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -36,30 +41,27 @@ class EmailTemplateResource extends Resource
                     ->maxLength(500)
                     ->helperText('The subject line of the email (can use variables like {{customer_name}})'),
 
+                Forms\Components\Radio::make('template_type')
+                    ->label('Template Type')
+                    ->options([
+                        'internal' => 'Internal',
+                        'customer' => 'Kunde',
+                        'both' => 'Beides',
+                    ])
+                    ->default('both')
+                    ->inline()
+                    ->required()
+                    ->helperText('Internal = nur für Mitarbeiter, Kunde = für Kunden sichtbar, Beides = für beide Zielgruppen'),
+
                 Forms\Components\RichEditor::make('body_html')
                     ->label('Email Body')
                     ->required()
                     ->helperText('The HTML body of the email (can use variables like {{customer_name}}, {{case_number}}, etc.)')
                     ->columnSpanFull(),
 
-                Forms\Components\Placeholder::make('available_variables')
-                    ->label('📋 Available Template Variables')
-                    ->content(new \Illuminate\Support\HtmlString('
-                        <div class="text-sm space-y-2">
-                            <p class="font-semibold text-gray-700 dark:text-gray-300">Use <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">{{variable_name}}</code> in subject or body:</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                                <li><strong>{{customer_name}}</strong> - Name of the customer</li>
-                                <li><strong>{{customer_email}}</strong> - Customer\'s email address</li>
-                                <li><strong>{{company_name}}</strong> - Name of your company</li>
-                                <li><strong>{{case_number}}</strong> - Unique case/ticket number</li>
-                                <li><strong>{{case_subject}}</strong> - Subject/title of the case</li>
-                                <li><strong>{{case_description}}</strong> - Detailed description of the case</li>
-                                <li><strong>{{case_status}}</strong> - Current status of the case</li>
-                                <li><strong>{{case_priority}}</strong> - Priority level of the case</li>
-                                <li><strong>{{created_at}}</strong> - Date and time when the case was created</li>
-                            </ul>
-                        </div>
-                    '))
+                Forms\Components\ViewField::make('available_variables')
+                    ->label('📋 Verfügbare Template-Variablen (48+ Variablen)')
+                    ->view('filament.forms.components.template-variables')
                     ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('is_active')
@@ -87,6 +89,21 @@ class EmailTemplateResource extends Resource
                     ->wrap()
                     ->limit(50),
 
+                Tables\Columns\BadgeColumn::make('template_type')
+                    ->label('Type')
+                    ->colors([
+                        'primary' => 'internal',
+                        'success' => 'customer',
+                        'secondary' => 'both',
+                    ])
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'internal' => 'Internal',
+                        'customer' => 'Kunde',
+                        'both' => 'Beides',
+                        default => $state,
+                    })
+                    ->sortable(),
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
@@ -106,9 +123,41 @@ class EmailTemplateResource extends Resource
                     ->placeholder('All')
                     ->trueLabel('Active only')
                     ->falseLabel('Inactive only'),
+
+                Tables\Filters\SelectFilter::make('template_type')
+                    ->label('Template Type')
+                    ->options([
+                        'internal' => 'Internal',
+                        'customer' => 'Kunde',
+                        'both' => 'Beides',
+                    ])
+                    ->placeholder('All types'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('duplicate')
+                    ->label('Duplizieren')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Template duplizieren?')
+                    ->modalDescription('Dies erstellt eine Kopie des Templates mit dem Suffix " (Kopie)".')
+                    ->action(function (EmailTemplate $record) {
+                        // Create a copy of the template
+                        $duplicate = $record->replicate();
+                        $duplicate->name = $record->name.' (Kopie)';
+                        $duplicate->is_active = false; // Set as draft
+                        $duplicate->save();
+
+                        // Success notification
+                        \Filament\Notifications\Notification::make()
+                            ->title('Template wurde dupliziert')
+                            ->success()
+                            ->send();
+
+                        // Redirect to edit page of the duplicate
+                        return redirect()->route('filament.admin.resources.email-templates.edit', ['record' => $duplicate]);
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

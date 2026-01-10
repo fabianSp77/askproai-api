@@ -28,6 +28,7 @@ class EmailTemplateFactory extends Factory
             'subject' => $this->faker->sentence(6),
             'body_html' => '<p>'.$this->faker->paragraph().'</p>',
             'variables' => null,
+            'template_type' => 'both',
             'is_active' => true,
         ];
     }

@@ -8,6 +8,7 @@ use App\Mail\ServiceCaseNotification;
 use App\Models\ServiceCase;
 use App\Models\ServiceCaseActivityLog;
 use App\Models\ServiceOutputConfiguration;
+use App\Services\ServiceGateway\EmailTemplateDataProvider;
 use App\Services\ServiceGateway\EmailTemplateService;
 use App\Services\ServiceGateway\ExchangeLogService;
 use Illuminate\Mail\Mailable;
@@ -64,6 +65,13 @@ class EmailOutputHandler implements OutputHandlerInterface
             'case_type' => $case->case_type,
             'priority' => $case->priority,
         ]);
+
+        // Eager load transcript segments for template rendering
+        if (! $case->relationLoaded('callSession')) {
+            $case->load('callSession.transcriptSegments');
+        } elseif ($case->callSession !== null && ! $case->callSession->relationLoaded('transcriptSegments')) {
+            $case->callSession->load('transcriptSegments');
+        }
 
         // Load configuration relationship (with null-safety for cases without category)
         if (! $case->relationLoaded('category')) {
@@ -494,18 +502,9 @@ class EmailOutputHandler implements OutputHandlerInterface
     {
         $template = $config->emailTemplate;
 
-        // Prepare template variables from ServiceCase
-        $data = [
-            'customer_name' => $case->customer?->name ?? '',
-            'customer_email' => $case->customer?->email ?? '',
-            'company_name' => $case->company?->name ?? '',
-            'case_number' => $case->case_number ?? '',
-            'case_subject' => $case->subject ?? '',
-            'case_description' => $case->description ?? '',
-            'case_status' => $case->status ?? '',
-            'case_priority' => $case->priority ?? '',
-            'created_at' => $case->created_at?->format('d.m.Y H:i') ?? '',
-        ];
+        // Use EmailTemplateDataProvider for all variables
+        $dataProvider = new EmailTemplateDataProvider($case);
+        $data = $dataProvider->getVariables();
 
         // Render template using EmailTemplateService
         $rendered = $this->emailTemplateService->render($template, $data);
