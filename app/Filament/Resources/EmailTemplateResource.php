@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmailTemplateResource\Pages;
 use App\Models\EmailTemplate;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -23,7 +24,28 @@ class EmailTemplateResource extends Resource
     {
         return $form
             ->schema([
-                // Form will be implemented in US-004
+                Forms\Components\TextInput::make('name')
+                    ->label('Template Name')
+                    ->required()
+                    ->maxLength(255)
+                    ->helperText('A descriptive name for this email template'),
+
+                Forms\Components\TextInput::make('subject')
+                    ->label('Email Subject')
+                    ->required()
+                    ->maxLength(500)
+                    ->helperText('The subject line of the email (can use variables like {{customer_name}})'),
+
+                Forms\Components\RichEditor::make('body_html')
+                    ->label('Email Body')
+                    ->required()
+                    ->helperText('The HTML body of the email (can use variables like {{customer_name}}, {{case_number}}, etc.)')
+                    ->columnSpanFull(),
+
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true)
+                    ->helperText('Only active templates can be used'),
             ]);
     }
 
