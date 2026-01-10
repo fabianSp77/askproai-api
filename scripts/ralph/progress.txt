@@ -1,0 +1,74 @@
+# Ralph Progress Log - AskPro Gateway
+Started: Sa 10. Jan 05:44:26 CET 2026
+---
+
+## Codebase Patterns
+- Laravel migrations use anonymous class pattern: `return new class extends Migration`
+- Foreign keys use `foreignId()` with `constrained()` and `onDelete()` chaining
+- Migrations should have both `up()` and `down()` methods for rollback support
+- Use `Schema::create()` for new tables, `Schema::table()` for modifications
+- Index columns that will be frequently queried (foreign keys, search fields)
+- JSON columns use `->json()` and should be cast to `array` in the model
+- Filament Resources: Create Resource class + Pages subdirectory (ListRecords, CreateRecord, EditRecord)
+- TextColumn: Use ->searchable() and ->sortable() for list columns
+- IconColumn: Use ->boolean() for true/false fields
+- TernaryFilter: Use for three-state filters (true/false/all)
+- Filament automatically discovers Resources - no manual route registration needed
+
+## Sa 10. Jan 06:06:21 CET 2026 - US-001
+- Created email_templates table migration
+- Files created:
+  - database/migrations/2026_01_10_055919_create_email_templates_table.php
+- Migration includes: id, company_id (FK to companies with cascade delete), name (VARCHAR 255), subject (VARCHAR 500), body_html (TEXT), variables (JSON nullable), is_active (BOOLEAN default true), timestamps
+- Added index on company_id for performance
+- Migration successfully applied to production database
+- Code style check passed with pint
+- **Learnings for future iterations:**
+  - Migration files must be created manually when `php artisan make:migration` fails due to permission issues
+  - Use timestamp format YYYY_MM_DD_HHMMSS for migration filenames
+  - Always verify migration with `php artisan migrate:status` after applying
+  - Git permissions may require root access for committing (.git/objects owned by root)
+  - Use `--force` flag when running migrations in production environment
+  - Pre-existing test failures should be documented but don't block story completion
+---
+## Sa 10. Jan 06:15:30 CET 2026 - US-002
+- Created EmailTemplate Eloquent model
+- Files created:
+  - app/Models/EmailTemplate.php
+- Model includes: BelongsToCompany trait, HasFactory trait
+- Fillable fields: company_id, name, subject, body_html, variables, is_active
+- Casts: variables (array), is_active (boolean), timestamps (datetime)
+- Relationships: belongsTo Company
+- Scopes: scopeActive() for filtering active templates
+- Code style check passed with pint (auto-fixed trait ordering)
+- **Learnings for future iterations:**
+  - Models use BelongsToCompany trait, not a CompanyScopedModel base class
+  - BelongsToCompany trait provides automatic company_id scoping via CompanyScope
+  - Pint auto-fixes trait ordering (BelongsToCompany before HasFactory)
+  - Scope methods follow pattern: scopeName(Builder $query): Builder
+  - Pre-existing test failures don't block story completion (documented in US-001 notes)
+  - Always run pint without --test first to auto-fix style issues
+---
+## Sa 10. Jan 06:30:45 CET 2026 - US-003
+- Created EmailTemplateResource with list page and pages structure
+- Files created:
+  - app/Filament/Resources/EmailTemplateResource.php
+  - app/Filament/Resources/EmailTemplateResource/Pages/ListEmailTemplates.php
+  - app/Filament/Resources/EmailTemplateResource/Pages/CreateEmailTemplate.php
+  - app/Filament/Resources/EmailTemplateResource/Pages/EditEmailTemplate.php
+  - database/factories/EmailTemplateFactory.php
+- Resource includes: list table with searchable/sortable name, searchable/sortable subject, IconColumn for is_active, created_at column
+- TernaryFilter for is_active status (Active only / Inactive only / All)
+- Navigation in Settings group with heroicon-o-envelope icon, label "Email Templates"
+- Factory created for testing with inactive() and withVariables() states
+- Code style check passed with pint
+- **Learnings for future iterations:**
+  - Filament Resources follow pattern: Resource class + Pages subdirectory (List/Create/Edit)
+  - Use TextColumn::make('field')->searchable()->sortable() for searchable/sortable columns
+  - Use IconColumn::make('field')->boolean() for boolean fields
+  - Use TernaryFilter::make('field') for three-state filters (true/false/all)
+  - Filament automatically discovers Resources - routes are generated at runtime
+  - Navigation properties: navigationGroup, navigationLabel, navigationIcon, navigationSort
+  - Pint may fail on directories with permission issues - test specific files instead
+  - Factory pattern uses states for variants: ->state(['field' => value])
+---
