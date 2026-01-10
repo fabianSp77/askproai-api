@@ -33,19 +33,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read WebhookPreset|null $webhookPreset
  */
 class ServiceOutputConfiguration extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * Output type constants
      * Note: Database uses 'hybrid' for combined email+webhook delivery
      */
     public const TYPE_EMAIL = 'email';
+
     public const TYPE_WEBHOOK = 'webhook';
+
     public const TYPE_HYBRID = 'hybrid'; // Both email and webhook
 
     public const OUTPUT_TYPES = [
@@ -68,6 +69,7 @@ class ServiceOutputConfiguration extends Model
         'email_template_type',
         'email_subject_template',
         'email_body_template',
+        'template_id',
         'webhook_configuration_id',
         'webhook_url',
         'webhook_headers',
@@ -76,6 +78,7 @@ class ServiceOutputConfiguration extends Model
         'webhook_secret',
         'webhook_enabled',
         'webhook_include_transcript',
+        'contact_type_override', // ServiceNow contact_type override (null = auto-map)
         'fallback_emails',
         'retry_on_failure',
         'is_active',
@@ -131,6 +134,14 @@ class ServiceOutputConfiguration extends Model
     }
 
     /**
+     * Get the custom email template.
+     */
+    public function emailTemplate(): BelongsTo
+    {
+        return $this->belongsTo(EmailTemplate::class, 'template_id');
+    }
+
+    /**
      * Check if this configuration uses a preset template.
      */
     public function usesPreset(): bool
@@ -140,8 +151,6 @@ class ServiceOutputConfiguration extends Model
 
     /**
      * Get the effective payload template (from preset or direct configuration).
-     *
-     * @return array|null
      */
     public function getEffectivePayloadTemplate(): ?array
     {
@@ -155,8 +164,6 @@ class ServiceOutputConfiguration extends Model
 
     /**
      * Get the effective headers template (from preset or direct configuration).
-     *
-     * @return array|null
      */
     public function getEffectiveHeadersTemplate(): ?array
     {
@@ -166,6 +173,24 @@ class ServiceOutputConfiguration extends Model
         }
 
         return $this->webhook_headers;
+    }
+
+    /**
+     * Get the effective contact_type for a ServiceCase.
+     *
+     * Uses override if configured, otherwise auto-maps from the case's source.
+     *
+     * @return string ServiceNow-compatible contact_type
+     */
+    public function getEffectiveContactType(\App\Models\ServiceCase $case): string
+    {
+        // Use override if explicitly set
+        if (! empty($this->contact_type_override)) {
+            return $this->contact_type_override;
+        }
+
+        // Auto-map from source
+        return $case->service_now_contact_type;
     }
 
     /**
@@ -266,7 +291,7 @@ class ServiceOutputConfiguration extends Model
     /**
      * Mute specific recipients (add to muted list).
      *
-     * @param array<string>|string $emails Email(s) to mute
+     * @param  array<string>|string  $emails  Email(s) to mute
      */
     public function muteRecipients(array|string $emails): void
     {
@@ -279,7 +304,7 @@ class ServiceOutputConfiguration extends Model
     /**
      * Unmute specific recipients (remove from muted list).
      *
-     * @param array<string>|string $emails Email(s) to unmute
+     * @param  array<string>|string  $emails  Email(s) to unmute
      */
     public function unmuteRecipients(array|string $emails): void
     {
@@ -302,7 +327,7 @@ class ServiceOutputConfiguration extends Model
      *
      * Useful for testing: muteAllExcept(['test@example.com'])
      *
-     * @param array<string> $keepActive Emails to keep active
+     * @param  array<string>  $keepActive  Emails to keep active
      */
     public function muteAllExcept(array $keepActive): void
     {
