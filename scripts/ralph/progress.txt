@@ -143,3 +143,22 @@ Started: Sa 10. Jan 05:44:26 CET 2026
   - Tests can instantiate models without database: `new EmailTemplate(['field' => 'value'])`
   - Pre-existing test permission issues continue (as documented in US-001)
 ---
+## Sa 10. Jan 06:33:07 CET 2026 - US-007
+- Added template_id to ServiceOutputConfiguration for linking to custom email templates
+- Files created:
+  - database/migrations/2026_01_10_063032_add_template_id_to_service_output_configurations.php
+- Files modified:
+  - app/Models/ServiceOutputConfiguration.php
+- Migration adds template_id column (nullable bigint) with foreign key to email_templates (SET NULL on delete)
+- ServiceOutputConfiguration model updated:
+  - Added 'template_id' to fillable array
+  - Added emailTemplate() relationship method (belongsTo EmailTemplate)
+- Code style check passed with Pint (auto-fixed trait ordering and constant separation)
+- **Learnings for future iterations:**
+  - Migration ->after('column') fails if column doesn't exist - safer to omit and add at end
+  - Foreign keys with onDelete('set null') require column to be nullable
+  - Pint enforces class_attributes_separation (blank line between constants)
+  - Pint enforces trait ordering: BelongsToCompany before HasFactory
+  - BelongsTo relationships can specify foreign key column: belongsTo(Model::class, 'column_name')
+  - Pre-existing test permission issues continue (as documented in US-001)
+---
