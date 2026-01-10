@@ -97,3 +97,23 @@ Started: Sa 10. Jan 05:44:26 CET 2026
   - No need to manually implement notifications/redirects - Filament does this
   - Pre-existing test permission issues don't block story completion (as per US-001 notes)
 ---
+## Sa 10. Jan 06:55:00 CET 2026 - US-005
+- Added template variables helper section to EmailTemplateResource form
+- Files modified:
+  - app/Filament/Resources/EmailTemplateResource.php
+- Implemented Placeholder component showing all 9 available variables:
+  - customer_name, customer_email, company_name
+  - case_number, case_subject, case_description, case_status, case_priority
+  - created_at
+- Each variable includes description (e.g., "Name of the customer")
+- Hint text explains: "Use {{variable_name}} in subject or body"
+- Used HtmlString for formatted HTML content with Tailwind CSS classes
+- Code style check passed with Pint
+- **Learnings for future iterations:**
+  - Placeholder::make() component displays read-only informational content in forms
+  - Use ->content(new \Illuminate\Support\HtmlString('...')) for HTML content
+  - Tailwind classes work in Placeholder content: bg-gray-100, dark:bg-gray-800, etc.
+  - Use ->columnSpanFull() to make Placeholder span full width
+  - Escaped single quotes in HtmlString content to avoid syntax errors
+  - Pre-existing test permission issues continue (as documented in US-001)
+---
