@@ -42,6 +42,26 @@ class EmailTemplateResource extends Resource
                     ->helperText('The HTML body of the email (can use variables like {{customer_name}}, {{case_number}}, etc.)')
                     ->columnSpanFull(),
 
+                Forms\Components\Placeholder::make('available_variables')
+                    ->label('📋 Available Template Variables')
+                    ->content(new \Illuminate\Support\HtmlString('
+                        <div class="text-sm space-y-2">
+                            <p class="font-semibold text-gray-700 dark:text-gray-300">Use <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">{{variable_name}}</code> in subject or body:</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+                                <li><strong>{{customer_name}}</strong> - Name of the customer</li>
+                                <li><strong>{{customer_email}}</strong> - Customer\'s email address</li>
+                                <li><strong>{{company_name}}</strong> - Name of your company</li>
+                                <li><strong>{{case_number}}</strong> - Unique case/ticket number</li>
+                                <li><strong>{{case_subject}}</strong> - Subject/title of the case</li>
+                                <li><strong>{{case_description}}</strong> - Detailed description of the case</li>
+                                <li><strong>{{case_status}}</strong> - Current status of the case</li>
+                                <li><strong>{{case_priority}}</strong> - Priority level of the case</li>
+                                <li><strong>{{created_at}}</strong> - Date and time when the case was created</li>
+                            </ul>
+                        </div>
+                    '))
+                    ->columnSpanFull(),
+
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active')
                     ->default(true)
