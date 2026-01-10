@@ -117,3 +117,29 @@ Started: Sa 10. Jan 05:44:26 CET 2026
   - Escaped single quotes in HtmlString content to avoid syntax errors
   - Pre-existing test permission issues continue (as documented in US-001)
 ---
+## Sa 10. Jan 06:29:48 CET 2026 - US-006
+- Created EmailTemplateService for rendering templates with data
+- Files created:
+  - app/Services/ServiceGateway/EmailTemplateService.php
+  - tests/Unit/Services/ServiceGateway/EmailTemplateServiceTest.php
+- Service implements render() method that:
+  - Takes EmailTemplate and array of data
+  - Returns ['subject' => string, 'body' => string]
+  - Replaces {{variable}} placeholders using preg_replace_callback
+  - Handles missing variables gracefully (replaces with empty string)
+- Unit tests cover:
+  - Happy path with variable replacement
+  - Missing variables (replaced with empty string)
+  - Templates with no variables
+  - Empty data array
+  - Multiple occurrences of same variable
+- Code style check passed with Pint (auto-fixed method doc comments and constructor call)
+- **Learnings for future iterations:**
+  - Use preg_replace_callback() for pattern replacement with custom logic
+  - Pattern `/\{\{(\w+)\}\}/` matches {{variable_name}} format
+  - Use null coalescing operator `??` in callback for graceful missing variable handling
+  - Pint rule `no_superfluous_phpdoc_tags` removes redundant @param/@return if types are declared
+  - Pint rule `new_with_braces` removes parentheses from `new ClassName()` when no args
+  - Tests can instantiate models without database: `new EmailTemplate(['field' => 'value'])`
+  - Pre-existing test permission issues continue (as documented in US-001)
+---
