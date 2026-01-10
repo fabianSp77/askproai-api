@@ -162,3 +162,26 @@ Started: Sa 10. Jan 05:44:26 CET 2026
   - BelongsTo relationships can specify foreign key column: belongsTo(Model::class, 'column_name')
   - Pre-existing test permission issues continue (as documented in US-001)
 ---
+## Sa 10. Jan 06:36:19 CET 2026 - US-008
+- Integrated EmailTemplateService with EmailOutputHandler for custom email templates
+- Files modified:
+  - app/Services/ServiceGateway/OutputHandlers/EmailOutputHandler.php
+- Changes made:
+  - Added EmailTemplateService as dependency (injected via constructor)
+  - Modified selectMailable() to check for template_id before other options
+  - Added buildMailableFromTemplate() method that:
+    - Prepares template variables from ServiceCase (customer_name, customer_email, company_name, case_number, etc.)
+    - Calls EmailTemplateService::render() to replace {{variables}}
+    - Returns anonymous Mailable class with rendered subject and HTML body
+  - Added Log::info() when using EmailTemplate from database (logs template_id and name)
+  - Maintains fallback chain: template_id → email_template_type → email_body_template → ServiceCaseNotification
+- Code style check passed with Pint (auto-fixed spacing around concatenation operators)
+- **Learnings for future iterations:**
+  - Anonymous classes can extend Mailable and be returned from methods
+  - Use class properties with `private string $field` syntax in anonymous classes
+  - Check if relationship is loaded before calling ->load() to avoid redundant queries
+  - Pint enforces spacing around concatenation: 'string'.$var vs 'string' . $var (auto-fixed)
+  - Log::info() vs Log::debug() - use info for significant flow decisions, debug for details
+  - Mailable constructor can accept and store data for use in build() method
+  - Pre-existing test permission issues continue (as documented in US-001)
+---
