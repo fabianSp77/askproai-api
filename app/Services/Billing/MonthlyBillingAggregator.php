@@ -310,6 +310,7 @@ class MonthlyBillingAggregator
      * Get call minutes data for a company.
      *
      * OPTIMIZED: Uses preloaded batch data when available (O(1) lookup).
+     * Uses bcmath for precise decimal calculations (4 decimal places).
      */
     private function getCallMinutesData(
         Company $company,
@@ -339,19 +340,25 @@ class MonthlyBillingAggregator
         // Calculate total duration in seconds
         // Note: Column is 'duration_sec' in the calls table
         $totalSeconds = $calls->sum('duration_sec') ?: 0;
-        $totalMinutes = $totalSeconds / 60;
         $callCount = $calls->count();
 
         // Get rate per minute (from company fee schedule or default)
         // Note: feeSchedule/tenant/pricingPlan already eager loaded
         $ratePerMinuteCents = $this->getCallRateForCompany($company);
 
-        // Calculate total cost
-        $totalCents = (int) round($totalMinutes * $ratePerMinuteCents);
+        // PRECISION: Use bcmath for accurate decimal calculations
+        // Convert seconds to minutes: totalSeconds / 60 (maintain 4 decimal places)
+        $totalMinutes = bcdiv((string) $totalSeconds, '60', 4);
+
+        // Calculate total cost: totalMinutes * ratePerMinuteCents (maintain 4 decimal places)
+        $totalCostPrecise = bcmul($totalMinutes, (string) $ratePerMinuteCents, 4);
+
+        // Round to integer cents for storage
+        $totalCents = (int) round((float) $totalCostPrecise);
 
         return [
             'call_count' => $callCount,
-            'total_minutes' => round($totalMinutes, 2),
+            'total_minutes' => round((float) $totalMinutes, 2), // Display precision: 2 decimals
             'rate_per_minute_cents' => $ratePerMinuteCents,
             'total_cents' => $totalCents,
         ];
