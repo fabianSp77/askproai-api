@@ -191,3 +191,39 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+## 2026-01-12 ~20:00 UTC - US-003: Fix Float Precision in Call Minutes Calculation
+- Fixed float precision issues in MonthlyBillingAggregator::getCallMinutesData()
+- Replaced float division ($totalSeconds / 60) with bcdiv((string)$totalSeconds, '60', 4)
+- Replaced float multiplication ($totalMinutes * $ratePerMinuteCents) with bcmul($totalMinutes, (string)$ratePerMinuteCents, 4)
+- Maintained 4 decimal places throughout calculations for precision
+- Final display value rounded to 2 decimal places
+- Verified bcmath functions work correctly with test cases (normal and edge cases)
+
+**Files changed:**
+- app/Services/Billing/MonthlyBillingAggregator.php (lines 309-365)
+
+**Learnings for future iterations:**
+- bcmath functions require string parameters: bcdiv((string)$value, '60', 4)
+- bcmath scale parameter (4th arg) maintains precision throughout calculation
+- Convert back to float for final rounding: round((float)$bcmathResult, 2)
+- Pint passed on first try when code is properly formatted
+- Environmental test issues (DB permissions, root-owned files) persist but don't block implementation
+- PHP CLI smoke tests are effective for verifying bcmath logic without DB
+
+**Pattern Identified:**
+- Precision-safe money calculation pattern:
+  1. Convert inputs to strings for bcmath: (string)$value
+  2. Use bcdiv/bcmul with scale=4 for intermediate calculations
+  3. Convert final result to float for rounding: (float)$result
+  4. Round to cents: (int)round($floatResult)
+- Always test precision fixes with edge cases (large numbers)
+
+**Acceptance Criteria:**
+- ✅ bcmul() used for multiplication in getCallMinutesData()
+- ✅ bcdiv() used for division operations
+- ✅ Scale of 4 decimal places maintained throughout
+- ✅ Final result rounded to 2 decimal places for display
+
+---
+
