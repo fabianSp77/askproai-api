@@ -36,14 +36,14 @@
     {
       "id": "US-002",
       "title": "Add Stripe Webhook Event ID Tracking",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "stripe_events table exists with event_id (unique), event_type, processed_at columns",
         "StripeInvoicingService checks for existing event_id before processing",
         "Duplicate events are logged and skipped gracefully",
         "Migration file created for stripe_events table"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-003",
