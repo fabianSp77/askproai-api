@@ -13,9 +13,17 @@ class AggregateInvoiceItem extends Model
 
     // Item type constants
     public const TYPE_CALL_MINUTES = 'call_minutes';
+
     public const TYPE_MONTHLY_SERVICE = 'monthly_service';
+
     public const TYPE_SETUP_FEE = 'setup_fee';
+
     public const TYPE_SERVICE_CHANGE = 'service_change';
+
+    public const TYPE_SERVICE_GATEWAY = 'service_gateway';
+
+    public const TYPE_SERVICE_GATEWAY_MONTHLY = 'service_gateway_monthly';
+
     public const TYPE_CUSTOM = 'custom';
 
     protected $fillable = [
@@ -98,7 +106,7 @@ class AggregateInvoiceItem extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2, ',', '.') . ' €';
+        return number_format($this->amount, 2, ',', '.').' €';
     }
 
     /**
@@ -111,6 +119,8 @@ class AggregateInvoiceItem extends Model
             self::TYPE_MONTHLY_SERVICE => 'Monatliche Servicegebühr',
             self::TYPE_SETUP_FEE => 'Einrichtungsgebühr',
             self::TYPE_SERVICE_CHANGE => 'Service-Änderung',
+            self::TYPE_SERVICE_GATEWAY => 'Service Gateway - Fälle',
+            self::TYPE_SERVICE_GATEWAY_MONTHLY => 'Service Gateway - Pauschale',
             self::TYPE_CUSTOM => 'Sonstiges',
             default => $this->item_type,
         };
@@ -126,6 +136,8 @@ class AggregateInvoiceItem extends Model
             self::TYPE_MONTHLY_SERVICE => 'heroicon-o-calendar',
             self::TYPE_SETUP_FEE => 'heroicon-o-cog-6-tooth',
             self::TYPE_SERVICE_CHANGE => 'heroicon-o-wrench-screwdriver',
+            self::TYPE_SERVICE_GATEWAY => 'heroicon-o-inbox-stack',
+            self::TYPE_SERVICE_GATEWAY_MONTHLY => 'heroicon-o-inbox',
             self::TYPE_CUSTOM => 'heroicon-o-document-text',
             default => 'heroicon-o-currency-euro',
         };
@@ -256,6 +268,76 @@ class AggregateInvoiceItem extends Model
             'unit' => null,
             'unit_price_cents' => $amountCents,
             'amount_cents' => $amountCents,
+        ]);
+    }
+
+    /**
+     * Create a Service Gateway per-case billing item.
+     *
+     * @param  int  $aggregateInvoiceId  Parent invoice ID
+     * @param  int  $companyId  Company being billed
+     * @param  int  $caseCount  Number of cases billed
+     * @param  int  $unitPriceCents  Price per case in cents
+     * @param  int  $totalAmountCents  Total amount in cents
+     * @param  \DateTimeInterface  $periodStart  Billing period start
+     * @param  \DateTimeInterface  $periodEnd  Billing period end
+     * @param  string|null  $outputType  Output type (email, webhook, hybrid)
+     */
+    public static function createServiceGatewayItem(
+        int $aggregateInvoiceId,
+        int $companyId,
+        int $caseCount,
+        int $unitPriceCents,
+        int $totalAmountCents,
+        \DateTimeInterface $periodStart,
+        \DateTimeInterface $periodEnd,
+        ?string $outputType = null,
+    ): self {
+        return self::create([
+            'aggregate_invoice_id' => $aggregateInvoiceId,
+            'company_id' => $companyId,
+            'item_type' => self::TYPE_SERVICE_GATEWAY,
+            'description' => 'Service Gateway - Fälle',
+            'description_detail' => sprintf('%d Fälle (%s)', $caseCount, $outputType ?? 'mixed'),
+            'quantity' => $caseCount,
+            'unit' => 'Fälle',
+            'unit_price_cents' => $unitPriceCents,
+            'amount_cents' => $totalAmountCents,
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
+        ]);
+    }
+
+    /**
+     * Create a Service Gateway monthly flat rate item.
+     *
+     * @param  int  $aggregateInvoiceId  Parent invoice ID
+     * @param  int  $companyId  Company being billed
+     * @param  int  $amountCents  Monthly rate in cents
+     * @param  string  $configName  Output configuration name
+     * @param  \DateTimeInterface  $periodStart  Billing period start
+     * @param  \DateTimeInterface  $periodEnd  Billing period end
+     */
+    public static function createServiceGatewayMonthlyItem(
+        int $aggregateInvoiceId,
+        int $companyId,
+        int $amountCents,
+        string $configName,
+        \DateTimeInterface $periodStart,
+        \DateTimeInterface $periodEnd,
+    ): self {
+        return self::create([
+            'aggregate_invoice_id' => $aggregateInvoiceId,
+            'company_id' => $companyId,
+            'item_type' => self::TYPE_SERVICE_GATEWAY_MONTHLY,
+            'description' => 'Service Gateway - Monatspauschale',
+            'description_detail' => $configName,
+            'quantity' => 1,
+            'unit' => 'Monat',
+            'unit_price_cents' => $amountCents,
+            'amount_cents' => $amountCents,
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
         ]);
     }
 }

@@ -56,6 +56,21 @@ class ServiceOutputConfiguration extends Model
     ];
 
     /**
+     * Billing mode constants
+     */
+    public const BILLING_MODE_PER_CASE = 'per_case';
+
+    public const BILLING_MODE_MONTHLY_FLAT = 'monthly_flat';
+
+    public const BILLING_MODE_NONE = 'none';
+
+    public const BILLING_MODES = [
+        self::BILLING_MODE_PER_CASE,
+        self::BILLING_MODE_MONTHLY_FLAT,
+        self::BILLING_MODE_NONE,
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<string>
@@ -90,6 +105,12 @@ class ServiceOutputConfiguration extends Model
         'wait_for_enrichment',
         'enrichment_timeout_seconds',
         'audio_url_ttl_minutes',
+        // Billing fields
+        'billing_mode',
+        'base_price_cents',
+        'email_price_cents',
+        'webhook_price_cents',
+        'monthly_flat_price_cents',
     ];
 
     /**
@@ -115,6 +136,11 @@ class ServiceOutputConfiguration extends Model
         'wait_for_enrichment' => 'boolean',
         'enrichment_timeout_seconds' => 'integer',
         'audio_url_ttl_minutes' => 'integer',
+        // Billing fields
+        'base_price_cents' => 'integer',
+        'email_price_cents' => 'integer',
+        'webhook_price_cents' => 'integer',
+        'monthly_flat_price_cents' => 'integer',
     ];
 
     /**
@@ -251,6 +277,65 @@ class ServiceOutputConfiguration extends Model
     public function webhookIsActive(): bool
     {
         return $this->sendsWebhook() && ($this->webhook_enabled ?? true);
+    }
+
+    // =========================================================================
+    // Billing Methods
+    // =========================================================================
+
+    /**
+     * Check if this configuration uses per-case billing.
+     */
+    public function usesPerCaseBilling(): bool
+    {
+        return $this->billing_mode === self::BILLING_MODE_PER_CASE;
+    }
+
+    /**
+     * Check if this configuration uses monthly flat billing.
+     */
+    public function usesMonthlyFlatBilling(): bool
+    {
+        return $this->billing_mode === self::BILLING_MODE_MONTHLY_FLAT;
+    }
+
+    /**
+     * Check if this configuration has billing enabled.
+     */
+    public function hasBillingEnabled(): bool
+    {
+        return $this->billing_mode !== self::BILLING_MODE_NONE
+            && $this->billing_mode !== null;
+    }
+
+    /**
+     * Calculate the price for a single case based on output type.
+     *
+     * @return int Price in cents
+     */
+    public function calculateCasePrice(): int
+    {
+        $price = $this->base_price_cents ?? 0;
+
+        if ($this->sendsEmail()) {
+            $price += $this->email_price_cents ?? 50;
+        }
+
+        if ($this->sendsWebhook()) {
+            $price += $this->webhook_price_cents ?? 50;
+        }
+
+        return $price;
+    }
+
+    /**
+     * Get the monthly flat rate.
+     *
+     * @return int Monthly rate in cents
+     */
+    public function getMonthlyFlatPrice(): int
+    {
+        return $this->monthly_flat_price_cents ?? 2900;
     }
 
     // =========================================================================

@@ -887,6 +887,30 @@ class ServiceCase extends Model
             if (! in_array($model->output_status, self::OUTPUT_STATUSES)) {
                 throw new \InvalidArgumentException("Invalid output status: {$model->output_status}");
             }
+
+            // Validate billing_status
+            if ($model->billing_status && ! in_array($model->billing_status, self::BILLING_STATUSES)) {
+                throw new \InvalidArgumentException("Invalid billing status: {$model->billing_status}");
+            }
+
+            // Enforce billing state machine transitions (Security: prevent bypass via direct update)
+            if ($model->isDirty('billing_status') && $model->exists) {
+                $original = $model->getOriginal('billing_status');
+                $new = $model->billing_status;
+
+                // Define valid transitions
+                $validTransitions = [
+                    self::BILLING_UNBILLED => [self::BILLING_BILLED, self::BILLING_WAIVED],
+                    self::BILLING_BILLED => [], // No transitions allowed from billed
+                    self::BILLING_WAIVED => [], // No transitions allowed from waived
+                ];
+
+                if (isset($validTransitions[$original]) && ! in_array($new, $validTransitions[$original])) {
+                    throw new \DomainException(
+                        "Invalid billing_status transition from '{$original}' to '{$new}' for ServiceCase {$model->id}"
+                    );
+                }
+            }
         });
     }
 }

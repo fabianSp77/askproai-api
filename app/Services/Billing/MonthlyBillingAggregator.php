@@ -7,10 +7,11 @@ use App\Models\AggregateInvoiceItem;
 use App\Models\Call;
 use App\Models\Company;
 use App\Models\CompanyServicePricing;
+use App\Models\ServiceCase;
 use App\Models\ServiceChangeFee;
+use App\Models\ServiceOutputConfiguration;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -29,8 +30,11 @@ class MonthlyBillingAggregator
      * Pre-loaded data for batch processing (avoids N+1 queries).
      */
     private Collection $batchCallsData;
+
     private Collection $batchServicePricings;
+
     private Collection $batchServiceChanges;
+
     private bool $batchDataLoaded = false;
 
     public function __construct()
@@ -53,7 +57,8 @@ class MonthlyBillingAggregator
             ->get();
 
         if ($managedCompanies->isEmpty()) {
-            Log::warning("Partner has no managed companies", ['partner_id' => $partner->id]);
+            Log::warning('Partner has no managed companies', ['partner_id' => $partner->id]);
+
             return $invoice;
         }
 
@@ -95,7 +100,7 @@ class MonthlyBillingAggregator
                 $q->whereNull('effective_until')
                     ->orWhere('effective_until', '>=', $periodStart);
             })
-            ->whereHas('template', fn($q) => $q->where('pricing_type', 'monthly'))
+            ->whereHas('template', fn ($q) => $q->where('pricing_type', 'monthly'))
             ->with('template')
             ->get()
             ->groupBy('company_id');
@@ -110,7 +115,7 @@ class MonthlyBillingAggregator
 
         $this->batchDataLoaded = true;
 
-        Log::debug("Batch data preloaded for billing", [
+        Log::debug('Batch data preloaded for billing', [
             'company_count' => count($companyIds),
             'calls_loaded' => $this->batchCallsData->flatten()->count(),
             'pricings_loaded' => $this->batchServicePricings->flatten()->count(),
@@ -173,6 +178,9 @@ class MonthlyBillingAggregator
 
         // 4. Setup fees (one-time, check if in period)
         $this->addSetupFees($invoice, $company, $periodStart, $periodEnd);
+
+        // 5. Service Gateway cases (per-case or monthly flat)
+        $this->addServiceGatewayCases($invoice, $company, $periodStart, $periodEnd);
     }
 
     /**
@@ -401,25 +409,32 @@ class MonthlyBillingAggregator
 
     /**
      * Get monthly service fees data.
+     *
+     * OPTIMIZED: Uses preloaded batch data when available (O(1) lookup).
      */
     private function getMonthlyServicesData(
         Company $company,
         Carbon $periodStart,
         Carbon $periodEnd
     ): array {
-        // Get active monthly service pricing for this company
-        $pricings = CompanyServicePricing::where('company_id', $company->id)
-            ->where('is_active', true)
-            ->where('effective_from', '<=', $periodEnd)
-            ->where(function ($q) use ($periodStart) {
-                $q->whereNull('effective_until')
-                    ->orWhere('effective_until', '>=', $periodStart);
-            })
-            ->whereHas('template', function ($q) {
-                $q->where('pricing_type', 'monthly');
-            })
-            ->with('template')
-            ->get();
+        // OPTIMIZATION: Use preloaded data if available
+        if ($this->batchDataLoaded) {
+            $pricings = $this->getBatchServicePricings($company->id);
+        } else {
+            // Fallback to direct query (for getChargesSummary preview)
+            $pricings = CompanyServicePricing::where('company_id', $company->id)
+                ->where('is_active', true)
+                ->where('effective_from', '<=', $periodEnd)
+                ->where(function ($q) use ($periodStart) {
+                    $q->whereNull('effective_until')
+                        ->orWhere('effective_until', '>=', $periodStart);
+                })
+                ->whereHas('template', function ($q) {
+                    $q->where('pricing_type', 'monthly');
+                })
+                ->with('template')
+                ->get();
+        }
 
         $fees = [];
         foreach ($pricings as $pricing) {
@@ -461,6 +476,8 @@ class MonthlyBillingAggregator
 
     /**
      * Get service change fees data.
+     *
+     * OPTIMIZED: Uses preloaded batch data when available (O(1) lookup).
      */
     private function getServiceChangesData(
         Company $company,
@@ -468,15 +485,21 @@ class MonthlyBillingAggregator
         Carbon $periodEnd
     ): array {
         // Check if ServiceChangeFee model exists
-        if (!class_exists(ServiceChangeFee::class)) {
+        if (! class_exists(ServiceChangeFee::class)) {
             return [];
         }
 
-        $fees = ServiceChangeFee::where('company_id', $company->id)
-            ->whereBetween('service_date', [$periodStart, $periodEnd])
-            ->where('status', 'completed')
-            ->whereNull('invoice_id') // Not yet invoiced
-            ->get();
+        // OPTIMIZATION: Use preloaded data if available
+        if ($this->batchDataLoaded) {
+            $fees = $this->getBatchServiceChanges($company->id);
+        } else {
+            // Fallback to direct query (for getChargesSummary preview)
+            $fees = ServiceChangeFee::where('company_id', $company->id)
+                ->whereBetween('service_date', [$periodStart, $periodEnd])
+                ->where('status', 'completed')
+                ->whereNull('invoice_id') // Not yet invoiced
+                ->get();
+        }
 
         $changes = [];
         foreach ($fees as $fee) {
@@ -530,17 +553,168 @@ class MonthlyBillingAggregator
         if ($company->created_at >= $periodStart && $company->created_at <= $periodEnd) {
             $feeSchedule = $company->feeSchedule;
 
-            if ($feeSchedule && $feeSchedule->setup_fee > 0 && !$feeSchedule->setup_fee_invoiced) {
+            if ($feeSchedule && $feeSchedule->setup_fee > 0 && ! $feeSchedule->isSetupFeeBilled()) {
                 $fees[] = [
                     'description' => 'Einrichtungsgebühr',
                     'amount_cents' => (int) ($feeSchedule->setup_fee * 100),
                 ];
 
-                // Mark setup fee as invoiced
-                $feeSchedule->update(['setup_fee_invoiced' => true]);
+                // Mark setup fee as billed using the model's API
+                $feeSchedule->markSetupFeeBilled();
             }
         }
 
         return $fees;
+    }
+
+    // =========================================================================
+    // SERVICE GATEWAY BILLING
+    // =========================================================================
+
+    /**
+     * Add Service Gateway charges to invoice.
+     *
+     * Handles two billing modes:
+     * - per_case: Bill each case individually based on output type
+     * - monthly_flat: Bill a flat monthly fee for unlimited cases
+     */
+    private function addServiceGatewayCases(
+        AggregateInvoice $invoice,
+        Company $company,
+        Carbon $periodStart,
+        Carbon $periodEnd
+    ): void {
+        $data = $this->getServiceGatewayCasesData($company, $periodStart, $periodEnd);
+
+        // Process per-case billing
+        if (! empty($data['per_case'])) {
+            $perCase = $data['per_case'];
+
+            $item = AggregateInvoiceItem::createServiceGatewayItem(
+                aggregateInvoiceId: $invoice->id,
+                companyId: $company->id,
+                caseCount: $perCase['case_count'],
+                unitPriceCents: $perCase['average_unit_price_cents'],
+                totalAmountCents: $perCase['total_amount_cents'],
+                periodStart: $periodStart,
+                periodEnd: $periodEnd,
+                outputType: $perCase['output_types'] ?? null,
+            );
+
+            // Mark all cases as billed
+            ServiceCase::where('company_id', $company->id)
+                ->unbilled()
+                ->whereBetween('created_at', [$periodStart, $periodEnd])
+                ->update([
+                    'billing_status' => ServiceCase::BILLING_BILLED,
+                    'billed_at' => now(),
+                    'invoice_item_id' => $item->id,
+                ]);
+
+            Log::info('[ServiceGateway] Per-case billing added', [
+                'company_id' => $company->id,
+                'case_count' => $perCase['case_count'],
+                'amount_cents' => $perCase['total_amount_cents'],
+            ]);
+        }
+
+        // Process monthly flat billing
+        foreach ($data['monthly_flat'] as $flatFee) {
+            AggregateInvoiceItem::createServiceGatewayMonthlyItem(
+                aggregateInvoiceId: $invoice->id,
+                companyId: $company->id,
+                amountCents: $flatFee['amount_cents'],
+                configName: $flatFee['config_name'],
+                periodStart: $periodStart,
+                periodEnd: $periodEnd,
+            );
+
+            Log::info('[ServiceGateway] Monthly flat billing added', [
+                'company_id' => $company->id,
+                'config' => $flatFee['config_name'],
+                'amount_cents' => $flatFee['amount_cents'],
+            ]);
+        }
+    }
+
+    /**
+     * Get Service Gateway billing data for a company.
+     *
+     * Returns both per-case charges and monthly flat fees.
+     */
+    private function getServiceGatewayCasesData(
+        Company $company,
+        Carbon $periodStart,
+        Carbon $periodEnd
+    ): array {
+        $result = [
+            'per_case' => null,
+            'monthly_flat' => [],
+        ];
+
+        // Get active output configurations with billing
+        $configs = ServiceOutputConfiguration::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->whereIn('billing_mode', [
+                ServiceOutputConfiguration::BILLING_MODE_PER_CASE,
+                ServiceOutputConfiguration::BILLING_MODE_MONTHLY_FLAT,
+            ])
+            ->get();
+
+        if ($configs->isEmpty()) {
+            return $result;
+        }
+
+        // Process per-case billing
+        $perCaseConfigs = $configs->filter(fn ($c) => $c->usesPerCaseBilling());
+        if ($perCaseConfigs->isNotEmpty()) {
+            // Get unbilled cases for this period
+            $cases = ServiceCase::where('company_id', $company->id)
+                ->unbilled()
+                ->whereBetween('created_at', [$periodStart, $periodEnd])
+                ->where('output_status', ServiceCase::OUTPUT_SENT) // Only bill delivered cases
+                ->get();
+
+            if ($cases->isNotEmpty()) {
+                $totalAmountCents = 0;
+                $outputTypes = [];
+
+                foreach ($cases as $case) {
+                    // Find the output config that applies to this case (via category)
+                    $config = $case->category?->outputConfiguration;
+                    if ($config && $config->usesPerCaseBilling()) {
+                        $totalAmountCents += $config->calculateCasePrice();
+                        $outputTypes[$config->output_type] = true;
+                    } else {
+                        // Fallback to first per-case config
+                        $fallbackConfig = $perCaseConfigs->first();
+                        $totalAmountCents += $fallbackConfig->calculateCasePrice();
+                        $outputTypes[$fallbackConfig->output_type] = true;
+                    }
+                }
+
+                $caseCount = $cases->count();
+                $avgUnitPrice = $caseCount > 0 ? (int) round($totalAmountCents / $caseCount) : 0;
+
+                $result['per_case'] = [
+                    'case_count' => $caseCount,
+                    'total_amount_cents' => $totalAmountCents,
+                    'average_unit_price_cents' => $avgUnitPrice,
+                    'output_types' => implode(', ', array_keys($outputTypes)),
+                ];
+            }
+        }
+
+        // Process monthly flat billing
+        $flatConfigs = $configs->filter(fn ($c) => $c->usesMonthlyFlatBilling());
+        foreach ($flatConfigs as $config) {
+            $result['monthly_flat'][] = [
+                'config_id' => $config->id,
+                'config_name' => $config->name,
+                'amount_cents' => $config->monthly_flat_price_cents ?? 2900,
+            ];
+        }
+
+        return $result;
     }
 }

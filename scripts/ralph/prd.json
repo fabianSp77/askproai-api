@@ -24,7 +24,8 @@
     {
       "id": "US-001",
       "title": "Fix N+1 Query in getMonthlyServicesData()",
-      "status": "pending",
+      "status": "completed",
+      "passes": true,
       "acceptanceCriteria": [
         "preloadBatchData() method exists in MonthlyBillingAggregator",
         "All company data loaded in single batch query before loop",
