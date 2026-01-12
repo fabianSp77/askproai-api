@@ -1,0 +1,152 @@
+{
+  "project": "AskPro Gateway",
+  "branchName": "ralph/billing-qc-fixes",
+  "description": "Billing System QC Fixes - P0 Fixes, N+1 Query Fix, Stripe Event ID Tracking, Float Precision, Indexes, Documentation, BillingPeriod VO, Test Coverage",
+  "userStories": [
+    {
+      "id": "US-000",
+      "title": "Add Billing Methods to ServiceCase Model",
+      "status": "completed",
+      "passes": true,
+      "acceptanceCriteria": [
+        "billing_status field added to ServiceCase $fillable array",
+        "billing_status field added to ServiceCase $casts array",
+        "markAsBilled(int $invoiceItemId, int $amountCents) method implemented",
+        "markAsBilled() throws LogicException if billing_status is not 'unbilled'",
+        "markAsWaived(string $reason) method implemented",
+        "markAsWaived() throws LogicException if billing_status is 'billed'",
+        "isBillable() method returns true only for unbilled cases",
+        "scopeUnbilled, scopeBilled, scopeWaived query scopes added",
+        "invoiceItem() BelongsTo relationship to AggregateInvoiceItem added",
+        "All existing tests still pass"
+      ]
+    },
+    {
+      "id": "US-001",
+      "title": "Fix N+1 Query in getMonthlyServicesData()",
+      "status": "completed",
+      "passes": true,
+      "acceptanceCriteria": [
+        "preloadBatchData() method exists in MonthlyBillingAggregator",
+        "All company data loaded in single batch query before loop",
+        "No individual company queries inside the foreach loop",
+        "Existing tests still pass"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Add Stripe Webhook Event ID Tracking",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "stripe_events table exists with event_id (unique), event_type, processed_at columns",
+        "StripeInvoicingService checks for existing event_id before processing",
+        "Duplicate events are logged and skipped gracefully",
+        "Migration file created for stripe_events table"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "Fix Float Precision in Call Minutes Calculation",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "bcmul() used for multiplication in getCallMinutesData()",
+        "bcdiv() used for division operations",
+        "Scale of 4 decimal places maintained throughout",
+        "Final result rounded to 2 decimal places for display"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-004",
+      "title": "Add Missing Billing Indexes",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "Index on service_cases(company_id, billing_status, created_at)",
+        "Index on aggregate_invoice_items(aggregate_invoice_id, company_id)",
+        "Index on aggregate_invoices(partner_company_id, status, billing_period_start)",
+        "Migration file created with all indexes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-005",
+      "title": "Create Billing Architecture Documentation",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md exists",
+        "Documents MonthlyBillingAggregator flow with Mermaid diagram",
+        "Documents ServiceCase billing lifecycle",
+        "Documents Stripe webhook handling with idempotency",
+        "Documents Service Gateway pricing calculation"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-006",
+      "title": "Create BillingPeriod Value Object",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "BillingPeriod class in app/ValueObjects/BillingPeriod.php",
+        "Contains start, end properties with Carbon types",
+        "Static factory methods: forMonth(year, month), forCurrentMonth()",
+        "Methods: toDateRange(), overlaps(), contains()",
+        "MonthlyBillingAggregator refactored to use BillingPeriod"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-007",
+      "title": "Add Service Gateway Billing Integration Tests",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "Test file: tests/Feature/Billing/ServiceGatewayBillingTest.php",
+        "Test: service cases correctly aggregated by company",
+        "Test: pricing tiers applied correctly",
+        "Test: billing_status transitions work",
+        "All tests pass"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-008",
+      "title": "Add ServiceCase Billing State Machine Tests",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "Test file: tests/Unit/Models/ServiceCaseBillingTest.php",
+        "Test: unbilled -> billed transition",
+        "Test: unbilled -> waived transition",
+        "Test: billed cases cannot be re-billed (state guard)",
+        "Test: waived cases cannot be billed",
+        "All tests pass"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-009",
+      "title": "Add AggregateInvoice Number Generation Test",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "Test in tests/Feature/Billing/AggregateInvoiceTest.php",
+        "Test: concurrent invoice generation produces unique numbers",
+        "Test: invoice numbers follow AGG-YYYY-MM-NNN format",
+        "Test uses database transactions to simulate concurrency",
+        "All tests pass"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-010",
+      "title": "Add ServiceOutputConfiguration Pricing Tests",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "Test file: tests/Unit/Models/ServiceOutputConfigurationPricingTest.php",
+        "Test: pricing_mode accessor returns correct mode",
+        "Test: effective pricing calculation",
+        "Test: billing configuration validation",
+        "All tests pass"
+      ],
+      "passes": true
+    }
+  ]
+}

@@ -15,15 +15,22 @@ use Illuminate\Support\HtmlString;
 class ServiceOutputConfigurationResource extends Resource
 {
     protected static ?string $model = ServiceOutputConfiguration::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-paper-airplane';
+
     protected static ?string $navigationGroup = 'Service Gateway';
+
     protected static ?string $navigationLabel = 'Output Konfigurationen';
+
     protected static ?string $modelLabel = 'Output Konfiguration';
+
     protected static ?string $pluralModelLabel = 'Output Konfigurationen';
+
     protected static ?int $navigationSort = 14;
 
     /**
      * Only show in navigation when Service Gateway is enabled.
+     *
      * @see config/gateway.php 'mode_enabled'
      */
     public static function shouldRegisterNavigation(): bool
@@ -71,10 +78,16 @@ class ServiceOutputConfigurationResource extends Resource
                             if ($recipientCount > 0) {
                                 $emailStatus = 'success';
                                 $features = [];
-                                $features[] = $recipientCount . ' Empfanger';
-                                if ($includeSummary) $features[] = 'Zusammenfassung';
-                                if ($includeTranscript) $features[] = 'Transkript';
-                                if ($audioOption !== 'none') $features[] = 'Audio';
+                                $features[] = $recipientCount.' Empfanger';
+                                if ($includeSummary) {
+                                    $features[] = 'Zusammenfassung';
+                                }
+                                if ($includeTranscript) {
+                                    $features[] = 'Transkript';
+                                }
+                                if ($audioOption !== 'none') {
+                                    $features[] = 'Audio';
+                                }
                                 $emailMessage = implode(' · ', $features);
                                 $emailIcon = 'check';
                             } else {
@@ -89,11 +102,13 @@ class ServiceOutputConfigurationResource extends Resource
                         $webhookMessage = 'Nicht aktiviert';
                         $webhookIcon = 'minus';
                         if ($webhookEnabled) {
-                            if (!empty($webhookUrl)) {
+                            if (! empty($webhookUrl)) {
                                 if ($webhookActive) {
                                     $webhookStatus = 'success';
                                     $features = ['URL gesetzt', 'Aktiv'];
-                                    if ($webhookTranscript) $features[] = 'Transkript';
+                                    if ($webhookTranscript) {
+                                        $features[] = 'Transkript';
+                                    }
                                     $webhookMessage = implode(' · ', $features);
                                     $webhookIcon = 'check';
                                 } else {
@@ -141,7 +156,7 @@ class ServiceOutputConfigurationResource extends Resource
                         ];
 
                         $deactivatedBanner = '';
-                        if (!$isActive) {
+                        if (! $isActive) {
                             $deactivatedBanner = '<div class="mb-3 px-3 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm font-medium flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" clip-rule="evenodd"></path></svg>
                                 Konfiguration ist deaktiviert - keine Benachrichtigungen werden gesendet
@@ -159,33 +174,33 @@ class ServiceOutputConfigurationResource extends Resource
                                     </h3>
                                 </div>
                                 <div class="p-4 bg-white dark:bg-gray-900">
-                                    ' . $deactivatedBanner . '
+                                    '.$deactivatedBanner.'
                                     <div class="space-y-3">
-                                        <div class="flex items-center gap-4 p-3 rounded-lg ' . $bgColors[$emailStatus] . ' border">
-                                            ' . $icons[$emailIcon] . '
+                                        <div class="flex items-center gap-4 p-3 rounded-lg '.$bgColors[$emailStatus].' border">
+                                            '.$icons[$emailIcon].'
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-white">E-Mail</span>
-                                                    ' . ($emailEnabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100">' . ($outputType === 'hybrid' ? 'Hybrid' : 'Aktiv') . '</span>' : '') . '
+                                                    '.($emailEnabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100">'.($outputType === 'hybrid' ? 'Hybrid' : 'Aktiv').'</span>' : '').'
                                                 </div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">' . $emailMessage . '</p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">'.$emailMessage.'</p>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-4 p-3 rounded-lg ' . $bgColors[$webhookStatus] . ' border">
-                                            ' . $icons[$webhookIcon] . '
+                                        <div class="flex items-center gap-4 p-3 rounded-lg '.$bgColors[$webhookStatus].' border">
+                                            '.$icons[$webhookIcon].'
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-white">Webhook</span>
-                                                    ' . ($webhookEnabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100">' . ($outputType === 'hybrid' ? 'Hybrid' : 'Aktiv') . '</span>' : '') . '
+                                                    '.($webhookEnabled ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100">'.($outputType === 'hybrid' ? 'Hybrid' : 'Aktiv').'</span>' : '').'
                                                 </div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">' . $webhookMessage . '</p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">'.$webhookMessage.'</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-700">
-                                            ' . $icons[$timingIcon] . '
+                                            '.$icons[$timingIcon].'
                                             <div class="flex-1 min-w-0">
                                                 <span class="text-sm font-semibold text-gray-800 dark:text-white">Timing</span>
-                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">' . $timingMessage . '</p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-200 mt-0.5">'.$timingMessage.'</p>
                                             </div>
                                         </div>
                                     </div>
@@ -310,7 +325,7 @@ class ServiceOutputConfigurationResource extends Resource
                                             </div>
                                         </div>
                                     '))
-                                    ->visible(fn (Forms\Get $get): bool => !in_array($get('output_type'), [
+                                    ->visible(fn (Forms\Get $get): bool => ! in_array($get('output_type'), [
                                         ServiceOutputConfiguration::TYPE_EMAIL,
                                         ServiceOutputConfiguration::TYPE_HYBRID,
                                     ])),
@@ -374,6 +389,78 @@ class ServiceOutputConfigurationResource extends Resource
                                                 default => 'Wähle ein Template-Format für deine Benachrichtigungen',
                                             }),
 
+                                        Forms\Components\Select::make('template_id')
+                                            ->label('Benutzerdefiniertes Template')
+                                            ->relationship(
+                                                'emailTemplate',
+                                                'name',
+                                                fn ($query) => $query->where('company_id', auth()->user()->company_id)
+                                                    ->where('is_active', true)
+                                            )
+                                            ->placeholder('Kein Template (Standard)')
+                                            ->helperText('Wählen Sie ein benutzerdefiniertes Email-Template')
+                                            ->searchable()
+                                            ->preload()
+                                            ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
+                                                ServiceOutputConfiguration::TYPE_EMAIL,
+                                                ServiceOutputConfiguration::TYPE_HYBRID,
+                                            ])),
+
+                                        // Preview Button for custom EmailTemplate
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('preview_custom_template')
+                                                ->label('Vorschau')
+                                                ->icon('heroicon-o-eye')
+                                                ->color('info')
+                                                ->size('sm')
+                                                ->modalHeading('Template-Vorschau')
+                                                ->modalWidth('5xl')
+                                                ->modalContent(function (Forms\Get $get) {
+                                                    $templateId = $get('template_id');
+
+                                                    if (! $templateId) {
+                                                        return new \Illuminate\Support\HtmlString('<p class="text-sm text-gray-500 dark:text-gray-400">Kein Template ausgewählt</p>');
+                                                    }
+
+                                                    // Load the template
+                                                    $template = \App\Models\EmailTemplate::find($templateId);
+
+                                                    if (! $template) {
+                                                        return new \Illuminate\Support\HtmlString('<p class="text-sm text-red-500 dark:text-red-400">Template nicht gefunden</p>');
+                                                    }
+
+                                                    // Create sample ServiceCase with realistic data
+                                                    $sampleCase = \App\Services\ServiceGateway\SampleServiceCaseFactory::create();
+
+                                                    // Generate template variables using EmailTemplateDataProvider
+                                                    $dataProvider = new \App\Services\ServiceGateway\EmailTemplateDataProvider($sampleCase);
+                                                    $variables = $dataProvider->getVariables();
+
+                                                    // Render subject and body by replacing {{variable}} with actual values
+                                                    $subject = $template->subject;
+                                                    $bodyHtml = $template->body_html;
+
+                                                    foreach ($variables as $key => $value) {
+                                                        $subject = str_replace('{{'.$key.'}}', (string) $value, $subject);
+                                                        $bodyHtml = str_replace('{{'.$key.'}}', (string) $value, $bodyHtml);
+                                                    }
+
+                                                    return view('filament.forms.components.custom-template-preview', [
+                                                        'subject' => $subject,
+                                                        'bodyHtml' => $bodyHtml,
+                                                        'templateName' => $template->name,
+                                                    ]);
+                                                })
+                                                ->modalSubmitAction(false)
+                                                ->modalCancelActionLabel('Schließen')
+                                                ->visible(fn (Forms\Get $get): bool => (bool) $get('template_id')),
+                                        ])
+                                            ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
+                                                ServiceOutputConfiguration::TYPE_EMAIL,
+                                                ServiceOutputConfiguration::TYPE_HYBRID,
+                                            ]))
+                                            ->columnSpanFull(),
+
                                         Forms\Components\Placeholder::make('template_preview')
                                             ->label('Template Info')
                                             ->content(fn (Forms\Get $get) => new HtmlString(match ($get('email_template_type')) {
@@ -428,7 +515,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                 ->modalSubmitAction(false)
                                                 ->modalCancelActionLabel('Schließen'),
                                         ])
-                                        ->columnSpanFull(),
+                                            ->columnSpanFull(),
                                     ])
                                     ->collapsible()
                                     ->visible(fn (Forms\Get $get): bool => in_array($get('output_type'), [
@@ -478,8 +565,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                     ->columnSpan(1),
                                             ])
                                             ->columns(3)
-                                            ->itemLabel(fn (array $state): ?string =>
-                                                ($state['email'] ?? 'Neue E-Mail') .
+                                            ->itemLabel(fn (array $state): ?string => ($state['email'] ?? 'Neue E-Mail').
                                                 (($state['is_active'] ?? true) ? '' : ' ⏸️ pausiert')
                                             )
                                             ->collapsible()
@@ -496,7 +582,7 @@ class ServiceOutputConfigurationResource extends Resource
                                             ->content(function (Forms\Get $get) {
                                                 $entries = $get('recipient_entries') ?? [];
                                                 $total = count($entries);
-                                                $active = count(array_filter($entries, fn($e) => $e['is_active'] ?? true));
+                                                $active = count(array_filter($entries, fn ($e) => $e['is_active'] ?? true));
                                                 $paused = $total - $active;
 
                                                 if ($total === 0) {
@@ -514,7 +600,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
                                                                 <span class="font-medium">⚠️ Keine aktiven Empfänger!</span>
                                                             </div>
-                                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">Alle ' . $total . ' Empfänger sind pausiert - es werden keine E-Mails zugestellt.</p>
+                                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">Alle '.$total.' Empfänger sind pausiert - es werden keine E-Mails zugestellt.</p>
                                                         </div>
                                                     ');
                                                 }
@@ -524,9 +610,9 @@ class ServiceOutputConfigurationResource extends Resource
                                                         <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3">
                                                             <div class="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
-                                                                <span class="font-medium">Test-Modus: ' . $active . ' von ' . $total . ' aktiv</span>
+                                                                <span class="font-medium">Test-Modus: '.$active.' von '.$total.' aktiv</span>
                                                             </div>
-                                                            <p class="mt-1 text-sm text-amber-600 dark:text-amber-400">' . $paused . ' Empfänger pausiert (erhalten keine E-Mails)</p>
+                                                            <p class="mt-1 text-sm text-amber-600 dark:text-amber-400">'.$paused.' Empfänger pausiert (erhalten keine E-Mails)</p>
                                                         </div>
                                                     ');
                                                 }
@@ -535,7 +621,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                     <div class="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3">
                                                         <div class="flex items-center gap-2 text-green-700 dark:text-green-300">
                                                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                                            <span class="font-medium">✓ Alle ' . $total . ' Empfänger aktiv</span>
+                                                            <span class="font-medium">✓ Alle '.$total.' Empfänger aktiv</span>
                                                         </div>
                                                     </div>
                                                 ');
@@ -649,7 +735,7 @@ class ServiceOutputConfigurationResource extends Resource
                                             </div>
                                         </div>
                                     '))
-                                    ->visible(fn (Forms\Get $get): bool => !in_array($get('output_type'), [
+                                    ->visible(fn (Forms\Get $get): bool => ! in_array($get('output_type'), [
                                         ServiceOutputConfiguration::TYPE_WEBHOOK,
                                         ServiceOutputConfiguration::TYPE_HYBRID,
                                     ])),
@@ -710,7 +796,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                         if ($companyId) {
                                                             // System presets + Company presets
                                                             $q->whereNull('company_id')
-                                                              ->orWhere('company_id', $companyId);
+                                                                ->orWhere('company_id', $companyId);
                                                         } else {
                                                             // Only system presets
                                                             $q->whereNull('company_id');
@@ -721,16 +807,14 @@ class ServiceOutputConfigurationResource extends Resource
                                                     ->orderBy('target_system')
                                                     ->orderBy('name')
                                             )
-                                            ->getOptionLabelFromRecordUsing(fn ($record) =>
-                                                ($record->is_system ? '🌐 ' : '🏢 ') .
-                                                $record->target_system_label . ' - ' . $record->name
+                                            ->getOptionLabelFromRecordUsing(fn ($record) => ($record->is_system ? '🌐 ' : '🏢 ').
+                                                $record->target_system_label.' - '.$record->name
                                             )
                                             ->placeholder('Kein Preset (Custom Template)')
                                             ->searchable()
                                             ->preload()
                                             ->live()
-                                            ->helperText(fn (Forms\Get $get) =>
-                                                $get('webhook_preset_id')
+                                            ->helperText(fn (Forms\Get $get) => $get('webhook_preset_id')
                                                     ? 'Das Preset-Template wird als Basis verwendet. Du kannst es im Payload-Tab anpassen.'
                                                     : 'Wähle ein Preset für schnelle Einrichtung oder erstelle ein eigenes Template.'
                                             ),
@@ -740,7 +824,7 @@ class ServiceOutputConfigurationResource extends Resource
                                             ->label('Preset Details')
                                             ->content(function (Forms\Get $get, $record) {
                                                 $presetId = $get('webhook_preset_id') ?? $record?->webhook_preset_id;
-                                                if (!$presetId) {
+                                                if (! $presetId) {
                                                     return new HtmlString('
                                                         <div class="text-sm text-gray-500 dark:text-gray-400">
                                                             Kein Preset ausgewählt. Konfiguriere URL und Payload manuell.
@@ -749,7 +833,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                 }
 
                                                 $preset = \App\Models\WebhookPreset::find($presetId);
-                                                if (!$preset) {
+                                                if (! $preset) {
                                                     return new HtmlString('<div class="text-sm text-gray-500">Preset nicht gefunden</div>');
                                                 }
 
@@ -765,16 +849,16 @@ class ServiceOutputConfigurationResource extends Resource
 
                                                 $requiredBadges = '';
                                                 foreach ($required as $var) {
-                                                    $requiredBadges .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 mr-1">' . e($var) . '*</span>';
+                                                    $requiredBadges .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 mr-1">'.e($var).'*</span>';
                                                 }
 
                                                 $optionalVars = array_diff($variables, $required);
                                                 $optionalBadges = '';
                                                 foreach (array_slice($optionalVars, 0, 5) as $var) {
-                                                    $optionalBadges .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 mr-1">' . e($var) . '</span>';
+                                                    $optionalBadges .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 mr-1">'.e($var).'</span>';
                                                 }
                                                 if (count($optionalVars) > 5) {
-                                                    $optionalBadges .= '<span class="text-xs text-gray-500">+' . (count($optionalVars) - 5) . ' weitere</span>';
+                                                    $optionalBadges .= '<span class="text-xs text-gray-500">+'.(count($optionalVars) - 5).' weitere</span>';
                                                 }
 
                                                 return new HtmlString('
@@ -782,42 +866,41 @@ class ServiceOutputConfigurationResource extends Resource
                                                         <div class="flex items-center gap-3 mb-3">
                                                             <div class="flex-shrink-0">
                                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
-                                                                    ' . e($preset->target_system_label) . '
+                                                                    '.e($preset->target_system_label).'
                                                                 </span>
                                                             </div>
                                                             <div class="flex-1">
-                                                                <p class="text-sm font-medium text-gray-900 dark:text-white">' . e($preset->name) . '</p>
-                                                                ' . ($preset->description ? '<p class="text-xs text-gray-600 dark:text-gray-400">' . e($preset->description) . '</p>' : '') . '
+                                                                <p class="text-sm font-medium text-gray-900 dark:text-white">'.e($preset->name).'</p>
+                                                                '.($preset->description ? '<p class="text-xs text-gray-600 dark:text-gray-400">'.e($preset->description).'</p>' : '').'
                                                             </div>
                                                         </div>
                                                         <div class="space-y-2 text-sm">
                                                             <div class="flex items-center gap-2">
                                                                 <span class="text-gray-600 dark:text-gray-400 w-24">Auth:</span>
-                                                                <span class="font-medium text-gray-900 dark:text-white">' . e($authLabel) . '</span>
+                                                                <span class="font-medium text-gray-900 dark:text-white">'.e($authLabel).'</span>
                                                             </div>
-                                                            ' . ($requiredBadges ? '
+                                                            '.($requiredBadges ? '
                                                             <div class="flex items-start gap-2">
                                                                 <span class="text-gray-600 dark:text-gray-400 w-24">Pflicht:</span>
-                                                                <div class="flex-1 flex flex-wrap gap-1">' . $requiredBadges . '</div>
-                                                            </div>' : '') . '
-                                                            ' . ($optionalBadges ? '
+                                                                <div class="flex-1 flex flex-wrap gap-1">'.$requiredBadges.'</div>
+                                                            </div>' : '').'
+                                                            '.($optionalBadges ? '
                                                             <div class="flex items-start gap-2">
                                                                 <span class="text-gray-600 dark:text-gray-400 w-24">Optional:</span>
-                                                                <div class="flex-1 flex flex-wrap gap-1">' . $optionalBadges . '</div>
-                                                            </div>' : '') . '
-                                                            ' . ($preset->documentation_url ? '
+                                                                <div class="flex-1 flex flex-wrap gap-1">'.$optionalBadges.'</div>
+                                                            </div>' : '').'
+                                                            '.($preset->documentation_url ? '
                                                             <div class="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
-                                                                <a href="' . e($preset->documentation_url) . '" target="_blank" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 dark:text-primary-400">
+                                                                <a href="'.e($preset->documentation_url).'" target="_blank" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 dark:text-primary-400">
                                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                                                     Dokumentation
                                                                 </a>
-                                                            </div>' : '') . '
+                                                            </div>' : '').'
                                                         </div>
                                                     </div>
                                                 ');
                                             })
-                                            ->visible(fn (Forms\Get $get, $record) =>
-                                                ($get('webhook_preset_id') ?? $record?->webhook_preset_id) !== null
+                                            ->visible(fn (Forms\Get $get, $record) => ($get('webhook_preset_id') ?? $record?->webhook_preset_id) !== null
                                             ),
                                     ])
                                     ->collapsible()
@@ -920,7 +1003,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                     $testJson = preg_replace('/\{\{[^}]+\}\}/', '"placeholder"', $value);
                                                     json_decode($testJson);
                                                     if (json_last_error() !== JSON_ERROR_NONE) {
-                                                        $fail('Das Payload-Template ist kein gültiges JSON: ' . json_last_error_msg());
+                                                        $fail('Das Payload-Template ist kein gültiges JSON: '.json_last_error_msg());
                                                     }
                                                 },
                                             ]),
@@ -1036,16 +1119,16 @@ class ServiceOutputConfigurationResource extends Resource
                                         Forms\Components\Placeholder::make('categories_info')
                                             ->label('Verknupfte Kategorien')
                                             ->content(function ($record) {
-                                                if (!$record) {
+                                                if (! $record) {
                                                     return new HtmlString('<span class="text-gray-500">Wird nach dem Speichern angezeigt</span>');
                                                 }
                                                 $categories = $record->categories;
                                                 if ($categories->isEmpty()) {
                                                     return new HtmlString('<span class="text-gray-500">Keine Kategorien verwenden diese Konfiguration</span>');
                                                 }
-                                                $badges = $categories->map(fn ($cat) =>
-                                                    '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">' . e($cat->name) . '</span>'
+                                                $badges = $categories->map(fn ($cat) => '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">'.e($cat->name).'</span>'
                                                 )->join(' ');
+
                                                 return new HtmlString($badges);
                                             }),
                                     ])
@@ -1071,7 +1154,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                 $webhookUrl = $get('webhook_url') ?? '';
                                                 $webhookEnabled = $get('webhook_enabled') ?? true;
 
-                                                if (!$isActive) {
+                                                if (! $isActive) {
                                                     return new HtmlString('
                                                         <div class="rounded-lg bg-gray-100 dark:bg-gray-800 p-4 text-gray-600 dark:text-gray-400">
                                                             <div class="flex items-center gap-2">
@@ -1093,7 +1176,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                         <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-medium text-blue-600 dark:text-blue-400">1</div>
                                                         <div>
                                                             <p class="font-medium text-gray-900 dark:text-gray-100">Warten auf Transkript & Audio</p>
-                                                            <p class="text-sm text-gray-500 dark:text-gray-400">Max. ' . $enrichmentTimeout . ' Sekunden nach Anruf-Ende</p>
+                                                            <p class="text-sm text-gray-500 dark:text-gray-400">Max. '.$enrichmentTimeout.' Sekunden nach Anruf-Ende</p>
                                                         </div>
                                                     </div>';
                                                 } else {
@@ -1111,17 +1194,17 @@ class ServiceOutputConfigurationResource extends Resource
                                                 if (in_array($outputType, ['email', 'hybrid'])) {
                                                     if ($recipientCount > 0) {
                                                         $recipientList = implode(', ', array_slice($recipients, 0, 2));
-                                                        $more = $recipientCount > 2 ? ' +' . ($recipientCount - 2) . ' weitere' : '';
+                                                        $more = $recipientCount > 2 ? ' +'.($recipientCount - 2).' weitere' : '';
                                                         $steps[] = '<div class="flex items-start gap-3">
-                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-medium text-blue-600 dark:text-blue-400">' . $stepNum . '</div>
+                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-medium text-blue-600 dark:text-blue-400">'.$stepNum.'</div>
                                                             <div>
                                                                 <p class="font-medium text-gray-900 dark:text-gray-100">E-Mail senden</p>
-                                                                <p class="text-sm text-gray-500 dark:text-gray-400">An: ' . e($recipientList) . e($more) . '</p>
+                                                                <p class="text-sm text-gray-500 dark:text-gray-400">An: '.e($recipientList).e($more).'</p>
                                                             </div>
                                                         </div>';
                                                     } else {
                                                         $steps[] = '<div class="flex items-start gap-3">
-                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-xs font-medium text-red-600 dark:text-red-400">' . $stepNum . '</div>
+                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-xs font-medium text-red-600 dark:text-red-400">'.$stepNum.'</div>
                                                             <div>
                                                                 <p class="font-medium text-red-600 dark:text-red-400">E-Mail: Keine Empfanger!</p>
                                                                 <p class="text-sm text-gray-500 dark:text-gray-400">Bitte E-Mail-Adressen im E-Mail Tab konfigurieren</p>
@@ -1133,18 +1216,18 @@ class ServiceOutputConfigurationResource extends Resource
 
                                                 // Step 3+: Webhook
                                                 if (in_array($outputType, ['webhook', 'hybrid'])) {
-                                                    if (!empty($webhookUrl) && $webhookEnabled) {
-                                                        $shortUrl = strlen($webhookUrl) > 40 ? substr($webhookUrl, 0, 40) . '...' : $webhookUrl;
+                                                    if (! empty($webhookUrl) && $webhookEnabled) {
+                                                        $shortUrl = strlen($webhookUrl) > 40 ? substr($webhookUrl, 0, 40).'...' : $webhookUrl;
                                                         $steps[] = '<div class="flex items-start gap-3">
-                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-xs font-medium text-amber-600 dark:text-amber-400">' . $stepNum . '</div>
+                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-xs font-medium text-amber-600 dark:text-amber-400">'.$stepNum.'</div>
                                                             <div>
                                                                 <p class="font-medium text-gray-900 dark:text-gray-100">Webhook POST</p>
-                                                                <p class="text-sm text-gray-500 dark:text-gray-400 font-mono">' . e($shortUrl) . '</p>
+                                                                <p class="text-sm text-gray-500 dark:text-gray-400 font-mono">'.e($shortUrl).'</p>
                                                             </div>
                                                         </div>';
-                                                    } elseif (!$webhookEnabled) {
+                                                    } elseif (! $webhookEnabled) {
                                                         $steps[] = '<div class="flex items-start gap-3">
-                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-500">' . $stepNum . '</div>
+                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-500">'.$stepNum.'</div>
                                                             <div>
                                                                 <p class="font-medium text-gray-500">Webhook pausiert</p>
                                                                 <p class="text-sm text-gray-400">Webhook ist deaktiviert</p>
@@ -1152,7 +1235,7 @@ class ServiceOutputConfigurationResource extends Resource
                                                         </div>';
                                                     } else {
                                                         $steps[] = '<div class="flex items-start gap-3">
-                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-xs font-medium text-red-600 dark:text-red-400">' . $stepNum . '</div>
+                                                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-xs font-medium text-red-600 dark:text-red-400">'.$stepNum.'</div>
                                                             <div>
                                                                 <p class="font-medium text-red-600 dark:text-red-400">Webhook: URL fehlt!</p>
                                                                 <p class="text-sm text-gray-500 dark:text-gray-400">Bitte URL im Webhook Tab konfigurieren</p>
@@ -1163,7 +1246,7 @@ class ServiceOutputConfigurationResource extends Resource
 
                                                 return new HtmlString('
                                                     <div class="space-y-4">
-                                                        ' . implode("\n", $steps) . '
+                                                        '.implode("\n", $steps).'
                                                     </div>
                                                 ');
                                             }),
@@ -1196,17 +1279,18 @@ class ServiceOutputConfigurationResource extends Resource
                         $active = array_diff($all, $muted);
 
                         if (empty($active)) {
-                            if (!empty($muted)) {
-                                return '⚠️ Alle ' . count($muted) . ' Empfänger pausiert';
+                            if (! empty($muted)) {
+                                return '⚠️ Alle '.count($muted).' Empfänger pausiert';
                             }
+
                             return null;
                         }
 
                         $display = implode(', ', array_slice($active, 0, 2));
-                        $more = count($active) > 2 ? ' +' . (count($active) - 2) : '';
-                        $mutedNote = count($muted) > 0 ? ' (' . count($muted) . ' pausiert)' : '';
+                        $more = count($active) > 2 ? ' +'.(count($active) - 2) : '';
+                        $mutedNote = count($muted) > 0 ? ' ('.count($muted).' pausiert)' : '';
 
-                        return $display . $more . $mutedNote;
+                        return $display.$more.$mutedNote;
                     }),
                 Tables\Columns\BadgeColumn::make('output_type')
                     ->label('Kanal')
@@ -1284,7 +1368,7 @@ class ServiceOutputConfigurationResource extends Resource
                     ->trueColor('warning')
                     ->falseColor('gray')
                     ->tooltip(fn ($record) => $record?->wait_for_enrichment
-                        ? 'Wartet auf Enrichment (' . ($record->enrichment_timeout_seconds ?? 180) . 's)'
+                        ? 'Wartet auf Enrichment ('.($record->enrichment_timeout_seconds ?? 180).'s)'
                         : 'Sofortige Zustellung'
                     )
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -1325,7 +1409,7 @@ class ServiceOutputConfigurationResource extends Resource
                         ->label('Vorschau')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        ->modalHeading(fn (ServiceOutputConfiguration $record) => 'E-Mail Vorschau: ' . $record->name)
+                        ->modalHeading(fn (ServiceOutputConfiguration $record) => 'E-Mail Vorschau: '.$record->name)
                         ->modalDescription('So sieht die E-Mail mit den aktuellen Einstellungen aus.')
                         ->modalWidth('6xl')
                         ->modalContent(fn (ServiceOutputConfiguration $record) => view('filament.forms.components.email-preview-modal', [
@@ -1349,8 +1433,7 @@ class ServiceOutputConfigurationResource extends Resource
                         ->color('success')
                         ->requiresConfirmation()
                         ->modalHeading('Test-E-Mail senden')
-                        ->modalDescription(fn (ServiceOutputConfiguration $record) =>
-                            'Sende eine Test-E-Mail mit dem Template "' . ($record->email_template_type ?? 'standard') . '" an:')
+                        ->modalDescription(fn (ServiceOutputConfiguration $record) => 'Sende eine Test-E-Mail mit dem Template "'.($record->email_template_type ?? 'standard').'" an:')
                         ->form([
                             \Filament\Forms\Components\TextInput::make('test_email')
                                 ->label('E-Mail-Adresse')
@@ -1361,15 +1444,15 @@ class ServiceOutputConfigurationResource extends Resource
                         ])
                         ->action(function (ServiceOutputConfiguration $record, array $data) {
                             try {
-                                $factory = new \App\Services\ServiceGateway\SampleServiceCaseFactory();
+                                $factory = new \App\Services\ServiceGateway\SampleServiceCaseFactory;
                                 $sampleCase = $factory->create($record);
 
-                                $handler = new \App\Services\ServiceGateway\OutputHandlers\EmailOutputHandler();
+                                $handler = new \App\Services\ServiceGateway\OutputHandlers\EmailOutputHandler;
                                 $handler->sendTestEmail($sampleCase, $data['test_email'], $record);
 
                                 \Filament\Notifications\Notification::make()
                                     ->title('Test-E-Mail gesendet!')
-                                    ->body('E-Mail wurde an ' . $data['test_email'] . ' gesendet.')
+                                    ->body('E-Mail wurde an '.$data['test_email'].' gesendet.')
                                     ->success()
                                     ->send();
                             } catch (\Exception $e) {
@@ -1390,7 +1473,7 @@ class ServiceOutputConfigurationResource extends Resource
                         ->icon(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'heroicon-o-pause' : 'heroicon-o-play')
                         ->color(fn (ServiceOutputConfiguration $record) => $record->is_active ? 'warning' : 'success')
                         ->requiresConfirmation()
-                        ->action(fn (ServiceOutputConfiguration $record) => $record->update(['is_active' => !$record->is_active])),
+                        ->action(fn (ServiceOutputConfiguration $record) => $record->update(['is_active' => ! $record->is_active])),
                     Tables\Actions\DeleteAction::make()
                         ->requiresConfirmation()
                         ->before(function (Tables\Actions\DeleteAction $action, ServiceOutputConfiguration $record) {

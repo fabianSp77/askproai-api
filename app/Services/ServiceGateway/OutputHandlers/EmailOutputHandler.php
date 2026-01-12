@@ -6,7 +6,10 @@ use App\Mail\BackupNotificationMail;
 use App\Mail\CustomTemplateEmail;
 use App\Mail\ServiceCaseNotification;
 use App\Models\ServiceCase;
+use App\Models\ServiceCaseActivityLog;
 use App\Models\ServiceOutputConfiguration;
+use App\Services\ServiceGateway\EmailTemplateDataProvider;
+use App\Services\ServiceGateway\EmailTemplateService;
 use App\Services\ServiceGateway\ExchangeLogService;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
@@ -24,8 +27,6 @@ use Illuminate\Support\Facades\Mail;
  * 2. Determine recipient list (primary + fallbacks)
  * 3. Queue emails for delivery
  * 4. Update case output status
- *
- * @package App\Services\ServiceGateway\OutputHandlers
  */
 class EmailOutputHandler implements OutputHandlerInterface
 {
@@ -34,9 +35,15 @@ class EmailOutputHandler implements OutputHandlerInterface
      */
     private ExchangeLogService $exchangeLogService;
 
-    public function __construct(?ExchangeLogService $exchangeLogService = null)
+    /**
+     * Email template service for rendering custom templates
+     */
+    private EmailTemplateService $emailTemplateService;
+
+    public function __construct(?ExchangeLogService $exchangeLogService = null, ?EmailTemplateService $emailTemplateService = null)
     {
         $this->exchangeLogService = $exchangeLogService ?? app(ExchangeLogService::class);
+        $this->emailTemplateService = $emailTemplateService ?? app(EmailTemplateService::class);
     }
 
     /**
@@ -46,7 +53,7 @@ class EmailOutputHandler implements OutputHandlerInterface
      * queue system for async delivery. Falls back to fallback_emails
      * if primary recipients are not configured.
      *
-     * @param \App\Models\ServiceCase $case Service case to notify about
+     * @param  \App\Models\ServiceCase  $case  Service case to notify about
      * @return bool True if emails were queued successfully
      */
     public function deliver(ServiceCase $case): bool
@@ -59,21 +66,28 @@ class EmailOutputHandler implements OutputHandlerInterface
             'priority' => $case->priority,
         ]);
 
+        // Eager load transcript segments for template rendering
+        if (! $case->relationLoaded('callSession')) {
+            $case->load('callSession.transcriptSegments');
+        } elseif ($case->callSession !== null && ! $case->callSession->relationLoaded('transcriptSegments')) {
+            $case->callSession->load('transcriptSegments');
+        }
+
         // Load configuration relationship (with null-safety for cases without category)
-        if (!$case->relationLoaded('category')) {
+        if (! $case->relationLoaded('category')) {
             $case->load('category.outputConfiguration');
-        } elseif ($case->category !== null && !$case->category->relationLoaded('outputConfiguration')) {
+        } elseif ($case->category !== null && ! $case->category->relationLoaded('outputConfiguration')) {
             $case->category->load('outputConfiguration');
         }
 
         $config = $case->category?->outputConfiguration ?? null;
 
         // Validate email configuration
-        if (!$config || !$this->supportsEmail($config)) {
+        if (! $config || ! $this->supportsEmail($config)) {
             Log::warning('[EmailOutputHandler] No email config for case', [
                 'case_id' => $case->id,
                 'category_id' => $case->category_id,
-                'has_config' => !is_null($config),
+                'has_config' => ! is_null($config),
             ]);
 
             // Log configuration failure to exchange log
@@ -120,11 +134,12 @@ class EmailOutputHandler implements OutputHandlerInterface
             $queuedRecipients = [];
 
             foreach ($recipients as $email) {
-                if (!$this->isValidEmail($email)) {
+                if (! $this->isValidEmail($email)) {
                     Log::warning('[EmailOutputHandler] Invalid email address', [
                         'case_id' => $case->id,
                         'email' => $email,
                     ]);
+
                     continue;
                 }
 
@@ -176,6 +191,20 @@ class EmailOutputHandler implements OutputHandlerInterface
                 startTime: $startTime
             );
 
+            // Log to activity trail
+            ServiceCaseActivityLog::logAction(
+                case: $case,
+                action: ServiceCaseActivityLog::ACTION_EMAIL_SENT,
+                user: null, // System action
+                oldValues: null,
+                newValues: [
+                    'recipients' => $this->maskRecipients($queuedRecipients),
+                    'count' => $queued,
+                    'mailable' => get_class($this->selectMailable($case, $config)),
+                ],
+                reason: "E-Mail-Benachrichtigung an {$queued} Empfänger gesendet"
+            );
+
             return true;
 
         } catch (\Exception $e) {
@@ -206,7 +235,7 @@ class EmailOutputHandler implements OutputHandlerInterface
      * Validates configuration and returns diagnostic information
      * about recipient setup and email readiness.
      *
-     * @param \App\Models\ServiceCase $case Service case to test
+     * @param  \App\Models\ServiceCase  $case  Service case to test
      * @return array Test results with configuration status
      */
     public function test(ServiceCase $case): array
@@ -225,19 +254,21 @@ class EmailOutputHandler implements OutputHandlerInterface
         ];
 
         // Load configuration
-        if (!$case->relationLoaded('category')) {
+        if (! $case->relationLoaded('category')) {
             $case->load('category.outputConfiguration');
         }
 
         $config = $case->category->outputConfiguration ?? null;
 
-        if (!$config) {
+        if (! $config) {
             $results['issues'][] = 'No output configuration found';
+
             return $results;
         }
 
-        if (!$this->supportsEmail($config)) {
+        if (! $this->supportsEmail($config)) {
             $results['issues'][] = 'Configuration does not support email output';
+
             return $results;
         }
 
@@ -246,6 +277,7 @@ class EmailOutputHandler implements OutputHandlerInterface
 
         if (empty($recipients)) {
             $results['issues'][] = 'No recipients configured';
+
             return $results;
         }
 
@@ -269,6 +301,7 @@ class EmailOutputHandler implements OutputHandlerInterface
 
         if (empty($validRecipients)) {
             $results['issues'][] = 'No valid email addresses found';
+
             return $results;
         }
 
@@ -282,7 +315,7 @@ class EmailOutputHandler implements OutputHandlerInterface
             'name' => $config->name,
             'email_template_type' => $templateType,
             'has_custom_template' => $this->hasCustomEmailTemplate($config),
-            'has_custom_subject' => !empty($config->email_subject_template),
+            'has_custom_subject' => ! empty($config->email_subject_template),
             'mailable_class' => $this->getMailableClassName($config),
         ];
 
@@ -317,12 +350,12 @@ class EmailOutputHandler implements OutputHandlerInterface
     /**
      * Check if configuration supports email output.
      *
-     * @param mixed $config Output configuration model
+     * @param  mixed  $config  Output configuration model
      * @return bool True if email is supported
      */
     private function supportsEmail($config): bool
     {
-        if (!$config) {
+        if (! $config) {
             return false;
         }
 
@@ -335,12 +368,12 @@ class EmailOutputHandler implements OutputHandlerInterface
      * Returns active (non-muted) primary recipients if configured,
      * otherwise falls back to fallback_emails (also respecting muted state).
      *
-     * @param mixed $config Output configuration model
+     * @param  mixed  $config  Output configuration model
      * @return array List of active email addresses
      */
     private function getRecipients($config): array
     {
-        if (!$config) {
+        if (! $config) {
             return [];
         }
 
@@ -370,7 +403,7 @@ class EmailOutputHandler implements OutputHandlerInterface
             // Also apply muting to fallback emails
             $recipients = array_values(array_diff($fallback, $muted));
 
-            if (!empty($recipients)) {
+            if (! empty($recipients)) {
                 Log::info('[EmailOutputHandler] Using fallback recipients (after muting)', [
                     'config_id' => $config->id,
                     'count' => count($recipients),
@@ -380,7 +413,7 @@ class EmailOutputHandler implements OutputHandlerInterface
         }
 
         // Ensure recipients is an array
-        if (!is_array($recipients)) {
+        if (! is_array($recipients)) {
             return [];
         }
 
@@ -390,7 +423,7 @@ class EmailOutputHandler implements OutputHandlerInterface
     /**
      * Validate email address format.
      *
-     * @param string $email Email address to validate
+     * @param  string  $email  Email address to validate
      * @return bool True if valid email format
      */
     private function isValidEmail(string $email): bool
@@ -398,22 +431,37 @@ class EmailOutputHandler implements OutputHandlerInterface
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
 
-    
     /**
      * Select appropriate mailable based on configuration.
      *
-     * Uses explicit email_template_type field:
-     * - 'technical': BackupNotificationMail MODE_TECHNICAL (e.g., Visionary Data)
-     * - 'admin': BackupNotificationMail MODE_ADMINISTRATIVE (e.g., IT-Systemhaus)
-     * - 'custom': CustomTemplateEmail (uses email_body_template field)
-     * - 'standard': ServiceCaseNotification (default internal email)
+     * Checks for custom template in this order:
+     * 1. template_id (EmailTemplate model) - uses EmailTemplateService
+     * 2. email_template_type ('technical', 'admin', 'custom')
+     * 3. email_body_template (legacy custom template field)
+     * 4. Standard ServiceCaseNotification (default fallback)
      *
-     * @param ServiceCase $case Service case to notify about
-     * @param ServiceOutputConfiguration $config Output configuration
+     * @param  ServiceCase  $case  Service case to notify about
+     * @param  ServiceOutputConfiguration  $config  Output configuration
      * @return Mailable Selected mailable instance
      */
     private function selectMailable(ServiceCase $case, ServiceOutputConfiguration $config): Mailable
     {
+        // Priority 1: Check for EmailTemplate model via template_id
+        if ($config->template_id && $config->relationLoaded('emailTemplate') === false) {
+            $config->load('emailTemplate');
+        }
+
+        if ($config->template_id && $config->emailTemplate) {
+            Log::info('[EmailOutputHandler] Using EmailTemplate from database', [
+                'case_id' => $case->id,
+                'config_id' => $config->id,
+                'template_id' => $config->template_id,
+                'template_name' => $config->emailTemplate->name,
+            ]);
+
+            return $this->buildMailableFromTemplate($case, $config);
+        }
+
         $templateType = $config->email_template_type ?? 'standard';
 
         if ($templateType !== 'standard') {
@@ -427,23 +475,63 @@ class EmailOutputHandler implements OutputHandlerInterface
                 'config_id' => $config->id,
                 'template_length' => strlen($config->email_body_template ?? ''),
             ]);
+
             return new CustomTemplateEmail($case, $config);
         }
 
         // Default: use standard notification
-        Log::debug('[EmailOutputHandler] Using ServiceCaseNotification', [
+        Log::debug('[EmailOutputHandler] Using ServiceCaseNotification (default fallback)', [
             'case_id' => $case->id,
             'template_type' => $templateType,
         ]);
+
         return new ServiceCaseNotification($case, 'internal');
+    }
+
+    /**
+     * Build mailable from EmailTemplate using EmailTemplateService.
+     *
+     * Renders the template with ServiceCase data and returns a mailable
+     * that can be sent via Laravel's mail system.
+     *
+     * @param  ServiceCase  $case  Service case to notify about
+     * @param  ServiceOutputConfiguration  $config  Output configuration with emailTemplate relationship
+     * @return Mailable Mailable instance with rendered content
+     */
+    private function buildMailableFromTemplate(ServiceCase $case, ServiceOutputConfiguration $config): Mailable
+    {
+        $template = $config->emailTemplate;
+
+        // Use EmailTemplateDataProvider for all variables
+        $dataProvider = new EmailTemplateDataProvider($case);
+        $data = $dataProvider->getVariables();
+
+        // Render template using EmailTemplateService
+        $rendered = $this->emailTemplateService->render($template, $data);
+
+        // Create a simple mailable with rendered content
+        return new class($rendered['subject'], $rendered['body']) extends Mailable
+        {
+            public function __construct(
+                private string $emailSubject,
+                private string $emailBody
+            ) {
+                $this->subject = $emailSubject;
+            }
+
+            public function build()
+            {
+                return $this->html($this->emailBody);
+            }
+        };
     }
 
     /**
      * Select mailable based on explicit email_template_type.
      *
-     * @param ServiceCase $case Service case to notify about
-     * @param ServiceOutputConfiguration $config Output configuration
-     * @param string $templateType The email_template_type value
+     * @param  ServiceCase  $case  Service case to notify about
+     * @param  ServiceOutputConfiguration  $config  Output configuration
+     * @param  string  $templateType  The email_template_type value
      * @return Mailable Selected mailable instance
      */
     private function selectMailableByType(ServiceCase $case, ServiceOutputConfiguration $config, string $templateType): Mailable
@@ -465,27 +553,27 @@ class EmailOutputHandler implements OutputHandlerInterface
     /**
      * Check if configuration has a custom email template.
      *
-     * @param ServiceOutputConfiguration|null $config Output configuration
+     * @param  ServiceOutputConfiguration|null  $config  Output configuration
      * @return bool True if custom template is configured
      */
     private function hasCustomEmailTemplate($config): bool
     {
-        if (!$config instanceof ServiceOutputConfiguration) {
+        if (! $config instanceof ServiceOutputConfiguration) {
             return false;
         }
 
-        return !empty($config->email_body_template);
+        return ! empty($config->email_body_template);
     }
 
     /**
      * Get the class name of the mailable that would be used.
      *
-     * @param ServiceOutputConfiguration|null $config Output configuration
+     * @param  ServiceOutputConfiguration|null  $config  Output configuration
      * @return string Mailable class name (short) with mode info
      */
     private function getMailableClassName($config): string
     {
-        if (!$config instanceof ServiceOutputConfiguration) {
+        if (! $config instanceof ServiceOutputConfiguration) {
             return 'ServiceCaseNotification';
         }
 
@@ -507,13 +595,13 @@ class EmailOutputHandler implements OutputHandlerInterface
      * Creates a record in service_gateway_exchange_logs visible in Filament.
      * Uses 'mailto:' prefix for endpoint to distinguish from HTTP endpoints.
      *
-     * @param ServiceCase $case The service case being delivered
-     * @param ServiceOutputConfiguration|null $config Output configuration
-     * @param int $statusCode HTTP-style status code (200=success, 422=config error, 500=exception)
-     * @param array $recipients List of email recipients
-     * @param float $startTime Microtime when delivery started
-     * @param string|null $errorClass Exception class name if failed
-     * @param string|null $errorMessage Error message if failed
+     * @param  ServiceCase  $case  The service case being delivered
+     * @param  ServiceOutputConfiguration|null  $config  Output configuration
+     * @param  int  $statusCode  HTTP-style status code (200=success, 422=config error, 500=exception)
+     * @param  array  $recipients  List of email recipients
+     * @param  float  $startTime  Microtime when delivery started
+     * @param  string|null  $errorClass  Exception class name if failed
+     * @param  string|null  $errorMessage  Error message if failed
      */
     private function logToExchange(
         ServiceCase $case,
@@ -541,7 +629,7 @@ class EmailOutputHandler implements OutputHandlerInterface
 
         // Create mailto: endpoint format for Filament display
         $endpoint = count($recipients) > 0
-            ? 'mailto:' . $this->maskRecipients($recipients)[0] . (count($recipients) > 1 ? ' (+' . (count($recipients) - 1) . ')' : '')
+            ? 'mailto:'.$this->maskRecipients($recipients)[0].(count($recipients) > 1 ? ' (+'.(count($recipients) - 1).')' : '')
             : 'mailto:(no recipients)';
 
         try {
@@ -555,7 +643,7 @@ class EmailOutputHandler implements OutputHandlerInterface
                 callId: $case->call_id,
                 serviceCaseId: $case->id,
                 companyId: $case->company_id,
-                correlationId: $case->id . '-email-' . now()->format('His'),
+                correlationId: $case->id.'-email-'.now()->format('His'),
                 errorClass: $errorClass,
                 errorMessage: $errorMessage,
                 outputConfigurationId: $config?->id
@@ -574,13 +662,13 @@ class EmailOutputHandler implements OutputHandlerInterface
      *
      * Shows first 3 chars + domain, e.g., "adm***@example.com"
      *
-     * @param array $emails List of email addresses
+     * @param  array  $emails  List of email addresses
      * @return array Masked email addresses
      */
     private function maskRecipients(array $emails): array
     {
         return array_map(function ($email) {
-            if (!$this->isValidEmail($email)) {
+            if (! $this->isValidEmail($email)) {
                 return '(invalid)';
             }
 
@@ -589,10 +677,63 @@ class EmailOutputHandler implements OutputHandlerInterface
             $domain = $parts[1] ?? '';
 
             $maskedLocal = strlen($local) > 3
-                ? substr($local, 0, 3) . '***'
-                : $local[0] . '***';
+                ? substr($local, 0, 3).'***'
+                : $local[0].'***';
 
-            return $maskedLocal . '@' . $domain;
+            return $maskedLocal.'@'.$domain;
         }, $emails);
+    }
+
+    /**
+     * Send a test email with sample data.
+     *
+     * Used for previewing email templates and testing configuration.
+     * Renders the mailable HTML and sends as raw email to avoid queue serialization
+     * issues with non-persisted sample cases.
+     *
+     * @param  ServiceCase  $sampleCase  Sample service case (from SampleServiceCaseFactory)
+     * @param  string  $testEmail  Recipient email address for test
+     * @param  ServiceOutputConfiguration|null  $config  Optional config override
+     *
+     * @throws \Exception If email sending fails
+     */
+    public function sendTestEmail(ServiceCase $sampleCase, string $testEmail, ?ServiceOutputConfiguration $config = null): void
+    {
+        // Use provided config or get from case's category
+        $config = $config ?? $sampleCase->category?->outputConfiguration;
+
+        if (! $config) {
+            throw new \InvalidArgumentException('No output configuration provided or found on sample case');
+        }
+
+        if (! $this->isValidEmail($testEmail)) {
+            throw new \InvalidArgumentException('Invalid test email address: '.$testEmail);
+        }
+
+        Log::info('[EmailOutputHandler] Sending test email', [
+            'test_email' => $testEmail,
+            'config_id' => $config->id,
+            'template_type' => $config->email_template_type ?? 'standard',
+        ]);
+
+        // Select appropriate mailable based on configuration
+        $mailable = $this->selectMailable($sampleCase, $config);
+
+        // Render the mailable to get HTML content
+        // This avoids queue serialization issues with non-persisted sample cases
+        $htmlContent = $mailable->render();
+        $subject = '[TEST] '.($mailable->subject ?? 'Service Case Notification');
+
+        // Send as raw HTML email (truly synchronous, bypasses ShouldQueue)
+        Mail::html($htmlContent, function ($message) use ($testEmail, $subject) {
+            $message->to($testEmail)
+                ->subject($subject)
+                ->from(config('mail.from.address'), config('mail.from.name'));
+        });
+
+        Log::info('[EmailOutputHandler] Test email sent successfully', [
+            'test_email' => $testEmail,
+            'mailable' => get_class($mailable),
+        ]);
     }
 }

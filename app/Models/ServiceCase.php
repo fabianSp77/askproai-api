@@ -5,9 +5,9 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ServiceCase Model
@@ -43,7 +43,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class ServiceCase extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * Default attribute values.
@@ -57,13 +57,16 @@ class ServiceCase extends Model
         'impact' => 'normal',
         'status' => 'new',
         'output_status' => 'pending',
+        'source' => 'voice', // Default: phone calls from Retell AI
     ];
 
     /**
      * Case type enumeration
      */
     public const TYPE_INCIDENT = 'incident';
+
     public const TYPE_REQUEST = 'request';
+
     public const TYPE_INQUIRY = 'inquiry';
 
     public const CASE_TYPES = [
@@ -76,8 +79,11 @@ class ServiceCase extends Model
      * Priority enumeration
      */
     public const PRIORITY_CRITICAL = 'critical';
+
     public const PRIORITY_HIGH = 'high';
+
     public const PRIORITY_NORMAL = 'normal';
+
     public const PRIORITY_LOW = 'low';
 
     public const PRIORITIES = [
@@ -91,9 +97,13 @@ class ServiceCase extends Model
      * Status enumeration
      */
     public const STATUS_NEW = 'new';
+
     public const STATUS_OPEN = 'open';
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_RESOLVED = 'resolved';
+
     public const STATUS_CLOSED = 'closed';
 
     public const STATUSES = [
@@ -108,7 +118,9 @@ class ServiceCase extends Model
      * Output status enumeration
      */
     public const OUTPUT_PENDING = 'pending';
+
     public const OUTPUT_SENT = 'sent';
+
     public const OUTPUT_FAILED = 'failed';
 
     public const OUTPUT_STATUSES = [
@@ -127,8 +139,11 @@ class ServiceCase extends Model
      * - skipped: Case doesn't require enrichment (e.g., non-voice source)
      */
     public const ENRICHMENT_PENDING = 'pending';
+
     public const ENRICHMENT_ENRICHED = 'enriched';
+
     public const ENRICHMENT_TIMEOUT = 'timeout';
+
     public const ENRICHMENT_SKIPPED = 'skipped';
 
     public const ENRICHMENT_STATUSES = [
@@ -136,6 +151,26 @@ class ServiceCase extends Model
         self::ENRICHMENT_ENRICHED,
         self::ENRICHMENT_TIMEOUT,
         self::ENRICHMENT_SKIPPED,
+    ];
+
+    /**
+     * Billing status enumeration
+     *
+     * State machine for billing lifecycle:
+     * - unbilled: Case not yet billed (initial state)
+     * - billed: Case has been billed and linked to an invoice item
+     * - waived: Case billing waived (e.g., support case, error)
+     */
+    public const BILLING_UNBILLED = 'unbilled';
+
+    public const BILLING_BILLED = 'billed';
+
+    public const BILLING_WAIVED = 'waived';
+
+    public const BILLING_STATUSES = [
+        self::BILLING_UNBILLED,
+        self::BILLING_BILLED,
+        self::BILLING_WAIVED,
     ];
 
     /**
@@ -215,9 +250,15 @@ class ServiceCase extends Model
         // Enrichment fields (2-Phase Delivery-Gate)
         'enrichment_status',
         'enriched_at',
+        'source',
         'retell_call_session_id',
         'transcript_segment_count',
         'transcript_char_count',
+        // Billing fields
+        'billing_status',
+        'billed_at',
+        'invoice_item_id',
+        'billed_amount_cents',
     ];
 
     /**
@@ -236,8 +277,11 @@ class ServiceCase extends Model
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
         'enriched_at' => 'datetime',
+        'billed_at' => 'datetime',
         'transcript_segment_count' => 'integer',
         'transcript_char_count' => 'integer',
+        'invoice_item_id' => 'integer',
+        'billed_amount_cents' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -245,8 +289,6 @@ class ServiceCase extends Model
 
     /**
      * Get the company that owns the service case.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function company(): BelongsTo
     {
@@ -255,8 +297,6 @@ class ServiceCase extends Model
 
     /**
      * Get the call that originated this service case.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function call(): BelongsTo
     {
@@ -268,8 +308,6 @@ class ServiceCase extends Model
      *
      * Links to RetellCallSession for transcript stats, function call counts,
      * and other call analytics. Populated during enrichment phase.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function callSession(): BelongsTo
     {
@@ -278,8 +316,6 @@ class ServiceCase extends Model
 
     /**
      * Get the customer associated with this service case.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function customer(): BelongsTo
     {
@@ -288,8 +324,6 @@ class ServiceCase extends Model
 
     /**
      * Get the category for this service case.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function category(): BelongsTo
     {
@@ -321,8 +355,6 @@ class ServiceCase extends Model
 
     /**
      * Get the staff member assigned to this service case.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function assignedTo(): BelongsTo
     {
@@ -332,8 +364,6 @@ class ServiceCase extends Model
     /**
      * Get the assignment group for this service case.
      * ServiceNow-style team-based ticket assignment.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function assignedGroup(): BelongsTo
     {
@@ -341,10 +371,17 @@ class ServiceCase extends Model
     }
 
     /**
+     * Get the invoice item this case was billed to.
+     */
+    public function invoiceItem(): BelongsTo
+    {
+        return $this->belongsTo(AggregateInvoiceItem::class, 'invoice_item_id');
+    }
+
+    /**
      * Scope a query to only include cases with a specific status.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $status
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeByStatus($query, string $status)
@@ -355,8 +392,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include cases with a specific priority.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $priority
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeByPriority($query, string $priority)
@@ -365,10 +401,20 @@ class ServiceCase extends Model
     }
 
     /**
+     * Scope a query to only include cases from a specific source.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeBySource($query, string $source)
+    {
+        return $query->where('source', $source);
+    }
+
+    /**
      * Scope a query to only include cases for a specific company.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $companyId
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeForCompany($query, int $companyId)
@@ -379,7 +425,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include open cases (new, open, pending).
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeOpen($query)
@@ -394,7 +440,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include closed cases (resolved, closed).
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeClosed($query)
@@ -408,7 +454,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include cases with pending output delivery.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopePendingOutput($query)
@@ -419,7 +465,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include cases with failed output delivery.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFailedOutput($query)
@@ -430,7 +476,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include cases pending enrichment.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopePendingEnrichment($query)
@@ -441,7 +487,7 @@ class ServiceCase extends Model
     /**
      * Scope a query to only include enriched cases.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeEnriched($query)
@@ -450,9 +496,40 @@ class ServiceCase extends Model
     }
 
     /**
-     * Check if the case is overdue for SLA response.
+     * Scope a query to only include unbilled cases.
      *
-     * @return bool
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeUnbilled($query)
+    {
+        return $query->where('billing_status', self::BILLING_UNBILLED);
+    }
+
+    /**
+     * Scope a query to only include billed cases.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeBilled($query)
+    {
+        return $query->where('billing_status', self::BILLING_BILLED);
+    }
+
+    /**
+     * Scope a query to only include waived cases.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWaived($query)
+    {
+        return $query->where('billing_status', self::BILLING_WAIVED);
+    }
+
+    /**
+     * Check if the case is overdue for SLA response.
      */
     public function isResponseOverdue(): bool
     {
@@ -466,11 +543,11 @@ class ServiceCase extends Model
      */
     public function isResponseSlaMet(): ?bool
     {
-        if (!$this->sla_response_met_at) {
+        if (! $this->sla_response_met_at) {
             return null; // Not yet responded
         }
 
-        if (!$this->sla_response_due_at) {
+        if (! $this->sla_response_due_at) {
             return true; // No SLA defined, consider as met
         }
 
@@ -479,12 +556,10 @@ class ServiceCase extends Model
 
     /**
      * Mark the first response as made (for SLA tracking).
-     *
-     * @return void
      */
     public function markFirstResponse(): void
     {
-        if (!$this->sla_response_met_at) {
+        if (! $this->sla_response_met_at) {
             $this->update([
                 'sla_response_met_at' => now(),
             ]);
@@ -493,8 +568,6 @@ class ServiceCase extends Model
 
     /**
      * Check if the case is overdue for SLA resolution.
-     *
-     * @return bool
      */
     public function isResolutionOverdue(): bool
     {
@@ -512,25 +585,25 @@ class ServiceCase extends Model
      * - Skips calculation if company has sla_tracking_enabled = false
      * - Skips if category has no SLA configuration
      * - Sets sla_response_due_at and sla_resolution_due_at based on category hours
-     *
-     * @return void
      */
     public function calculateSlaDueDates(): void
     {
         try {
             // Guard: Skip if company has SLA tracking disabled (pass-through mode)
-            if (!$this->company?->sla_tracking_enabled) {
+            if (! $this->company?->sla_tracking_enabled) {
                 \Log::debug('[ServiceCase] SLA calculation skipped: Company has SLA tracking disabled', [
                     'company_id' => $this->company_id,
                 ]);
+
                 return;
             }
 
             // Guard: Skip if no category assigned
-            if (!$this->category) {
+            if (! $this->category) {
                 \Log::debug('[ServiceCase] SLA calculation skipped: No category assigned', [
                     'case_id' => $this->id,
                 ]);
+
                 return;
             }
 
@@ -568,8 +641,6 @@ class ServiceCase extends Model
 
     /**
      * Check if the case is open (not resolved or closed).
-     *
-     * @return bool
      */
     public function isOpen(): bool
     {
@@ -582,8 +653,6 @@ class ServiceCase extends Model
 
     /**
      * Check if the case is closed (resolved or closed).
-     *
-     * @return bool
      */
     public function isClosed(): bool
     {
@@ -595,8 +664,6 @@ class ServiceCase extends Model
 
     /**
      * Mark the case output as sent.
-     *
-     * @return void
      */
     public function markOutputAsSent(): void
     {
@@ -609,9 +676,6 @@ class ServiceCase extends Model
 
     /**
      * Mark the case output as failed.
-     *
-     * @param string $error
-     * @return void
      */
     public function markOutputAsFailed(string $error): void
     {
@@ -623,8 +687,6 @@ class ServiceCase extends Model
 
     /**
      * Check if the case is pending enrichment.
-     *
-     * @return bool
      */
     public function isPendingEnrichment(): bool
     {
@@ -633,8 +695,6 @@ class ServiceCase extends Model
 
     /**
      * Check if the case has been enriched.
-     *
-     * @return bool
      */
     public function isEnriched(): bool
     {
@@ -644,8 +704,7 @@ class ServiceCase extends Model
     /**
      * Mark the case as enriched with transcript/audio data.
      *
-     * @param RetellCallSession|null $session Optional session to link
-     * @return void
+     * @param  RetellCallSession|null  $session  Optional session to link
      */
     public function markAsEnriched(?RetellCallSession $session = null): void
     {
@@ -667,8 +726,6 @@ class ServiceCase extends Model
 
     /**
      * Mark the case enrichment as timed out.
-     *
-     * @return void
      */
     public function markEnrichmentTimeout(): void
     {
@@ -678,16 +735,129 @@ class ServiceCase extends Model
     }
 
     /**
+     * Mark the case as billed and link to invoice item.
+     *
+     * State Guard: Can only bill unbilled cases.
+     *
+     * @param  int  $invoiceItemId  The aggregate invoice item ID
+     * @param  int  $amountCents  The amount billed in cents
+     *
+     * @throws \LogicException if billing_status is not 'unbilled'
+     */
+    public function markAsBilled(int $invoiceItemId, int $amountCents): void
+    {
+        if ($this->billing_status !== self::BILLING_UNBILLED) {
+            throw new \LogicException(
+                "Cannot bill ServiceCase {$this->id}: Current billing_status is '{$this->billing_status}', expected 'unbilled'"
+            );
+        }
+
+        $this->update([
+            'billing_status' => self::BILLING_BILLED,
+            'billed_at' => now(),
+            'invoice_item_id' => $invoiceItemId,
+            'billed_amount_cents' => $amountCents,
+        ]);
+    }
+
+    /**
+     * Mark the case billing as waived.
+     *
+     * State Guard: Cannot waive already-billed cases.
+     *
+     * @param  string  $reason  Reason for waiving (logged in metadata)
+     *
+     * @throws \LogicException if billing_status is 'billed'
+     */
+    public function markAsWaived(string $reason): void
+    {
+        if ($this->billing_status === self::BILLING_BILLED) {
+            throw new \LogicException(
+                "Cannot waive ServiceCase {$this->id}: Case is already billed (invoice_item_id: {$this->invoice_item_id})"
+            );
+        }
+
+        $this->update([
+            'billing_status' => self::BILLING_WAIVED,
+            // Store waiver reason in ai_metadata (non-destructive)
+            'ai_metadata' => array_merge($this->ai_metadata ?? [], [
+                'billing_waived_at' => now()->toISOString(),
+                'billing_waived_reason' => $reason,
+            ]),
+        ]);
+    }
+
+    /**
+     * Check if the case is billable (unbilled status).
+     *
+     * @return bool True if case can be billed
+     */
+    public function isBillable(): bool
+    {
+        return $this->billing_status === self::BILLING_UNBILLED;
+    }
+
+    /**
      * Get formatted ticket ID (TKT-YYYY-NNNNN format).
      *
      * Example: TKT-2025-00042
-     *
-     * @return string
      */
     public function getFormattedIdAttribute(): string
     {
         $year = $this->created_at?->format('Y') ?? date('Y');
+
         return sprintf('TKT-%s-%05d', $year, $this->id);
+    }
+
+    /**
+     * Get human-readable source label (German).
+     *
+     * Example: 'voice' → 'Telefonanruf'
+     */
+    public function getSourceLabelAttribute(): string
+    {
+        return \App\Constants\ServiceGatewayConstants::getSourceLabel($this->source);
+    }
+
+    /**
+     * Get human-readable case type label (German).
+     *
+     * Example: 'incident' → 'Incident'
+     */
+    public function getCaseTypeLabelAttribute(): string
+    {
+        return self::TYPE_LABELS[$this->case_type] ?? $this->case_type ?? 'Unbekannt';
+    }
+
+    /**
+     * Get ServiceNow-compatible contact_type from source.
+     *
+     * This maps our internal source values to ServiceNow's contact_type field:
+     * - voice → phone
+     * - email → email
+     * - web → self-service
+     * - chat → virtual_agent
+     * etc.
+     */
+    public function getServiceNowContactTypeAttribute(): string
+    {
+        return \App\Constants\ServiceGatewayConstants::getServiceNowContactType($this->source);
+    }
+
+    /**
+     * Get source icon for UI display.
+     */
+    public function getSourceIconAttribute(): string
+    {
+        return \App\Constants\ServiceGatewayConstants::SOURCE_ICONS[$this->source] ?? '📋';
+    }
+
+    /**
+     * Get source color for badge styling.
+     */
+    public function getSourceColorAttribute(): string
+    {
+        return \App\Constants\ServiceGatewayConstants::SOURCE_COLORS[$this->source] ?? 'gray';
     }
 
     /**
@@ -699,23 +869,47 @@ class ServiceCase extends Model
 
         static::saving(function ($model) {
             // Validate case_type
-            if (!in_array($model->case_type, self::CASE_TYPES)) {
+            if (! in_array($model->case_type, self::CASE_TYPES)) {
                 throw new \InvalidArgumentException("Invalid case type: {$model->case_type}");
             }
 
             // Validate priority
-            if (!in_array($model->priority, self::PRIORITIES)) {
+            if (! in_array($model->priority, self::PRIORITIES)) {
                 throw new \InvalidArgumentException("Invalid priority: {$model->priority}");
             }
 
             // Validate status
-            if (!in_array($model->status, self::STATUSES)) {
+            if (! in_array($model->status, self::STATUSES)) {
                 throw new \InvalidArgumentException("Invalid status: {$model->status}");
             }
 
             // Validate output_status
-            if (!in_array($model->output_status, self::OUTPUT_STATUSES)) {
+            if (! in_array($model->output_status, self::OUTPUT_STATUSES)) {
                 throw new \InvalidArgumentException("Invalid output status: {$model->output_status}");
+            }
+
+            // Validate billing_status
+            if ($model->billing_status && ! in_array($model->billing_status, self::BILLING_STATUSES)) {
+                throw new \InvalidArgumentException("Invalid billing status: {$model->billing_status}");
+            }
+
+            // Enforce billing state machine transitions (Security: prevent bypass via direct update)
+            if ($model->isDirty('billing_status') && $model->exists) {
+                $original = $model->getOriginal('billing_status');
+                $new = $model->billing_status;
+
+                // Define valid transitions
+                $validTransitions = [
+                    self::BILLING_UNBILLED => [self::BILLING_BILLED, self::BILLING_WAIVED],
+                    self::BILLING_BILLED => [], // No transitions allowed from billed
+                    self::BILLING_WAIVED => [], // No transitions allowed from waived
+                ];
+
+                if (isset($validTransitions[$original]) && ! in_array($new, $validTransitions[$original])) {
+                    throw new \DomainException(
+                        "Invalid billing_status transition from '{$original}' to '{$new}' for ServiceCase {$model->id}"
+                    );
+                }
             }
         });
     }

@@ -51,6 +51,8 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Safety: Override billing email in non-production (prevents external sends)
+        'test_billing_email' => env('STRIPE_TEST_BILLING_EMAIL'),
     ],
 
     'samedi' => [
