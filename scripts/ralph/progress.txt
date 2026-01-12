@@ -265,3 +265,51 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+## 2026-01-12 ~19:00 UTC - US-005: Create Billing Architecture Documentation
+- Created comprehensive billing architecture documentation (899 lines)
+- Included 4 Mermaid diagrams for visual representation:
+  1. MonthlyBillingAggregator flow diagram (batch processing)
+  2. ServiceCase billing lifecycle state machine
+  3. Stripe webhook idempotency sequence diagram
+  4. Service Gateway pricing modes comparison
+- Documented all key patterns:
+  - Batch data preloading (N+1 query optimization)
+  - bcmath precision calculations
+  - State machine guards and validation
+  - Webhook idempotency with StripeEvent tracking
+  - Invoice number generation with MySQL locks
+- Included code examples, troubleshooting guide, testing strategy
+- File: claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md
+
+**Files created:**
+- claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md (899 lines)
+
+**Learnings for future iterations:**
+- Documentation as code: Mermaid diagrams in markdown for maintainable flow diagrams
+- Multi-level structure works well: Overview → Components → Detailed Flows → Code Examples
+- Include both "what" (architecture) and "why" (optimization reasons, security patterns)
+- Troubleshooting section saves future debugging time
+- Link to actual code files for easy navigation
+
+**Pattern Identified:**
+- Architecture documentation structure:
+  1. Overview and TOC for navigation
+  2. System components table (models, services)
+  3. Flow diagrams with Mermaid
+  4. Implementation details with code examples
+  5. Performance considerations and optimizations
+  6. Security and idempotency patterns
+  7. Testing strategy
+  8. Troubleshooting guide
+  9. References to code files
+
+**Acceptance Criteria:**
+- ✅ claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md exists
+- ✅ Documents MonthlyBillingAggregator flow with Mermaid diagram
+- ✅ Documents ServiceCase billing lifecycle
+- ✅ Documents Stripe webhook handling with idempotency
+- ✅ Documents Service Gateway pricing calculation
+
+---
+

@@ -72,7 +72,7 @@
     {
       "id": "US-005",
       "title": "Create Billing Architecture Documentation",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md exists",
         "Documents MonthlyBillingAggregator flow with Mermaid diagram",
@@ -80,7 +80,7 @@
         "Documents Stripe webhook handling with idempotency",
         "Documents Service Gateway pricing calculation"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-006",
