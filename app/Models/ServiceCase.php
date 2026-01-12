@@ -154,6 +154,26 @@ class ServiceCase extends Model
     ];
 
     /**
+     * Billing status enumeration
+     *
+     * State machine for billing lifecycle:
+     * - unbilled: Case not yet billed (initial state)
+     * - billed: Case has been billed and linked to an invoice item
+     * - waived: Case billing waived (e.g., support case, error)
+     */
+    public const BILLING_UNBILLED = 'unbilled';
+
+    public const BILLING_BILLED = 'billed';
+
+    public const BILLING_WAIVED = 'waived';
+
+    public const BILLING_STATUSES = [
+        self::BILLING_UNBILLED,
+        self::BILLING_BILLED,
+        self::BILLING_WAIVED,
+    ];
+
+    /**
      * German labels for status values
      * Single source of truth for all widgets and UI components
      */
@@ -234,6 +254,11 @@ class ServiceCase extends Model
         'retell_call_session_id',
         'transcript_segment_count',
         'transcript_char_count',
+        // Billing fields
+        'billing_status',
+        'billed_at',
+        'invoice_item_id',
+        'billed_amount_cents',
     ];
 
     /**
@@ -252,8 +277,11 @@ class ServiceCase extends Model
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
         'enriched_at' => 'datetime',
+        'billed_at' => 'datetime',
         'transcript_segment_count' => 'integer',
         'transcript_char_count' => 'integer',
+        'invoice_item_id' => 'integer',
+        'billed_amount_cents' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -340,6 +368,14 @@ class ServiceCase extends Model
     public function assignedGroup(): BelongsTo
     {
         return $this->belongsTo(AssignmentGroup::class, 'assigned_group_id');
+    }
+
+    /**
+     * Get the invoice item this case was billed to.
+     */
+    public function invoiceItem(): BelongsTo
+    {
+        return $this->belongsTo(AggregateInvoiceItem::class, 'invoice_item_id');
     }
 
     /**
@@ -457,6 +493,39 @@ class ServiceCase extends Model
     public function scopeEnriched($query)
     {
         return $query->where('enrichment_status', self::ENRICHMENT_ENRICHED);
+    }
+
+    /**
+     * Scope a query to only include unbilled cases.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeUnbilled($query)
+    {
+        return $query->where('billing_status', self::BILLING_UNBILLED);
+    }
+
+    /**
+     * Scope a query to only include billed cases.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeBilled($query)
+    {
+        return $query->where('billing_status', self::BILLING_BILLED);
+    }
+
+    /**
+     * Scope a query to only include waived cases.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWaived($query)
+    {
+        return $query->where('billing_status', self::BILLING_WAIVED);
     }
 
     /**
@@ -663,6 +732,69 @@ class ServiceCase extends Model
         $this->update([
             'enrichment_status' => self::ENRICHMENT_TIMEOUT,
         ]);
+    }
+
+    /**
+     * Mark the case as billed and link to invoice item.
+     *
+     * State Guard: Can only bill unbilled cases.
+     *
+     * @param  int  $invoiceItemId  The aggregate invoice item ID
+     * @param  int  $amountCents  The amount billed in cents
+     *
+     * @throws \LogicException if billing_status is not 'unbilled'
+     */
+    public function markAsBilled(int $invoiceItemId, int $amountCents): void
+    {
+        if ($this->billing_status !== self::BILLING_UNBILLED) {
+            throw new \LogicException(
+                "Cannot bill ServiceCase {$this->id}: Current billing_status is '{$this->billing_status}', expected 'unbilled'"
+            );
+        }
+
+        $this->update([
+            'billing_status' => self::BILLING_BILLED,
+            'billed_at' => now(),
+            'invoice_item_id' => $invoiceItemId,
+            'billed_amount_cents' => $amountCents,
+        ]);
+    }
+
+    /**
+     * Mark the case billing as waived.
+     *
+     * State Guard: Cannot waive already-billed cases.
+     *
+     * @param  string  $reason  Reason for waiving (logged in metadata)
+     *
+     * @throws \LogicException if billing_status is 'billed'
+     */
+    public function markAsWaived(string $reason): void
+    {
+        if ($this->billing_status === self::BILLING_BILLED) {
+            throw new \LogicException(
+                "Cannot waive ServiceCase {$this->id}: Case is already billed (invoice_item_id: {$this->invoice_item_id})"
+            );
+        }
+
+        $this->update([
+            'billing_status' => self::BILLING_WAIVED,
+            // Store waiver reason in ai_metadata (non-destructive)
+            'ai_metadata' => array_merge($this->ai_metadata ?? [], [
+                'billing_waived_at' => now()->toISOString(),
+                'billing_waived_reason' => $reason,
+            ]),
+        ]);
+    }
+
+    /**
+     * Check if the case is billable (unbilled status).
+     *
+     * @return bool True if case can be billed
+     */
+    public function isBillable(): bool
+    {
+        return $this->billing_status === self::BILLING_UNBILLED;
     }
 
     /**
