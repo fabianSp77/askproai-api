@@ -42,7 +42,8 @@
         "StripeInvoicingService checks for existing event_id before processing",
         "Duplicate events are logged and skipped gracefully",
         "Migration file created for stripe_events table"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-003",
@@ -53,7 +54,8 @@
         "bcdiv() used for division operations",
         "Scale of 4 decimal places maintained throughout",
         "Final result rounded to 2 decimal places for display"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-004",
@@ -64,7 +66,8 @@
         "Index on aggregate_invoice_items(aggregate_invoice_id, company_id)",
         "Index on aggregate_invoices(partner_company_id, status, billing_period_start)",
         "Migration file created with all indexes"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-005",
@@ -76,7 +79,8 @@
         "Documents ServiceCase billing lifecycle",
         "Documents Stripe webhook handling with idempotency",
         "Documents Service Gateway pricing calculation"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-006",
@@ -88,7 +92,8 @@
         "Static factory methods: forMonth(year, month), forCurrentMonth()",
         "Methods: toDateRange(), overlaps(), contains()",
         "MonthlyBillingAggregator refactored to use BillingPeriod"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-007",
@@ -100,7 +105,8 @@
         "Test: pricing tiers applied correctly",
         "Test: billing_status transitions work",
         "All tests pass"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-008",
@@ -113,7 +119,8 @@
         "Test: billed cases cannot be re-billed (state guard)",
         "Test: waived cases cannot be billed",
         "All tests pass"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-009",
@@ -125,7 +132,8 @@
         "Test: invoice numbers follow AGG-YYYY-MM-NNN format",
         "Test uses database transactions to simulate concurrency",
         "All tests pass"
-      ]
+      ],
+      "passes": false
     },
     {
       "id": "US-010",
@@ -137,7 +145,8 @@
         "Test: effective pricing calculation",
         "Test: billing configuration validation",
         "All tests pass"
-      ]
+      ],
+      "passes": false
     }
   ]
 }
