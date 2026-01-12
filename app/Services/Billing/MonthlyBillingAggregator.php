@@ -615,15 +615,34 @@ class MonthlyBillingAggregator
                 outputType: $perCase['output_types'] ?? null,
             );
 
-            // Mark all cases as billed
+            // Mark all cases as billed (using model method to ensure state machine validation)
+            $unitPrice = $perCase['average_unit_price_cents'];
+            $billedCount = 0;
+
             ServiceCase::where('company_id', $company->id)
                 ->unbilled()
                 ->whereBetween('created_at', [$periodStart, $periodEnd])
-                ->update([
-                    'billing_status' => ServiceCase::BILLING_BILLED,
-                    'billed_at' => now(),
-                    'invoice_item_id' => $item->id,
+                ->each(function (ServiceCase $case) use ($item, $unitPrice, &$billedCount) {
+                    try {
+                        $case->markAsBilled($item->id, $unitPrice);
+                        $billedCount++;
+                    } catch (\LogicException $e) {
+                        Log::warning('[ServiceGateway] Could not bill case - invalid state', [
+                            'case_id' => $case->id,
+                            'current_status' => $case->billing_status,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                });
+
+            // Verify all cases were billed
+            if ($billedCount !== $perCase['case_count']) {
+                Log::warning('[ServiceGateway] Billing count mismatch', [
+                    'company_id' => $company->id,
+                    'expected' => $perCase['case_count'],
+                    'actual' => $billedCount,
                 ]);
+            }
 
             Log::info('[ServiceGateway] Per-case billing added', [
                 'company_id' => $company->id,

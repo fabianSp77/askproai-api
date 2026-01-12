@@ -247,12 +247,20 @@ class AggregateInvoice extends Model
 
     /**
      * Recalculate totals from items.
+     *
+     * German VAT Compliance: Tax is calculated on the net amount AFTER discounts.
+     * Formula: taxable = subtotal - discount, tax = taxable * rate, total = taxable + tax
      */
     public function calculateTotals(): self
     {
         $subtotal = $this->items()->sum('amount_cents');
-        $tax = (int) round($subtotal * ($this->tax_rate / 100));
-        $total = $subtotal + $tax;
+
+        // German VAT: Tax must be calculated AFTER discount is applied
+        $discount = $this->discount_cents ?? 0;
+        $taxableAmount = max(0, $subtotal - $discount);
+
+        $tax = (int) round($taxableAmount * ($this->tax_rate / 100));
+        $total = $taxableAmount + $tax;
 
         $this->update([
             'subtotal_cents' => $subtotal,
