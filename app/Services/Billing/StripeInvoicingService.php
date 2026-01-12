@@ -5,10 +5,13 @@ namespace App\Services\Billing;
 use App\Models\AggregateInvoice;
 use App\Models\AggregateInvoiceItem;
 use App\Models\Company;
+use App\Models\StripeEvent;
+use App\Notifications\InvoicePaymentFailedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Stripe\StripeClient;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 /**
  * Stripe Invoicing Service
@@ -22,6 +25,11 @@ use Stripe\Exception\ApiErrorException;
  * 3. Add line items for each company's charges
  * 4. Finalize and send invoice
  * 5. Handle webhook events for payment status
+ *
+ * Webhook Idempotency:
+ * - All webhook handlers track event IDs in stripe_events table
+ * - Duplicate events are logged and skipped gracefully
+ * - Prevents double-processing when Stripe retries webhooks
  */
 class StripeInvoicingService
 {
@@ -50,11 +58,82 @@ class StripeInvoicingService
     }
 
     /**
+     * Execute a Stripe API call with retry logic and exponential backoff.
+     *
+     * Handles:
+     * - Rate limiting (HTTP 429)
+     * - Transient connection errors
+     * - Temporary API unavailability
+     *
+     * @param  callable  $callback  The Stripe API call to execute
+     * @param  string  $operation  Description of the operation (for logging)
+     * @param  int  $maxAttempts  Maximum number of attempts (default: 3)
+     * @return mixed Result of the callback
+     *
+     * @throws ApiErrorException If all attempts fail
+     */
+    private function retryStripeCall(callable $callback, string $operation, int $maxAttempts = 3): mixed
+    {
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < $maxAttempts) {
+            $attempt++;
+
+            try {
+                return $callback();
+            } catch (ApiErrorException $e) {
+                $lastException = $e;
+                $httpStatus = $e->getHttpStatus();
+
+                // Determine if retry is appropriate
+                $isRetryable = in_array($httpStatus, [429, 500, 502, 503, 504])
+                    || $e instanceof \Stripe\Exception\RateLimitException
+                    || $e instanceof \Stripe\Exception\ApiConnectionException;
+
+                if (! $isRetryable || $attempt >= $maxAttempts) {
+                    Log::error('Stripe API call failed (non-retryable or max attempts reached)', [
+                        'operation' => $operation,
+                        'attempt' => $attempt,
+                        'http_status' => $httpStatus,
+                        'error' => $e->getMessage(),
+                        'stripe_code' => $e->getStripeCode(),
+                    ]);
+                    throw $e;
+                }
+
+                // Calculate exponential backoff: 1s, 2s, 4s, 8s...
+                $delay = (int) pow(2, $attempt - 1);
+
+                // Check for Retry-After header (rate limiting)
+                $retryAfter = $e->getHttpHeaders()['retry-after'] ?? null;
+                if ($retryAfter !== null) {
+                    $delay = max($delay, (int) $retryAfter);
+                }
+
+                Log::warning('Stripe API call failed, retrying', [
+                    'operation' => $operation,
+                    'attempt' => $attempt,
+                    'max_attempts' => $maxAttempts,
+                    'http_status' => $httpStatus,
+                    'error' => $e->getMessage(),
+                    'delay_seconds' => $delay,
+                ]);
+
+                sleep($delay);
+            }
+        }
+
+        // Should not reach here, but for safety
+        throw $lastException ?? new \RuntimeException("Stripe API call failed after {$maxAttempts} attempts");
+    }
+
+    /**
      * Check if Stripe is properly configured.
      */
     public function isConfigured(): bool
     {
-        return !empty(config('services.stripe.secret'));
+        return ! empty(config('services.stripe.secret'));
     }
 
     /**
@@ -77,10 +156,11 @@ class StripeInvoicingService
         // Check for test email override
         $testEmail = config('services.stripe.test_billing_email');
         if ($testEmail) {
-            Log::info("Using test billing email override", [
+            Log::info('Using test billing email override', [
                 'original' => $email,
                 'override' => $testEmail,
             ]);
+
             return $testEmail;
         }
 
@@ -88,13 +168,14 @@ class StripeInvoicingService
         $allowedDomains = ['askproai.de', 'askpro.ai'];
         $domain = substr(strrchr($email, '@'), 1);
 
-        if (!in_array($domain, $allowedDomains)) {
+        if (! in_array($domain, $allowedDomains)) {
             $fallbackEmail = config('mail.admin_email', 'fabian@askproai.de');
-            Log::warning("Blocked external email in non-production", [
+            Log::warning('Blocked external email in non-production', [
                 'partner_id' => $partner->id,
                 'blocked_email' => $email,
                 'using_fallback' => $fallbackEmail,
             ]);
+
             return $fallbackEmail;
         }
 
@@ -110,7 +191,11 @@ class StripeInvoicingService
         if ($partner->partner_stripe_customer_id) {
             // Verify it still exists in Stripe
             try {
-                $this->getStripe()->customers->retrieve($partner->partner_stripe_customer_id);
+                $this->retryStripeCall(
+                    fn () => $this->getStripe()->customers->retrieve($partner->partner_stripe_customer_id),
+                    "retrieve_customer:{$partner->id}"
+                );
+
                 return $partner->partner_stripe_customer_id;
             } catch (ApiErrorException $e) {
                 Log::warning("Partner Stripe customer not found, creating new: {$partner->id}");
@@ -119,22 +204,25 @@ class StripeInvoicingService
 
         // Create new Stripe customer (using safe email to prevent external sends)
         $safeEmail = $this->getSafeBillingEmail($partner);
-        $customer = $this->getStripe()->customers->create([
-            'name' => $partner->name,
-            'email' => $safeEmail,
-            'metadata' => [
-                'partner_id' => $partner->id,
-                'partner_name' => $partner->name,
-                'type' => 'partner_billing',
-            ],
-            'address' => $this->formatAddress($partner),
-            'preferred_locales' => ['de'],
-        ]);
+        $customer = $this->retryStripeCall(
+            fn () => $this->getStripe()->customers->create([
+                'name' => $partner->name,
+                'email' => $safeEmail,
+                'metadata' => [
+                    'partner_id' => $partner->id,
+                    'partner_name' => $partner->name,
+                    'type' => 'partner_billing',
+                ],
+                'address' => $this->formatAddress($partner),
+                'preferred_locales' => ['de'],
+            ]),
+            "create_customer:{$partner->id}"
+        );
 
         // Save to partner record
         $partner->update(['partner_stripe_customer_id' => $customer->id]);
 
-        Log::info("Created Stripe customer for partner", [
+        Log::info('Created Stripe customer for partner', [
             'partner_id' => $partner->id,
             'stripe_customer_id' => $customer->id,
         ]);
@@ -179,7 +267,7 @@ class StripeInvoicingService
             ],
         ]);
 
-        Log::info("Created aggregate invoice", [
+        Log::info('Created aggregate invoice', [
             'invoice_id' => $invoice->id,
             'partner_id' => $partner->id,
             'period' => $periodStart->format('Y-m'),
@@ -196,7 +284,7 @@ class StripeInvoicingService
         AggregateInvoiceItem $item
     ): void {
         if ($invoice->status !== AggregateInvoice::STATUS_DRAFT) {
-            throw new \Exception("Cannot add items to non-draft invoice");
+            throw new \Exception('Cannot add items to non-draft invoice');
         }
 
         // No Stripe sync needed for draft invoices
@@ -209,40 +297,50 @@ class StripeInvoicingService
     public function finalizeAndSend(AggregateInvoice $invoice): AggregateInvoice
     {
         if ($invoice->status !== AggregateInvoice::STATUS_DRAFT) {
-            throw new \Exception("Can only finalize draft invoices");
+            throw new \Exception('Can only finalize draft invoices');
         }
 
         // Recalculate totals
         $invoice->calculateTotals();
 
         if ($invoice->total_cents === 0) {
-            Log::info("Skipping invoice with zero total", ['invoice_id' => $invoice->id]);
+            Log::info('Skipping invoice with zero total', ['invoice_id' => $invoice->id]);
             $invoice->void();
+
             return $invoice;
         }
 
         try {
-            // Create Stripe invoice
-            $stripeInvoice = $this->getStripe()->invoices->create([
-                'customer' => $invoice->stripe_customer_id,
-                'collection_method' => 'send_invoice',
-                'days_until_due' => $invoice->partnerCompany->getPartnerPaymentTermsDays(),
-                'auto_advance' => false,
-                'metadata' => [
-                    'aggregate_invoice_id' => $invoice->id,
-                    'partner_id' => $invoice->partner_company_id,
-                    'billing_period' => $invoice->billing_period_start->format('Y-m'),
-                ],
-            ]);
+            // Create Stripe invoice (with retry)
+            $stripeInvoice = $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->create([
+                    'customer' => $invoice->stripe_customer_id,
+                    'collection_method' => 'send_invoice',
+                    'days_until_due' => $invoice->partnerCompany->getPartnerPaymentTermsDays(),
+                    'auto_advance' => false,
+                    'metadata' => [
+                        'aggregate_invoice_id' => $invoice->id,
+                        'partner_id' => $invoice->partner_company_id,
+                        'billing_period' => $invoice->billing_period_start->format('Y-m'),
+                    ],
+                ]),
+                "create_invoice:{$invoice->id}"
+            );
 
             // Add line items to Stripe
             $this->syncLineItemsToStripe($invoice, $stripeInvoice->id);
 
-            // Finalize the Stripe invoice
-            $finalizedInvoice = $this->getStripe()->invoices->finalizeInvoice($stripeInvoice->id);
+            // Finalize the Stripe invoice (with retry)
+            $finalizedInvoice = $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->finalizeInvoice($stripeInvoice->id),
+                "finalize_invoice:{$invoice->id}"
+            );
 
-            // Send the invoice
-            $sentInvoice = $this->getStripe()->invoices->sendInvoice($stripeInvoice->id);
+            // Send the invoice (with retry)
+            $sentInvoice = $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->sendInvoice($stripeInvoice->id),
+                "send_invoice:{$invoice->id}"
+            );
 
             // Update local record
             $invoice->update([
@@ -255,7 +353,7 @@ class StripeInvoicingService
                 'due_at' => Carbon::createFromTimestamp($sentInvoice->due_date),
             ]);
 
-            Log::info("Invoice finalized and sent", [
+            Log::info('Invoice finalized and sent', [
                 'invoice_id' => $invoice->id,
                 'stripe_invoice_id' => $sentInvoice->id,
                 'total' => $invoice->total,
@@ -264,7 +362,7 @@ class StripeInvoicingService
             return $invoice->fresh();
 
         } catch (ApiErrorException $e) {
-            Log::error("Failed to create Stripe invoice", [
+            Log::error('Failed to create Stripe invoice', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);
@@ -278,29 +376,32 @@ class StripeInvoicingService
     public function createStripeInvoiceDraft(AggregateInvoice $invoice): AggregateInvoice
     {
         if ($invoice->stripe_invoice_id) {
-            throw new \Exception("Invoice already has Stripe invoice");
+            throw new \Exception('Invoice already has Stripe invoice');
         }
 
         // Recalculate totals
         $invoice->calculateTotals();
 
         if ($invoice->total_cents === 0) {
-            throw new \Exception("Cannot create invoice with zero total");
+            throw new \Exception('Cannot create invoice with zero total');
         }
 
         try {
-            // Create Stripe invoice (draft)
-            $stripeInvoice = $this->getStripe()->invoices->create([
-                'customer' => $invoice->stripe_customer_id,
-                'collection_method' => 'send_invoice',
-                'days_until_due' => $invoice->partnerCompany->getPartnerPaymentTermsDays(),
-                'auto_advance' => false,
-                'metadata' => [
-                    'aggregate_invoice_id' => $invoice->id,
-                    'partner_id' => $invoice->partner_company_id,
-                    'billing_period' => $invoice->billing_period_start->format('Y-m'),
-                ],
-            ]);
+            // Create Stripe invoice (draft, with retry)
+            $stripeInvoice = $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->create([
+                    'customer' => $invoice->stripe_customer_id,
+                    'collection_method' => 'send_invoice',
+                    'days_until_due' => $invoice->partnerCompany->getPartnerPaymentTermsDays(),
+                    'auto_advance' => false,
+                    'metadata' => [
+                        'aggregate_invoice_id' => $invoice->id,
+                        'partner_id' => $invoice->partner_company_id,
+                        'billing_period' => $invoice->billing_period_start->format('Y-m'),
+                    ],
+                ]),
+                "create_invoice_draft:{$invoice->id}"
+            );
 
             // Add line items
             $this->syncLineItemsToStripe($invoice, $stripeInvoice->id);
@@ -313,7 +414,7 @@ class StripeInvoicingService
             return $invoice->fresh();
 
         } catch (ApiErrorException $e) {
-            Log::error("Failed to create Stripe invoice draft", [
+            Log::error('Failed to create Stripe invoice draft', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);
@@ -323,6 +424,12 @@ class StripeInvoicingService
 
     /**
      * Sync line items to Stripe invoice.
+     *
+     * Format: "Firmenname: Beschreibung (Details)"
+     * Example: "IT-Systemhaus Test GmbH: Call-Minuten (32 Anrufe, 55.30 Min)"
+     *
+     * Note: Previously used 0€ header lines for company grouping, but this was
+     * confusing on the invoice. Now the company name is included in each line item.
      */
     private function syncLineItemsToStripe(AggregateInvoice $invoice, string $stripeInvoiceId): void
     {
@@ -331,50 +438,48 @@ class StripeInvoicingService
         foreach ($itemsByCompany as $companyId => $data) {
             $company = $data['company'];
 
-            // Create a section header for each company
-            $this->getStripe()->invoiceItems->create([
-                'customer' => $invoice->stripe_customer_id,
-                'invoice' => $stripeInvoiceId,
-                'description' => "── {$company->name} ──",
-                'amount' => 0,
-                'currency' => 'eur',
-            ]);
-
-            // Add each item
+            // Add each item with company name prefix
             foreach ($data['items'] as $item) {
-                $description = $item->description;
+                // Build description: "Firmenname: Beschreibung (Details)"
+                $description = "{$company->name}: {$item->description}";
                 if ($item->description_detail) {
                     $description .= " ({$item->description_detail})";
                 }
 
-                $stripeItem = $this->getStripe()->invoiceItems->create([
-                    'customer' => $invoice->stripe_customer_id,
-                    'invoice' => $stripeInvoiceId,
-                    'description' => $description,
-                    'amount' => $item->amount_cents,
-                    'currency' => 'eur',
-                    'metadata' => [
-                        'company_id' => $companyId,
-                        'company_name' => $company->name,
-                        'item_type' => $item->item_type,
-                        'aggregate_invoice_item_id' => $item->id,
-                    ],
-                ]);
+                $stripeItem = $this->retryStripeCall(
+                    fn () => $this->getStripe()->invoiceItems->create([
+                        'customer' => $invoice->stripe_customer_id,
+                        'invoice' => $stripeInvoiceId,
+                        'description' => $description,
+                        'amount' => $item->amount_cents,
+                        'currency' => 'eur',
+                        'metadata' => [
+                            'company_id' => $companyId,
+                            'company_name' => $company->name,
+                            'item_type' => $item->item_type,
+                            'aggregate_invoice_item_id' => $item->id,
+                        ],
+                    ]),
+                    "add_line_item:{$invoice->id}:{$item->id}"
+                );
 
                 // Store Stripe line item ID
                 $item->update(['stripe_line_item_id' => $stripeItem->id]);
             }
         }
 
-        // Add tax as a separate line item (Stripe can also handle this automatically)
+        // Add tax as a separate line item (with retry)
         if ($invoice->tax_cents > 0) {
-            $this->getStripe()->invoiceItems->create([
-                'customer' => $invoice->stripe_customer_id,
-                'invoice' => $stripeInvoiceId,
-                'description' => sprintf('MwSt. (%.0f%%)', $invoice->tax_rate),
-                'amount' => $invoice->tax_cents,
-                'currency' => 'eur',
-            ]);
+            $this->retryStripeCall(
+                fn () => $this->getStripe()->invoiceItems->create([
+                    'customer' => $invoice->stripe_customer_id,
+                    'invoice' => $stripeInvoiceId,
+                    'description' => sprintf('MwSt. (%.0f%%)', $invoice->tax_rate),
+                    'amount' => $invoice->tax_cents,
+                    'currency' => 'eur',
+                ]),
+                "add_tax_line_item:{$invoice->id}"
+            );
         }
     }
 
@@ -382,6 +487,7 @@ class StripeInvoicingService
      * Handle invoice.paid webhook event.
      *
      * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
+     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoicePaid(array $event): void
     {
@@ -389,30 +495,57 @@ class StripeInvoicingService
         $stripeInvoiceId = $stripeInvoice['id'];
         $stripeEventId = $event['id'] ?? null;
 
+        // Check for duplicate event
+        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
+            Log::info('Duplicate invoice.paid event, skipping', [
+                'stripe_event_id' => $stripeEventId,
+                'stripe_invoice_id' => $stripeInvoiceId,
+            ]);
+
+            return;
+        }
+
         $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
-        if (!$invoice) {
-            Log::warning("Received invoice.paid for unknown invoice", [
+        if (! $invoice) {
+            Log::warning('Received invoice.paid for unknown invoice', [
                 'stripe_invoice_id' => $stripeInvoiceId,
                 'stripe_event_id' => $stripeEventId,
             ]);
+
+            // Mark event as processed even if invoice not found
+            if ($stripeEventId) {
+                StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
+            }
+
             return;
         }
 
         // IDEMPOTENCY CHECK: Skip if already paid
         if ($invoice->status === AggregateInvoice::STATUS_PAID) {
-            Log::info("Invoice already paid, skipping duplicate webhook", [
+            Log::info('Invoice already paid, skipping duplicate webhook', [
                 'invoice_id' => $invoice->id,
                 'stripe_invoice_id' => $stripeInvoiceId,
                 'stripe_event_id' => $stripeEventId,
                 'paid_at' => $invoice->paid_at?->toIso8601String(),
             ]);
+
+            // Mark event as processed
+            if ($stripeEventId) {
+                StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
+            }
+
             return;
         }
 
         $invoice->markAsPaid();
 
-        Log::info("Invoice marked as paid via webhook", [
+        // Mark event as processed
+        if ($stripeEventId) {
+            StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
+        }
+
+        Log::info('Invoice marked as paid via webhook', [
             'invoice_id' => $invoice->id,
             'stripe_invoice_id' => $stripeInvoiceId,
             'stripe_event_id' => $stripeEventId,
@@ -421,18 +554,39 @@ class StripeInvoicingService
 
     /**
      * Handle invoice.payment_failed webhook event.
+     *
+     * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
+     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoicePaymentFailed(array $event): void
     {
         $stripeInvoice = $event['data']['object'];
         $stripeInvoiceId = $stripeInvoice['id'];
+        $stripeEventId = $event['id'] ?? null;
+
+        // Check for duplicate event
+        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
+            Log::info('Duplicate invoice.payment_failed event, skipping', [
+                'stripe_event_id' => $stripeEventId,
+                'stripe_invoice_id' => $stripeInvoiceId,
+            ]);
+
+            return;
+        }
 
         $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
-        if (!$invoice) {
-            Log::warning("Received invoice.payment_failed for unknown invoice", [
+        if (! $invoice) {
+            Log::warning('Received invoice.payment_failed for unknown invoice', [
                 'stripe_invoice_id' => $stripeInvoiceId,
+                'stripe_event_id' => $stripeEventId,
             ]);
+
+            // Mark event as processed even if invoice not found
+            if ($stripeEventId) {
+                StripeEvent::markAsProcessed($stripeEventId, 'invoice.payment_failed');
+            }
+
             return;
         }
 
@@ -444,25 +598,90 @@ class StripeInvoicingService
             ]),
         ]);
 
-        Log::warning("Invoice payment failed", [
+        Log::warning('Invoice payment failed', [
             'invoice_id' => $invoice->id,
             'stripe_invoice_id' => $stripeInvoiceId,
+            'stripe_event_id' => $stripeEventId,
         ]);
 
-        // TODO: Send notification to admin
+        // Send notification to admin
+        $this->notifyAdminOfPaymentFailure($invoice, $stripeInvoice, $stripeEventId);
+
+        // Mark event as processed
+        if ($stripeEventId) {
+            StripeEvent::markAsProcessed($stripeEventId, 'invoice.payment_failed');
+        }
+    }
+
+    /**
+     * Notify admin(s) of invoice payment failure.
+     */
+    private function notifyAdminOfPaymentFailure(
+        AggregateInvoice $invoice,
+        array $stripeInvoice,
+        ?string $stripeEventId
+    ): void {
+        $failureMessage = $stripeInvoice['last_finalization_error']['message']
+            ?? $stripeInvoice['status_transitions']['paid_at'] === null
+                ? 'Payment not completed'
+                : 'Unknown payment failure';
+
+        // Get admin email(s) - can be comma-separated for multiple recipients
+        $adminEmails = config('mail.admin_email', 'fabian@askproai.de');
+        $recipients = array_map('trim', explode(',', $adminEmails));
+
+        foreach ($recipients as $email) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                Notification::route('mail', $email)
+                    ->notify(new InvoicePaymentFailedNotification(
+                        $invoice,
+                        $failureMessage,
+                        $stripeEventId
+                    ));
+            }
+        }
+
+        Log::info('Payment failure notification sent', [
+            'invoice_id' => $invoice->id,
+            'recipients' => $recipients,
+        ]);
     }
 
     /**
      * Handle invoice.finalized webhook event.
+     *
+     * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
+     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoiceFinalized(array $event): void
     {
         $stripeInvoice = $event['data']['object'];
         $stripeInvoiceId = $stripeInvoice['id'];
+        $stripeEventId = $event['id'] ?? null;
+
+        // Check for duplicate event
+        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
+            Log::info('Duplicate invoice.finalized event, skipping', [
+                'stripe_event_id' => $stripeEventId,
+                'stripe_invoice_id' => $stripeInvoiceId,
+            ]);
+
+            return;
+        }
 
         $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
-        if (!$invoice) {
+        if (! $invoice) {
+            Log::warning('Received invoice.finalized for unknown invoice', [
+                'stripe_invoice_id' => $stripeInvoiceId,
+                'stripe_event_id' => $stripeEventId,
+            ]);
+
+            // Mark event as processed even if invoice not found
+            if ($stripeEventId) {
+                StripeEvent::markAsProcessed($stripeEventId, 'invoice.finalized');
+            }
+
             return;
         }
 
@@ -470,20 +689,122 @@ class StripeInvoicingService
             'stripe_hosted_invoice_url' => $stripeInvoice['hosted_invoice_url'] ?? null,
             'stripe_pdf_url' => $stripeInvoice['invoice_pdf'] ?? null,
         ]);
+
+        // Mark event as processed
+        if ($stripeEventId) {
+            StripeEvent::markAsProcessed($stripeEventId, 'invoice.finalized');
+        }
+
+        Log::info('Invoice finalized via webhook', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'stripe_invoice_id' => $stripeInvoiceId,
+            'stripe_event_id' => $stripeEventId,
+        ]);
     }
 
     /**
      * Handle invoice.voided webhook event.
+     *
+     * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
+     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoiceVoided(array $event): void
     {
         $stripeInvoice = $event['data']['object'];
         $stripeInvoiceId = $stripeInvoice['id'];
+        $stripeEventId = $event['id'] ?? null;
+
+        // Check for duplicate event
+        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
+            Log::info('Duplicate invoice.voided event, skipping', [
+                'stripe_event_id' => $stripeEventId,
+                'stripe_invoice_id' => $stripeInvoiceId,
+            ]);
+
+            return;
+        }
 
         $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
-        if ($invoice) {
-            $invoice->void();
+        if (! $invoice) {
+            Log::warning('Received invoice.voided for unknown invoice', [
+                'stripe_invoice_id' => $stripeInvoiceId,
+                'stripe_event_id' => $stripeEventId,
+            ]);
+
+            // Mark event as processed even if invoice not found
+            if ($stripeEventId) {
+                StripeEvent::markAsProcessed($stripeEventId, 'invoice.voided');
+            }
+
+            return;
+        }
+
+        $invoice->void();
+
+        // Mark event as processed
+        if ($stripeEventId) {
+            StripeEvent::markAsProcessed($stripeEventId, 'invoice.voided');
+        }
+
+        Log::info('Invoice voided via webhook', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'stripe_invoice_id' => $stripeInvoiceId,
+            'stripe_event_id' => $stripeEventId,
+        ]);
+    }
+
+    /**
+     * Resend an already-sent invoice via Stripe.
+     *
+     * Can be used when the customer didn't receive the email or needs a reminder.
+     * Stripe handles email delivery with proper retry logic.
+     *
+     * @throws \Exception If invoice is not in 'open' status
+     * @throws ApiErrorException If Stripe API call fails
+     */
+    public function resendInvoice(AggregateInvoice $invoice): AggregateInvoice
+    {
+        if ($invoice->status !== AggregateInvoice::STATUS_OPEN) {
+            throw new \Exception('Only open invoices can be resent');
+        }
+
+        if (! $invoice->stripe_invoice_id) {
+            throw new \Exception('Invoice has no Stripe invoice ID');
+        }
+
+        try {
+            // Stripe's sendInvoice can be called multiple times on open invoices
+            $sentInvoice = $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->sendInvoice($invoice->stripe_invoice_id),
+                "resend_invoice:{$invoice->id}"
+            );
+
+            // Update sent timestamp
+            $invoice->update([
+                'sent_at' => now(),
+                'metadata' => array_merge($invoice->metadata ?? [], [
+                    'last_resent_at' => now()->toIso8601String(),
+                    'resend_count' => ($invoice->metadata['resend_count'] ?? 0) + 1,
+                ]),
+            ]);
+
+            Log::info('Invoice resent via Stripe', [
+                'invoice_id' => $invoice->id,
+                'stripe_invoice_id' => $sentInvoice->id,
+                'resend_count' => $invoice->metadata['resend_count'] ?? 1,
+            ]);
+
+            return $invoice->fresh();
+
+        } catch (ApiErrorException $e) {
+            Log::error('Failed to resend invoice', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
         }
     }
 
@@ -492,16 +813,20 @@ class StripeInvoicingService
      */
     public function voidStripeInvoice(AggregateInvoice $invoice): void
     {
-        if (!$invoice->stripe_invoice_id) {
+        if (! $invoice->stripe_invoice_id) {
             $invoice->void();
+
             return;
         }
 
         try {
-            $this->getStripe()->invoices->voidInvoice($invoice->stripe_invoice_id);
+            $this->retryStripeCall(
+                fn () => $this->getStripe()->invoices->voidInvoice($invoice->stripe_invoice_id),
+                "void_invoice:{$invoice->id}"
+            );
             $invoice->void();
         } catch (ApiErrorException $e) {
-            Log::error("Failed to void Stripe invoice", [
+            Log::error('Failed to void Stripe invoice', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);
@@ -532,7 +857,7 @@ class StripeInvoicingService
     {
         $address = $partner->partner_billing_address;
 
-        if (!$address) {
+        if (! $address) {
             return null;
         }
 
