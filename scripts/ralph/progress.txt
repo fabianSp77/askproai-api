@@ -313,3 +313,60 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+## 2026-01-12 ~22:00 UTC - US-006: Create BillingPeriod Value Object
+- Created BillingPeriod Value Object in app/ValueObjects/BillingPeriod.php
+- Implemented all required static factory methods:
+  - forMonth(int $year, int $month): self
+  - forCurrentMonth(): self
+  - forPreviousMonth(): self
+  - fromDates(string $startDate, string $endDate): self
+- Implemented all required methods:
+  - toDateRange(): array - Returns [$start, $end] tuple
+  - overlaps(BillingPeriod $other): bool - Check period overlap
+  - contains(Carbon $date): bool - Check if date is in period
+  - getDays(): int - Get number of days in period
+  - getLabel(string $format = 'Y-m-d'): string - Human-readable label
+  - getMonthLabel(string $locale = 'de'): string - Month label (e.g., "Januar 2026")
+  - isCurrentPeriod(): bool - Check if period contains today
+  - toArray(): array - Array representation
+- Refactored MonthlyBillingAggregator to use BillingPeriod:
+  - Updated populateInvoice() to accept BillingPeriod|Carbon (backward compatible)
+  - Updated preloadBatchData() to use BillingPeriod
+  - Updated addChargesForCompany() to use BillingPeriod
+  - Updated all private methods: addCallMinutesCharges(), addMonthlyServiceFees(), etc.
+  - Updated getChargesSummary() for backward compatibility
+  - All methods use BillingPeriod internally, with Carbon fallback for preview mode
+- Code style: Pint passed (auto-fixed phpdoc formatting)
+- Syntax check: PHP linting passed for both files
+- Manual testing: All BillingPeriod methods verified working correctly
+
+**Files changed/created:**
+- app/ValueObjects/BillingPeriod.php (created, 207 lines)
+- app/Services/Billing/MonthlyBillingAggregator.php (refactored, 257 lines changed)
+
+**Learnings for future iterations:**
+- Value Object pattern follows TimePreference.php structure: readonly properties, static factories, helper methods
+- Union types (BillingPeriod|Carbon) enable backward compatibility without breaking existing code
+- toDateRange() method returns array destructurable as [$start, $end] - clean API for internal use
+- Period methods (contains, overlaps) simplify date logic in consuming code
+- BillingPeriod automatically normalizes dates (startOfDay/endOfDay) - reduces bugs
+- Pint auto-fixes phpdoc formatting issues (phpdoc_no_package, no_superfluous_phpdoc_tags)
+
+**Pattern Identified:**
+- Value Object refactoring pattern:
+  1. Create VO with static factories (forMonth, forCurrentMonth, fromDates)
+  2. Add conversion methods (toDateRange, toArray) for easy integration
+  3. Update consuming service to accept VO|OldType (union type for backward compatibility)
+  4. Convert old type to VO at service entry point: $period = $param instanceof VO ? $param : new VO($param)
+  5. Use VO methods internally (contains, overlaps) instead of raw date comparisons
+  6. Maintain fallback paths for non-batch operations (preview mode)
+
+**Acceptance Criteria:**
+- ✅ BillingPeriod class in app/ValueObjects/BillingPeriod.php
+- ✅ Contains start, end properties with Carbon types (readonly)
+- ✅ Static factory methods: forMonth(year, month), forCurrentMonth(), forPreviousMonth(), fromDates()
+- ✅ Methods: toDateRange(), overlaps(), contains(), getDays(), getLabel(), etc.
+- ✅ MonthlyBillingAggregator refactored to use BillingPeriod
+
+---
+

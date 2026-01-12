@@ -85,7 +85,7 @@
     {
       "id": "US-006",
       "title": "Create BillingPeriod Value Object",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "BillingPeriod class in app/ValueObjects/BillingPeriod.php",
         "Contains start, end properties with Carbon types",
@@ -93,7 +93,7 @@
         "Methods: toDateRange(), overlaps(), contains()",
         "MonthlyBillingAggregator refactored to use BillingPeriod"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-007",
