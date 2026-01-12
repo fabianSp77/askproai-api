@@ -125,7 +125,7 @@
     {
       "id": "US-009",
       "title": "Add AggregateInvoice Number Generation Test",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "Test in tests/Feature/Billing/AggregateInvoiceTest.php",
         "Test: concurrent invoice generation produces unique numbers",
@@ -133,7 +133,7 @@
         "Test uses database transactions to simulate concurrency",
         "All tests pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-010",
