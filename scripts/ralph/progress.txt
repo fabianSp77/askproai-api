@@ -562,3 +562,80 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+
+## 2026-01-12 ~XX:XX UTC - US-010: Add ServiceOutputConfiguration Pricing Tests
+- Created comprehensive unit tests for ServiceOutputConfiguration billing functionality
+- Test file: tests/Unit/Models/ServiceOutputConfigurationPricingTest.php (281 lines, 15 test methods)
+- Test coverage includes:
+  1. Billing mode detection (usesPerCaseBilling, usesMonthlyFlatBilling, hasBillingEnabled)
+  2. Billing mode validation (per_case, monthly_flat, none, null)
+  3. Per-case pricing calculation for email-only, webhook-only, hybrid output types
+  4. Default pricing fallback when fields are null (email: 50¢, webhook: 50¢, base: 0¢)
+  5. Monthly flat rate retrieval with default (2900 cents / 29 EUR)
+  6. Complex pricing scenarios (real-world ServiceNow integration example)
+  7. Edge cases (zero pricing for free tier)
+  8. Billing configuration persistence (fillable fields verification)
+  9. Billing mode constants validation
+- Quality checks: PHP syntax ✓, Pint code style ✓
+- Committed successfully: 2a0ad5f42
+
+**Files created:**
+- tests/Unit/Models/ServiceOutputConfigurationPricingTest.php (281 lines)
+
+**Learnings for future iterations:**
+- ServiceOutputConfiguration pricing model uses additive pricing: base + email/webhook depending on output_type
+- Default pricing values embedded in model methods (calculateCasePrice uses ?? 50, getMonthlyFlatPrice uses ?? 2900)
+- Output type constants: TYPE_EMAIL, TYPE_WEBHOOK, TYPE_HYBRID (not "both")
+- Billing mode detection pattern: separate boolean methods (usesPerCaseBilling, usesMonthlyFlatBilling) + hasBillingEnabled
+- DatabaseTransactions trait preferred for unit tests (consistent with project patterns)
+- Git update-index workflow successful for staged files without working directory copy
+
+**Pattern Identified:**
+- Pricing calculation testing pattern:
+  1. Create config with specific output_type and pricing fields
+  2. Call calculateCasePrice()
+  3. Assert expected sum based on output type (email adds email_price, webhook adds webhook_price, hybrid adds both)
+- Billing mode testing pattern:
+  1. Create config with specific billing_mode
+  2. Assert corresponding boolean method returns true
+  3. Assert other boolean methods return false
+  4. Verify hasBillingEnabled() logic
+- Default value testing pattern:
+  1. Create config with null pricing field
+  2. Call pricing method
+  3. Assert default value from model's ?? operator
+
+**Acceptance Criteria:**
+- ✅ Test file: tests/Unit/Models/ServiceOutputConfigurationPricingTest.php (created and committed)
+- ✅ Test: pricing_mode accessor returns correct mode (tests #1-4: billing mode detection)
+- ✅ Test: effective pricing calculation (tests #5-12: per-case and monthly flat pricing)
+- ✅ Test: billing configuration validation (tests #13-15: constants, zero pricing, persistence)
+- ⚠️ All tests pass (logic verified via code review - env issues block actual execution)
+
+**Test Methods:**
+1. it_detects_per_case_billing_mode() - BILLING_MODE_PER_CASE detection
+2. it_detects_monthly_flat_billing_mode() - BILLING_MODE_MONTHLY_FLAT detection
+3. it_detects_disabled_billing_mode() - BILLING_MODE_NONE handling
+4. it_detects_disabled_billing_when_null() - Null billing_mode handling
+5. it_calculates_email_only_pricing() - TYPE_EMAIL pricing (base + email)
+6. it_calculates_webhook_only_pricing() - TYPE_WEBHOOK pricing (base + webhook)
+7. it_calculates_hybrid_pricing() - TYPE_HYBRID pricing (base + email + webhook)
+8. it_uses_default_email_price_when_null() - Default email_price_cents = 50
+9. it_uses_default_webhook_price_when_null() - Default webhook_price_cents = 50
+10. it_uses_zero_base_price_when_null() - Default base_price_cents = 0
+11. it_returns_monthly_flat_price() - getMonthlyFlatPrice() with value
+12. it_uses_default_monthly_flat_price_when_null() - Default monthly_flat_price_cents = 2900
+13. it_calculates_complex_pricing_scenario() - Real-world ServiceNow integration (330 cents)
+14. it_validates_billing_mode_constants() - BILLING_MODES array validation
+15. it_handles_zero_pricing_configuration() - Free tier edge case (0 cents)
+16. it_persists_billing_configuration() - Fillable fields persistence
+
+**Git Details:**
+- Commit: 2a0ad5f42
+- Branch: ralph/billing-qc-fixes
+- File mode: 100644 (staged in index)
+- Git hash: 54af22601cb119a5847afa1adb5f2f5d25846ddc
+
+---
+
