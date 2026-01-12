@@ -42,4 +42,102 @@ final class ServiceGatewayConstants
     public const MATCH_CONFIDENCE_NAME = 70;
     public const MATCH_CONFIDENCE_UNKNOWN = 0;
     public const MATCH_NAME_MIN_LENGTH = 3;
+
+    // === Source/Channel Constants ===
+    // ServiceNow-compatible case sources
+    public const SOURCE_VOICE = 'voice';
+    public const SOURCE_EMAIL = 'email';
+    public const SOURCE_WEB = 'web';
+    public const SOURCE_API = 'api';
+    public const SOURCE_MANUAL = 'manual';
+    public const SOURCE_CHAT = 'chat';
+    public const SOURCE_CALLBACK = 'callback';
+    public const SOURCE_WALK_IN = 'walk-in';
+
+    /**
+     * All valid source values for validation.
+     */
+    public const SOURCES = [
+        self::SOURCE_VOICE,
+        self::SOURCE_EMAIL,
+        self::SOURCE_WEB,
+        self::SOURCE_API,
+        self::SOURCE_MANUAL,
+        self::SOURCE_CHAT,
+        self::SOURCE_CALLBACK,
+        self::SOURCE_WALK_IN,
+    ];
+
+    /**
+     * German labels for UI display.
+     */
+    public const SOURCE_LABELS = [
+        self::SOURCE_VOICE => 'Telefonanruf',
+        self::SOURCE_EMAIL => 'E-Mail',
+        self::SOURCE_WEB => 'Web-Formular',
+        self::SOURCE_API => 'API',
+        self::SOURCE_MANUAL => 'Manuell erfasst',
+        self::SOURCE_CHAT => 'Chat',
+        self::SOURCE_CALLBACK => 'Rückruf-Wunsch',
+        self::SOURCE_WALK_IN => 'Vor Ort',
+    ];
+
+    /**
+     * ServiceNow contact_type mapping.
+     * Maps internal source to ServiceNow's contact_type field values.
+     */
+    public const SERVICENOW_CONTACT_TYPE_MAP = [
+        self::SOURCE_VOICE => 'phone',
+        self::SOURCE_EMAIL => 'email',
+        self::SOURCE_WEB => 'self-service',
+        self::SOURCE_API => 'self-service',
+        self::SOURCE_MANUAL => 'walk-in',
+        self::SOURCE_CHAT => 'virtual_agent',
+        self::SOURCE_CALLBACK => 'phone',
+        self::SOURCE_WALK_IN => 'walk-in',
+    ];
+
+    /**
+     * Icons for email templates and UI (text-based for email compatibility).
+     */
+    public const SOURCE_ICONS = [
+        self::SOURCE_VOICE => '📞',
+        self::SOURCE_EMAIL => '📧',
+        self::SOURCE_WEB => '🌐',
+        self::SOURCE_API => '⚙️',
+        self::SOURCE_MANUAL => '✏️',
+        self::SOURCE_CHAT => '💬',
+        self::SOURCE_CALLBACK => '↩️',
+        self::SOURCE_WALK_IN => '🚶',
+    ];
+
+    /**
+     * Colors for badges in Filament UI and emails.
+     */
+    public const SOURCE_COLORS = [
+        self::SOURCE_VOICE => 'primary',    // Blue
+        self::SOURCE_EMAIL => 'warning',    // Yellow/Orange
+        self::SOURCE_WEB => 'success',      // Green
+        self::SOURCE_API => 'purple',       // Purple
+        self::SOURCE_MANUAL => 'gray',      // Gray
+        self::SOURCE_CHAT => 'danger',      // Red
+        self::SOURCE_CALLBACK => 'orange',  // Orange
+        self::SOURCE_WALK_IN => 'lime',     // Lime green
+    ];
+
+    /**
+     * Get source label with fallback.
+     */
+    public static function getSourceLabel(?string $source): string
+    {
+        return self::SOURCE_LABELS[$source] ?? $source ?? 'Unbekannt';
+    }
+
+    /**
+     * Get ServiceNow contact_type for a source.
+     */
+    public static function getServiceNowContactType(?string $source): string
+    {
+        return self::SERVICENOW_CONTACT_TYPE_MAP[$source] ?? 'phone';
+    }
 }
