@@ -630,21 +630,43 @@ class StripeInvoicingService
         $adminEmails = config('mail.admin_email', 'fabian@askproai.de');
         $recipients = array_map('trim', explode(',', $adminEmails));
 
+        $sentCount = 0;
+        $failedCount = 0;
+
         foreach ($recipients as $email) {
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                Notification::route('mail', $email)
-                    ->notify(new InvoicePaymentFailedNotification(
-                        $invoice,
-                        $failureMessage,
-                        $stripeEventId
-                    ));
+                try {
+                    Notification::route('mail', $email)
+                        ->notify(new InvoicePaymentFailedNotification(
+                            $invoice,
+                            $failureMessage,
+                            $stripeEventId
+                        ));
+                    $sentCount++;
+                } catch (\Throwable $e) {
+                    $failedCount++;
+                    Log::error('Failed to send payment failure notification', [
+                        'invoice_id' => $invoice->id,
+                        'recipient' => $email,
+                        'error' => $e->getMessage(),
+                        'stripe_event_id' => $stripeEventId,
+                    ]);
+                }
             }
         }
 
-        Log::info('Payment failure notification sent', [
-            'invoice_id' => $invoice->id,
-            'recipients' => $recipients,
-        ]);
+        if ($sentCount > 0) {
+            Log::info('Payment failure notification sent', [
+                'invoice_id' => $invoice->id,
+                'recipients_sent' => $sentCount,
+                'recipients_failed' => $failedCount,
+            ]);
+        } elseif ($failedCount > 0) {
+            Log::warning('All payment failure notifications failed', [
+                'invoice_id' => $invoice->id,
+                'recipients_attempted' => count($recipients),
+            ]);
+        }
     }
 
     /**
