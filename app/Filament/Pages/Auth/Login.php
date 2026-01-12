@@ -39,17 +39,22 @@ class Login extends BaseLogin
             ->extraInputAttributes([
                 'class' => 'login-input',
                 'aria-describedby' => 'email-hint',
+                'x-ref' => 'emailInput',
             ]);
     }
 
     protected function getPasswordFormComponent(): Component
     {
+        $baseUrl = filament()->getRequestPasswordResetUrl();
+
         return TextInput::make('password')
             ->label(__('filament-panels::pages/auth/login.form.password.label'))
             ->hint(
                 filament()->hasPasswordReset()
                     ? new \Illuminate\Support\HtmlString(
-                        '<a href="' . filament()->getRequestPasswordResetUrl() . '" class="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded">' .
+                        '<a href="' . $baseUrl . '" ' .
+                        'x-on:click.prevent="window.location.href=\'' . $baseUrl . '?email=\' + encodeURIComponent($refs.emailInput?.value || \'\')" ' .
+                        'class="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded">' .
                         __('filament-panels::pages/auth/login.actions.request_password_reset.label') .
                         '</a>'
                     )
