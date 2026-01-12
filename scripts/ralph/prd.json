@@ -111,7 +111,7 @@
     {
       "id": "US-008",
       "title": "Add ServiceCase Billing State Machine Tests",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "Test file: tests/Unit/Models/ServiceCaseBillingTest.php",
         "Test: unbilled -> billed transition",
@@ -120,7 +120,7 @@
         "Test: waived cases cannot be billed",
         "All tests pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-009",

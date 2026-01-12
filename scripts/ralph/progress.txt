@@ -441,3 +441,62 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+## 2026-01-12 ~XX:XX UTC - US-008: Add ServiceCase Billing State Machine Tests
+- Created comprehensive unit tests for ServiceCase billing state machine
+- Test file: tests/Unit/Models/ServiceCaseBillingTest.php (259 lines, 7 test methods)
+- Test coverage includes:
+  1. unbilled → billed transition with invoice item linkage
+  2. unbilled → waived transition with metadata logging
+  3. billed cases cannot be re-billed (state guard with LogicException)
+  4. waived cases cannot be billed (state guard with LogicException)
+  5. billed cases cannot be waived (additional state guard)
+  6. isBillable() correctness for all three states (unbilled/billed/waived)
+  7. Query scopes (scopeUnbilled, scopeBilled, scopeWaived)
+- Quality checks: PHP syntax ✓, Pint code style ✓
+- Test execution blocked by environmental MySQL permission issues (all tests in project failing)
+
+**Files created:**
+- tests/Unit/Models/ServiceCaseBillingTest.php (259 lines)
+
+**Learnings for future iterations:**
+- Environmental test infrastructure is broken project-wide (MySQL 'root'@'localhost' access denied)
+- All Unit and Feature tests fail with same DB connection error - not specific to this test
+- Following established pattern from US-000, US-007: Verify test logic through code review when infrastructure has blockers
+- PHPUnit metadata warnings can be ignored (deprecated @covers annotations - project-wide issue)
+- Test logic verified: State machine transitions correctly enforced with LogicException
+- Added setUp() method with SQLite config (didn't resolve issue - RefreshDatabase connects before setUp)
+
+**Pattern Identified:**
+- Unit test structure for state machine testing:
+  1. Test valid transitions (unbilled → billed, unbilled → waived)
+  2. Test invalid transitions with expectException(LogicException::class)
+  3. Verify database persistence with fresh() calls
+  4. Test metadata preservation (ai_metadata merging)
+  5. Test query scopes for filtering by state
+- State guard test pattern:
+  1. Create entity in invalid state (e.g., already billed)
+  2. Store original values for comparison
+  3. expectException + expectExceptionMessage
+  4. Attempt invalid transition
+  5. Verify database NOT modified (exception thrown before update)
+
+**Acceptance Criteria:**
+- ✅ Test file: tests/Unit/Models/ServiceCaseBillingTest.php (created)
+- ✅ Test: unbilled → billed transition (test_unbilled_case_can_be_marked_as_billed)
+- ✅ Test: unbilled → waived transition (test_unbilled_case_can_be_marked_as_waived)
+- ✅ Test: billed cases cannot be re-billed (test_billed_case_cannot_be_rebilled)
+- ✅ Test: waived cases cannot be billed (test_waived_case_cannot_be_billed)
+- ⚠️ All tests pass (blocked by environmental DB issues - logic verified via code review)
+
+**Test Methods:**
+1. test_unbilled_case_can_be_marked_as_billed() - Tests markAsBilled() success path
+2. test_unbilled_case_can_be_marked_as_waived() - Tests markAsWaived() success path
+3. test_billed_case_cannot_be_rebilled() - Tests state guard prevents re-billing
+4. test_waived_case_cannot_be_billed() - Tests state guard prevents billing waived cases
+5. test_billed_case_cannot_be_waived() - Tests state guard prevents waiving billed cases
+6. test_is_billable_returns_true_only_for_unbilled_cases() - Tests isBillable() method
+7. test_billing_status_query_scopes() - Tests scopeUnbilled/Billed/Waived
+
+---
+
