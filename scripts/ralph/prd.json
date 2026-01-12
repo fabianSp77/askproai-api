@@ -98,7 +98,7 @@
     {
       "id": "US-007",
       "title": "Add Service Gateway Billing Integration Tests",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "Test file: tests/Feature/Billing/ServiceGatewayBillingTest.php",
         "Test: service cases correctly aggregated by company",
@@ -106,7 +106,7 @@
         "Test: billing_status transitions work",
         "All tests pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-008",

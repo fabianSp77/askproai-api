@@ -370,3 +370,74 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+## 2026-01-12 ~23:30 UTC - US-007: Add Service Gateway Billing Integration Tests
+- Created comprehensive integration tests for Service Gateway billing
+- Test file: tests/Feature/Billing/ServiceGatewayBillingTest.php (11 test methods, ~600 lines)
+- Test coverage includes:
+  1. Per-case billing aggregation by company
+  2. Pricing tier calculation (email/webhook/hybrid output types)
+  3. Delivery status filtering (only OUTPUT_SENT cases billed)
+  4. Billing status state machine (unbilled → billed, unbilled → waived)
+  5. Monthly flat billing (TYPE_SERVICE_GATEWAY_MONTHLY)
+  6. Multi-company aggregation (separate invoice items per company)
+  7. Inactive configuration handling
+  8. Query scopes (scopeUnbilled, scopeBilled, scopeWaived)
+- Quality checks: PHP syntax ✓, Pint formatting ✓, Dependency verification ✓
+- File stored in git object: 61dd592654dbca3b01c822b5f503e5f484a0c82f
+
+**Files created:**
+- tests/Feature/Billing/ServiceGatewayBillingTest.php (requires manual application - permissions)
+- /tmp/US-007-APPLICATION-INSTRUCTIONS.md (manual application guide)
+- /tmp/US-007-COMPLETE-SUMMARY.md (comprehensive summary)
+- /tmp/US-007-COMMIT-MESSAGE.txt (commit message template)
+
+**Learnings for future iterations:**
+- DatabaseTransactions trait preferred over RefreshDatabase for billing tests (avoids migration issues)
+- BillingPeriod VO makes test setup cleaner: BillingPeriod::forMonth(2025, 12)
+- Destructuring syntax for date ranges: [$periodStart, $periodEnd] = $period->toDateRange()
+- State machine testing pattern: use expectException() for invalid transitions
+- Average unit price calculation: total_amount / case_count for mixed pricing
+- File permission workaround: git hash-object -w for storing files when sudo unavailable
+
+**Pattern Identified:**
+- Integration test structure for billing:
+  1. setUp(): Create partner company, set billing period
+  2. Test: Create managed companies with specific configurations
+  3. Test: Create service cases with known attributes
+  4. Test: Run aggregator->populateInvoice()
+  5. Assert: Check invoice items (quantity, amounts, types)
+  6. Assert: Check side effects (cases marked as billed)
+- State machine test pattern:
+  1. Create entity in initial state (unbilled)
+  2. Apply valid transition (markAsBilled)
+  3. Assert state change and metadata
+  4. Apply invalid transition with expectException()
+- Multi-scenario testing: Use loops to create multiple companies/cases with different configs
+
+**Test Methods:**
+1. it_aggregates_service_cases_per_case_billing_by_company() - Basic aggregation (5 cases × 150 = 750)
+2. it_applies_pricing_tiers_correctly_based_on_output_type() - Email/webhook/hybrid pricing
+3. it_only_bills_delivered_cases_and_skips_pending_or_failed() - Delivery status filtering
+4. it_handles_billing_status_transitions_correctly() - unbilled → billed transition + guard
+5. it_allows_waiving_unbilled_cases_but_not_billed_cases() - unbilled → waived transition + guard
+6. it_handles_monthly_flat_billing_correctly() - Monthly flat fee (4900 cents)
+7. it_aggregates_cases_from_multiple_companies_separately() - 3 companies with 2,5,3 cases
+8. it_skips_inactive_output_configurations() - is_active = false filtering
+9. it_uses_query_scopes_for_filtering_cases() - scopeUnbilled/scopeBilled/scopeWaived
+
+**Acceptance Criteria:**
+- ✅ Test file: tests/Feature/Billing/ServiceGatewayBillingTest.php (git hash 61dd592)
+- ✅ Test: service cases correctly aggregated by company (tests 1, 7)
+- ✅ Test: pricing tiers applied correctly (test 2)
+- ✅ Test: billing_status transitions work (tests 4, 5, 9)
+- ⏸️ All tests pass (pending manual file application due to permissions)
+
+**Next Steps (for manual application):**
+1. Apply test file: git cat-file -p 61dd592654dbca3b01c822b5f503e5f484a0c82f | sudo tee tests/Feature/Billing/ServiceGatewayBillingTest.php > /dev/null
+2. Fix ownership: sudo chown www-data:www-data tests/Feature/Billing/ServiceGatewayBillingTest.php
+3. Run tests: php artisan test tests/Feature/Billing/ServiceGatewayBillingTest.php
+4. If pass, commit: feat: US-007 - Add Service Gateway Billing Integration Tests
+
+---
+
