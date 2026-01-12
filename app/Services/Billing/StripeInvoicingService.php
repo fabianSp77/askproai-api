@@ -487,68 +487,37 @@ class StripeInvoicingService
      * Handle invoice.paid webhook event.
      *
      * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
-     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoicePaid(array $event): void
     {
-        $stripeInvoice = $event['data']['object'];
-        $stripeInvoiceId = $stripeInvoice['id'];
-        $stripeEventId = $event['id'] ?? null;
+        $resolved = $this->resolveInvoiceForWebhook($event, 'invoice.paid');
 
-        // Check for duplicate event
-        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
-            Log::info('Duplicate invoice.paid event, skipping', [
-                'stripe_event_id' => $stripeEventId,
-                'stripe_invoice_id' => $stripeInvoiceId,
-            ]);
-
+        if (! $resolved['shouldProcess']) {
             return;
         }
 
-        $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
-
-        if (! $invoice) {
-            Log::warning('Received invoice.paid for unknown invoice', [
-                'stripe_invoice_id' => $stripeInvoiceId,
-                'stripe_event_id' => $stripeEventId,
-            ]);
-
-            // Mark event as processed even if invoice not found
-            if ($stripeEventId) {
-                StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
-            }
-
-            return;
-        }
+        $invoice = $resolved['invoice'];
 
         // IDEMPOTENCY CHECK: Skip if already paid
         if ($invoice->status === AggregateInvoice::STATUS_PAID) {
             Log::info('Invoice already paid, skipping duplicate webhook', [
                 'invoice_id' => $invoice->id,
-                'stripe_invoice_id' => $stripeInvoiceId,
-                'stripe_event_id' => $stripeEventId,
+                'stripe_invoice_id' => $resolved['stripeInvoice']['id'],
                 'paid_at' => $invoice->paid_at?->toIso8601String(),
             ]);
 
-            // Mark event as processed
-            if ($stripeEventId) {
-                StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
-            }
+            $this->markEventProcessed($resolved['stripeEventId'], 'invoice.paid');
 
             return;
         }
 
         $invoice->markAsPaid();
 
-        // Mark event as processed
-        if ($stripeEventId) {
-            StripeEvent::markAsProcessed($stripeEventId, 'invoice.paid');
-        }
+        $this->markEventProcessed($resolved['stripeEventId'], 'invoice.paid');
 
         Log::info('Invoice marked as paid via webhook', [
             'invoice_id' => $invoice->id,
-            'stripe_invoice_id' => $stripeInvoiceId,
-            'stripe_event_id' => $stripeEventId,
+            'stripe_invoice_id' => $resolved['stripeInvoice']['id'],
         ]);
     }
 
@@ -556,39 +525,17 @@ class StripeInvoicingService
      * Handle invoice.payment_failed webhook event.
      *
      * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
-     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoicePaymentFailed(array $event): void
     {
-        $stripeInvoice = $event['data']['object'];
-        $stripeInvoiceId = $stripeInvoice['id'];
-        $stripeEventId = $event['id'] ?? null;
+        $resolved = $this->resolveInvoiceForWebhook($event, 'invoice.payment_failed');
 
-        // Check for duplicate event
-        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
-            Log::info('Duplicate invoice.payment_failed event, skipping', [
-                'stripe_event_id' => $stripeEventId,
-                'stripe_invoice_id' => $stripeInvoiceId,
-            ]);
-
+        if (! $resolved['shouldProcess']) {
             return;
         }
 
-        $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
-
-        if (! $invoice) {
-            Log::warning('Received invoice.payment_failed for unknown invoice', [
-                'stripe_invoice_id' => $stripeInvoiceId,
-                'stripe_event_id' => $stripeEventId,
-            ]);
-
-            // Mark event as processed even if invoice not found
-            if ($stripeEventId) {
-                StripeEvent::markAsProcessed($stripeEventId, 'invoice.payment_failed');
-            }
-
-            return;
-        }
+        $invoice = $resolved['invoice'];
+        $stripeInvoice = $resolved['stripeInvoice'];
 
         // Update metadata with failure info
         $invoice->update([
@@ -600,17 +547,13 @@ class StripeInvoicingService
 
         Log::warning('Invoice payment failed', [
             'invoice_id' => $invoice->id,
-            'stripe_invoice_id' => $stripeInvoiceId,
-            'stripe_event_id' => $stripeEventId,
+            'stripe_invoice_id' => $stripeInvoice['id'],
         ]);
 
         // Send notification to admin
-        $this->notifyAdminOfPaymentFailure($invoice, $stripeInvoice, $stripeEventId);
+        $this->notifyAdminOfPaymentFailure($invoice, $stripeInvoice, $resolved['stripeEventId']);
 
-        // Mark event as processed
-        if ($stripeEventId) {
-            StripeEvent::markAsProcessed($stripeEventId, 'invoice.payment_failed');
-        }
+        $this->markEventProcessed($resolved['stripeEventId'], 'invoice.payment_failed');
     }
 
     /**
@@ -670,12 +613,19 @@ class StripeInvoicingService
     }
 
     /**
-     * Handle invoice.finalized webhook event.
+     * Resolve invoice for webhook event with idempotency checks.
      *
-     * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
-     * Checks stripe_events table to prevent duplicate processing.
+     * This helper method handles the common webhook pattern:
+     * 1. Extract event data
+     * 2. Check for duplicate events
+     * 3. Find the invoice
+     * 4. Handle not-found cases
+     *
+     * @param array $event The Stripe webhook event
+     * @param string $eventType The event type (e.g., 'invoice.paid')
+     * @return array{invoice: ?AggregateInvoice, stripeInvoice: array, stripeEventId: ?string, shouldProcess: bool}
      */
-    public function handleInvoiceFinalized(array $event): void
+    private function resolveInvoiceForWebhook(array $event, string $eventType): array
     {
         $stripeInvoice = $event['data']['object'];
         $stripeInvoiceId = $stripeInvoice['id'];
@@ -683,45 +633,85 @@ class StripeInvoicingService
 
         // Check for duplicate event
         if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
-            Log::info('Duplicate invoice.finalized event, skipping', [
+            Log::info("Duplicate {$eventType} event, skipping", [
                 'stripe_event_id' => $stripeEventId,
                 'stripe_invoice_id' => $stripeInvoiceId,
             ]);
 
-            return;
+            return [
+                'invoice' => null,
+                'stripeInvoice' => $stripeInvoice,
+                'stripeEventId' => $stripeEventId,
+                'shouldProcess' => false,
+            ];
         }
 
         $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
         if (! $invoice) {
-            Log::warning('Received invoice.finalized for unknown invoice', [
+            Log::warning("Received {$eventType} for unknown invoice", [
                 'stripe_invoice_id' => $stripeInvoiceId,
                 'stripe_event_id' => $stripeEventId,
             ]);
 
             // Mark event as processed even if invoice not found
             if ($stripeEventId) {
-                StripeEvent::markAsProcessed($stripeEventId, 'invoice.finalized');
+                StripeEvent::markAsProcessed($stripeEventId, $eventType);
             }
 
+            return [
+                'invoice' => null,
+                'stripeInvoice' => $stripeInvoice,
+                'stripeEventId' => $stripeEventId,
+                'shouldProcess' => false,
+            ];
+        }
+
+        return [
+            'invoice' => $invoice,
+            'stripeInvoice' => $stripeInvoice,
+            'stripeEventId' => $stripeEventId,
+            'shouldProcess' => true,
+        ];
+    }
+
+    /**
+     * Mark a Stripe event as processed.
+     */
+    private function markEventProcessed(?string $stripeEventId, string $eventType): void
+    {
+        if ($stripeEventId) {
+            StripeEvent::markAsProcessed($stripeEventId, $eventType);
+        }
+    }
+
+    /**
+     * Handle invoice.finalized webhook event.
+     *
+     * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
+     */
+    public function handleInvoiceFinalized(array $event): void
+    {
+        $resolved = $this->resolveInvoiceForWebhook($event, 'invoice.finalized');
+
+        if (! $resolved['shouldProcess']) {
             return;
         }
+
+        $invoice = $resolved['invoice'];
+        $stripeInvoice = $resolved['stripeInvoice'];
 
         $invoice->update([
             'stripe_hosted_invoice_url' => $stripeInvoice['hosted_invoice_url'] ?? null,
             'stripe_pdf_url' => $stripeInvoice['invoice_pdf'] ?? null,
         ]);
 
-        // Mark event as processed
-        if ($stripeEventId) {
-            StripeEvent::markAsProcessed($stripeEventId, 'invoice.finalized');
-        }
+        $this->markEventProcessed($resolved['stripeEventId'], 'invoice.finalized');
 
         Log::info('Invoice finalized via webhook', [
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
-            'stripe_invoice_id' => $stripeInvoiceId,
-            'stripe_event_id' => $stripeEventId,
+            'stripe_invoice_id' => $stripeInvoice['id'],
         ]);
     }
 
@@ -729,52 +719,24 @@ class StripeInvoicingService
      * Handle invoice.voided webhook event.
      *
      * Idempotent: Safe to call multiple times (Stripe may retry webhooks).
-     * Checks stripe_events table to prevent duplicate processing.
      */
     public function handleInvoiceVoided(array $event): void
     {
-        $stripeInvoice = $event['data']['object'];
-        $stripeInvoiceId = $stripeInvoice['id'];
-        $stripeEventId = $event['id'] ?? null;
+        $resolved = $this->resolveInvoiceForWebhook($event, 'invoice.voided');
 
-        // Check for duplicate event
-        if ($stripeEventId && StripeEvent::isDuplicate($stripeEventId)) {
-            Log::info('Duplicate invoice.voided event, skipping', [
-                'stripe_event_id' => $stripeEventId,
-                'stripe_invoice_id' => $stripeInvoiceId,
-            ]);
-
+        if (! $resolved['shouldProcess']) {
             return;
         }
 
-        $invoice = AggregateInvoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
-
-        if (! $invoice) {
-            Log::warning('Received invoice.voided for unknown invoice', [
-                'stripe_invoice_id' => $stripeInvoiceId,
-                'stripe_event_id' => $stripeEventId,
-            ]);
-
-            // Mark event as processed even if invoice not found
-            if ($stripeEventId) {
-                StripeEvent::markAsProcessed($stripeEventId, 'invoice.voided');
-            }
-
-            return;
-        }
-
+        $invoice = $resolved['invoice'];
         $invoice->void();
 
-        // Mark event as processed
-        if ($stripeEventId) {
-            StripeEvent::markAsProcessed($stripeEventId, 'invoice.voided');
-        }
+        $this->markEventProcessed($resolved['stripeEventId'], 'invoice.voided');
 
         Log::info('Invoice voided via webhook', [
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
-            'stripe_invoice_id' => $stripeInvoiceId,
-            'stripe_event_id' => $stripeEventId,
+            'stripe_invoice_id' => $resolved['stripeInvoice']['id'],
         ]);
     }
 

@@ -83,8 +83,10 @@ class AggregateInvoice extends Model
 
     /**
      * Invoices for a specific billing period.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
      */
-    public function scopeForPeriod($query, Carbon $periodStart, Carbon $periodEnd)
+    public function scopeForPeriod(\Illuminate\Database\Eloquent\Builder $query, Carbon $periodStart, Carbon $periodEnd): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('billing_period_start', $periodStart->format('Y-m-d'))
             ->where('billing_period_end', $periodEnd->format('Y-m-d'));
@@ -92,8 +94,10 @@ class AggregateInvoice extends Model
 
     /**
      * Invoices for a specific month.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
      */
-    public function scopeForMonth($query, int $year, int $month)
+    public function scopeForMonth(\Illuminate\Database\Eloquent\Builder $query, int $year, int $month): \Illuminate\Database\Eloquent\Builder
     {
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end = $start->copy()->endOfMonth();
@@ -101,27 +105,42 @@ class AggregateInvoice extends Model
         return $query->forPeriod($start, $end);
     }
 
-    public function scopeDraft($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
+     */
+    public function scopeDraft(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('status', self::STATUS_DRAFT);
     }
 
-    public function scopeOpen($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
+     */
+    public function scopeOpen(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('status', self::STATUS_OPEN);
     }
 
-    public function scopePaid($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
+     */
+    public function scopePaid(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('status', self::STATUS_PAID);
     }
 
-    public function scopeUnpaid($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
+     */
+    public function scopeUnpaid(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereIn('status', [self::STATUS_DRAFT, self::STATUS_OPEN]);
     }
 
-    public function scopeOverdue($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<self> $query
+     */
+    public function scopeOverdue(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('status', self::STATUS_OPEN)
             ->where('due_at', '<', now());

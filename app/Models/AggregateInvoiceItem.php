@@ -148,7 +148,18 @@ class AggregateInvoiceItem extends Model
     // ========================================
 
     /**
-     * Create a call minutes item.
+     * Create a call minutes item for usage-based billing.
+     *
+     * Calculates total amount from minutes × rate and formats detail string.
+     *
+     * @param int $aggregateInvoiceId Parent invoice ID
+     * @param int $companyId Company being billed
+     * @param float $totalMinutes Total billable minutes
+     * @param int $callCount Number of calls in the period
+     * @param int $ratePerMinuteCents Price per minute in cents
+     * @param \DateTimeInterface $periodStart Billing period start
+     * @param \DateTimeInterface $periodEnd Billing period end
+     * @return self Created invoice item
      */
     public static function createCallMinutesItem(
         int $aggregateInvoiceId,
@@ -177,7 +188,14 @@ class AggregateInvoiceItem extends Model
     }
 
     /**
-     * Create a monthly service fee item.
+     * Create a monthly service fee item for recurring subscription charges.
+     *
+     * @param int $aggregateInvoiceId Parent invoice ID
+     * @param int $companyId Company being billed
+     * @param string $serviceName Name of the service (shown in detail)
+     * @param int $amountCents Monthly fee in cents
+     * @param int|null $servicePricingId Optional reference to CompanyServicePricing
+     * @return self Created invoice item
      */
     public static function createMonthlyServiceItem(
         int $aggregateInvoiceId,
@@ -202,7 +220,16 @@ class AggregateInvoiceItem extends Model
     }
 
     /**
-     * Create a service change fee item.
+     * Create a service change fee item for professional services.
+     *
+     * Used for one-time charges like configuration changes, customizations, etc.
+     *
+     * @param int $aggregateInvoiceId Parent invoice ID
+     * @param int $companyId Company being billed
+     * @param string $description Description of the service change
+     * @param int $amountCents Fee amount in cents
+     * @param int|null $serviceChangeFeeId Optional reference to ServiceChangeFee
+     * @return self Created invoice item
      */
     public static function createServiceChangeItem(
         int $aggregateInvoiceId,
@@ -227,7 +254,15 @@ class AggregateInvoiceItem extends Model
     }
 
     /**
-     * Create a setup fee item.
+     * Create a setup fee item for one-time onboarding charges.
+     *
+     * Typically used during company onboarding for initial configuration.
+     *
+     * @param int $aggregateInvoiceId Parent invoice ID
+     * @param int $companyId Company being billed
+     * @param string $description Setup fee description
+     * @param int $amountCents Fee amount in cents
+     * @return self Created invoice item
      */
     public static function createSetupFeeItem(
         int $aggregateInvoiceId,
@@ -249,7 +284,16 @@ class AggregateInvoiceItem extends Model
     }
 
     /**
-     * Create a custom item.
+     * Create a custom item for ad-hoc charges or adjustments.
+     *
+     * Use this for manual billing entries that don't fit standard categories.
+     *
+     * @param int $aggregateInvoiceId Parent invoice ID
+     * @param int $companyId Company being billed
+     * @param string $description Main description (shown as line item)
+     * @param int $amountCents Amount in cents (can be negative for credits)
+     * @param string|null $detail Optional additional detail
+     * @return self Created invoice item
      */
     public static function createCustomItem(
         int $aggregateInvoiceId,
