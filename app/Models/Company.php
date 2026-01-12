@@ -127,6 +127,14 @@ class Company extends Model
         return $this->hasMany(Service::class);
     }
 
+    /**
+     * Get all service pricing configurations for this company.
+     */
+    public function servicePricings(): HasMany
+    {
+        return $this->hasMany(CompanyServicePricing::class);
+    }
+
     public function calls(): HasMany
     {
         return $this->hasMany(Call::class);
