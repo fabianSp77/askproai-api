@@ -10,6 +10,7 @@ use App\Models\CompanyServicePricing;
 use App\Models\ServiceCase;
 use App\Models\ServiceChangeFee;
 use App\Models\ServiceOutputConfiguration;
+use App\ValueObjects\BillingPeriod;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -47,9 +48,14 @@ class MonthlyBillingAggregator
     public function populateInvoice(
         AggregateInvoice $invoice,
         Company $partner,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod|Carbon $periodStart,
+        ?Carbon $periodEnd = null
     ): AggregateInvoice {
+        // Convert to BillingPeriod if Carbon dates provided (backward compatibility)
+        $period = $periodStart instanceof BillingPeriod
+            ? $periodStart
+            : new BillingPeriod($periodStart, $periodEnd);
+
         // OPTIMIZATION: Eager load relationships to prevent N+1 queries
         // Note: pricingPlan relationship may not exist on all setups
         $managedCompanies = $partner->managedCompanies()
@@ -63,10 +69,10 @@ class MonthlyBillingAggregator
         }
 
         // OPTIMIZATION: Batch load all related data in 3 queries instead of N*3
-        $this->preloadBatchData($managedCompanies, $periodStart, $periodEnd);
+        $this->preloadBatchData($managedCompanies, $period);
 
         foreach ($managedCompanies as $company) {
-            $this->addChargesForCompany($invoice, $company, $periodStart, $periodEnd);
+            $this->addChargesForCompany($invoice, $company, $period);
         }
 
         // Recalculate totals after all items added
@@ -81,13 +87,14 @@ class MonthlyBillingAggregator
     /**
      * Preload all data for batch processing (reduces N+1 to constant queries).
      */
-    private function preloadBatchData(Collection $companies, Carbon $periodStart, Carbon $periodEnd): void
+    private function preloadBatchData(Collection $companies, BillingPeriod $period): void
     {
         $companyIds = $companies->pluck('id')->toArray();
+        [$periodStart, $periodEnd] = $period->toDateRange();
 
         // Batch load calls (grouped by company_id)
         $this->batchCallsData = Call::whereIn('company_id', $companyIds)
-            ->whereBetween('created_at', [$periodStart, $periodEnd->copy()->endOfDay()])
+            ->whereBetween('created_at', [$periodStart, $periodEnd])
             ->whereIn('status', ['completed', 'ended'])
             ->get()
             ->groupBy('company_id');
@@ -107,7 +114,7 @@ class MonthlyBillingAggregator
 
         // Batch load service change fees
         $this->batchServiceChanges = ServiceChangeFee::whereIn('company_id', $companyIds)
-            ->whereBetween('service_date', [$periodStart, $periodEnd->copy()->endOfDay()])
+            ->whereBetween('service_date', [$periodStart, $periodEnd])
             ->where('status', 'completed')
             ->whereNull('invoice_id')
             ->get()
@@ -164,23 +171,22 @@ class MonthlyBillingAggregator
     public function addChargesForCompany(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
         // 1. Call minutes
-        $this->addCallMinutesCharges($invoice, $company, $periodStart, $periodEnd);
+        $this->addCallMinutesCharges($invoice, $company, $period);
 
         // 2. Monthly service fees
-        $this->addMonthlyServiceFees($invoice, $company, $periodStart, $periodEnd);
+        $this->addMonthlyServiceFees($invoice, $company, $period);
 
         // 3. Service change fees
-        $this->addServiceChangeFees($invoice, $company, $periodStart, $periodEnd);
+        $this->addServiceChangeFees($invoice, $company, $period);
 
         // 4. Setup fees (one-time, check if in period)
-        $this->addSetupFees($invoice, $company, $periodStart, $periodEnd);
+        $this->addSetupFees($invoice, $company, $period);
 
         // 5. Service Gateway cases (per-case or monthly flat)
-        $this->addServiceGatewayCases($invoice, $company, $periodStart, $periodEnd);
+        $this->addServiceGatewayCases($invoice, $company, $period);
     }
 
     /**
@@ -188,14 +194,19 @@ class MonthlyBillingAggregator
      */
     public function getChargesSummary(
         Company $partner,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod|Carbon $periodStart,
+        ?Carbon $periodEnd = null
     ): array {
+        // Convert to BillingPeriod if Carbon dates provided (backward compatibility)
+        $period = $periodStart instanceof BillingPeriod
+            ? $periodStart
+            : new BillingPeriod($periodStart, $periodEnd);
+
         $summary = [
             'partner_id' => $partner->id,
             'partner_name' => $partner->name,
-            'period_start' => $periodStart->format('Y-m-d'),
-            'period_end' => $periodEnd->format('Y-m-d'),
+            'period_start' => $period->start->format('Y-m-d'),
+            'period_end' => $period->end->format('Y-m-d'),
             'companies' => [],
             'total_cents' => 0,
         ];
@@ -203,7 +214,7 @@ class MonthlyBillingAggregator
         $managedCompanies = $partner->managedCompanies()->get();
 
         foreach ($managedCompanies as $company) {
-            $companyCharges = $this->getCompanyChargesSummary($company, $periodStart, $periodEnd);
+            $companyCharges = $this->getCompanyChargesSummary($company, $period);
 
             if ($companyCharges['total_cents'] > 0) {
                 $summary['companies'][] = $companyCharges;
@@ -219,8 +230,7 @@ class MonthlyBillingAggregator
      */
     private function getCompanyChargesSummary(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         $summary = [
             'company_id' => $company->id,
@@ -230,7 +240,7 @@ class MonthlyBillingAggregator
         ];
 
         // Call minutes
-        $callData = $this->getCallMinutesData($company, $periodStart, $periodEnd);
+        $callData = $this->getCallMinutesData($company, $period);
         if ($callData['total_cents'] > 0) {
             $summary['charges'][] = [
                 'type' => 'call_minutes',
@@ -241,7 +251,7 @@ class MonthlyBillingAggregator
         }
 
         // Monthly services
-        $monthlyFees = $this->getMonthlyServicesData($company, $periodStart, $periodEnd);
+        $monthlyFees = $this->getMonthlyServicesData($company, $period);
         foreach ($monthlyFees as $fee) {
             $summary['charges'][] = [
                 'type' => 'monthly_service',
@@ -252,7 +262,7 @@ class MonthlyBillingAggregator
         }
 
         // Service changes
-        $serviceChanges = $this->getServiceChangesData($company, $periodStart, $periodEnd);
+        $serviceChanges = $this->getServiceChangesData($company, $period);
         foreach ($serviceChanges as $change) {
             $summary['charges'][] = [
                 'type' => 'service_change',
@@ -263,7 +273,7 @@ class MonthlyBillingAggregator
         }
 
         // Setup fees
-        $setupFees = $this->getSetupFeesData($company, $periodStart, $periodEnd);
+        $setupFees = $this->getSetupFeesData($company, $period);
         foreach ($setupFees as $fee) {
             $summary['charges'][] = [
                 'type' => 'setup_fee',
@@ -286,14 +296,15 @@ class MonthlyBillingAggregator
     private function addCallMinutesCharges(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
-        $data = $this->getCallMinutesData($company, $periodStart, $periodEnd);
+        $data = $this->getCallMinutesData($company, $period);
 
         if ($data['total_cents'] <= 0) {
             return;
         }
+
+        [$periodStart, $periodEnd] = $period->toDateRange();
 
         AggregateInvoiceItem::createCallMinutesItem(
             aggregateInvoiceId: $invoice->id,
@@ -314,16 +325,16 @@ class MonthlyBillingAggregator
      */
     private function getCallMinutesData(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         // OPTIMIZATION: Use preloaded data if available
         if ($this->batchDataLoaded) {
             $calls = $this->getBatchCalls($company->id);
         } else {
             // Fallback to direct query (for getChargesSummary preview)
+            [$periodStart, $periodEnd] = $period->toDateRange();
             $calls = Call::where('company_id', $company->id)
-                ->whereBetween('created_at', [$periodStart, $periodEnd->copy()->endOfDay()])
+                ->whereBetween('created_at', [$periodStart, $periodEnd])
                 ->whereIn('status', ['completed', 'ended'])
                 ->get();
         }
@@ -398,10 +409,9 @@ class MonthlyBillingAggregator
     private function addMonthlyServiceFees(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
-        $fees = $this->getMonthlyServicesData($company, $periodStart, $periodEnd);
+        $fees = $this->getMonthlyServicesData($company, $period);
 
         foreach ($fees as $fee) {
             AggregateInvoiceItem::createMonthlyServiceItem(
@@ -421,14 +431,14 @@ class MonthlyBillingAggregator
      */
     private function getMonthlyServicesData(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         // OPTIMIZATION: Use preloaded data if available
         if ($this->batchDataLoaded) {
             $pricings = $this->getBatchServicePricings($company->id);
         } else {
             // Fallback to direct query (for getChargesSummary preview)
+            [$periodStart, $periodEnd] = $period->toDateRange();
             $pricings = CompanyServicePricing::where('company_id', $company->id)
                 ->where('is_active', true)
                 ->where('effective_from', '<=', $periodEnd)
@@ -465,10 +475,9 @@ class MonthlyBillingAggregator
     private function addServiceChangeFees(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
-        $changes = $this->getServiceChangesData($company, $periodStart, $periodEnd);
+        $changes = $this->getServiceChangesData($company, $period);
 
         foreach ($changes as $change) {
             AggregateInvoiceItem::createServiceChangeItem(
@@ -488,8 +497,7 @@ class MonthlyBillingAggregator
      */
     private function getServiceChangesData(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         // Check if ServiceChangeFee model exists
         if (! class_exists(ServiceChangeFee::class)) {
@@ -501,6 +509,7 @@ class MonthlyBillingAggregator
             $fees = $this->getBatchServiceChanges($company->id);
         } else {
             // Fallback to direct query (for getChargesSummary preview)
+            [$periodStart, $periodEnd] = $period->toDateRange();
             $fees = ServiceChangeFee::where('company_id', $company->id)
                 ->whereBetween('service_date', [$periodStart, $periodEnd])
                 ->where('status', 'completed')
@@ -530,10 +539,9 @@ class MonthlyBillingAggregator
     private function addSetupFees(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
-        $fees = $this->getSetupFeesData($company, $periodStart, $periodEnd);
+        $fees = $this->getSetupFeesData($company, $period);
 
         foreach ($fees as $fee) {
             AggregateInvoiceItem::createSetupFeeItem(
@@ -551,13 +559,12 @@ class MonthlyBillingAggregator
      */
     private function getSetupFeesData(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         $fees = [];
 
         // Check if company was created in this period and has a fee schedule with setup fee
-        if ($company->created_at >= $periodStart && $company->created_at <= $periodEnd) {
+        if ($period->contains($company->created_at)) {
             $feeSchedule = $company->feeSchedule;
 
             if ($feeSchedule && $feeSchedule->setup_fee > 0 && ! $feeSchedule->isSetupFeeBilled()) {
@@ -588,10 +595,10 @@ class MonthlyBillingAggregator
     private function addServiceGatewayCases(
         AggregateInvoice $invoice,
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): void {
-        $data = $this->getServiceGatewayCasesData($company, $periodStart, $periodEnd);
+        $data = $this->getServiceGatewayCasesData($company, $period);
+        [$periodStart, $periodEnd] = $period->toDateRange();
 
         // Process per-case billing
         if (! empty($data['per_case'])) {
@@ -651,8 +658,7 @@ class MonthlyBillingAggregator
      */
     private function getServiceGatewayCasesData(
         Company $company,
-        Carbon $periodStart,
-        Carbon $periodEnd
+        BillingPeriod $period
     ): array {
         $result = [
             'per_case' => null,
@@ -676,6 +682,7 @@ class MonthlyBillingAggregator
         $perCaseConfigs = $configs->filter(fn ($c) => $c->usesPerCaseBilling());
         if ($perCaseConfigs->isNotEmpty()) {
             // Get unbilled cases for this period
+            [$periodStart, $periodEnd] = $period->toDateRange();
             $cases = ServiceCase::where('company_id', $company->id)
                 ->unbilled()
                 ->whereBetween('created_at', [$periodStart, $periodEnd])
