@@ -227,3 +227,41 @@ Previous P0 fixes were already applied manually:
 
 ---
 
+
+## 2026-01-12 17:30 UTC - US-004: Add Missing Billing Indexes
+- Created migration 2026_01_12_172721_add_billing_indexes_to_tables.php
+- Added composite index on aggregate_invoices(partner_company_id, status, billing_period_start)
+- Verified that two other required indexes already existed:
+  - service_cases(company_id, billing_status, created_at) via idx_service_cases_billing (migration 2026_01_12_122503)
+  - aggregate_invoice_items(aggregate_invoice_id, company_id) via auto-generated index (migration 2026_01_09_120001)
+- Migration tested: successful rollback and re-run
+- All three indexes verified via Schema::getIndexes()
+- Pint code style check: PASSED
+
+**Files changed/created:**
+- database/migrations/2026_01_12_172721_add_billing_indexes_to_tables.php (created, 44 lines)
+
+**Learnings for future iterations:**
+- Many indexes may already exist from previous migrations - always verify before adding duplicates
+- Use Schema::getIndexes($tableName) to programmatically verify index existence
+- Composite indexes optimize specific query patterns: WHERE col1 = ? AND col2 = ? ORDER BY col3
+- Migration rollback/re-run testing is a good smoke test when full test suite has environmental issues
+- Index naming convention: idx_{table}_{purpose} for custom indexes, auto-generated names for simple foreign keys
+
+**Pattern Identified:**
+- Database index verification pattern:
+  1. Read existing migrations to see what indexes already exist
+  2. Use Schema::getIndexes($table) to verify current state
+  3. Only add NEW indexes, document existing ones in migration comments
+  4. Test rollback: php artisan migrate:rollback --step=1
+  5. Test re-run: php artisan migrate
+  6. Verify with Schema::getIndexes() after each step
+
+**Acceptance Criteria:**
+- ✅ Index on service_cases(company_id, billing_status, created_at) - exists as idx_service_cases_billing
+- ✅ Index on aggregate_invoice_items(aggregate_invoice_id, company_id) - exists (auto-generated name)
+- ✅ Index on aggregate_invoices(partner_company_id, status, billing_period_start) - ADDED as idx_aggregate_invoices_partner_billing
+- ✅ Migration file created with all indexes (and documentation of existing ones)
+
+---
+

@@ -60,14 +60,14 @@
     {
       "id": "US-004",
       "title": "Add Missing Billing Indexes",
-      "status": "pending",
+      "status": "completed",
       "acceptanceCriteria": [
         "Index on service_cases(company_id, billing_status, created_at)",
         "Index on aggregate_invoice_items(aggregate_invoice_id, company_id)",
         "Index on aggregate_invoices(partner_company_id, status, billing_period_start)",
         "Migration file created with all indexes"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-005",
