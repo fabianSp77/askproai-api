@@ -72,6 +72,8 @@ class ServiceCaseActivityLog extends Model
     public const ACTION_ESCALATED = 'escalated';
     public const ACTION_DELETED = 'deleted';
     public const ACTION_RESTORED = 'restored';
+    public const ACTION_EMAIL_SENT = 'email_sent';
+    public const ACTION_WEBHOOK_SENT = 'webhook_sent';
 
     /**
      * German labels for actions (for UI display)
@@ -91,6 +93,8 @@ class ServiceCaseActivityLog extends Model
         self::ACTION_ESCALATED => 'Eskaliert',
         self::ACTION_DELETED => 'Gelöscht',
         self::ACTION_RESTORED => 'Wiederhergestellt',
+        self::ACTION_EMAIL_SENT => 'E-Mail gesendet',
+        self::ACTION_WEBHOOK_SENT => 'Webhook gesendet',
     ];
 
     // ==========================================
@@ -215,6 +219,8 @@ class ServiceCaseActivityLog extends Model
             self::ACTION_ESCALATED => "{$actor} hat den Fall eskaliert",
             self::ACTION_DELETED => "{$actor} hat den Fall gelöscht",
             self::ACTION_RESTORED => "{$actor} hat den Fall wiederhergestellt",
+            self::ACTION_EMAIL_SENT => "E-Mail-Benachrichtigung wurde gesendet",
+            self::ACTION_WEBHOOK_SENT => "Webhook-Benachrichtigung wurde gesendet",
             default => "{$actor} hat {$label} durchgeführt",
         };
     }
