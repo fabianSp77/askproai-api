@@ -564,7 +564,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                     ])
                     ->columns(2)
                     ->collapsible()
-                    ->collapsed(true),
+                    ->collapsed(false),
 
                 // === STATUS & METRICS ===
                 Infolists\Components\Section::make('Status & Metriken')
@@ -649,7 +649,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->columns(1),
                     ])
                     ->collapsible()
-                    ->collapsed(true),
+                    ->collapsed(false),
 
                 // === REQUEST PAYLOAD ===
                 Infolists\Components\Section::make('Request-Body')
@@ -672,7 +672,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(true),
+                    ->collapsed(false),
 
                 // === RESPONSE PAYLOAD ===
                 Infolists\Components\Section::make('Response-Body')
@@ -695,7 +695,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(true)
+                    ->collapsed(false)
                     ->visible(fn ($record) => $record->response_body_redacted !== null),
 
                 // === HEADERS ===
@@ -719,7 +719,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(true)
+                    ->collapsed(false)
                     ->visible(fn ($record) => $record->headers_redacted !== null),
 
                 // === CORRELATION & REFERENCES ===
@@ -765,7 +765,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(true),
+                    ->collapsed(false),
             ]);
     }
 
