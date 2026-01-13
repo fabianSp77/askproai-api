@@ -89,7 +89,7 @@ class ListAggregateInvoices extends ListRecords
 
         foreach ($partners as $partner) {
             try {
-                // Check if invoice already exists
+                // Check if invoice already exists (non-voided)
                 $existing = AggregateInvoice::where('partner_company_id', $partner->id)
                     ->forPeriod($periodStart, $periodEnd)
                     ->whereNotIn('status', [AggregateInvoice::STATUS_VOID])
@@ -99,6 +99,12 @@ class ListAggregateInvoices extends ListRecords
                     $skipped++;
                     continue;
                 }
+
+                // Delete any voided invoices for this period (to satisfy unique constraint)
+                AggregateInvoice::where('partner_company_id', $partner->id)
+                    ->forPeriod($periodStart, $periodEnd)
+                    ->where('status', AggregateInvoice::STATUS_VOID)
+                    ->delete();
 
                 // Check if there are any charges
                 $summary = $aggregator->getChargesSummary($partner, $periodStart, $periodEnd);
