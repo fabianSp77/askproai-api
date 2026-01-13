@@ -104,15 +104,37 @@ class ServiceGatewayExchangeLogResource extends Resource
                     ->color('gray')
                     ->fontFamily('mono'),
 
-                Tables\Columns\BadgeColumn::make('status_code')
+                Tables\Columns\TextColumn::make('overall_status')
                     ->label('Status')
-                    ->colors([
-                        'success' => fn ($state) => $state >= 200 && $state < 300,
-                        'warning' => fn ($state) => $state >= 300 && $state < 400,
-                        'danger' => fn ($state) => $state >= 400,
-                    ])
-                    ->formatStateUsing(fn ($state) => $state ?? '-')
-                    ->sortable(),
+                    ->badge()
+                    ->getStateUsing(fn ($record) => match ($record->getOverallStatus()) {
+                        'success' => $record->status_code ? "OK ({$record->status_code})" : 'OK',
+                        'http_error' => "HTTP {$record->status_code}",
+                        'semantic_error' => 'Semantischer Fehler',
+                        'exception' => 'Exception',
+                        default => 'Unbekannt',
+                    })
+                    ->color(fn ($record) => match ($record->getOverallStatus()) {
+                        'success' => 'success',
+                        'http_error' => 'danger',
+                        'semantic_error' => 'warning',
+                        'exception' => 'danger',
+                        default => 'gray',
+                    })
+                    ->icon(fn ($record) => match ($record->getOverallStatus()) {
+                        'success' => 'heroicon-o-check-circle',
+                        'http_error' => 'heroicon-o-x-circle',
+                        'semantic_error' => 'heroicon-o-exclamation-triangle',
+                        'exception' => 'heroicon-o-bolt',
+                        default => 'heroicon-o-question-mark-circle',
+                    })
+                    ->tooltip(fn ($record) => $record->hasSemanticError()
+                        ? $record->getSemanticErrorMessage()
+                        : ($record->error_message ?? null)
+                    )
+                    ->sortable(query: fn ($query, $direction) =>
+                        $query->orderBy('status_code', $direction)
+                    ),
 
                 Tables\Columns\TextColumn::make('formatted_duration')
                     ->label('Dauer')
@@ -135,16 +157,20 @@ class ServiceGatewayExchangeLogResource extends Resource
                     ->sortable()
                     ->description(fn ($record) => $record->created_at?->diffForHumans()),
 
-                // Hidden by default
+                // Error columns - visible when errors exist
                 Tables\Columns\TextColumn::make('error_class')
                     ->label('Fehlerklasse')
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->limit(30),
+                    ->limit(30)
+                    ->color('danger'),
 
                 Tables\Columns\TextColumn::make('error_message')
                     ->label('Fehlermeldung')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->limit(50)
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->limit(40)
+                    ->tooltip(fn ($record) => $record->error_message)
+                    ->color(fn ($record) => $record->hasSemanticError() ? 'warning' : 'danger')
+                    ->placeholder('—')
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('correlation_id')
@@ -182,6 +208,27 @@ class ServiceGatewayExchangeLogResource extends Resource
                         true: fn ($query) => $query->successful(),
                         false: fn ($query) => $query->failed(),
                     ),
+
+                Tables\Filters\SelectFilter::make('status_type')
+                    ->label('Status-Typ')
+                    ->options([
+                        'success' => '✅ Erfolgreich',
+                        'semantic_error' => '⚠️ Semantische Fehler',
+                        'http_error' => '❌ HTTP Fehler',
+                        'exception' => '💥 Exceptions',
+                    ])
+                    ->query(function ($query, array $data) {
+                        return match ($data['value'] ?? null) {
+                            'success' => $query->whereNull('error_class')
+                                ->where(fn ($q) => $q->whereNull('status_code')->orWhere('status_code', '<', 400)),
+                            'semantic_error' => $query->where('error_class', 'like', 'SemanticError:%'),
+                            'http_error' => $query->where('status_code', '>=', 400)
+                                ->where(fn ($q) => $q->whereNull('error_class')->orWhere('error_class', 'not like', 'SemanticError:%')),
+                            'exception' => $query->whereNotNull('error_class')
+                                ->where('error_class', 'not like', 'SemanticError:%'),
+                            default => $query,
+                        };
+                    }),
 
                 Tables\Filters\SelectFilter::make('http_method')
                     ->label('HTTP Methode')
@@ -302,23 +349,47 @@ class ServiceGatewayExchangeLogResource extends Resource
 
                 Infolists\Components\Section::make('Status & Metriken')
                     ->schema([
+                        // Semantic Error Warning Banner
+                        Infolists\Components\TextEntry::make('semantic_error_warning')
+                            ->label('')
+                            ->getStateUsing(fn ($record) => $record->hasSemanticError()
+                                ? '⚠️ Semantischer Fehler erkannt: HTTP-Status war erfolgreich, aber der Response-Body enthält einen Fehler. ' . ($record->getSemanticErrorMessage() ?? '')
+                                : null
+                            )
+                            ->visible(fn ($record) => $record->hasSemanticError())
+                            ->columnSpanFull()
+                            ->extraAttributes(['class' => 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-200 p-3 rounded-lg font-medium']),
+
                         Infolists\Components\Grid::make(4)
                             ->schema([
                                 Infolists\Components\TextEntry::make('status_code')
-                                    ->label('Status Code')
+                                    ->label('HTTP Status')
                                     ->badge()
                                     ->color(fn ($record): string => $record->status_color),
+
+                                Infolists\Components\TextEntry::make('overall_status_display')
+                                    ->label('Gesamtstatus')
+                                    ->badge()
+                                    ->getStateUsing(fn ($record) => match ($record->getOverallStatus()) {
+                                        'success' => '✅ Erfolgreich',
+                                        'http_error' => '❌ HTTP Fehler',
+                                        'semantic_error' => '⚠️ Semantischer Fehler',
+                                        'exception' => '💥 Exception',
+                                        default => '❓ Unbekannt',
+                                    })
+                                    ->color(fn ($record) => match ($record->getOverallStatus()) {
+                                        'success' => 'success',
+                                        'http_error' => 'danger',
+                                        'semantic_error' => 'warning',
+                                        'exception' => 'danger',
+                                        default => 'gray',
+                                    }),
 
                                 Infolists\Components\TextEntry::make('attempt_no')
                                     ->label('Versuch')
                                     ->formatStateUsing(fn ($record) =>
                                         "{$record->attempt_no} von {$record->max_attempts}"
                                     ),
-
-                                Infolists\Components\IconEntry::make('is_successful')
-                                    ->label('Erfolgreich')
-                                    ->boolean()
-                                    ->getStateUsing(fn ($record) => $record->isSuccessful()),
 
                                 Infolists\Components\IconEntry::make('can_retry')
                                     ->label('Retry moeglich')
@@ -329,12 +400,14 @@ class ServiceGatewayExchangeLogResource extends Resource
                         Infolists\Components\TextEntry::make('error_class')
                             ->label('Fehlerklasse')
                             ->placeholder('-')
+                            ->color(fn ($record) => $record->hasSemanticError() ? 'warning' : 'danger')
                             ->visible(fn ($record) => $record->error_class !== null),
 
                         Infolists\Components\TextEntry::make('error_message')
                             ->label('Fehlermeldung')
                             ->placeholder('-')
                             ->columnSpanFull()
+                            ->color(fn ($record) => $record->hasSemanticError() ? 'warning' : 'danger')
                             ->visible(fn ($record) => $record->error_message !== null),
                     ]),
 

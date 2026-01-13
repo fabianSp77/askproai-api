@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ServiceGateway\ResponseBodyAnalyzer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -85,6 +86,7 @@ class ServiceGatewayExchangeLog extends Model
         'parent_event_id',
         'is_test',
         'output_configuration_id',
+        'notification_sent_at',
         'created_at',
         'completed_at',
     ];
@@ -104,6 +106,7 @@ class ServiceGatewayExchangeLog extends Model
         'max_attempts' => 'integer',
         'is_test' => 'boolean',
         'output_configuration_id' => 'integer',
+        'notification_sent_at' => 'datetime',
         'created_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
@@ -277,12 +280,82 @@ class ServiceGatewayExchangeLog extends Model
     // =========================================================================
 
     /**
-     * Check if exchange was successful.
+     * Check if response contains a semantic error.
+     *
+     * Semantic errors occur when HTTP status is 2xx/3xx but the response body
+     * contains error information (e.g., {"error": "Invalid HMAC", "status": 401}).
+     *
+     * @return bool True if semantic error is present
+     */
+    public function hasSemanticError(): bool
+    {
+        // If error_class is already set and starts with SemanticError: → detected at write time
+        if (!is_null($this->error_class)) {
+            return str_starts_with($this->error_class, 'SemanticError:');
+        }
+
+        // Fallback: Re-analyze response body (for legacy logs before this feature)
+        if (!$this->response_body_redacted || !is_array($this->response_body_redacted)) {
+            return false;
+        }
+
+        return app(ResponseBodyAnalyzer::class)->hasError($this->response_body_redacted);
+    }
+
+    /**
+     * Get the semantic error message if present.
+     *
+     * @return string|null The error message or null if no semantic error
+     */
+    public function getSemanticErrorMessage(): ?string
+    {
+        // If already stored
+        if ($this->error_message && str_starts_with($this->error_class ?? '', 'SemanticError:')) {
+            return $this->error_message;
+        }
+
+        // Fallback: Re-analyze response body (for legacy logs)
+        if ($this->response_body_redacted && is_array($this->response_body_redacted)) {
+            [, $message] = app(ResponseBodyAnalyzer::class)->analyze($this->response_body_redacted);
+            return $message;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the overall status for UI display.
+     *
+     * @return string One of: 'success', 'http_error', 'semantic_error', 'exception'
+     */
+    public function getOverallStatus(): string
+    {
+        // PHP Exception (connection error, timeout, etc.)
+        if ($this->error_class && !str_starts_with($this->error_class, 'SemanticError:')) {
+            return 'exception';
+        }
+
+        // Semantic error (HTTP 200 but error in body)
+        if ($this->hasSemanticError()) {
+            return 'semantic_error';
+        }
+
+        // HTTP error (4xx, 5xx)
+        if ($this->status_code && $this->status_code >= 400) {
+            return 'http_error';
+        }
+
+        return 'success';
+    }
+
+    /**
+     * Check if exchange was successful (considers semantic errors).
+     *
+     * @return bool True only if HTTP successful AND no semantic error
      */
     public function isSuccessful(): bool
     {
-        return is_null($this->error_class)
-            && (is_null($this->status_code) || $this->status_code < 400);
+        return $this->getOverallStatus() === 'success';
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Services\ServiceGateway;
 
 use App\Models\ServiceGatewayExchangeLog;
+use App\Services\ServiceGateway\ResponseBodyAnalyzer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -316,6 +317,28 @@ class ExchangeLogService
         ?int $outputConfigurationId = null
     ): ServiceGatewayExchangeLog {
         try {
+            // Detect semantic errors in response body
+            // This catches cases where HTTP 200 is returned but body contains error information
+            $finalErrorClass = $errorClass;
+            $finalErrorMessage = $errorMessage;
+
+            if (is_null($finalErrorClass) && $responseBody && ($statusCode === null || $statusCode < 400)) {
+                $analyzer = app(ResponseBodyAnalyzer::class);
+                [$bodyErrorClass, $bodyErrorMessage] = $analyzer->analyze($responseBody, $statusCode ?? 200);
+
+                if ($bodyErrorClass !== null) {
+                    $finalErrorClass = $bodyErrorClass;
+                    $finalErrorMessage = $bodyErrorMessage;
+
+                    Log::warning('[ExchangeLogService] Semantic error detected in response body', [
+                        'error_class' => $bodyErrorClass,
+                        'error_message' => $bodyErrorMessage,
+                        'http_status' => $statusCode,
+                        'endpoint' => $endpoint,
+                    ]);
+                }
+            }
+
             $log = ServiceGatewayExchangeLog::create([
                 'event_id' => (string) Str::uuid(),
                 'direction' => $direction,
@@ -333,11 +356,11 @@ class ExchangeLogService
                 'correlation_id' => $correlationId,
                 'attempt_no' => $attemptNo,
                 'max_attempts' => $maxAttempts,
-                'error_class' => $errorClass,
-                'error_message' => $this->sanitizeErrorMessage($errorMessage),
+                'error_class' => $finalErrorClass,
+                'error_message' => $this->sanitizeErrorMessage($finalErrorMessage),
                 'parent_event_id' => $parentEventId,
                 'is_test' => $isTest,
-                'completed_at' => ($statusCode !== null || $errorClass !== null) ? now() : null,
+                'completed_at' => ($statusCode !== null || $finalErrorClass !== null) ? now() : null,
             ]);
 
             Log::debug('[ExchangeLogService] Exchange logged', [
@@ -377,12 +400,34 @@ class ExchangeLogService
         ?string $errorClass = null,
         ?string $errorMessage = null
     ): ServiceGatewayExchangeLog {
+        // Detect semantic errors in response body (if no error already set)
+        $finalErrorClass = $errorClass ?? $log->error_class;
+        $finalErrorMessage = $errorMessage ?? $log->error_message;
+        $effectiveStatus = $statusCode ?? $log->status_code;
+
+        if (is_null($finalErrorClass) && $responseBody && ($effectiveStatus === null || $effectiveStatus < 400)) {
+            $analyzer = app(ResponseBodyAnalyzer::class);
+            [$bodyErrorClass, $bodyErrorMessage] = $analyzer->analyze($responseBody, $effectiveStatus ?? 200);
+
+            if ($bodyErrorClass !== null) {
+                $finalErrorClass = $bodyErrorClass;
+                $finalErrorMessage = $bodyErrorMessage;
+
+                Log::warning('[ExchangeLogService] Semantic error detected on completion', [
+                    'event_id' => $log->event_id,
+                    'error_class' => $bodyErrorClass,
+                    'error_message' => $bodyErrorMessage,
+                    'http_status' => $effectiveStatus,
+                ]);
+            }
+        }
+
         $log->update([
             'response_body_redacted' => $responseBody ? $this->redactPayload($responseBody) : $log->response_body_redacted,
-            'status_code' => $statusCode ?? $log->status_code,
+            'status_code' => $effectiveStatus,
             'duration_ms' => $durationMs ?? $log->duration_ms,
-            'error_class' => $errorClass ?? $log->error_class,
-            'error_message' => $errorMessage ? $this->sanitizeErrorMessage($errorMessage) : $log->error_message,
+            'error_class' => $finalErrorClass,
+            'error_message' => $finalErrorMessage ? $this->sanitizeErrorMessage($finalErrorMessage) : $log->error_message,
             'completed_at' => now(),
         ]);
 

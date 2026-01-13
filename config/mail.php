@@ -113,4 +113,21 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Failure Alerts
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for automatic email alerts when webhook deliveries fail.
+    | Detects HTTP errors, semantic errors (error in body), and exceptions.
+    |
+    */
+
+    'webhook_alerts' => [
+        'enabled' => env('WEBHOOK_ALERTS_ENABLED', true),
+        'admin_email' => env('WEBHOOK_ADMIN_EMAIL', 'fabian@askproai.de'),
+        'threshold' => env('WEBHOOK_ALERT_THRESHOLD', 1),
+        'cooldown_minutes' => env('WEBHOOK_ALERT_COOLDOWN', 60),
+    ],
+
 ];

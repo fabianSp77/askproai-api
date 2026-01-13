@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ReconcileCallSuccess::class, // 🆕 2025-11-27: Fix false negatives
         \App\Console\Commands\QueueHealthCheckCommand::class, // 🆕 2025-12-31: Stale worker detection
         \App\Console\Commands\GenerateMonthlyInvoicesCommand::class, // 🆕 2026-01-09: Partner monthly billing
+        \App\Console\Commands\SendWebhookFailureReportCommand::class, // 🆕 2026-01-13: Webhook failure alerts
     ];
 
     public function schedule(Schedule $schedule): void
@@ -228,6 +229,21 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/queue-health.log'))
+            ->onOneServer();
+
+        // 📧 WEBHOOK FAILURE ALERTS (2026-01-13) - SERVICE GATEWAY
+        //
+        // Sends hourly email alerts when webhook deliveries fail.
+        // Detects three types of failures:
+        // - HTTP errors (4xx/5xx status codes)
+        // - Semantic errors (HTTP 200 but error in response body)
+        // - Exceptions (connection failures, timeouts)
+        // Recipients: fabian@askproai.de (configurable in config/mail.php)
+        $schedule->command('webhook:send-failure-report --hours=1 --threshold=1')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/webhook-failure-alerts.log'))
             ->onOneServer();
 
         // 🔄 APPOINTMENT SYNC MONITORING (2025-11-24) - PHASE 3
