@@ -552,7 +552,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->copyMessage('URL kopiert')
                             ->columnSpanFull()
                             ->extraAttributes([
-                                'class' => 'bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg break-all',
+                                'class' => 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-lg break-all border border-gray-200 dark:border-gray-700',
                             ]),
 
                         Infolists\Components\TextEntry::make('event_id')
@@ -563,7 +563,8 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->helperText('Eindeutige Kennung dieser Anfrage'),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(),
 
                 // === STATUS & METRICS ===
                 Infolists\Components\Section::make('Status & Metriken')
@@ -647,7 +648,8 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->visible(fn ($record) => $record->error_class !== null || $record->error_message !== null)
                             ->columns(1),
                     ])
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(),
 
                 // === REQUEST PAYLOAD ===
                 Infolists\Components\Section::make('Request-Body')
@@ -666,11 +668,11 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->copyMessage('Request-Body kopiert')
                             ->fontFamily('mono')
                             ->extraAttributes([
-                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700',
+                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700',
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(false),
+                    ->collapsed(),
 
                 // === RESPONSE PAYLOAD ===
                 Infolists\Components\Section::make('Response-Body')
@@ -689,11 +691,11 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->copyMessage('Response-Body kopiert')
                             ->fontFamily('mono')
                             ->extraAttributes([
-                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700',
+                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700',
                             ]),
                     ])
                     ->collapsible()
-                    ->collapsed(fn ($record) => $record->getOverallStatus() === 'success')
+                    ->collapsed()
                     ->visible(fn ($record) => $record->response_body_redacted !== null),
 
                 // === HEADERS ===
@@ -713,7 +715,7 @@ class ServiceGatewayExchangeLogResource extends Resource
                             ->copyMessage('Headers kopiert')
                             ->fontFamily('mono')
                             ->extraAttributes([
-                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 p-4 rounded-xl overflow-x-auto border border-slate-200 dark:border-slate-700',
+                                'class' => 'whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-4 rounded-xl overflow-x-auto border border-slate-200 dark:border-slate-700',
                             ]),
                     ])
                     ->collapsible()
