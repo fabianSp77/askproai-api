@@ -87,6 +87,20 @@ class CompanyResource extends Resource
                                                 ->native(false),
                                         ]),
 
+                                        // Partner-Zuordnung (nur für Nicht-Partner-Unternehmen)
+                                        Forms\Components\Select::make('managed_by_company_id')
+                                            ->label('Verwaltet durch Partner')
+                                            ->relationship(
+                                                'managingPartner',
+                                                'name',
+                                                fn ($query) => $query->where('is_partner', true)
+                                            )
+                                            ->searchable()
+                                            ->preload()
+                                            ->placeholder('Kein Partner zugewiesen')
+                                            ->helperText('Partner erhält Sammelrechnungen für dieses Unternehmen')
+                                            ->visible(fn ($record) => !$record?->is_partner && auth()->user()?->hasAnyRole(['Admin', 'admin', 'Super Admin', 'super_admin'])),
+
                                         Grid::make(3)->schema([
                                             Forms\Components\Toggle::make('is_active')
                                                 ->label('Aktiv')
@@ -484,6 +498,157 @@ class CompanyResource extends Resource
                                             ])
                                             ->collapsible()
                                             ->collapsed(true),
+                                    ]),
+                            ]),
+
+                        // Tab 6: Partner Settings (Admin only)
+                        Tabs\Tab::make('Partner')
+                            ->icon('heroicon-m-user-group')
+                            ->badge(fn ($record) => $record?->is_partner ? 'Partner' : null)
+                            ->badgeColor('success')
+                            ->visible(fn () => auth()->user()?->hasAnyRole(['Admin', 'admin', 'Super Admin', 'super_admin']))
+                            ->schema([
+                                Section::make('Partner-Status')
+                                    ->description('Aktivieren Sie die Partner-Funktion, um diesem Unternehmen verwaltete Firmen zuzuweisen.')
+                                    ->schema([
+                                        Grid::make(2)->schema([
+                                            Forms\Components\Toggle::make('is_partner')
+                                                ->label('Ist Partner')
+                                                ->helperText('Partner können andere Unternehmen verwalten und erhalten Sammelrechnungen.')
+                                                ->live(),
+
+                                            Forms\Components\Placeholder::make('managed_count')
+                                                ->label('Verwaltete Unternehmen')
+                                                ->content(fn ($record) => $record?->managedCompanies()->count() . ' Unternehmen')
+                                                ->visible(fn (Get $get, $record) => $get('is_partner') || $record?->is_partner),
+                                        ]),
+                                    ]),
+
+                                Section::make('Rechnungsempfänger')
+                                    ->description('Kontaktdaten für Partner-Rechnungen.')
+                                    ->visible(fn (Get $get, $record) => $get('is_partner') || $record?->is_partner)
+                                    ->schema([
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('partner_billing_email')
+                                                ->label('Rechnungs-E-Mail')
+                                                ->email()
+                                                ->required(fn (Get $get) => $get('is_partner'))
+                                                ->helperText('Primärer Empfänger für Partner-Rechnungen'),
+
+                                            Forms\Components\TextInput::make('partner_billing_name')
+                                                ->label('Rechnungsempfänger Name')
+                                                ->maxLength(255)
+                                                ->placeholder('z.B. Buchhaltung Muster GmbH'),
+                                        ]),
+
+                                        Forms\Components\TagsInput::make('partner_billing_cc_emails')
+                                            ->label('CC E-Mail-Adressen')
+                                            ->placeholder('CC E-Mail hinzufügen...')
+                                            ->helperText('Zusätzliche Empfänger (z.B. CFO, Buchhaltung)'),
+
+                                        Forms\Components\Textarea::make('partner_billing_address')
+                                            ->label('Rechnungsadresse')
+                                            ->rows(3)
+                                            ->placeholder("Muster GmbH\nMusterstraße 123\n12345 Berlin"),
+                                    ]),
+
+                                Section::make('Zahlungsbedingungen')
+                                    ->description('Zahlungskonditionen für Partner-Rechnungen.')
+                                    ->visible(fn (Get $get, $record) => $get('is_partner') || $record?->is_partner)
+                                    ->schema([
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('partner_payment_terms_days')
+                                                ->label('Zahlungsziel')
+                                                ->numeric()
+                                                ->default(14)
+                                                ->suffix('Tage')
+                                                ->minValue(0)
+                                                ->maxValue(90)
+                                                ->helperText('Tage bis zur Fälligkeit nach Rechnungsstellung'),
+
+                                            Forms\Components\Select::make('partner_invoice_delivery')
+                                                ->label('Rechnungsversand')
+                                                ->options([
+                                                    'email' => '📧 E-Mail (automatisch)',
+                                                    'manual' => '📋 Manuell',
+                                                    'both' => '📧+📋 Beides',
+                                                ])
+                                                ->default('email')
+                                                ->helperText('Wie sollen Rechnungen versendet werden?'),
+                                        ]),
+                                    ]),
+
+                                Section::make('Steuerliche Angaben')
+                                    ->description('Pflichtangaben für §14 UStG konforme Rechnungen.')
+                                    ->visible(fn (Get $get, $record) => $get('is_partner') || $record?->is_partner)
+                                    ->schema([
+                                        // Warning banner when tax info is missing
+                                        Forms\Components\ViewField::make('tax_warning')
+                                            ->view('filament.forms.components.tax-compliance-warning')
+                                            ->visible(fn ($record) => $record?->is_partner && (
+                                                empty($record->tax_number) && empty($record->vat_id)
+                                            )),
+
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('tax_number')
+                                                ->label('Steuernummer')
+                                                ->placeholder('123/456/78901')
+                                                ->maxLength(50)
+                                                ->helperText('Deutsche Steuernummer (für inländische Geschäfte)'),
+
+                                            Forms\Components\TextInput::make('vat_id')
+                                                ->label('USt-IdNr.')
+                                                ->placeholder('DE123456789')
+                                                ->maxLength(20)
+                                                ->helperText('EU-Umsatzsteuer-ID (für EU-Geschäfte)'),
+                                        ]),
+
+                                        Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('trade_register')
+                                                ->label('Handelsregister')
+                                                ->placeholder('HRB 12345')
+                                                ->maxLength(100)
+                                                ->helperText('Handelsregisternummer'),
+
+                                            Forms\Components\TextInput::make('trade_register_court')
+                                                ->label('Registergericht')
+                                                ->placeholder('Amtsgericht Berlin-Charlottenburg')
+                                                ->maxLength(100)
+                                                ->helperText('Zuständiges Registergericht'),
+                                        ]),
+                                    ]),
+
+                                Section::make('Partner-Verwaltung')
+                                    ->description('Übersicht der vom Partner verwalteten Unternehmen.')
+                                    ->visible(fn (Get $get, $record) => ($get('is_partner') || $record?->is_partner) && $record?->managedCompanies()->count() > 0)
+                                    ->collapsed()
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('managed_companies_list')
+                                            ->label('')
+                                            ->content(function ($record) {
+                                                if (!$record) return 'Keine verwalteten Unternehmen';
+
+                                                $companies = $record->managedCompanies()
+                                                    ->select(['id', 'name', 'is_active'])
+                                                    ->limit(10)
+                                                    ->get();
+
+                                                if ($companies->isEmpty()) {
+                                                    return 'Keine verwalteten Unternehmen';
+                                                }
+
+                                                $list = $companies->map(function ($company) {
+                                                    $status = $company->is_active ? '✓' : '✗';
+                                                    return "{$status} {$company->name}";
+                                                })->join('<br>');
+
+                                                $total = $record->managedCompanies()->count();
+                                                if ($total > 10) {
+                                                    $list .= "<br><em>... und " . ($total - 10) . " weitere</em>";
+                                                }
+
+                                                return new HtmlString($list);
+                                            }),
                                     ]),
                             ]),
                     ])
@@ -1346,6 +1511,7 @@ class CompanyResource extends Resource
             RelationManagers\BranchesRelationManager::class,
             RelationManagers\StaffRelationManager::class,
             RelationManagers\PhoneNumbersRelationManager::class,
+            RelationManagers\ManagedCompaniesRelationManager::class,
         ];
     }
 
