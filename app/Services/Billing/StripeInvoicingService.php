@@ -6,9 +6,11 @@ use App\Models\AggregateInvoice;
 use App\Models\AggregateInvoiceItem;
 use App\Models\Company;
 use App\Models\StripeEvent;
+use App\Mail\PartnerInvoiceMail;
 use App\Notifications\InvoicePaymentFailedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
@@ -785,6 +787,63 @@ class StripeInvoicingService
 
         } catch (ApiErrorException $e) {
             Log::error('Failed to resend invoice', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Send custom partner notification email.
+     *
+     * Unlike Stripe's built-in email, this supports:
+     * - CC recipients from partner_billing_cc_emails
+     * - Custom German email template
+     * - Our own branding and messaging
+     *
+     * Can be called after finalizeAndSend() for additional notification,
+     * or as a standalone reminder.
+     *
+     * @throws \Exception If invoice has no payment URL
+     */
+    public function sendPartnerNotification(AggregateInvoice $invoice): void
+    {
+        if (!$invoice->stripe_hosted_invoice_url) {
+            throw new \Exception('Invoice has no Stripe payment URL - finalize first');
+        }
+
+        $partner = $invoice->partnerCompany;
+
+        if (!$partner->partner_billing_email) {
+            Log::warning('Cannot send partner notification: no billing email', [
+                'invoice_id' => $invoice->id,
+                'partner_id' => $partner->id,
+            ]);
+            return;
+        }
+
+        try {
+            Mail::to($partner->partner_billing_email)
+                ->send(new PartnerInvoiceMail($invoice));
+
+            // Update notification tracking
+            $invoice->update([
+                'metadata' => array_merge($invoice->metadata ?? [], [
+                    'last_partner_notification_at' => now()->toIso8601String(),
+                    'partner_notification_count' => ($invoice->metadata['partner_notification_count'] ?? 0) + 1,
+                ]),
+            ]);
+
+            Log::info('Partner invoice notification sent', [
+                'invoice_id' => $invoice->id,
+                'partner_id' => $partner->id,
+                'to' => $partner->partner_billing_email,
+                'cc_count' => count($partner->getPartnerBillingCcEmails()),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send partner notification', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);

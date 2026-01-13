@@ -365,6 +365,16 @@ class ServiceCaseResource extends Resource
                         default => $state,
                     })
                     ->toggleable(),
+                // 🔗 Externe Ticket-ID (z.B. VisionaryData, Jira, ServiceNow)
+                Tables\Columns\TextColumn::make('external_reference')
+                    ->label('Ext. Ticket')
+                    ->badge()
+                    ->color('success')
+                    ->copyable()
+                    ->copyMessage('Externe Ticket-ID kopiert')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt')
                     ->dateTime('d.m.Y H:i')
@@ -451,6 +461,11 @@ class ServiceCaseResource extends Resource
                 Tables\Filters\Filter::make('output_failed')
                     ->label('Output fehlgeschlagen')
                     ->query(fn (Builder $query): Builder => $query->where('output_status', ServiceCase::OUTPUT_FAILED))
+                    ->toggle(),
+                // 🔗 Filter für externe Ticket-Referenzen
+                Tables\Filters\Filter::make('has_external_reference')
+                    ->label('Mit externer Referenz')
+                    ->query(fn (Builder $query): Builder => $query->whereNotNull('external_reference'))
                     ->toggle(),
 
                 // 📅 Phase 4: Zeitraum-Filter (ServiceNow-Style)

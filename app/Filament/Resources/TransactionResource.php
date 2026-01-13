@@ -47,7 +47,7 @@ class TransactionResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Transaktionen';
     protected static ?string $navigationGroup = 'Abrechnung';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 27;
     protected static ?string $slug = 'transactions';
     
     protected static ?string $recordTitleAttribute = 'description';

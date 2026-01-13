@@ -63,6 +63,15 @@ class WebhookDeliveryFailedNotification extends Notification implements ShouldQu
     {
         $count = $this->failedLogs->count();
 
+        // Eager load relationships for performance (avoid N+1)
+        // Re-query with eager loading since we may have a plain Collection
+        $logIds = $this->failedLogs->pluck('id')->toArray();
+        $this->failedLogs = ServiceGatewayExchangeLog::with([
+            'company:id,name',
+            'serviceCase:id,subject',
+            'outputConfiguration:id,name',
+        ])->whereIn('id', $logIds)->get();
+
         // Group errors by type for summary
         $semanticCount = $this->failedLogs->filter(fn ($log) => $log->hasSemanticError())->count();
         $httpErrorCount = $this->failedLogs->filter(fn ($log) =>
@@ -72,8 +81,34 @@ class WebhookDeliveryFailedNotification extends Notification implements ShouldQu
             $log->error_class && !str_starts_with($log->error_class, 'SemanticError:')
         )->count();
 
+        // Retry statistics
+        $exhaustedRetries = $this->failedLogs
+            ->filter(fn ($log) => $log->attempt_no >= $log->max_attempts)
+            ->count();
+        $retriesPending = $count - $exhaustedRetries;
+
+        // Group by company for affected customers section
+        $byCompany = $this->failedLogs
+            ->groupBy('company_id')
+            ->map(fn ($logs) => [
+                'name' => $logs->first()->company?->name ?? 'System',
+                'count' => $logs->count(),
+            ])
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
         // Admin panel link with filter for failed status
         $adminUrl = url('/admin/service-gateway-exchange-logs?tableFilters[status][value]=0');
+
+        // Generate error type labels for Claude debug prompts
+        $errorTypeLabels = $this->failedLogs->take(5)->map(function ($log) {
+            return match (self::getErrorType($log)) {
+                'semantic' => 'Semantischer Fehler (HTTP 200 + Error in Body)',
+                'http' => 'HTTP Fehler (' . ($log->status_code ?? '???') . ')',
+                'exception' => 'Exception/Timeout',
+            };
+        })->values()->toArray();
 
         // Use custom HTML template for professional appearance
         return (new MailMessage)
@@ -86,6 +121,12 @@ class WebhookDeliveryFailedNotification extends Notification implements ShouldQu
                 'exceptionCount' => $exceptionCount,
                 'logs' => $this->failedLogs->take(5),
                 'adminUrl' => $adminUrl,
+                // State-of-the-Art additions
+                'exhaustedRetries' => $exhaustedRetries,
+                'retriesPending' => $retriesPending,
+                'byCompany' => $byCompany,
+                // Claude debug prompt labels
+                'errorTypeLabels' => $errorTypeLabels,
             ]);
     }
 

@@ -51,7 +51,7 @@ class PricingPlanResource extends Resource
     protected static ?string $navigationLabel = 'Preispläne';
     protected static ?string $label = 'Preisplan';
     protected static ?string $pluralLabel = 'Preispläne';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'name';
 

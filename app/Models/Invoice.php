@@ -130,28 +130,51 @@ class Invoice extends Model
     }
 
     /**
-     * Generate unique invoice number
+     * Generate unique invoice number (race-condition safe).
+     *
+     * Uses DB transaction with advisory lock to prevent duplicate numbers
+     * when multiple invoices are created simultaneously.
      */
     public static function generateInvoiceNumber(): string
     {
-        $year = date('Y');
-        $month = date('m');
+        return \Illuminate\Support\Facades\DB::transaction(function () {
+            $year = date('Y');
+            $month = date('m');
+            $lockKey = "invoice_number_{$year}_{$month}";
 
-        // Get the last invoice number for this month
-        $lastInvoice = self::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->orderBy('id', 'desc')
-            ->first();
+            // Advisory lock for this year/month combination
+            $driver = \Illuminate\Support\Facades\DB::getDriverName();
 
-        if ($lastInvoice) {
-            // Extract number from last invoice and increment
-            preg_match('/(\d+)$/', $lastInvoice->invoice_number, $matches);
-            $number = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
-        } else {
-            $number = 1;
-        }
+            if ($driver === 'pgsql') {
+                \Illuminate\Support\Facades\DB::statement(
+                    "SELECT pg_advisory_xact_lock(hashtext(?))",
+                    [$lockKey]
+                );
+            } else {
+                // MySQL/MariaDB - use GET_LOCK with 5 second timeout
+                \Illuminate\Support\Facades\DB::statement(
+                    "SELECT GET_LOCK(?, 5)",
+                    [$lockKey]
+                );
+            }
 
-        return sprintf('INV-%s-%s-%04d', $year, $month, $number);
+            // Now safe to count and generate number
+            $count = self::whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->count() + 1;
+
+            $invoiceNumber = sprintf('INV-%s-%s-%04d', $year, $month, $count);
+
+            // Release MySQL lock (PostgreSQL releases automatically at transaction end)
+            if ($driver !== 'pgsql') {
+                \Illuminate\Support\Facades\DB::statement(
+                    "SELECT RELEASE_LOCK(?)",
+                    [$lockKey]
+                );
+            }
+
+            return $invoiceNumber;
+        });
     }
 
     /**

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Traits\HasConfigurationInheritance;
 
 class Company extends Model
@@ -94,6 +95,7 @@ class Company extends Model
         'security_settings' => 'json',
         'allowed_ip_addresses' => 'json',
         'api_test_errors' => 'json',
+        'partner_billing_cc_emails' => 'array',
         'credit_balance' => 'decimal:2',
         'low_credit_threshold' => 'decimal:2',
         'commission_rate' => 'decimal:2',
@@ -150,6 +152,46 @@ class Company extends Model
     public function managingPartner(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'managed_by_company_id');
+    }
+
+    /**
+     * Get the company's fee schedule configuration.
+     * Used for billing settings like per-second/per-minute mode, setup fees, rate overrides.
+     */
+    public function feeSchedule(): HasOne
+    {
+        return $this->hasOne(CompanyFeeSchedule::class);
+    }
+
+    /**
+     * Get CC email addresses for partner billing.
+     */
+    public function getPartnerBillingCcEmails(): array
+    {
+        return $this->partner_billing_cc_emails ?? [];
+    }
+
+    /**
+     * Get all billing recipients (primary + CC emails).
+     * Used by StripeInvoicingService for sending invoices.
+     */
+    public function getAllBillingRecipients(): array
+    {
+        $recipients = [];
+
+        if ($this->partner_billing_email) {
+            $recipients[] = $this->partner_billing_email;
+        }
+
+        return array_unique(array_merge($recipients, $this->getPartnerBillingCcEmails()));
+    }
+
+    /**
+     * Check if partner has valid billing configuration.
+     */
+    public function hasValidBillingConfig(): bool
+    {
+        return $this->is_partner && !empty($this->partner_billing_email);
     }
 
     public function calls(): HasMany

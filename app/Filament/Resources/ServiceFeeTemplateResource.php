@@ -24,7 +24,7 @@ class ServiceFeeTemplateResource extends Resource
 
     protected static ?string $navigationGroup = 'Abrechnung';
 
-    protected static ?int $navigationSort = 23;
+    protected static ?int $navigationSort = 21;
 
     public static function form(Form $form): Form
     {

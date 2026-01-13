@@ -40,31 +40,32 @@ class InvoiceResource extends Resource
     protected static ?string $model = Invoice::class;
 
     /**
-     * Resource disabled - invoices table doesn't exist in Sept 21 database backup
-     * TODO: Re-enable when database is fully restored
+     * LEGACY RESOURCE - Deprecated in favor of AggregateInvoice.
+     *
+     * This resource is hidden from regular admins. Only Super Admins can access
+     * for historical data review. All new invoicing should use AggregateInvoice.
      */
     public static function shouldRegisterNavigation(): bool
     {
-        // ✅ Super admin can see all resources
         $user = Filament::auth()->user();
-        return $user && $user->hasRole('super_admin');
+        return $user && $user->hasAnyRole(['Super Admin', 'super_admin']);
     }
 
 
     public static function canViewAny(): bool
     {
-        // ✅ Super admin can access all resources
+        // Only Super Admins can access legacy invoice resource
         $user = Filament::auth()->user();
-        return $user && $user->hasRole('super_admin');
+        return $user && $user->hasAnyRole(['Super Admin', 'super_admin']);
     }
 
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationGroup = 'Abrechnung';
-    protected static ?string $navigationLabel = 'Rechnungen';
-    protected static ?string $label = 'Rechnung';
-    protected static ?string $pluralLabel = 'Rechnungen';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationLabel = 'Rechnungen (Legacy)';
+    protected static ?string $label = 'Rechnung (Legacy)';
+    protected static ?string $pluralLabel = 'Rechnungen (Legacy)';
+    protected static ?int $navigationSort = 26;
 
     protected static ?string $recordTitleAttribute = 'invoice_number';
 

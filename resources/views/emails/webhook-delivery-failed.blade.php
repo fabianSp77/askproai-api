@@ -28,13 +28,14 @@
             .stack-column { display: block !important; width: 100% !important; }
             .mobile-padding { padding-left: 16px !important; padding-right: 16px !important; }
             .summary-card { margin-bottom: 12px !important; }
+            .mobile-full { width: 100% !important; display: block !important; }
         }
     </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     <!-- Preheader Text -->
     <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">
-        {{ $count }} Webhook-Fehler erkannt ({{ $period }})
+        {{ $count }} Webhook-Fehler erkannt ({{ $period }})@if($exhaustedRetries > 0) - {{ $exhaustedRetries }} erfordern Aktion @endif
     </div>
 
     <!-- Email Container -->
@@ -49,7 +50,7 @@
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     <td style="color: #DC2626; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                        !!! WEBHOOK-FEHLER ERKANNT
+                                        WEBHOOK-FEHLER ERKANNT
                                     </td>
                                     <td style="text-align: right; color: #6B7280; font-size: 12px;">
                                         {{ now()->timezone('Europe/Berlin')->format('d.m.Y H:i') }} Uhr
@@ -84,7 +85,7 @@
                                                 <td style="padding: 16px; text-align: center;">
                                                     <div style="color: #D97706; font-size: 24px; font-weight: 700;">{{ $semanticCount }}</div>
                                                     <div style="color: #92400E; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-top: 4px;">Semantisch</div>
-                                                    <div style="color: #A16207; font-size: 10px; margin-top: 2px;">HTTP 200 + Fehler im Body</div>
+                                                    <div style="color: #A16207; font-size: 10px; margin-top: 2px;">HTTP 200 + Fehler</div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -124,6 +125,68 @@
                             </table>
                         </td>
                     </tr>
+
+                    {{-- Action Required Banner (NEW) --}}
+                    @if($exhaustedRetries > 0)
+                    <tr>
+                        <td style="padding: 0 24px 16px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px;">
+                                <tr>
+                                    <td style="padding: 16px;">
+                                        <div style="color: #92400E; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                                            AKTION ERFORDERLICH
+                                        </div>
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="color: #78350F; font-size: 13px; padding: 4px 0;">
+                                                    <span style="color: #DC2626; font-weight: 600;">{{ $exhaustedRetries }}</span> Fehler: Alle Retries erschoepft (manuelle Aktion noetig)
+                                                </td>
+                                            </tr>
+                                            @if($retriesPending > 0)
+                                            <tr>
+                                                <td style="color: #78350F; font-size: 13px; padding: 4px 0;">
+                                                    <span style="color: #059669; font-weight: 600;">{{ $retriesPending }}</span> Fehler: Auto-Retry aktiv
+                                                </td>
+                                            </tr>
+                                            @endif
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
+
+                    {{-- Affected Customers Section (NEW) --}}
+                    @if($byCompany->isNotEmpty())
+                    <tr>
+                        <td style="padding: 0 24px 16px;">
+                            <div style="color: #6B7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                                BETROFFENE KUNDEN
+                            </div>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px;">
+                                @foreach($byCompany as $company)
+                                <tr>
+                                    <td style="padding: 12px 16px; border-bottom: 1px solid #E5E7EB;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="color: #1F2937; font-size: 14px; font-weight: 600;">
+                                                    {{ $company['name'] }}
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <span style="background-color: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px;">
+                                                        {{ $company['count'] }} {{ $company['count'] == 1 ? 'Fehler' : 'Fehler' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
 
                     {{-- Divider --}}
                     <tr>
@@ -169,6 +232,22 @@
                             'http' => 'HTTP ' . $log->status_code,
                             'exception' => 'Exception',
                         };
+
+                        // Format duration
+                        $duration = $log->duration_ms ?? 0;
+                        $durationFormatted = $duration >= 1000
+                            ? number_format($duration / 1000, 2) . 's'
+                            : $duration . 'ms';
+
+                        // Response preview
+                        $responsePreview = null;
+                        if ($log->response_body_redacted) {
+                            $responseJson = json_encode($log->response_body_redacted, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            $responsePreview = Str::limit($responseJson, 150);
+                        }
+
+                        // Direct link to this log
+                        $logDetailUrl = url("/admin/service-gateway-exchange-logs/{$log->id}");
                     @endphp
                     <tr>
                         <td style="padding: 8px 24px;">
@@ -189,6 +268,28 @@
                                             </tr>
                                         </table>
 
+                                        {{-- Company & Config (NEW) --}}
+                                        @if($log->company || $log->outputConfiguration)
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
+                                            @if($log->company)
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 11px; padding-bottom: 4px;">
+                                                    <span style="color: #9CA3AF;">Kunde:</span>
+                                                    <span style="color: #1F2937; font-weight: 600;">{{ $log->company->name }}</span>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($log->outputConfiguration)
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 11px; padding-bottom: 4px;">
+                                                    <span style="color: #9CA3AF;">Config:</span>
+                                                    <span style="color: #374151;">{{ $log->outputConfiguration->name }}</span>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                        </table>
+                                        @endif
+
                                         {{-- Endpoint --}}
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
@@ -197,6 +298,22 @@
                                             <tr>
                                                 <td style="font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 12px; color: #1F2937; word-break: break-all;">
                                                     {{ Str::limit($log->endpoint, 70) }}
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        {{-- Duration & Retry Status (NEW) --}}
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 8px;">
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 11px;">
+                                                    <span style="color: #9CA3AF;">Dauer:</span>
+                                                    <span style="color: {{ $duration > 5000 ? '#DC2626' : '#374151' }}; font-weight: 500;">{{ $durationFormatted }}</span>
+                                                    <span style="color: #D1D5DB; margin: 0 6px;">|</span>
+                                                    <span style="color: #9CA3AF;">Versuch:</span>
+                                                    <span style="color: {{ $log->attempt_no >= $log->max_attempts ? '#DC2626' : '#374151' }}; font-weight: 500;">{{ $log->attempt_no }}/{{ $log->max_attempts }}</span>
+                                                    @if($log->attempt_no >= $log->max_attempts)
+                                                    <span style="color: #DC2626; font-size: 10px; font-weight: 600; margin-left: 4px;">(FINAL)</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         </table>
@@ -218,6 +335,31 @@
                                             </tr>
                                         </table>
                                         @endif
+
+                                        {{-- Response Preview (NEW) --}}
+                                        @if($responsePreview)
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
+                                            <tr>
+                                                <td style="color: #6B7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 4px;">Response</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="background-color: #1F2937; border-radius: 6px; padding: 10px 12px;">
+                                                    <div style="font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 11px; color: #E5E7EB; word-break: break-all; line-height: 1.4;">{{ $responsePreview }}</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        @endif
+
+                                        {{-- Direct Link Button (NEW) --}}
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ $logDetailUrl }}" style="display: inline-block; background-color: #ffffff; color: #374151; font-size: 12px; font-weight: 500; padding: 8px 16px; border-radius: 6px; text-decoration: none; border: 1px solid #D1D5DB;">
+                                                        Log #{{ $log->id }} anzeigen
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                             </table>
@@ -232,6 +374,89 @@
                         </td>
                     </tr>
                     @endif
+
+                    {{-- Claude Debug Prompt Section --}}
+                    <tr>
+                        <td style="padding: 24px 24px 8px;">
+                            <div style="color: #6B7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                CLAUDE DEBUG PROMPTS
+                            </div>
+                            <div style="color: #9CA3AF; font-size: 11px; margin-top: 4px;">
+                                Kopiere einen Block und fuege ihn in Claude Code ein fuer automatische Fehleranalyse
+                            </div>
+                        </td>
+                    </tr>
+                    @foreach($logs as $log)
+                    @php
+                        $errorTypeLabel = $errorTypeLabels[$loop->index] ?? 'Unbekannt';
+                        $requestBodyJson = $log->request_body_redacted
+                            ? json_encode($log->request_body_redacted, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                            : 'null';
+                        $responseBodyJson = $log->response_body_redacted
+                            ? json_encode($log->response_body_redacted, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                            : 'null';
+
+                        // Truncate if too long
+                        $maxLen = 2000;
+                        if (strlen($requestBodyJson) > $maxLen) {
+                            $requestBodyJson = substr($requestBodyJson, 0, $maxLen) . "\n... [TRUNCATED - siehe Admin Panel fuer vollstaendige Daten]";
+                        }
+                        if (strlen($responseBodyJson) > $maxLen) {
+                            $responseBodyJson = substr($responseBodyJson, 0, $maxLen) . "\n... [TRUNCATED - siehe Admin Panel fuer vollstaendige Daten]";
+                        }
+                    @endphp
+                    <tr>
+                        <td style="padding: 8px 24px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1F2937; border-radius: 8px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 12px 16px; border-bottom: 1px solid #374151;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="color: #F9FAFB; font-size: 11px; font-weight: 600;">
+                                                    CLAUDE DEBUG PROMPT - Log #{{ $log->id }}
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <span style="color: #9CA3AF; font-size: 10px;">Kopieren &amp; in Claude Code einfuegen</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px;">
+                                        <pre style="margin: 0; font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 10px; color: #E5E7EB; white-space: pre-wrap; word-break: break-word; line-height: 1.5; background: transparent;">Analysiere diesen Webhook-Fehler:
+
+**Fehlertyp:** {{ $errorTypeLabel }}
+**Endpoint:** `{{ $log->endpoint }}`
+**HTTP:** {{ $log->http_method }} -> {{ $log->status_code ?? 'N/A' }}
+**Error Class:** {{ $log->error_class ?? 'Kein Error Class' }}
+**Nachricht:** {{ $log->error_message ?? 'Keine Nachricht' }}
+**Dauer:** {{ $log->duration_ms ?? 0 }}ms | Versuch: {{ $log->attempt_no }}/{{ $log->max_attempts }}
+**Kunde:** {{ $log->company?->name ?? 'System' }}
+**Config:** {{ $log->outputConfiguration?->name ?? 'N/A' }}
+
+**Response Body:**
+```json
+{{ $responseBodyJson }}
+```
+
+**Request Body:**
+```json
+{{ $requestBodyJson }}
+```
+
+Bitte analysiere:
+1. Was ist die Ursache des Fehlers?
+2. Wie kann ich das beheben?
+3. Welche Dateien/Configs muss ich pruefen?
+
+Admin-Link: {{ url("/admin/service-gateway-exchange-logs/{$log->id}") }}</pre>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endforeach
 
                     {{-- Action Button --}}
                     <tr>
@@ -248,19 +473,38 @@
                         </td>
                     </tr>
 
-                    {{-- Help Box --}}
+                    {{-- Help Box with Error-specific Guidance --}}
                     <tr>
                         <td style="padding: 0 24px 24px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px;">
                                 <tr>
                                     <td style="padding: 16px;">
-                                        <div style="color: #1D4ED8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
-                                            [i] EMPFOHLENE MASSNAHMEN
+                                        <div style="color: #1D4ED8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                                            EMPFOHLENE MASSNAHMEN
                                         </div>
-                                        <div style="color: #1E40AF; font-size: 13px; line-height: 1.5;">
-                                            Pruefen Sie die fehlgeschlagenen Webhooks und beheben Sie eventuelle Konfigurationsprobleme.
-                                            Semantische Fehler deuten oft auf Aenderungen in der API-Struktur oder ungueltige Credentials hin.
-                                        </div>
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            @if($semanticCount > 0)
+                                            <tr>
+                                                <td style="color: #1E40AF; font-size: 13px; line-height: 1.5; padding-bottom: 8px;">
+                                                    <span style="color: #D97706; font-weight: 600;">Semantische Fehler:</span> API-Credentials pruefen, HMAC-Secret abgleichen, API-Struktur-Aenderungen beim Anbieter nachfragen.
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($httpErrorCount > 0)
+                                            <tr>
+                                                <td style="color: #1E40AF; font-size: 13px; line-height: 1.5; padding-bottom: 8px;">
+                                                    <span style="color: #DC2626; font-weight: 600;">HTTP-Fehler:</span> Endpoint-URL pruefen, Authentifizierung validieren, Rate-Limits beim Anbieter pruefen.
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($exceptionCount > 0)
+                                            <tr>
+                                                <td style="color: #1E40AF; font-size: 13px; line-height: 1.5; padding-bottom: 8px;">
+                                                    <span style="color: #4B5563; font-weight: 600;">Exceptions:</span> Netzwerk-Konnektivitaet pruefen, Firewall-Regeln, SSL-Zertifikate validieren.
+                                                </td>
+                                            </tr>
+                                            @endif
+                                        </table>
                                     </td>
                                 </tr>
                             </table>

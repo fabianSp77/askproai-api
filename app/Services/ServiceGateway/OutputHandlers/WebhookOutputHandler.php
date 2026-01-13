@@ -909,10 +909,11 @@ class WebhookOutputHandler implements OutputHandlerInterface
     /**
      * Extract external ticket ID from webhook response.
      *
-     * Supports common response formats from Jira, ServiceNow, Zendesk, etc.
+     * Supports common response formats from Jira, ServiceNow, Zendesk, VisionaryData, etc.
+     * Includes type validation, length checking, and sanitization for robustness.
      *
      * @param array|null $response Response JSON data
-     * @return string|null External ticket ID
+     * @return string|null External ticket ID (max 100 chars, sanitized)
      */
     private function extractExternalId(?array $response): ?string
     {
@@ -920,11 +921,12 @@ class WebhookOutputHandler implements OutputHandlerInterface
             return null;
         }
 
-        // Try common field names used by various ticket systems
+        // Common field names used by various ticket systems
+        // Priority order: first match wins
         $fields = [
             'id',           // Generic
             'key',          // Jira
-            'ticket_id',    // ServiceNow, Zendesk
+            'ticket_id',    // ServiceNow, Zendesk, VisionaryData
             'number',       // ServiceNow
             'issue_id',     // GitHub Issues
             'case_id',      // Salesforce
@@ -932,8 +934,43 @@ class WebhookOutputHandler implements OutputHandlerInterface
         ];
 
         foreach ($fields as $field) {
-            if (isset($response[$field]) && !empty($response[$field])) {
-                return (string) $response[$field];
+            if (!isset($response[$field])) {
+                continue;
+            }
+
+            $value = $response[$field];
+
+            // Skip null/empty but NOT "0" (which is a valid ID)
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            // Type validation: Skip arrays/objects (prevents "(string) array" = "Array" bug)
+            if (is_array($value) || is_object($value)) {
+                Log::warning('[WebhookOutputHandler] Non-scalar ticket ID skipped', [
+                    'field' => $field,
+                    'type' => gettype($value),
+                ]);
+                continue;
+            }
+
+            $stringValue = (string) $value;
+
+            // Length check (VARCHAR(100) DB limit)
+            if (strlen($stringValue) > 100) {
+                Log::warning('[WebhookOutputHandler] Ticket ID truncated', [
+                    'field' => $field,
+                    'original_length' => strlen($stringValue),
+                ]);
+                $stringValue = substr($stringValue, 0, 100);
+            }
+
+            // Sanitize control characters (prevent display issues)
+            $stringValue = preg_replace('/[\x00-\x1F\x7F]/u', '', $stringValue);
+            $stringValue = trim($stringValue);
+
+            if ($stringValue !== '') {
+                return $stringValue;
             }
         }
 

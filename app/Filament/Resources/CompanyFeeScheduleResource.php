@@ -25,7 +25,7 @@ class CompanyFeeScheduleResource extends Resource
 
     protected static ?string $navigationGroup = 'Abrechnung';
 
-    protected static ?int $navigationSort = 24;
+    protected static ?int $navigationSort = 22;
 
     public static function form(Form $form): Form
     {

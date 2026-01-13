@@ -601,6 +601,12 @@ class CompanyResource extends Resource
                                                 ->placeholder('DE123456789')
                                                 ->maxLength(20)
                                                 ->helperText('EU-Umsatzsteuer-ID (für EU-Geschäfte)'),
+
+                                            Forms\Components\TextInput::make('wirtschafts_id_nr')
+                                                ->label('W-IdNr')
+                                                ->placeholder('114/139/00281')
+                                                ->maxLength(20)
+                                                ->helperText('Wirtschafts-Identifikationsnummer (seit 2024)'),
                                         ]),
 
                                         Grid::make(2)->schema([

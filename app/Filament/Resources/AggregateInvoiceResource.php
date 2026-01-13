@@ -96,6 +96,37 @@ class AggregateInvoiceResource extends Resource
                     ])
                     ->visible(fn ($record) => $record !== null),
 
+                Forms\Components\Section::make('Rabatt')
+                    ->description('Rabatte werden vor der MwSt.-Berechnung abgezogen (German VAT Compliance).')
+                    ->schema([
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('discount')
+                                ->label('Rabattbetrag')
+                                ->numeric()
+                                ->step('0.01')
+                                ->prefix('€')
+                                ->default(0)
+                                ->minValue(0)
+                                ->disabled(fn ($record) => $record?->status !== AggregateInvoice::STATUS_DRAFT)
+                                ->afterStateUpdated(function ($state, $record) {
+                                    if ($record && $record->status === AggregateInvoice::STATUS_DRAFT) {
+                                        $record->discount = (float) $state;
+                                        $record->calculateTotals();
+                                    }
+                                })
+                                ->helperText('Rabatt wird automatisch bei Speichern berechnet.'),
+
+                            Forms\Components\TextInput::make('discount_description')
+                                ->label('Rabattgrund')
+                                ->maxLength(255)
+                                ->placeholder('z.B. Neukundenrabatt, Mengenrabatt')
+                                ->disabled(fn ($record) => $record?->status !== AggregateInvoice::STATUS_DRAFT),
+                        ]),
+                    ])
+                    ->visible(fn ($record) => $record !== null)
+                    ->collapsible()
+                    ->collapsed(fn ($record) => !$record || ($record->discount_cents ?? 0) === 0),
+
                 Forms\Components\Section::make('Notizen')
                     ->schema([
                         Forms\Components\Textarea::make('notes')
@@ -189,21 +220,53 @@ class AggregateInvoiceResource extends Resource
                         ->icon('heroicon-o-paper-airplane')
                         ->color('success')
                         ->visible(fn ($record) => $record->status === AggregateInvoice::STATUS_DRAFT)
-                        ->requiresConfirmation()
-                        ->modalHeading('Rechnung versenden?')
-                        ->modalDescription('Die Rechnung wird finalisiert und per E-Mail an den Partner versendet.')
+                        ->modalHeading('Rechnung versenden')
+                        ->modalContent(fn ($record) => view('filament.modals.send-invoice-confirmation', [
+                            'record' => $record,
+                        ]))
+                        ->modalSubmitActionLabel('Jetzt versenden')
+                        ->modalCancelActionLabel('Abbrechen')
                         ->action(function ($record) {
-                            $service = app(StripeInvoicingService::class);
-                            $service->finalizeAndSend($record);
+                            // Validate billing email exists
+                            if (empty($record->partnerCompany->partner_billing_email)) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Versand nicht möglich')
+                                    ->body('Kein Rechnungsempfänger beim Partner konfiguriert.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
 
-                            \Filament\Notifications\Notification::make()
-                                ->title('Rechnung versendet')
-                                ->success()
-                                ->send();
+                            try {
+                                $service = app(StripeInvoicingService::class);
+                                $service->finalizeAndSend($record);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Rechnung versendet')
+                                    ->body("An: {$record->partnerCompany->partner_billing_email}")
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Fehler beim Versand')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
-                    Tables\Actions\Action::make('preview')
+                    Tables\Actions\Action::make('local_preview')
                         ->label('Vorschau')
+                        ->icon('heroicon-o-eye')
+                        ->color('gray')
+                        ->visible(fn ($record) => $record->status === AggregateInvoice::STATUS_DRAFT)
+                        ->modalHeading(fn ($record) => "Vorschau: {$record->invoice_number}")
+                        ->modalContent(fn ($record) => view('filament.modals.invoice-preview', ['record' => $record]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Schließen'),
+
+                    Tables\Actions\Action::make('preview')
+                        ->label('Stripe Vorschau')
                         ->icon('heroicon-o-eye')
                         ->url(fn ($record) => $record->stripe_hosted_invoice_url)
                         ->openUrlInNewTab()
@@ -245,6 +308,24 @@ class AggregateInvoiceResource extends Resource
                             \Filament\Notifications\Notification::make()
                                 ->title('Rechnung storniert')
                                 ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\Action::make('mark_uncollectible')
+                        ->label('Uneinbringlich')
+                        ->icon('heroicon-o-exclamation-circle')
+                        ->color('danger')
+                        ->visible(fn ($record) => $record->status === AggregateInvoice::STATUS_OPEN)
+                        ->requiresConfirmation()
+                        ->modalHeading('Als uneinbringlich markieren?')
+                        ->modalDescription('Diese Rechnung wird als nicht mehr eintreibbar markiert. Dieser Status wird oft für Buchhaltungszwecke verwendet.')
+                        ->action(function ($record) {
+                            $record->markAsUncollectible();
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Status aktualisiert')
+                                ->body('Rechnung als uneinbringlich markiert.')
+                                ->warning()
                                 ->send();
                         }),
                 ])->iconButton(),

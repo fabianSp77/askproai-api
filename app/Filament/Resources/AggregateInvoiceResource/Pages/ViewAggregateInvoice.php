@@ -128,6 +128,26 @@ class ViewAggregateInvoice extends ViewRecord
                     $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
                 }),
 
+            Actions\Action::make('mark_uncollectible')
+                ->label('Als uneinbringlich markieren')
+                ->icon('heroicon-o-exclamation-circle')
+                ->color('danger')
+                ->visible(fn () => $this->record->status === AggregateInvoice::STATUS_OPEN)
+                ->authorize('markAsUncollectible')
+                ->requiresConfirmation()
+                ->modalHeading('Als uneinbringlich markieren?')
+                ->modalDescription('Diese Rechnung wird als nicht mehr eintreibbar markiert. Der Status wird auf "Uneinbringlich" gesetzt und dient Buchhaltungszwecken.')
+                ->action(function () {
+                    $this->record->markAsUncollectible();
+
+                    Notification::make()
+                        ->title('Rechnung als uneinbringlich markiert')
+                        ->warning()
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
+                }),
+
             Actions\EditAction::make()
                 ->visible(fn () => $this->record->status === AggregateInvoice::STATUS_DRAFT),
         ];

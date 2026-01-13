@@ -41,12 +41,15 @@ class AggregateInvoice extends Model
         'due_at',
         'metadata',
         'notes',
+        'discount_cents',
+        'discount_description',
     ];
 
     protected $casts = [
         'billing_period_start' => 'date',
         'billing_period_end' => 'date',
         'subtotal_cents' => 'integer',
+        'discount_cents' => 'integer',
         'tax_cents' => 'integer',
         'total_cents' => 'integer',
         'tax_rate' => 'decimal:2',
@@ -172,6 +175,22 @@ class AggregateInvoice extends Model
     public function getTotalAttribute(): float
     {
         return $this->total_cents / 100;
+    }
+
+    /**
+     * Get discount as decimal (EUR).
+     */
+    public function getDiscountAttribute(): float
+    {
+        return ($this->discount_cents ?? 0) / 100;
+    }
+
+    /**
+     * Set discount from decimal (EUR).
+     */
+    public function setDiscountAttribute(float $value): void
+    {
+        $this->attributes['discount_cents'] = (int) round($value * 100);
     }
 
     /**

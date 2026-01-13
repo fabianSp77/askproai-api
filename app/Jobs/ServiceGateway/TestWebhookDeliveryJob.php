@@ -300,10 +300,11 @@ class TestWebhookDeliveryJob implements ShouldQueue
         ];
 
         // Add HMAC signature if secret configured
+        // IMPORTANT: Use 'X-Signature' to match WebhookOutputHandler (not X-AskPro-Signature)
         if (!empty($config->webhook_secret)) {
             $jsonPayload = json_encode($payload);
             $signature = hash_hmac('sha256', $jsonPayload, $config->webhook_secret);
-            $headers['X-AskPro-Signature'] = $signature;
+            $headers['X-Signature'] = $signature;
 
             Log::debug('[TestWebhookDeliveryJob] HMAC signature generated', [
                 'configuration_id' => $config->id,
