@@ -16,11 +16,14 @@
         'admin' => 'Admin',
         'transcript' => 'Transcript',
     ];
+
+    // Helper function to format template variable
+    $formatVar = fn($name) => '{{' . $name . '}}';
 @endphp
 
 <div class="text-sm space-y-4" x-data="{ copied: null }">
     <p class="font-semibold text-gray-700 dark:text-gray-300">
-        Verwenden Sie <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">{{variable_name}}</code> im Betreff oder Body:
+        Verwenden Sie <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">@{{variable_name}}</code> im Betreff oder Body:
     </p>
 
     @foreach($variableGroups as $groupKey => $variables)
@@ -32,10 +35,11 @@
 
             <div class="space-y-1.5">
                 @foreach($variables as $varName => $description)
+                    @php $templateVar = $formatVar($varName); @endphp
                     <div class="flex items-start justify-between gap-2 group hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1.5 transition-colors">
                         <div class="flex-1 min-w-0">
                             <code class="text-xs font-mono text-primary-600 dark:text-primary-400 font-semibold">
-                                {{'{{'}}{{ $varName }}{{'}}'}}
+                                {{ $templateVar }}
                             </code>
                             <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                                 {{ $description }}
@@ -44,12 +48,8 @@
 
                         <button
                             type="button"
-                            @click="
-                                navigator.clipboard.writeText('{{'{{'}}{{ $varName }}{{'}}}}');
-                                copied = '{{ $varName }}';
-                                setTimeout(() => copied = null, 1500);
-                            "
-                            aria-label="Variable {{'{{'}}{{ $varName }}{{'}}'}} in Zwischenablage kopieren"
+                            x-on:click="navigator.clipboard.writeText('{{ $templateVar }}'); copied = '{{ $varName }}'; setTimeout(() => copied = null, 1500);"
+                            aria-label="Variable {{ $templateVar }} in Zwischenablage kopieren"
                             class="flex-shrink-0 p-1.5 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                             title="In Zwischenablage kopieren"
                         >

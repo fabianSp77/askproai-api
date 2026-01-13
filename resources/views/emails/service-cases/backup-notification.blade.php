@@ -78,6 +78,28 @@
                         </td>
                     </tr>
 
+                    {{-- ═══════════════════════════════════════════════════════════════ --}}
+                    {{-- SECTION: COMPANY NAME (above Ticket ID) --}}
+                    {{-- ═══════════════════════════════════════════════════════════════ --}}
+
+                    @if($calledCompanyName)
+                    <tr>
+                        <td align="center" style="padding:20px 24px 0;">
+                            <div style="color:#6b7280; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
+                                Unternehmen
+                            </div>
+                            <div style="font-size:18px; font-weight:600; color:#1f2937;">
+                                {{ $calledCompanyName }}
+                            </div>
+                            @if($calledBranchName && $calledBranchName !== $calledCompanyName)
+                            <div style="color:#6b7280; font-size:13px; margin-top:2px;">
+                                {{ $calledBranchName }}
+                            </div>
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
+
                     <!-- Ticket ID Hero -->
                     <tr>
                         <td align="center" style="padding:28px 24px 12px;">
