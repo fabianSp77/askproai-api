@@ -135,6 +135,23 @@ class Company extends Model
         return $this->hasMany(CompanyServicePricing::class);
     }
 
+    /**
+     * Get all companies managed by this partner company.
+     * Used for aggregate billing where partner receives ONE invoice for all managed companies.
+     */
+    public function managedCompanies(): HasMany
+    {
+        return $this->hasMany(Company::class, 'managed_by_company_id');
+    }
+
+    /**
+     * Get the partner company that manages this company.
+     */
+    public function managingPartner(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'managed_by_company_id');
+    }
+
     public function calls(): HasMany
     {
         return $this->hasMany(Call::class);
