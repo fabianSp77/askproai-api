@@ -1,0 +1,50 @@
+02abf1262 chore: Add env.testing and Serena memories
+529aa11f5 feat: Golden Backup - Webhook Alerts, Partner Billing & Service Gateway
+e20759238 style(email): Lighter webhook error email matching ticket design
+01a84867a fix(filament): Sections default to expanded (open) state
+46a08b51b fix(filament): Use explicit collapsed(true) for sections
+19f4cde24 fix(filament): Dark mode & collapsed sections for ExchangeLog detail view
+24d79b8a4 style(service-gateway): State-of-the-art UI/UX for webhook monitoring
+ae0df58d8 feat(service-gateway): Semantic error detection and email alerts
+346baa3c2 feat(filament): Partner UI improvements for Company list
+5c88fbfab feat(filament): Add ManagedCompaniesRelationManager for partners
+e70402714 feat(billing): Premium Partner Invoice Email Template
+dfc519817 fix(email): Complete email preview with all fields and company name placement
+86ffcfb58 fix(billing): Use forceDelete() for voided invoices
+43f2a2995 fix(billing): Delete voided invoices before creating new ones
+27e46dfb8 fix: Add missing managedCompanies() relationship to Company model
+81ed40108 feat(billing): Improve AggregateInvoice UI with authorization and actions
+ae2c1926f feat(auth): Pass email to password reset URL for better UX
+690ac00d7 feat(gateway): Add source/channel constants for ServiceNow integration
+f5141b94f fix: Add missing servicePricings() relationship to Company model
+d3adca8c9 feat: Billing System QC Fixes - 11 User Stories (#764)
+ebc900ba6 feat(dashboard): add custom date range picker and UI/UX improvements
+03b6acc90 fix(dashboard): remove inherited Cal.com widgets from Service Gateway Dashboard
+bc4f87bdf fix(filament): resolve Service Gateway menu navigationSort collision
+71e5520c4 fix(ci): Add missing ThomasIncidentCategoriesSeeder for migration
+6066fc13b fix(ci): Fix build-artifacts workflow npm/rollup platform issue
+4e13f0436 fix(migrations): Fix retell monitoring tables skipped in CI testing
+2af4f363c fix(tests): Resolve CI test configuration and test bugs
+3acefb32a fix(ci): Create Laravel storage directories before test run
+31bd93acb fix(ci): Increase PHP memory limit for coverage generation
+37fe06feb fix(ci): Use Pest instead of PHPUnit in test workflow
+09f01254c fix(ci): Remove PostgreSQL-only migration causing MySQL CI failure
+878e5aada fix(database): Batch commit all migration fixes for CI compatibility
+a03201248 fix(database): Make number_normalized migration idempotent
+ef923a97b fix(database): Skip obsolete phone_number_id column type migration
+948dfc696 fix(database): Remove JSON default values (MySQL 8.0 constraint)
+d686763e3 fix(database): Add explicit collation to all char(36) UUID FKs
+fbf0cec68 fix(database): MySQL 8.0 strict collation for char(36) UUID FKs
+5621e15c3 ci: Add database credentials for CI environment
+f2e49cdc6 ci: Upgrade Node.js to v20 and fix rollup platform deps
+da45afa1d ci: Use npm install instead of npm ci for cross-platform compatibility
+6eb233da1 chore: Regenerate package-lock.json for CI compatibility
+7093c0535 ci: Add npm build step before composer install
+382f47334 ci: Update PHP version from 8.2 to 8.4
+6f07d1874 ci: Update actions/upload-artifact from v3 to v4
+ce12a07a7 fix(security): VULN-001 - Implement Retell webhook signature verification
+296ef986e fix(email-preview): Improve UI/UX and eliminate console warning
+a2760e0ec feat(service-gateway): Add live email template preview in admin panel
+5c2572aa8 feat(filament): Improve Service Output Configuration UX
+2faa12bac feat(service-gateway): Add call details to email templates
+8d081d37b docs: Complete VitePress documentation with all missing pages

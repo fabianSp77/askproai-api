@@ -1,0 +1,39 @@
+Auf Branch main
+Ihr Branch ist auf demselben Stand wie 'origin/main'.
+
+Unversionierte Dateien:
+  (benutzen Sie "git add <Datei>...", um die Änderungen zum Commit vorzumerken)
+	storage/framework/views/03f1afd0302892e864e9718d8415f88b.php
+	storage/framework/views/0a39707b22f2d09a9deed9f9e314af3d.php
+	storage/framework/views/0e32e2865078b89ed69cfbcd39ac5df5.php
+	storage/framework/views/12e8c9d619ebe343c76bf82c18475f7f.php
+	storage/framework/views/22892ed1befa5bff56affada212d6ab8.php
+	storage/framework/views/2cfa93aa8f990b111403ebe98ae7f529.blade.php
+	storage/framework/views/35e5726f44bb292865dab327acda00d5.blade.php
+	storage/framework/views/4593cdab6908756faa832ddc4302bfdc.php
+	storage/framework/views/464bf1dde755b7cfb4ce19021725f11d.php
+	storage/framework/views/4cf0061ddd534431da52edff78a467c8.php
+	storage/framework/views/53cb0031853904210e049ed12a4e3463.php
+	storage/framework/views/5495fd3882fda3f65118e05ad0013765.php
+	storage/framework/views/5a10ad8f551ae264e03be0ef00a09750.php
+	storage/framework/views/67c5e716e016f9d046435f8686696198.php
+	storage/framework/views/70366191063446b4b5926edbd0bcb587.blade.php
+	storage/framework/views/713e8904252121946626f2717b9fdabc.blade.php
+	storage/framework/views/86b90c146b1a85e1b46e7abbf56c8993.blade.php
+	storage/framework/views/8babcf072183498811d55185a8e6c77e.php
+	storage/framework/views/9e5b8ede552e4ca88d56c6475e6f19a3.php
+	storage/framework/views/a16697cb61ac376c6d86d6e90b6d5daf.php
+	storage/framework/views/a4f33f048c00d4ee89ad3b25f24a0be7.php
+	storage/framework/views/b3b30aba6b57a974cac6328efab204c6.php
+	storage/framework/views/b93e2c46329249b91e5b7d4ecf901b14.blade.php
+	storage/framework/views/bbf4444e4860df56274a9bfde4974ee5.php
+	storage/framework/views/be90777f04e1ac4513bfba8c7a0a7f17.php
+	storage/framework/views/d4a02645d78dd9c5a48a14dd4a1ef8c8.php
+	storage/framework/views/e5a62f150d8d25f20b3135446fd12347.blade.php
+	storage/framework/views/f48782f145be76ed3029cf61a5bf0ec9.php
+	storage/framework/views/f4c797e109023d67aa51078c20a97bfb.blade.php
+	storage/framework/views/fbcb941986b5092fb660d38fea606f4a.php
+	storage/framework/views/feaaa2ba954c49b99a421036298bfca8.php
+
+nichts zum Commit vorgemerkt, aber es gibt unversionierte Dateien
+(benutzen Sie "git add" zum Versionieren)
