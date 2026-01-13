@@ -661,8 +661,11 @@ class CompanyResource extends Resource
         $table = $table
             // Performance: Eager load relationships and count aggregates
             ->modifyQueryUsing(fn (Builder $query) =>
-                $query->withCount(['branches', 'staff'])
-                    ->with(['branches' => fn ($q) => $q->limit(3)])
+                $query->withCount(['branches', 'staff', 'managedCompanies'])
+                    ->with([
+                        'branches' => fn ($q) => $q->limit(3),
+                        'managingPartner:id,name',
+                    ])
             )
             // Optimized to 9 essential columns with rich visual information
             ->columns([
@@ -721,6 +724,38 @@ class CompanyResource extends Resource
                         'internal' => '🏠 Intern',
                         default => $state,
                     }),
+
+                // Partner relationship column
+                Tables\Columns\TextColumn::make('partner_status')
+                    ->label('Partner-Beziehung')
+                    ->toggleable()
+                    ->getStateUsing(function ($record) {
+                        if ($record->is_partner) {
+                            $count = $record->managed_companies_count ?? 0;
+                            return "Partner ({$count})";
+                        }
+                        if ($record->managed_by_company_id) {
+                            return $record->managingPartner?->name ?? 'Unbekannt';
+                        }
+                        return null;
+                    })
+                    ->badge()
+                    ->color(fn ($record) => match(true) {
+                        $record->is_partner => 'success',
+                        (bool) $record->managed_by_company_id => 'info',
+                        default => 'gray',
+                    })
+                    ->icon(fn ($record) => match(true) {
+                        $record->is_partner => 'heroicon-m-star',
+                        (bool) $record->managed_by_company_id => 'heroicon-m-arrow-right-circle',
+                        default => null,
+                    })
+                    ->tooltip(fn ($record) => match(true) {
+                        $record->is_partner => "Verwaltet {$record->managed_companies_count} Unternehmen",
+                        (bool) $record->managed_by_company_id => "Wird verwaltet von: {$record->managingPartner?->name}",
+                        default => null,
+                    })
+                    ->placeholder('-'),
 
                 // Billing status with clear indicators
                 Tables\Columns\TextColumn::make('billing_status')
@@ -1009,6 +1044,38 @@ class CompanyResource extends Resource
                         $query->whereNotNull('retell_agent_id')
                     ),
 
+                // Partner filters
+                Filter::make('is_partner')
+                    ->label('Nur Partner')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->where('is_partner', true)
+                    )
+                    ->toggle(),
+
+                Filter::make('has_partner')
+                    ->label('Hat Partner zugewiesen')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->whereNotNull('managed_by_company_id')
+                    )
+                    ->toggle(),
+
+                Filter::make('no_partner')
+                    ->label('Ohne Partner-Zuordnung')
+                    ->query(fn (Builder $query): Builder =>
+                        $query->whereNull('managed_by_company_id')
+                              ->where('is_partner', false)
+                    )
+                    ->toggle(),
+
+                SelectFilter::make('managed_by_company_id')
+                    ->label('Verwaltet von Partner')
+                    ->relationship('managingPartner', 'name', fn (Builder $query) =>
+                        $query->where('is_partner', true)
+                    )
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Alle Partner'),
+
                 Filter::make('created_this_month')
                     ->label('Diesen Monat erstellt')
                     ->query(fn (Builder $query): Builder =>
@@ -1027,6 +1094,27 @@ class CompanyResource extends Resource
             ->filtersFormColumns(4)
             // Quick actions for company management
             ->actions([
+                // Quick navigation for partner relationships
+                Tables\Actions\Action::make('viewPartner')
+                    ->icon('heroicon-m-arrow-up-circle')
+                    ->iconButton()
+                    ->color('primary')
+                    ->size('sm')
+                    ->visible(fn ($record) => (bool) $record->managed_by_company_id)
+                    ->url(fn ($record) => route('filament.admin.resources.companies.edit', $record->managed_by_company_id))
+                    ->tooltip(fn ($record) => "Zum Partner: {$record->managingPartner?->name}"),
+
+                Tables\Actions\Action::make('viewManagedCompanies')
+                    ->icon('heroicon-m-users')
+                    ->iconButton()
+                    ->color('info')
+                    ->size('sm')
+                    ->visible(fn ($record) => $record->is_partner && ($record->managed_companies_count ?? 0) > 0)
+                    ->url(fn ($record) => route('filament.admin.resources.companies.index', [
+                        'tableFilters[managed_by_company_id][value]' => $record->id
+                    ]))
+                    ->tooltip(fn ($record) => ($record->managed_companies_count ?? 0) . " verwaltete Unternehmen anzeigen"),
+
                 Tables\Actions\ActionGroup::make([
                     // Credit management
                     Tables\Actions\Action::make('addCredit')
@@ -1162,6 +1250,57 @@ class CompanyResource extends Resource
                             Notification::make()
                                 ->title('Benachrichtigung gesendet')
                                 ->body("Benachrichtigung an {$record->name} wurde gesendet.")
+                                ->success()
+                                ->send();
+                        }),
+
+                    // Partner assignment actions
+                    Tables\Actions\Action::make('assignPartner')
+                        ->label('Partner zuweisen')
+                        ->icon('heroicon-m-user-plus')
+                        ->color('info')
+                        ->visible(fn ($record) => !$record->is_partner && !$record->managed_by_company_id)
+                        ->form([
+                            Forms\Components\Select::make('partner_id')
+                                ->label('Partner auswählen')
+                                ->options(function () {
+                                    return Company::where('is_partner', true)
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $partner = Company::find($data['partner_id']);
+                            $record->update(['managed_by_company_id' => $data['partner_id']]);
+
+                            Notification::make()
+                                ->title('Partner zugewiesen')
+                                ->body("\"{$record->name}\" wird jetzt von \"{$partner->name}\" verwaltet.")
+                                ->success()
+                                ->send();
+                        })
+                        ->modalHeading('Partner zuweisen')
+                        ->modalSubmitActionLabel('Zuweisen'),
+
+                    Tables\Actions\Action::make('removePartner')
+                        ->label('Partner entfernen')
+                        ->icon('heroicon-m-user-minus')
+                        ->color('warning')
+                        ->visible(fn ($record) => !$record->is_partner && $record->managed_by_company_id)
+                        ->requiresConfirmation()
+                        ->modalHeading('Partner-Zuordnung entfernen')
+                        ->modalDescription(fn ($record) =>
+                            "Soll \"{$record->name}\" nicht mehr von \"{$record->managingPartner?->name}\" verwaltet werden?"
+                        )
+                        ->action(function ($record) {
+                            $partnerName = $record->managingPartner?->name;
+                            $record->update(['managed_by_company_id' => null]);
+
+                            Notification::make()
+                                ->title('Partner entfernt')
+                                ->body("\"{$record->name}\" wird nicht mehr von \"{$partnerName}\" verwaltet.")
                                 ->success()
                                 ->send();
                         }),
@@ -1356,6 +1495,71 @@ class CompanyResource extends Resource
 
                     Tables\Actions\ExportBulkAction::make()
                         ->label('Exportieren'),
+
+                    // Bulk Partner Assignment
+                    Tables\Actions\BulkAction::make('bulkAssignPartner')
+                        ->label('Partner zuweisen')
+                        ->icon('heroicon-m-user-group')
+                        ->color('info')
+                        ->form([
+                            Forms\Components\Select::make('partner_id')
+                                ->label('Partner')
+                                ->options(function () {
+                                    return Company::where('is_partner', true)
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->action(function ($records, array $data) {
+                            $partner = Company::find($data['partner_id']);
+                            $assigned = 0;
+                            $skipped = 0;
+
+                            foreach ($records as $company) {
+                                if ($company->is_partner) {
+                                    $skipped++;
+                                    continue;
+                                }
+                                $company->update(['managed_by_company_id' => $data['partner_id']]);
+                                $assigned++;
+                            }
+
+                            Notification::make()
+                                ->title('Partner zugewiesen')
+                                ->body("{$assigned} Unternehmen wurden \"{$partner->name}\" zugewiesen." .
+                                       ($skipped > 0 ? " ({$skipped} übersprungen)" : ''))
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Partner zuweisen')
+                        ->modalSubmitActionLabel('Partner zuweisen'),
+
+                    Tables\Actions\BulkAction::make('bulkRemovePartner')
+                        ->label('Partner entfernen')
+                        ->icon('heroicon-m-user-minus')
+                        ->color('warning')
+                        ->action(function ($records) {
+                            $removed = 0;
+                            foreach ($records as $company) {
+                                if ($company->managed_by_company_id) {
+                                    $company->update(['managed_by_company_id' => null]);
+                                    $removed++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Partner entfernt')
+                                ->body("{$removed} Unternehmen wurden von ihren Partnern getrennt.")
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Partner-Zuordnung entfernen')
+                        ->modalDescription('Die Partner-Zuordnung wird für alle ausgewählten Unternehmen entfernt.')
+                        ->modalSubmitActionLabel('Zuordnung entfernen'),
 
                     // Bulk Archive
                     Tables\Actions\BulkAction::make('bulkArchive')
