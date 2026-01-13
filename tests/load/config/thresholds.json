@@ -1,0 +1,54 @@
+{
+  "voice_hot_path": {
+    "description": "Function calls during active voice call - CRITICAL",
+    "endpoints": [
+      "/api/retell/check-availability",
+      "/api/retell/check-customer",
+      "/api/retell/collect-appointment"
+    ],
+    "thresholds": {
+      "http_req_duration": {
+        "p50": 200,
+        "p95": 400,
+        "p99": 500,
+        "max": 1000
+      },
+      "http_req_failed": {
+        "rate": 0.01
+      }
+    }
+  },
+  "booking_flow": {
+    "description": "Booking creation - must complete within call",
+    "endpoints": [
+      "/api/retell/book-appointment",
+      "/api/webhooks/retell"
+    ],
+    "thresholds": {
+      "http_req_duration": {
+        "p50": 1000,
+        "p95": 2500,
+        "p99": 3000,
+        "max": 5000
+      },
+      "http_req_failed": {
+        "rate": 0.02
+      }
+    }
+  },
+  "health_check": {
+    "description": "System health endpoints",
+    "endpoints": [
+      "/api/health",
+      "/api/health/detailed"
+    ],
+    "thresholds": {
+      "http_req_duration": {
+        "p95": 100
+      },
+      "http_req_failed": {
+        "rate": 0.0
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "baseline": {
+    "description": "Establish baseline metrics with minimal load",
+    "vus": 5,
+    "duration": "2m",
+    "purpose": "Measure system performance under ideal conditions"
+  },
+  "normal_load": {
+    "description": "Simulate typical production load",
+    "vus": 30,
+    "duration": "5m",
+    "purpose": "Verify system handles expected daily traffic"
+  },
+  "peak_load": {
+    "description": "Target capacity - 50-100 concurrent calls",
+    "vus": 100,
+    "duration": "5m",
+    "purpose": "Verify system meets business requirements"
+  },
+  "stress_test": {
+    "description": "Find breaking point",
+    "vus": 200,
+    "duration": "10m",
+    "purpose": "Identify saturation point and failure modes"
+  },
+  "spike_test": {
+    "description": "Test sudden load changes",
+    "stages": [
+      { "duration": "30s", "target": 10 },
+      { "duration": "1m", "target": 150 },
+      { "duration": "30s", "target": 150 },
+      { "duration": "1m", "target": 10 }
+    ],
+    "purpose": "Test system recovery from sudden load spikes"
+  }
+}

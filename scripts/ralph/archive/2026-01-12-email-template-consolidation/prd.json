@@ -1,0 +1,191 @@
+{
+  "project": "AskPro Gateway",
+  "branchName": "ralph/billing-qc-fixes",
+  "description": "Billing System QC Fixes - N+1 Query Fix, Stripe Event ID Tracking, Float Precision, Indexes, Documentation, BillingPeriod VO, Test Coverage",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix N+1 Query in getMonthlyServicesData()",
+      "description": "Als System muss getMonthlyServicesData() die bereits geladenen Batch-Daten nutzen statt eigene Queries auszuführen.",
+      "acceptanceCriteria": [
+        "getMonthlyServicesData() nutzt $this->getBatchServicePricings($company->id) statt direkter Query",
+        "Die direkte Query (Zeilen 416-427) wird entfernt",
+        "Unit Test: Billing mit 10 Companies führt exakt 3 Batch-Queries aus (Calls, Pricings, ChangeFees)",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "P0-003 aus QC Report. Kritisch für Performance bei vielen Companies."
+    },
+    {
+      "id": "US-002",
+      "title": "Add Stripe Webhook Event ID Tracking",
+      "description": "Als System muss ich Stripe Event IDs speichern um Replay-Angriffe zu verhindern.",
+      "acceptanceCriteria": [
+        "Migration: stripe_event_id VARCHAR(255) NULLABLE zu aggregate_invoices hinzufügen",
+        "Index auf stripe_event_id für schnelle Lookups",
+        "handleInvoicePaid(): Prüft ob Event-ID bereits verarbeitet, loggt Warning und skipped bei Duplikat",
+        "handleInvoiceFinalized() und handleInvoiceVoided(): Speichern Event-ID nach Verarbeitung",
+        "Model AggregateInvoice: stripe_event_id zu fillable und PHPDoc hinzufügen",
+        "Unit Test: Doppelte Event-ID wird erkannt und ignoriert",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "P1-001 aus QC Report. Sicherheitsrelevant."
+    },
+    {
+      "id": "US-003",
+      "title": "Fix Float Precision in Call Minutes Calculation",
+      "description": "Als System muss ich Minuten mit Integer-Arithmetik berechnen um Rundungsfehler zu vermeiden.",
+      "acceptanceCriteria": [
+        "getCallMinutesData() summiert Sekunden als Integer",
+        "Division erst am Ende: $totalMinutes = round($totalSeconds / 60, 2)",
+        "Keine Float-Division in Loops",
+        "$totalAmountCents als Integer: (int) round($totalMinutes * $ratePerMinuteCents)",
+        "Unit Test: 1000 Calls mit je 61 Sekunden = exakt 1016.67 Minuten",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "P1-002 aus QC Report. Finanzielle Genauigkeit."
+    },
+    {
+      "id": "US-004",
+      "title": "Add Missing Billing Indexes",
+      "description": "Als System brauche ich Indexes für schnelle Billing-Queries.",
+      "acceptanceCriteria": [
+        "Migration erstellt Index idx_service_cases_billing_query auf (company_id, billing_status, created_at)",
+        "Migration erstellt Index idx_aggregate_invoices_partner auf (partner_company_id, status, billing_period_start)",
+        "Migration ist idempotent (prüft ob Index bereits existiert mit Schema::hasIndex oder try-catch)",
+        "php artisan migrate läuft erfolgreich",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "P1-003 aus QC Report. Performance-Optimierung."
+    },
+    {
+      "id": "US-005",
+      "title": "Create Billing Architecture Documentation",
+      "description": "Als Entwickler brauche ich Dokumentation zum Billing-System.",
+      "acceptanceCriteria": [
+        "Neue Datei: claudedocs/02_BACKEND/Billing/BILLING_ARCHITECTURE.md",
+        "Abschnitt Overview: MonthlyBillingAggregator, StripeInvoicingService, Models",
+        "Abschnitt Invoice Lifecycle: draft → open → paid/void mit ASCII-Diagram",
+        "Abschnitt Billing Modes: per_case, monthly_flat, none mit Beispielen",
+        "Abschnitt Stripe Integration: Webhook Events, Idempotency, Event ID Tracking",
+        "Abschnitt Service Gateway Billing: Categories → OutputConfig → Pricing",
+        "Abschnitt Partner Portal: PartnerInvoiceResource, Zugriffskontrolle",
+        "Abschnitt Tax Calculation: German VAT, Discount before Tax",
+        "Abschnitt Troubleshooting: Common Issues, Debug Commands",
+        "Index in claudedocs/00_INDEX.md unter 02_BACKEND aktualisiert"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "P1-004 aus QC Report. Kein Code, nur Dokumentation."
+    },
+    {
+      "id": "US-006",
+      "title": "Create BillingPeriod Value Object",
+      "description": "Als Entwickler möchte ich Period-Logik in einem Value Object kapseln.",
+      "acceptanceCriteria": [
+        "Neue Klasse: app/ValueObjects/BillingPeriod.php",
+        "Immutable Value Object mit Carbon $start und Carbon $end Properties",
+        "Factory: BillingPeriod::forMonth(int $year, int $month): self",
+        "Factory: BillingPeriod::forPreviousMonth(): self (basierend auf now())",
+        "Methode: toDateRange(): array returns [$start, $end]",
+        "Methode: containsDate(Carbon $date): bool",
+        "MonthlyBillingAggregator Constructor akzeptiert optional BillingPeriod statt year/month",
+        "Unit Tests für alle Factory-Methoden inkl. Jahresübergang (Dezember → Januar)",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "P2-003 aus QC Report. DRY-Verbesserung."
+    },
+    {
+      "id": "US-007",
+      "title": "Add Service Gateway Billing Integration Tests",
+      "description": "Als Entwickler brauche ich Integration Tests für Service Gateway Billing.",
+      "acceptanceCriteria": [
+        "Neue Testdatei: tests/Feature/Billing/ServiceGatewayBillingTest.php",
+        "Test: Per-Case Billing - ServiceCase mit per_case Config generiert korrekten Invoice Item",
+        "Test: Monthly-Flat Billing - Config mit monthly_flat generiert monatlichen Posten",
+        "Test: Mixed Billing - Company mit beiden Modi generiert beide Item-Typen",
+        "Test: Billing Status Transition - unbilled → billed nach Invoice-Erstellung",
+        "Test: Waived Cases werden nicht berechnet",
+        "Test: Bereits billed Cases werden übersprungen",
+        "Tests nutzen RefreshDatabase Trait und Factories",
+        "php artisan test tests/Feature/Billing/ServiceGatewayBillingTest.php passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "P2-004 aus QC Report. Test Coverage."
+    },
+    {
+      "id": "US-008",
+      "title": "Add ServiceCase Billing State Machine Tests",
+      "description": "Als Entwickler brauche ich Tests für billing_status State Transitions.",
+      "acceptanceCriteria": [
+        "Neue Testdatei: tests/Unit/Models/ServiceCaseBillingTest.php",
+        "Test: unbilled → billed via markAsBilled() erfolgreich",
+        "Test: billed → billed via markAsBilled() wirft InvalidArgumentException",
+        "Test: waived → billed via markAsBilled() wirft InvalidArgumentException",
+        "Test: unbilled → waived via waiveBilling() erfolgreich",
+        "Test: waiveBilling() speichert Grund in ai_metadata['billing_waived_reason']",
+        "Test: billed_amount_cents und billed_at werden korrekt gesetzt",
+        "php artisan test tests/Unit/Models/ServiceCaseBillingTest.php passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "P2-004 aus QC Report. State Machine Coverage."
+    },
+    {
+      "id": "US-009",
+      "title": "Add AggregateInvoice Number Generation Test",
+      "description": "Als Entwickler brauche ich Tests für Invoice Number Generation.",
+      "acceptanceCriteria": [
+        "Neue Testdatei: tests/Feature/Billing/InvoiceNumberGenerationTest.php",
+        "Test: Sequentielle Invoice-Erstellungen generieren aufsteigende Nummern",
+        "Test: Format ist AGG-YYYY-MM-NNN (z.B. AGG-2026-01-001)",
+        "Test: Neuer Monat startet bei 001",
+        "Test: Nummern sind unique (kein Duplikat möglich)",
+        "Test: Try-finally im MySQL-Pfad funktioniert bei Exception",
+        "php artisan test tests/Feature/Billing/InvoiceNumberGenerationTest.php passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "P2-004 aus QC Report. Concurrency Coverage."
+    },
+    {
+      "id": "US-010",
+      "title": "Add ServiceOutputConfiguration Pricing Tests",
+      "description": "Als Entwickler brauche ich Tests für calculateCasePrice().",
+      "acceptanceCriteria": [
+        "Neue Testdatei: tests/Unit/Models/ServiceOutputConfigurationBillingTest.php",
+        "Test: per_case Mode mit base_price + email_price = korrekte Summe",
+        "Test: per_case Mode mit base_price + webhook_price = korrekte Summe",
+        "Test: per_case Mode mit hybrid (email + webhook) addiert beide Fees",
+        "Test: monthly_flat Mode gibt 0 für calculateCasePrice() zurück",
+        "Test: none Mode gibt 0 für calculateCasePrice() zurück",
+        "Test: Default-Werte (50 cents email, 50 cents webhook)",
+        "Test: getCasePriceEurAttribute() konvertiert cents → EUR korrekt",
+        "Test: getMonthlyFlatPriceEurAttribute() mit Default 29.00 EUR",
+        "php artisan test tests/Unit/Models/ServiceOutputConfigurationBillingTest.php passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "P2-004 aus QC Report. Pricing Logic Coverage."
+    }
+  ]
+}

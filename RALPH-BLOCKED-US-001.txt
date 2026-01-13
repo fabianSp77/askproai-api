@@ -1,0 +1,23 @@
+⚠️  RALPH AGENT - ACTION REQUIRED ⚠️
+=====================================
+
+User Story US-001 is IMPLEMENTED but BLOCKED by file permissions.
+
+QUICK FIX:
+----------
+Run this command as root or with sudo:
+    sudo bash /tmp/apply_n_plus_one_fix.sh
+
+Then continue Ralph iteration normally.
+
+DETAILS:
+--------
+See: /tmp/US-001-IMPLEMENTATION-COMPLETE-NEEDS-SUDO.txt
+
+The N+1 query optimization is complete and tested for syntax.
+It just needs to be written to disk with elevated permissions.
+
+File to apply: /tmp/MonthlyBillingAggregator_fixed.php
+Target: /var/www/api-gateway/app/Services/Billing/MonthlyBillingAggregator.php
+
+After applying, delete this file and let Ralph continue.

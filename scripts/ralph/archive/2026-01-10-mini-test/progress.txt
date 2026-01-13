@@ -1,0 +1,64 @@
+# Ralph Progress Log - AskPro Gateway
+Started: 2026-01-10
+
+## Codebase Patterns
+
+### Multi-Tenancy
+- All tenant-specific models extend `CompanyScopedModel`
+- Company ID is automatically filtered via global scope
+- Use `company_id` foreign key, NOT `tenant_id`
+
+### Filament Resources
+- Location: `app/Filament/Resources/{Model}Resource.php`
+- Admin panel at `/admin/`
+- Customer panel at `/customer/`
+- Use `->searchable()` on TextColumn for search
+- Use `->sortable()` on columns for sorting
+
+### Services
+- Location: `app/Services/{Domain}/{Service}Service.php`
+- Inject via constructor, not facades
+- Business logic lives here, not in controllers
+- Example: `ServiceGateway/OutputHandlers/EmailOutputHandler.php`
+
+### Events & Jobs
+- Events in `app/Events/{Domain}/`
+- Jobs in `app/Jobs/{Domain}/`
+- Use queues for async operations
+- Redis is the queue driver
+
+### Cache
+- Redis-based caching
+- Key pattern: `company:{id}:{resource}:{identifier}`
+- TTL: 5min for availability, 1hr for config
+- Invalidate via event listeners
+
+### Testing
+- Use `RefreshDatabase` trait
+- Factories in `database/factories/`
+- Feature tests in `tests/Feature/`
+- Unit tests in `tests/Unit/`
+- Run with: `php artisan test --parallel`
+
+### Code Style
+- PSR-12 via Laravel Pint
+- Check with: `./vendor/bin/pint --test`
+- Fix with: `./vendor/bin/pint`
+
+## Key Files Reference
+
+### Configuration
+- `config/companyscope.php` - Multi-tenant config
+- `config/gateway.php` - Service Gateway settings
+- `config/services.php` - External API keys
+
+### Core Models
+- `app/Models/Company.php` - Tenant model
+- `app/Models/ServiceCase.php` - Service Gateway cases
+- `app/Models/ServiceOutputConfiguration.php` - Output config
+
+### Key Services
+- `app/Services/ServiceGateway/OutputHandlers/*.php` - Email/Webhook handlers
+- `app/Services/ServiceGateway/WebhookTemplateEngine.php` - Template rendering
+
+---

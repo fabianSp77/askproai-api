@@ -1,0 +1,110 @@
+{
+  "timestamp": "2025-12-29T09:20:55.967Z",
+  "url": "https://api.askproai.de/test-419",
+  "tests": {
+    "screenshots": [
+      {
+        "name": "Light Mode Desktop",
+        "path": "/var/www/api-gateway/tests/screenshots/419-page/01-light-mode-desktop.png",
+        "status": "captured"
+      }
+    ],
+    "darkMode": {
+      "implemented": true,
+      "backgroundColor": "rgb(17, 24, 39)",
+      "screenshotPath": "/var/www/api-gateway/tests/screenshots/419-page/02-dark-mode-desktop.png",
+      "status": "passed"
+    },
+    "designQuality": {
+      "elements": {
+        "card": {
+          "exists": true,
+          "styles": {
+            "color": "rgb(17, 24, 39)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "display": "block"
+          }
+        },
+        "icon": {
+          "exists": true,
+          "type": "div"
+        },
+        "heading": {
+          "exists": true,
+          "text": "Sitzung abgelaufen"
+        },
+        "description": {
+          "exists": true,
+          "text": "Ihre Sitzung ist aus Sicherheitsgründen abgelaufen.\n                Bitte melden Sie sich erneut an, um fortzufahren."
+        },
+        "button": {
+          "exists": true,
+          "text": "Zur Anmeldung",
+          "href": "https://api.askproai.de/admin/login"
+        }
+      },
+      "checks": {
+        "hasCard": true,
+        "hasIcon": true,
+        "hasHeading": true,
+        "hasCorrectHeading": true,
+        "hasDescription": true,
+        "hasButton": true,
+        "hasGermanText": true,
+        "buttonHasText": true
+      },
+      "score": 8,
+      "maxScore": 8,
+      "status": "passed"
+    },
+    "responsiveness": {
+      "viewports": [
+        {
+          "name": "mobile",
+          "width": 375,
+          "height": 667,
+          "screenshotPath": "/var/www/api-gateway/tests/screenshots/419-page/03-responsive-mobile.png",
+          "contentVisible": true,
+          "status": "passed"
+        },
+        {
+          "name": "tablet",
+          "width": 768,
+          "height": 1024,
+          "screenshotPath": "/var/www/api-gateway/tests/screenshots/419-page/03-responsive-tablet.png",
+          "contentVisible": true,
+          "status": "passed"
+        },
+        {
+          "name": "desktop",
+          "width": 1920,
+          "height": 1080,
+          "screenshotPath": "/var/www/api-gateway/tests/screenshots/419-page/03-responsive-desktop.png",
+          "contentVisible": true,
+          "status": "passed"
+        }
+      ]
+    },
+    "accessibility": {
+      "checks": {
+        "hasHeadingTag": true,
+        "headingText": "Sitzung abgelaufen",
+        "hasMainLandmark": false,
+        "buttonHasText": true,
+        "buttonText": "Zur Anmeldung",
+        "buttonFocusable": true,
+        "hasAltTexts": true,
+        "imageCount": 0
+      },
+      "wcagLevel": "AA",
+      "status": "passed"
+    }
+  },
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "warnings": 0
+  }
+}

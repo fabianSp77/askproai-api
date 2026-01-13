@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visionary Data - Payload Analyse</title>
+    <style>
+        :root {
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --gray: #6b7280;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: #e2e8f0;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .summary-card h3 {
+            font-size: 0.875rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card.green .value { color: var(--green); }
+        .summary-card.yellow .value { color: var(--yellow); }
+        .summary-card.red .value { color: var(--red); }
+        .summary-card.gray .value { color: var(--gray); }
+
+        .section {
+            background: var(--card);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.green { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+        .badge.yellow { background: rgba(245, 158, 11, 0.2); color: var(--yellow); }
+        .badge.red { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+        .badge.gray { background: rgba(107, 114, 128, 0.2); color: var(--gray); }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0,0,0,0.2);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .field-name {
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+            font-size: 0.875rem;
+            color: #93c5fd;
+        }
+
+        .field-example {
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #fbbf24;
+            background: rgba(0,0,0,0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .risk-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .risk-dot.high { background: var(--red); }
+        .risk-dot.medium { background: var(--yellow); }
+        .risk-dot.low { background: var(--green); }
+
+        .recommendation {
+            padding: 1rem 1.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--red);
+            margin: 1rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .recommendation.action {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--green);
+        }
+
+        .recommendation h4 {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation p {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        .json-block {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 1.5rem;
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: #c9d1d9;
+        }
+
+        .json-key { color: #7ee787; }
+        .json-string { color: #a5d6ff; }
+        .json-comment { color: #8b949e; font-style: italic; }
+        .json-sensitive { color: #f85149; text-decoration: line-through; }
+
+        .legend {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            body { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Webhook Payload Analyse - BEREINIGT</h1>
+        <p class="subtitle">Payload wurde am 24.12.2025 bereinigt - keine internen IDs mehr</p>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="badge green">Notwendig</span>
+                <span>Braucht der Empfänger</span>
+            </div>
+            <div class="legend-item">
+                <span class="badge red">Sensitiv</span>
+                <span>Interne Daten - sollten entfernt werden</span>
+            </div>
+            <div class="legend-item">
+                <span class="badge yellow">Redundant</span>
+                <span>Doppelt oder unnötig</span>
+            </div>
+            <div class="legend-item">
+                <span class="badge gray">Optional</span>
+                <span>Konfigurierbar</span>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card green">
+                <h3>Aktuelle Felder</h3>
+                <div class="value">14</div>
+            </div>
+            <div class="summary-card green">
+                <h3>Entfernt (Sensitiv)</h3>
+                <div class="value">✓ 12</div>
+            </div>
+            <div class="summary-card green">
+                <h3>Entfernt (Redundant)</h3>
+                <div class="value">✓ 5</div>
+            </div>
+            <div class="summary-card gray">
+                <h3>Optionale Felder</h3>
+                <div class="value">3</div>
+            </div>
+        </div>
+
+        <!-- SENSITIVE DATA - REMOVED -->
+        <div class="section">
+            <div class="section-header">
+                <span class="badge green">✓ Entfernt</span>
+                <h2>🔒 Sensitive/Interne Daten - BEREINIGT</h2>
+            </div>
+
+            <div class="recommendation action">
+                <h4>✓ Diese Felder wurden am 24.12.2025 entfernt</h4>
+                <p>Der Payload enthält keine internen IDs, Provider-Namen oder Architektur-Hinweise mehr.</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Feld</th>
+                        <th>Alter Wert</th>
+                        <th>Problem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.source</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">"askpro_service_gateway"</span></td>
+                        <td style="opacity: 0.6;">Verriet Provider-Name</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.version</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">"1.2"</span></td>
+                        <td style="opacity: 0.6;">Interne Versionierung</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.case_id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">30</span></td>
+                        <td style="opacity: 0.6;">Interne DB-ID</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.company_id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">15</span></td>
+                        <td style="opacity: 0.6;">Interne Mandanten-ID</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.call_id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">90693</span></td>
+                        <td style="opacity: 0.6;">Retell-Verknüpfung</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">meta.customer_id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">555</span></td>
+                        <td style="opacity: 0.6;">Interne Kunden-ID</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">fields.labels</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">["askpro", "voice-intake"]</span></td>
+                        <td style="opacity: 0.6;">Architektur-Hinweise</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">fields.customfield_10000</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">30</span></td>
+                        <td style="opacity: 0.6;">Jira-spezifisch</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.status</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">"completed"</span></td>
+                        <td style="opacity: 0.6;">Interner Pipeline-Status</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.enriched_at</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">"2025-12-24T..."</span></td>
+                        <td style="opacity: 0.6;">Interner Timestamp</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">Header: X-AskPro-Case-Id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">30</span></td>
+                        <td style="opacity: 0.6;">ID in HTTP-Header</td>
+                    </tr>
+                    <tr style="background: rgba(239, 68, 68, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">Header: X-AskPro-Company-Id</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">15</span></td>
+                        <td style="opacity: 0.6;">ID in HTTP-Header</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- REDUNDANT DATA - REMOVED -->
+        <div class="section">
+            <div class="section-header">
+                <span class="badge green">✓ Entfernt</span>
+                <h2>♻️ Redundante Daten - BEREINIGT</h2>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Feld</th>
+                        <th>Alter Wert</th>
+                        <th>Redundanz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: rgba(245, 158, 11, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.transcript_available</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">true</span></td>
+                        <td style="opacity: 0.6;">Präsenz von <code>transcript</code> zeigt das bereits</td>
+                    </tr>
+                    <tr style="background: rgba(245, 158, 11, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.transcript_segment_count</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">15</span></td>
+                        <td style="opacity: 0.6;">Bereits in <code>transcript.segment_count</code></td>
+                    </tr>
+                    <tr style="background: rgba(245, 158, 11, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.transcript_char_count</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">2847</span></td>
+                        <td style="opacity: 0.6;">Bereits in <code>transcript.total_chars</code></td>
+                    </tr>
+                    <tr style="background: rgba(245, 158, 11, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">enrichment.audio_available</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">true</span></td>
+                        <td style="opacity: 0.6;">Präsenz von <code>audio</code> zeigt das bereits</td>
+                    </tr>
+                    <tr style="background: rgba(245, 158, 11, 0.05);">
+                        <td><span class="badge green" style="font-size: 0.7rem;">✓ ENTFERNT</span></td>
+                        <td><span class="field-name" style="text-decoration: line-through; opacity: 0.6;">context.problem_since_original</span></td>
+                        <td><span class="field-example" style="text-decoration: line-through; opacity: 0.6;">"seit fünfzehn Minuten"</span></td>
+                        <td style="opacity: 0.6;"><code>problem_since</code> enthält angereicherte Version</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- NECESSARY DATA - Keep -->
+        <div class="section">
+            <div class="section-header">
+                <span class="badge green">Behalten</span>
+                <h2>✅ Notwendige Daten</h2>
+            </div>
+
+            <div class="recommendation action">
+                <h4>✓ Diese Daten braucht der Empfänger</h4>
+                <p>Ticket-Informationen, Kundendaten und Kontext sind essentiell für die Weiterverarbeitung.</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feld</th>
+                        <th>Beispiel</th>
+                        <th>Zweck</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="field-name">fields.summary</span></td>
+                        <td><span class="field-example">"Drucker funktioniert nicht"</span></td>
+                        <td>Ticket-Betreff</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">fields.description</span></td>
+                        <td><span class="field-example">"Mitarbeiter kann nicht drucken..."</span></td>
+                        <td>Problembeschreibung</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">fields.priority</span></td>
+                        <td><span class="field-example">{"name": "High"}</span></td>
+                        <td>Priorisierung</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">fields.issuetype</span></td>
+                        <td><span class="field-example">{"name": "Bug"}</span></td>
+                        <td>Ticket-Typ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">customer.name</span></td>
+                        <td><span class="field-example">"Max Mustermann"</span></td>
+                        <td>Ansprechpartner</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">customer.phone</span></td>
+                        <td><span class="field-example">"+49 123 456789"</span></td>
+                        <td>Rückrufnummer</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">customer.email</span></td>
+                        <td><span class="field-example">"max@firma.de"</span></td>
+                        <td>E-Mail für Updates</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">customer.location</span></td>
+                        <td><span class="field-example">"Berlin, Büro 3.OG"</span></td>
+                        <td>Standort für Vor-Ort-Support</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">context.problem_since</span></td>
+                        <td><span class="field-example">"seit 15 Min (18:49 Uhr)"</span></td>
+                        <td>Zeitlicher Kontext</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">context.others_affected</span></td>
+                        <td><span class="field-example">"ja, 5 Kollegen"</span></td>
+                        <td>Impact-Einschätzung</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">context.category_name</span></td>
+                        <td><span class="field-example">"Hardware Support"</span></td>
+                        <td>Kategorie für Routing</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">meta.urgency</span></td>
+                        <td><span class="field-example">"high"</span></td>
+                        <td>Dringlichkeit</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">meta.impact</span></td>
+                        <td><span class="field-example">"department"</span></td>
+                        <td>Auswirkungsbereich</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">meta.created_at</span></td>
+                        <td><span class="field-example">"2025-12-24T14:30:00Z"</span></td>
+                        <td>Erstellungszeitpunkt</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- OPTIONAL DATA -->
+        <div class="section">
+            <div class="section-header">
+                <span class="badge gray">Konfigurierbar</span>
+                <h2>⚙️ Optionale Daten</h2>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feld</th>
+                        <th>Beispiel</th>
+                        <th>Aktiviert via</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="field-name">transcript</span></td>
+                        <td><span class="field-example">{segments: [...], format: "segments"}</span></td>
+                        <td><code>webhook_include_transcript</code> pro Config</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">enrichment.audio_url</span></td>
+                        <td><span class="field-example">"https://s3...?presigned"</span></td>
+                        <td><code>GATEWAY_AUDIO_IN_WEBHOOK=true</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">enrichment.audio_url_expires_at</span></td>
+                        <td><span class="field-example">"2025-12-24T15:30:00Z"</span></td>
+                        <td>Nur wenn audio_url aktiv</td>
+                    </tr>
+                    <tr>
+                        <td><span class="field-name">transcript.segments[].timestamp</span></td>
+                        <td><span class="field-example">null (nicht implementiert)</span></td>
+                        <td>Zukünftige Erweiterung</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CURRENT vs RECOMMENDED -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📊 Aktuell vs. Empfohlen</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.5rem;">
+                <div>
+                    <h3 style="color: var(--gray); margin-bottom: 1rem;">❌ ALTER Payload (31 Felder) - ENTFERNT</h3>
+                    <div class="json-block" style="opacity: 0.5; text-decoration: line-through;">{
+  <span class="json-key">"fields"</span>: {
+    <span class="json-sensitive">"labels"</span>: <span class="json-sensitive">["askpro", "voice-intake"]</span>,
+    <span class="json-sensitive">"customfield_10000"</span>: <span class="json-sensitive">30</span>
+  },
+  <span class="json-key">"meta"</span>: {
+    <span class="json-sensitive">"source"</span>: <span class="json-sensitive">"askpro_service_gateway"</span>,
+    <span class="json-sensitive">"version"</span>: <span class="json-sensitive">"1.2"</span>,
+    <span class="json-sensitive">"case_id"</span>: <span class="json-sensitive">30</span>,
+    <span class="json-sensitive">"company_id"</span>: <span class="json-sensitive">15</span>,
+    <span class="json-sensitive">"call_id"</span>: <span class="json-sensitive">90693</span>,
+    <span class="json-sensitive">"customer_id"</span>: <span class="json-sensitive">555</span>
+  },
+  <span class="json-key">"enrichment"</span>: {
+    <span class="json-sensitive">"status"</span>: <span class="json-sensitive">"completed"</span>,
+    <span class="json-sensitive">"transcript_available"</span>: <span class="json-sensitive">true</span>,
+    <span class="json-sensitive">"audio_available"</span>: <span class="json-sensitive">true</span>
+  }
+}</div>
+                </div>
+                <div>
+                    <h3 style="color: var(--green); margin-bottom: 1rem;">✅ NEUER Payload (14 Felder) - AKTIV</h3>
+                    <div class="json-block">{
+  <span class="json-key">"ticket"</span>: {
+    <span class="json-key">"reference"</span>: <span class="json-string">"TKT-2025-00030"</span>,
+    <span class="json-key">"summary"</span>: <span class="json-string">"..."</span>,
+    <span class="json-key">"description"</span>: <span class="json-string">"..."</span>,
+    <span class="json-key">"type"</span>: <span class="json-string">"incident"</span>,
+    <span class="json-key">"priority"</span>: <span class="json-string">"high"</span>,
+    <span class="json-key">"category"</span>: <span class="json-string">"Hardware Support"</span>,
+    <span class="json-key">"created_at"</span>: <span class="json-string">"2025-12-24T..."</span>
+  },
+  <span class="json-key">"context"</span>: {
+    <span class="json-key">"urgency"</span>: <span class="json-string">"high"</span>,
+    <span class="json-key">"impact"</span>: <span class="json-string">"normal"</span>,
+    <span class="json-key">"problem_since"</span>: <span class="json-string">"seit 15 Min..."</span>,
+    <span class="json-key">"others_affected"</span>: <span class="json-string">false</span>
+  },
+  <span class="json-key">"customer"</span>: {
+    <span class="json-key">"name"</span>: <span class="json-string">"Max Mustermann"</span>,
+    <span class="json-key">"phone"</span>: <span class="json-string">"+49 123..."</span>,
+    <span class="json-key">"email"</span>: <span class="json-string">"..."</span>,
+    <span class="json-key">"location"</span>: <span class="json-string">"Berlin"</span>
+  },
+  <span class="json-key">"audio"</span>: { <span class="json-comment">// optional</span>
+    <span class="json-key">"url"</span>: <span class="json-string">"https://..."</span>,
+    <span class="json-key">"expires_at"</span>: <span class="json-string">"..."</span>
+  },
+  <span class="json-key">"transcript"</span>: {...} <span class="json-comment">// optional</span>
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION ITEMS - COMPLETED -->
+        <div class="section">
+            <div class="section-header">
+                <h2>✅ Durchgeführte Maßnahmen</h2>
+            </div>
+
+            <div style="padding: 1.5rem;">
+                <div style="display: grid; gap: 1rem;">
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--green); padding: 1rem; border-radius: 0 8px 8px 0;">
+                        <h4 style="color: var(--green);">✓ 1. Sensitive Felder entfernt</h4>
+                        <p style="color: var(--gray); margin-top: 0.5rem;">
+                            <code>meta.source</code>, <code>meta.version</code>, <code>fields.labels</code>,
+                            <code>fields.customfield_10000</code> - alle entfernt
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--green); padding: 1rem; border-radius: 0 8px 8px 0;">
+                        <h4 style="color: var(--green);">✓ 2. IDs durch opake Referenzen ersetzt</h4>
+                        <p style="color: var(--gray); margin-top: 0.5rem;">
+                            <code>case_id: 30</code> → <code>reference: "TKT-2025-00030"</code><br>
+                            Alle internen IDs aus Payload und HTTP-Headers entfernt
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--green); padding: 1rem; border-radius: 0 8px 8px 0;">
+                        <h4 style="color: var(--green);">✓ 3. Redundanzen bereinigt</h4>
+                        <p style="color: var(--gray); margin-top: 0.5rem;">
+                            <code>transcript_available</code>, <code>transcript_segment_count</code>,
+                            <code>audio_available</code>, <code>problem_since_original</code> - alle entfernt
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--green); padding: 1rem; border-radius: 0 8px 8px 0;">
+                        <h4 style="color: var(--green);">✓ 4. Payload-Struktur vereinfacht</h4>
+                        <p style="color: var(--gray); margin-top: 0.5rem;">
+                            Jira-spezifische <code>fields</code>-Struktur durch generisches <code>ticket</code>-Objekt ersetzt.<br>
+                            Von 31 auf 14 Felder reduziert.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer style="text-align: center; padding: 2rem; color: var(--gray); font-size: 0.875rem;">
+            Analyse erstellt am 24. Dezember 2025 | AskPro AI Gateway
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "title": "Anmelden - AskPro AI Gateway",
+  "bodyClasses": [
+    "fi-body",
+    "fi-panel-admin",
+    "min-h-screen",
+    "bg-gray-50",
+    "font-normal",
+    "text-gray-950",
+    "antialiased",
+    "dark:bg-gray-950",
+    "dark:text-white"
+  ],
+  "hasFilamentBranding": false,
+  "formAction": "https://api.askproai.de/admin/login",
+  "cssLinks": [
+    "https://api.askproai.de/css/filament/forms/forms.css?v=3.3.43.0",
+    "https://api.askproai.de/css/filament/support/support.css?v=3.3.43.0",
+    "https://api.askproai.de/build/assets/session-modal-Bq6jPyCm.css",
+    "https://api.askproai.de/css/filament/filament/app.css?v=3.3.43.0",
+    "https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap",
+    "https://api.askproai.de/build/assets/call-detail-full-width-CaYUuTVJ.css",
+    "https://unpkg.com/tippy.js@6/dist/tippy.css"
+  ],
+  "loginButton": {
+    "exists": true,
+    "text": "Anmelden"
+  }
+}

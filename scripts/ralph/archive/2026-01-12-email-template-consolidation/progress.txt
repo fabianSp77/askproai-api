@@ -1,0 +1,22 @@
+# Ralph Progress Log - AskPro Gateway
+Started: So 12. Jan 2026
+Feature: Billing System QC Fixes
+
+## Codebase Patterns
+- MonthlyBillingAggregator: 700+ Zeilen, Haupt-Billing-Logik, nutzt preloadBatchData() für N+1 Vermeidung
+- StripeInvoicingService: Stripe API Integration, Webhook Handler, Retry-Logik mit exponential backoff
+- AggregateInvoice: Invoice Model mit generateInvoiceNumber() für race-safe Nummerierung
+- ServiceCase: billing_status enum (unbilled, billed, waived), markAsBilled() mit State Guard
+- ServiceOutputConfiguration: billing_mode (per_case, monthly_flat, none), calculateCasePrice() für Pricing
+- BillingPeriod: Noch nicht existiert - wird in US-006 erstellt als Value Object
+- Test-Datenbank: Nutze RefreshDatabase Trait für saubere Test-Isolation
+- Pint: Nutze ./vendor/bin/pint (ohne --test) für Auto-Fix, dann --test für Validierung
+- German Labels: Nutze deutsche Übersetzungen für User-facing Content (Rechnung, Abrechnungszeitraum)
+
+## QC Context
+- QC Report: claudedocs/08_REFERENCE/QC_BILLING_SYSTEM_2026-01-12.md
+- PRD: claudedocs/08_REFERENCE/PRD_BILLING_QC_FIXES.md
+- P0 bereits gefixt: markAsBilled() State Guard, Docblock both→hybrid, Webhook Logging, MySQL Lock try-finally
+- Fokus: Performance (N+1), Sicherheit (Event ID), Präzision (Float), Coverage (Tests)
+
+---

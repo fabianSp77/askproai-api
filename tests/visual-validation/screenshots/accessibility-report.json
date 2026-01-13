@@ -1,0 +1,137 @@
+{
+  "labels": [
+    {
+      "text": "E-Mail-Adresse*",
+      "for": "data.email",
+      "hasFor": true
+    },
+    {
+      "text": "Passwort*",
+      "for": "data.password",
+      "hasFor": true
+    },
+    {
+      "text": "Angemeldet bleiben",
+      "for": "data.remember",
+      "hasFor": true
+    }
+  ],
+  "ariaLabels": [],
+  "formElements": [
+    {
+      "tagName": "INPUT",
+      "type": "email",
+      "name": "",
+      "id": "data.email",
+      "hasLabel": true,
+      "ariaLabel": null,
+      "placeholder": ""
+    },
+    {
+      "tagName": "INPUT",
+      "type": "password",
+      "name": "",
+      "id": "data.password",
+      "hasLabel": true,
+      "ariaLabel": null,
+      "placeholder": ""
+    },
+    {
+      "tagName": "BUTTON",
+      "type": "button",
+      "name": "",
+      "id": "",
+      "hasLabel": false,
+      "ariaLabel": null
+    },
+    {
+      "tagName": "BUTTON",
+      "type": "button",
+      "name": "",
+      "id": "",
+      "hasLabel": false,
+      "ariaLabel": null
+    },
+    {
+      "tagName": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "id": "data.remember",
+      "hasLabel": true,
+      "ariaLabel": null,
+      "placeholder": ""
+    },
+    {
+      "tagName": "BUTTON",
+      "type": "submit",
+      "name": "",
+      "id": "",
+      "hasLabel": false,
+      "ariaLabel": null
+    }
+  ],
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Melden Sie sich an."
+    }
+  ],
+  "landmarks": [
+    {
+      "tagName": "MAIN",
+      "role": null
+    },
+    {
+      "tagName": "HEADER",
+      "role": null
+    },
+    {
+      "tagName": "DIV",
+      "role": "dialog"
+    },
+    {
+      "tagName": "DIV",
+      "role": "dialog"
+    },
+    {
+      "tagName": "DIV",
+      "role": "dialog"
+    },
+    {
+      "tagName": "DIV",
+      "role": "status"
+    }
+  ],
+  "focusableElements": [
+    {
+      "tagName": "INPUT",
+      "hasFocusStyle": true,
+      "tabIndex": 1
+    },
+    {
+      "tagName": "INPUT",
+      "hasFocusStyle": true,
+      "tabIndex": 2
+    },
+    {
+      "tagName": "BUTTON",
+      "hasFocusStyle": true,
+      "tabIndex": 0
+    },
+    {
+      "tagName": "BUTTON",
+      "hasFocusStyle": true,
+      "tabIndex": 0
+    },
+    {
+      "tagName": "INPUT",
+      "hasFocusStyle": true,
+      "tabIndex": 0
+    },
+    {
+      "tagName": "BUTTON",
+      "hasFocusStyle": true,
+      "tabIndex": 0
+    }
+  ]
+}

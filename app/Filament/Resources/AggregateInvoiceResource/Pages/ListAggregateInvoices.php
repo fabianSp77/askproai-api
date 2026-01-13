@@ -100,11 +100,12 @@ class ListAggregateInvoices extends ListRecords
                     continue;
                 }
 
-                // Delete any voided invoices for this period (to satisfy unique constraint)
+                // Hard-delete any voided invoices for this period (to satisfy unique constraints)
+                // Using forceDelete() because soft-delete still keeps invoice_number in DB
                 AggregateInvoice::where('partner_company_id', $partner->id)
                     ->forPeriod($periodStart, $periodEnd)
                     ->where('status', AggregateInvoice::STATUS_VOID)
-                    ->delete();
+                    ->forceDelete();
 
                 // Check if there are any charges
                 $summary = $aggregator->getChargesSummary($partner, $periodStart, $periodEnd);

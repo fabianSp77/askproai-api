@@ -1,0 +1,262 @@
+/**
+ * AskPro Session Modal Styles
+ *
+ * PatternFly-inspiriertes Design für Session-Timeout-Modals.
+ * Unterstützt Dark Mode via Filament's .dark Klasse.
+ *
+ * @version 1.0.0
+ * @since 2025-12-29
+ */
+
+/* ============================================================================
+   Backdrop
+   ============================================================================ */
+
+.session-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    animation: session-fadeIn 0.2s ease-out;
+}
+
+/* ============================================================================
+   Modal Content Container
+   ============================================================================ */
+
+.session-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    z-index: 9999;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    animation: session-slideUp 0.3s ease-out;
+}
+
+/* Dark Mode */
+.dark .session-modal-content {
+    background: #1f2937;
+    color: white;
+}
+
+/* ============================================================================
+   Icon Styles
+   ============================================================================ */
+
+.session-modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    padding: 1rem;
+    border-radius: 50%;
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.dark .session-modal-icon {
+    background: #78350f;
+    color: #fbbf24;
+}
+
+/* Expired State (rot) */
+.session-expired-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.dark .session-expired-icon {
+    background: #7f1d1d;
+    color: #f87171;
+}
+
+.session-modal-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================================================
+   Typography
+   ============================================================================ */
+
+.session-modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.dark .session-modal-title {
+    color: #f9fafb;
+}
+
+.session-modal-message {
+    color: #374151;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.dark .session-modal-message {
+    color: #d1d5db;
+}
+
+.session-modal-submessage {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.dark .session-modal-submessage {
+    color: #9ca3af;
+}
+
+/* Countdown Timer */
+.session-countdown {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #dc2626;
+    font-variant-numeric: tabular-nums;
+}
+
+.dark .session-countdown {
+    color: #f87171;
+}
+
+/* ============================================================================
+   Action Buttons
+   ============================================================================ */
+
+.session-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.session-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    border: none;
+    font-family: inherit;
+}
+
+.session-btn:focus {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+}
+
+.session-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Primary Button (Orange - AskPro Brand) */
+.session-btn-primary {
+    background: #f59e0b;
+    color: white;
+}
+
+.session-btn-primary:hover:not(:disabled) {
+    background: #d97706;
+}
+
+.session-btn-primary:disabled {
+    background: #fcd34d;
+}
+
+/* Secondary Button */
+.session-btn-secondary {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.dark .session-btn-secondary {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+.session-btn-secondary:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.dark .session-btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+}
+
+/* ============================================================================
+   Animations
+   ============================================================================ */
+
+@keyframes session-fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes session-slideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* ============================================================================
+   Responsive Adjustments
+   ============================================================================ */
+
+@media (max-width: 480px) {
+    .session-modal-content {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    .session-modal-title {
+        font-size: 1.25rem;
+    }
+
+    .session-modal-actions {
+        flex-direction: column;
+    }
+
+    .session-btn {
+        width: 100%;
+    }
+}
+
+/* ============================================================================
+   Print Styles (hide modals when printing)
+   ============================================================================ */
+
+@media print {
+    #session-warning-modal,
+    #session-expired-modal {
+        display: none !important;
+    }
+}

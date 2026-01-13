@@ -1,0 +1,142 @@
+{
+  "project": "AskPro Gateway",
+  "branchName": "ralph/email-template-editor",
+  "description": "Email Template Editor - Custom email templates with live preview for Service Gateway",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add email_templates database table",
+      "description": "As a developer, I need to store custom email templates in the database.",
+      "acceptanceCriteria": [
+        "Add email_templates table with columns: id, company_id, name, subject, body_html, variables (JSON), is_active, created_at, updated_at",
+        "company_id is foreign key to companies table with cascade delete",
+        "name is VARCHAR(255) NOT NULL with unique constraint per company",
+        "subject is VARCHAR(500) NOT NULL",
+        "body_html is TEXT NOT NULL",
+        "variables is JSON nullable for template variable definitions",
+        "is_active is BOOLEAN default true",
+        "Add index on company_id",
+        "Migration runs successfully: php artisan migrate",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add EmailTemplate Eloquent model",
+      "description": "As a developer, I need an Eloquent model to interact with email templates.",
+      "acceptanceCriteria": [
+        "Model at app/Models/EmailTemplate.php",
+        "Extends CompanyScopedModel for multi-tenancy",
+        "Has fillable: ['company_id', 'name', 'subject', 'body_html', 'variables', 'is_active']",
+        "Has casts: ['variables' => 'array', 'is_active' => 'boolean']",
+        "Has belongsTo relationship to Company",
+        "Has scope: scopeActive() for filtering active templates",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add EmailTemplateResource Filament CRUD",
+      "description": "As an admin, I want to manage email templates through Filament.",
+      "acceptanceCriteria": [
+        "Resource at app/Filament/Resources/EmailTemplateResource.php",
+        "List page shows columns: name, subject, is_active (badge), created_at",
+        "List has search on name and subject",
+        "List has filter for is_active status",
+        "Create form has: name (TextInput required), subject (TextInput required), body_html (RichEditor required), is_active (Toggle)",
+        "Edit form pre-fills existing data correctly",
+        "Delete action with confirmation dialog",
+        "Navigation label: 'Email Templates' under Settings group",
+        "Accessible at /admin/email-templates",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes",
+        "Screenshot verification at tmp/us-003-list.png"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Add template variables definition field",
+      "description": "As an admin, I want to define which variables are available in a template.",
+      "acceptanceCriteria": [
+        "Add KeyValue field or Repeater in form for variables definition",
+        "Each variable has: name (string), description (string), default_value (string optional)",
+        "Variables stored as JSON array in database",
+        "Show available variables hint text in form",
+        "Example variables: customer_name, company_name, case_number, case_subject",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes",
+        "Screenshot verification at tmp/us-004-variables.png"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add live preview component",
+      "description": "As an admin, I want to see a live preview of my template while editing.",
+      "acceptanceCriteria": [
+        "Add ViewField or custom component showing rendered preview",
+        "Preview section appears below or beside the body_html editor",
+        "Preview updates when subject or body_html changes (Livewire reactive)",
+        "Preview shows placeholder values for variables: {{variable_name}} -> [variable_name]",
+        "Preview renders HTML safely (sanitized)",
+        "Shows 'No content' placeholder if body is empty",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes",
+        "Screenshot verification at tmp/us-005-preview.png"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add EmailTemplateService for rendering",
+      "description": "As the system, I need a service to render templates with actual data.",
+      "acceptanceCriteria": [
+        "Service at app/Services/ServiceGateway/EmailTemplateService.php",
+        "Method: render(EmailTemplate $template, array $data): array returns ['subject' => string, 'body' => string]",
+        "Replaces {{variable}} placeholders with actual values from $data",
+        "Falls back to variable default_value if not in $data",
+        "Falls back to empty string if no default",
+        "Handles missing variables gracefully (no exceptions)",
+        "Unit test covers: happy path, missing variables, default values",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Integrate with EmailOutputHandler",
+      "description": "As the system, I want EmailOutputHandler to use custom templates when available.",
+      "acceptanceCriteria": [
+        "Modify EmailOutputHandler to check for custom template first",
+        "If ServiceOutputConfiguration has template_id, use that template",
+        "If no custom template, fall back to default Blade templates",
+        "Pass ServiceCase data to template variables",
+        "Add template_id nullable column to service_output_configurations if not exists",
+        "Unit test covers: custom template used, fallback to default",
+        "php artisan test passes",
+        "./vendor/bin/pint --test passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
