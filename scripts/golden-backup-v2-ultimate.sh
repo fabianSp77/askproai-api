@@ -76,9 +76,11 @@ log "Starting Ultimate Golden Backup V2"
 log "Backup Directory: ${BACKUP_DIR}"
 log "Timestamp: ${TIMESTAMP}"
 
-# Load environment variables
+# Load environment variables (safe parser for inline comments)
 if [ -f "${APP_ROOT}/.env" ]; then
-    export $(grep -v '^#' "${APP_ROOT}/.env" | grep -v '^$' | xargs)
+    set -a
+    source <(grep -v '^#' "${APP_ROOT}/.env" | grep -v '^$' | sed 's/#.*//' | sed 's/[[:space:]]*$//')
+    set +a
     success "Environment loaded"
 else
     error ".env file not found"
@@ -941,11 +943,6 @@ echo -e "  Script: ${BACKUP_DIR}/quick-restore.sh"
 echo -e "  Log:    ${BACKUP_DIR}/backup.log"
 echo -e "${CYAN}========================================${NC}"
 echo ""
-
-log "Ultimate Golden Backup V2 completed successfully!"
-
-exit 0
-QUICK_RESTORE_EOF
 
 chmod +x "${BACKUP_DIR}/quick-restore.sh"
 
