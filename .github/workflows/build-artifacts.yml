@@ -158,6 +158,8 @@ jobs:
           BUNDLE_NAME="deploy-bundle-${GITHUB_SHA:0:8}-${TIMESTAMP}.tar.gz"
 
           # Create tarball with built artifacts
+          # Note: Using || [[ $? -eq 1 ]] to allow exit code 1 which means
+          # "Some files differ" (files changed during archive) - this is safe
           tar -czf "$BUNDLE_NAME" \
             --exclude='node_modules' \
             --exclude='.git' \
@@ -166,7 +168,7 @@ jobs:
             --exclude='storage/framework/sessions/*' \
             --exclude='tests' \
             --exclude='.env*' \
-            .
+            . || [[ $? -eq 1 ]]
 
           # Calculate checksum
           sha256sum "$BUNDLE_NAME" > "${BUNDLE_NAME}.sha256"
@@ -218,6 +220,12 @@ jobs:
         with:
           name: backend-build-${{ github.sha }}
           path: vendor/
+
+      - name: Setup Laravel Storage Directories
+        run: |
+          mkdir -p storage/framework/{cache,sessions,views}
+          mkdir -p storage/logs
+          chmod -R 775 storage bootstrap/cache
 
       - name: Setup Environment
         run: |
