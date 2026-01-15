@@ -215,6 +215,12 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
           coverage: none
 
+      - name: Download Frontend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: public/build/
+
       - name: Download Backend Artifacts
         uses: actions/download-artifact@v4
         with:
