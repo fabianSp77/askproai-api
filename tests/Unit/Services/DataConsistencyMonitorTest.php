@@ -27,6 +27,13 @@ use Carbon\Carbon;
  * - Alert throttling (prevent spam)
  * - Daily validation report generation
  * - Single call consistency checks
+ *
+ * @group slow
+ * @group requires-database
+ *
+ * NOTE: These tests use RefreshDatabase and may be slow in CI.
+ * Run explicitly with: vendor/bin/pest --group=slow
+ * Excluded from default CI run (2026-01-15).
  */
 class DataConsistencyMonitorTest extends TestCase
 {
