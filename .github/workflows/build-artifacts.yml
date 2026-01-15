@@ -221,11 +221,10 @@ jobs:
           name: frontend-build-${{ github.sha }}
           path: public/build/
 
-      - name: Download Backend Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-build-${{ github.sha }}
-          path: vendor/
+      - name: Install Backend Dependencies (with dev for testing)
+        run: |
+          echo "📦 Installing Composer dependencies (including dev for Pest)..."
+          composer install --no-interaction --prefer-dist
 
       - name: Setup Laravel Storage Directories
         run: |
@@ -238,6 +237,16 @@ jobs:
           cp .env.testing .env
           php artisan key:generate
           php artisan config:clear || true
+
+      - name: Run Database Migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Run Unit Tests
         run: |
