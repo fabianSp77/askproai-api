@@ -82,6 +82,9 @@ jobs:
       - name: Copy environment file
         run: cp .env.testing .env
 
+      - name: Clear configuration cache
+        run: php artisan config:clear || true
+
       - name: Setup Laravel storage directories
         run: |
           mkdir -p storage/framework/{cache,sessions,views}

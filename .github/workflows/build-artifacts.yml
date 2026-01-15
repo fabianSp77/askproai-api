@@ -221,8 +221,9 @@ jobs:
 
       - name: Setup Environment
         run: |
-          cp .env.example .env.testing
-          php artisan key:generate --env=testing
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan config:clear || true
 
       - name: Run Unit Tests
         run: |
