@@ -59,6 +59,15 @@ class AppServiceProvider extends ServiceProvider
         // CRITICAL DEBUG: Log boot start
         \Log::info('🚀 AppServiceProvider::boot() START - Memory: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB');
 
+        // =========================================================================
+        // PRODUCTION DATABASE PROTECTION
+        // Added after 2026-01-15 incident where PHPUnit deleted all production data
+        // =========================================================================
+        // This blocks destructive database commands in production:
+        // - migrate:fresh, migrate:refresh, migrate:reset, migrate:rollback, db:wipe
+        // These commands cannot be bypassed with --force flag
+        DB::prohibitDestructiveCommands($this->app->isProduction());
+
         // Phase 4: Enable Database Performance Monitor for N+1 detection
         \App\Services\Monitoring\DatabasePerformanceMonitor::enable();
 
