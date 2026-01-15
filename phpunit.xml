@@ -34,5 +34,12 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="CALCOM_API_KEY" value="test-api-key-for-testing"/>
+        <env name="CALCOM_EVENT_TYPE_ID" value="12345"/>
+        <env name="CALCOM_TEAM_SLUG" value="test-team"/>
+        <env name="CALCOM_WEBHOOK_SECRET" value="test-calcom-webhook-secret"/>
+        <env name="CALCOM_BASE_URL" value="https://api.cal.com/v2"/>
+        <env name="RETELLAI_API_KEY" value="test-retell-key-for-testing"/>
+        <env name="RETELLAI_FUNCTION_SECRET" value="test-function-secret"/>
+        <env name="RETELLAI_WEBHOOK_SECRET" value="test-webhook-secret"/>
     </php>
 </phpunit>

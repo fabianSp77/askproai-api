@@ -15,15 +15,15 @@ use App\Services\CircuitBreakerOpenException;
 class CalcomService
 {
     protected string $baseUrl;
-    protected string $apiKey;
-    protected string $eventTypeId;
+    protected ?string $apiKey;
+    protected ?string $eventTypeId;
     protected CircuitBreaker $circuitBreaker;
     protected CalcomApiRateLimiter $rateLimiter;
 
     public function __construct()
     {
-        $this->baseUrl     = rtrim(config('services.calcom.base_url'), '/');
-        $this->apiKey      = config('services.calcom.api_key');
+        $this->baseUrl     = rtrim(config('services.calcom.base_url', 'https://api.cal.com/v2'), '/');
+        $this->apiKey      = config('services.calcom.api_key') ?? '';
         $this->eventTypeId = config('services.calcom.event_type_id');
 
         // Initialize circuit breaker for Cal.com API
