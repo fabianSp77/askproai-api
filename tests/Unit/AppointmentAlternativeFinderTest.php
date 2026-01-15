@@ -71,6 +71,10 @@ class AppointmentAlternativeFinderTest extends TestCase
         $property = $reflection->getProperty('calcomService');
         $property->setAccessible(true);
         $property->setValue($this->finder, $this->calcomMock);
+
+        // SECURITY: Set tenant context for multi-tenant isolation
+        // Uses test company_id=1 and branch_id='test-branch-uuid' for test isolation
+        $this->finder->setTenantContext(1, 'test-branch-uuid');
     }
 
     protected function tearDown(): void
