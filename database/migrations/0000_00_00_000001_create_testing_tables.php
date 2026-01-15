@@ -329,6 +329,81 @@ return new class extends Migration
             });
         }
 
+        // ================================================================
+        // BILLING SYSTEM TABLES (added 2026-01-15 for CI/CD compatibility)
+        // These tables exist in production but had no migrations
+        // ================================================================
+
+        if (!Schema::hasTable('tenants')) {
+            Schema::create('tenants', function ($table) {
+                $table->id();
+                $table->unsignedBigInteger('company_id')->nullable();
+                $table->string('name');
+                $table->string('logo_url')->nullable();
+                $table->string('type')->nullable();
+                $table->string('domain')->nullable();
+                $table->string('subdomain')->nullable();
+                $table->bigInteger('balance_cents')->default(0);
+                $table->string('slug')->nullable();
+                $table->text('api_key')->nullable();
+                $table->string('api_key_hash')->nullable();
+                $table->string('api_key_prefix')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->boolean('is_verified')->default(false);
+                $table->string('calcom_team_slug')->nullable();
+                $table->string('email')->nullable();
+                $table->text('api_secret')->nullable();
+                $table->json('allowed_ips')->nullable();
+                $table->string('webhook_url')->nullable();
+                $table->json('webhook_events')->nullable();
+                $table->string('webhook_secret')->nullable();
+                $table->string('pricing_plan')->nullable();
+                $table->decimal('monthly_fee', 10, 2)->nullable();
+                $table->decimal('per_minute_rate', 10, 3)->nullable();
+                $table->decimal('discount_percentage', 5, 2)->nullable();
+                $table->json('billing_info')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('invoices')) {
+            Schema::create('invoices', function ($table) {
+                $table->id();
+                $table->string('invoice_number')->nullable();
+                $table->unsignedBigInteger('company_id')->nullable();
+                $table->unsignedBigInteger('tenant_id')->nullable();
+                $table->unsignedBigInteger('customer_id')->nullable();
+                $table->date('due_date')->nullable();
+                $table->decimal('subtotal', 12, 2)->default(0);
+                $table->decimal('tax_rate', 5, 2)->default(0);
+                $table->decimal('tax_amount', 12, 2)->default(0);
+                $table->decimal('total_amount', 12, 2)->default(0);
+                $table->string('status')->default('draft');
+                $table->string('currency', 3)->default('EUR');
+                $table->string('stripe_invoice_id')->nullable();
+                $table->timestamp('sent_at')->nullable();
+                $table->timestamp('paid_at')->nullable();
+                $table->json('metadata')->nullable();
+                $table->json('line_items')->nullable();
+                $table->string('billing_name')->nullable();
+                $table->text('billing_address')->nullable();
+                $table->string('billing_email')->nullable();
+                $table->string('billing_phone')->nullable();
+                $table->string('billing_tax_id')->nullable();
+                $table->date('issue_date')->nullable();
+                $table->decimal('balance_due', 12, 2)->default(0);
+                $table->decimal('discount_amount', 12, 2)->default(0);
+                $table->decimal('paid_amount', 12, 2)->default(0);
+                $table->text('notes')->nullable();
+                $table->text('terms_conditions')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+                $table->index('company_id');
+                $table->index('tenant_id');
+                $table->index('status');
+            });
+        }
+
         // Add foreign keys to users table (after other tables exist)
         // In test environment, foreign keys are optional for performance
         // The factories will handle data integrity
@@ -369,6 +444,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Drop billing tables first (they reference other tables)
+        Schema::dropIfExists('invoices');
+        Schema::dropIfExists('tenants');
+
+        // Drop in reverse order of dependencies
         Schema::dropIfExists('appointments');
         Schema::dropIfExists('phone_numbers');
         Schema::dropIfExists('customers');
