@@ -2,8 +2,11 @@
 
 namespace Tests\Unit\Services\Booking;
 
+use App\Models\Service;
 use App\Services\Booking\BookingNoticeValidator;
 use Carbon\Carbon;
+use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 /**
@@ -18,7 +21,7 @@ use Tests\TestCase;
 class BookingNoticeValidatorTest extends TestCase
 {
     private BookingNoticeValidator $validator;
-    private object $service;
+    private Service|MockInterface $service;
 
     protected function setUp(): void
     {
@@ -26,26 +29,25 @@ class BookingNoticeValidatorTest extends TestCase
 
         $this->validator = new BookingNoticeValidator();
 
-        // Create test service object (NO DATABASE)
-        $this->service = new class {
-            public int $id = 42;
-            public string $name = 'Test Service';
-            public ?int $minimum_booking_notice = null;
-            public int $calcom_slot_interval = 15;
+        // Create mock Service object (NO DATABASE)
+        // Using Mockery to satisfy type hint while keeping test database-free
+        $this->service = Mockery::mock(Service::class)->makePartial();
+        $this->service->id = 42;
+        $this->service->name = 'Test Service';
+        $this->service->minimum_booking_notice = null;
+        $this->service->calcom_slot_interval = 15;
 
-            // Mock branches() method
-            public function branches() {
-                return $this;
-            }
+        // Mock branches() relationship to return null (no branch override)
+        $branchesQuery = Mockery::mock();
+        $branchesQuery->shouldReceive('where')->andReturnSelf();
+        $branchesQuery->shouldReceive('first')->andReturn(null);
+        $this->service->shouldReceive('branches')->andReturn($branchesQuery);
+    }
 
-            public function where($column, $value) {
-                return $this;
-            }
-
-            public function first() {
-                return null; // No branch override by default
-            }
-        };
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 
     /**
