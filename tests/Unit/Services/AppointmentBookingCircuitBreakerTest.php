@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Mockery;
 
 /**
  * AppointmentBookingCircuitBreaker Test Suite
@@ -773,6 +774,9 @@ class AppointmentBookingCircuitBreakerTest extends TestCase
 
         // Reset Carbon time
         Carbon::setTestNow();
+
+        // Clean up Mockery expectations (prevents cascading test failures)
+        Mockery::close();
 
         parent::tearDown();
     }
