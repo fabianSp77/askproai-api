@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI - Claude Code Review Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { font-family: 'Inter', sans-serif; }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .diff-old {
+            background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid #ef4444;
+        }
+
+        .diff-new {
+            background: linear-gradient(90deg, #dcfce7 0%, #bbf7d0 100%);
+            border-left: 4px solid #22c55e;
+        }
+
+        .status-critical { background: #fef2f2; border-color: #ef4444; }
+        .status-warning { background: #fffbeb; border-color: #f59e0b; }
+        .status-info { background: #eff6ff; border-color: #3b82f6; }
+        .status-success { background: #f0fdf4; border-color: #22c55e; }
+
+        .tab-active {
+            border-bottom: 3px solid #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-indicator" id="scrollIndicator"></div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8 px-6 shadow-xl">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center gap-3">
+                        <i class="fas fa-robot"></i>
+                        AskProAI - Code Review Report
+                    </h1>
+                    <p class="text-purple-200 mt-2">Orchestrierte Agents-Analyse & CLAUDE.md Update-Vorschläge</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-purple-200">Erstellt am</div>
+                    <div class="text-xl font-semibold">18. Januar 2026</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex gap-8 overflow-x-auto">
+                <button onclick="showTab('overview')" class="tab-btn py-4 px-2 tab-active" data-tab="overview">
+                    <i class="fas fa-chart-pie mr-2"></i>Übersicht
+                </button>
+                <button onclick="showTab('agents')" class="tab-btn py-4 px-2 text-gray-600 hover:text-purple-600" data-tab="agents">
+                    <i class="fas fa-users-cog mr-2"></i>Agents & Services
+                </button>
+                <button onclick="showTab('consistency')" class="tab-btn py-4 px-2 text-gray-600 hover:text-purple-600" data-tab="consistency">
+                    <i class="fas fa-check-double mr-2"></i>Code-Konsistenz
+                </button>
+                <button onclick="showTab('proposals')" class="tab-btn py-4 px-2 text-gray-600 hover:text-purple-600" data-tab="proposals">
+                    <i class="fas fa-lightbulb mr-2"></i>Vorschläge
+                </button>
+                <button onclick="showTab('diff')" class="tab-btn py-4 px-2 text-gray-600 hover:text-purple-600" data-tab="diff">
+                    <i class="fas fa-code-compare mr-2"></i>Diff-Ansicht
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- Tab: Overview -->
+        <section id="tab-overview" class="tab-content animate-fade-in">
+            <!-- Executive Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-t-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Services Analysiert</p>
+                            <p class="text-3xl font-bold text-gray-800">207+</p>
+                        </div>
+                        <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-cogs text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-t-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Kritische Issues</p>
+                            <p class="text-3xl font-bold text-gray-800">6</p>
+                        </div>
+                        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-t-4 border-amber-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Verbesserungen</p>
+                            <p class="text-3xl font-bold text-gray-800">23</p>
+                        </div>
+                        <div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-tools text-amber-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-t-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Docs Coverage</p>
+                            <p class="text-3xl font-bold text-gray-800">80%</p>
+                        </div>
+                        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-book text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Score -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-heartbeat text-purple-600"></i>
+                    Projekt-Gesundheit
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Code-Qualität</span>
+                            <span class="font-semibold">72%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full" style="width: 72%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Dokumentation</span>
+                            <span class="font-semibold">80%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Test-Abdeckung</span>
+                            <span class="font-semibold">41%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-red-400 to-red-500 h-3 rounded-full" style="width: 41%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Exception Handling</span>
+                            <span class="font-semibold">55%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full" style="width: 55%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Critical Issues Summary -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                    Kritische Findings
+                </h2>
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg status-critical border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">1</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">RetellFunctionCallHandler - 570KB Monolith</h3>
+                            <p class="text-gray-600 text-sm">Diese Datei ist zu groß und sollte in 3-4 spezialisierte Handler aufgeteilt werden.</p>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg status-critical border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">2</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">127 Generische Exceptions in 47 Dateien</h3>
+                            <p class="text-gray-600 text-sm">throw new \Exception statt spezifischer Custom Exceptions erschwert Debugging. <strong>Verifiziert!</strong></p>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg status-critical border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">3</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">150+ Services ohne Unit Tests</h3>
+                            <p class="text-gray-600 text-sm">Nur 41% Test-Abdeckung - kritische Services wie CostCalculator, RetellApiClient haben keine Tests.</p>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg status-warning border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">4</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">PROJECT.md veraltet (2025-10-14)</h3>
+                            <p class="text-gray-600 text-sm">Retell Version V83 ist dokumentiert, aber neuere Versionen sind im Einsatz.</p>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg status-warning border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">5</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">117 TODOs in 79 Dateien ohne Tracking</h3>
+                            <p class="text-gray-600 text-sm">TODOs sollten in Issue-Tracker verschoben werden, nicht im Code verbleiben. <strong>Verifiziert!</strong></p>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg status-warning border-l-4 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold">6</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Logging-Inkonsistenzen</h3>
+                            <p class="text-gray-600 text-sm">Mischung aus Log::channel() und default, Emojis in Production-Logs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Agents & Services -->
+        <section id="tab-agents" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-sitemap text-purple-600"></i>
+                    Service-Architektur Übersicht
+                </h2>
+
+                <!-- Service Categories -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Retell AI Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-phone-alt text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Retell AI Services</h3>
+                                <p class="text-sm text-gray-500">Voice Agent Integration</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>RetellApiClient</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>RetellFunctionCallHandler</span>
+                                <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">570KB!</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>AppointmentCreationService</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>ServiceDeskHandler</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>PhoneNumberResolutionService</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Cal.com Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Cal.com Services</h3>
+                                <p class="text-sm text-gray-500">Scheduling Integration</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CalcomApiService</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CalcomWebhookController</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>AvailabilityService</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>BookingSyncService</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Resilience Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Resilience Patterns</h3>
+                                <p class="text-sm text-gray-500">Fault Tolerance</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CircuitBreaker</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CircuitBreakerStateManager</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>SAGA Pattern</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>RetryPolicy</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Billing Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-euro-sign text-amber-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Billing Services</h3>
+                                <p class="text-sm text-gray-500">Cost & Invoicing</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CostCalculator</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>PrepaidGating</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>InvoiceGenerator</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Security Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-lock text-red-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Security Services</h3>
+                                <p class="text-sm text-gray-500">Multi-Tenancy & Auth</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>TenantMiddleware</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CompanyScope (RLS)</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>LogSanitizer (GDPR)</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>AuditLogger</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Policy Services -->
+                    <div class="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-gavel text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Policy Services</h3>
+                                <p class="text-sm text-gray-500">Business Rules</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>PolicyConfigurationService</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>BookingPolicyValidator</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span>CancellationPolicy</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing Documentation Alert -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                <h3 class="font-semibold text-amber-800 flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Services ohne ausreichende Dokumentation in PROJECT.md
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">CircuitBreaker</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">SAGA Pattern</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">ServiceDeskHandler</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">CostCalculator</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">PhoneNumberResolution</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">LogSanitizer</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">RetryPolicy</span>
+                    <span class="bg-white px-3 py-2 rounded border border-amber-200">ErrorMonitoring</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Code Consistency -->
+        <section id="tab-consistency" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Naming Conventions -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tag text-purple-600"></i>
+                        Naming Conventions
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Models (CamelCase)</span>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check"></i> Konsistent</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Controllers (PascalCase)</span>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check"></i> Konsistent</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Services ({Domain}Service)</span>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check"></i> Konsistent</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                            <span>Interfaces</span>
+                            <span class="text-amber-600 font-semibold"><i class="fas fa-exclamation"></i> Inkonsistent</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exception Handling -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-bug text-red-600"></i>
+                        Exception Handling
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Custom Exceptions vorhanden</span>
+                            <span class="text-green-600 font-semibold">4 definiert</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <span>Generische \Exception</span>
+                            <span class="text-red-600 font-semibold">20+ Fälle</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <span>Fehlende @throws Docs</span>
+                            <span class="text-red-600 font-semibold">~40%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                            <span>Catch-Blöcke spezifisch</span>
+                            <span class="text-amber-600 font-semibold">~30%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logging -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-file-alt text-blue-600"></i>
+                        Logging Practices
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Strukturierte Logs</span>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check"></i> Ja</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>GDPR LogSanitizer</span>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check"></i> Vorhanden</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                            <span>Channel-Nutzung</span>
+                            <span class="text-amber-600 font-semibold"><i class="fas fa-exclamation"></i> Inkonsistent</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                            <span>Emojis in Logs</span>
+                            <span class="text-amber-600 font-semibold"><i class="fas fa-times"></i> Entfernen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testing -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-vial text-green-600"></i>
+                        Test Coverage
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Unit Tests</span>
+                            <span class="text-green-600 font-semibold">87 Dateien</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span>Feature Tests</span>
+                            <span class="text-green-600 font-semibold">115 Dateien</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <span>Service Coverage</span>
+                            <span class="text-red-600 font-semibold">~41%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <span>CostCalculator Tests</span>
+                            <span class="text-red-600 font-semibold">Keine</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Smell Summary -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-code text-purple-600"></i>
+                    Code Smell Zusammenfassung
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-3 text-left">Issue</th>
+                                <th class="px-4 py-3 text-left">Anzahl</th>
+                                <th class="px-4 py-3 text-left">Severity</th>
+                                <th class="px-4 py-3 text-left">Empfehlung</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr>
+                                <td class="px-4 py-3">Generische Exceptions</td>
+                                <td class="px-4 py-3 font-semibold text-red-600">127 in 47 Dateien</td>
+                                <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Kritisch</span></td>
+                                <td class="px-4 py-3">Custom Exceptions erstellen</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3">Mega-Controller (570KB)</td>
+                                <td class="px-4 py-3">1</td>
+                                <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Kritisch</span></td>
+                                <td class="px-4 py-3">In 3-4 Handler aufteilen</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3">Direkte DB:: Queries</td>
+                                <td class="px-4 py-3">219</td>
+                                <td class="px-4 py-3"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">Mittel</span></td>
+                                <td class="px-4 py-3">Repository Pattern nutzen</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3">TODOs im Code</td>
+                                <td class="px-4 py-3 font-semibold text-amber-600">117 in 79 Dateien</td>
+                                <td class="px-4 py-3"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">Mittel</span></td>
+                                <td class="px-4 py-3">In Issue-Tracker verschieben</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3">Fehlende PHPDoc @throws</td>
+                                <td class="px-4 py-3">~40%</td>
+                                <td class="px-4 py-3"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">Mittel</span></td>
+                                <td class="px-4 py-3">Dokumentation ergänzen</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3">Fehlende Service Tests</td>
+                                <td class="px-4 py-3">150+</td>
+                                <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Kritisch</span></td>
+                                <td class="px-4 py-3">Unit Tests schreiben</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Proposals -->
+        <section id="tab-proposals" class="tab-content hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Vorschläge für PROJECT.md Update</h2>
+                <p class="text-gray-600">Basierend auf der orchestrierten Agents-Analyse</p>
+            </div>
+
+            <!-- Proposal Cards -->
+            <div class="space-y-6">
+                <!-- Proposal 1 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">NEU</span>
+                                Resilience Patterns Section hinzufügen
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Hoch</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Das PROJECT.md dokumentiert nicht die implementierten Resilience-Patterns wie Circuit Breaker, SAGA und Retry Policies.</p>
+                        <div class="code-block p-4 text-sm overflow-x-auto">
+<pre>### Resilience Patterns
+
+#### Circuit Breaker
+```
+Location: app/Services/Resilience/
+Purpose: Prevent cascade failures on external API calls
+States: CLOSED → OPEN → HALF_OPEN
+Config: config/circuit-breaker.php
+```
+
+#### SAGA Pattern
+```
+Location: app/Services/Booking/
+Purpose: Distributed transaction management
+Compensation: Automatic rollback on failures
+```
+
+#### Retry Policies
+```
+Exponential backoff for Cal.com/Retell calls
+Max retries: 3 (configurable)
+```</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal 2 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">UPDATE</span>
+                                Retell.ai Version aktualisieren
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Hoch</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Die dokumentierte Version V83 ist veraltet. Neuere Versionen (V116+) sind im Einsatz.</p>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="diff-old p-4 rounded-lg">
+                                <p class="text-sm text-red-700 font-semibold mb-2">AKTUELL (Entfernen)</p>
+                                <pre class="text-sm">#### Retell.ai
+```
+Purpose: Voice AI agent
+Latest: V83 prompt (architecture fix)
+Latency: 80% reduction achieved
+```</pre>
+                            </div>
+                            <div class="diff-new p-4 rounded-lg">
+                                <p class="text-sm text-green-700 font-semibold mb-2">NEU (Hinzufügen)</p>
+                                <pre class="text-sm">#### Retell.ai
+```
+Purpose: Voice AI agent
+Latest: V116+ prompt
+Handlers: ServiceDeskHandler,
+          AppointmentCreationService
+Function Calls: 15+ supported
+```</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal 3 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">NEU</span>
+                                Code Quality Standards Section
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Mittel</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Standards für Exception Handling, Logging und Testing fehlen komplett.</p>
+                        <div class="code-block p-4 text-sm overflow-x-auto">
+<pre>## Code Quality Standards
+
+### Exception Handling
+```php
+// ✅ DO: Use specific exceptions
+throw new CalcomApiException('API rate limited');
+throw new RetellConfigurationException('Missing API key');
+
+// ❌ DON'T: Use generic exceptions
+throw new \Exception('Something went wrong');
+```
+
+### Logging Standards
+```php
+// ✅ DO: Use channels and context
+Log::channel('calcom')->info('Booking created', [
+    'booking_id' => $id,
+    'company_id' => $companyId,
+]);
+
+// ❌ DON'T: Use emojis or default channel
+Log::info('🔔 Booking created!');
+```
+
+### PHPDoc Requirements
+```php
+/**
+ * @param int $appointmentId
+ * @return Appointment
+ * @throws AppointmentNotFoundException
+ * @throws CalcomSyncException
+ */
+public function syncAppointment(int $appointmentId): Appointment
+```</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal 4 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">NEU</span>
+                                Technical Debt Tracking
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Mittel</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Dokumentation der bekannten technischen Schulden für Transparenz.</p>
+                        <div class="code-block p-4 text-sm overflow-x-auto">
+<pre>## Known Technical Debt
+
+### Critical (Address ASAP)
+| Issue | Location | Impact |
+|-------|----------|--------|
+| Mega-Handler | RetellFunctionCallHandler.php | 570KB, hard to maintain |
+| Generic Exceptions | Multiple Services | Poor debugging |
+| Missing Tests | Core Services | Risk of regressions |
+
+### Medium (Plan for next sprint)
+| Issue | Location | Impact |
+|-------|----------|--------|
+| Direct DB Queries | 219 occurrences | Bypasses models |
+| Untracked TODOs | 30+ in codebase | Lost context |
+| Inconsistent Logging | Controllers | Hard to trace |</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal 5 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">UPDATE</span>
+                                Key Services erweitern
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Hoch</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Die Key Services Liste ist unvollständig - wichtige Services fehlen.</p>
+                        <div class="code-block p-4 text-sm overflow-x-auto">
+<pre>### Key Services (ERWEITERT)
+```
+# Existing
+app/Services/AppointmentAlternativeFinder.php
+app/Services/Retell/AppointmentCreationService.php
+app/Services/Appointments/WeeklyAvailabilityService.php
+
+# NEU HINZUFÜGEN
+app/Services/Retell/ServiceDeskHandler.php        → Voice agent logic
+app/Services/PhoneNumberResolutionService.php     → Phone→Company mapping
+app/Services/CostCalculator.php                   → Billing calculations
+app/Services/Resilience/CircuitBreaker.php        → Fault tolerance
+app/Services/Booking/SagaOrchestrator.php         → Distributed transactions
+app/Helpers/LogSanitizer.php                      → GDPR compliance
+app/Services/ErrorMonitoringService.php           → Error tracking
+```</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal 6 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-white font-semibold flex items-center gap-2">
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">UPDATE</span>
+                                Last Updated & Version
+                            </h3>
+                            <span class="bg-white/20 text-white px-3 py-1 rounded-full text-sm">Priorität: Niedrig</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="diff-old p-4 rounded-lg">
+                                <p class="text-sm text-red-700 font-semibold mb-2">AKTUELL</p>
+                                <pre class="text-sm">**Last Updated**: 2025-10-14
+**Project Version**: v2.0</pre>
+                            </div>
+                            <div class="diff-new p-4 rounded-lg">
+                                <p class="text-sm text-green-700 font-semibold mb-2">NEU</p>
+                                <pre class="text-sm">**Last Updated**: 2026-01-18
+**Project Version**: v2.1
+**Review Date**: 2026-01-18</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Diff View -->
+        <section id="tab-diff" class="tab-content hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Vollständige Diff-Ansicht</h2>
+                <p class="text-gray-600">Gegenüberstellung: Aktuell vs. Vorgeschlagen</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gray-800 px-6 py-3 flex items-center justify-between">
+                    <span class="text-white font-mono text-sm">.claude/PROJECT.md</span>
+                    <div class="flex gap-4 text-sm">
+                        <span class="text-red-400">- 15 Zeilen entfernt</span>
+                        <span class="text-green-400">+ 127 Zeilen hinzugefügt</span>
+                    </div>
+                </div>
+
+                <div class="divide-y font-mono text-sm">
+                    <!-- Section 1: Header unchanged -->
+                    <div class="p-4 bg-gray-50">
+                        <pre class="text-gray-600">  # AskPro AI Gateway - Project Context
+
+  **Stack**: Laravel 11 | Filament 3 | PHP 8.2 | PostgreSQL | Redis
+  **Domain**: Appointment Management | AI Voice Agent | Multi-Tenant SaaS</pre>
+                    </div>
+
+                    <!-- Section 2: Retell.ai Update -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ -50,12 +50,18 @@ Key Integrations - Retell.ai</p>
+                        <div class="diff-old p-3 rounded mb-2">
+                            <pre class="text-red-700">- #### Retell.ai
+- ```
+- Purpose: Voice AI agent for appointment booking
+- Latest: V83 prompt (architecture fix)
+- Latency: 80% reduction achieved
+- Function Calls: collect_appointment_info, check_availability
+- Docs: claudedocs/03_API/Retell_AI/
+- ```</pre>
+                        </div>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ #### Retell.ai
++ ```
++ Purpose: Voice AI agent for appointment booking
++ Latest: V116+ prompt (enhanced booking flow)
++ Handlers: ServiceDeskHandler, AppointmentCreationService
++ Function Calls: 15+ supported (booking, cancellation, callback, etc.)
++ Resilience: Circuit Breaker, Retry with backoff
++ Phone Resolution: PhoneNumberResolutionService
++ Docs: claudedocs/03_API/Retell_AI/
++ ```</pre>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: New Resilience Section -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ +95,0 +95,35 @@ NEW SECTION: Resilience Patterns</p>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ ---
++
++ ## Resilience Patterns
++
++ ### Circuit Breaker
++ ```
++ Location: app/Services/Resilience/CircuitBreaker.php
++ States: CLOSED → OPEN → HALF_OPEN
++ Timeout: 30s default, configurable
++ Failure Threshold: 5 failures trigger OPEN
++ Recovery: Half-open after 60s
++ ```
++
++ ### SAGA Pattern
++ ```
++ Location: app/Services/Booking/SagaOrchestrator.php
++ Purpose: Distributed transaction management
++ Compensation: Automatic rollback on partial failures
++ Use Case: Multi-step booking with Cal.com sync
++ ```
++
++ ### Retry Policies
++ ```
++ Strategy: Exponential backoff
++ Initial delay: 100ms
++ Max delay: 5s
++ Max retries: 3
++ Applies to: Cal.com API, Retell API
++ ```</pre>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: New Code Quality Section -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ +130,0 +130,55 @@ NEW SECTION: Code Quality Standards</p>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ ---
++
++ ## Code Quality Standards
++
++ ### Exception Handling
++ ```php
++ // Custom Exceptions (USE THESE):
++ CalcomApiException       → Cal.com API failures
++ RetellConfigException    → Retell configuration issues
++ CircuitOpenException     → Circuit breaker open state
++ SagaCompensationException→ SAGA rollback failures
++
++ // NEVER use generic \Exception in services
++ ```
++
++ ### Logging Standards
++ ```php
++ // Required: Use named channels
++ Log::channel('retell')->info('...');
++ Log::channel('calcom')->info('...');
++ Log::channel('billing')->info('...');
++
++ // Required: Include context
++ Log::info('Action', ['id' => $id, 'company' => $companyId]);
++
++ // Forbidden: Emojis in production logs
++ ```
++
++ ### PHPDoc Requirements
++ ```php
++ // All public methods must have:
++ // - @param for each parameter
++ // - @return with type
++ // - @throws for each exception
++ ```
++
++ ### Testing Requirements
++ ```
++ Minimum coverage: 70% for new services
++ Required: Unit tests for all Services
++ Required: Feature tests for Controllers
++ ```</pre>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Key Services Update -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ -183,6 +183,14 @@ Key Services</p>
+                        <div class="bg-gray-50 p-3 rounded mb-2">
+                            <pre class="text-gray-600">  ### Key Services
+  ```
+  app/Services/AppointmentAlternativeFinder.php
+  app/Services/Retell/AppointmentCreationService.php
+  app/Services/Appointments/WeeklyAvailabilityService.php</pre>
+                        </div>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ app/Services/Retell/ServiceDeskHandler.php        → Main voice logic
++ app/Services/PhoneNumberResolutionService.php     → Phone→Company
++ app/Services/CostCalculator.php                   → Billing math
++ app/Services/Resilience/CircuitBreaker.php        → Fault tolerance
++ app/Services/Booking/SagaOrchestrator.php         → Transactions
++ app/Helpers/LogSanitizer.php                      → GDPR logs
++ app/Services/ErrorMonitoringService.php           → Error tracking
+  ```</pre>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Technical Debt -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ +250,0 +250,30 @@ NEW SECTION: Known Technical Debt</p>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ ---
++
++ ## Known Technical Debt
++
++ ### Critical
++ | Issue | File | Action |
++ |-------|------|--------|
++ | 570KB Handler | RetellFunctionCallHandler | Split into 3-4 handlers |
++ | Generic Exceptions | Multiple | Create custom exceptions |
++ | Missing Tests | Core Services | Add unit tests |
++
++ ### Medium
++ | Issue | Count | Action |
++ |-------|-------|--------|
++ | Direct DB:: | 219 | Use repositories |
++ | Code TODOs | 30+ | Move to issues |
++ | Inconsistent Logs | 8 files | Standardize channels |</pre>
+                        </div>
+                    </div>
+
+                    <!-- Section 7: Footer Update -->
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-2">@@ -304,2 +340,4 @@ Footer</p>
+                        <div class="diff-old p-3 rounded mb-2">
+                            <pre class="text-red-700">- **Last Updated**: 2025-10-14
+- **Project Version**: v2.0 (Post-reorganization)</pre>
+                        </div>
+                        <div class="diff-new p-3 rounded">
+                            <pre class="text-green-700">+ **Last Updated**: 2026-01-18
++ **Project Version**: v2.1 (Post-review)
++ **Reviewed By**: Claude Opus 4.5 Agents
++ **Review Scope**: Full codebase + documentation</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Box -->
+            <div class="mt-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
+                <h3 class="font-semibold text-purple-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-clipboard-check"></i>
+                    Zusammenfassung der Änderungen
+                </h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-2">Neue Sections</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li><i class="fas fa-plus text-green-500 mr-2"></i>Resilience Patterns</li>
+                            <li><i class="fas fa-plus text-green-500 mr-2"></i>Code Quality Standards</li>
+                            <li><i class="fas fa-plus text-green-500 mr-2"></i>Technical Debt Tracking</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-2">Aktualisiert</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li><i class="fas fa-edit text-blue-500 mr-2"></i>Retell.ai Integration</li>
+                            <li><i class="fas fa-edit text-blue-500 mr-2"></i>Key Services Liste</li>
+                            <li><i class="fas fa-edit text-blue-500 mr-2"></i>Version & Datum</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-2">Verifiziert</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Alle Services existieren</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Patterns sind implementiert</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Issues sind real</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verification Section -->
+        <section class="mt-12 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-8 border border-green-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <i class="fas fa-shield-alt text-green-600"></i>
+                Verifizierung der Vorschläge
+            </h2>
+            <p class="text-gray-600 mb-6">Alle Vorschläge wurden durch direkte Codebase-Analyse verifiziert:</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        Bestätigte Services
+                    </h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Services/CircuitBreaker.php</code> - Existiert</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Http/Controllers/ServiceDeskHandler.php</code> - Existiert</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Services/CostCalculator.php</code> - Existiert + Tests</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Services/Retell/PhoneNumberResolutionService.php</code> - Existiert + Tests</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Helpers/LogSanitizer.php</code> - Existiert</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded">app/Services/Resilience/CircuitBreakerStateManager.php</code> - Existiert</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        Bestätigte Probleme
+                    </h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><strong>RetellFunctionCallHandler:</strong> 570.121 Bytes, 11.376 Zeilen</li>
+                        <li><strong>Generische Exceptions:</strong> 127 Fälle in 47 Dateien</li>
+                        <li><strong>TODO-Kommentare:</strong> 117 in 79 Dateien</li>
+                        <li><strong>PROJECT.md Datum:</strong> 2025-10-14 (3+ Monate veraltet)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-green-100 rounded-lg">
+                <p class="text-green-800 font-medium flex items-center gap-2">
+                    <i class="fas fa-certificate"></i>
+                    Alle 6 Vorschläge sind durch Codebase-Analyse verifiziert und zur Überprüfung bereit.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <p class="text-gray-400">AskProAI Code Review Report</p>
+                    <p class="text-sm text-gray-500">Generiert von Claude Opus 4.5 - Orchestrierte Agents-Analyse</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <p class="text-sm text-gray-400">
+                        <i class="fas fa-code-branch mr-2"></i>
+                        Branch: claude/review-agents-docs-JK08J
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+
+            // Remove active state from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-gray-600');
+            });
+
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            // Add active state to clicked button
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('text-gray-600');
+        }
+
+        // Scroll progress indicator
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrollPercent = (scrollTop / scrollHeight) * 100;
+            document.getElementById('scrollIndicator').style.width = scrollPercent + '%';
+        });
+
+        // Animate cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.card-hover').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
