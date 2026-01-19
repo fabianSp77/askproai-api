@@ -32,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->passwordReset()
             ->authGuard('web')
             ->colors([
                 'primary' => Color::Amber,
@@ -160,9 +161,9 @@ function initTooltipPatch() {
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
 
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            // Widgets disabled until database fully migrated (some query missing tables)
-            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            // 🆕 PHASE 3 (2025-11-24): Register specific monitoring widgets
+            // Widget discovery re-enabled (2026-01-19) - CrmAppointments widgets have proper try-catch error handling
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            // Explicit registration for priority/order control (discovered widgets also available)
             ->widgets([
                 \App\Filament\Widgets\CalcomSyncStatusWidget::class,
                 \App\Filament\Widgets\AppointmentSyncStatusWidget::class,
