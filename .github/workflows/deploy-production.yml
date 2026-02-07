@@ -126,6 +126,7 @@ jobs:
           EOF
 
       - name: Upload Backup to Synology
+        continue-on-error: true
         run: |
           echo "☁️  Uploading backup to Synology..."
 
