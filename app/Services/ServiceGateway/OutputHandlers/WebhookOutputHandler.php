@@ -710,6 +710,7 @@ class WebhookOutputHandler implements OutputHandlerInterface
         $aiMeta = $case->ai_metadata ?? [];
         $payload['customer'] = [
             'name' => $aiMeta['customer_name'] ?? $case->customer?->name ?? null,
+            'company' => $aiMeta['customer_company'] ?? null,
             'phone' => $aiMeta['customer_phone'] ?? $case->customer?->phone ?? null,
             'email' => $aiMeta['customer_email'] ?? $case->customer?->email ?? null,
             'location' => $aiMeta['customer_location'] ?? null,
@@ -719,6 +720,14 @@ class WebhookOutputHandler implements OutputHandlerInterface
         $problemSince = $aiMeta['problem_since'] ?? null;
         $payload['context']['problem_since'] = $this->enrichProblemSince($problemSince, $case->created_at);
         $payload['context']['others_affected'] = $aiMeta['others_affected'] ?? false;
+
+        // Include triage details from AI classification (K3: use_case_detail)
+        if (!empty($aiMeta['use_case_detail'])) {
+            $payload['context']['use_case_detail'] = $aiMeta['use_case_detail'];
+        }
+        if (!empty($aiMeta['use_case_category'])) {
+            $payload['context']['use_case_category'] = $aiMeta['use_case_category'];
+        }
 
         // Include transcript if configured (clean structure)
         if ($config->webhook_include_transcript ?? false) {

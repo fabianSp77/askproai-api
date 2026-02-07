@@ -14,6 +14,7 @@ use App\Jobs\ServiceGateway\ProcessCallRecordingJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Exception;
 
@@ -666,6 +667,20 @@ class ServiceDeskHandler extends Controller
                     ? ServiceCase::PRIORITY_HIGH
                     : ServiceCase::PRIORITY_NORMAL;
 
+                // Security escalation: override priority to critical when
+                // Retell classify node detects security-critical keywords
+                // (ransomware, erpressung, datenleck, kompromittiert, etc.)
+                $useCaseDetail = $params['use_case_detail'] ?? '';
+                if (is_string($useCaseDetail) && str_contains($useCaseDetail, 'escalation=critical')) {
+                    $priority = ServiceCase::PRIORITY_CRITICAL;
+
+                    Log::warning('[ServiceDeskHandler] Security escalation triggered', [
+                        'call_id' => $callId,
+                        'use_case_detail' => mb_substr($useCaseDetail, 0, 200),
+                        'priority' => $priority,
+                    ]);
+                }
+
                 // Persist gateway_mode to Call record (2025-12-22)
                 // This call is definitively service_desk since it's using finalize_ticket
                 try {
@@ -758,6 +773,9 @@ class ServiceDeskHandler extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // K2: Error-Handler Fallback — send backup email with collected data
+            $this->sendErrorFallbackEmail($callId, $params, $e);
 
             return response()->json([
                 'success' => false,
@@ -1181,6 +1199,7 @@ class ServiceDeskHandler extends Controller
             'source' => 'voice_finalize_ticket',
             'retell_call_id' => $callId,  // EXTERNAL Retell ID for audit
             'customer_name' => $params['customer_name'] ?? null,
+            'customer_company' => $params['customer_company'] ?? null,
             'customer_phone' => $effectivePhone,
             'customer_phone_source' => $phoneSource,  // Audit: 'agent' or 'call_record'
             'call_from_number' => $callFromNumber,    // Original Caller ID for audit
@@ -1190,6 +1209,8 @@ class ServiceDeskHandler extends Controller
             'problem_since' => $problemSinceFormatted,
             'problem_since_original' => $problemSince,
             'problem_since_absolute' => $problemSinceAbsolute,
+            'use_case_detail' => $params['use_case_detail'] ?? null,
+            'use_case_category' => $params['use_case_category'] ?? null,
             'finalized_at' => $now->toIso8601String(),
         ];
     }
@@ -1266,5 +1287,97 @@ class ServiceDeskHandler extends Controller
 
         // Fallback: PHP's default boolean cast
         return (bool) $value;
+    }
+
+    /**
+     * K2: Send error fallback email when ticket creation fails.
+     *
+     * Ensures caller data is not lost when finalize_ticket encounters an error.
+     * Sends a plain-text backup email to the company's configured backup address
+     * with all collected parameters from the voice call.
+     *
+     * @param string $callId Retell call ID
+     * @param array $params Collected function call parameters
+     * @param Exception $error The exception that caused the failure
+     */
+    private function sendErrorFallbackEmail(string $callId, array $params, Exception $error): void
+    {
+        try {
+            // Resolve company context for backup email address
+            $callContext = $this->callLifecycle->getCallContext($callId);
+            $companyId = $callContext?->company_id;
+
+            // Find backup email from ServiceOutputConfiguration via category
+            $backupEmail = null;
+            if ($companyId) {
+                $outputConfigId = \App\Models\ServiceCaseCategory::where('company_id', $companyId)
+                    ->whereNotNull('output_configuration_id')
+                    ->value('output_configuration_id');
+
+                if ($outputConfigId) {
+                    $config = \App\Models\ServiceOutputConfiguration::find($outputConfigId);
+                    $recipients = $config?->email_recipients;
+
+                    // email_recipients is cast to array
+                    if (is_array($recipients) && !empty($recipients)) {
+                        $backupEmail = $recipients[0];
+                    }
+                }
+            }
+
+            // Fallback: Send to admin if no company-specific backup found
+            if (empty($backupEmail)) {
+                $backupEmail = config('mail.admin_address', config('mail.from.address'));
+            }
+
+            if (empty($backupEmail) || !filter_var($backupEmail, FILTER_VALIDATE_EMAIL)) {
+                Log::warning('[ServiceDeskHandler] K2: No valid fallback email address available', [
+                    'call_id' => $callId,
+                    'backup_email' => $backupEmail,
+                ]);
+                return;
+            }
+
+            // Build plain-text email body with all collected data
+            $body = "⚠️ FEHLER BEI TICKET-ERSTELLUNG — BACKUP\n";
+            $body .= str_repeat('=', 50) . "\n\n";
+            $body .= "Zeitpunkt: " . now()->timezone('Europe/Berlin')->format('d.m.Y H:i:s') . "\n";
+            $body .= "Call ID: {$callId}\n";
+            $body .= "Fehler: {$error->getMessage()}\n\n";
+            $body .= "--- KUNDENDATEN ---\n";
+            $body .= "Name: " . ($params['customer_name'] ?? 'Nicht angegeben') . "\n";
+            $body .= "Firma: " . ($params['customer_company'] ?? 'Nicht angegeben') . "\n";
+            $body .= "Telefon: " . ($params['customer_phone'] ?? 'Nicht angegeben') . "\n";
+            $body .= "E-Mail: " . ($params['customer_email'] ?? 'Nicht angegeben') . "\n";
+            $body .= "Standort: " . ($params['customer_location'] ?? 'Nicht angegeben') . "\n\n";
+            $body .= "--- PROBLEMBESCHREIBUNG ---\n";
+            $body .= ($params['problem_description'] ?? 'Keine Beschreibung') . "\n\n";
+            $body .= "Kategorie: " . ($params['use_case_category'] ?? 'Nicht klassifiziert') . "\n";
+            $body .= "Detail: " . ($params['use_case_detail'] ?? 'Nicht verfügbar') . "\n";
+            $body .= "Andere betroffen: " . ($params['others_affected'] ?? 'Unbekannt') . "\n";
+            $body .= "Problem seit: " . ($params['problem_since'] ?? 'Nicht angegeben') . "\n\n";
+            $body .= "--- AKTION ERFORDERLICH ---\n";
+            $body .= "Bitte manuell ein Ticket erstellen und den Kunden kontaktieren.\n";
+
+            Mail::raw($body, function ($message) use ($backupEmail, $params) {
+                $name = $params['customer_name'] ?? 'Unbekannt';
+                $message->to($backupEmail)
+                    ->subject("⚠️ Fehler-Backup: Ticket für {$name} konnte nicht erstellt werden");
+            });
+
+            Log::info('[ServiceDeskHandler] K2: Error fallback email sent', [
+                'call_id' => $callId,
+                'backup_email' => $backupEmail,
+                'customer_name' => $params['customer_name'] ?? null,
+            ]);
+
+        } catch (Exception $emailError) {
+            // Don't let email failure mask the original error
+            Log::error('[ServiceDeskHandler] K2: Failed to send error fallback email', [
+                'call_id' => $callId,
+                'email_error' => $emailError->getMessage(),
+                'original_error' => $error->getMessage(),
+            ]);
+        }
     }
 }
