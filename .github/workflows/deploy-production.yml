@@ -112,7 +112,10 @@ jobs:
               --exclude='storage/framework/cache/*' \
               --exclude='vendor' \
               --exclude='node_modules' \
-              .
+              --exclude='tests' \
+              --warning=no-file-changed \
+              --ignore-failed-read \
+              . || true
 
           # Calculate checksums
           cd "$BACKUP_DIR"
