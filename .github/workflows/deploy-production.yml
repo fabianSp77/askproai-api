@@ -16,7 +16,7 @@ on:
 
 env:
   PRODUCTION_HOST: api.askproai.de
-  PRODUCTION_USER: www-data
+  PRODUCTION_USER: deploy
   PRODUCTION_BASE_DIR: /var/www/api-gateway
   DOMAIN: api.askproai.de
 
@@ -75,15 +75,15 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
-          chmod 600 ~/.ssh/production_key
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create Pre-Deploy Backup
         run: |
           echo "💾 Creating pre-deploy backup..."
 
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -94,7 +94,14 @@ jobs:
           mkdir -p "$BACKUP_DIR"
 
           echo "🗄️  Backing up database..."
-          mysqldump -h 127.0.0.1 -u root askproai_db \
+          # Read DB credentials from the app's .env
+          APP_ENV="${{ env.PRODUCTION_BASE_DIR }}/shared/.env/production.env"
+          DB_USER=$(grep '^DB_USERNAME=' "$APP_ENV" | cut -d'=' -f2)
+          DB_PASS=$(grep '^DB_PASSWORD=' "$APP_ENV" | cut -d'=' -f2)
+          DB_NAME=$(grep '^DB_DATABASE=' "$APP_ENV" | cut -d'=' -f2)
+          DB_HOST=$(grep '^DB_HOST=' "$APP_ENV" | cut -d'=' -f2)
+
+          mysqldump -h "${DB_HOST:-127.0.0.1}" -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" \
               --single-transaction \
               --quick | gzip > "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz"
 
@@ -119,7 +126,7 @@ jobs:
         run: |
           echo "☁️  Uploading backup to Synology..."
 
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -180,8 +187,8 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/production_key
-          chmod 600 ~/.ssh/production_key
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
 
       # -----------------------------------------------------------------------
@@ -195,7 +202,7 @@ jobs:
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
 
           # Upload to production server
-          scp -i ~/.ssh/production_key \
+          scp -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               "$BUNDLE_FILE" \
               "${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }}:/tmp/"
@@ -208,7 +215,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Prepare Release on Production
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -253,7 +260,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Run Migrations
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -275,7 +282,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Caches
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -304,7 +311,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Switch to New Release (Atomic)
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -330,17 +337,17 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Reload Services
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
           echo "♻️  Reloading services..."
 
-          # Reload PHP-FPM
-          sudo systemctl reload php8.3-fpm
+          # Reload PHP-FPM (sudoers allows: service php*-fpm reload)
+          sudo service php8.3-fpm reload
 
-          # Reload Nginx
-          sudo nginx -t && sudo systemctl reload nginx
+          # Reload Nginx (sudoers allows: systemctl reload nginx)
+          sudo systemctl reload nginx
 
           echo "✅ Services reloaded"
           EOF
@@ -350,7 +357,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Nginx Cache
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -380,7 +387,7 @@ jobs:
           fi
 
           # Database check
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -401,7 +408,7 @@ jobs:
       - name: Cleanup Old Releases
         if: success()
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 
@@ -426,7 +433,7 @@ jobs:
       - name: Cleanup Temp Files
         if: always()
         run: |
-          ssh -i ~/.ssh/production_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
 

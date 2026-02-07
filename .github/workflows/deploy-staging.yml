@@ -15,7 +15,7 @@ on:
 
 env:
   STAGING_HOST: staging.askproai.de
-  STAGING_USER: www-data
+  STAGING_USER: deploy
   STAGING_BASE_DIR: /var/www/api-gateway-staging
   DOMAIN: staging.askproai.de
 
@@ -59,8 +59,8 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
-          chmod 600 ~/.ssh/staging_key
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
           # Add staging server to known_hosts
           ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
@@ -76,7 +76,7 @@ jobs:
           BUNDLE_NAME=$(basename "$BUNDLE_FILE")
 
           # Upload to staging server
-          scp -i ~/.ssh/staging_key \
+          scp -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               "$BUNDLE_FILE" \
               "${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:/tmp/"
@@ -89,7 +89,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Prepare Release on Staging
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -134,7 +134,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Run Migrations
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -147,7 +147,12 @@ jobs:
 
           # Backup database before migrations
           mkdir -p "${{ env.STAGING_BASE_DIR }}/shared/storage/backups"
-          mysqldump -h 127.0.0.1 -u root askproai_staging \
+          APP_ENV="${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env"
+          DB_USER=$(grep '^DB_USERNAME=' "$APP_ENV" | cut -d'=' -f2)
+          DB_PASS=$(grep '^DB_PASSWORD=' "$APP_ENV" | cut -d'=' -f2)
+          DB_NAME=$(grep '^DB_DATABASE=' "$APP_ENV" | cut -d'=' -f2)
+          DB_HOST=$(grep '^DB_HOST=' "$APP_ENV" | cut -d'=' -f2)
+          mysqldump -h "${DB_HOST:-127.0.0.1}" -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" \
               --single-transaction \
               --quick | gzip > "${{ env.STAGING_BASE_DIR }}/shared/storage/backups/pre-migration-$(date +%s).sql.gz" 2>/dev/null || true
 
@@ -162,7 +167,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Caches
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -191,7 +196,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Switch to New Release (Atomic)
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -217,17 +222,17 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Reload Services
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
           echo "♻️  Reloading services..."
 
-          # Reload PHP-FPM
-          sudo systemctl reload php8.3-fpm
+          # Reload PHP-FPM (sudoers allows: service php*-fpm reload)
+          sudo service php8.3-fpm reload
 
-          # Reload Nginx
-          sudo nginx -t && sudo systemctl reload nginx
+          # Reload Nginx (sudoers allows: systemctl reload nginx)
+          sudo systemctl reload nginx
 
           echo "✅ Services reloaded"
           EOF
@@ -237,7 +242,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Clear Nginx Cache
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -267,7 +272,7 @@ jobs:
           fi
 
           # Database check
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -288,7 +293,7 @@ jobs:
       - name: Cleanup Old Releases
         if: success()
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
@@ -313,7 +318,7 @@ jobs:
       - name: Cleanup Temp Files
         if: always()
         run: |
-          ssh -i ~/.ssh/staging_key \
+          ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
               ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
 
