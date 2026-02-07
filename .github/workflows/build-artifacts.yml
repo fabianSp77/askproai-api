@@ -236,6 +236,10 @@ jobs:
       - name: Setup Environment
         run: |
           cp .env.testing .env
+          # Override DB credentials to match CI MariaDB service container
+          sed -i 's/^DB_DATABASE=.*/DB_DATABASE=testing/' .env
+          sed -i 's/^DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
           php artisan key:generate
           php artisan config:clear || true
 
@@ -253,6 +257,13 @@ jobs:
         run: |
           echo "🧪 Running PHPUnit tests..."
           vendor/bin/pest --testdox --exclude-group=slow,circuit-breaker,requires-redis
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
       - name: Upload Test Results
         if: always()
