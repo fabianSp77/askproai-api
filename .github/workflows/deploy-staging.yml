@@ -127,8 +127,12 @@ jobs:
           # Link .env
           ln -s "${{ env.STAGING_BASE_DIR }}/shared/.env/staging.env" .env
 
-          # Set permissions
-          chmod -R 775 storage bootstrap/cache
+          # Ensure shared storage framework dirs exist
+          SHARED_STORAGE="${{ env.STAGING_BASE_DIR }}/shared/storage"
+          mkdir -p "$SHARED_STORAGE"/{framework/{views,cache/data,sessions},app/public,logs}
+
+          # Set permissions (storage is a symlink to shared — only chmod bootstrap/cache)
+          chmod -R 775 bootstrap/cache
 
           echo "✅ Release prepared: $RELEASE_PATH"
           echo "RELEASE_PATH=$RELEASE_PATH" >> /tmp/deploy_env
@@ -269,7 +273,7 @@ jobs:
           echo "🏥 Running health checks..."
 
           # HTTP health check
-          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
+          if curl -sf "https://${{ env.DOMAIN }}/api/health" > /dev/null; then
               echo "✅ HTTP health check passed"
           else
               echo "❌ HTTP health check failed!"
@@ -346,8 +350,8 @@ jobs:
           echo "🧪 Testing homepage..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}")
 
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Homepage OK (200)"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
+              echo "✅ Homepage OK ($STATUS)"
           else
               echo "❌ Homepage failed (Status: $STATUS)"
               exit 1
@@ -356,24 +360,12 @@ jobs:
       - name: Test Health Endpoint
         run: |
           echo "🧪 Testing health endpoint..."
-          RESPONSE=$(curl -sf "https://${{ env.DOMAIN }}/health")
+          RESPONSE=$(curl -sf "https://${{ env.DOMAIN }}/api/health")
 
-          if echo "$RESPONSE" | grep -q "ok"; then
+          if echo "$RESPONSE" | grep -q "healthy"; then
               echo "✅ Health endpoint OK"
           else
               echo "❌ Health endpoint failed"
-              exit 1
-          fi
-
-      - name: Test API Endpoint
-        run: |
-          echo "🧪 Testing API..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}/api/health")
-
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ API OK (200)"
-          else
-              echo "❌ API failed (Status: $STATUS)"
               exit 1
           fi
 

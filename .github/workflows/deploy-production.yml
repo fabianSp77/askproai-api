@@ -254,8 +254,8 @@ jobs:
           # Link .env
           ln -s "${{ env.PRODUCTION_BASE_DIR }}/shared/.env/production.env" .env
 
-          # Set permissions
-          chmod -R 775 storage bootstrap/cache
+          # Set permissions (storage is a symlink to shared — only chmod bootstrap/cache)
+          chmod -R 775 bootstrap/cache
 
           echo "✅ Release prepared: $RELEASE_PATH"
           echo "RELEASE_PATH=$RELEASE_PATH" >> /tmp/deploy_env
