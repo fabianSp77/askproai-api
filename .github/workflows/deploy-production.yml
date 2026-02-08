@@ -111,26 +111,11 @@ jobs:
               --single-transaction \
               --quick | gzip > "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz"
 
-          echo "📦 Backing up application..."
-          cd "${{ env.PRODUCTION_BASE_DIR }}/current"
-          tar -czf "$BACKUP_DIR/pre-deploy-app-${TIMESTAMP}.tar.gz" \
-              --exclude='storage/logs/*' \
-              --exclude='storage/framework/cache/*' \
-              --exclude='vendor' \
-              --exclude='node_modules' \
-              --exclude='tests' \
-              --exclude='current' \
-              --exclude='.git' \
-              --warning=no-file-changed \
-              --ignore-failed-read \
-              . || true
-
-          # Calculate checksums
+          # Calculate checksum
           cd "$BACKUP_DIR"
           sha256sum "pre-deploy-${TIMESTAMP}.sql.gz" > "pre-deploy-${TIMESTAMP}.sql.gz.sha256"
-          sha256sum "pre-deploy-app-${TIMESTAMP}.tar.gz" > "pre-deploy-app-${TIMESTAMP}.tar.gz.sha256"
 
-          echo "✅ Pre-deploy backup created"
+          echo "✅ Pre-deploy DB backup created (app code is in git — no tar needed)"
           EOF
 
       - name: Upload Backup to Synology
@@ -164,7 +149,7 @@ jobs:
   # ===========================================================================
   build:
     name: Build Artifacts
-    needs: [check-staging, pre-deploy-backup]
+    needs: [check-staging]
     uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
 
@@ -522,7 +507,7 @@ jobs:
   summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [check-staging, pre-deploy-backup, deploy-production, smoke-tests]
+    needs: [check-staging, deploy-production, smoke-tests]
     if: always()
 
     steps:
