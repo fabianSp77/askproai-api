@@ -236,12 +236,16 @@ jobs:
           # Extract bundle
           tar -xzf "/tmp/${{ env.bundle_name }}" -C "$RELEASE_PATH"
 
+          # Ensure shared storage structure exists
+          SHARED_STORAGE="${{ env.PRODUCTION_BASE_DIR }}/shared/storage"
+          mkdir -p "$SHARED_STORAGE"/{framework/{views,cache/data,sessions},app/public,logs}
+
           # Link shared resources
           cd "$RELEASE_PATH"
 
           # Link storage
           rm -rf storage
-          ln -s "${{ env.PRODUCTION_BASE_DIR }}/shared/storage" storage
+          ln -s "$SHARED_STORAGE" storage
 
           # Link uploads
           rm -rf public/uploads
