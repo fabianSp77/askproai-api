@@ -186,7 +186,7 @@ return new class extends Migration
         // MySQL doesn't support partial indexes with WHERE clause
         // We'll enforce uniqueness at application level via UserObserver
         // Add a regular index for performance
-        if (!$this->indexExists('users', 'users_staff_id_index')) {
+        if (Schema::hasColumn('users', 'staff_id') && !$this->indexExists('users', 'users_staff_id_index')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->index('staff_id');
             });
@@ -197,13 +197,17 @@ return new class extends Migration
         // =====================================================================
         if (Schema::hasTable('appointment_reservations')) {
             Schema::table('appointment_reservations', function (Blueprint $table) {
-                $table->foreignId('original_appointment_id')
-                    ->nullable()
-                    ->after('id')
-                    ->constrained('appointments')
-                    ->onDelete('cascade');
-                $table->string('reservation_type', 20)->default('new_booking')->after('original_appointment_id');
-                // Values: new_booking, reschedule, cancel_hold
+                if (!Schema::hasColumn('appointment_reservations', 'original_appointment_id')) {
+                    $table->foreignId('original_appointment_id')
+                        ->nullable()
+                        ->after('id')
+                        ->constrained('appointments')
+                        ->onDelete('cascade');
+                }
+                if (!Schema::hasColumn('appointment_reservations', 'reservation_type')) {
+                    $table->string('reservation_type', 20)->default('new_booking')->after('original_appointment_id');
+                    // Values: new_booking, reschedule, cancel_hold
+                }
             });
         }
     }
