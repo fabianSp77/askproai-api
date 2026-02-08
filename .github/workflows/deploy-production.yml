@@ -463,10 +463,11 @@ jobs:
           echo "🧪 Testing homepage..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}")
 
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Homepage OK (200)"
+          # Accept 200 (OK), 302 (redirect to login), 401 (auth-protected)
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
+              echo "✅ Homepage OK (HTTP $STATUS)"
           else
-              echo "❌ Homepage failed (Status: $STATUS)"
+              echo "❌ Homepage failed (HTTP $STATUS)"
               exit 1
           fi
 
