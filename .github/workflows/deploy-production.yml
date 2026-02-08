@@ -66,6 +66,7 @@ jobs:
     name: Pre-Deploy Backup
     runs-on: ubuntu-latest
     needs: [check-staging]
+    continue-on-error: true  # Don't block deployment if backup fails
     timeout-minutes: 20
 
     steps:
@@ -78,6 +79,11 @@ jobs:
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config << 'SSHEOF'
+          Host *
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          SSHEOF
 
       - name: Create Pre-Deploy Backup
         run: |
@@ -113,6 +119,8 @@ jobs:
               --exclude='vendor' \
               --exclude='node_modules' \
               --exclude='tests' \
+              --exclude='current' \
+              --exclude='.git' \
               --warning=no-file-changed \
               --ignore-failed-read \
               . || true
@@ -194,6 +202,11 @@ jobs:
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config << 'SSHEOF'
+          Host *
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          SSHEOF
 
       # -----------------------------------------------------------------------
       # 3. Upload deployment bundle to production
