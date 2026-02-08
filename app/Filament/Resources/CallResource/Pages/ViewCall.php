@@ -11,6 +11,12 @@ class ViewCall extends ViewRecord
 {
     protected static string $resource = CallResource::class;
 
+    /**
+     * Custom view with guaranteed single root element wrapper
+     * Fixes: Livewire MultipleRootElementsDetectedException
+     */
+    protected static string $view = 'filament.resources.call-resource.pages.view-call';
+
     protected function getHeaderActions(): array
     {
         return [
@@ -21,6 +27,7 @@ class ViewCall extends ViewRecord
 
     /**
      * Eager load all relationships to prevent N+1 queries
+     * Phase 12: Added appointments.staff and appointments.service for cancellation banner
      */
     protected function resolveRecord($key): \Illuminate\Database\Eloquent\Model
     {
@@ -33,6 +40,11 @@ class ViewCall extends ViewRecord
             'latestAppointment.staff',
             'latestAppointment.service',
             'latestAppointment.customer',
+            // Phase 12: Eager load all appointments with relations for cancellation banner
+            'appointments.staff',
+            'appointments.service',
+            'appointments.customer',
+            'appointments.modifications',
         ]);
     }
 

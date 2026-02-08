@@ -206,18 +206,30 @@ class StripeInvoicingService
 
         // Create new Stripe customer (using safe email to prevent external sends)
         $safeEmail = $this->getSafeBillingEmail($partner);
+
+        // Build customer data with optional tax ID
+        $customerData = [
+            'name' => $partner->name,
+            'email' => $safeEmail,
+            'metadata' => [
+                'partner_id' => $partner->id,
+                'partner_name' => $partner->name,
+                'type' => 'partner_billing',
+            ],
+            'address' => $this->formatAddress($partner),
+            'preferred_locales' => ['de'],
+        ];
+
+        // Add EU VAT ID if available (required for EU B2B invoicing)
+        if (!empty($partner->vat_id)) {
+            $customerData['tax_id_data'] = [[
+                'type' => 'eu_vat',
+                'value' => $partner->vat_id,
+            ]];
+        }
+
         $customer = $this->retryStripeCall(
-            fn () => $this->getStripe()->customers->create([
-                'name' => $partner->name,
-                'email' => $safeEmail,
-                'metadata' => [
-                    'partner_id' => $partner->id,
-                    'partner_name' => $partner->name,
-                    'type' => 'partner_billing',
-                ],
-                'address' => $this->formatAddress($partner),
-                'preferred_locales' => ['de'],
-            ]),
+            fn () => $this->getStripe()->customers->create($customerData),
             "create_customer:{$partner->id}"
         );
 

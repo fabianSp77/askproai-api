@@ -56,6 +56,31 @@ Route::middleware(['auth'])->prefix('docs')->group(function () {
     Route::get('/claudedocs/{path}', [\App\Http\Controllers\DocsController::class, 'show'])
         ->name('docs.show')
         ->where('path', '.*');
+
+    // HTML Documentation Pages (with and without .html extension)
+    Route::get('/service-gateway{ext?}', function () {
+        return response()->file(storage_path('app/docs/service-gateway-guide.html'));
+    })->where('ext', '\.html')->name('docs.service-gateway');
+
+    Route::get('/service-gateway-overview{ext?}', function () {
+        return response()->file(storage_path('app/docs/internal-service-gateway-overview.html'));
+    })->where('ext', '\.html')->name('docs.service-gateway-overview');
+
+    Route::get('/calcom-architecture{ext?}', function () {
+        return response()->file(storage_path('app/docs/calcom-integration-architecture.html'));
+    })->where('ext', '\.html')->name('docs.calcom-architecture');
+
+    Route::get('/retell-integration{ext?}', function () {
+        return response()->file(storage_path('app/docs/retell-integration-technical-documentation.html'));
+    })->where('ext', '\.html')->name('docs.retell-integration');
+
+    Route::get('/partner-presentation{ext?}', function () {
+        return response()->file(storage_path('app/docs/partner-presentation-it-service-desk.html'));
+    })->where('ext', '\.html')->name('docs.partner-presentation');
+
+    Route::get('/flow-diagrams{ext?}', function () {
+        return response()->file(storage_path('app/docs/flow-diagrams.html'));
+    })->where('ext', '\.html')->name('docs.flow-diagrams');
 });
 
 // Conversation Flow Routes

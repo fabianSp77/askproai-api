@@ -922,6 +922,14 @@ class RetellWebhookController extends Controller
                 }
             }
 
+            // 🔍 RCA #94768: Dead-End Detection for Service Desk Calls
+            // Detects when a service_desk call ends without creating a ServiceCase
+            // Symptoms: Agent silence → user hangs up → no ticket created
+            // Causes: Broken flow edges, missing nodes, deploy issues
+            if ($call && !$call->appointment_made) {
+                $this->detectServiceDeskDeadEnd($call, $callData);
+            }
+
             // If we STILL don't have a call after all attempts, log warning
             if (!$call) {
                 Log::warning('⚠️ No call record found or created for call_ended event', [
@@ -1814,6 +1822,81 @@ class RetellWebhookController extends Controller
 
             // Fail safe: return 0 instead of breaking the webhook
             return 0;
+        }
+    }
+
+    /**
+     * Detect service desk dead-end: call ended without creating a ServiceCase
+     *
+     * RCA #94768: Agent silence after name collection caused by broken flow edges.
+     * This detector flags calls where:
+     * 1. The company has gateway_mode = 'service_desk'
+     * 2. The call ended with user_hangup
+     * 3. Duration is short (< 90s) — user gave up
+     * 4. No ServiceCase was created during the call
+     *
+     * @param Call $call The ended call
+     * @param array $callData Raw webhook payload
+     */
+    private function detectServiceDeskDeadEnd(Call $call, array $callData): void
+    {
+        try {
+            // Only check if company has service_desk gateway mode
+            $company = $call->company;
+            if (!$company) {
+                return;
+            }
+
+            $policy = \App\Models\PolicyConfiguration::where('company_id', $company->id)
+                ->where('configurable_type', \App\Models\Company::class)
+                ->where('configurable_id', $company->id)
+                ->where('policy_type', \App\Models\PolicyConfiguration::POLICY_TYPE_GATEWAY_MODE)
+                ->first();
+
+            $gatewayMode = $policy?->config['mode'] ?? null;
+
+            // Also check call-level gateway_mode (set during the call)
+            $callGatewayMode = $call->gateway_mode ?? null;
+
+            if (!in_array('service_desk', [$gatewayMode, $callGatewayMode], true)) {
+                return; // Not a service desk call
+            }
+
+            // Check dead-end conditions
+            $disconnectionReason = $callData['disconnection_reason'] ?? $call->disconnection_reason ?? null;
+            $durationSec = $call->duration_sec ?? ($callData['duration_ms'] ?? 0) / 1000;
+            $hasServiceCase = \App\Models\ServiceCase::where('call_id', $call->id)->exists();
+
+            if (!$hasServiceCase && $durationSec < 90 && $disconnectionReason === 'user_hangup') {
+                Log::warning('🚨 [Dead-End Detection] Service desk call ended without ticket', [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'company_id' => $company->id,
+                    'company_name' => $company->name,
+                    'gateway_mode' => $gatewayMode ?? $callGatewayMode,
+                    'disconnection_reason' => $disconnectionReason,
+                    'duration_sec' => round($durationSec, 1),
+                    'agent_id' => $call->retell_agent_id,
+                    'alert' => 'DEAD_END_DETECTED',
+                    'rca_reference' => 'RCA #94768 — Agent silence after name collection',
+                    'action_required' => 'Check Retell flow edges for classification node',
+                ]);
+            } elseif (!$hasServiceCase && $gatewayMode === 'service_desk') {
+                // Less severe: service_desk call without ticket but normal end
+                Log::info('📋 [Dead-End Detection] Service desk call ended without ticket (non-critical)', [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'company_id' => $company->id,
+                    'disconnection_reason' => $disconnectionReason,
+                    'duration_sec' => round($durationSec, 1),
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Non-critical monitoring — never fail the webhook
+            Log::debug('[Dead-End Detection] Check failed', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

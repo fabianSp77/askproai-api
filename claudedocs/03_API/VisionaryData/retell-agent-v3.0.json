@@ -1,0 +1,871 @@
+{
+  "model_choice": {"type": "cascading", "model": "gpt-4o"},
+  "model_temperature": 0.3,
+  "tool_call_strict_mode": true,
+  "start_speaker": "agent",
+  "start_node_id": "node_it_consent_start",
+  "global_prompt": "Du bist ein freundlicher, professioneller IT-Support-Assistent von {{FIRMENNAME}}. Du nimmst IT-Probleme telefonisch auf und erstellst Tickets.\n\nWICHTIG:\n- Sprich natuerlich und freundlich, nicht wie ein Roboter\n- Stelle keine ueberfluessigen Fragen - extrahiere Informationen aus dem Gespraech\n- Wenn der Anrufer schon Firma und Name genannt hat, frage NICHT nochmal\n- Maximal 1 Rueckfrage zum Problem, dann Daten erfassen\n- Bei Verstaendnisproblemen: 'Entschuldigung, die Verbindung war kurz schlecht. Koennen Sie das bitte wiederholen?'\n- NIEMALS interne Systemnamen oder technische Details erwaehnen\n- Halte dich kurz, maximal 2 Saetze pro Antwort",
+  "nodes": [
+    {
+      "id": "node_it_consent_start",
+      "name": "IT Ticket: Consent",
+      "type": "conversation",
+      "display_position": {"x": 100, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Begruesse den Anrufer und hole die Zustimmung zur Aufzeichnung.\n\nSage: 'Willkommen beim IT-Support von {{FIRMENNAME}}. Zur Bearbeitung Ihres Anliegens wird dieses Gespraech aufgezeichnet und ein Ticket erstellt. Sind Sie damit einverstanden?'\n\nWarte auf Antwort."
+      },
+      "edges": [
+        {
+          "id": "edge_consent_yes",
+          "label": "Zustimmung erhalten",
+          "destination_node_id": "node_it_intro_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat zugestimmt (ja, okay, klar, einverstanden, etc.)."
+          }
+        },
+        {
+          "id": "edge_consent_no",
+          "label": "Keine Zustimmung",
+          "destination_node_id": "node_it_no_consent",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat ausdruecklich nicht zugestimmt oder lehnt ab (nein, will ich nicht, etc.)."
+          }
+        },
+        {
+          "id": "edge_consent_unclear",
+          "label": "Unklar / nicht verstanden",
+          "destination_node_id": "node_it_consent_reask",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat nicht klar ja oder nein gesagt. Die Antwort ist unklar, unverstaendlich, oder der Anrufer hat etwas anderes gefragt."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_consent_reask",
+      "name": "IT Ticket: Consent Nachfrage",
+      "type": "conversation",
+      "display_position": {"x": 100, "y": 350},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Entschuldigung, ich habe Sie nicht ganz verstanden. Darf ich das Gespräch aufzeichnen, um ein Ticket zu erstellen?'\n\nWarte auf Antwort."
+      },
+      "edges": [
+        {
+          "id": "edge_reask_yes",
+          "label": "Zustimmung",
+          "destination_node_id": "node_it_intro_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat zugestimmt (ja, okay, klar, einverstanden, etc.)."
+          }
+        },
+        {
+          "id": "edge_reask_no",
+          "label": "Ablehnung",
+          "destination_node_id": "node_it_no_consent",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat nicht zugestimmt, lehnt ab, oder ist immer noch unklar."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_no_consent",
+      "name": "IT Ticket: Keine Zustimmung",
+      "type": "conversation",
+      "display_position": {"x": 100, "y": 450},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Kein Problem. Ohne Ihre Zustimmung kann ich leider kein Ticket aufnehmen. Sie koennen uns gerne per E-Mail kontaktieren. Auf Wiederhören.'"
+      },
+      "edges": [
+        {
+          "id": "edge_no_consent_end",
+          "label": "Ende",
+          "destination_node_id": "node_it_end",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Beende das Gespraech."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_intro_v3",
+      "name": "IT Ticket: Offener Einstieg",
+      "type": "conversation",
+      "display_position": {"x": 600, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Vielen Dank. Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?'\n\nLasse den Anrufer frei erzaehlen. Unterbrich NICHT. Hoere aufmerksam zu und merke dir alle genannten Details (Firma, Name, Problem, Standort, seit wann, etc.)."
+      },
+      "edges": [
+        {
+          "id": "edge_intro_to_extract",
+          "label": "Problem geschildert",
+          "destination_node_id": "node_it_extract_initial_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat sein Problem beschrieben oder sein Anliegen geschildert."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_extract_initial_v3",
+      "name": "Extract: Alle Basisdaten",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 1100, "y": 200},
+      "variables": [
+        {
+          "type": "string",
+          "name": "customer_name",
+          "description": "Vollstaendiger Name des Anrufers (Vor- und Nachname). Nur setzen wenn klar genannt."
+        },
+        {
+          "type": "string",
+          "name": "customer_company",
+          "description": "Firma oder Organisation des Anrufers. Nur setzen wenn klar genannt."
+        },
+        {
+          "type": "string",
+          "name": "problem_description",
+          "description": "Zusammenfassung des Problems in 1-3 Saetzen. IMMER setzen wenn ein Problem beschrieben wurde."
+        },
+        {
+          "type": "string",
+          "name": "customer_location",
+          "description": "Standort, Buero, Stockwerk, Gebaeude. Nur setzen wenn erwaehnt."
+        },
+        {
+          "type": "string",
+          "name": "others_affected",
+          "description": "Auf 'ja' setzen wenn der Anrufer sagt dass mehrere Personen betroffen sind. Sonst nicht setzen."
+        },
+        {
+          "type": "string",
+          "name": "problem_since",
+          "description": "Zeitangabe seit wann das Problem besteht. Nur setzen wenn erwaehnt."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_extract_basisdaten_ok",
+          "label": "Basisdaten vorhanden",
+          "destination_node_id": "node_it_classify_issue_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "customer_name UND customer_company UND problem_description sind alle gesetzt (nicht leer)."
+          }
+        },
+        {
+          "id": "edge_extract_basisdaten_fehlen",
+          "label": "Basisdaten fehlen",
+          "destination_node_id": "node_it_ask_missing_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "customer_name ODER customer_company fehlt (ist leer oder nicht gesetzt), aber problem_description ist vorhanden."
+          }
+        },
+        {
+          "id": "edge_extract_kein_problem",
+          "label": "Problem unklar",
+          "destination_node_id": "node_it_ask_problem_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "problem_description fehlt oder ist unklar."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_ask_missing_v3",
+      "name": "IT Ticket: Fehlende Basisdaten nachfragen",
+      "type": "conversation",
+      "display_position": {"x": 1100, "y": 450},
+      "instruction": {
+        "type": "prompt",
+        "text": "Frage gezielt nach den fehlenden Informationen. Sei natuerlich und freundlich.\n\nWenn der Name fehlt: 'Darf ich noch Ihren Namen erfahren?'\nWenn die Firma fehlt: 'Von welcher Firma rufen Sie an?'\nWenn beides fehlt: 'Darf ich noch kurz Ihren Namen und Ihre Firma erfahren?'\n\nFrage NUR was tatsaechlich fehlt. Wiederhole nicht was bereits bekannt ist."
+      },
+      "edges": [
+        {
+          "id": "edge_missing_to_reextract",
+          "label": "Antwort erhalten",
+          "destination_node_id": "node_it_reextract_missing_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die fehlenden Informationen genannt."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_reextract_missing_v3",
+      "name": "Extract: Fehlende Basisdaten",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 1600, "y": 450},
+      "variables": [
+        {
+          "type": "string",
+          "name": "customer_name",
+          "description": "Vollstaendiger Name. NUR setzen wenn der Anrufer GERADE einen Namen genannt hat. NICHT aus vorherigem Kontext raten."
+        },
+        {
+          "type": "string",
+          "name": "customer_company",
+          "description": "Firma. NUR setzen wenn der Anrufer GERADE eine Firma genannt hat. NICHT aus vorherigem Kontext raten oder halluzinieren."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_reextract_to_classify",
+          "label": "Weiter zur Klassifizierung",
+          "destination_node_id": "node_it_classify_issue_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "customer_name UND customer_company sind beide gesetzt (nicht leer)."
+          }
+        },
+        {
+          "id": "edge_reextract_company_missing",
+          "label": "Firma fehlt noch",
+          "destination_node_id": "node_it_ask_company_only_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "customer_company ist noch leer oder nicht gesetzt. Die Firma wurde noch nicht genannt."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_ask_problem_v3",
+      "name": "IT Ticket: Problem nachfragen",
+      "type": "conversation",
+      "display_position": {"x": 1100, "y": 650},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Koennten Sie mir bitte kurz schildern, wobei ich Ihnen helfen kann?'\n\nHoere aufmerksam zu."
+      },
+      "edges": [
+        {
+          "id": "edge_problem_to_reextract",
+          "label": "Problem geschildert",
+          "destination_node_id": "node_it_extract_initial_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat ein Problem oder Anliegen beschrieben."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_ask_company_only_v3",
+      "name": "IT Ticket: Firma nachfragen",
+      "type": "conversation",
+      "display_position": {"x": 1600, "y": 650},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Danke! Von welcher Firma rufen Sie an?'\n\nWarte auf die Antwort des Anrufers."
+      },
+      "edges": [
+        {
+          "id": "edge_company_to_extract",
+          "label": "Firma genannt",
+          "destination_node_id": "node_it_extract_company_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat eine Firma oder Organisation genannt."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_extract_company_v3",
+      "name": "Extract: Firma",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 2100, "y": 650},
+      "variables": [
+        {
+          "type": "string",
+          "name": "customer_company",
+          "description": "Firma oder Organisation des Anrufers. NUR setzen wenn der Anrufer GERADE eine Firma genannt hat. NICHT halluzinieren."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_extract_company_to_classify",
+          "label": "Weiter zur Klassifizierung",
+          "destination_node_id": "node_it_classify_issue_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Extraktion der Firma ist abgeschlossen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_classify_issue_v3",
+      "name": "Extract: Klassifizierung + Security-Check",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 2100, "y": 200},
+      "variables": [
+        {
+          "type": "string",
+          "name": "use_case_category",
+          "description": "PFLICHTFELD. Exakt EINER dieser Werte (kleingeschrieben, KEINE Abweichung): network, m365, endpoint, print, identity, security, other. Zuordnung: network=Internet/WLAN/VPN/DNS/Netzwerk, m365=Outlook/Teams/SharePoint/Exchange, endpoint=Laptop/Desktop/PC/Software/Rechner, print=Drucker/Scanner, identity=Passwort/Login/MFA/Zugang/Konto, security=Virus/Malware/Sicherheitsvorfall, other=alles andere. IMMER exakt einen dieser 7 Werte setzen, IMMER kleingeschrieben."
+        },
+        {
+          "type": "string",
+          "name": "use_case_detail",
+          "description": "Spezifische Problembeschreibung in 1-2 Saetzen. Bei Woertern wie Ransomware, Erpressung, Datenleck, Verschluesselung, kompromittiert, Loesegeld, Hackerangriff: 'escalation=critical' am Ende anfuegen."
+        },
+        {
+          "type": "string",
+          "name": "security_critical",
+          "description": "Auf 'true' setzen NUR wenn Ransomware, Erpressung, Datenleck, kompromittiert, Loesegeld, Hackerangriff oder gehackt erwaehnt wurde. Sonst leer lassen."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_classify_security",
+          "label": "Security-Eskalation",
+          "destination_node_id": "node_it_security_escalation_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "security_critical", "operator": "==", "right": "true"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_network",
+          "label": "Netzwerk",
+          "destination_node_id": "node_it_triage_network_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "use_case_category", "operator": "==", "right": "network"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_m365",
+          "label": "M365",
+          "destination_node_id": "node_it_triage_m365_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "use_case_category", "operator": "==", "right": "m365"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_endpoint",
+          "label": "Endgeraet",
+          "destination_node_id": "node_it_triage_endpoint_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "use_case_category", "operator": "==", "right": "endpoint"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_print",
+          "label": "Drucker",
+          "destination_node_id": "node_it_triage_print_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "use_case_category", "operator": "==", "right": "print"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_identity",
+          "label": "Identitaet",
+          "destination_node_id": "node_it_triage_identity_v3",
+          "transition_condition": {
+            "type": "equation",
+            "equations": [
+              {"left": "use_case_category", "operator": "==", "right": "identity"}
+            ],
+            "operator": "&&"
+          }
+        },
+        {
+          "id": "edge_classify_other",
+          "label": "Sonstiges / Default",
+          "destination_node_id": "node_it_triage_general_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "DEFAULT-FALLBACK: Diese Edge MUSS immer feuern wenn keine der vorherigen Equation-Edges ausgeloest wurde. Dies ist der Auffang-Pfad fuer alle nicht exakt zugeordneten Kategorien."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_security_escalation_v3",
+      "name": "IT Ticket: Security-Eskalation",
+      "type": "conversation",
+      "display_position": {"x": 2100, "y": -100},
+      "instruction": {
+        "type": "prompt",
+        "text": "WICHTIG: Dies ist ein kritischer Sicherheitsvorfall. Keine weiteren Rueckfragen zum Problem stellen!\n\nSage: 'Ich verstehe, das klingt nach einem dringenden Sicherheitsvorfall. Ich erstelle sofort ein Ticket mit hoechster Prioritaet. Bitte aendern Sie keine Passwoerter und schalten Sie betroffene Geraete nicht aus, bis sich ein Techniker bei Ihnen meldet.'\n\nDann direkt weiter."
+      },
+      "edges": [
+        {
+          "id": "edge_security_to_contact",
+          "label": "Sofort zur Kontaktaufnahme",
+          "destination_node_id": "node_it_collect_contact_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Information zur Kenntnis genommen. Gehe sofort weiter."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_network_v3",
+      "name": "IT Ticket: Triage Netzwerk",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 0},
+      "instruction": {
+        "type": "prompt",
+        "text": "Stelle EINE gezielte Rueckfrage zum Netzwerk-Problem, z.B.:\n- 'Betrifft das nur Ihren Rechner oder auch andere Geraete?'\n- 'Funktioniert das WLAN oder nur das Netzwerkkabel?'\n- 'Ist das Problem ploetzlich aufgetreten?'\n\nWaehle die passendste Frage. Stelle nur EINE Frage."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_network_done",
+          "label": "Triage abgeschlossen",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_m365_v3",
+      "name": "IT Ticket: Triage M365",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 150},
+      "instruction": {
+        "type": "prompt",
+        "text": "Stelle EINE gezielte Rueckfrage zum M365-Problem, z.B.:\n- 'Welche Anwendung ist betroffen - Outlook, Teams, oder eine andere?'\n- 'Kommt eine Fehlermeldung?'\n- 'Funktioniert es im Browser oder in der Desktop-App?'\n\nStelle nur EINE Frage."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_m365_done",
+          "label": "Triage abgeschlossen",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_endpoint_v3",
+      "name": "IT Ticket: Triage Endgeraet",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 300},
+      "instruction": {
+        "type": "prompt",
+        "text": "Stelle EINE gezielte Rueckfrage zum Endgeraet-Problem, z.B.:\n- 'Um welches Geraet handelt es sich - Laptop, Desktop oder etwas anderes?'\n- 'Haben Sie schon einen Neustart versucht?'\n- 'Kommt eine Fehlermeldung?'\n\nStelle nur EINE Frage."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_endpoint_done",
+          "label": "Triage abgeschlossen",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_print_v3",
+      "name": "IT Ticket: Triage Drucker",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 450},
+      "instruction": {
+        "type": "prompt",
+        "text": "Stelle EINE gezielte Rueckfrage zum Druck-Problem, z.B.:\n- 'Welchen Drucker betrifft es?'\n- 'Zeigt der Drucker eine Fehlermeldung an?'\n- 'Funktioniert der Drucker bei anderen Kollegen?'\n\nStelle nur EINE Frage."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_print_done",
+          "label": "Triage abgeschlossen",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_identity_v3",
+      "name": "IT Ticket: Triage Identitaet",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 600},
+      "instruction": {
+        "type": "prompt",
+        "text": "Stelle EINE gezielte Rueckfrage zum Zugangs-Problem, z.B.:\n- 'Ist Ihr Konto komplett gesperrt oder funktioniert nur ein bestimmtes Passwort nicht?'\n- 'Bei welchem System koennen Sie sich nicht anmelden?'\n- 'Haben Sie kuerzlich Ihr Passwort geaendert?'\n\nStelle nur EINE Frage."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_identity_done",
+          "label": "Triage abgeschlossen",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_triage_general_v3",
+      "name": "IT Ticket: Allgemeine Rückfrage",
+      "type": "conversation",
+      "display_position": {"x": 2600, "y": 750},
+      "instruction": {
+        "type": "prompt",
+        "text": "Bestaetige kurz was du verstanden hast und stelle EINE allgemeine Rueckfrage.\n\nSage ungefaehr: 'Verstanden, [kurze Wiederholung des Problems in eigenen Worten]. Gibt es noch ein Detail, das dem Techniker helfen koennte? Zum Beispiel ob es ploetzlich aufgetreten ist oder ob schon etwas versucht wurde?'\n\nStelle nur EINE Frage. Hoere aufmerksam zu."
+      },
+      "edges": [
+        {
+          "id": "edge_triage_general_done",
+          "label": "Rückfrage beantwortet",
+          "destination_node_id": "node_it_extract_triage_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Rueckfrage beantwortet oder gesagt dass es keine weiteren Details gibt."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_extract_triage_v3",
+      "name": "Extract: Triage-Details",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 3100, "y": 300},
+      "variables": [
+        {
+          "type": "string",
+          "name": "problem_description",
+          "description": "Aktualisierte vollstaendige Problembeschreibung in 2-4 Saetzen mit bisheriger Beschreibung UND neuen Triage-Details."
+        },
+        {
+          "type": "string",
+          "name": "use_case_detail",
+          "description": "Aktualisierte Detail-Beschreibung mit Triage-Ergebnissen. Bestehenden 'escalation=critical' beibehalten falls vorhanden."
+        },
+        {
+          "type": "string",
+          "name": "customer_location",
+          "description": "Standort nur aktualisieren wenn in der Triage-Antwort ein Standort erwaehnt wurde."
+        },
+        {
+          "type": "string",
+          "name": "others_affected",
+          "description": "Nur aktualisieren wenn in der Triage-Antwort erwaehnt wurde ob andere betroffen sind."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_triage_extract_to_contact",
+          "label": "Weiter zu Kontaktdaten",
+          "destination_node_id": "node_it_collect_contact_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Extraktion ist abgeschlossen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_collect_contact_v3",
+      "name": "IT Ticket: Rueckrufnummer",
+      "type": "conversation",
+      "display_position": {"x": 3600, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Unter welcher Nummer können wir Sie für Rückfragen am besten erreichen?'\n\nWenn der Anrufer eine Nummer nennt, wiederhole sie und frage: 'Ich habe die Nummer notiert. Ist das korrekt?'\n\nWenn der Anrufer sagt die Nummer im Display reicht: 'Alles klar, dann nutzen wir die angezeigte Nummer.'"
+      },
+      "edges": [
+        {
+          "id": "edge_contact_to_extract",
+          "label": "Nummer erhalten",
+          "destination_node_id": "node_it_extract_contact_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat eine Rueckrufnummer genannt oder gesagt die angezeigte Nummer reicht."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_extract_contact_v3",
+      "name": "Extract: Kontaktdaten",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 4100, "y": 200},
+      "variables": [
+        {
+          "type": "string",
+          "name": "customer_phone",
+          "description": "Telefonnummer des Anrufers. Wenn der Anrufer sagt 'die Nummer im Display reicht', auf 'caller_id' setzen."
+        },
+        {
+          "type": "string",
+          "name": "customer_email",
+          "description": "E-Mail-Adresse falls spontan genannt. Nicht aktiv danach fragen."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_extract_contact_to_summary",
+          "label": "Weiter zur Zusammenfassung",
+          "destination_node_id": "node_it_summary_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Kontaktdaten wurden extrahiert."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_summary_v3",
+      "name": "IT Ticket: Zusammenfassung",
+      "type": "conversation",
+      "display_position": {"x": 4600, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Fasse das Ticket zusammen und nenne dabei: Name, Firma, Kurzform des Problems, und die Rueckrufnummer.\n\nSage ungefaehr: 'Ich fasse kurz zusammen: [Name] von [Firma] — [Problem in einem Satz]. Wir melden uns unter [Rueckrufnummer] bei Ihnen. Stimmt das so?'\n\nWenn die Rueckrufnummer 'caller_id' ist, sage stattdessen: '...und melden uns unter der angezeigten Nummer bei Ihnen.'\n\nWarte auf Bestaetigung."
+      },
+      "edges": [
+        {
+          "id": "edge_summary_confirmed",
+          "label": "Bestaetigt",
+          "destination_node_id": "func_it_finalize_ticket_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat bestaetigt (ja, passt, genau, korrekt, etc.)."
+          }
+        },
+        {
+          "id": "edge_summary_correction",
+          "label": "Korrektur",
+          "destination_node_id": "node_it_intro_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer moechte etwas korrigieren oder aendern."
+          }
+        }
+      ]
+    },
+    {
+      "id": "func_it_finalize_ticket_v3",
+      "name": "Ticket erstellen",
+      "type": "function",
+      "tool_id": "tool-finalize-ticket",
+      "tool_type": "local",
+      "display_position": {"x": 5100, "y": 200},
+      "speak_during_execution": true,
+      "wait_for_result": true,
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage 'Einen Moment bitte, ich erstelle das Ticket...' waehrend die Funktion ausgefuehrt wird."
+      },
+      "parameter_mapping": {
+        "problem_description": "{{problem_description}}",
+        "customer_name": "{{customer_name}}",
+        "customer_company": "{{customer_company}}",
+        "customer_phone": "{{customer_phone}}",
+        "customer_email": "{{customer_email}}",
+        "customer_location": "{{customer_location}}",
+        "others_affected": "{{others_affected}}",
+        "problem_since": "{{problem_since}}",
+        "use_case_category": "{{use_case_category}}",
+        "use_case_detail": "{{use_case_detail}}"
+      },
+      "edges": [
+        {
+          "id": "edge_finalize_success",
+          "label": "Ticket erstellt",
+          "destination_node_id": "node_it_success_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Funktion hat success=true zurueckgegeben und eine ticket_id."
+          }
+        },
+        {
+          "id": "edge_finalize_error",
+          "label": "Fehler",
+          "destination_node_id": "node_it_error_handler_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Funktion hat einen Fehler zurueckgegeben (success=false) oder es gab ein technisches Problem."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_success_v3",
+      "name": "IT Ticket: Erfolg",
+      "type": "conversation",
+      "display_position": {"x": 5600, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Danke, ich habe das Ticket erstellt. Ein Techniker schaut sich das an und meldet sich in Kuerze bei Ihnen. Kann ich sonst noch etwas fuer Sie tun?'\n\nWarte auf Antwort."
+      },
+      "edges": [
+        {
+          "id": "edge_success_to_end",
+          "label": "Verabschiedung",
+          "destination_node_id": "node_it_goodbye_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat sich verabschiedet, sich bedankt, oder bestaetigt dass er keine weiteren Fragen hat (z.B. 'Danke', 'Tschuess', 'Passt', 'Nein danke', etc.)."
+          }
+        },
+        {
+          "id": "edge_success_new_problem",
+          "label": "Neues Problem",
+          "destination_node_id": "node_it_intro_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat ein weiteres Problem oder ein anderes Anliegen (z.B. 'Ja, ich habe noch ein Problem', 'Da waere noch etwas', 'Ich braeuchte noch Hilfe bei...')."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_goodbye_v3",
+      "name": "IT Ticket: Verabschiedung",
+      "type": "conversation",
+      "display_position": {"x": 5850, "y": 200},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Alles klar, dann wuensche ich Ihnen einen guten Tag. Auf Wiederhoeren!'"
+      },
+      "edges": [
+        {
+          "id": "edge_goodbye_to_end",
+          "label": "Ende",
+          "destination_node_id": "node_it_end",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat sich verabschiedet oder auf die Verabschiedung des Agenten reagiert (z.B. 'Tschuess', 'Danke', 'Auf Wiederhoeren', oder aehnliches)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_error_handler_v3",
+      "name": "IT Ticket: Fehler-Handler",
+      "type": "conversation",
+      "display_position": {"x": 5600, "y": 400},
+      "instruction": {
+        "type": "prompt",
+        "text": "Sage: 'Es tut mir leid, es gab ein technisches Problem bei der Ticket-Erstellung. Ich habe Ihre Daten notiert und ein Kollege wird sich bei Ihnen melden. Auf Wiederhören.'"
+      },
+      "edges": [
+        {
+          "id": "edge_error_to_end",
+          "label": "Ende",
+          "destination_node_id": "node_it_end",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Beende das Gespraech."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_end",
+      "name": "Ende",
+      "type": "end",
+      "display_position": {"x": 6100, "y": 300},
+      "edges": [],
+      "instruction": {
+        "type": "prompt",
+        "text": ""
+      }
+    }
+  ],
+  "tools": [
+    {
+      "tool_id": "tool-finalize-ticket",
+      "name": "finalize_ticket",
+      "description": "Erstellt ein Support-Ticket im System mit allen gesammelten Daten vom Anruf.",
+      "type": "custom",
+      "timeout_ms": 15000,
+      "parameter_mapping": [],
+      "url": "https://api.askproai.de/api/webhooks/retell/function",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "problem_description": {
+            "type": "string",
+            "description": "Vollstaendige Problembeschreibung"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Name des Anrufers"
+          },
+          "customer_company": {
+            "type": "string",
+            "description": "Firma des Anrufers"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Rueckrufnummer oder 'caller_id'"
+          },
+          "customer_email": {
+            "type": "string",
+            "description": "E-Mail-Adresse (optional)"
+          },
+          "customer_location": {
+            "type": "string",
+            "description": "Standort des Anrufers (optional)"
+          },
+          "others_affected": {
+            "type": "string",
+            "description": "Sind andere betroffen? ja/nein (optional)"
+          },
+          "problem_since": {
+            "type": "string",
+            "description": "Seit wann besteht das Problem (optional)"
+          },
+          "use_case_category": {
+            "type": "string",
+            "description": "Kategorie: network, m365, endpoint, print, identity, security, other"
+          },
+          "use_case_detail": {
+            "type": "string",
+            "description": "Detailbeschreibung mit optionalem escalation=critical bei Sicherheitsvorfaellen"
+          }
+        },
+        "required": ["problem_description", "customer_name"]
+      }
+    }
+  ]
+}

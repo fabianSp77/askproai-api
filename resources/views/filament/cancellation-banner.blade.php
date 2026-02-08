@@ -4,6 +4,9 @@
     Shows: cancellation details, link to cancellation call, policy status
 --}}
 
+{{-- Single Root Element Wrapper for Livewire Compatibility --}}
+<div class="cancellation-banner-wrapper">
+
 @if ($show ?? false)
 <div class="w-full rounded-lg border-2 border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 p-4 mb-4">
     <div class="flex items-start gap-3">
@@ -146,3 +149,5 @@
     </div>
 </div>
 @endif
+
+</div>{{-- End: cancellation-banner-wrapper (Single Root Element for Livewire) --}}

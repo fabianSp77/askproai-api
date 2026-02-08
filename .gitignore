@@ -33,3 +33,13 @@ backups/
 # Test call recordings with sensitive data
 call_*_full.json
 last_test_call_analysis.json
+
+# Deployment artifacts (atomic symlink deployment)
+/current
+/releases/
+/shared/
+
+# Compiled Blade views (auto-generated)
+/storage/framework/views/*.php
+/storage/framework/views/*.blade.php
+/storage/framework/cache/

@@ -561,6 +561,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Premium Dashboard (Financial Analytics)
+    |--------------------------------------------------------------------------
+    |
+    | Enable Premium Dark Dashboard with financial analytics widgets.
+    | Accessible only to Super-Admin and Reseller-Admin roles.
+    |
+    | Features:
+    |   - Revenue Bar Chart (Monthly/Weekly/Yearly)
+    |   - Interactive Calendar with appointment events
+    |   - AI-powered performance summary
+    |   - Spending breakdown (Donut chart)
+    |   - Recent invoices list
+    |
+    | Design Reference: Outcrowd Financial Analytics Dashboard
+    | Route: /admin/premium-dashboard
+    |
+    | @default false
+    | @since 2026-01-19
+    */
+    'premium_dashboard' => env('FEATURE_PREMIUM_DASHBOARD', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Slot Intelligence System (2025-11-25)
     |--------------------------------------------------------------------------
     |

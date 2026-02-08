@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionaryData IT-Support Agent v3.0 — Flow-Architektur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .mermaid-wrapper { overflow-x: auto; overflow-y: auto; max-height: 600px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; position: relative; }
+        .mermaid-wrapper .mermaid svg { min-width: 2200px; height: auto; }
+        .fullscreen-overlay { display: none; position: fixed; inset: 0; z-index: 9999; background: white; overflow: auto; padding: 20px; }
+        .fullscreen-overlay.active { display: block; }
+        .fullscreen-overlay .mermaid svg { min-width: 2400px; height: auto; }
+        .fullscreen-close { position: fixed; top: 16px; right: 16px; z-index: 10000; }
+        .fullscreen-hint { position: absolute; bottom: 8px; right: 12px; z-index: 10; pointer-events: none; }
+        .phase-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        details summary { cursor: pointer; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] summary .chevron { transform: rotate(90deg); }
+        .chevron { transition: transform 0.2s; display: inline-block; }
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">VisionaryData IT-Support Agent v3.0</h1>
+                <p class="text-sm text-gray-500">Flow-Architektur &amp; Release-Dokumentation</p>
+            </div>
+            <div class="text-right text-sm text-gray-400">
+                <div>Agent (v3.0): <code class="text-gray-400 line-through">agent_92cb5bd4d94f4ae5fdacc0e5b5</code></div>
+                <div>Agent (v3.1): <code class="text-gray-600">agent_769af524dac772a9b8b3234af4</code></div>
+                <div>Flow (v3.1): <code class="text-gray-600">conversation_flow_cc8ac4e55c5c</code></div>
+                <div>Stand: 02.02.2026</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+
+        <!-- Executive Summary -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <h2 class="text-lg font-semibold mb-4">Executive Summary</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-gray-700 leading-relaxed">
+                        Der IT-Support Agent v3.0 ist eine grundlegende Neugestaltung des Conversation Flows,
+                        basierend auf dem Feedback von <strong>Thomas Stanner (GF, VisionaryData)</strong>.
+                        Kernprinzip: <em>"Kein Roboter-Verhoer, sondern intelligente Assistenz."</em>
+                    </p>
+                    <p class="text-gray-700 leading-relaxed mt-3">
+                        Der Agent fuehrt ein natuerliches Gespraech, extrahiert Informationen dynamisch aus
+                        dem Redefluss des Anrufers und stellt nur gezielte Rueckfragen wenn noetig.
+                        Bei kritischen Sicherheitsvorfaellen (Ransomware, Datenleck) wird sofort eskaliert.
+                    </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-5 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="status-badge badge-green">Deployed</span>
+                        <span class="text-sm text-gray-600">Agent erstellt, unpublished (zum Testen)</span>
+                    </div>
+                    <div class="text-sm space-y-1.5 text-gray-600">
+                        <div><strong>Nodes:</strong> 22 (11 Conversation, 5 Extract, 1 Function, 1 End, 4 Triage-spezifisch)</div>
+                        <div><strong>Pflichtfelder:</strong> 4 (Firma, Name, Problem, Rueckrufnummer)</div>
+                        <div><strong>Triage-Runden:</strong> Max. 1 pro Kategorie</div>
+                        <div><strong>Kategorien:</strong> Network, M365, Endpoint, Print, Identity, Security, Other</div>
+                        <div><strong>Model:</strong> GPT-4o-mini (cascading), Temperature 0.3</div>
+                        <div><strong>Voice:</strong> ElevenLabs <code>eEmoQJhC4SAEQpCINUov</code> (Thomas-Favorit)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flow Diagram -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold">Interaktiver Flow-Graph</h2>
+                <div class="flex flex-wrap gap-4 text-xs">
+                    <span><span class="phase-dot" style="background:#22c55e"></span> Consent &amp; Intro</span>
+                    <span><span class="phase-dot" style="background:#3b82f6"></span> Datenerfassung</span>
+                    <span><span class="phase-dot" style="background:#eab308"></span> Klassifizierung &amp; Triage</span>
+                    <span><span class="phase-dot" style="background:#ef4444"></span> Security-Eskalation</span>
+                    <span><span class="phase-dot" style="background:#a855f7"></span> Kontakt &amp; Abschluss</span>
+                    <span><span class="phase-dot" style="background:#6b7280"></span> Error / Ende</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-4 no-print">
+                <button onclick="openFullscreen()" class="text-sm px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors font-medium">
+                    Vollbild &ouml;ffnen
+                </button>
+                <span class="text-xs text-gray-400 self-center ml-2">Tipp: Im Kasten horizontal scrollen oder Vollbild f&uuml;r beste Ansicht</span>
+            </div>
+
+            <div class="mermaid-wrapper" id="diagramWrapper">
+                <div class="fullscreen-hint">
+                    <span class="text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">&larr; scrollen &rarr;</span>
+                </div>
+                <div class="mermaid" id="flowDiagram">
+graph LR
+    %% Styling
+    classDef consent fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#166534
+    classDef extract fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e40af
+    classDef triage fill:#fef9c3,stroke:#eab308,stroke-width:2px,color:#854d0e
+    classDef security fill:#fee2e2,stroke:#ef4444,stroke-width:3px,color:#991b1b
+    classDef contact fill:#f3e8ff,stroke:#a855f7,stroke-width:2px,color:#6b21a8
+    classDef ending fill:#f3f4f6,stroke:#6b7280,stroke-width:2px,color:#374151
+
+    %% Consent Phase
+    A["Consent<br/><small>Aufzeichnung</small>"]:::consent
+    B["Keine Zustimmung<br/><small>→ E-Mail-Verweis</small>"]:::ending
+
+    %% Intro Phase
+    C["Offener Einstieg<br/><small>'Worum geht es?'</small>"]:::consent
+
+    %% Extraction Phase
+    D["Extract: Basisdaten<br/><small>Name, Firma, Problem,<br/>Standort, Seit-wann</small>"]:::extract
+    E["Fehlende Daten<br/>nachfragen"]:::extract
+    F["Re-Extract:<br/>Fehlende Daten"]:::extract
+    G["Problem<br/>nachfragen"]:::extract
+
+    %% Classification
+    H["Classify + Security<br/><small>Kategorie + Hard-Trigger</small>"]:::triage
+
+    %% Security Path
+    SEC["SECURITY<br/>ESKALATION<br/><small>Priority: CRITICAL</small>"]:::security
+
+    %% Triage Nodes
+    T1["Triage: Netzwerk<br/><small>1 Rueckfrage</small>"]:::triage
+    T2["Triage: M365<br/><small>1 Rueckfrage</small>"]:::triage
+    T3["Triage: Endgeraet<br/><small>1 Rueckfrage</small>"]:::triage
+    T4["Triage: Drucker<br/><small>1 Rueckfrage</small>"]:::triage
+    T5["Triage: Identitaet<br/><small>1 Rueckfrage</small>"]:::triage
+    T6["Extract:<br/>Triage-Details"]:::extract
+
+    %% Contact & Finalize
+    K1["Rueckrufnummer<br/>erfragen"]:::contact
+    K2["Extract:<br/>Kontaktdaten"]:::extract
+    K3["Zusammenfassung<br/><small>Bestaetigung</small>"]:::contact
+    K4["func: Ticket<br/>erstellen"]:::contact
+
+    %% End
+    OK["Erfolg<br/><small>'Techniker meldet<br/>sich in Kuerze'</small>"]:::contact
+    ERR["Fehler-Handler<br/><small>Fallback-Meldung</small>"]:::ending
+    END["Ende"]:::ending
+
+    %% Edges: Consent
+    A -->|"Ja"| C
+    A -->|"Nein"| B
+    B --> END
+
+    %% Edges: Intro → Extract
+    C -->|"Problem geschildert"| D
+
+    %% Edges: Extraction
+    D -->|"Name+Firma+Problem OK"| H
+    D -->|"Name/Firma fehlt"| E
+    D -->|"Problem unklar"| G
+    E -->|"Antwort"| F
+    F --> H
+    G -->|"Problem geschildert"| D
+
+    %% Edges: Classification
+    H -->|"security_critical=true"| SEC
+    H -->|"network"| T1
+    H -->|"m365"| T2
+    H -->|"endpoint"| T3
+    H -->|"print"| T4
+    H -->|"identity"| T5
+    H -->|"other/default"| K1
+
+    %% Edges: Security → Contact
+    SEC --> K1
+
+    %% Edges: Triage → Extract → Contact
+    T1 --> T6
+    T2 --> T6
+    T3 --> T6
+    T4 --> T6
+    T5 --> T6
+    T6 --> K1
+
+    %% Edges: Contact → End
+    K1 --> K2
+    K2 --> K3
+    K3 -->|"Bestaetigt"| K4
+    K3 -->|"Korrektur"| C
+    K4 -->|"success"| OK
+    K4 -->|"error"| ERR
+    OK --> END
+    ERR --> END
+                </div>
+            </div>
+        </section>
+
+        <!-- Fullscreen Overlay -->
+        <div class="fullscreen-overlay" id="fullscreenOverlay">
+            <button onclick="closeFullscreen()" class="fullscreen-close no-print px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium shadow-lg">
+                Schlie&szlig;en (Esc)
+            </button>
+            <div id="fullscreenContent" style="padding-top: 20px;"></div>
+        </div>
+
+        <!-- Node Detail Table -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <h2 class="text-lg font-semibold mb-6">Node-Detail-Tabelle (22 Nodes)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200 text-left">
+                            <th class="py-3 px-3 font-semibold w-8">#</th>
+                            <th class="py-3 px-3 font-semibold">Node-ID</th>
+                            <th class="py-3 px-3 font-semibold">Typ</th>
+                            <th class="py-3 px-3 font-semibold">Phase</th>
+                            <th class="py-3 px-3 font-semibold">Zweck</th>
+                            <th class="py-3 px-3 font-semibold">Ausgaenge</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">1</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_consent_start</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Consent</td>
+                            <td class="py-2.5 px-3">Begruessung + Aufzeichnungszustimmung</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">Ja → Intro | Nein → No-Consent</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">2</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_no_consent</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Consent</td>
+                            <td class="py-2.5 px-3">Hoefliche Verabschiedung, E-Mail-Verweis</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ End</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">3</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_intro_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Intro</td>
+                            <td class="py-2.5 px-3">Offener Einstieg: "Worum geht es?"</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Basisdaten</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">4</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_extract_initial_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-blue">extract</span></td>
+                            <td class="py-2.5 px-3">Extraktion</td>
+                            <td class="py-2.5 px-3">Alle Basisdaten dynamisch extrahieren (7 Felder)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">Alles da → Classify | Name/Firma fehlt → Ask Missing | Problem unklar → Ask Problem</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">5</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_ask_missing_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Extraktion</td>
+                            <td class="py-2.5 px-3">Gezielt fehlende Basisdaten nachfragen</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Re-Extract</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">6</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_reextract_missing_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-blue">extract</span></td>
+                            <td class="py-2.5 px-3">Extraktion</td>
+                            <td class="py-2.5 px-3">Fehlende Basisdaten extrahieren</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Classify</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">7</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_ask_problem_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Extraktion</td>
+                            <td class="py-2.5 px-3">Problem nachfragen (wenn initial unklar)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Basisdaten (Loop)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">8</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_classify_issue_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-blue">extract</span></td>
+                            <td class="py-2.5 px-3">Klassifizierung</td>
+                            <td class="py-2.5 px-3">Kategorie bestimmen + Security Hard-Trigger pruefen</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">7 Ausgaenge: Security | 5x Triage | Other→Contact</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-red-50">
+                            <td class="py-2.5 px-3 text-gray-400">9</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_security_escalation_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-red">conversation</span></td>
+                            <td class="py-2.5 px-3">Security</td>
+                            <td class="py-2.5 px-3">Sofort-Eskalation bei Ransomware, Datenleck etc.</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Contact (ueberspringt Triage)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">10</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_triage_network_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-yellow">conversation</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">1 Netzwerk-Rueckfrage (WLAN, Kabel, andere betroffen?)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Triage</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">11</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_triage_m365_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-yellow">conversation</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">1 M365-Rueckfrage (Outlook, Teams, Browser/Desktop?)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Triage</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">12</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_triage_endpoint_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-yellow">conversation</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">1 Endgeraet-Rueckfrage (Laptop, Desktop, Neustart?)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Triage</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">13</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_triage_print_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-yellow">conversation</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">1 Drucker-Rueckfrage (welcher Drucker, Fehlermeldung?)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Triage</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">14</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_triage_identity_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-yellow">conversation</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">1 Zugangs-Rueckfrage (gesperrt, welches System?)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Triage</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">15</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_extract_triage_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-blue">extract</span></td>
+                            <td class="py-2.5 px-3">Triage</td>
+                            <td class="py-2.5 px-3">Triage-Details extrahieren (aktualisiert Problem + Detail)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Contact</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">16</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_collect_contact_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Kontakt</td>
+                            <td class="py-2.5 px-3">Rueckrufnummer erfragen (oder Caller-ID akzeptieren)</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Extract Contact</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">17</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_extract_contact_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-blue">extract</span></td>
+                            <td class="py-2.5 px-3">Kontakt</td>
+                            <td class="py-2.5 px-3">Telefonnummer + optionale E-Mail extrahieren</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ Summary</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">18</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_summary_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Abschluss</td>
+                            <td class="py-2.5 px-3">Kurze Zusammenfassung, Bestaetigung einholen</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">OK → Finalize | Korrektur → Intro (Loop)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">19</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">func_it_finalize_ticket_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge" style="background:#e0e7ff;color:#3730a3">function</span></td>
+                            <td class="py-2.5 px-3">Abschluss</td>
+                            <td class="py-2.5 px-3">HTTP POST an Backend: Ticket erstellen</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">Success → Erfolg | Error → Fehler-Handler</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">20</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_success_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge badge-green">conversation</span></td>
+                            <td class="py-2.5 px-3">Abschluss</td>
+                            <td class="py-2.5 px-3">Erfolgs-Meldung: "Techniker meldet sich in Kuerze"</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ End</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">21</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_error_handler_v3</td>
+                            <td class="py-2.5 px-3"><span class="status-badge" style="background:#f3f4f6;color:#374151">conversation</span></td>
+                            <td class="py-2.5 px-3">Error</td>
+                            <td class="py-2.5 px-3">Fehler-Fallback: "Kollege meldet sich"</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">→ End</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 text-gray-400">22</td>
+                            <td class="py-2.5 px-3 font-mono text-xs">node_it_end</td>
+                            <td class="py-2.5 px-3"><span class="status-badge" style="background:#f3f4f6;color:#374151">end</span></td>
+                            <td class="py-2.5 px-3">Ende</td>
+                            <td class="py-2.5 px-3">Gespraechsende</td>
+                            <td class="py-2.5 px-3 text-xs text-gray-500">&mdash;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Thomas Feedback: Anforderungs-Tracking -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <h2 class="text-lg font-semibold mb-2">Anforderungs-Tracking: Thomas Stanner &rarr; Umsetzung</h2>
+            <p class="text-sm text-gray-500 mb-6">Jeder Punkt aus Thomas' E-Mail vom 24.01.2026 mit Original-Zitat, Umsetzung und betroffenen Nodes.</p>
+
+            <div class="space-y-5">
+
+                <!-- Grundstrategie -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Grundstrategie: &bdquo;So wenig Roboter-Verh&ouml;r wie m&ouml;glich&ldquo;</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;So wenig Roboter-Verh&ouml;r wie m&ouml;glich, so viel intelligente Assistenz wie n&ouml;tig. Der deutsche IT-Kunde ruft an, weil er ein Problem hat, nicht um Formulare am Telefon auszuf&uuml;llen. Wenn der Bot zu starr wirkt, verlieren wir die Akzeptanz.&ldquo;
+                            <div class="mt-1 text-xs text-amber-700 not-italic">&mdash; Thomas Stanner, 24.01.2026</div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8 (vorher)</div>
+                                <p class="text-gray-600">Strukturierte Abfrage: &bdquo;Bitte nennen Sie zuerst die Firma oder Organisation. Danach Ihren vollst&auml;ndigen Namen...&ldquo; &mdash; 8 Pflicht-Gates in Reihe.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0 (jetzt)</div>
+                                <p class="text-gray-600">Offener Einstieg: &bdquo;Worum geht es?&ldquo; &mdash; Agent h&ouml;rt zu, extrahiert dynamisch aus dem Redefluss. Nur gezielte R&uuml;ckfragen wenn etwas fehlt.</p>
+                                <div class="mt-2 text-xs text-gray-400">Nodes: <code>node_it_intro_v3</code>, <code>node_it_extract_initial_v3</code>, <code>global_prompt</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guardrails: Max 2 Rückfragen -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Guardrail: Max. R&uuml;ckfrage-Runden</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;Maximal 2 R&uuml;ckfrage-Runden zur Problemvertiefung (Kategorie B). Danach muss der Absprung zur Datenerfassung (Kategorie A) kommen, um Loop-Frust zu vermeiden.&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Unbegrenzte Triage-Schleifen m&ouml;glich. Danach noch Impact-, Scope- und Seit-wann-Bl&ouml;cke als Pflicht-Gates.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">Exakt <strong>1 Triage-R&uuml;ckfrage</strong> pro Kategorie, dann direkt zur R&uuml;ckrufnummer. Keine Impact/Scope/Seit-wann-Bl&ouml;cke mehr im Flow.</p>
+                                <div class="mt-2 text-xs text-gray-400">Nodes: <code>node_it_triage_*_v3</code> (5 St&uuml;ck) &rarr; <code>node_it_extract_triage_v3</code> &rarr; <code>node_it_collect_contact_v3</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scope/Impact raus -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Pflichtfelder: Seit-wann / Scope / Impact aus Pflicht raus</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;Seit wann / Scope / Impact nehmen wir aus der harten Pflicht-Liste raus. Grund: Wenn der Kunde sagt &sbquo;Mein Drucker brennt&lsquo;, will ich nicht, dass der Bot fragt &sbquo;Seit wann brennt er?&lsquo;. Die KI soll versuchen, diese Infos dynamisch zu erfragen, aber wenn sie fehlen, darf das Ticket trotzdem nicht scheitern.&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">8 Pflicht-Gates: Firma, Name, Problem, Standort, Scope, Impact, Seit-wann, R&uuml;ckruf. Fehlende Felder blockierten die Ticket-Erstellung.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600"><strong>4 Pflichtfelder:</strong> Firma, Name, Problem, R&uuml;ckruf. Standort, Scope, Impact, Seit-wann werden dynamisch extrahiert, sind aber keine Gates mehr. Ticket wird auch ohne sie erstellt.</p>
+                                <div class="mt-2 text-xs text-gray-400">Nodes: <code>node_it_extract_initial_v3</code> (Felder optional), <code>func_it_finalize_ticket_v3</code> (required: nur name + problem)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keine starre Scope/Impact-Abfrage -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Kein starrer Scope/Impact-Block</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;Keine starre Abfrage von Scope/Impact als Block. Das wirkt wie ein Call-Center-Skript. Die KI soll diese Infos extrahieren, wenn sie genannt werden, oder nur fragen, wenn es f&uuml;r die Priorisierung kritisch ist.&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Dedizierte Nodes <code>node_it_ask_scope_v2</code>, <code>node_it_ask_impact_v2</code> etc. als sequentielle Pflicht-Bl&ouml;cke.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">Alle Scope/Impact-Nodes entfernt. Informationen werden in <code>node_it_extract_initial_v3</code> und <code>node_it_extract_triage_v3</code> passiv extrahiert &mdash; wenn der Anrufer es erw&auml;hnt.</p>
+                                <div class="mt-2 text-xs text-gray-400">Entfernte Nodes: <code>node_it_ask_location_v2</code>, <code>node_it_ask_scope_v2</code>, <code>node_it_ask_impact_v2</code>, <code>node_it_ask_since_v2</code> + zugeh&ouml;rige Extract-Nodes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Hard-Trigger -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Security: Hard-Trigger bei kritischen Vorf&auml;llen</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;Beispiel Security: Hier bitte einen Hard-Trigger setzen. Bei W&ouml;rtern wie &sbquo;Ransomware&lsquo;, &sbquo;Erpressung&lsquo;, &sbquo;Datenleck&lsquo; &rarr; Keine weiteren Fragen, sofort Ticket erstellen und Eskalations-Flag setzen.&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Security-Kategorie durchlief normale 2-Schritt-Triage wie alle anderen Kategorien. Keine Eskalation, keine Priority-&Auml;nderung.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600"><strong>Dreifach-Mechanismus:</strong><br>
+                                1. Flow: <code>security_critical=true</code> &rarr; &uuml;berspringt Triage komplett<br>
+                                2. Agent: <code>escalation=critical</code> in <code>use_case_detail</code><br>
+                                3. Backend: <code>ServiceDeskHandler</code> setzt Priority=CRITICAL</p>
+                                <div class="mt-2 text-xs text-gray-400">Nodes: <code>node_it_classify_issue_v3</code> (equation-Edge) &rarr; <code>node_it_security_escalation_v3</code> &rarr; <code>node_it_collect_contact_v3</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wording C1: Consent -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Wording C1: Einstieg &amp; Consent</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            Thomas' Vorgabe:<br>
+                            &bdquo;Willkommen beim IT-Support von [Firma]. Ich bin der digitale Assistent. Um Ihr Anliegen aufzunehmen und ein Ticket zu erstellen, zeichne ich dieses Gespr&auml;ch auf. Sind Sie damit einverstanden?&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600 font-mono text-xs bg-gray-50 p-2 rounded">&bdquo;Willkommen beim IT Support der Muster IT. Ich bin ein digitaler Telefonassistent. Damit ich ein Ticket aufnehmen kann, brauche ich Ihre Zustimmung, dass wir dieses Gespr&auml;ch aufzeichnen und Ihre Daten verarbeiten. Sind Sie damit einverstanden?&ldquo;</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600 font-mono text-xs bg-green-50 p-2 rounded">&bdquo;Willkommen beim IT-Support von {{FIRMENNAME}}. Ich bin der digitale Assistent. Um Ihr Anliegen aufzunehmen und ein Ticket zu erstellen, zeichne ich dieses Gespr&auml;ch auf. Sind Sie damit einverstanden?&ldquo;</p>
+                                <div class="mt-2 text-xs text-gray-400">Node: <code>node_it_consent_start</code> &mdash; 1:1 Thomas' Wortlaut, <code>{{FIRMENNAME}}</code> als Platzhalter</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wording C2: Problemanalyse -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Wording C2: &Uuml;bergang zur Problemanalyse</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            Thomas' Vorgabe:<br>
+                            &bdquo;Vielen Dank. Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?&ldquo;<br>
+                            <span class="text-xs not-italic">(Anmerkung Thomas: &bdquo;Hier bewusst offen lassen, damit wir den Intent catchen k&ouml;nnen.&ldquo;)</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600 font-mono text-xs bg-gray-50 p-2 rounded">&bdquo;Ich nehme ein Support Ticket auf. Bitte nennen Sie zuerst die Firma oder Organisation. Danach Ihren vollst&auml;ndigen Namen, also Vorname und Nachname. Und dann in ein paar S&auml;tzen: Was genau ist das technische Problem?&ldquo;</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600 font-mono text-xs bg-green-50 p-2 rounded">&bdquo;Vielen Dank. Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?&ldquo;</p>
+                                <div class="mt-2 text-xs text-gray-400">Node: <code>node_it_intro_v3</code> &mdash; 1:1 Thomas' Wortlaut</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wording C3: Rückrufnummer -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Wording C3: R&uuml;ckrufnummer</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            Thomas' Vorgabe:<br>
+                            &bdquo;Unter welcher Nummer k&ouml;nnen wir Sie f&uuml;r R&uuml;ckfragen am besten erreichen?&ldquo;<br>
+                            (Nach Eingabe/Nennung): &bdquo;Ich habe [Nummer wiederholen] notiert. Ist das korrekt?&ldquo;
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Generische R&uuml;ckruf-Abfrage ohne definiertes Validierungs-Wording.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">Thomas' exakter Wortlaut. Zus&auml;tzlich: Wenn Anrufer sagt &bdquo;die Nummer im Display reicht&ldquo; &rarr; wird akzeptiert (<code>caller_id</code>).</p>
+                                <div class="mt-2 text-xs text-gray-400">Node: <code>node_it_collect_contact_v3</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wording C4: Abschluss -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Wording C4: Abschluss</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            Thomas' Vorgabe:<br>
+                            &bdquo;Danke, ich habe das Ticket erstellt. Ein Techniker schaut sich das an und meldet sich in K&uuml;rze bei Ihnen. Auf Wiederh&ouml;ren.&ldquo;<br>
+                            <span class="text-xs not-italic">(Thomas: &bdquo;Keine Ticket-ID nennen, keine Zeit (&sbquo;in 10 min&lsquo;) versprechen &ndash; das k&ouml;nnen wir nicht garantieren.&ldquo;)</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Generischer Abschlusstext.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">1:1 Thomas' Wortlaut. Keine Ticket-ID, kein Zeitversprechen.</p>
+                                <div class="mt-2 text-xs text-gray-400">Node: <code>node_it_success_v3</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wording C5: Fallback -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Wording C5: Fallback / Error</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            Thomas' Vorgabe:<br>
+                            &bdquo;Entschuldigung, die Verbindung war kurz schlecht. K&ouml;nnen Sie das bitte wiederholen?&ldquo;<br>
+                            <span class="text-xs not-italic">(Thomas: &bdquo;Wir geben der Verbindung die Schuld, nicht dem Nutzer, um Frust zu vermeiden.&ldquo;)</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Kein spezifisches Fallback-Wording definiert.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">Thomas' No-Blame-Wortlaut in <code>global_prompt</code> (gilt f&uuml;r alle Nodes) und im <code>node_it_error_handler_v3</code>.</p>
+                                <div class="mt-2 text-xs text-gray-400">Stellen: <code>global_prompt</code>, <code>node_it_error_handler_v3</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voice -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Stimme: ElevenLabs Voice</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm italic text-amber-900">
+                            &bdquo;Hab meinen derzeitigen Favoriten gefunden bei ElevenLabs:&ldquo;<br>
+                            <code class="not-italic">elevenlabs.io/app/voice-library?voiceId=eEmoQJhC4SAEQpCINUov</code>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600">Anna-Voice (<code>custom_voice_b95f63b2...</code>)</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600">Thomas' ElevenLabs-Stimme manuell im Retell Dashboard als Custom Voice registriert und dem Agent zugewiesen.</p>
+                                <div class="mt-2 text-xs text-gray-400">Voice ID: <code>eEmoQJhC4SAEQpCINUov</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backend: use_case_detail -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-5 py-3 flex items-center gap-3 border-b border-gray-200">
+                        <span class="status-badge badge-green">Umgesetzt</span>
+                        <span class="font-semibold">Backend: use_case_detail + Security-Eskalation</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 text-sm text-blue-900">
+                            Technische Voraussetzung f&uuml;r Thomas' Security-Anforderung: Der Agent sendet <code>use_case_detail</code> mit Kontext + <code>escalation=critical</code> bei Sicherheitsvorf&auml;llen. Das Backend muss beides verarbeiten.
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-800 mb-1">v2.8</div>
+                                <p class="text-gray-600"><code>use_case_detail</code> wurde vom Agent gesendet, aber vom Backend ignoriert (Bug). Keine Security-Eskalation.</p>
+                            </div>
+                            <div>
+                                <div class="font-medium text-green-800 mb-1">v3.0</div>
+                                <p class="text-gray-600"><code>buildAiMetadata()</code> speichert <code>use_case_detail</code>. Bei <code>escalation=critical</code> wird Priority auf CRITICAL gesetzt.</p>
+                                <div class="mt-2 text-xs text-gray-400">Datei: <code>ServiceDeskHandler.php</code> Zeile 1205 (Metadata) + Zeile ~770 (Eskalation)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Technical Details -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <h2 class="text-lg font-semibold mb-6">Technische Details</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Retell-Konfiguration</h3>
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-100">
+                            <tr><td class="py-2 text-gray-500 w-40">Agent ID (v3.1)</td><td class="py-2 font-mono text-xs">agent_769af524dac772a9b8b3234af4</td></tr>
+                            <tr><td class="py-2 text-gray-500">Flow ID (v3.1)</td><td class="py-2 font-mono text-xs">conversation_flow_cc8ac4e55c5c</td></tr>
+                            <tr><td class="py-2 text-gray-500">Agent ID (v3.0, alt)</td><td class="py-2 font-mono text-xs text-gray-400">agent_92cb5bd4d94f4ae5fdacc0e5b5</td></tr>
+                            <tr><td class="py-2 text-gray-500">Flow ID (v3.0, alt)</td><td class="py-2 font-mono text-xs text-gray-400">conversation_flow_e1777169a264</td></tr>
+                            <tr><td class="py-2 text-gray-500">Model</td><td class="py-2">GPT-4o-mini (cascading)</td></tr>
+                            <tr><td class="py-2 text-gray-500">Temperature</td><td class="py-2">0.3</td></tr>
+                            <tr><td class="py-2 text-gray-500">Tool Strict Mode</td><td class="py-2">true</td></tr>
+                            <tr><td class="py-2 text-gray-500">Start Speaker</td><td class="py-2">Agent</td></tr>
+                            <tr><td class="py-2 text-gray-500">Voice</td><td class="py-2 font-mono text-xs">eEmoQJhC4SAEQpCINUov <span class="text-green-600">(Thomas-Favorit, aktiv)</span></td></tr>
+                            <tr><td class="py-2 text-gray-500">Status</td><td class="py-2"><span class="status-badge badge-yellow">Unpublished (Test)</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Backend-Aenderungen</h3>
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-100">
+                            <tr><td class="py-2 text-gray-500 w-40">Datei</td><td class="py-2 font-mono text-xs">ServiceDeskHandler.php</td></tr>
+                            <tr><td class="py-2 text-gray-500">Bug-Fix</td><td class="py-2"><code>use_case_detail</code> in ai_metadata (Zeile 1205)</td></tr>
+                            <tr><td class="py-2 text-gray-500">Eskalation</td><td class="py-2"><code>escalation=critical</code> → Priority CRITICAL</td></tr>
+                            <tr><td class="py-2 text-gray-500">Webhook</td><td class="py-2">POST an VisionaryData mit Priority-Feld</td></tr>
+                            <tr><td class="py-2 text-gray-500">Company</td><td class="py-2">1658 (IT-Systemhaus Test GmbH)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="font-medium text-gray-800 mt-6 mb-3">Dateien</h3>
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-100">
+                            <tr><td class="py-2 text-gray-500 w-40">Flow JSON</td><td class="py-2 font-mono text-xs">claudedocs/03_API/VisionaryData/retell-agent-v3.0.json</td></tr>
+                            <tr><td class="py-2 text-gray-500">Deploy Script</td><td class="py-2 font-mono text-xs">claudedocs/03_API/VisionaryData/deploy-retell-v3.sh</td></tr>
+                            <tr><td class="py-2 text-gray-500">Visualisierung</td><td class="py-2 font-mono text-xs">claudedocs/03_API/VisionaryData/v3-flow-presentation.html</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testing Checklist -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <h2 class="text-lg font-semibold mb-6">Testing-Checkliste</h2>
+            <p class="text-sm text-gray-600 mb-4">Empfohlene Testszenarien fuer den v3.0 Agent. Agent ist unpublished — Testanrufe ueber Retell Dashboard moeglich.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Happy Path</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Standard-Anruf:</strong> Consent → Problem schildern (mit Name + Firma) → Triage-Frage → Rueckrufnummer → Bestaetigung → Ticket erstellt</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Alle Infos sofort:</strong> "Hier ist Max Mueller von der Firma ABC, mein Outlook geht nicht seit heute Morgen" → Agent sollte nicht nochmal nach Name/Firma fragen</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Korrektur-Loop:</strong> Bei Zusammenfassung "Nein" sagen → Agent geht zurueck zum Intro</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Edge Cases</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Consent abgelehnt:</strong> "Nein" bei Aufzeichnungszustimmung → Hoefliche Verabschiedung</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Keine Firma genannt:</strong> Problem schildern ohne Firma → Agent fragt gezielt nach</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Vage Problembeschreibung:</strong> "Es geht irgendwie nicht" → Agent fragt nach Praezisierung</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Security-Pfad</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Ransomware:</strong> "Unsere Dateien sind alle verschluesselt, da steht was von Loesegeld" → Sofort-Eskalation, keine Triage, Priority CRITICAL</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Datenleck:</strong> "Jemand hat unsere Kundendaten im Internet veroeffentlicht" → Security-Eskalation</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Normaler Security:</strong> "Mein Passwort geht nicht" → Kategorie identity, KEIN Hard-Trigger</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-3">Kategorie-Triage</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Netzwerk:</strong> "Internet geht nicht" → Triage: "Nur Ihr Rechner oder auch andere?" → 1 Frage, dann Kontakt</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>M365:</strong> "Outlook zeigt keine E-Mails" → Triage: "Browser oder Desktop-App?"</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Drucker:</strong> "Drucker druckt nicht" → Triage: "Welcher Drucker?"</span>
+                        </label>
+                        <label class="flex items-start gap-2">
+                            <input type="checkbox" class="mt-0.5 rounded border-gray-300">
+                            <span><strong>Sonstiges:</strong> "Mein Bildschirm flackert" → Direkt zu Kontakt (kein Triage)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Email Draft -->
+        <section class="bg-white rounded-xl border border-gray-200 p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold">E-Mail an Thomas Stanner</h2>
+                <button onclick="copyEmail()" class="no-print text-sm px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" id="copyBtn">
+                    In Zwischenablage kopieren
+                </button>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <!-- Email Header -->
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 text-sm space-y-1.5">
+                    <div><span class="text-gray-500 w-16 inline-block">An:</span> <span class="text-gray-800">thomas.stanner@visionarydata.de</span></div>
+                    <div><span class="text-gray-500 w-16 inline-block">CC:</span> <span class="text-gray-800">sebastian.sager@visionarydata.de, sebastian.gesellensetter@visionarydata.de</span></div>
+                    <div><span class="text-gray-500 w-16 inline-block">Betreff:</span> <strong class="text-gray-900">IT-Support Agent v3.0 &mdash; Dein Feedback umgesetzt</strong></div>
+                </div>
+
+                <!-- Email Body -->
+                <div class="px-6 py-6 text-sm leading-relaxed text-gray-800 space-y-4" id="emailBody">
+                    <p>Hallo Thomas,</p>
+
+                    <p>danke f&uuml;r dein ausf&uuml;hrliches Feedback zum Fragekatalog. Ich habe alle Punkte aufgegriffen und in Version 3.0 des Agents umgesetzt. Hier die &Uuml;bersicht, was sich ge&auml;ndert hat &mdash; jeweils mit Bezug auf dein Feedback:</p>
+
+                    <h3 class="font-semibold text-gray-900 text-base pt-2">&bdquo;So wenig Roboter-Verh&ouml;r wie m&ouml;glich&ldquo;</h3>
+
+                    <table class="w-full border border-gray-200 rounded text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200">Dein Feedback</th>
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200">Vorher (v2.8)</th>
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200">Jetzt (v3.0)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr>
+                                <td class="px-3 py-2 text-gray-600 italic">&bdquo;Der deutsche IT-Kunde ruft an, weil er ein Problem hat, nicht um Formulare am Telefon auszuf&uuml;llen.&ldquo;</td>
+                                <td class="px-3 py-2">Strukturiert: &bdquo;Nennen Sie zuerst die Firma, dann den Namen, dann das Problem...&ldquo;</td>
+                                <td class="px-3 py-2 text-green-800">Offen: &bdquo;Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?&ldquo; &mdash; Infos werden automatisch aus dem Gespr&auml;ch erkannt.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 text-gray-600 italic">&bdquo;Seit wann / Scope / Impact aus der harten Pflicht-Liste raus. Wenn der Kunde sagt &sbquo;Mein Drucker brennt&lsquo;, will ich nicht, dass der Bot fragt &sbquo;Seit wann brennt er?&lsquo;&ldquo;</td>
+                                <td class="px-3 py-2">8 Pflichtfelder als sequentielle Bl&ouml;cke</td>
+                                <td class="px-3 py-2 text-green-800">4 Pflichtfelder (Firma, Name, Problem, R&uuml;ckruf). Standort, Scope, Impact, Seit-wann werden nur erfasst, wenn der Anrufer sie von sich aus nennt.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 text-gray-600 italic">&bdquo;Max. 2 R&uuml;ckfrage-Runden, dann Absprung zur Datenerfassung, um Loop-Frust zu vermeiden.&ldquo;</td>
+                                <td class="px-3 py-2">Unbegrenzte Triage + danach noch Impact/Scope-Bl&ouml;cke</td>
+                                <td class="px-3 py-2 text-green-800">Exakt 1 gezielte R&uuml;ckfrage pro Kategorie, dann direkt zur R&uuml;ckrufnummer.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 text-gray-600 italic">&bdquo;Bei Ransomware, Erpressung, Datenleck &rarr; Keine weiteren Fragen, sofort Ticket erstellen und Eskalations-Flag setzen.&ldquo;</td>
+                                <td class="px-3 py-2">Security wie jede andere Kategorie behandelt</td>
+                                <td class="px-3 py-2 text-green-800">Hard-Trigger: Triage wird komplett &uuml;bersprungen, Ticket sofort mit h&ouml;chster Priorit&auml;t erstellt.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="font-semibold text-gray-900 text-base pt-2">Deine Wording-Vorgaben &mdash; 1:1 &uuml;bernommen</h3>
+
+                    <table class="w-full border border-gray-200 rounded text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200">Stelle</th>
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200">Deine Vorgabe</th>
+                                <th class="text-left px-3 py-2 font-medium border-b border-gray-200 w-16">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr>
+                                <td class="px-3 py-2 font-medium">Consent</td>
+                                <td class="px-3 py-2 italic">&bdquo;Willkommen beim IT-Support von [Firma]. Ich bin der digitale Assistent. Um Ihr Anliegen aufzunehmen...&ldquo;</td>
+                                <td class="px-3 py-2 text-green-700 font-medium">Drin</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 font-medium">Einstieg</td>
+                                <td class="px-3 py-2 italic">&bdquo;Vielen Dank. Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?&ldquo;</td>
+                                <td class="px-3 py-2 text-green-700 font-medium">Drin</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 font-medium">R&uuml;ckruf</td>
+                                <td class="px-3 py-2 italic">&bdquo;Unter welcher Nummer k&ouml;nnen wir Sie f&uuml;r R&uuml;ckfragen am besten erreichen?&ldquo;</td>
+                                <td class="px-3 py-2 text-green-700 font-medium">Drin</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 font-medium">Abschluss</td>
+                                <td class="px-3 py-2 italic">&bdquo;Danke, ich habe das Ticket erstellt. Ein Techniker schaut sich das an und meldet sich in K&uuml;rze bei Ihnen.&ldquo;</td>
+                                <td class="px-3 py-2 text-green-700 font-medium">Drin</td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2 font-medium">Fallback</td>
+                                <td class="px-3 py-2 italic">&bdquo;Entschuldigung, die Verbindung war kurz schlecht. K&ouml;nnen Sie das bitte wiederholen?&ldquo;</td>
+                                <td class="px-3 py-2 text-green-700 font-medium">Drin</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="font-semibold text-gray-900 text-base pt-2">Stimme</h3>
+                    <p>Dein ElevenLabs-Favorit ist jetzt aktiv im Agent hinterlegt.</p>
+
+                    <h3 class="font-semibold text-gray-900 text-base pt-2">Bevor ich teste: Dein Input</h3>
+
+                    <p>Bevor ich in die Testphase gehe, w&uuml;rde ich gern dein Feedback zu zwei Dingen abwarten:</p>
+
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li><strong>Passt das so?</strong> Schau dir die &Auml;nderungen oben nochmal in Ruhe an. Wenn dir noch was auff&auml;llt oder du etwas anders haben willst &mdash; jetzt ist der beste Zeitpunkt, das reinzugeben.</li>
+                        <li><strong>Beispiel-Gespr&auml;che:</strong> Wenn du m&ouml;chtest, kannst du mir f&uuml;r die verschiedenen Kategorien (Netzwerk, M365, Drucker, Security etc.) konkrete Beispiel-Gespr&auml;che schicken &mdash; also wie ein typischer Anruf aus deiner Sicht ablaufen sollte. Das hilft mir, den Agent noch genauer auf eure Praxis abzustimmen und gezielter zu testen.</li>
+                    </ol>
+
+                    <p>Sobald ich dein Feedback habe, gehe ich in den Test. Wenn bei mir alles passt, lasse ich dich nochmal selbst testen, bevor wir weitermachen.</p>
+
+                    <p>Melde dich einfach, wenn du soweit bist.</p>
+
+                    <p>Beste Gr&uuml;&szlig;e<br>Fabian</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-sm text-gray-400 py-6">
+            <p>VisionaryData IT-Support Agent v3.0 &mdash; AskPro AI Gateway &mdash; 02.02.2026</p>
+            <p class="mt-1">Interne Dokumentation. Nicht zur Weitergabe an Dritte.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        function openFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            const content = document.getElementById('fullscreenContent');
+            const diagram = document.getElementById('flowDiagram');
+            // Clone the rendered SVG from our own page content (no untrusted input)
+            const svgClone = diagram.querySelector('svg');
+            if (svgClone) {
+                content.replaceChildren(svgClone.cloneNode(true));
+            }
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', escHandler);
+        }
+
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', escHandler);
+        }
+
+        function escHandler(e) {
+            if (e.key === 'Escape') closeFullscreen();
+        }
+
+        function copyEmail() {
+            const body = document.getElementById('emailBody');
+            const range = document.createRange();
+            range.selectNodeContents(body);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            sel.removeAllRanges();
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = 'Kopiert!';
+            btn.classList.add('bg-green-100', 'text-green-800');
+            setTimeout(() => {
+                btn.textContent = 'In Zwischenablage kopieren';
+                btn.classList.remove('bg-green-100', 'text-green-800');
+            }, 2000);
+        }
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                nodeSpacing: 30,
+                rankSpacing: 60,
+                padding: 15
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Inter, system-ui, sans-serif'
+            }
+        });
+    </script>
+
+</body>
+</html>

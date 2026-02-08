@@ -3,6 +3,9 @@
     $appointments = $record->appointments ?? collect();
 @endphp
 
+{{-- Single Root Element Wrapper for Livewire Compatibility --}}
+<div class="appointments-composite-wrapper">
+
 @if($appointments->isEmpty())
     <div class="text-sm text-gray-500 dark:text-gray-400 italic">
         Keine Termine für diesen Anruf vorhanden
@@ -267,3 +270,5 @@
         </div>
     @endforeach
 @endif
+
+</div>{{-- End: appointments-composite-wrapper (Single Root Element for Livewire) --}}

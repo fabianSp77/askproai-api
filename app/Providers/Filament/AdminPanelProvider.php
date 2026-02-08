@@ -41,7 +41,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::head.end',
                 fn (): string => \Illuminate\Support\Facades\Vite::useHotFile(public_path('hot'))
                     ->useBuildDirectory('build')
-                    ->withEntryPoints(['resources/css/call-detail-full-width.css'])
+                    ->withEntryPoints([
+                        'resources/css/call-detail-full-width.css',
+                        'resources/css/premium-dark-theme.css',  // Premium Dashboard dark theme
+                    ])
                     ->toHtml()
             )
             ->renderHook(

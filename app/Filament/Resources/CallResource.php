@@ -30,6 +30,7 @@ use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Tabs as InfolistTabs;
 use Filament\Infolists\Components\RepeatableEntry;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\HtmlString;
 use App\Helpers\FormatHelper;
 use App\Services\Patterns\GermanNamePatternLibrary;
@@ -691,15 +692,37 @@ class CallResource extends Resource
                                     ->schema([
                                         TextEntry::make('duration_display')
                                             ->label('Dauer')
-                                            ->getStateUsing(fn ($record) =>
-                                                view('filament.kpi-card', [
+                                            ->getStateUsing(function ($record) {
+                                                $duration = $record->duration_sec ?? 0;
+                                                $formatted = gmdate('i:s', $duration);
+
+                                                // Calculate company average for benchmark (Phase 10)
+                                                $sublabel = 'Minuten:Sekunden';
+                                                if ($record->company_id && $duration > 0) {
+                                                    $avg = Cache::remember(
+                                                        "company:{$record->company_id}:avg_call_duration",
+                                                        now()->addHour(),
+                                                        fn () => Call::where('company_id', $record->company_id)
+                                                            ->whereNotNull('duration_sec')
+                                                            ->where('duration_sec', '>', 0)
+                                                            ->avg('duration_sec')
+                                                    );
+
+                                                    if ($avg && $avg > 0) {
+                                                        $diff = (($duration - $avg) / $avg) * 100;
+                                                        $indicator = $diff > 0 ? '↑' : '↓';
+                                                        $sublabel = abs(round($diff)) . '% ' . $indicator . ' vs. Ø';
+                                                    }
+                                                }
+
+                                                return view('filament.kpi-card', [
                                                     'label' => 'Gesprächsdauer',
-                                                    'value' => gmdate('i:s', $record->duration_sec ?? 0),
-                                                    'sublabel' => 'Minuten:Sekunden',
+                                                    'value' => $formatted,
+                                                    'sublabel' => $sublabel,
                                                     'icon' => 'heroicon-m-clock',
-                                                    'color' => $record->duration_sec > 300 ? 'success' : 'warning'
-                                                ])->render()
-                                            )
+                                                    'color' => $duration > 300 ? 'success' : 'warning'
+                                                ])->render();
+                                            })
                                             ->html(),
 
                                         TextEntry::make('appointment_display')
@@ -756,6 +779,68 @@ class CallResource extends Resource
                                             )
                                             ->html(),
                                     ])
+                                    ->columnSpanFull(),
+
+                                // Engagement Metrics - Speaking Time Ratio & Interaction Analysis
+                                Grid::make(['default' => 1, 'sm' => 2, 'lg' => 4])
+                                    ->schema([
+                                        TextEntry::make('agent_speaking_ratio')
+                                            ->label('Agent-Anteil')
+                                            ->getStateUsing(function ($record) {
+                                                $metrics = self::calculateEngagementMetrics($record);
+                                                return view('filament.kpi-card', [
+                                                    'label' => 'Agent-Sprechzeit',
+                                                    'value' => $metrics['agent_percent'] . '%',
+                                                    'sublabel' => gmdate('i:s', (int)$metrics['agent_sec']) . ' gesprochen',
+                                                    'icon' => 'heroicon-m-user',
+                                                    'color' => $metrics['agent_percent'] > 60 ? 'warning' : 'info'
+                                                ])->render();
+                                            })
+                                            ->html(),
+
+                                        TextEntry::make('customer_speaking_ratio')
+                                            ->label('Kunden-Anteil')
+                                            ->getStateUsing(function ($record) {
+                                                $metrics = self::calculateEngagementMetrics($record);
+                                                return view('filament.kpi-card', [
+                                                    'label' => 'Kunden-Sprechzeit',
+                                                    'value' => $metrics['customer_percent'] . '%',
+                                                    'sublabel' => gmdate('i:s', (int)$metrics['customer_sec']) . ' gesprochen',
+                                                    'icon' => 'heroicon-m-user-circle',
+                                                    'color' => $metrics['customer_percent'] < 30 ? 'warning' : 'success'
+                                                ])->render();
+                                            })
+                                            ->html(),
+
+                                        TextEntry::make('silence_duration')
+                                            ->label('Stille')
+                                            ->getStateUsing(function ($record) {
+                                                $metrics = self::calculateEngagementMetrics($record);
+                                                return view('filament.kpi-card', [
+                                                    'label' => 'Stille/Pausen',
+                                                    'value' => gmdate('i:s', (int)$metrics['silence_sec']),
+                                                    'sublabel' => $metrics['silence_percent'] . '% der Gesamtzeit',
+                                                    'icon' => 'heroicon-m-pause-circle',
+                                                    'color' => $metrics['silence_percent'] > 20 ? 'warning' : 'gray'
+                                                ])->render();
+                                            })
+                                            ->html(),
+
+                                        TextEntry::make('turn_count')
+                                            ->label('Gesprächswechsel')
+                                            ->getStateUsing(function ($record) {
+                                                $metrics = self::calculateEngagementMetrics($record);
+                                                return view('filament.kpi-card', [
+                                                    'label' => 'Gesprächswechsel',
+                                                    'value' => $metrics['turn_count'],
+                                                    'sublabel' => 'Hin & Her',
+                                                    'icon' => 'heroicon-m-arrows-right-left',
+                                                    'color' => $metrics['turn_count'] > 10 ? 'success' : 'gray'
+                                                ])->render();
+                                            })
+                                            ->html(),
+                                    ])
+                                    ->visible(fn ($record) => self::hasTranscriptData($record))
                                     ->columnSpanFull(),
 
                                 // Termin Details - Promoted to full width for prominence (Grid-wrapped + CSS Override)
@@ -949,7 +1034,7 @@ HTML;
                                     ->extraAttributes(['class' => '!max-w-full w-full'])
                                     ->schema([
                                         InfoSection::make('Anrufinformationen')
-                                            ->extraAttributes(['class' => '!max-w-full w-full'])
+                                            ->extraAttributes(['class' => '!max-w-full w-full', 'role' => 'region', 'aria-label' => 'Anrufinformationen'])
                                             ->schema([
                                                 TextEntry::make('customer_name')
                                                     ->label(function ($record) {
@@ -968,6 +1053,9 @@ HTML;
                                                     ->getStateUsing(function ($record) {
                                                         $name = '';
                                                         $verificationIcon = '';
+                                                        $customerUrl = $record->customer_id
+                                                            ? CustomerResource::getUrl('view', ['record' => $record->customer_id])
+                                                            : null;
 
                                                         // Filter out transcript fragments
                                                         $nonNamePhrases = ['mir nicht', 'guten tag', 'guten morgen', 'hallo', 'ja', 'nein', 'gleich fertig'];
@@ -996,7 +1084,12 @@ HTML;
                                                             $name = $record->from_number === 'anonymous' ? 'Anonym' : 'Unbekannt';
                                                         }
 
-                                                        return '<div class="flex items-center"><span class="font-bold text-lg">' . $name . '</span>' . $verificationIcon . '</div>';
+                                                        // Wrap name in link if customer exists
+                                                        $nameHtml = $customerUrl
+                                                            ? '<a href="' . $customerUrl . '" class="font-bold text-lg text-primary-600 hover:text-primary-500 hover:underline">' . $name . '</a>'
+                                                            : '<span class="font-bold text-lg">' . $name . '</span>';
+
+                                                        return '<div class="flex items-center">' . $nameHtml . $verificationIcon . '</div>';
                                                     })
                                                     ->icon('heroicon-m-user'),
 
@@ -1032,7 +1125,7 @@ HTML;
                                             ]),
 
                                         InfoSection::make('Ergebnis')
-                                            ->extraAttributes(['class' => '!max-w-full w-full'])
+                                            ->extraAttributes(['class' => '!max-w-full w-full', 'role' => 'region', 'aria-label' => 'Anrufergebnis'])
                                             ->schema([
                                                 TextEntry::make('status')
                                                     ->label('Status')
@@ -1103,51 +1196,24 @@ HTML;
                                     ]),
                             ]),
 
-                        // AUFNAHME & TRANSKRIPT TAB
+                        // AUFNAHME & TRANSKRIPT TAB (State-of-the-Art UI)
                         InfolistTabs\Tab::make('Aufnahme & Transkript')
                             ->icon('heroicon-m-microphone')
                             ->schema([
-                                // Audio Player
-                                TextEntry::make('audio_player_display')
-                                    ->label('')
-                                    ->getStateUsing(function ($record) {
-                                        if (empty($record->recording_url)) {
-                                            return '<div class="text-center text-gray-500 py-8">Keine Aufnahme verfügbar</div>';
-                                        }
-                                        return view('filament.audio-player', [
-                                            'url' => $record->recording_url,
-                                            'duration' => $record->duration_sec ?? 0,
-                                            'callId' => $record->id
-                                        ])->render();
-                                    })
-                                    ->html()
-                                    ->columnSpanFull(),
-
-                                // Transcript Viewer
-                                TextEntry::make('transcript_viewer_display')
-                                    ->label('')
-                                    ->getStateUsing(function ($record) {
-                                        if (empty($record->transcript)) {
-                                            return '<div class="text-center text-gray-500 py-8">Kein Transkript verfügbar</div>';
-                                        }
-
-                                        $text = $record->transcript;
-                                        if (is_array($text)) {
-                                            $text = isset($text['text']) ? $text['text'] :
-                                                   (isset($text['transcript']) ? $text['transcript'] :
-                                                   json_encode($text, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                                        }
-
-                                        $wordCount = str_word_count($text);
-                                        $readingTime = ceil($wordCount / 200);
-
-                                        return view('filament.transcript-viewer', [
-                                            'text' => $text,
-                                            'wordCount' => $wordCount,
-                                            'readingTime' => $readingTime
-                                        ])->render();
-                                    })
-                                    ->html()
+                                // Unified Recording & Transcript Component
+                                ViewEntry::make('recording_transcript_tab')
+                                    ->view('filament.components.recording-transcript-tab.index')
+                                    ->viewData(fn ($record) => [
+                                        'recordingUrl' => $record->recording_url,
+                                        'durationSec' => $record->duration_sec ?? 0,
+                                        'callId' => $record->id,
+                                        'transcript' => is_array($record->transcript)
+                                            ? ($record->transcript['text'] ?? $record->transcript['transcript'] ?? json_encode($record->transcript))
+                                            : ($record->transcript ?? ''),
+                                        'transcriptObject' => is_array($record->raw)
+                                            ? ($record->raw['transcript_object'] ?? [])
+                                            : (json_decode($record->raw ?? '{}', true)['transcript_object'] ?? []),
+                                    ])
                                     ->columnSpanFull(),
                             ]),
 
@@ -1180,121 +1246,504 @@ HTML;
                                     })
                                     ->html()
                                     ->columnSpanFull(),
+
+                                // Retell AI Direct Costs (Phase 8)
+                                TextEntry::make('retell_cost')
+                                    ->label('Retell AI Kosten')
+                                    ->money('EUR')
+                                    ->icon('heroicon-m-cpu-chip')
+                                    ->visible(fn ($record) => $record->retell_cost !== null && $record->retell_cost > 0)
+                                    ->columnSpanFull(),
+
+                                // Cost Breakdown Section (Phase 8)
+                                InfoSection::make('Kostenaufschlüsselung')
+                                    ->icon('heroicon-m-receipt-percent')
+                                    ->description('Detaillierte Aufschlüsselung der Anrufkosten')
+                                    ->visible(fn ($record) => !empty($record->cost_breakdown))
+                                    ->schema([
+                                        ViewEntry::make('cost_breakdown')
+                                            ->view('filament.components.cost-breakdown-viewer')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Cost Trend Sparkline (Phase 13)
+                                InfoSection::make('Kostentrend')
+                                    ->icon('heroicon-m-chart-bar')
+                                    ->description('Entwicklung der Unternehmenskosten')
+                                    ->schema([
+                                        ViewEntry::make('cost_sparkline')
+                                            ->view('filament.components.cost-sparkline')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
                             ]),
 
-                        // ANALYSE TAB
+                        // ANALYSE TAB - Enhanced with latency metrics, sentiment, and JSON viewer
                         InfolistTabs\Tab::make('Analyse')
                             ->icon('heroicon-m-chart-bar')
                             ->schema([
-                                TextEntry::make('notes')
-                                    ->label('Notizen')
-                                    ->formatStateUsing(fn ($state) => !empty($state) ? $state : 'Keine Notizen vorhanden')
-                                    ->columnSpanFull(),
+                                // Grundlegende Analyse-Informationen
+                                InfoSection::make('Gesprächsanalyse')
+                                    ->icon('heroicon-m-chart-pie')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'Gesprächsanalyse'])
+                                    ->schema([
+                                        Grid::make(['default' => 1, 'sm' => 2, 'lg' => 4])
+                                            ->schema([
+                                                // Sentiment aus raw->call_analysis->user_sentiment
+                                                TextEntry::make('user_sentiment_analysis')
+                                                    ->label('Kundenstimmung')
+                                                    ->badge()
+                                                    ->getStateUsing(fn ($record) => $record->raw['call_analysis']['user_sentiment'] ?? $record->sentiment ?? null)
+                                                    ->formatStateUsing(fn (?string $state): string => match (ucfirst(strtolower($state ?? ''))) {
+                                                        'Positive' => 'Positiv',
+                                                        'Neutral' => 'Neutral',
+                                                        'Negative' => 'Negativ',
+                                                        default => 'Unbekannt',
+                                                    })
+                                                    ->color(fn (?string $state): string => match (ucfirst(strtolower($state ?? ''))) {
+                                                        'Positive' => 'success',
+                                                        'Neutral' => 'warning',
+                                                        'Negative' => 'danger',
+                                                        default => 'gray',
+                                                    }),
 
-                                TextEntry::make('urgency_level')
-                                    ->label('Dringlichkeit')
-                                    ->badge()
-                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                        'urgent' => 'Dringend',
-                                        'high' => 'Hoch',
-                                        'medium' => 'Mittel',
-                                        'low' => 'Niedrig',
-                                        default => $state ?? 'Unbekannt',
-                                    })
-                                    ->color(fn (?string $state): string => match ($state) {
-                                        'urgent' => 'danger',
-                                        'high' => 'warning',
-                                        'medium' => 'info',
-                                        'low' => 'success',
-                                        default => 'gray',
-                                    }),
+                                                // Call Successful aus raw->call_analysis
+                                                TextEntry::make('call_successful_analysis')
+                                                    ->label('Anruf erfolgreich')
+                                                    ->badge()
+                                                    ->getStateUsing(fn ($record) => $record->raw['call_analysis']['call_successful'] ?? null)
+                                                    ->formatStateUsing(fn ($state): string => $state ? 'Ja' : ($state === false ? 'Nein' : 'Unbekannt'))
+                                                    ->color(fn ($state): string => $state ? 'success' : ($state === false ? 'danger' : 'gray')),
 
-                                TextEntry::make('lead_status')
-                                    ->label('Lead-Status')
-                                    ->badge()
-                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                        'appointment_set' => 'Termin vereinbart',
-                                        'qualified' => 'Qualifiziert',
-                                        'not_interested' => 'Kein Interesse',
-                                        'contacted' => 'Kontaktiert',
-                                        'no_answer' => 'Nicht erreicht',
-                                        'busy' => 'Beschäftigt',
-                                        'failed' => 'Fehlgeschlagen',
-                                        'connected' => 'Verbunden',
-                                        'follow_up_required' => 'Follow-up nötig',
-                                        default => $state ?? 'Unbekannt',
-                                    })
-                                    ->color(fn (?string $state): string => match ($state) {
-                                        'appointment_set' => 'success',
-                                        'qualified' => 'success',
-                                        'not_interested' => 'danger',
-                                        'contacted' => 'info',
-                                        'no_answer' => 'warning',
-                                        'busy' => 'warning',
-                                        'failed' => 'danger',
-                                        'connected' => 'info',
-                                        'follow_up_required' => 'warning',
-                                        default => 'gray',
-                                    }),
+                                                TextEntry::make('urgency_level')
+                                                    ->label('Dringlichkeit')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                                        'urgent' => 'Dringend',
+                                                        'high' => 'Hoch',
+                                                        'medium' => 'Mittel',
+                                                        'low' => 'Niedrig',
+                                                        default => $state ?? 'Unbekannt',
+                                                    })
+                                                    ->color(fn (?string $state): string => match ($state) {
+                                                        'urgent' => 'danger',
+                                                        'high' => 'warning',
+                                                        'medium' => 'info',
+                                                        'low' => 'success',
+                                                        default => 'gray',
+                                                    }),
+
+                                                TextEntry::make('lead_status')
+                                                    ->label('Lead-Status')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                                        'appointment_set' => 'Termin vereinbart',
+                                                        'qualified' => 'Qualifiziert',
+                                                        'not_interested' => 'Kein Interesse',
+                                                        'contacted' => 'Kontaktiert',
+                                                        'no_answer' => 'Nicht erreicht',
+                                                        'busy' => 'Beschäftigt',
+                                                        'failed' => 'Fehlgeschlagen',
+                                                        'connected' => 'Verbunden',
+                                                        'follow_up_required' => 'Follow-up nötig',
+                                                        default => $state ?? 'Unbekannt',
+                                                    })
+                                                    ->color(fn (?string $state): string => match ($state) {
+                                                        'appointment_set' => 'success',
+                                                        'qualified' => 'success',
+                                                        'not_interested' => 'danger',
+                                                        'contacted' => 'info',
+                                                        'no_answer' => 'warning',
+                                                        'busy' => 'warning',
+                                                        'failed' => 'danger',
+                                                        'connected' => 'info',
+                                                        'follow_up_required' => 'warning',
+                                                        default => 'gray',
+                                                    }),
+                                            ]),
+
+                                        TextEntry::make('notes')
+                                            ->label('Notizen')
+                                            ->formatStateUsing(fn ($state) => !empty($state) ? $state : 'Keine Notizen vorhanden')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsible(),
+
+                                // Latenz-Metriken aus raw->latency
+                                InfoSection::make('Performance-Metriken')
+                                    ->icon('heroicon-m-bolt')
+                                    ->description('End-to-End Latenz, LLM, TTS & ASR Performance')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'Performance-Metriken'])
+                                    ->visible(fn ($record) => !empty($record->raw['latency']))
+                                    ->schema([
+                                        // E2E Latenz
+                                        Grid::make(['default' => 2, 'sm' => 3, 'lg' => 5])
+                                            ->schema([
+                                                TextEntry::make('latency_e2e_p50')
+                                                    ->label('E2E p50')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['e2e']['p50'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color(fn ($state) => match (true) {
+                                                        $state === null => 'gray',
+                                                        $state < 1000 => 'success',
+                                                        $state < 2000 => 'warning',
+                                                        default => 'danger',
+                                                    }),
+                                                TextEntry::make('latency_e2e_p90')
+                                                    ->label('E2E p90')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['e2e']['p90'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('info'),
+                                                TextEntry::make('latency_e2e_p99')
+                                                    ->label('E2E p99')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['e2e']['p99'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('warning'),
+                                                TextEntry::make('latency_e2e_min')
+                                                    ->label('E2E Min')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['e2e']['min'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                                TextEntry::make('latency_e2e_max')
+                                                    ->label('E2E Max')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['e2e']['max'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                            ]),
+
+                                        // LLM Latenz
+                                        Grid::make(['default' => 2, 'sm' => 3, 'lg' => 5])
+                                            ->schema([
+                                                TextEntry::make('latency_llm_p50')
+                                                    ->label('LLM p50')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['llm']['p50'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color(fn ($state) => match (true) {
+                                                        $state === null => 'gray',
+                                                        $state < 500 => 'success',
+                                                        $state < 1000 => 'warning',
+                                                        default => 'danger',
+                                                    }),
+                                                TextEntry::make('latency_llm_p90')
+                                                    ->label('LLM p90')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['llm']['p90'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('info'),
+                                                TextEntry::make('latency_llm_p99')
+                                                    ->label('LLM p99')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['llm']['p99'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('warning'),
+                                                TextEntry::make('latency_llm_min')
+                                                    ->label('LLM Min')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['llm']['min'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                                TextEntry::make('latency_llm_max')
+                                                    ->label('LLM Max')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['llm']['max'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                            ]),
+
+                                        // TTS & ASR zusammen
+                                        Grid::make(['default' => 2, 'sm' => 4])
+                                            ->schema([
+                                                TextEntry::make('latency_tts_p50')
+                                                    ->label('TTS p50')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['tts']['p50'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('success'),
+                                                TextEntry::make('latency_tts_p90')
+                                                    ->label('TTS p90')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['tts']['p90'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                                TextEntry::make('latency_asr_p50')
+                                                    ->label('ASR p50')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['asr']['p50'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-')
+                                                    ->badge()
+                                                    ->color('success'),
+                                                TextEntry::make('latency_asr_p90')
+                                                    ->label('ASR p90')
+                                                    ->getStateUsing(fn ($record) => $record->raw['latency']['asr']['p90'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0) . ' ms' : '-'),
+                                            ]),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Token Usage aus raw->llm_token_usage
+                                InfoSection::make('Token-Verbrauch')
+                                    ->icon('heroicon-m-calculator')
+                                    ->description('LLM Token-Nutzung')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'Token-Verbrauch'])
+                                    ->visible(fn ($record) => !empty($record->raw['llm_token_usage']) || !empty($record->llm_token_usage))
+                                    ->schema([
+                                        Grid::make(['default' => 2, 'sm' => 4])
+                                            ->schema([
+                                                TextEntry::make('token_prompt')
+                                                    ->label('Prompt Tokens')
+                                                    ->getStateUsing(fn ($record) =>
+                                                        $record->raw['llm_token_usage']['prompt_tokens'] ??
+                                                        $record->llm_token_usage['prompt_tokens'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state) : '-'),
+                                                TextEntry::make('token_completion')
+                                                    ->label('Completion Tokens')
+                                                    ->getStateUsing(fn ($record) =>
+                                                        $record->raw['llm_token_usage']['completion_tokens'] ??
+                                                        $record->llm_token_usage['completion_tokens'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state) : '-'),
+                                                TextEntry::make('token_total')
+                                                    ->label('Gesamt Tokens')
+                                                    ->getStateUsing(fn ($record) =>
+                                                        $record->raw['llm_token_usage']['total_tokens'] ??
+                                                        $record->llm_token_usage['total_tokens'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state) : '-')
+                                                    ->badge()
+                                                    ->color('info'),
+                                                TextEntry::make('token_model')
+                                                    ->label('Modell')
+                                                    ->getStateUsing(fn ($record) =>
+                                                        $record->raw['llm_token_usage']['model'] ??
+                                                        $record->llm_token_usage['model'] ?? null)
+                                                    ->formatStateUsing(fn ($state) => $state ?? '-'),
+                                            ]),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Custom Analysis Data JSON Viewer
+                                InfoSection::make('Erweiterte Analyse-Daten')
+                                    ->icon('heroicon-m-code-bracket')
+                                    ->description('Benutzerdefinierte Analysedaten im JSON-Format')
+                                    ->visible(fn ($record) => !empty($record->custom_analysis_data) || !empty($record->raw['call_analysis']['custom_analysis_data']))
+                                    ->schema([
+                                        ViewEntry::make('custom_analysis_data')
+                                            ->view('filament.components.json-viewer')
+                                            ->getStateUsing(fn ($record) =>
+                                                !empty($record->custom_analysis_data)
+                                                    ? $record->custom_analysis_data
+                                                    : ($record->raw['call_analysis']['custom_analysis_data'] ?? null))
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Action Items - AI-identified follow-up actions (Phase 9)
+                                InfoSection::make('Aktionspunkte')
+                                    ->icon('heroicon-m-clipboard-document-check')
+                                    ->description('Vom AI identifizierte Folgeaktionen')
+                                    ->visible(fn ($record) => !empty($record->action_items))
+                                    ->schema([
+                                        ViewEntry::make('action_items')
+                                            ->view('filament.components.action-items-viewer')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
                             ]),
 
-                        // TECHNISCHE DETAILS TAB
+                        // TECHNISCHE DETAILS TAB - Enhanced with linkable IDs, public_log_url, and metadata viewer
                         InfolistTabs\Tab::make('Technische Details')
                             ->icon('heroicon-m-cog')
                             ->schema([
-                                Grid::make(3)
+                                // System IDs Section
+                                InfoSection::make('System-Identifikatoren')
+                                    ->icon('heroicon-m-finger-print')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'System-Identifikatoren'])
                                     ->schema([
-                                        TextEntry::make('external_id')
-                                            ->label('Externe ID')
-                                            ->badge()
-                                            ->color('gray')
-                                            ->copyable(),
+                                        Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])
+                                            ->schema([
+                                                TextEntry::make('id')
+                                                    ->label('Interne ID')
+                                                    ->badge()
+                                                    ->color('primary')
+                                                    ->copyable()
+                                                    ->copyMessage('ID kopiert!'),
 
-                                        TextEntry::make('retell_call_id')
-                                            ->label('Retell Anruf-ID')
-                                            ->copyable(),
+                                                TextEntry::make('external_id')
+                                                    ->label('Externe ID')
+                                                    ->badge()
+                                                    ->color('gray')
+                                                    ->copyable()
+                                                    ->copyMessage('Externe ID kopiert!'),
 
-                                        TextEntry::make('conversation_id')
-                                            ->label('Konversations-ID')
-                                            ->copyable(),
+                                                TextEntry::make('retell_call_id')
+                                                    ->label('Retell Anruf-ID')
+                                                    ->copyable()
+                                                    ->copyMessage('Retell ID kopiert!')
+                                                    ->formatStateUsing(fn ($state) => $state ? substr($state, 0, 20) . '...' : '-')
+                                                    ->tooltip(fn ($record) => $record->retell_call_id),
 
-                                        TextEntry::make('agent_id')
-                                            ->label('Agent-ID'),
+                                                TextEntry::make('conversation_id')
+                                                    ->label('Konversations-ID')
+                                                    ->copyable()
+                                                    ->copyMessage('Konversations-ID kopiert!'),
 
-                                        TextEntry::make('phone_number_id')
-                                            ->label('Telefonnummer-ID'),
+                                                TextEntry::make('agent_id')
+                                                    ->label('Agent-ID')
+                                                    ->copyable()
+                                                    ->copyMessage('Agent-ID kopiert!')
+                                                    ->color('info'),
 
-                                        TextEntry::make('disconnection_reason')
-                                            ->label('Trennungsgrund')
-                                            ->formatStateUsing(fn (?string $state): string => match ($state) {
-                                                'customer_hangup' => 'Kunde hat aufgelegt',
-                                                'agent_hangup' => 'Agent hat beendet',
-                                                'call_transfer' => 'Anruf weitergeleitet',
-                                                'voicemail_reached' => 'Voicemail erreicht',
-                                                'inactivity' => 'Inaktivität',
-                                                'error' => 'Fehler',
-                                                'normal' => 'Normal beendet',
-                                                default => $state ?? 'Unbekannt',
-                                            }),
+                                                TextEntry::make('customer_id')
+                                                    ->label('Kunden-ID')
+                                                    ->copyable()
+                                                    ->copyMessage('Kunden-ID kopiert!')
+                                                    ->url(fn ($record) => $record->customer_id
+                                                        ? CustomerResource::getUrl('view', ['record' => $record->customer_id])
+                                                        : null)
+                                                    ->color(fn ($record) => $record->customer_id ? 'primary' : 'gray')
+                                                    ->formatStateUsing(fn ($state) => $state ?? '-'),
 
-                                        TextEntry::make('cost_cents')
-                                            ->label('Kosten (Cents)')
-                                            ->badge()
-                                            ->formatStateUsing(fn ($state): string => $state ? $state . ' ¢' : '0 ¢')
-                                            ->color('warning'),
+                                                TextEntry::make('phone_number_id')
+                                                    ->label('Telefonnummer-ID')
+                                                    ->copyable()
+                                                    ->copyMessage('Telefonnummer-ID kopiert!'),
 
-                                        TextEntry::make('wait_time_sec')
-                                            ->label('Wartezeit')
-                                            ->badge()
-                                            ->formatStateUsing(fn ($state): string => $state ? $state . ' Sek.' : '0 Sek.')
-                                            ->icon('heroicon-m-clock'),
+                                                TextEntry::make('company_id')
+                                                    ->label('Unternehmen-ID')
+                                                    ->copyable(),
 
-                                        TextEntry::make('duration_ms')
-                                            ->label('Dauer (ms)')
-                                            ->badge()
-                                            ->formatStateUsing(fn ($state): string => $state ? number_format($state) . ' ms' : '0 ms')
-                                            ->color('info'),
-                                    ]),
+                                                TextEntry::make('branch_id')
+                                                    ->label('Filiale-ID')
+                                                    ->copyable()
+                                                    ->formatStateUsing(fn ($state) => $state ?? '-'),
+                                            ]),
+                                    ])
+                                    ->collapsible(),
+
+                                // Timing & Status Section
+                                InfoSection::make('Timing & Status')
+                                    ->icon('heroicon-m-clock')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'Timing und Status'])
+                                    ->schema([
+                                        Grid::make(['default' => 2, 'sm' => 3, 'lg' => 4])
+                                            ->schema([
+                                                TextEntry::make('duration_sec')
+                                                    ->label('Dauer (Sek.)')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn ($state): string => $state ? $state . ' Sek.' : '0 Sek.')
+                                                    ->color('info'),
+
+                                                TextEntry::make('duration_ms')
+                                                    ->label('Dauer (ms)')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn ($state): string => $state ? number_format($state) . ' ms' : '0 ms')
+                                                    ->color('info'),
+
+                                                TextEntry::make('wait_time_sec')
+                                                    ->label('Wartezeit')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn ($state): string => $state ? $state . ' Sek.' : '0 Sek.')
+                                                    ->icon('heroicon-m-clock'),
+
+                                                TextEntry::make('disconnection_reason')
+                                                    ->label('Trennungsgrund')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                                        'customer_hangup' => 'Kunde aufgelegt',
+                                                        'agent_hangup' => 'Agent beendet',
+                                                        'call_transfer' => 'Weitergeleitet',
+                                                        'voicemail_reached' => 'Voicemail',
+                                                        'inactivity' => 'Inaktivität',
+                                                        'error' => 'Fehler',
+                                                        'normal' => 'Normal',
+                                                        default => $state ?? 'Unbekannt',
+                                                    })
+                                                    ->color(fn (?string $state): string => match ($state) {
+                                                        'customer_hangup' => 'warning',
+                                                        'agent_hangup' => 'success',
+                                                        'call_transfer' => 'info',
+                                                        'error' => 'danger',
+                                                        default => 'gray',
+                                                    }),
+
+                                                TextEntry::make('cost_cents')
+                                                    ->label('Kosten (Cents)')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn ($state): string => $state ? $state . ' ¢' : '0 ¢')
+                                                    ->color('warning'),
+
+                                                TextEntry::make('call_status')
+                                                    ->label('Anruf-Status')
+                                                    ->badge()
+                                                    ->formatStateUsing(fn ($state) => ucfirst($state ?? 'unbekannt'))
+                                                    ->color('gray'),
+
+                                                TextEntry::make('call_time')
+                                                    ->label('Startzeit')
+                                                    ->dateTime('d.m.Y H:i:s')
+                                                    ->icon('heroicon-m-calendar'),
+
+                                                TextEntry::make('created_at')
+                                                    ->label('Erstellt')
+                                                    ->dateTime('d.m.Y H:i:s'),
+                                            ]),
+                                    ])
+                                    ->collapsible(),
+
+                                // External Links Section
+                                InfoSection::make('Externe Links')
+                                    ->icon('heroicon-m-arrow-top-right-on-square')
+                                    ->extraAttributes(['role' => 'region', 'aria-label' => 'Externe Links'])
+                                    ->visible(fn ($record) => !empty($record->raw['public_log_url']) || !empty($record->recording_url))
+                                    ->schema([
+                                        Grid::make(['default' => 1, 'sm' => 2])
+                                            ->schema([
+                                                TextEntry::make('public_log_url')
+                                                    ->label('Retell Debug Log')
+                                                    ->getStateUsing(fn ($record) => $record->raw['public_log_url'] ?? null)
+                                                    ->url(fn ($record) => $record->raw['public_log_url'] ?? null, shouldOpenInNewTab: true)
+                                                    ->icon('heroicon-m-arrow-top-right-on-square')
+                                                    ->color('primary')
+                                                    ->formatStateUsing(fn ($state) => $state ? 'Debug Log öffnen' : '-')
+                                                    ->visible(fn ($record) => !empty($record->raw['public_log_url'])),
+
+                                                TextEntry::make('recording_url')
+                                                    ->label('Aufnahme URL')
+                                                    ->url(fn ($record) => $record->recording_url, shouldOpenInNewTab: true)
+                                                    ->icon('heroicon-m-play')
+                                                    ->color('success')
+                                                    ->formatStateUsing(fn ($state) => $state ? 'Aufnahme abspielen' : '-')
+                                                    ->visible(fn ($record) => !empty($record->recording_url)),
+                                            ]),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Raw Metadata JSON Viewer
+                                InfoSection::make('Metadaten (JSON)')
+                                    ->icon('heroicon-m-code-bracket')
+                                    ->description('Vollständige Rohdaten im JSON-Format')
+                                    ->visible(fn ($record) => !empty($record->metadata))
+                                    ->schema([
+                                        ViewEntry::make('metadata')
+                                            ->view('filament.components.json-viewer')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
+
+                                // Raw Data Section (for debugging)
+                                InfoSection::make('Retell Rohdaten')
+                                    ->icon('heroicon-m-document-text')
+                                    ->description('Vollständige Retell API-Antwort')
+                                    ->visible(fn ($record) => !empty($record->raw))
+                                    ->schema([
+                                        ViewEntry::make('raw')
+                                            ->view('filament.components.json-viewer')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed()
+                                    ->collapsible(),
                             ]),
                     ])
                     ->columnSpanFull(),
@@ -3011,5 +3460,106 @@ HTML;
             \App\Filament\Resources\CallResource\Widgets\CallVolumeChart::class,
             \App\Filament\Resources\CallResource\Widgets\RecentCallsActivity::class,
         ];
+    }
+
+    /**
+     * Check if the call has transcript data for engagement metrics
+     */
+    protected static function hasTranscriptData($record): bool
+    {
+        $raw = is_array($record->raw) ? $record->raw : json_decode($record->raw ?? '{}', true);
+        $transcriptObject = $raw['transcript_object'] ?? [];
+
+        return !empty($transcriptObject) && count($transcriptObject) > 1;
+    }
+
+    /**
+     * Calculate engagement metrics from transcript data
+     * Returns: agent speaking time, customer speaking time, silence duration, turn count
+     */
+    protected static function calculateEngagementMetrics($record): array
+    {
+        $raw = is_array($record->raw) ? $record->raw : json_decode($record->raw ?? '{}', true);
+        $transcriptObject = $raw['transcript_object'] ?? [];
+        $totalDuration = $record->duration_sec ?? 0;
+
+        // Default values
+        $metrics = [
+            'agent_sec' => 0,
+            'customer_sec' => 0,
+            'silence_sec' => 0,
+            'agent_percent' => 0,
+            'customer_percent' => 0,
+            'silence_percent' => 0,
+            'turn_count' => 0,
+        ];
+
+        if (empty($transcriptObject) || $totalDuration <= 0) {
+            return $metrics;
+        }
+
+        $agentTime = 0;
+        $customerTime = 0;
+        $lastEnd = 0;
+        $silenceTime = 0;
+        $lastSpeaker = null;
+        $turnCount = 0;
+
+        foreach ($transcriptObject as $item) {
+            $role = strtolower($item['role'] ?? 'system');
+            $isAgent = in_array($role, ['agent', 'assistant', 'bot', 'ai']);
+            $isCustomer = in_array($role, ['user', 'customer', 'kunde', 'human']);
+
+            // Calculate speaking duration from words array
+            $duration = 0;
+            $start = null;
+            $end = null;
+
+            if (!empty($item['words']) && is_array($item['words'])) {
+                $start = $item['words'][0]['start'] ?? null;
+                $lastWord = end($item['words']);
+                $end = $lastWord['end'] ?? null;
+
+                if ($start !== null && $end !== null) {
+                    $duration = max(0, $end - $start);
+
+                    // Calculate silence gap from previous message
+                    if ($lastEnd > 0 && $start > $lastEnd) {
+                        $silenceTime += ($start - $lastEnd);
+                    }
+                    $lastEnd = $end;
+                }
+            }
+
+            // Track speaker time
+            if ($isAgent) {
+                $agentTime += $duration;
+                if ($lastSpeaker !== 'agent') {
+                    $turnCount++;
+                    $lastSpeaker = 'agent';
+                }
+            } elseif ($isCustomer) {
+                $customerTime += $duration;
+                if ($lastSpeaker !== 'customer') {
+                    $turnCount++;
+                    $lastSpeaker = 'customer';
+                }
+            }
+        }
+
+        // Calculate percentages
+        $totalSpoken = $agentTime + $customerTime;
+        $metrics['agent_sec'] = round($agentTime, 1);
+        $metrics['customer_sec'] = round($customerTime, 1);
+        $metrics['silence_sec'] = round($silenceTime, 1);
+        $metrics['turn_count'] = $turnCount;
+
+        if ($totalDuration > 0) {
+            $metrics['agent_percent'] = round(($agentTime / $totalDuration) * 100);
+            $metrics['customer_percent'] = round(($customerTime / $totalDuration) * 100);
+            $metrics['silence_percent'] = round(($silenceTime / $totalDuration) * 100);
+        }
+
+        return $metrics;
     }
 }

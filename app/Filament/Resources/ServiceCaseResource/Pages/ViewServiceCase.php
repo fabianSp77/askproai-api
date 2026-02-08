@@ -304,38 +304,6 @@ class ViewServiceCase extends ViewRecord
             ->icon('heroicon-o-link')
             ->badge(fn () => ($this->record->call_id ? 1 : 0) + ($this->record->customer_id ? 1 : 0))
             ->schema([
-                // Call Section with Audio Player
-                Components\Section::make('Verknüpfter Anruf')
-                    ->icon('heroicon-o-phone-arrow-up-right')
-                    ->schema([
-                        Components\Grid::make(3)
-                            ->schema([
-                                Components\TextEntry::make('call.id')
-                                    ->label('Anruf ID')
-                                    ->url(fn ($record) => $record->call_id
-                                        ? route('filament.admin.resources.calls.view', $record->call_id)
-                                        : null)
-                                    ->badge()
-                                    ->color('primary'),
-                                Components\TextEntry::make('call.duration_sec')
-                                    ->label('Dauer')
-                                    ->formatStateUsing(fn ($state) => $state ? gmdate('i:s', $state) : '—'),
-                                Components\TextEntry::make('call.status')
-                                    ->label('Status')
-                                    ->badge(),
-                            ]),
-                        // Audio Player
-                        Components\ViewEntry::make('call_audio')
-                            ->label('Aufnahme')
-                            ->view('filament.components.audio-player')
-                            ->viewData([
-                                'audioUrl' => $this->record->call?->recording_url,
-                            ])
-                            ->visible(fn ($record) => $record->call?->recording_url)
-                            ->columnSpanFull(),
-                    ])
-                    ->visible(fn ($record) => $record->call_id),
-
                 // Customer Section
                 Components\Section::make('CRM Kunde')
                     ->icon('heroicon-o-user-circle')
@@ -392,6 +360,46 @@ class ViewServiceCase extends ViewRecord
                             ]),
                     ])
                     ->collapsible(),
+
+                // Call Section with Audio Player
+                Components\Section::make('Verknüpfter Anruf')
+                    ->icon('heroicon-o-phone-arrow-up-right')
+                    ->schema([
+                        Components\Grid::make(3)
+                            ->schema([
+                                Components\TextEntry::make('call.id')
+                                    ->label('Anruf ID')
+                                    ->url(fn ($record) => $record->call_id
+                                        ? route('filament.admin.resources.calls.view', $record->call_id)
+                                        : null)
+                                    ->badge()
+                                    ->color('primary'),
+                                Components\TextEntry::make('call.duration_sec')
+                                    ->label('Dauer')
+                                    ->formatStateUsing(fn ($state) => $state ? gmdate('i:s', $state) : '—'),
+                                Components\TextEntry::make('call.status')
+                                    ->label('Status')
+                                    ->badge(),
+                            ]),
+                        // Audio Player & Transcript (same component as Call detail page)
+                        Components\ViewEntry::make('recording_transcript_tab')
+                            ->label('')
+                            ->view('filament.components.recording-transcript-tab.index')
+                            ->viewData(fn () => [
+                                'recordingUrl' => $this->record->call?->recording_url,
+                                'durationSec' => $this->record->call?->duration_sec ?? 0,
+                                'callId' => $this->record->call?->id ?? 0,
+                                'transcript' => is_array($this->record->call?->transcript)
+                                    ? ($this->record->call->transcript['text'] ?? $this->record->call->transcript['transcript'] ?? json_encode($this->record->call->transcript))
+                                    : ($this->record->call?->transcript ?? ''),
+                                'transcriptObject' => is_array($this->record->call?->raw)
+                                    ? ($this->record->call->raw['transcript_object'] ?? [])
+                                    : (json_decode($this->record->call?->raw ?? '{}', true)['transcript_object'] ?? []),
+                            ])
+                            ->visible(fn ($record) => $record->call?->recording_url)
+                            ->columnSpanFull(),
+                    ])
+                    ->visible(fn ($record) => $record->call_id),
             ]);
     }
 

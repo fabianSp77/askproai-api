@@ -7,6 +7,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/call-detail-full-width.css',
+                'resources/css/premium-dark-theme.css',  // Premium Dashboard dark theme
                 'resources/js/app.js',
                 'resources/js/app-admin.js'  // Separate admin bundle
             ],

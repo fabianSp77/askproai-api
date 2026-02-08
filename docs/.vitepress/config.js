@@ -118,6 +118,7 @@ export default defineConfig({
 
   // Exclude old documentation files
   srcExclude: [
+    '**/ISSUE_TEMPLATE.md',
     '**/BACKLOG_INDEX.md',
     '**/CALCOM_*.md',
     '**/CLAUDE_*.md',

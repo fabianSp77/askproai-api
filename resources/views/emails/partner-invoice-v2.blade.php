@@ -471,22 +471,43 @@
                         <!-- ============================================================ -->
                         <!-- FOOTER -->
                         <!-- ============================================================ -->
+                        @php
+                            $company = config('billing.company');
+                        @endphp
                         <tr>
                             <td style="padding: 20px 28px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td style="text-align: center;">
                                             <p style="margin: 0 0 2px 0; color: #374151; font-size: 13px; font-weight: 600;">
-                                                AskProAI
+                                                {{ $company['name'] }}
                                             </p>
-                                            <p style="margin: 0 0 8px 0; color: #6B7280; font-size: 12px;">
-                                                Fabian Spitzer · George-Stephenson-Strasse 12 · 10557 Berlin
+                                            <p style="margin: 0 0 4px 0; color: #6B7280; font-size: 12px;">
+                                                {{ $company['owner'] }} · {{ $company['address']['street'] }} · {{ $company['address']['postal_code'] }} {{ $company['address']['city'] }}
                                             </p>
-                                            <p style="margin: 0; font-size: 12px;">
-                                                <a href="tel:+491604366218" style="color: #6B7280; text-decoration: none;">+49 160 4366218</a>
+                                            <p style="margin: 0 0 8px 0; font-size: 12px;">
+                                                <a href="tel:{{ $company['contact']['phone'] }}" style="color: #6B7280; text-decoration: none;">{{ $company['contact']['phone'] }}</a>
                                                 <span style="color: #D1D5DB; margin: 0 6px;">|</span>
-                                                <a href="mailto:fabian@askproai.de" style="color: #2563EB; text-decoration: none;">fabian@askproai.de</a>
+                                                <a href="mailto:{{ $company['contact']['email'] }}" style="color: #2563EB; text-decoration: none;">{{ $company['contact']['email'] }}</a>
                                             </p>
+                                            {{-- Tax & Legal Information --}}
+                                            <p style="margin: 0 0 4px 0; color: #9CA3AF; font-size: 11px;">
+                                                @if(!empty($company['vat_id']))
+                                                    USt-IdNr: {{ $company['vat_id'] }}
+                                                @else
+                                                    Steuernummer: {{ $company['tax_number'] }}
+                                                @endif
+                                                @if(!empty($company['trade_register']))
+                                                    <span style="color: #D1D5DB; margin: 0 4px;">·</span>
+                                                    {{ $company['trade_register'] }}, {{ $company['trade_register_court'] }}
+                                                @endif
+                                            </p>
+                                            {{-- Bank Information --}}
+                                            @if(!empty($company['bank']['iban']))
+                                            <p style="margin: 0; color: #9CA3AF; font-size: 11px;">
+                                                {{ $company['bank']['name'] }} · IBAN: {{ $company['bank']['iban'] }} · BIC: {{ $company['bank']['bic'] }}
+                                            </p>
+                                            @endif
                                         </td>
                                     </tr>
                                     <tr>
