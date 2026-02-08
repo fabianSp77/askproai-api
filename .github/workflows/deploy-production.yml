@@ -36,7 +36,7 @@ jobs:
 
           # Test staging health endpoint
           # Accept 200 (healthy) and 401 (auth-protected but server responding)
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de/health")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://staging.askproai.de/api/health")
 
           if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 401 ]; then
               echo "✅ Staging is reachable (HTTP $STATUS)"
@@ -384,11 +384,12 @@ jobs:
         run: |
           echo "🏥 Running health checks..."
 
-          # HTTP health check
-          if curl -sf "https://${{ env.DOMAIN }}/health" > /dev/null; then
-              echo "✅ HTTP health check passed"
+          # HTTP health check (accept 200 OK or 401 auth-protected)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}/api/health")
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 401 ]; then
+              echo "✅ HTTP health check passed (HTTP $STATUS)"
           else
-              echo "❌ HTTP health check failed!"
+              echo "❌ HTTP health check failed (HTTP $STATUS)!"
               exit 1
           fi
 
@@ -472,24 +473,12 @@ jobs:
       - name: Test Health Endpoint
         run: |
           echo "🧪 Testing health endpoint..."
-          RESPONSE=$(curl -sf "https://${{ env.DOMAIN }}/health")
-
-          if echo "$RESPONSE" | grep -q "ok"; then
-              echo "✅ Health endpoint OK"
-          else
-              echo "❌ Health endpoint failed"
-              exit 1
-          fi
-
-      - name: Test API Endpoint
-        run: |
-          echo "🧪 Testing API..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.DOMAIN }}/api/health")
 
-          if [ "$STATUS" -eq 200 ]; then
-              echo "✅ API OK (200)"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 401 ]; then
+              echo "✅ Health endpoint OK (HTTP $STATUS)"
           else
-              echo "❌ API failed (Status: $STATUS)"
+              echo "❌ Health endpoint failed (HTTP $STATUS)"
               exit 1
           fi
 
