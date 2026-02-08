@@ -178,7 +178,7 @@ class ServiceOutputConfigurationFactory extends Factory
 
         $config = $templates[$categoryType] ?? $templates['general'];
 
-        return ServiceOutputConfiguration::factory()->create(array_merge($config, [
+        return ServiceOutputConfiguration::create(array_merge($config, [
             'company_id' => $company->id,
             'output_type' => ServiceOutputConfiguration::TYPE_EMAIL,
             'email_recipients' => ["support@{$company->id}.askproai.de"], // Use company ID for unique email

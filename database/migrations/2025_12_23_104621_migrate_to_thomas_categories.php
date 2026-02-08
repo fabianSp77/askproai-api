@@ -4,7 +4,6 @@ use App\Models\Company;
 use App\Models\ServiceCase;
 use App\Models\ServiceCaseCategory;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -73,9 +72,10 @@ return new class extends Migration
             }
         });
 
-        // Step 4: Run the new seeder
+        // Step 4: Run the new seeder (directly to avoid Faker dependency in production)
         Log::info('Running ThomasIncidentCategoriesSeeder...');
-        Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\ThomasIncidentCategoriesSeeder']);
+        $seeder = new \Database\Seeders\ThomasIncidentCategoriesSeeder();
+        $seeder->run();
         Log::info('ThomasIncidentCategoriesSeeder completed');
 
         Log::info('Migration: Completed successfully');
