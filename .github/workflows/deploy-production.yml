@@ -115,6 +115,17 @@ jobs:
           cd "$BACKUP_DIR"
           sha256sum "pre-deploy-${TIMESTAMP}.sql.gz" > "pre-deploy-${TIMESTAMP}.sql.gz.sha256"
 
+          # Backup retention: keep only last 5 DB backups
+          KEEP_BACKUPS=5
+          BACKUP_COUNT=$(ls -1t pre-deploy-*.sql.gz 2>/dev/null | wc -l)
+          if [ "$BACKUP_COUNT" -gt "$KEEP_BACKUPS" ]; then
+              echo "🗑️  Found $BACKUP_COUNT backups, keeping last $KEEP_BACKUPS..."
+              ls -1t pre-deploy-*.sql.gz | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
+                  rm -f "$f" "${f}.sha256"
+                  echo "   Deleted: $f"
+              done
+          fi
+
           echo "✅ Pre-deploy DB backup created (app code is in git — no tar needed)"
           EOF
 
@@ -129,18 +140,17 @@ jobs:
 
           set -euo pipefail
 
-          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           BACKUP_DIR="${{ env.PRODUCTION_BASE_DIR }}/shared/storage/backups"
+          LATEST_BACKUP=$(ls -1t "$BACKUP_DIR"/pre-deploy-*.sql.gz 2>/dev/null | head -1)
 
           # Upload to Synology using synology-upload.sh
           cd "${{ env.PRODUCTION_BASE_DIR }}"
 
-          if [ -f "scripts/synology-upload.sh" ]; then
-              ./scripts/synology-upload.sh "$BACKUP_DIR/pre-deploy-${TIMESTAMP}.sql.gz" pre-deploy
-              ./scripts/synology-upload.sh "$BACKUP_DIR/pre-deploy-app-${TIMESTAMP}.tar.gz" pre-deploy
+          if [ -f "scripts/synology-upload.sh" ] && [ -n "$LATEST_BACKUP" ]; then
+              ./scripts/synology-upload.sh "$LATEST_BACKUP" pre-deploy
               echo "✅ Backup uploaded to Synology"
           else
-              echo "⚠️  synology-upload.sh not found, backup stored locally only"
+              echo "⚠️  synology-upload.sh not found or no backup, stored locally only"
           fi
           EOF
 

@@ -26,6 +26,7 @@ REPO_DIR="$BASE_DIR/repo"
 
 GIT_BRANCH="${1:-main}"
 KEEP_RELEASES=5
+KEEP_BACKUPS=5
 
 # Staging specific
 DB_NAME="askproai_db"
@@ -309,6 +310,31 @@ cleanup_old_releases() {
     fi
 }
 
+# Function: Cleanup old backups
+cleanup_old_backups() {
+    log_step "Cleaning Up Old Backups"
+
+    local backup_dir="$SHARED_DIR/storage/backups"
+    if [ ! -d "$backup_dir" ]; then
+        log "No backup directory found"
+        return
+    fi
+
+    cd "$backup_dir"
+    local count=$(ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | wc -l)
+
+    if [ "$count" -gt "$KEEP_BACKUPS" ]; then
+        log "Found $count backups, keeping last $KEEP_BACKUPS..."
+        ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
+            rm -f "$f" "${f}.sha256"
+            log "  Deleted: $f"
+        done
+        log "✅ Old backups cleaned"
+    else
+        log "Only $count backups, nothing to clean"
+    fi
+}
+
 # Function: Rollback to previous release
 rollback() {
     log_error "Deployment failed! Rolling back..."
@@ -356,6 +382,7 @@ main() {
     # Check if deployment was successful
     if run_health_checks; then
         cleanup_old_releases
+        cleanup_old_backups
 
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))

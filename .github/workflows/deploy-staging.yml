@@ -165,6 +165,19 @@ jobs:
               --single-transaction \
               --quick | gzip > "${{ env.STAGING_BASE_DIR }}/shared/storage/backups/pre-migration-$(date +%s).sql.gz" 2>/dev/null || true
 
+          # Backup retention: keep only last 5 DB backups
+          KEEP_BACKUPS=5
+          BACKUP_DIR="${{ env.STAGING_BASE_DIR }}/shared/storage/backups"
+          cd "$BACKUP_DIR"
+          BACKUP_COUNT=$(ls -1t pre-migration-*.sql.gz 2>/dev/null | wc -l)
+          if [ "$BACKUP_COUNT" -gt "$KEEP_BACKUPS" ]; then
+              echo "🗑️  Found $BACKUP_COUNT backups, keeping last $KEEP_BACKUPS..."
+              ls -1t pre-migration-*.sql.gz | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
+                  rm -f "$f" "${f}.sha256"
+                  echo "   Deleted: $f"
+              done
+          fi
+
           # Run migrations
           php artisan migrate --force
 
