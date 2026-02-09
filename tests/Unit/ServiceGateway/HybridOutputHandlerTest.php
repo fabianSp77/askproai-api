@@ -103,7 +103,7 @@ class HybridOutputHandlerTest extends TestCase
             'subject' => 'Email Only Test',
             'description' => 'Webhook should fail, email should succeed',
             'case_type' => 'incident',
-            'priority' => 'medium',
+            'priority' => 'normal',
             'customer_name' => 'Jane Smith',
             'customer_email' => 'jane@example.com',
         ]);
@@ -141,7 +141,7 @@ class HybridOutputHandlerTest extends TestCase
             'category_id' => $this->category->id,
             'subject' => 'Webhook Only Test',
             'description' => 'Email should fail, webhook should succeed',
-            'case_type' => 'feature_request',
+            'case_type' => 'request',
             'priority' => 'low',
         ]);
 
@@ -209,7 +209,7 @@ class HybridOutputHandlerTest extends TestCase
             'subject' => 'Test Configuration Check',
             'description' => 'Testing hybrid configuration',
             'case_type' => 'incident',
-            'priority' => 'medium',
+            'priority' => 'normal',
         ]);
 
         $result = $this->handler->test($case);
@@ -265,7 +265,7 @@ class HybridOutputHandlerTest extends TestCase
             'category_id' => $this->category->id,
             'subject' => 'Independent Delivery Test',
             'description' => 'Both handlers should receive the case',
-            'case_type' => 'complaint',
+            'case_type' => 'request',
             'priority' => 'high',
             'customer_name' => 'Test Customer',
             'customer_email' => 'customer@example.com',

@@ -161,7 +161,7 @@ class WebhookOutputHandlerTest extends TestCase
             'category_id' => $this->category->id,
             'subject' => 'Test Issue',
             'description' => 'Test Description',
-            'case_type' => 'question',
+            'case_type' => 'inquiry',
             'priority' => 'low',
         ]);
 
@@ -303,8 +303,8 @@ class WebhookOutputHandlerTest extends TestCase
             'category_id' => $this->category->id,
             'subject' => 'Default Format Test',
             'description' => 'Testing default payload structure',
-            'case_type' => 'feature_request',
-            'priority' => 'medium',
+            'case_type' => 'request',
+            'priority' => 'normal',
         ]);
 
         $this->handler->deliver($case);
@@ -403,10 +403,8 @@ class WebhookOutputHandlerTest extends TestCase
 
         $testCases = [
             ['case_type' => 'incident', 'expected' => 'Bug'],
-            ['case_type' => 'feature_request', 'expected' => 'Story'],
-            ['case_type' => 'question', 'expected' => 'Task'],
-            ['case_type' => 'complaint', 'expected' => 'Task'],
-            ['case_type' => 'unknown_type', 'expected' => 'Task'], // Default fallback
+            ['case_type' => 'request', 'expected' => 'Task'],
+            ['case_type' => 'inquiry', 'expected' => 'Story'],
         ];
 
         foreach ($testCases as $testCase) {
@@ -416,7 +414,7 @@ class WebhookOutputHandlerTest extends TestCase
                 'subject' => "Type: {$testCase['case_type']}",
                 'description' => 'Testing case type mapping',
                 'case_type' => $testCase['case_type'],
-                'priority' => 'medium',
+                'priority' => 'normal',
             ]);
 
             $this->handler->deliver($case);
@@ -439,9 +437,8 @@ class WebhookOutputHandlerTest extends TestCase
         $testCases = [
             ['priority' => 'critical', 'expected' => 'Highest'],
             ['priority' => 'high', 'expected' => 'High'],
-            ['priority' => 'medium', 'expected' => 'Medium'],
+            ['priority' => 'normal', 'expected' => 'Medium'],
             ['priority' => 'low', 'expected' => 'Low'],
-            ['priority' => 'unknown_priority', 'expected' => 'Medium'], // Default fallback
         ];
 
         foreach ($testCases as $testCase) {

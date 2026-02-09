@@ -65,7 +65,7 @@ class SlotFlatteningTest extends TestCase
         echo "\n";
         echo "Cal.com slot (UTC):    " . $parsedSlot->format('Y-m-d H:i:s') . " (" . $parsedSlot->timezone->getName() . ")\n";
         echo "User requested (Berlin): " . $requestedTime->format('Y-m-d H:i:s') . " (" . $requestedTime->timezone->getName() . ")\n";
-        echo "Cal.com → Berlin:      " . $parsedSlot->setTimezone('Europe/Berlin')->format('Y-m-d H:i:s') . "\n";
+        echo "Cal.com → Berlin:      " . $parsedSlot->copy()->setTimezone('Europe/Berlin')->format('Y-m-d H:i:s') . "\n";
         echo "\n";
 
         // Current code comparison (WITHOUT timezone conversion)

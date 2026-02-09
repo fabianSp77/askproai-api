@@ -4797,29 +4797,11 @@ class RetellFunctionCallHandler extends Controller
             try {
                 // Parse slot time - could be "13:15", "13:00 - 13:30", Unix timestamp, etc.
                 $parsedSlotTime = Carbon::parse((string)$slotTime);
-
-                // 🔧 CRITICAL FIX 2025-10-19: TIMEZONE CONVERSION!
-                // Cal.com returns UTC timestamps (e.g., "2025-10-20T12:00:00.000Z")
-                // User requests in Europe/Berlin timezone (e.g., "14:00")
-                // 12:00 UTC == 14:00 Europe/Berlin (same moment!)
-                // We MUST convert slots to Europe/Berlin before comparison
-                $parsedSlotTime = $parsedSlotTime->setTimezone('Europe/Berlin');
-
-                // 🔧 VERBOSE DEBUG: Log every slot parsing attempt
-                Log::debug('🔬 SLOT PARSE ATTEMPT', [
-                    'raw_slot_time' => $slotTime,
-                    'parsed_datetime' => $parsedSlotTime->format('Y-m-d H:i:s'),
-                    'parsed_timezone' => $parsedSlotTime->timezone->getName(),
-                    'parsed_timestamp' => $parsedSlotTime->timestamp,
-                ]);
-
-                // FIX 2025-10-19: If slot is only time (not full datetime), use requested date
-                // Check if the parsed time is on a default/epoch date (Carbon::parse adds epoch date for time-only strings)
                 $slotStr = (string)$slotTime;
+                $isTimeOnly = !preg_match('/[-\/\.]|\d{4}/', $slotStr);
 
-                // If slot is just a time string (no date separators like "-", "/", "."), apply requested date
-                if (!preg_match('/[-\/\.]|\d{4}/', $slotStr)) {
-                    // Only time provided, use requested date
+                if ($isTimeOnly) {
+                    // Time-only slot (e.g., "13:30"): use requested date, no timezone conversion
                     $parsedSlotTime = $requestedTime->copy()->setTime(
                         $parsedSlotTime->hour,
                         $parsedSlotTime->minute,
@@ -4830,7 +4812,18 @@ class RetellFunctionCallHandler extends Controller
                         'time_only_input' => $slotTime,
                         'combined_datetime' => $parsedSlotTime->format('Y-m-d H:i:s')
                     ]);
+                } else {
+                    // Full datetime slot (e.g., "2025-10-20T12:00:00.000Z"): convert to Europe/Berlin
+                    // Cal.com returns UTC timestamps, user requests in Europe/Berlin
+                    $parsedSlotTime = $parsedSlotTime->setTimezone('Europe/Berlin');
                 }
+
+                Log::debug('🔬 SLOT PARSE ATTEMPT', [
+                    'raw_slot_time' => $slotTime,
+                    'is_time_only' => $isTimeOnly,
+                    'parsed_datetime' => $parsedSlotTime->format('Y-m-d H:i:s'),
+                    'parsed_timezone' => $parsedSlotTime->timezone->getName(),
+                ]);
 
                 // 🔴 EXACT MATCH ONLY: 14:15 == 14:15
                 $slotFormatted = $parsedSlotTime->format('Y-m-d H:i');

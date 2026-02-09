@@ -109,7 +109,7 @@ class BillingPeriod
      */
     public function getDays(): int
     {
-        return $this->start->diffInDays($this->end) + 1;
+        return intval($this->start->diffInDays($this->end)) + 1;
     }
 
     /**

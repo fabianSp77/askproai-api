@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
  */
 class RetellCallSession extends Model
 {
-    use HasUuids, BelongsToCompany;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     protected $table = 'retell_call_sessions';
 
