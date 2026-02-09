@@ -115,16 +115,18 @@ jobs:
           cd "$BACKUP_DIR"
           sha256sum "pre-deploy-${TIMESTAMP}.sql.gz" > "pre-deploy-${TIMESTAMP}.sql.gz.sha256"
 
-          # Backup retention: keep only last 5 DB backups
-          KEEP_BACKUPS=5
-          BACKUP_COUNT=$(ls -1t pre-deploy-*.sql.gz 2>/dev/null | wc -l)
-          if [ "$BACKUP_COUNT" -gt "$KEEP_BACKUPS" ]; then
-              echo "🗑️  Found $BACKUP_COUNT backups, keeping last $KEEP_BACKUPS..."
-              ls -1t pre-deploy-*.sql.gz | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
-                  rm -f "$f" "${f}.sha256"
-                  echo "   Deleted: $f"
-              done
-          fi
+          # Backup retention: keep only last 5 DB backups (subshell to preserve cwd)
+          (
+              KEEP_BACKUPS=5
+              BACKUP_COUNT=$(ls -1t pre-deploy-*.sql.gz 2>/dev/null | wc -l)
+              if [ "$BACKUP_COUNT" -gt "$KEEP_BACKUPS" ]; then
+                  echo "🗑️  Found $BACKUP_COUNT backups, keeping last $KEEP_BACKUPS..."
+                  ls -1t pre-deploy-*.sql.gz | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
+                      rm -f "$f" "${f}.sha256"
+                      echo "   Deleted: $f"
+                  done
+              fi
+          )
 
           echo "✅ Pre-deploy DB backup created (app code is in git — no tar needed)"
           EOF

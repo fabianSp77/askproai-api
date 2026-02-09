@@ -320,19 +320,21 @@ cleanup_old_backups() {
         return
     fi
 
-    cd "$backup_dir"
-    local count=$(ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | wc -l)
+    (
+        cd "$backup_dir"
+        local count=$(ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | wc -l)
 
-    if [ "$count" -gt "$KEEP_BACKUPS" ]; then
-        log "Found $count backups, keeping last $KEEP_BACKUPS..."
-        ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
-            rm -f "$f" "${f}.sha256"
-            log "  Deleted: $f"
-        done
-        log "✅ Old backups cleaned"
-    else
-        log "Only $count backups, nothing to clean"
-    fi
+        if [ "$count" -gt "$KEEP_BACKUPS" ]; then
+            log "Found $count backups, keeping last $KEEP_BACKUPS..."
+            ls -1t pre-migration-*.sql.gz pre-deploy-*.sql.gz 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | while read f; do
+                rm -f "$f" "${f}.sha256"
+                log "  Deleted: $f"
+            done
+            log "✅ Old backups cleaned"
+        else
+            log "Only $count backups, nothing to clean"
+        fi
+    )
 }
 
 # Function: Rollback to previous release
