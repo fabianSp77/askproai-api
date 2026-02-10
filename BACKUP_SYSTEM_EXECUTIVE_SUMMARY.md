@@ -318,8 +318,8 @@ Backup-specific docs (in each backup/docs/)
 ⚠️ **WICHTIG**: Backups enthalten **hochsensible Daten**:
 
 - Datenbank-Passwörter
-- API Keys (Retell.ai: `key_6ff998ba48e842092e04a5455d19`)
-- Cal.com API Key: `cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da`
+- API Keys (Retell.ai: `<REDACTED_RETELL_KEY>`)
+- Cal.com API Key: `<REDACTED_CALCOM_KEY>`
 - MySQL Credentials
 - SSL Private Keys
 - User-Daten (DSGVO-relevant)

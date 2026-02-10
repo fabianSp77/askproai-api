@@ -271,15 +271,15 @@ class RetellApiController extends Controller
                     ]);
 
                     // Set guarded fields explicitly (they're protected for security)
-                    $call->company_id = 1; // Friseur 1 for testing
-                    $call->branch_id = '34c4d48e-4753-4715-9c30-c55843a943e8'; // Main branch
+                    $call->company_id = config('retell.default_company_id');
+                    $call->branch_id = config('retell.default_branch_id');
                     $call->save();
 
-                    Log::info('✅ Created test call record with company_id=1 and branch_id', [
+                    Log::info('✅ Created test call record with default company/branch', [
                         'call_id' => $callId,
                         'call_db_id' => $call->id,
                         'company_id' => $call->company_id,
-                        'branch_id' => $call->branch_id
+                        'branch_id' => $call->branch_id,
                     ]);
                 } else {
                     Log::info('⚠️ Test call already exists - skipping creation');

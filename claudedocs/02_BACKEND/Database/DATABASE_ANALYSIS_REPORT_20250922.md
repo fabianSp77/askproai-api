@@ -121,9 +121,9 @@ phone_numbers -> companies, branches
 ### Integration-Konfiguration aus .env:
 ```bash
 # Vorhandene API-Schlüssel (aber nicht in DB konfiguriert):
-CALCOM_API_KEY=cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da
+CALCOM_API_KEY=<REDACTED_CALCOM_KEY>
 CALCOM_EVENT_TYPE_ID=2026302
-RETELL_TOKEN=key_6ff998ba48e842092e04a5455d19
+RETELL_TOKEN=<REDACTED_RETELL_KEY>
 ```
 
 ## 6. Test-Daten-Generierung Empfehlungen
@@ -137,7 +137,7 @@ INSERT INTO integrations (company_id, name, type, status, config, credentials, i
 VALUES
 (1, 'Cal.com Integration', 'calcom', 'active',
  JSON_OBJECT('event_type_id', 2026302, 'team_slug', 'askproai'),
- JSON_OBJECT('api_key', 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da'),
+ JSON_OBJECT('api_key', '<REDACTED_CALCOM_KEY>'),
  1, NOW(), NOW());
 
 -- Für jedes Unternehmen Retell AI Integration:
@@ -145,7 +145,7 @@ INSERT INTO integrations (company_id, name, type, status, config, credentials, i
 VALUES
 (1, 'Retell AI Integration', 'retell', 'active',
  JSON_OBJECT('webhook_url', 'https://api.askproai.de/api/retell/webhook'),
- JSON_OBJECT('api_token', 'key_6ff998ba48e842092e04a5455d19'),
+ JSON_OBJECT('api_token', '<REDACTED_RETELL_KEY>'),
  1, NOW(), NOW());
 ```
 

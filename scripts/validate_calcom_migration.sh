@@ -20,11 +20,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Database credentials from .env
-DB_HOST=$(grep DB_HOST .env | cut -d '=' -f2)
-DB_DATABASE=$(grep DB_DATABASE .env | cut -d '=' -f2)
-DB_USERNAME=$(grep DB_USERNAME .env | cut -d '=' -f2)
-DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2)
+# Database credentials from .env (strip comments, whitespace, quotes)
+DB_HOST=$(grep DB_HOST .env | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+DB_DATABASE=$(grep DB_DATABASE .env | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+DB_USERNAME=$(grep DB_USERNAME .env | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
 
 MYSQL_CMD="mysql -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_PASSWORD} ${DB_DATABASE}"
 

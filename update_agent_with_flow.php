@@ -1,6 +1,6 @@
 <?php
 
-$apiKey = 'key_6ff998ba48e842092e04a5455d19';
+$apiKey = getenv('RETELL_TOKEN') ?: die("ERROR: RETELL_TOKEN not set\n");
 $baseUrl = 'https://api.retellai.com';
 $agentId = 'agent_616d645570ae613e421edb98e7';
 $conversationFlowId = trim(file_get_contents('conversation_flow_id.txt'));

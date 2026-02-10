@@ -26,6 +26,16 @@ class CheckCallbackSlaJob implements ShouldQueue
     use Queueable;
 
     /**
+     * The number of times the job may be attempted.
+     */
+    public $tries = 3;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     */
+    public $timeout = 120;
+
+    /**
      * SLA threshold in minutes for warning alert
      */
     const WARNING_THRESHOLD = 60;
@@ -161,6 +171,11 @@ class CheckCallbackSlaJob implements ShouldQueue
 
             // TODO: Send notification to assigned staff
             // Notification::send($callback->assignedTo, new CallbackSlaWarningNotification($callback));
+            Log::warning('[SLA] Callback SLA warning', [
+                'callback_id' => $callback->id,
+                'sla_minutes' => self::WARNING_THRESHOLD,
+                'elapsed_minutes' => $callback->created_at->diffInMinutes(Carbon::now()),
+            ]);
 
             // Mark as notified (cache for 24 hours)
             Cache::put($cacheKey, true, 60 * 24);
@@ -190,6 +205,11 @@ class CheckCallbackSlaJob implements ShouldQueue
             // TODO: Send notification to staff + supervisor
             // Notification::send($callback->assignedTo, new CallbackSlaCriticalNotification($callback));
             // Notification::send($callback->branch->supervisors, new CallbackSlaCriticalNotification($callback));
+            Log::warning('[SLA] Callback SLA breach (critical)', [
+                'callback_id' => $callback->id,
+                'sla_minutes' => self::CRITICAL_THRESHOLD,
+                'elapsed_minutes' => $callback->created_at->diffInMinutes(Carbon::now()),
+            ]);
 
             // Mark as notified
             Cache::put($cacheKey, true, 60 * 24);
@@ -221,6 +241,11 @@ class CheckCallbackSlaJob implements ShouldQueue
             // TODO: Send notification to managers
             // $managers = User::role('manager')->get();
             // Notification::send($managers, new CallbackSlaEscalationNotification($callback));
+            Log::warning('[SLA] Callback SLA escalation required', [
+                'callback_id' => $callback->id,
+                'sla_minutes' => self::ESCALATION_THRESHOLD,
+                'elapsed_minutes' => $callback->created_at->diffInMinutes(Carbon::now()),
+            ]);
 
             // Auto-escalate callback
             $callback->escalate(
@@ -245,5 +270,15 @@ class CheckCallbackSlaJob implements ShouldQueue
             'escalation_count' => $counts['escalation'],
             'last_check' => Carbon::now()->toIso8601String(),
         ], 60 * 5); // Cache for 5 minutes
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('[CheckCallbackSlaJob] permanently failed', [
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

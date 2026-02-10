@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 
 echo "=== Listing All Retell Agents ===\n\n";
 
-$retellApiKey = env('RETELL_TOKEN', 'key_6ff998ba48e842092e04a5455d19');
+$retellApiKey = env('RETELL_TOKEN') ?: die("ERROR: RETELL_TOKEN not set in .env\n");
 $retellBaseUrl = env('RETELL_BASE', 'https://api.retellai.com');
 
 try {

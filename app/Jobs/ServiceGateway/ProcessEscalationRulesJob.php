@@ -29,7 +29,7 @@ class ProcessEscalationRulesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;
+    public int $tries = 3;
     public int $timeout = 300; // 5 minutes max
 
     public function handle(): void
@@ -178,19 +178,35 @@ class ProcessEscalationRulesJob implements ShouldQueue
 
         // For now, send a simple notification email
         // In production, you'd use a proper Mailable class
+        $emailsSent = [];
+        $emailsFailed = [];
+
         foreach ($recipients as $email) {
-            Mail::raw(
-                $this->buildEmailBody($rule, $case),
-                function ($message) use ($email, $subject) {
-                    $message->to($email)
-                        ->subject($subject);
-                }
-            );
+            try {
+                Mail::raw(
+                    $this->buildEmailBody($rule, $case),
+                    function ($message) use ($email, $subject) {
+                        $message->to($email)
+                            ->subject($subject);
+                    }
+                );
+                $emailsSent[] = $email;
+            } catch (\Exception $e) {
+                Log::error("[Escalation] Failed to send email notification", [
+                    'rule_id' => $rule->id,
+                    'case_id' => $case->id,
+                    'recipient' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+                $emailsFailed[] = $email;
+                // Continue to next recipient instead of stopping
+            }
         }
 
         return [
-            'success' => true,
-            'recipients' => $recipients,
+            'success' => empty($emailsFailed),
+            'recipients_sent' => $emailsSent,
+            'recipients_failed' => $emailsFailed,
             'subject' => $subject,
         ];
     }
@@ -358,5 +374,15 @@ SLA Resolution: {$case->sla_resolution_due_at?->format('d.m.Y H:i')}
 ---
 Diese E-Mail wurde automatisch generiert.
 TEXT;
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('[ProcessEscalationRulesJob] permanently failed', [
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

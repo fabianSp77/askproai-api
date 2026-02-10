@@ -39,6 +39,9 @@ class SyncToCalcomOnBooked implements ShouldQueue
     {
         $appointment = $event->appointment;
 
+        // Eager load service to prevent N+1 query
+        $appointment->loadMissing('service');
+
         Log::channel('calcom')->info('📨 AppointmentBooked event received', [
             'appointment_id' => $appointment->id,
             'sync_origin' => $appointment->sync_origin,
@@ -76,6 +79,9 @@ class SyncToCalcomOnBooked implements ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Flag appointment for manual review (calcom_sync_status column exists since 2025_10_11 migration)
+            $appointment->update(['calcom_sync_status' => 'failed']);
         }
     }
 
@@ -152,11 +158,14 @@ class SyncToCalcomOnBooked implements ShouldQueue
             'trace' => $exception->getTraceAsString(),
         ]);
 
-        // Flag appointment for manual review
-        $event->appointment->update([
-            'requires_manual_review' => true,
-            'manual_review_flagged_at' => now(),
-            'sync_error_message' => 'Listener failed: ' . $exception->getMessage(),
-        ]);
+        // Reload appointment from database before updating (avoid stale model)
+        $appointment = \App\Models\Appointment::find($event->appointment->id);
+        if ($appointment) {
+            $appointment->update([
+                'requires_manual_review' => true,
+                'manual_review_flagged_at' => now(),
+                'sync_error_message' => 'Listener failed: ' . $exception->getMessage(),
+            ]);
+        }
     }
 }

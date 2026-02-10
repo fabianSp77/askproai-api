@@ -36,7 +36,7 @@ Go to Retell Dashboard:
 **OR** run this command:
 ```bash
 curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"is_published": true}'
 ```

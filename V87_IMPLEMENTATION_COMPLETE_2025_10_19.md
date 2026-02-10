@@ -212,13 +212,13 @@ Customer: HAPPY ✅
 ```bash
 # Just run this command:
 curl -X PATCH "https://api.retellai.com/update-retell-llm/llm_f3209286ed1caf6a75906d2645b9" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d @/tmp/v87_retell_prompt_complete.json
 
 # Then publish:
 curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -d '{"is_published": true}'
 ```
 
@@ -226,7 +226,7 @@ curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fc
 ```bash
 # Check it published successfully
 curl -s -X GET "https://api.retellai.com/get-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" | jq '.is_published, .version'
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" | jq '.is_published, .version'
 
 # Should return:
 # true
@@ -300,12 +300,12 @@ If production issues:
 ```bash
 # Revert to V86
 curl -X PATCH "https://api.retellai.com/update-retell-llm/llm_f3209286ed1caf6a75906d2645b9" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -d @/tmp/v86_retell_update.json
 
 # Publish old version
 curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -d '{"is_published": true}'
 ```
 

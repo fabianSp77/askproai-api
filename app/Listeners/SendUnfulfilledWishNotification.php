@@ -94,8 +94,8 @@ class SendUnfulfilledWishNotification implements ShouldQueue
                 return;
             }
 
-            // 📤 Send email
-            Mail::to($validEmails)->send(new UnfulfilledAppointmentWish($wish, $call));
+            // 📤 Queue email (prevents SMTP failures from blocking event processing)
+            Mail::to($validEmails)->queue(new UnfulfilledAppointmentWish($wish, $call));
 
             // ✅ Log success
             Log::info('✅ Unfulfilled wish notification sent', [

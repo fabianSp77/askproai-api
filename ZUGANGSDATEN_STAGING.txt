@@ -31,10 +31,10 @@ CLI:      mysql -u askproai_staging_user -p'St4g1ng_S3cur3_P@ssw0rd_2025' askpro
 🔌 EXTERNE APIS
 ──────────────────────────────────────────────────────────────
 Cal.com:
-  API Key: cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da
+  API Key: <REDACTED_CALCOM_KEY>
   
 Retell AI:
-  API Key: key_6ff998ba48e842092e04a5455d19
+  API Key: <REDACTED_RETELL_KEY>
 
 
 📊 TEST-DATEN

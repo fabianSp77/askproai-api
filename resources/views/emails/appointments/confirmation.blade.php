@@ -1,23 +1,24 @@
 @component('mail::message')
 # Terminbestätigung
 
-Hallo {{ $appointment->customer->name }},
+Hallo {{ $appointment->customer?->name ?? 'Kunde' }},
 
 vielen Dank für Ihre Buchung. Hiermit bestätigen wir Ihren Termin:
 
 @component('mail::panel')
-**Service:** {{ $appointment->service->name }}<br>
+**Service:** {{ $appointment->service?->name ?? 'Service' }}<br>
 **Datum:** {{ \Carbon\Carbon::parse($appointment->starts_at)->locale('de')->format('l, d. F Y') }}<br>
 **Uhrzeit:** {{ \Carbon\Carbon::parse($appointment->starts_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($appointment->ends_at)->format('H:i') }} Uhr<br>
-**Ort:** {{ $appointment->branch->name }}<br>
-{{ $appointment->branch->address }}
+**Ort:** {{ $appointment->branch?->name ?? 'Filiale' }}<br>
+{{ $appointment->branch?->address ?? '' }}
 @endcomponent
 
+@isset($appointment->is_composite)
 @if($appointment->is_composite && !empty($appointment->segments))
 ## Ihre Terminübersicht
 
 @foreach($appointment->segments as $segment)
-**{{ $segment['name'] }}**<br>
+**{{ $segment['name'] ?? 'Segment' }}**<br>
 {{ \Carbon\Carbon::parse($segment['starts_at'])->format('H:i') }} - {{ \Carbon\Carbon::parse($segment['ends_at'])->format('H:i') }} Uhr
 @if(isset($segment['staff_name']))
 mit {{ $segment['staff_name'] }}
@@ -25,6 +26,7 @@ mit {{ $segment['staff_name'] }}
 <br><br>
 @endforeach
 @endif
+@endisset
 
 ## Wichtige Hinweise
 
@@ -43,5 +45,5 @@ Termin anzeigen
 Bei Fragen stehen wir Ihnen gerne zur Verfügung.
 
 Mit freundlichen Grüßen,<br>
-{{ $appointment->company->name ?? config('app.name') }}
+{{ $appointment->company?->name ?? config('app.name') }}
 @endcomponent

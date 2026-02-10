@@ -48,7 +48,7 @@ Successfully fixed the broken Cal.com integration that was using **fake Event ID
 - Fixed "Sync All for Company" header action
 
 ### 4. **API Verification**
-- ✅ Cal.com API Key: `cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da`
+- ✅ Cal.com API Key: `<REDACTED_CALCOM_KEY>`
 - ✅ Base URL: `https://api.cal.com/v1`
 - ✅ API Connection: Working (200 OK)
 - ✅ Found 11 real event types in Cal.com account

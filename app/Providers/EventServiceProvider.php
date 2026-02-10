@@ -61,7 +61,7 @@ class EventServiceProvider extends ServiceProvider
 
         // Booking Events (Phase 2: Bidirectional Cal.com Sync)
         AppointmentBooked::class => [
-            // SyncToCalcomOnBooked::class,  // ⚠️ TEMPORARILY DISABLED - migration pending
+            SyncToCalcomOnBooked::class,  // ✅ RE-ENABLED - listener is functional and has proper loop prevention
             InvalidateWeekCacheListener::class . '@handleBooked', // Clear week availability cache
         ],
 
@@ -82,7 +82,7 @@ class EventServiceProvider extends ServiceProvider
             UpdateModificationStats::class,
             AppointmentNotificationListener::class . '@handleRescheduled',
             SyncToCalcomOnRescheduled::class,  // ✅ RE-ENABLED 2025-11-25: Sync reschedules to Cal.com
-            // SendRescheduleNotifications::class, // TODO: Create this listener
+            // TODO: SendRescheduleNotifications listener not yet implemented (would send SMS/email to customer about reschedule)
             InvalidateWeekCacheListener::class . '@handleRescheduled', // Clear week availability cache
         ],
 
@@ -102,8 +102,9 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         CallbackEscalated::class => [
-            // NotifyManagers::class, // TODO: Create this listener
-            // UpdateEscalationStats::class, // TODO: Create this listener
+            // NOTE: No listeners implemented yet. Consider adding:
+            // - NotifyManagers::class - Send alerts to management on escalation
+            // - UpdateEscalationStats::class - Track escalation metrics for reporting
         ],
 
         // Configuration Events (Phase 2: Event System & Synchronisation)

@@ -706,27 +706,29 @@ class WebhookOutputHandler implements OutputHandlerInterface
             ];
         }
 
-        // Include customer data from ai_metadata
-        $aiMeta = $case->ai_metadata ?? [];
+        // Include customer data from ai_metadata (H4: null-safe access)
+        $aiMeta = is_array($case->ai_metadata) ? $case->ai_metadata : [];
         $payload['customer'] = [
-            'name' => $aiMeta['customer_name'] ?? $case->customer?->name ?? null,
-            'company' => $aiMeta['customer_company'] ?? null,
-            'phone' => $aiMeta['customer_phone'] ?? $case->customer?->phone ?? null,
-            'email' => $aiMeta['customer_email'] ?? $case->customer?->email ?? null,
-            'location' => $aiMeta['customer_location'] ?? null,
+            'name' => data_get($aiMeta, 'customer_name') ?? $case->customer?->name ?? null,
+            'company' => data_get($aiMeta, 'customer_company') ?? null,
+            'phone' => data_get($aiMeta, 'customer_phone') ?? $case->customer?->phone ?? null,
+            'email' => data_get($aiMeta, 'customer_email') ?? $case->customer?->email ?? null,
+            'location' => data_get($aiMeta, 'customer_location') ?? null,
         ];
 
         // Add problem context (enriched timestamp, no redundant original)
-        $problemSince = $aiMeta['problem_since'] ?? null;
+        $problemSince = data_get($aiMeta, 'problem_since');
         $payload['context']['problem_since'] = $this->enrichProblemSince($problemSince, $case->created_at);
-        $payload['context']['others_affected'] = $aiMeta['others_affected'] ?? false;
+        $payload['context']['others_affected'] = data_get($aiMeta, 'others_affected', false);
 
         // Include triage details from AI classification (K3: use_case_detail)
-        if (!empty($aiMeta['use_case_detail'])) {
-            $payload['context']['use_case_detail'] = $aiMeta['use_case_detail'];
+        $useCaseDetail = data_get($aiMeta, 'use_case_detail');
+        if (!empty($useCaseDetail)) {
+            $payload['context']['use_case_detail'] = $useCaseDetail;
         }
-        if (!empty($aiMeta['use_case_category'])) {
-            $payload['context']['use_case_category'] = $aiMeta['use_case_category'];
+        $useCaseCategory = data_get($aiMeta, 'use_case_category');
+        if (!empty($useCaseCategory)) {
+            $payload['context']['use_case_category'] = $useCaseCategory;
         }
 
         // Include transcript if configured (clean structure)

@@ -81,7 +81,7 @@ POST /publish-agent/{agent_id}
    curl_setopt_array(\$ch, [
        CURLOPT_URL => 'https://api.retellai.com/get-agent/agent_616d645570ae613e421edb98e7',
        CURLOPT_RETURNTRANSFER => true,
-       CURLOPT_HTTPHEADER => ['Authorization: Bearer key_6ff998ba48e842092e04a5455d19']
+       CURLOPT_HTTPHEADER => ['Authorization: Bearer <REDACTED_RETELL_KEY>']
    ]);
    \$response = curl_exec(\$ch);
    curl_close(\$ch);

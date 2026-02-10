@@ -3,7 +3,7 @@
  * Add reschedule nodes - v2 with correct node references
  */
 
-$retellApiKey = 'key_6ff998ba48e842092e04a5455d19';
+$retellApiKey = getenv('RETELL_TOKEN') ?: die("ERROR: RETELL_TOKEN not set. Export it first: export RETELL_TOKEN=your_key\n");
 $flowId = 'conversation_flow_097b2c1c2bca';
 
 echo "=== Adding Reschedule Nodes (v2) ===\n\n";

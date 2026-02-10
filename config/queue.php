@@ -109,4 +109,37 @@ return [
         'table' => 'failed_jobs',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Named Queue Workers - Deployment Notes
+    |--------------------------------------------------------------------------
+    |
+    | The following named queues are used in the application and require
+    | dedicated workers to be configured at the server level (via supervisor):
+    |
+    | - emails: Email notifications, customer invitations
+    | - notifications: SMS and push notifications
+    | - enrichment: Data enrichment, API enrichment jobs
+    | - audio-processing: Audio transcription, processing
+    | - events: Event processing, webhook dispatch
+    | - callbacks: Callback requests, SLA monitoring
+    | - low: Low-priority background tasks
+    | - calcom-sync: Cal.com synchronization jobs
+    | - default: Catch-all for non-specific jobs
+    |
+    | Production supervisor configuration should include:
+    |   php artisan queue:work --queue=emails,notifications,enrichment,audio-processing,events,callbacks,low,default
+    |
+    | OR separate workers for critical queues:
+    |   [program:emails-worker]
+    |   command=php artisan queue:work --queue=emails --tries=3 --timeout=60
+    |
+    |   [program:notifications-worker]
+    |   command=php artisan queue:work --queue=notifications --tries=3 --timeout=60
+    |
+    |   [program:default-worker]
+    |   command=php artisan queue:work --queue=default,low --tries=3 --timeout=120
+    |
+    */
+
 ];

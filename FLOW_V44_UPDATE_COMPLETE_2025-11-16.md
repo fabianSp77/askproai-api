@@ -182,7 +182,7 @@ $appointment->forceFill([
 **Oder via API**:
 ```bash
 curl -X POST "https://api.retellai.com/publish-agent/agent_7a24afda65b04d1cd79fa11e8f" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19"
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>"
 ```
 
 ---

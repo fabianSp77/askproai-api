@@ -34,12 +34,12 @@ class AppointmentConfirmation extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $company = $this->appointment->company->name ?? config('app.name');
+        $company = $this->appointment->company?->name ?? config('app.name');
 
         return new Envelope(
             subject: "Terminbestätigung - {$company}",
             from: config('mail.from.address'),
-            replyTo: $this->appointment->branch->email ?? config('mail.reply_to.address')
+            replyTo: $this->appointment->branch?->email ?? config('mail.reply_to.address')
         );
     }
 

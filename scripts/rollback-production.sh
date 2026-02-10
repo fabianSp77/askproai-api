@@ -21,11 +21,15 @@ TARGET_RELEASE="${1:-$PREVIOUS_RELEASE}"
 
 echo "Current:  $CURRENT_RELEASE"
 echo "Rolling back to: $TARGET_RELEASE"
-read -p "Continue? (y/N) " -n 1 -r
-echo
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
+if [ "${AUTO_CONFIRM:-0}" = "1" ] || [ "${1:-}" = "--yes" ]; then
+    echo "Auto-confirming rollback..."
+else
+    read -p "Continue? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
 fi
 
 # Atomic rollback

@@ -67,12 +67,12 @@ success "Backup directory created"
 echo ""
 info "Step 2: Backing up database..."
 
-# Get database credentials from .env
+# Get database credentials from .env (strip comments, whitespace, quotes)
 if [ -f /var/www/api-gateway/.env ]; then
-    DB_NAME=$(grep ^DB_DATABASE= /var/www/api-gateway/.env | cut -d= -f2)
-    DB_USER=$(grep ^DB_USERNAME= /var/www/api-gateway/.env | cut -d= -f2)
-    DB_PASS=$(grep ^DB_PASSWORD= /var/www/api-gateway/.env | cut -d= -f2)
-    DB_HOST=$(grep ^DB_HOST= /var/www/api-gateway/.env | cut -d= -f2)
+    DB_NAME=$(grep ^DB_DATABASE= /var/www/api-gateway/.env | cut -d= -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_USER=$(grep ^DB_USERNAME= /var/www/api-gateway/.env | cut -d= -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_PASS=$(grep ^DB_PASSWORD= /var/www/api-gateway/.env | cut -d= -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_HOST=$(grep ^DB_HOST= /var/www/api-gateway/.env | cut -d= -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
 else
     DB_NAME="askpro"
     DB_USER="root"
@@ -298,7 +298,7 @@ cat > "${BACKUP_DIR}/restore.sh" << 'EOF'
 #!/bin/bash
 
 # API Gateway Restoration Script
-# Usage: ./restore.sh
+# Usage: ./restore.sh [--yes]
 
 set -e
 
@@ -306,11 +306,16 @@ echo "🔄 API Gateway Restoration Script"
 echo "=================================="
 echo ""
 echo "⚠️  WARNING: This will overwrite current data!"
-read -p "Continue? (yes/no): " confirm
 
-if [ "$confirm" != "yes" ]; then
-    echo "Restoration cancelled."
-    exit 1
+# Skip confirmation if --yes flag or AUTO_CONFIRM=1
+if [ "${AUTO_CONFIRM:-0}" = "1" ] || [ "${1:-}" = "--yes" ]; then
+    echo "Auto-confirm enabled, proceeding..."
+else
+    read -p "Continue? (yes/no): " confirm
+    if [ "$confirm" != "yes" ]; then
+        echo "Restoration cancelled."
+        exit 1
+    fi
 fi
 
 BACKUP_DIR="$(dirname "$0")"

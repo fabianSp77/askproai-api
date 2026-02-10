@@ -36,6 +36,14 @@ trait BelongsToCompany
             if (!$model->company_id && Auth::check()) {
                 $model->company_id = Auth::user()->company_id;
             }
+
+            // Prevent saving without company_id (tenant isolation guard)
+            if (!$model->company_id) {
+                throw new \RuntimeException(
+                    'TENANT ISOLATION: ' . class_basename($model) . ' cannot be created without company_id. '
+                    . 'Set company_id explicitly or ensure user is authenticated.'
+                );
+            }
         });
     }
 

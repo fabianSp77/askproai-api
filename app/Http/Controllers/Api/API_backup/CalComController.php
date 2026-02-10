@@ -31,7 +31,7 @@ class CalComController extends Controller
             $endTimeFormatted = $endTime->format('Y-m-d\TH:i:s.u\Z');
             
             // Cal.com API details
-            $apiKey = 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da';
+            $apiKey = config('calcom.api_key');
             $userId = '1346408';
             
             // Build the correct format for Cal.com API - matching their exact expected format

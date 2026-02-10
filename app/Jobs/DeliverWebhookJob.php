@@ -33,12 +33,12 @@ class DeliverWebhookJob implements ShouldQueue
     /**
      * Number of times the job may be attempted.
      */
-    public $tries;
+    public $tries = 3;
 
     /**
      * The number of seconds the job can run before timing out.
      */
-    public $timeout;
+    public $timeout = 35; // 30s default + 5s overhead
 
     /**
      * @param WebhookConfiguration $webhookConfig
@@ -52,8 +52,8 @@ class DeliverWebhookJob implements ShouldQueue
         public array $payload,
         public string $idempotencyKey
     ) {
-        $this->tries = $webhookConfig->max_retry_attempts;
-        $this->timeout = $webhookConfig->timeout_seconds + 5; // +5s for processing overhead
+        // Note: Use static defaults above for job retry behavior
+        // The webhook config values are used within handle() for HTTP timeouts
     }
 
     /**

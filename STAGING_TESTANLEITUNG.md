@@ -105,14 +105,14 @@ URL: https://staging.askproai.de/phpmyadmin
 
 **Cal.com (Terminbuchung)**:
 ```
-API Key: cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da
+API Key: <REDACTED_CALCOM_KEY>
 Base URL: https://api.cal.com/v1
 ```
 
 **Retell AI (Voice Agent)**:
 ```
-API Key: key_6ff998ba48e842092e04a5455d19
-Webhook Secret: key_6ff998ba48e842092e04a5455d19
+API Key: <REDACTED_RETELL_KEY>
+Webhook Secret: <REDACTED_RETELL_KEY>
 ```
 
 ---

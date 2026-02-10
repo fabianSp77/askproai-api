@@ -366,15 +366,15 @@ class RetellFunctionCallHandler extends Controller
 
         // 🔧 Härtung C: Set test-call company/branch even for existing records without company_id
         if ($isTestCall && !$call->company_id) {
-            $call->company_id = 1; // Friseur 1 for testing
-            $call->branch_id = '34c4d48e-4753-4715-9c30-c55843a943e8'; // Main branch
+            $call->company_id = config('retell.default_company_id');
+            $call->branch_id = config('retell.default_branch_id');
             $call->save();
 
             Log::debug('🔧 ensureCallRecordExists: Test call company/branch set', [
                 'call_id' => $callId,
                 'call_db_id' => $call->id,
                 'was_recently_created' => $call->wasRecentlyCreated,
-                'company_id' => 1
+                'company_id' => $call->company_id,
             ]);
         }
 
@@ -3596,8 +3596,8 @@ class RetellFunctionCallHandler extends Controller
             }
 
             // 🚀 PHASE 2 OPTIMIZATION (2025-11-17): ASYNC CAL.COM SYNC
-            // Check if async sync is enabled (env flag)
-            $asyncSyncEnabled = env('ASYNC_CALCOM_SYNC', false);
+            // Check if async sync is enabled (config flag)
+            $asyncSyncEnabled = config('features.async_calcom_sync', false);
 
             if ($asyncSyncEnabled) {
                 // ASYNC PATH: Create appointment immediately, sync to Cal.com in background
@@ -9977,15 +9977,15 @@ class RetellFunctionCallHandler extends Controller
 
                 // For test calls, set company and branch AFTER creation (they're guarded fields)
                 if ($call->wasRecentlyCreated && (str_starts_with($callId, 'flow_test_') || str_starts_with($callId, 'test_'))) {
-                    $call->company_id = 1; // Friseur 1 for testing
-                    $call->branch_id = '34c4d48e-4753-4715-9c30-c55843a943e8'; // Main branch
+                    $call->company_id = config('retell.default_company_id');
+                    $call->branch_id = config('retell.default_branch_id');
                     $call->save();
 
                     Log::info('🔧 Test call detected - set company_id and branch_id', [
                         'call_id' => $callId,
                         'call_db_id' => $call->id,
                         'company_id' => $call->company_id,
-                        'branch_id' => $call->branch_id
+                        'branch_id' => $call->branch_id,
                     ]);
                 }
 

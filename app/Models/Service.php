@@ -100,9 +100,9 @@ class Service extends Model
      */
 
     protected $casts = [
-        'metadata' => 'array',
+        'metadata' => 'array',          // CANONICAL: Used in code (NotificationService)
         'locations_json' => 'array',
-        'metadata_json' => 'array',
+        'metadata_json' => 'array',     // LEGACY: Kept for backwards compatibility, not actively used
         'booking_fields_json' => 'array',
         'is_active' => 'boolean',
         'is_online' => 'boolean',

@@ -18,6 +18,21 @@ class RefreshModificationStatsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
+     * The number of times the job may be attempted.
+     */
+    public $tries = 3;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     */
+    public $timeout = 120;
+
+    /**
+     * The number of seconds to wait before retrying the job.
+     */
+    public $backoff = [30, 120];
+
+    /**
      * Execute the job.
      *
      * This job materializes modification statistics for faster policy quota checks.
@@ -107,5 +122,15 @@ class RefreshModificationStatsJob implements ShouldQueue
 
             throw $e; // Re-throw for queue retry logic
         }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('[RefreshModificationStatsJob] permanently failed', [
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

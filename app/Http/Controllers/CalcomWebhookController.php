@@ -464,10 +464,10 @@ class CalcomWebhookController extends Controller
                     'ends_at' => Carbon::parse($payload['endTime']),
                     'status' => $payload['status'] === 'CANCELLED' ? 'cancelled' : 'rescheduled',
                     'notes' => $appointment->notes . "\n\nRescheduled on " . now()->format('Y-m-d H:i'),
-                    'metadata' => json_encode(array_merge(
-                        json_decode($appointment->metadata ?? '{}', true),
+                    'metadata' => array_merge(
+                        is_array($appointment->metadata) ? $appointment->metadata : [],
                         ['last_update' => $payload]
-                    )),
+                    ),
                     // ✅ METADATA FIX 2025-10-10: Populate reschedule tracking fields
                     'rescheduled_at' => now(),
                     'rescheduled_by' => 'customer',
@@ -547,10 +547,10 @@ class CalcomWebhookController extends Controller
                     'status' => 'cancelled',
                     'notes' => $appointment->notes . "\n\nCancelled on " . now()->format('Y-m-d H:i') .
                               "\nReason: " . ($payload['cancellationReason'] ?? 'No reason provided'),
-                    'metadata' => json_encode(array_merge(
-                        json_decode($appointment->metadata ?? '{}', true),
+                    'metadata' => array_merge(
+                        is_array($appointment->metadata) ? $appointment->metadata : [],
                         ['cancellation' => $payload]
-                    )),
+                    ),
                     // ✅ METADATA FIX 2025-10-10: Populate cancellation tracking fields
                     'cancelled_at' => now(),
                     'cancelled_by' => 'customer',

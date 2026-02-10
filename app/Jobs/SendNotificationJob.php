@@ -41,7 +41,7 @@ class SendNotificationJob implements ShouldQueue
         string $eventType
     ) {
         $this->config = $config;
-        $this->appointment = $appointment->load(['customer', 'staff', 'service', 'branch', 'company']);
+        $this->appointment = $appointment;
         $this->eventType = $eventType;
 
         // Set queue based on priority
@@ -53,6 +53,9 @@ class SendNotificationJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // Load relationships needed for processing
+        $this->appointment->load(['customer', 'staff', 'service', 'branch', 'company']);
+
         // Check if configuration is still enabled
         if (!$this->config->is_enabled) {
             Log::info('Notification skipped - configuration disabled', [

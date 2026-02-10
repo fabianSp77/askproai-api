@@ -49,8 +49,8 @@ Log::error('❌ Failed to create booking via Cal.com', [...]);
 
 **WICHTIG:** API-Key und Webhook-Secret sind identisch!
 ```
-RETELL_TOKEN=key_6ff998ba48e842092e04a5455d19
-RETELL_WEBHOOK_SECRET=key_6ff998ba48e842092e04a5455d19  # ← Gleicher Wert!
+RETELL_TOKEN=<REDACTED_RETELL_KEY>
+RETELL_WEBHOOK_SECRET=<REDACTED_RETELL_KEY>  # ← Gleicher Wert!
 ```
 
 ### Empfohlene Aktion:

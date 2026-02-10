@@ -54,13 +54,13 @@ grep -A 10 "isTimeOnly" app/Services/Retell/DateTimeParser.php
 ```bash
 # Update LLM with V87 Prompt
 curl -X PATCH "https://api.retellai.com/update-retell-llm/llm_f3209286ed1caf6a75906d2645b9" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d @/tmp/v87_retell_prompt_complete.json
 
 # Then publish agent
 curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"is_published": true}'
 ```
@@ -69,7 +69,7 @@ curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fc
 ```bash
 # Check agent is published
 curl -s -X GET "https://api.retellai.com/get-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" | jq '.is_published, .version'
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" | jq '.is_published, .version'
 
 # Expected output:
 # true
@@ -222,13 +222,13 @@ If critical issues arise:
 ```bash
 # Restore previous prompt to LLM
 curl -X PATCH "https://api.retellai.com/update-retell-llm/llm_f3209286ed1caf6a75906d2645b9" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d @/tmp/v86_retell_update.json
 
 # Republish with old prompt
 curl -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -d '{"is_published": true}'
 ```
 

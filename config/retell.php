@@ -17,7 +17,8 @@ return [
     'language' => env('RETELL_LANGUAGE', 'de'),
     'fallback_phone' => env('RETELL_FALLBACK_PHONE', '+49000000000'),
     'fallback_email' => env('RETELL_FALLBACK_EMAIL', 'noreply@placeholder.local'),
-    'default_company_id' => env('RETELL_DEFAULT_COMPANY_ID', null), // Should be set per environment
+    'default_company_id' => env('RETELL_DEFAULT_COMPANY_ID', null),
+    'default_branch_id' => env('RETELL_DEFAULT_BRANCH_ID', null),
 
     /*
     |--------------------------------------------------------------------------

@@ -7,12 +7,18 @@ use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 class ProcessRetellCallJob implements ShouldQueue
 {
-    use Dispatchable, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $tries = 3;
+    public $timeout = 120;
+    public $backoff = [60, 300];
+
     public function __construct(private array $payload){}
 
     public function handle(CalcomService $cal): void
@@ -60,6 +66,15 @@ class ProcessRetellCallJob implements ShouldQueue
             'ends_at'    =>$end,
             'payload'    =>$booking,
             'status'     =>$booking['status']??'pending',
+        ]);
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('[ProcessRetellCallJob] failed permanently', [
+            'call_id' => $this->payload['call_id'] ?? null,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
         ]);
     }
 }

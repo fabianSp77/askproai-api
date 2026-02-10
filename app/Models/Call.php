@@ -56,6 +56,7 @@ class Call extends Model
         'raw' => 'array',
         'analysis' => 'array',
         'metadata' => 'array',
+        'booking_details' => 'array',
         'tags' => 'array',
         'action_items' => 'array',
         'summary_translations' => 'array',

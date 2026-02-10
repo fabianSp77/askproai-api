@@ -84,14 +84,14 @@ fi
 # 3. Database backup
 log "Creating database dumps..."
 
-# Read database credentials from .env
+# Read database credentials from .env (strip comments, whitespace, quotes)
 if [ -f "${APP_ROOT}/.env" ]; then
-    DB_CONNECTION=$(grep DB_CONNECTION "${APP_ROOT}/.env" | cut -d '=' -f2)
-    DB_HOST=$(grep DB_HOST "${APP_ROOT}/.env" | cut -d '=' -f2)
-    DB_PORT=$(grep DB_PORT "${APP_ROOT}/.env" | cut -d '=' -f2)
-    DB_DATABASE=$(grep DB_DATABASE "${APP_ROOT}/.env" | cut -d '=' -f2)
-    DB_USERNAME=$(grep DB_USERNAME "${APP_ROOT}/.env" | cut -d '=' -f2)
-    DB_PASSWORD=$(grep DB_PASSWORD "${APP_ROOT}/.env" | cut -d '=' -f2)
+    DB_CONNECTION=$(grep DB_CONNECTION "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_HOST=$(grep DB_HOST "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_PORT=$(grep DB_PORT "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_DATABASE=$(grep DB_DATABASE "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_USERNAME=$(grep DB_USERNAME "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
+    DB_PASSWORD=$(grep DB_PASSWORD "${APP_ROOT}/.env" | cut -d '=' -f2- | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '"' | tr -d "'")
 
     # Full database dump
     log "Creating full database dump..."

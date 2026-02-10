@@ -94,20 +94,29 @@ class ServiceCaseNotificationV2 extends Mailable implements ShouldQueue
     {
         // Load relationships including nested phoneNumber for call details display
         // call.phoneNumber.company/branch provides: Servicenummer, Zugehöriges Unternehmen, Filiale
-        $relationships = [
-            'category',
-            'customer',
-            'company',
-            'call.phoneNumber.company',
-            'call.phoneNumber.branch',
-            'assignedTo',
-        ];
 
-        foreach ($relationships as $relation) {
-            // Check top-level relation to avoid duplicate loading
-            $topLevel = \Illuminate\Support\Str::before($relation, '.');
-            if (!$case->relationLoaded($topLevel)) {
+        // Load basic relationships
+        $basicRelations = ['category', 'customer', 'company', 'assignedTo'];
+        foreach ($basicRelations as $relation) {
+            if (!$case->relationLoaded($relation)) {
                 $case->load($relation);
+            }
+        }
+
+        // Load nested call relationships only if call exists
+        if ($case->call) {
+            if (!$case->call->relationLoaded('phoneNumber')) {
+                $case->call->load('phoneNumber');
+            }
+
+            // Load phoneNumber nested relations only if phoneNumber exists
+            if ($case->call->phoneNumber) {
+                if (!$case->call->phoneNumber->relationLoaded('company')) {
+                    $case->call->phoneNumber->load('company');
+                }
+                if (!$case->call->phoneNumber->relationLoaded('branch')) {
+                    $case->call->phoneNumber->load('branch');
+                }
             }
         }
     }

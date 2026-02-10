@@ -295,7 +295,7 @@ cd /path/to/backup/ultimate-backup-YYYYMMDD_HHMMSS/
 
 # Retell.ai Agent
 AGENT_ID="agent_9a8202a740cd3120d96fcfda1e"
-RETELL_TOKEN="key_6ff998ba48e842092e04a5455d19"
+RETELL_TOKEN="<REDACTED_RETELL_KEY>"
 
 curl -X POST "https://api.retellai.com/update-agent/${AGENT_ID}" \
     -H "Authorization: Bearer ${RETELL_TOKEN}" \

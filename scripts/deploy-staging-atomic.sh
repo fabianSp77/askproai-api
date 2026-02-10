@@ -100,20 +100,21 @@ update_repository() {
     if [ ! -d "$REPO_DIR/.git" ]; then
         log "Cloning repository..."
         git clone https://github.com/[org]/[repo].git "$REPO_DIR"
-        cd "$REPO_DIR"
-    else
+    fi
+
+    (
         cd "$REPO_DIR"
         log "Fetching latest changes..."
         git fetch origin
-    fi
 
-    log "Checking out branch: $GIT_BRANCH"
-    git checkout "$GIT_BRANCH"
-    git pull origin "$GIT_BRANCH"
+        log "Checking out branch: $GIT_BRANCH"
+        git checkout "$GIT_BRANCH"
+        git pull origin "$GIT_BRANCH"
 
-    CURRENT_COMMIT=$(git rev-parse --short HEAD)
-    log "✅ Repository updated to: $CURRENT_COMMIT"
-    echo "$CURRENT_COMMIT"
+        CURRENT_COMMIT=$(git rev-parse --short HEAD)
+        log "✅ Repository updated to: $CURRENT_COMMIT"
+        echo "$CURRENT_COMMIT"
+    )
 }
 
 # Function: Create new release
@@ -144,25 +145,27 @@ install_dependencies() {
 
     log_step "Installing Dependencies"
 
-    cd "$release_path"
+    (
+        cd "$release_path"
 
-    # Composer install
-    log "Installing Composer dependencies..."
-    composer install \
-        --no-dev \
-        --no-interaction \
-        --prefer-dist \
-        --optimize-autoloader \
-        --no-progress
+        # Composer install
+        log "Installing Composer dependencies..."
+        composer install \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --optimize-autoloader \
+            --no-progress
 
-    # NPM install and build
-    log "Installing NPM dependencies..."
-    npm ci --prefer-offline
+        # NPM install and build
+        log "Installing NPM dependencies..."
+        npm ci --prefer-offline
 
-    log "Building frontend assets..."
-    npm run build
+        log "Building frontend assets..."
+        npm run build
 
-    log "✅ Dependencies installed"
+        log "✅ Dependencies installed"
+    )
 }
 
 # Function: Link shared resources
@@ -171,25 +174,27 @@ link_shared_resources() {
 
     log_step "Linking Shared Resources"
 
-    cd "$release_path"
+    (
+        cd "$release_path"
 
-    # Link storage
-    rm -rf storage
-    ln -s "$SHARED_DIR/storage" storage
+        # Link storage
+        rm -rf storage
+        ln -s "$SHARED_DIR/storage" storage
 
-    # Link uploads
-    rm -rf public/uploads
-    ln -s "$SHARED_DIR/public/uploads" public/uploads
+        # Link uploads
+        rm -rf public/uploads
+        ln -s "$SHARED_DIR/public/uploads" public/uploads
 
-    # Link .env
-    if [ -f "$SHARED_DIR/.env/staging.env" ]; then
-        ln -s "$SHARED_DIR/.env/staging.env" .env
-    elif [ ! -f ".env" ]; then
-        cp .env.example .env
-        log "⚠️  Created .env from example - please configure!"
-    fi
+        # Link .env
+        if [ -f "$SHARED_DIR/.env/staging.env" ]; then
+            ln -s "$SHARED_DIR/.env/staging.env" .env
+        elif [ ! -f ".env" ]; then
+            cp .env.example .env
+            log "⚠️  Created .env from example - please configure!"
+        fi
 
-    log "✅ Shared resources linked"
+        log "✅ Shared resources linked"
+    )
 }
 
 # Function: Run migrations
@@ -198,19 +203,21 @@ run_migrations() {
 
     log_step "Running Database Migrations"
 
-    cd "$release_path"
+    (
+        cd "$release_path"
 
-    # Backup database before migrations
-    log "Creating pre-migration backup..."
-    mysqldump -h 127.0.0.1 -u root "$DB_NAME" \
-        --single-transaction \
-        --quick | gzip > "$SHARED_DIR/storage/backups/pre-migration-$(date +%s).sql.gz" 2>/dev/null || true
+        # Backup database before migrations
+        log "Creating pre-migration backup..."
+        mysqldump -h 127.0.0.1 -u root "$DB_NAME" \
+            --single-transaction \
+            --quick | gzip > "$SHARED_DIR/storage/backups/pre-migration-$(date +%s).sql.gz" 2>/dev/null || true
 
-    # Run migrations
-    log "Running migrations..."
-    php artisan migrate --force
+        # Run migrations
+        log "Running migrations..."
+        php artisan migrate --force
 
-    log "✅ Migrations completed"
+        log "✅ Migrations completed"
+    )
 }
 
 # Function: Clear caches
@@ -219,19 +226,21 @@ clear_caches() {
 
     log_step "Clearing Caches"
 
-    cd "$release_path"
+    (
+        cd "$release_path"
 
-    php artisan config:clear
-    php artisan cache:clear
-    php artisan route:clear
-    php artisan view:clear
-    php artisan optimize:clear
+        php artisan config:clear
+        php artisan cache:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan optimize:clear
 
-    # Rebuild caches
-    php artisan config:cache
-    php artisan route:cache
+        # Rebuild caches
+        php artisan config:cache
+        php artisan route:cache
 
-    log "✅ Caches cleared"
+        log "✅ Caches cleared"
+    )
 }
 
 # Function: Switch to new release (ATOMIC)
@@ -282,8 +291,8 @@ run_health_checks() {
     fi
 
     # Database check
-    cd "$CURRENT_LINK"
-    if php artisan migrate:status > /dev/null 2>&1; then
+    ( cd "$CURRENT_LINK" && php artisan migrate:status > /dev/null 2>&1 )
+    if [ $? -eq 0 ]; then
         log "✅ Database connection OK"
     else
         log_error "Database connection failed!"
@@ -297,16 +306,18 @@ run_health_checks() {
 cleanup_old_releases() {
     log_step "Cleaning Up Old Releases"
 
-    cd "$RELEASES_DIR"
-    local count=$(ls -1d */ 2>/dev/null | wc -l)
+    (
+        cd "$RELEASES_DIR"
+        local count=$(ls -1d */ 2>/dev/null | wc -l)
 
-    if [ "$count" -gt "$KEEP_RELEASES" ]; then
-        log "Found $count releases, keeping last $KEEP_RELEASES..."
-        ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs rm -rf
-        log "✅ Old releases cleaned"
-    else
-        log "Only $count releases, nothing to clean"
-    fi
+        if [ "$count" -gt "$KEEP_RELEASES" ]; then
+            log "Found $count releases, keeping last $KEEP_RELEASES..."
+            ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs rm -rf
+            log "✅ Old releases cleaned"
+        else
+            log "Only $count releases, nothing to clean"
+        fi
+    )
 }
 
 # Function: Rollback to previous release

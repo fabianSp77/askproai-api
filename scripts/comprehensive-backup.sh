@@ -249,11 +249,16 @@ echo -e "${GREEN}========================================${NC}"
 
 echo -e "${YELLOW}WARNING: This will restore system data.${NC}"
 echo -e "${YELLOW}Make sure to backup current state first!${NC}"
-read -p "Continue? (yes/no): " CONFIRM
 
-if [ "$CONFIRM" != "yes" ]; then
-    echo "Restoration cancelled."
-    exit 0
+# Skip confirmation if --yes flag or AUTO_CONFIRM=1
+if [ "${AUTO_CONFIRM:-0}" = "1" ] || [ "${1:-}" = "--yes" ]; then
+    echo "Auto-confirm enabled, proceeding..."
+else
+    read -p "Continue? (yes/no): " CONFIRM
+    if [ "$CONFIRM" != "yes" ]; then
+        echo "Restoration cancelled."
+        exit 0
+    fi
 fi
 
 # Function to restore with progress

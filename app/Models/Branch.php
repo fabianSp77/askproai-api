@@ -48,7 +48,7 @@ class Branch extends Model
         'accepts_walkins' => 'boolean',
         'parking_available' => 'boolean',
         'public_transport_access' => 'boolean',
-        'call_notification_overrides' => 'json',
+        'call_notification_overrides' => 'array',
         'retell_agent_cache' => 'json',
         'parent_settings' => 'json',
         'business_hours' => 'json',

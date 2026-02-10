@@ -440,6 +440,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Async Cal.com Sync (Legacy)
+    |--------------------------------------------------------------------------
+    |
+    | DEPRECATED: Use 'parallel_calcom_booking' instead.
+    | This flag enables asynchronous Cal.com synchronization.
+    |
+    | @default false
+    | @deprecated Use parallel_calcom_booking for new implementations
+    */
+    'async_calcom_sync' => env('ASYNC_CALCOM_SYNC', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Parallel Cal.com Booking (Performance Optimization)
     |--------------------------------------------------------------------------
     |

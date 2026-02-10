@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 echo "=== Fetching Call Details from Retell API ===\n";
 
-$retellApiKey = env('RETELL_TOKEN', 'key_6ff998ba48e842092e04a5455d19');
+$retellApiKey = env('RETELL_TOKEN') ?: die("ERROR: RETELL_TOKEN not set in .env\n");
 $retellBaseUrl = env('RETELL_BASE', 'https://api.retellai.com');
 
 // Get all calls from today that are missing data

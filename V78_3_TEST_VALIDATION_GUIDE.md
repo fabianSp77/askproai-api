@@ -114,13 +114,13 @@ tail -f storage/logs/laravel.log | grep --line-buffered -E "Function:|Response:|
 ```bash
 # V78.2 wiederherstellen
 curl -s -X PATCH "https://api.retellai.com/update-retell-llm/llm_f3209286ed1caf6a75906d2645b9" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d "{\"general_prompt\": $(cat /var/www/api-gateway/RETELL_PROMPT_V78_2_SILENCE_FIX.txt | jq -Rs .)}"
 
 # begin_message wieder setzen
 curl -s -X PATCH "https://api.retellai.com/update-agent/agent_9a8202a740cd3120d96fcfda1e" \
-  -H "Authorization: Bearer key_6ff998ba48e842092e04a5455d19" \
+  -H "Authorization: Bearer <REDACTED_RETELL_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"begin_message": "Willkommen bei Ask Pro AI, Ihr Spezialist für KI-Telefonassistenten. Wie kann ich Ihnen helfen?"}'
 ```

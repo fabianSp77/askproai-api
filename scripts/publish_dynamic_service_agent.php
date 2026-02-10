@@ -3,7 +3,7 @@
 // Publish new agent version with dynamic service selection
 
 $BASE_URL = "https://api.retellai.com";
-$API_KEY = "key_6ff998ba48e842092e04a5455d19";
+$API_KEY = getenv('RETELL_TOKEN') ?: die("ERROR: RETELL_TOKEN not set. Export it first: export RETELL_TOKEN=your_key\n");
 $AGENT_ID = "agent_9a8202a740cd3120d96fcfda1e";
 
 // Read the new prompt
