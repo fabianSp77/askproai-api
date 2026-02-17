@@ -297,22 +297,40 @@ class RetellWebhookController extends Controller
                 $call = $retellClient->syncCallToDatabase($callData);
 
                 if ($call) {
-                    // 🔧 BUG FIX: Only extract name from transcript if NOT already set by function call
-                    // Function calls (collect_appointment_data, reschedule_appointment) provide the
-                    // authoritative customer name. We should only fall back to transcript extraction
-                    // when no function call provided a name.
+                    // 🔧 v3.6 FIX (BUG 5): Use collected_dynamic_variables as primary name source
+                    // Retell's flow variables contain the correctly extracted name even when
+                    // finalize_ticket was never called (e.g. user hung up during loop).
+                    // Priority: 1) existing name from function call, 2) collected_dynamic_variables, 3) transcript
                     if (empty($call->name) && empty($call->customer_name)) {
-                        Log::info('📝 No name from function call - extracting from transcript', [
-                            'call_id' => $call->retell_call_id
-                        ]);
+                        $dynamicVars = $callData['call_analysis']['collected_dynamic_variables'] ?? [];
+                        $dynCustomerName = $dynamicVars['customer_name'] ?? null;
 
-                        $nameExtractor = new NameExtractor();
-                        $nameExtractor->updateCallWithExtractedName($call);
+                        if (!empty($dynCustomerName) && !in_array(strtolower($dynCustomerName), ['nein', 'ja', 'nee', 'ne', ''])) {
+                            // Use name from flow variables (most reliable when finalize_ticket wasn't called)
+                            $call->update([
+                                'customer_name' => trim($dynCustomerName),
+                                'customer_name_verified' => false,
+                                'verification_method' => 'flow_dynamic_variables',
+                            ]);
+                            Log::info('📝 customer_name set from collected_dynamic_variables', [
+                                'call_id' => $call->retell_call_id,
+                                'customer_name' => $dynCustomerName,
+                            ]);
+                        } else {
+                            // Fallback: extract from transcript
+                            Log::info('📝 No name from function call or dynamic vars - extracting from transcript', [
+                                'call_id' => $call->retell_call_id,
+                                'dynamic_vars_name' => $dynCustomerName,
+                            ]);
+
+                            $nameExtractor = new NameExtractor();
+                            $nameExtractor->updateCallWithExtractedName($call);
+                        }
                     } else {
-                        Log::info('✅ Name already set by function call - skipping transcript extraction', [
+                        Log::info('✅ Name already set by function call - skipping extraction', [
                             'call_id' => $call->retell_call_id,
                             'name' => $call->name,
-                            'customer_name' => $call->customer_name
+                            'customer_name' => $call->customer_name,
                         ]);
                     }
 

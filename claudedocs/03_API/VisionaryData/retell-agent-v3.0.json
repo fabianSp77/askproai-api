@@ -4,7 +4,7 @@
   "tool_call_strict_mode": true,
   "start_speaker": "agent",
   "start_node_id": "node_it_consent_start",
-  "global_prompt": "Du bist ein freundlicher, professioneller IT-Support-Assistent von {{FIRMENNAME}}. Du nimmst IT-Probleme telefonisch auf und erstellst Tickets.\n\nWICHTIG:\n- Sprich natuerlich und freundlich, nicht wie ein Roboter\n- Stelle keine ueberfluessigen Fragen - extrahiere Informationen aus dem Gespraech\n- Wenn der Anrufer schon Firma und Name genannt hat, frage NICHT nochmal\n- Maximal 1 Rueckfrage zum Problem, dann Daten erfassen\n- Bei Verstaendnisproblemen: 'Entschuldigung, die Verbindung war kurz schlecht. Koennen Sie das bitte wiederholen?'\n- NIEMALS interne Systemnamen oder technische Details erwaehnen\n- Halte dich kurz, maximal 2 Saetze pro Antwort",
+  "global_prompt": "Du bist ein freundlicher IT-Support-Mitarbeiter von {{FIRMENNAME}}. Du nimmst Probleme telefonisch auf und erstellst Tickets.\n\nSPRECHSTIL:\n- Sprich natuerlich und warm, wie ein echter Mensch am Telefon\n- Kurze Saetze, maximal 2 pro Antwort\n- Variiere deine Bestatigungen: 'Alles klar' / 'Verstanden' / 'Gut' / 'Okay' - nie zweimal dasselbe\n- Keine ueberfluessigen Fragen - nutze was der Anrufer schon gesagt hat\n- NIEMALS interne Systemnamen oder technische Begriffe erwaehnen\n\nTELEFONNUMMERN:\n- In natuerlichen Gruppen wiederholen, z.B. 'null eins fuenf eins ... zwölf vierunddreissig ... fuenf sechs sieben acht'\n- NICHT Ziffer fuer Ziffer, sondern in 3er- oder 4er-Bloecken nach der Vorwahl\n- Bei unklarer Nummer: 'Koennten Sie die nochmal langsam wiederholen?'\n\nIT-BEGRIFFE: VPN (nicht VPE), DNS, MFA, WLAN - immer die korrekte Abkuerzung verwenden",
   "nodes": [
     {
       "id": "node_it_consent_start",
@@ -13,7 +13,7 @@
       "display_position": {"x": 100, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Begruesse den Anrufer und hole die Zustimmung zur Aufzeichnung.\n\nSage: 'Willkommen beim IT-Support von {{FIRMENNAME}}. Zur Bearbeitung Ihres Anliegens wird dieses Gespraech aufgezeichnet und ein Ticket erstellt. Sind Sie damit einverstanden?'\n\nWarte auf Antwort."
+        "text": "Sage ungefaehr: 'Hallo, hier ist der IT-Support von {{FIRMENNAME}}. Kurzer Hinweis: Ich zeichne das Gespraech auf und erstelle ein Ticket fuer Sie. Ist das in Ordnung?'\n\nWarte auf Antwort."
       },
       "edges": [
         {
@@ -52,7 +52,7 @@
       "display_position": {"x": 100, "y": 350},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Entschuldigung, ich habe Sie nicht ganz verstanden. Darf ich das Gespräch aufzeichnen, um ein Ticket zu erstellen?'\n\nWarte auf Antwort."
+        "text": "Sage ungefaehr: 'Entschuldigung, das habe ich nicht ganz mitbekommen. Ist es okay, wenn ich das Gespraech aufzeichne und ein Ticket fuer Sie erstelle?'\n\nWarte auf Antwort."
       },
       "edges": [
         {
@@ -82,7 +82,7 @@
       "display_position": {"x": 100, "y": 450},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Kein Problem. Ohne Ihre Zustimmung kann ich leider kein Ticket aufnehmen. Sie koennen uns gerne per E-Mail kontaktieren. Auf Wiederhören.'"
+        "text": "Sage ungefaehr: 'Verstehe ich, kein Problem. Sie koennen uns jederzeit per E-Mail erreichen. Auf Wiederhoeren!'"
       },
       "edges": [
         {
@@ -103,7 +103,7 @@
       "display_position": {"x": 600, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Vielen Dank. Bitte schildern Sie mir kurz Ihr Problem. Worum geht es?'\n\nLasse den Anrufer frei erzaehlen. Unterbrich NICHT. Hoere aufmerksam zu und merke dir alle genannten Details (Firma, Name, Problem, Standort, seit wann, etc.)."
+        "text": "Sage ungefaehr: 'Super, danke. Wie kann ich Ihnen helfen?'\n\nLasse den Anrufer frei erzaehlen. Unterbrich NICHT. Hoere aufmerksam zu und merke dir alle genannten Details."
       },
       "edges": [
         {
@@ -152,6 +152,11 @@
           "type": "string",
           "name": "problem_since",
           "description": "Zeitangabe seit wann das Problem besteht. Nur setzen wenn erwaehnt."
+        },
+        {
+          "type": "string",
+          "name": "customer_phone",
+          "description": "Rueckrufnummer des Anrufers als Ziffernfolge. Gesprochene Zahlwoerter in Ziffern umwandeln: null=0, eins=1, zwei=2, drei=3, vier=4, fuenf=5, sechs=6, sieben=7, acht=8, neun=9. Beispiel: 'null eins sieben eins fuenf fuenf fuenf' wird '01715555'. NUR setzen wenn der Anrufer GERADE eine Telefonnummer genannt hat."
         }
       ],
       "edges": [
@@ -250,7 +255,7 @@
       "display_position": {"x": 1100, "y": 650},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Koennten Sie mir bitte kurz schildern, wobei ich Ihnen helfen kann?'\n\nHoere aufmerksam zu."
+        "text": "Sage ungefaehr: 'Koennten Sie mir kurz schildern, worum es geht?'\n\nHoere aufmerksam zu."
       },
       "edges": [
         {
@@ -271,7 +276,7 @@
       "display_position": {"x": 1600, "y": 650},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Danke! Von welcher Firma rufen Sie an?'\n\nWarte auf die Antwort des Anrufers."
+        "text": "Sage ungefaehr: 'Danke! Von welcher Firma rufen Sie an?'\n\nWarte auf Antwort."
       },
       "edges": [
         {
@@ -422,7 +427,7 @@
       "display_position": {"x": 2100, "y": -100},
       "instruction": {
         "type": "prompt",
-        "text": "WICHTIG: Dies ist ein kritischer Sicherheitsvorfall. Keine weiteren Rueckfragen zum Problem stellen!\n\nSage: 'Ich verstehe, das klingt nach einem dringenden Sicherheitsvorfall. Ich erstelle sofort ein Ticket mit hoechster Prioritaet. Bitte aendern Sie keine Passwoerter und schalten Sie betroffene Geraete nicht aus, bis sich ein Techniker bei Ihnen meldet.'\n\nDann direkt weiter."
+        "text": "WICHTIG: Keine weiteren Rueckfragen stellen! Direkt weiter.\n\nSage ungefaehr: 'Oh, das ist ernst. Ich leite das sofort mit hoechster Prioritaet weiter. Ganz wichtig: Bitte nichts an den Geraeten aendern, bis sich ein Techniker meldet.'"
       },
       "edges": [
         {
@@ -443,7 +448,7 @@
       "display_position": {"x": 2600, "y": 0},
       "instruction": {
         "type": "prompt",
-        "text": "Stelle EINE gezielte Rueckfrage zum Netzwerk-Problem, z.B.:\n- 'Betrifft das nur Ihren Rechner oder auch andere Geraete?'\n- 'Funktioniert das WLAN oder nur das Netzwerkkabel?'\n- 'Ist das Problem ploetzlich aufgetreten?'\n\nWaehle die passendste Frage. Stelle nur EINE Frage."
+        "text": "Stelle EINE gezielte Rueckfrage zum Netzwerk-Problem, z.B.:\n- 'Betrifft das nur Ihren Rechner oder auch andere Geraete?'\n- 'Funktioniert das WLAN oder nur das Kabel?'\n- 'Ist das ploetzlich aufgetreten?'\n\nWaehle die passendste Frage. Nur EINE. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -464,7 +469,7 @@
       "display_position": {"x": 2600, "y": 150},
       "instruction": {
         "type": "prompt",
-        "text": "Stelle EINE gezielte Rueckfrage zum M365-Problem, z.B.:\n- 'Welche Anwendung ist betroffen - Outlook, Teams, oder eine andere?'\n- 'Kommt eine Fehlermeldung?'\n- 'Funktioniert es im Browser oder in der Desktop-App?'\n\nStelle nur EINE Frage."
+        "text": "Stelle EINE gezielte Rueckfrage zum M365-Problem, z.B.:\n- 'Welche Anwendung ist betroffen - Outlook, Teams, oder eine andere?'\n- 'Kommt eine Fehlermeldung?'\n- 'Geht es im Browser oder in der App?'\n\nNur EINE Frage. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -485,7 +490,7 @@
       "display_position": {"x": 2600, "y": 300},
       "instruction": {
         "type": "prompt",
-        "text": "Stelle EINE gezielte Rueckfrage zum Endgeraet-Problem, z.B.:\n- 'Um welches Geraet handelt es sich - Laptop, Desktop oder etwas anderes?'\n- 'Haben Sie schon einen Neustart versucht?'\n- 'Kommt eine Fehlermeldung?'\n\nStelle nur EINE Frage."
+        "text": "Stelle EINE gezielte Rueckfrage zum Geraete-Problem, z.B.:\n- 'Ist es ein Laptop oder ein Desktop?'\n- 'Haben Sie schon einen Neustart probiert?'\n- 'Kommt eine Fehlermeldung?'\n\nNur EINE Frage. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -506,7 +511,7 @@
       "display_position": {"x": 2600, "y": 450},
       "instruction": {
         "type": "prompt",
-        "text": "Stelle EINE gezielte Rueckfrage zum Druck-Problem, z.B.:\n- 'Welchen Drucker betrifft es?'\n- 'Zeigt der Drucker eine Fehlermeldung an?'\n- 'Funktioniert der Drucker bei anderen Kollegen?'\n\nStelle nur EINE Frage."
+        "text": "Stelle EINE gezielte Rueckfrage zum Drucker-Problem, z.B.:\n- 'Welchen Drucker betrifft es?'\n- 'Zeigt der eine Fehlermeldung an?'\n- 'Geht er bei Kollegen?'\n\nNur EINE Frage. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -527,7 +532,7 @@
       "display_position": {"x": 2600, "y": 600},
       "instruction": {
         "type": "prompt",
-        "text": "Stelle EINE gezielte Rueckfrage zum Zugangs-Problem, z.B.:\n- 'Ist Ihr Konto komplett gesperrt oder funktioniert nur ein bestimmtes Passwort nicht?'\n- 'Bei welchem System koennen Sie sich nicht anmelden?'\n- 'Haben Sie kuerzlich Ihr Passwort geaendert?'\n\nStelle nur EINE Frage."
+        "text": "Stelle EINE gezielte Rueckfrage zum Zugangs-Problem, z.B.:\n- 'Ist das Konto gesperrt oder geht nur das Passwort nicht?'\n- 'Bei welchem System koennen Sie sich nicht anmelden?'\n- 'Haben Sie kuerzlich das Passwort geaendert?'\n\nNur EINE Frage. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -548,7 +553,7 @@
       "display_position": {"x": 2600, "y": 750},
       "instruction": {
         "type": "prompt",
-        "text": "Bestaetige kurz was du verstanden hast und stelle EINE allgemeine Rueckfrage.\n\nSage ungefaehr: 'Verstanden, [kurze Wiederholung des Problems in eigenen Worten]. Gibt es noch ein Detail, das dem Techniker helfen koennte? Zum Beispiel ob es ploetzlich aufgetreten ist oder ob schon etwas versucht wurde?'\n\nStelle nur EINE Frage. Hoere aufmerksam zu."
+        "text": "Bestaetige kurz was du verstanden hast. Dann stelle EINE kurze Nachfrage, z.B.:\n- 'Gibt es noch was, das dem Techniker helfen koennte?'\n- 'Ist das Problem ploetzlich aufgetreten?'\n- 'Haben Sie schon etwas versucht?'\n\nWaehle die passendste Frage. Stelle nur EINE. Warte auf die Antwort."
       },
       "edges": [
         {
@@ -576,7 +581,12 @@
         {
           "type": "string",
           "name": "use_case_detail",
-          "description": "Aktualisierte Detail-Beschreibung mit Triage-Ergebnissen. Bestehenden 'escalation=critical' beibehalten falls vorhanden."
+          "description": "Aktualisierte Detail-Beschreibung mit Triage-Ergebnissen. WICHTIG: Wenn in der Triage-Antwort Woerter wie Ransomware, Erpressung, Datenleck, Verschluesselung, kompromittiert, Loesegeld oder Hackerangriff erwaehnt werden: 'escalation=critical' am Ende anfuegen. Bestehenden 'escalation=critical' beibehalten falls bereits vorhanden."
+        },
+        {
+          "type": "string",
+          "name": "security_critical",
+          "description": "Auf 'true' setzen NUR wenn in der Triage-Antwort Ransomware, Erpressung, Datenleck, kompromittiert, Loesegeld, Hackerangriff oder gehackt erwaehnt wurde. Sonst leer lassen oder bestehenden Wert beibehalten."
         },
         {
           "type": "string",
@@ -591,12 +601,21 @@
       ],
       "edges": [
         {
+          "id": "edge_triage_extract_to_summary_phone_known",
+          "label": "Phone bereits bekannt → direkt zur Zusammenfassung",
+          "destination_node_id": "node_it_summary_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "customer_phone ist bereits gesetzt (nicht leer) UND customer_phone ist nicht 'caller_id'. Die Telefonnummer wurde schon frueher im Gespraech erfasst."
+          }
+        },
+        {
           "id": "edge_triage_extract_to_contact",
           "label": "Weiter zu Kontaktdaten",
           "destination_node_id": "node_it_collect_contact_v3",
           "transition_condition": {
             "type": "prompt",
-            "prompt": "Die Extraktion ist abgeschlossen."
+            "prompt": "customer_phone ist leer, nicht gesetzt, oder nicht vorhanden. Die Telefonnummer muss noch erfasst werden."
           }
         }
       ]
@@ -608,7 +627,7 @@
       "display_position": {"x": 3600, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Unter welcher Nummer können wir Sie für Rückfragen am besten erreichen?'\n\nWenn der Anrufer eine Nummer nennt, wiederhole sie und frage: 'Ich habe die Nummer notiert. Ist das korrekt?'\n\nWenn der Anrufer sagt die Nummer im Display reicht: 'Alles klar, dann nutzen wir die angezeigte Nummer.'"
+        "text": "Sage ungefaehr: 'Unter welcher Nummer koennen wir Sie am besten erreichen?'\n\nWenn der Anrufer eine Nummer nennt:\n1. Wiederhole die Nummer in natuerlichen Gruppen, z.B. 'Ich habe notiert: null eins fuenf eins ... zwölf vierunddreissig ... fuenf sechs sieben acht. Stimmt das?'\n2. Gruppiere nach Vorwahl (3-5 Ziffern), dann 3er- oder 4er-Bloecke\n\nWenn der Anrufer sagt die Nummer im Display reicht: 'Alles klar, dann nutzen wir die angezeigte Nummer.'"
       },
       "edges": [
         {
@@ -631,7 +650,7 @@
         {
           "type": "string",
           "name": "customer_phone",
-          "description": "Telefonnummer des Anrufers. Wenn der Anrufer sagt 'die Nummer im Display reicht', auf 'caller_id' setzen."
+          "description": "Telefonnummer als Ziffernfolge. Gesprochene Zahlwoerter in Ziffern umwandeln: null=0, eins=1, zwei=2, drei=3, vier=4, fuenf=5, sechs=6, sieben=7, acht=8, neun=9. Wenn 'die Nummer im Display reicht' oder aehnlich, auf 'caller_id' setzen."
         },
         {
           "type": "string",
@@ -658,7 +677,7 @@
       "display_position": {"x": 4600, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Fasse das Ticket zusammen und nenne dabei: Name, Firma, Kurzform des Problems, und die Rueckrufnummer.\n\nSage ungefaehr: 'Ich fasse kurz zusammen: [Name] von [Firma] — [Problem in einem Satz]. Wir melden uns unter [Rueckrufnummer] bei Ihnen. Stimmt das so?'\n\nWenn die Rueckrufnummer 'caller_id' ist, sage stattdessen: '...und melden uns unter der angezeigten Nummer bei Ihnen.'\n\nWarte auf Bestaetigung."
+        "text": "Fasse das Ticket kurz zusammen. Nenne: Name, Firma, Problem (ein Satz), und Rueckrufnummer. Die Rueckrufnummer in natuerlichen Gruppen vorlesen (z.B. 'null eins fuenf eins ... zwölf vierunddreissig ... fuenf sechs sieben acht').\n\nWenn die Rueckrufnummer 'caller_id' ist: '...und melden uns unter der angezeigten Nummer.'\n\nAm Ende fragen: 'Stimmt das so?'\n\nWarte auf Bestaetigung."
       },
       "edges": [
         {
@@ -673,10 +692,79 @@
         {
           "id": "edge_summary_correction",
           "label": "Korrektur",
-          "destination_node_id": "node_it_intro_v3",
+          "destination_node_id": "node_it_summary_correction_v3",
           "transition_condition": {
             "type": "prompt",
             "prompt": "Der Anrufer moechte etwas korrigieren oder aendern."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_summary_correction_v3",
+      "name": "IT Ticket: Korrektur",
+      "type": "conversation",
+      "display_position": {"x": 4850, "y": 400},
+      "instruction": {
+        "type": "prompt",
+        "text": "Frage: 'Was genau soll ich aendern?' Hoere zu. Bestaetige NUR den geaenderten Teil, z.B. 'Alles klar, also [korrigierter Wert]. Passt das so?' Wiederhole NICHT die komplette Zusammenfassung."
+      },
+      "edges": [
+        {
+          "id": "edge_correction_confirmed",
+          "label": "Korrektur bestaetigt",
+          "destination_node_id": "node_it_extract_correction_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat die Korrektur bestaetigt (ja, passt, korrekt, stimmt, genau, etc.)."
+          }
+        },
+        {
+          "id": "edge_correction_still_wrong",
+          "label": "Weitere Korrektur noetig",
+          "destination_node_id": "node_it_extract_correction_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Der Anrufer hat eine Korrektur mitgeteilt. Die geaenderten Daten muessen extrahiert werden."
+          }
+        }
+      ]
+    },
+    {
+      "id": "node_it_extract_correction_v3",
+      "name": "Extract: Korrektur-Daten",
+      "type": "extract_dynamic_variables",
+      "display_position": {"x": 4850, "y": 600},
+      "variables": [
+        {
+          "type": "string",
+          "name": "customer_name",
+          "description": "NUR aktualisieren wenn der Anrufer GERADE den Namen korrigiert hat. Sonst bestehenden Wert beibehalten."
+        },
+        {
+          "type": "string",
+          "name": "customer_company",
+          "description": "NUR aktualisieren wenn der Anrufer GERADE die Firma korrigiert hat. Sonst bestehenden Wert beibehalten."
+        },
+        {
+          "type": "string",
+          "name": "problem_description",
+          "description": "NUR aktualisieren wenn der Anrufer GERADE die Problembeschreibung korrigiert hat. Sonst bestehenden Wert beibehalten."
+        },
+        {
+          "type": "string",
+          "name": "customer_phone",
+          "description": "NUR aktualisieren wenn der Anrufer GERADE die Telefonnummer korrigiert hat. Zahlwoerter in Ziffern umwandeln: null=0, eins=1, zwei=2, drei=3, vier=4, fuenf=5, sechs=6, sieben=7, acht=8, neun=9. Sonst bestehenden Wert beibehalten."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_correction_extract_to_summary",
+          "label": "Zurueck zur Zusammenfassung",
+          "destination_node_id": "node_it_summary_v3",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Die Korrektur-Daten wurden extrahiert. Weiter zur aktualisierten Zusammenfassung."
           }
         }
       ]
@@ -734,7 +822,7 @@
       "display_position": {"x": 5600, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Danke, ich habe das Ticket erstellt. Ein Techniker schaut sich das an und meldet sich in Kuerze bei Ihnen. Kann ich sonst noch etwas fuer Sie tun?'\n\nWarte auf Antwort."
+        "text": "Sage ungefaehr: 'Alles klar, das Ticket ist angelegt. Ein Techniker meldet sich bei Ihnen. Kann ich sonst noch etwas fuer Sie tun?'\n\nWarte auf Antwort."
       },
       "edges": [
         {
@@ -764,7 +852,7 @@
       "display_position": {"x": 5850, "y": 200},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Alles klar, dann wuensche ich Ihnen einen guten Tag. Auf Wiederhoeren!'"
+        "text": "Sage ungefaehr: 'Alles klar, dann wuensche ich Ihnen einen schoenen Tag. Auf Wiederhoeren!'"
       },
       "edges": [
         {
@@ -785,7 +873,7 @@
       "display_position": {"x": 5600, "y": 400},
       "instruction": {
         "type": "prompt",
-        "text": "Sage: 'Es tut mir leid, es gab ein technisches Problem bei der Ticket-Erstellung. Ich habe Ihre Daten notiert und ein Kollege wird sich bei Ihnen melden. Auf Wiederhören.'"
+        "text": "Sage ungefaehr: 'Entschuldigung, da hat leider etwas nicht geklappt. Aber keine Sorge, Ihre Daten sind notiert und ein Kollege meldet sich bei Ihnen. Auf Wiederhoeren!'"
       },
       "edges": [
         {
@@ -864,7 +952,7 @@
             "description": "Detailbeschreibung mit optionalem escalation=critical bei Sicherheitsvorfaellen"
           }
         },
-        "required": ["problem_description", "customer_name"]
+        "required": ["problem_description", "customer_name", "customer_company", "customer_phone", "use_case_category"]
       }
     }
   ]

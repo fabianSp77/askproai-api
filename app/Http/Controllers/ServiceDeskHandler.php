@@ -657,8 +657,19 @@ class ServiceDeskHandler extends Controller
                     ], 400);
                 }
 
-                // Auto-classify category from description
-                $categoryId = $this->classifyCategory($problemDescription, $callContext->company_id);
+                // Prefer flow-provided category over keyword classification
+                $categoryId = null;
+                $flowCategory = $params['use_case_category'] ?? null;
+                if ($flowCategory && is_string($flowCategory)) {
+                    $categoryId = $this->findCategoryByFlowSlug($flowCategory, $callContext->company_id);
+                }
+                if (!$categoryId) {
+                    $categoryId = $this->classifyCategory($problemDescription, $callContext->company_id);
+                    Log::info('[ServiceDeskHandler] Flow category not matched, falling back to keyword classification', [
+                        'flow_category' => $flowCategory,
+                        'call_id' => $callId,
+                    ]);
+                }
 
                 // Determine priority (high if others affected)
                 // Parse German "ja"/"nein" strings to boolean
@@ -871,6 +882,44 @@ class ServiceDeskHandler extends Controller
         ]);
 
         return null;
+    }
+
+    /**
+     * Find category by flow-provided slug.
+     *
+     * Maps Retell flow category slugs (network, m365, endpoint, etc.)
+     * to ServiceCaseCategory records in the database.
+     *
+     * @param string $slug Flow category slug from Retell classify node
+     * @param int $companyId Company ID for tenant isolation
+     * @return int|null Category ID or null if no match
+     */
+    private function findCategoryByFlowSlug(string $slug, int $companyId): ?int
+    {
+        $slug = strtolower(trim($slug));
+
+        // 'other' maps to default category (handled by fallback in classifyCategory)
+        if ($slug === 'other' || $slug === '') {
+            return null;
+        }
+
+        $categoryId = ServiceCaseCategory::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->where(function ($q) use ($slug) {
+                $q->where('slug', $slug)
+                  ->orWhere('name', 'ILIKE', "%{$slug}%");
+            })
+            ->value('id');
+
+        if ($categoryId) {
+            Log::debug('[ServiceDeskHandler] Category matched by flow slug', [
+                'slug' => $slug,
+                'category_id' => $categoryId,
+                'company_id' => $companyId,
+            ]);
+        }
+
+        return $categoryId;
     }
 
     /**

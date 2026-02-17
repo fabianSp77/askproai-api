@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# VisionaryData IT Support Agent v3.4 - Retell Deployment Script
+# VisionaryData IT Support Agent v3.6 - Retell Deployment Script
 # =============================================================================
 #
 # WICHTIG: {{FIRMENNAME}} im Flow-JSON vor dem Deploy durch den echten
@@ -27,7 +27,7 @@ API_BASE="https://api.retellai.com"
 # Agent settings
 VOICE_ID="custom_voice_8e4c6d5a408f81563a7e5c310b"
 VOICE_MODEL="eleven_turbo_v2_5"
-AGENT_NAME="IT-Systemhaus Ticket Support v3.4"
+AGENT_NAME="IT-Systemhaus Ticket Support v3.6"
 
 # --- Validation ---
 
@@ -101,9 +101,9 @@ print(len(data.get('nodes', [])))
             return 1
         fi
 
-        if [ "$NODE_COUNT" -lt 25 ]; then
+        if [ "$NODE_COUNT" -lt 27 ]; then
             echo ""
-            echo "WARNUNG: Nur $NODE_COUNT Nodes gefunden (erwartet >= 27)."
+            echo "WARNUNG: Nur $NODE_COUNT Nodes gefunden (erwartet >= 29)."
             echo "Bitte manuell pruefen ob alle Nodes vorhanden sind."
         fi
 
@@ -186,7 +186,7 @@ create_new() {
     "backchannel_frequency": 0.5,
     "backchannel_words": ["mhm", "verstehe", "ja"],
     "end_call_after_silence_ms": 45000,
-    "boosted_keywords": ["VPN", "WLAN", "DNS", "MFA", "Outlook", "Teams", "SharePoint", "Azure", "Active Directory", "Citrix", "VMware", "Firewall", "BitLocker", "OneDrive", "Exchange", "Drucker", "Scanner", "Ransomware", "Phishing", "VisionaryData"]
+    "boosted_keywords": ["VPN", "WLAN", "DNS", "MFA", "Outlook", "Teams", "SharePoint", "Azure", "Active Directory", "Citrix", "VMware", "Firewall", "BitLocker", "OneDrive", "Exchange", "Drucker", "Scanner", "Ransomware", "Phishing", "VisionaryData", "null", "eins", "zwei", "drei", "vier", "fuenf", "sechs", "sieben", "acht", "neun", "Telefonnummer", "Rueckrufnummer", "Handynummer"]
 }
 AGENT_EOF
 )
@@ -239,7 +239,7 @@ case "${1:-help}" in
         create_new
         ;;
     *)
-        echo "VisionaryData IT Support Agent v3.4 - Retell Deploy"
+        echo "VisionaryData IT Support Agent v3.6 - Retell Deploy"
         echo ""
         echo "Usage:"
         echo "  $0 update <conversation_flow_id>   Bestehenden Flow aktualisieren"

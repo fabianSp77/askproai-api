@@ -13,17 +13,12 @@ use Illuminate\Support\Facades\Log;
  * Setup VisionaryData Agent Configuration
  *
  * Idempotent command to configure Company 1658 (IT-Systemhaus Test GmbH)
- * for the Retell v3.2 IT Support Agent (RCA #94768 fix — new agent created from v3.0 template).
+ * for the Retell v3.6 IT Support Agent.
  *
  * Actions:
- * 1. Register v3.1 agent in retell_agents table
+ * 1. Register agent in retell_agents table
  * 2. Set gateway_mode policy to 'service_desk'
  * 3. Sync company retell_agent_id
- *
- * Usage: php artisan visionarydata:setup-agent
- *
- * RCA Context: Call #94768 showed agent silence after name collection.
- * Root cause: v3.1 flow edges broken + backend not pointing to v3.1 agent.
  *
  * @see claudedocs/03_API/VisionaryData/retell-agent-v3.0.json
  */
@@ -31,8 +26,8 @@ class SetupVisionaryDataAgent extends Command
 {
     protected $signature = 'visionarydata:setup-agent
                             {--company-id=1658 : The company ID to configure}
-                            {--agent-id=agent_b94caa0b7804477f3ac373b3ac : The Retell agent ID}
-                            {--flow-id=conversation_flow_afa858be6620 : The conversation flow ID}
+                            {--agent-id=agent_88ca380b9cb51f22d07d078a3c : The Retell agent ID}
+                            {--flow-id=conversation_flow_0b5d4b51c882 : The conversation flow ID}
                             {--dry-run : Show what would be changed without making changes}';
 
     protected $description = 'Setup VisionaryData IT Support Agent configuration (idempotent)';

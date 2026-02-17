@@ -15,6 +15,40 @@
 
 ---
 
+## Communication Style
+- User speaks German frequently. 'weiter' = continue, 'ja mach das' = yes do it, 'fertig' = done/finished.
+- When user asks to do something, DO IT immediately. Don't explain what you would do or ask for confirmation — just implement it.
+- Never imply an email was sent unless you actually sent it via an API or tool.
+
+## Git & Commits
+- Do NOT commit or push unless the user explicitly asks. Wait for user confirmation before git operations.
+- When pushing, handle GitHub remote errors gracefully — retry once before reporting failure.
+
+## Deployment & Scripts
+- When editing deploy scripts or shell scripts, always use subshells `(cd /path && command)` instead of bare `cd` to avoid directory state leaking across commands.
+- When running deploy scripts, ensure they handle non-interactive mode (no TTY prompts).
+
+## Retell / Voice Agent
+- Retell API uses hyphens not underscores in field names (e.g., `response-type` not `response_type`).
+- Voice IDs must be Retell custom voice IDs, NOT ElevenLabs IDs.
+- Always validate JSON for trailing commas after edits.
+- **Pre-Deploy Checklist** (MUST show validation results before deploying):
+  1. Validate all JSON payloads for correct field naming (hyphens not underscores)
+  2. Verify all voice IDs are Retell custom IDs (not ElevenLabs IDs)
+  3. Check for JSON syntax errors (trailing commas, missing brackets)
+  4. Show validation results to user before proceeding with deployment
+
+## Testing & CI
+- After making changes, always clear OPcache and all Laravel caches before verifying: `php artisan optimize:clear`
+- When fixing CI tests, run the full test suite locally first to catch all failures at once rather than discovering them incrementally across multiple push cycles.
+
+## Livewire / Filament Stack
+- This project uses Laravel + Livewire + Filament.
+- When debugging Livewire errors (ComponentNotFoundException, snapshot errors, reactive prop mutations), check AdminPanelProvider.php widget/component discovery first.
+- Never use `$getRecord()` in components without verifying the parent resource model type.
+
+---
+
 ## 1. Quick Start
 
 ### First-Time Setup
