@@ -5,6 +5,7 @@ namespace App\Services\Retell;
 use App\Models\Call;
 use App\Models\Customer;
 use App\Models\Appointment;
+use App\Scopes\CompanyScope;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -86,8 +87,10 @@ class CallLifecycleService implements CallLifecycleInterface
                 }
             }
 
+            $retellCallId = $callData['call_id'] ?? $callData['retell_call_id'] ?? null;
+
             $createData = [
-                'retell_call_id' => $callData['call_id'] ?? $callData['retell_call_id'] ?? null,
+                'retell_call_id' => $retellCallId,
                 'external_id' => $callData['call_id'] ?? null,
                 'from_number' => $callData['from_number'] ?? 'unknown',
                 'to_number' => $callData['to_number'] ?? null,
@@ -95,8 +98,6 @@ class CallLifecycleService implements CallLifecycleInterface
                 'status' => $callData['status'] ?? 'ongoing',
                 'call_status' => $callData['call_status'] ?? 'ongoing',
                 'agent_id' => $callData['agent_id'] ?? null,
-                // phone_number_id is GUARDED - will be set manually after create
-                // company_id and branch_id are GUARDED - will be set manually after create
             ];
 
             // Add timestamps if available
@@ -104,41 +105,35 @@ class CallLifecycleService implements CallLifecycleInterface
                 $createData['start_timestamp'] = Carbon::createFromTimestampMs($callData['start_timestamp']);
             }
 
-            // 🔧 FIX 2025-12-13: Use updateOrCreate to handle race conditions properly
-            // BACKGROUND: ensureCallRecordExists() in RetellFunctionCallHandler may have already
-            // created the Call record before this webhook is processed (race condition).
-            //
-            // WHY updateOrCreate() instead of firstOrCreate():
-            // - ensureCallRecordExists() only sets: from_number, to_number, status, direction
-            // - Webhook provides ADDITIONAL critical fields: agent_id, external_id, start_timestamp
-            // - firstOrCreate() would NOT update agent_id if Call already exists
-            // - updateOrCreate() ensures webhook fields are always applied
-            $call = Call::updateOrCreate(
-                ['retell_call_id' => $createData['retell_call_id']],
-                $createData
-            );
+            // 🔧 FIX 2026-02-18: Set company_id BEFORE save to satisfy BelongsToCompany guard.
+            // Previously company_id was set AFTER updateOrCreate(), but the BelongsToCompany
+            // trait's creating guard throws RuntimeException if company_id is missing.
+            // Solution: Check for existing record first, then create with company_id pre-set.
+            $call = Call::withoutGlobalScope(CompanyScope::class)
+                ->where('retell_call_id', $retellCallId)
+                ->first();
 
-            // 🔥 FIX: Manually set company_id, branch_id, and phone_number_id to bypass $guarded protection
-            // These fields are guarded to prevent mass assignment vulnerabilities,
-            // but we need to set them explicitly for webhook-created calls
-            $needsSave = false;
+            if ($call) {
+                // Update existing record with webhook data
+                $call->fill($createData);
+            } else {
+                // Create new record with company_id set before save
+                $call = new Call();
+                $call->fill($createData);
+            }
 
+            // Set guarded fields directly on model BEFORE save
             if ($companyId !== null) {
                 $call->company_id = $companyId;
-                $needsSave = true;
             }
             if ($branchId !== null) {
                 $call->branch_id = $branchId;
-                $needsSave = true;
             }
             if ($phoneNumberId !== null) {
                 $call->phone_number_id = $phoneNumberId;
-                $needsSave = true;
             }
 
-            if ($needsSave) {
-                $call->save();
-            }
+            $call->save();
 
             // Cache the call
             if ($call->retell_call_id) {

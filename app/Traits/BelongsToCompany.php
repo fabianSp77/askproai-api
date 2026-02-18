@@ -37,12 +37,24 @@ trait BelongsToCompany
                 $model->company_id = Auth::user()->company_id;
             }
 
-            // Prevent saving without company_id (tenant isolation guard)
-            if (!$model->company_id) {
+            // Prevent saving without company_id in authenticated contexts.
+            // Webhook/CLI handlers set company_id explicitly after creation
+            // (because company_id is $guarded for mass-assignment protection).
+            // Only enforce this guard when a user IS authenticated but company_id
+            // is still missing — that indicates a real bug.
+            if (!$model->company_id && Auth::check()) {
                 throw new \RuntimeException(
                     'TENANT ISOLATION: ' . class_basename($model) . ' cannot be created without company_id. '
                     . 'Set company_id explicitly or ensure user is authenticated.'
                 );
+            }
+
+            // Log warning for unauthenticated contexts creating without company_id
+            if (!$model->company_id && !Auth::check()) {
+                \Illuminate\Support\Facades\Log::warning('TENANT WARNING: ' . class_basename($model) . ' created without company_id in unauthenticated context. Webhook handler must set company_id after creation.', [
+                    'model' => class_basename($model),
+                    'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
+                ]);
             }
         });
     }

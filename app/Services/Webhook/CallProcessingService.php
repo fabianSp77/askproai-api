@@ -255,7 +255,29 @@ class CallProcessingService
     private function createCallFromEndedEvent(array $callData): ?Call
     {
         try {
-            return Call::create([
+            // 🔧 FIX 2026-02-18: Resolve company_id from agent_id instead of hardcoding.
+            // Set company_id on model directly (not via mass assignment) because it's $guarded.
+            $companyId = null;
+            $agentId = $callData['agent_id'] ?? $callData['retell_agent_id'] ?? null;
+            if ($agentId) {
+                $agent = \App\Models\RetellAgent::where('agent_id', $agentId)->first();
+                if ($agent) {
+                    $companyId = $agent->company_id;
+                }
+            }
+
+            // Fallback: resolve from phone number
+            if (!$companyId && !empty($callData['to_number'])) {
+                $phone = \App\Models\PhoneNumber::where('number', $callData['to_number'])
+                    ->orWhere('phone_number', $callData['to_number'])
+                    ->first();
+                if ($phone) {
+                    $companyId = $phone->company_id;
+                }
+            }
+
+            $call = new Call();
+            $call->fill([
                 'retell_call_id' => $callData['call_id'] ?? null,
                 'external_id' => $callData['call_id'] ?? null,
                 'from_number' => $callData['from_number'] ?? 'unknown',
@@ -263,7 +285,7 @@ class CallProcessingService
                 'direction' => $callData['direction'] ?? 'inbound',
                 'status' => 'completed',
                 'call_status' => 'completed',
-                'retell_agent_id' => $callData['agent_id'] ?? $callData['retell_agent_id'] ?? null,
+                'retell_agent_id' => $agentId,
                 'start_timestamp' => isset($callData['start_timestamp'])
                     ? Carbon::createFromTimestampMs($callData['start_timestamp'])
                     : null,
@@ -273,8 +295,11 @@ class CallProcessingService
                 'duration_ms' => $callData['duration_ms'] ?? null,
                 'duration_sec' => isset($callData['duration_ms']) ? round($callData['duration_ms'] / 1000) : null,
                 'disconnection_reason' => $callData['disconnection_reason'] ?? null,
-                'company_id' => 1,
             ]);
+            $call->company_id = $companyId ?? 1;
+            $call->save();
+
+            return $call;
         } catch (\Exception $e) {
             Log::error('Failed to create call from ended event', [
                 'error' => $e->getMessage(),

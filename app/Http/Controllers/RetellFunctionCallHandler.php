@@ -344,48 +344,82 @@ class RetellFunctionCallHandler extends Controller
             return null;
         }
 
+        // Check for existing record first (bypass CompanyScope for webhook context)
+        $call = \App\Models\Call::withoutGlobalScope(\App\Scopes\CompanyScope::class)
+            ->where('retell_call_id', $callId)
+            ->first();
+
+        if ($call) {
+            return $call;
+        }
+
         // Check if this is a test call
         $isTestCall = str_starts_with($callId, 'flow_test_') ||
                       str_starts_with($callId, 'test_') ||
                       str_starts_with($callId, 'phase1_test_');
 
-        // 🔧 Härtung B: Pull metadata from data.call FIRST, fallback to parameters
-        $createData = [
+        // 🔧 FIX 2026-02-18: Resolve company_id BEFORE creating Call record.
+        // BelongsToCompany trait requires company_id at creation time.
+        $companyId = null;
+        $branchId = null;
+
+        if ($isTestCall) {
+            $companyId = config('retell.default_company_id');
+            $branchId = config('retell.default_branch_id');
+        } else {
+            // Resolve from agent_id
+            $agentId = $data['call']['agent_id'] ?? $data['agent_id'] ?? null;
+            if ($agentId) {
+                $agent = \App\Models\RetellAgent::where('agent_id', $agentId)->first();
+                if ($agent) {
+                    $companyId = $agent->company_id;
+                }
+            }
+
+            // Fallback: resolve from phone number
+            if (!$companyId) {
+                $toNumber = $data['call']['to_number'] ?? $parameters['to_number'] ?? null;
+                if ($toNumber) {
+                    $phone = \App\Models\PhoneNumber::where('number', $toNumber)
+                        ->orWhere('phone_number', $toNumber)
+                        ->first();
+                    if ($phone) {
+                        $companyId = $phone->company_id;
+                        $branchId = $phone->branch_id;
+                    }
+                }
+            }
+        }
+
+        // Create new Call record with company_id pre-set
+        $call = new \App\Models\Call();
+        $call->fill([
+            'retell_call_id' => $callId,
             'from_number' => $data['call']['from_number'] ?? $parameters['from_number'] ?? $parameters['caller_number'] ?? null,
             'to_number' => $data['call']['to_number'] ?? $parameters['to_number'] ?? $parameters['called_number'] ?? null,
             'status' => $isTestCall ? 'test' : 'ongoing',
             'call_status' => $isTestCall ? 'test' : 'ongoing',
             'start_timestamp' => now(),
-            'direction' => 'inbound'
-        ];
+            'direction' => 'inbound',
+        ]);
 
-        $call = \App\Models\Call::firstOrCreate(
-            ['retell_call_id' => $callId],
-            $createData
-        );
-
-        // 🔧 Härtung C: Set test-call company/branch even for existing records without company_id
-        if ($isTestCall && !$call->company_id) {
-            $call->company_id = config('retell.default_company_id');
-            $call->branch_id = config('retell.default_branch_id');
-            $call->save();
-
-            Log::debug('🔧 ensureCallRecordExists: Test call company/branch set', [
-                'call_id' => $callId,
-                'call_db_id' => $call->id,
-                'was_recently_created' => $call->wasRecentlyCreated,
-                'company_id' => $call->company_id,
-            ]);
+        // Set guarded fields before save (satisfies BelongsToCompany guard)
+        if ($companyId) {
+            $call->company_id = $companyId;
+        }
+        if ($branchId) {
+            $call->branch_id = $branchId;
         }
 
-        if ($call->wasRecentlyCreated) {
-            Log::info('✅ ensureCallRecordExists: Call record created', [
-                'call_id' => $callId,
-                'call_db_id' => $call->id,
-                'from_number' => $call->from_number,
-                'to_number' => $call->to_number
-            ]);
-        }
+        $call->save();
+
+        Log::info('✅ ensureCallRecordExists: Call record created', [
+            'call_id' => $callId,
+            'call_db_id' => $call->id,
+            'company_id' => $call->company_id,
+            'from_number' => $call->from_number,
+            'to_number' => $call->to_number,
+        ]);
 
         return $call;
     }
