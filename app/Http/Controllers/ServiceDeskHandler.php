@@ -907,7 +907,7 @@ class ServiceDeskHandler extends Controller
             ->where('is_active', true)
             ->where(function ($q) use ($slug) {
                 $q->where('slug', $slug)
-                  ->orWhere('name', 'ILIKE', "%{$slug}%");
+                  ->orWhere('name', 'LIKE', "%{$slug}%");
             })
             ->value('id');
 
